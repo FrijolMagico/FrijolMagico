@@ -7,7 +7,10 @@
     "build": "next build",
     "postbuild": "next-sitemap",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:migrate": "bash db/scripts/migrate.sh",
+    "db:seed": "bash db/scripts/seed.sh",
+    "db:reset": "bash db/scripts/reset.sh"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
