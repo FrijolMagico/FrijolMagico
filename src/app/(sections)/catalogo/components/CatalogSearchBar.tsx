@@ -1,22 +1,41 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useRef } from 'react'
+
 import { useCatalogFiltersStore } from '../store/useCatalogFiltersStore'
 import { CatalogSearchBarLoader } from './CatalogSkeletonLoaders'
+import { useAnalytics } from '@/components/analytics/useAnalytics'
 
 export const CatalogSearchBar = () => {
   const filters = useCatalogFiltersStore((state) => state.filters)
   const setFilters = useCatalogFiltersStore((state) => state.setFilters)
   const isReady = useCatalogFiltersStore((state) => state.isReady)
 
+  const { trackCatalogSearch } = useAnalytics()
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const handleInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       e.preventDefault()
       if (isReady) {
-        setFilters({ search: e.target.value })
+        const searchValue = e.target.value
+        setFilters({ search: searchValue })
+
+        // Debounce tracking to avoid tracking every keystroke
+        if (debounceRef.current) {
+          clearTimeout(debounceRef.current)
+        }
+
+        if (searchValue.trim().length >= 2) {
+          debounceRef.current = setTimeout(() => {
+            trackCatalogSearch({
+              search_term: searchValue.trim(),
+            })
+          }, 1000)
+        }
       }
     },
-    [setFilters, isReady],
+    [setFilters, isReady, trackCatalogSearch],
   )
 
   if (!isReady) return <CatalogSearchBarLoader />
