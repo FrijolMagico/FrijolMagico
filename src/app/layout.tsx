@@ -65,9 +65,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang={SITE.lang}>
-      <GoogleAnalytics />
-      <SpeedInsights />
-      <Analytics />
       <body
         className={cn(
           'bg-fm-white font-noto relative flex size-full min-h-dvh flex-col antialiased',
@@ -75,6 +72,9 @@ export default function RootLayout({
           notoSans.variable,
           superFortress.variable,
         )}>
+        <GoogleAnalytics />
+        <SpeedInsights />
+        <Analytics />
         <Background />
         {SITE.top_bar.active && <TopBarInfo />}
         {children}
