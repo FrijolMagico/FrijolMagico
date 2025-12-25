@@ -26,9 +26,9 @@ SEED_FILE="$SEED_DIR/seed.sql"
 # ENVIRONMENT LOADING
 # =============================================================================
 
-# Load TURSO_DB_NAME from .env files (priority order, last wins)
+# Load TURSO_DATABASE_NAME from .env files (priority order, last wins)
 # Order: .env -> .env.local -> .env.production -> .env.production.local (etc.)
-# Note: Only reads TURSO_DB_NAME, does not export to environment
+# Note: Only reads TURSO_DATABASE_NAME, does not export to environment
 load_turso_db_name() {
     local env_files=()
     local db_name=""
@@ -53,11 +53,11 @@ load_turso_db_name() {
         [ -f "$f" ] && env_files+=("$f")
     done
     
-    # Load TURSO_DB_NAME from each file (later files override earlier ones)
+    # Load TURSO_DATABASE_NAME from each file (later files override earlier ones)
     for env_file in "${env_files[@]}"; do
         if [ -f "$env_file" ]; then
             local found_value
-            found_value=$(grep -E '^TURSO_DB_NAME=' "$env_file" 2>/dev/null | tail -1 | cut -d'=' -f2-)
+            found_value=$(grep -E '^TURSO_DATABASE_NAME=' "$env_file" 2>/dev/null | tail -1 | cut -d'=' -f2-)
             # Remove surrounding quotes (single or double)
             found_value=$(echo "$found_value" | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//")
             if [ -n "$found_value" ]; then
@@ -77,8 +77,8 @@ init_db() {
     echo ""
     
     if [ -z "$DB_NAME" ]; then
-        echo -e "${RED}Error: TURSO_DB_NAME not found in any .env file${NC}"
-        echo "Please add TURSO_DB_NAME=your-database-name to .env.local"
+        echo -e "${RED}Error: TURSO_DATABASE_NAME not found in any .env file${NC}"
+        echo "Please add TURSO_DATABASE_NAME=your-database-name to .env.local"
         exit 1
     fi
 }
