@@ -1,8 +1,13 @@
+'use client'
+
 import Link from 'next/link'
+import clsx from 'clsx'
+
 import { Instagram } from '@/components/icons/Instagram'
 import { Facebook } from '@/components/icons/Facebook'
-import clsx from 'clsx'
+import { useAnalytics } from '@/components/analytics/useAnalytics'
 import siteData from '@/data/site.json'
+
 const SITE = siteData
 
 export const RRSSCard = ({
@@ -10,6 +15,8 @@ export const RRSSCard = ({
 }: {
   orientation?: 'vertical' | 'horizontal'
 }) => {
+  const { trackSocialClick } = useAnalytics()
+
   return (
     <div
       className={clsx(
@@ -28,6 +35,9 @@ export const RRSSCard = ({
           target='_blank'
           rel='noopener noreferrer'
           aria-label='Síguenos en Instagram'
+          onClick={() =>
+            trackSocialClick({ platform: 'instagram', location: 'footer' })
+          }
           className='hover:text-flexible-yellow transition duration-150 hover:scale-110 hover:rotate-6'>
           <Instagram size={orientation === 'vertical' ? 52 : 32} />
         </Link>
@@ -36,6 +46,9 @@ export const RRSSCard = ({
           target='_blank'
           rel='noopener noreferrer'
           aria-label='Síguenos en Facebook'
+          onClick={() =>
+            trackSocialClick({ platform: 'facebook', location: 'footer' })
+          }
           className='hover:text-flexible-yellow transition duration-150 hover:scale-110 hover:rotate-6'>
           <Facebook size={orientation === 'vertical' ? 44 : 28} />
         </Link>
