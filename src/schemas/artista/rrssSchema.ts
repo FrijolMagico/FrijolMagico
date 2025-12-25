@@ -37,7 +37,7 @@ export type RrssObject = z.infer<typeof rrssObjectSchema>
 
 /**
  * Detecta la plataforma de una URL
- * Retorna null si la URL es invalida
+ * Retorna null si la URL es inválida
  */
 export function detectPlatform(url: string): RrssPlatform | null {
   const normalizedUrl = url.toLowerCase()
@@ -57,13 +57,13 @@ export function detectPlatform(url: string): RrssPlatform | null {
   )
     return 'youtube'
 
-  // Si no es una red social conocida, validamos que sea una URL valida
+  // Si no es una red social conocida, validamos que sea una URL válida
   // antes de asumir que es web personal
   try {
     new URL(url)
     return 'web'
   } catch {
-    // URL invalida, retornamos null
+    // URL inválida, retornamos null
     return null
   }
 }
