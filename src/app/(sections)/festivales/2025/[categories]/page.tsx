@@ -8,6 +8,7 @@ import { ApprovedArtistsCategoriesNav } from '@/app/(sections)/festivales/2025/[
 import { getApprovedArtistsData } from './lib/getApprovedArtistsData'
 import { SectionHomeButton } from '@/components/SectionsHomeButton'
 import { FestivalHeader } from '../components/FestivalHeader'
+import { TrackPageView } from '@/components/analytics/TrackPageView'
 
 type CategoryParams = {
   categories: keyof typeof siteData.selected_artists.seo.category
@@ -29,6 +30,10 @@ export default async function ApprovedArtistsPage({
 
   return (
     <>
+      <TrackPageView
+        sectionName={`Festival 2025 - ${categories}`}
+        sectionPath={`/festivales/2025/${categories}`}
+      />
       <FestivalHeader
         title={siteData.selected_artists.title}
         subTitle={siteData.selected_artists.subtitle}

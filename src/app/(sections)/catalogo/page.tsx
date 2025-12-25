@@ -14,6 +14,7 @@ import { CatalogFiltersInitializer } from './components/CatalogFiltersInitialize
 import { getCatalogData } from './lib/getCatalogData'
 import { SectionHomeButton } from '@/components/SectionsHomeButton'
 import { Metadata } from 'next'
+import { TrackPageView } from '@/components/analytics/TrackPageView'
 
 const { catalog } = siteData
 
@@ -27,6 +28,7 @@ export default async function CatalogPage() {
 
   return (
     <>
+      <TrackPageView sectionName='Catálogo' sectionPath='/catalogo' />
       <ViewTransition name='transition-logo'>
         <SectionHomeButton />
       </ViewTransition>
