@@ -1,14 +1,18 @@
 'use client'
+
+import { useState, useCallback } from 'react'
+
 import { CatalogFilter } from './CatalogFilter'
 import { normalizeString } from '@/utils/utils'
-import type { CatalogArtist } from '../types/catalog'
-import { useState, useCallback } from 'react'
 import { useCatalogFiltersStore } from '../store/useCatalogFiltersStore'
 import { CatalogFiltersBarLoader } from './CatalogSkeletonLoaders'
 import { urlHasFilters } from '../utils/urlFilters'
-import { CatalogSelectionFilterKey } from '../types/filters'
 import { getFiltersData } from '../utils/filterUtils'
 import { FILTER_KEYS } from '../constants/filterConstants'
+import { useAnalytics } from '@/components/analytics/useAnalytics'
+
+import type { CatalogArtist } from '../types/catalog'
+import type { CatalogSelectionFilterKey } from '../types/filters'
 
 interface CatalogFilterBarProps {
   catalogData: CatalogArtist[]
@@ -26,6 +30,8 @@ export const CatalogFilterBar = ({ catalogData }: CatalogFilterBarProps) => {
   const filters = useCatalogFiltersStore((state) => state.filters)
   const setFilters = useCatalogFiltersStore((state) => state.setFilters)
   const isReady = useCatalogFiltersStore((state) => state.isReady)
+
+  const { trackFilterApplied } = useAnalytics()
 
   const toggleFilter = useCallback((filterKey: CatalogSelectionFilterKey) => {
     setFiltersOpen((prev) => {
@@ -50,6 +56,14 @@ export const CatalogFilterBar = ({ catalogData }: CatalogFilterBarProps) => {
         .map(normalizeString)
         .includes(normalizedValue)
 
+      // Track filter applied (only when adding, not removing)
+      if (!alreadySelected) {
+        trackFilterApplied({
+          filter_type: filterKey,
+          filter_value: value,
+        })
+      }
+
       // if already selected, remove it, otherwise add it
       setFilters({
         [filterKey]: alreadySelected
@@ -57,7 +71,7 @@ export const CatalogFilterBar = ({ catalogData }: CatalogFilterBarProps) => {
           : [...current, value],
       })
     },
-    [filters, setFilters, isReady],
+    [filters, setFilters, isReady, trackFilterApplied],
   )
 
   const handleClear = useCallback(
