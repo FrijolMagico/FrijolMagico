@@ -3,6 +3,7 @@ import { getFestivalScheduleData } from './lib/getFestivalScheduleData'
 import { FestivalHeader } from '../components/FestivalHeader'
 import { ScheduleWrapper } from './components/ScheduleWrapper'
 import { SectionHomeButton } from '@/components/SectionsHomeButton'
+import { TrackPageView } from '@/components/analytics/TrackPageView'
 
 const {
   data: { firstDay, secondDay },
@@ -16,6 +17,10 @@ export default function ProgramacionPage() {
 
   return (
     <>
+      <TrackPageView
+        sectionName='Festival 2025 - Programación'
+        sectionPath='/festivales/2025/programacion'
+      />
       <FestivalHeader
         title={'# Programación'}
         subTitle={'## Festival Frijol Mágico 2025'}
