@@ -12,12 +12,10 @@ export const artistaSchema = z.object({
   id: z.number().int().positive(),
   nombre: z.string().min(1, 'Nombre es requerido'),
   pseudonimo: z.string().nullable(),
-  correo: z
-    .string()
-    .email()
-    .nullable()
-    .or(z.literal(''))
-    .transform((v) => v || null),
+  correo: z.preprocess(
+    (v) => (typeof v === 'string' && v === '' ? null : v),
+    z.string().email().nullable(),
+  ),
   ciudad: z
     .string()
     .nullable()
