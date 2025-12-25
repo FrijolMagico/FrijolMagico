@@ -60,7 +60,7 @@ export function detectPlatform(url: string): RrssPlatform | null {
   // Si no es una red social conocida, validamos que sea una URL valida
   // antes de asumir que es web personal
   try {
-    new URL(normalizedUrl)
+    new URL(url)
     return 'web'
   } catch {
     // URL invalida, retornamos null
