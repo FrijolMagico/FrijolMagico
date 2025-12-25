@@ -1,10 +1,15 @@
 import type { Metadata } from 'next'
 import { Josefin_Sans, Noto_Sans } from 'next/font/google'
+import localFont from 'next/font/local'
+
 import siteData from '@/data/site.json'
 import '@/styles/globals.css'
 import { TopBarInfo } from '@/components/TopBarInfo'
 import { Background } from '@/components/Background'
-import localFont from 'next/font/local'
+import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics'
+import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
+
 import { cn } from '@/utils/utils'
 
 const SITE = siteData
@@ -62,11 +67,14 @@ export default function RootLayout({
     <html lang={SITE.lang}>
       <body
         className={cn(
-          'bg-fm-white font-noto relative flex size-full min-h-[100dvh] flex-col antialiased',
+          'bg-fm-white font-noto relative flex size-full min-h-dvh flex-col antialiased',
           josefinSans.variable,
           notoSans.variable,
           superFortress.variable,
         )}>
+        <GoogleAnalytics />
+        <SpeedInsights />
+        <Analytics />
         <Background />
         {SITE.top_bar.active && <TopBarInfo />}
         {children}
