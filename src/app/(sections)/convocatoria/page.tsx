@@ -8,6 +8,7 @@ import { paths } from '@/config/paths'
 import { ViewTransition } from 'react'
 import { LogoHomeLink } from '@/components/LogoHomeLink'
 import { Metadata } from 'next'
+import { TrackPageView } from '@/components/analytics/TrackPageView'
 
 const { apply } = siteData
 
@@ -20,6 +21,7 @@ export default function ConvocatoriaPage() {
   redirect(paths.home)
   return (
     <>
+      <TrackPageView sectionName='Convocatoria' sectionPath='/convocatoria' />
       <ViewTransition name='transition-logo'>
         <div className='fixed right-0 bottom-2 scale-75'>
           <LogoHomeLink />
