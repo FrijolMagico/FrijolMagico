@@ -12,3 +12,4 @@
 INSERT OR IGNORE INTO disciplina (nombre) VALUES ('Ilustración');
 INSERT OR IGNORE INTO disciplina (nombre) VALUES ('Narrativa gráfica');
 INSERT OR IGNORE INTO disciplina (nombre) VALUES ('Manualidades');
+INSERT OR IGNORE INTO disciplina (nombre) VALUES ('Fotografía');
