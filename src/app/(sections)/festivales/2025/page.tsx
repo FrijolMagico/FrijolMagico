@@ -5,10 +5,15 @@ import { GridItem } from '@/components/GridItem'
 import { FestivalCard } from './components/FestivalCard'
 import { paths } from '@/config/paths'
 import { SectionHomeButton } from '@/components/SectionsHomeButton'
+import { TrackPageView } from '@/components/analytics/TrackPageView'
 
 export default function Festival2025Page() {
   return (
     <>
+      <TrackPageView
+        sectionName='Festival 2025'
+        sectionPath='/festivales/2025'
+      />
       <FestivalHeader
         title='# Festival Frijol Mágico 2025'
         subTitle='## Casa Editorial Universidad de La Serena'
