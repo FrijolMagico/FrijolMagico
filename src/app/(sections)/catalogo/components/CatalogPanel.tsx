@@ -1,13 +1,15 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Instagram, Mail, X } from 'lucide-react'
-import { useCatalogPanelStore } from '../store/useCatalogPanelStore'
-import { getInstagramUserTag } from '@/utils/utils'
-import { cn } from '@/utils/utils'
 import Image from 'next/image'
-import { CatalogArtist } from '../types/catalog'
+import { Instagram, Mail, X } from 'lucide-react'
 import Markdown from 'react-markdown'
+
+import { useCatalogPanelStore } from '../store/useCatalogPanelStore'
+import { getInstagramUserTag, cn } from '@/utils/utils'
+import { useAnalytics } from '@/components/analytics/useAnalytics'
+
+import type { CatalogArtist } from '../types/catalog'
 
 export const CatalogPanel = ({
   catalogData,
@@ -27,6 +29,19 @@ export const CatalogPanel = ({
   const selectedArtist = useCatalogPanelStore((state) => state.selectedArtist)
   const [isVisible, setIsVisible] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
+
+  const { trackArtistView, trackSocialClick } = useAnalytics()
+
+  // Track artist view when panel opens with a selected artist
+  useEffect(() => {
+    if (isArtistPanelOpen && selectedArtist) {
+      trackArtistView({
+        artist_name: selectedArtist.name,
+        artist_category: selectedArtist.category,
+        artist_city: selectedArtist.city,
+      })
+    }
+  }, [isArtistPanelOpen, selectedArtist, trackArtistView])
 
   // Handle animation when opening/closing
   useEffect(() => {
@@ -168,7 +183,13 @@ export const CatalogPanel = ({
                     href={`mailto:${selectedArtist.email}`}
                     className='hover:text-fm-orange flex items-center transition-colors duration-150'
                     target='_blank'
-                    rel='noopener noreferrer'>
+                    rel='noopener noreferrer'
+                    onClick={() =>
+                      trackSocialClick({
+                        platform: 'email',
+                        location: 'artist_panel',
+                      })
+                    }>
                     <span className='w-6'>
                       <Mail size={18} />
                     </span>
@@ -178,7 +199,13 @@ export const CatalogPanel = ({
                     href={selectedArtist.rrss}
                     className='hover:text-fm-orange flex items-center transition-colors duration-150'
                     target='_blank'
-                    rel='noopener noreferrer'>
+                    rel='noopener noreferrer'
+                    onClick={() =>
+                      trackSocialClick({
+                        platform: 'instagram',
+                        location: 'artist_panel',
+                      })
+                    }>
                     <span className='w-6'>
                       <Instagram size={18} />
                     </span>
