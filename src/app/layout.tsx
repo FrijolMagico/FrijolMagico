@@ -7,6 +7,9 @@ import '@/styles/globals.css'
 import { TopBarInfo } from '@/components/TopBarInfo'
 import { Background } from '@/components/Background'
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics'
+import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
+
 import { cn } from '@/utils/utils'
 
 const SITE = siteData
@@ -63,9 +66,11 @@ export default function RootLayout({
   return (
     <html lang={SITE.lang}>
       <GoogleAnalytics />
+      <SpeedInsights />
+      <Analytics />
       <body
         className={cn(
-          'bg-fm-white font-noto relative flex size-full min-h-[100dvh] flex-col antialiased',
+          'bg-fm-white font-noto relative flex size-full min-h-dvh flex-col antialiased',
           josefinSans.variable,
           notoSans.variable,
           superFortress.variable,
