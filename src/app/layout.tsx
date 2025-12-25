@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
 import { Josefin_Sans, Noto_Sans } from 'next/font/google'
+import localFont from 'next/font/local'
+
 import siteData from '@/data/site.json'
 import '@/styles/globals.css'
 import { TopBarInfo } from '@/components/TopBarInfo'
 import { Background } from '@/components/Background'
-import localFont from 'next/font/local'
+import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics'
 import { cn } from '@/utils/utils'
 
 const SITE = siteData
@@ -60,6 +62,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang={SITE.lang}>
+      <GoogleAnalytics />
       <body
         className={cn(
           'bg-fm-white font-noto relative flex size-full min-h-[100dvh] flex-col antialiased',
