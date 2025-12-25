@@ -71,7 +71,8 @@ END;
 CREATE TABLE evento_edicion (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     evento_id INTEGER NOT NULL,
-    nombre TEXT NOT NULL,
+    nombre TEXT,
+    numero_edicion TEXT NOT NULL UNIQUE,
     poster_url TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -90,6 +91,8 @@ CREATE TABLE evento_edicion_dia (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     evento_edicion_id INTEGER NOT NULL,
     fecha TEXT NOT NULL,
+    hora_inicio TEXT NOT NULL,
+    hora_fin TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_evento_edicion_dia_edicion FOREIGN KEY (evento_edicion_id)
@@ -107,8 +110,10 @@ END;
 CREATE TABLE evento_edicion_dia_lugar (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     evento_edicion_dia_id INTEGER NOT NULL,
+    modalidad TEXT NOT NULL DEFAULT 'presencial' CHECK (modalidad IN ('presencial', 'online', 'hibrido')),
     nombre_lugar TEXT,
-    direccion TEXT NOT NULL,
+    direccion TEXT,
+    coordenadas TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_evento_dia_lugar_dia FOREIGN KEY (evento_edicion_dia_id)
