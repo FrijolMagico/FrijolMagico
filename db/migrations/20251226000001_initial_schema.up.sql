@@ -1,16 +1,17 @@
 -- =============================================================================
--- FRIJOL MÁGICO - DATABASE SCHEMA
+-- FRIJOL MAGICO - INITIAL DATABASE SCHEMA
 -- =============================================================================
 -- Provider: libSQL (SQLite-compatible)
 -- Format: ISO8601 for timestamps (TEXT), YYYY-MM-DD for dates (TEXT)
 -- JSON: Stored as TEXT, validated in application layer
+-- Note: Uses IF NOT EXISTS for idempotent migrations
 -- =============================================================================
 
 -- =============================================================================
--- ORGANIZACIÓN
+-- ORGANIZACION
 -- =============================================================================
 
-CREATE TABLE organizacion (
+CREATE TABLE IF NOT EXISTS organizacion (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL,
     descripcion TEXT,
@@ -20,14 +21,14 @@ CREATE TABLE organizacion (
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TRIGGER trg_organizacion_updated_at
+CREATE TRIGGER IF NOT EXISTS trg_organizacion_updated_at
 AFTER UPDATE ON organizacion
 FOR EACH ROW
 BEGIN
     UPDATE organizacion SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
 END;
 
-CREATE TABLE organizacion_equipo (
+CREATE TABLE IF NOT EXISTS organizacion_equipo (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     organizacion_id INTEGER NOT NULL,
     nombre TEXT NOT NULL,
@@ -39,7 +40,7 @@ CREATE TABLE organizacion_equipo (
     REFERENCES organizacion (id) ON DELETE CASCADE
 );
 
-CREATE TRIGGER trg_organizacion_equipo_updated_at
+CREATE TRIGGER IF NOT EXISTS trg_organizacion_equipo_updated_at
 AFTER UPDATE ON organizacion_equipo
 FOR EACH ROW
 BEGIN
@@ -47,13 +48,35 @@ BEGIN
 END;
 
 -- =============================================================================
+-- LUGARES
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS lugar (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL,
+    direccion TEXT,
+    ciudad TEXT,
+    coordenadas TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER IF NOT EXISTS trg_lugar_updated_at
+AFTER UPDATE ON lugar
+FOR EACH ROW
+BEGIN
+    UPDATE lugar SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+END;
+
+-- =============================================================================
 -- EVENTOS
 -- =============================================================================
 
-CREATE TABLE evento (
+CREATE TABLE IF NOT EXISTS evento (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     organizacion_id INTEGER NOT NULL,
     nombre TEXT NOT NULL,
+    slug TEXT,
     descripcion TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -61,18 +84,19 @@ CREATE TABLE evento (
     REFERENCES organizacion (id) ON DELETE CASCADE
 );
 
-CREATE TRIGGER trg_evento_updated_at
+CREATE TRIGGER IF NOT EXISTS trg_evento_updated_at
 AFTER UPDATE ON evento
 FOR EACH ROW
 BEGIN
     UPDATE evento SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
 END;
 
-CREATE TABLE evento_edicion (
+CREATE TABLE IF NOT EXISTS evento_edicion (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     evento_id INTEGER NOT NULL,
     nombre TEXT,
-    numero_edicion TEXT NOT NULL UNIQUE,
+    slug TEXT,
+    numero_edicion TEXT NOT NULL,
     poster_url TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -80,14 +104,14 @@ CREATE TABLE evento_edicion (
     REFERENCES evento (id) ON DELETE CASCADE
 );
 
-CREATE TRIGGER trg_evento_edicion_updated_at
+CREATE TRIGGER IF NOT EXISTS trg_evento_edicion_updated_at
 AFTER UPDATE ON evento_edicion
 FOR EACH ROW
 BEGIN
     UPDATE evento_edicion SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
 END;
 
-CREATE TABLE evento_edicion_dia (
+CREATE TABLE IF NOT EXISTS evento_edicion_dia (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     evento_edicion_id INTEGER NOT NULL,
     fecha TEXT NOT NULL,
@@ -100,45 +124,25 @@ CREATE TABLE evento_edicion_dia (
     CONSTRAINT uq_evento_edicion_dia UNIQUE (evento_edicion_id, fecha)
 );
 
-CREATE TRIGGER trg_evento_edicion_dia_updated_at
+CREATE TRIGGER IF NOT EXISTS trg_evento_edicion_dia_updated_at
 AFTER UPDATE ON evento_edicion_dia
 FOR EACH ROW
 BEGIN
     UPDATE evento_edicion_dia SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
 END;
 
-CREATE TABLE evento_edicion_dia_lugar (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    evento_edicion_dia_id INTEGER NOT NULL,
-    modalidad TEXT NOT NULL DEFAULT 'presencial' CHECK (modalidad IN ('presencial', 'online', 'hibrido')),
-    nombre_lugar TEXT,
-    direccion TEXT,
-    coordenadas TEXT,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_evento_dia_lugar_dia FOREIGN KEY (evento_edicion_dia_id)
-    REFERENCES evento_edicion_dia (id) ON DELETE CASCADE
-);
-
-CREATE TRIGGER trg_evento_edicion_dia_lugar_updated_at
-AFTER UPDATE ON evento_edicion_dia_lugar
-FOR EACH ROW
-BEGIN
-    UPDATE evento_edicion_dia_lugar SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
-END;
-
 -- =============================================================================
 -- DISCIPLINAS
 -- =============================================================================
 
-CREATE TABLE disciplina (
+CREATE TABLE IF NOT EXISTS disciplina (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL UNIQUE,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TRIGGER trg_disciplina_updated_at
+CREATE TRIGGER IF NOT EXISTS trg_disciplina_updated_at
 AFTER UPDATE ON disciplina
 FOR EACH ROW
 BEGIN
@@ -149,10 +153,11 @@ END;
 -- ARTISTAS
 -- =============================================================================
 
-CREATE TABLE artista (
+CREATE TABLE IF NOT EXISTS artista (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL,
     pseudonimo TEXT,
+    slug TEXT,
     correo TEXT,
     rrss TEXT,
     ciudad TEXT,
@@ -162,14 +167,14 @@ CREATE TABLE artista (
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TRIGGER trg_artista_updated_at
+CREATE TRIGGER IF NOT EXISTS trg_artista_updated_at
 AFTER UPDATE ON artista
 FOR EACH ROW
 BEGIN
     UPDATE artista SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
 END;
 
-CREATE TABLE artista_imagen (
+CREATE TABLE IF NOT EXISTS artista_imagen (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     artista_id INTEGER NOT NULL,
     imagen_url TEXT NOT NULL,
@@ -182,7 +187,7 @@ CREATE TABLE artista_imagen (
     REFERENCES artista (id) ON DELETE CASCADE
 );
 
-CREATE TRIGGER trg_artista_imagen_updated_at
+CREATE TRIGGER IF NOT EXISTS trg_artista_imagen_updated_at
 AFTER UPDATE ON artista_imagen
 FOR EACH ROW
 BEGIN
@@ -193,7 +198,7 @@ END;
 -- POSTULACIONES
 -- =============================================================================
 
-CREATE TABLE evento_edicion_postulacion (
+CREATE TABLE IF NOT EXISTS evento_edicion_postulacion (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     evento_edicion_id INTEGER NOT NULL,
     nombre TEXT NOT NULL,
@@ -210,7 +215,7 @@ CREATE TABLE evento_edicion_postulacion (
     REFERENCES disciplina (id)
 );
 
-CREATE TRIGGER trg_evento_edicion_postulacion_updated_at
+CREATE TRIGGER IF NOT EXISTS trg_evento_edicion_postulacion_updated_at
 AFTER UPDATE ON evento_edicion_postulacion
 FOR EACH ROW
 BEGIN
@@ -221,7 +226,7 @@ END;
 -- AGRUPACIONES
 -- =============================================================================
 
-CREATE TABLE agrupacion (
+CREATE TABLE IF NOT EXISTS agrupacion (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL,
     descripcion TEXT,
@@ -230,14 +235,14 @@ CREATE TABLE agrupacion (
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TRIGGER trg_agrupacion_updated_at
+CREATE TRIGGER IF NOT EXISTS trg_agrupacion_updated_at
 AFTER UPDATE ON agrupacion
 FOR EACH ROW
 BEGIN
     UPDATE agrupacion SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
 END;
 
-CREATE TABLE agrupacion_miembro (
+CREATE TABLE IF NOT EXISTS agrupacion_miembro (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     agrupacion_id INTEGER NOT NULL,
     artista_id INTEGER NOT NULL,
@@ -253,7 +258,7 @@ CREATE TABLE agrupacion_miembro (
     CONSTRAINT uq_agrupacion_miembro UNIQUE (artista_id, evento_edicion_id)
 );
 
-CREATE TRIGGER trg_agrupacion_miembro_updated_at
+CREATE TRIGGER IF NOT EXISTS trg_agrupacion_miembro_updated_at
 AFTER UPDATE ON agrupacion_miembro
 FOR EACH ROW
 BEGIN
@@ -264,7 +269,7 @@ END;
 -- PARTICIPANTES
 -- =============================================================================
 
-CREATE TABLE evento_edicion_participante (
+CREATE TABLE IF NOT EXISTS evento_edicion_participante (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     evento_edicion_id INTEGER NOT NULL,
     artista_id INTEGER NOT NULL,
@@ -288,7 +293,7 @@ CREATE TABLE evento_edicion_participante (
     )
 );
 
-CREATE TRIGGER trg_evento_edicion_participante_updated_at
+CREATE TRIGGER IF NOT EXISTS trg_evento_edicion_participante_updated_at
 AFTER UPDATE ON evento_edicion_participante
 FOR EACH ROW
 BEGIN
@@ -299,7 +304,7 @@ END;
 -- INVITADOS
 -- =============================================================================
 
-CREATE TABLE artista_invitado (
+CREATE TABLE IF NOT EXISTS artista_invitado (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL,
     correo TEXT,
@@ -308,14 +313,14 @@ CREATE TABLE artista_invitado (
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TRIGGER trg_artista_invitado_updated_at
+CREATE TRIGGER IF NOT EXISTS trg_artista_invitado_updated_at
 AFTER UPDATE ON artista_invitado
 FOR EACH ROW
 BEGIN
     UPDATE artista_invitado SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
 END;
 
-CREATE TABLE evento_edicion_invitado (
+CREATE TABLE IF NOT EXISTS evento_edicion_invitado (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     evento_edicion_id INTEGER NOT NULL,
     artista_invitado_id INTEGER NOT NULL,
@@ -330,7 +335,7 @@ CREATE TABLE evento_edicion_invitado (
     CONSTRAINT chk_evento_edicion_invitado_rol CHECK (LENGTH(TRIM(rol)) > 0)
 );
 
-CREATE TRIGGER trg_evento_edicion_invitado_updated_at
+CREATE TRIGGER IF NOT EXISTS trg_evento_edicion_invitado_updated_at
 AFTER UPDATE ON evento_edicion_invitado
 FOR EACH ROW
 BEGIN
@@ -338,10 +343,10 @@ BEGIN
 END;
 
 -- =============================================================================
--- MÉTRICAS Y SNAPSHOTS
+-- METRICAS Y SNAPSHOTS
 -- =============================================================================
 
-CREATE TABLE evento_edicion_metrica (
+CREATE TABLE IF NOT EXISTS evento_edicion_metrica (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     evento_edicion_id INTEGER NOT NULL,
     tipo TEXT NOT NULL,
@@ -354,7 +359,7 @@ CREATE TABLE evento_edicion_metrica (
     REFERENCES evento_edicion (id) ON DELETE CASCADE
 );
 
-CREATE TABLE evento_edicion_snapshot (
+CREATE TABLE IF NOT EXISTS evento_edicion_snapshot (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     evento_edicion_id INTEGER NOT NULL,
     tipo TEXT NOT NULL,

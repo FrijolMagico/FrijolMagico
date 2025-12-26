@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Frijol Magico is a Next.js 15 (App Router) web platform for the Frijol Magico Festival, showcasing illustrators from the Coquimbo Region, Chile. Built with React 19, TypeScript, and Tailwind CSS v4. Uses Google Sheets as a headless CMS.
+Frijol Magico is a Next.js 15 (App Router) web platform for the Frijol Magico Festival, showcasing illustrators from the Coquimbo Region, Chile. Built with React 19, TypeScript, and Tailwind CSS v4. Uses Google Sheets as CMS with Turso (libSQL) as the primary database.
 
 ## Tech Stack
 
@@ -13,6 +13,7 @@ Frijol Magico is a Next.js 15 (App Router) web platform for the Frijol Magico Fe
 - **Animation**: GSAP with ScrollTrigger
 - **Package Manager**: Bun (preferred) or npm
 - **CMS**: Google Sheets via google-spreadsheet library
+- **Database**: Turso (libSQL) with Geni for migrations
 
 ## Build/Lint/Test Commands
 
@@ -22,9 +23,12 @@ bun run dev          # Development server (with Turbopack)
 bun run build        # Production build
 bun run start        # Start production server
 bun run lint         # Lint code (ESLint + Prettier)
-bun run db:migrate   # Run migrations
+bun run db:migrate   # Run pending migrations
+bun run db:rollback  # Rollback last migration
+bun run db:status    # Show pending migrations
+bun run db:new       # Create new migration (e.g., bun run db:new add_users)
 bun run db:seed      # Seed database
-bun run db:reset     # Reset database
+bun run db:import    # Import data from Google Sheets
 ```
 
 **Note**: No test framework is currently configured in this project.
@@ -124,11 +128,16 @@ src/
 ├── components/          # Shared components (ui/, icons/)
 ├── config/              # App configuration
 ├── data/                # Static data (site.json)
-├── infra/               # Infrastructure (CMS adapters, __mocks__/)
+├── infra/               # Infrastructure (database adapters, importers)
+├── schemas/             # Zod validation schemas
 ├── services/            # External service integrations
 ├── styles/              # Global styles and palettes
 ├── types/               # Global TypeScript types
 └── utils/               # Utility functions
+
+db/
+├── migrations/          # Database migrations (Geni)
+└── seed/                # Seed data
 ```
 
 ## Key Patterns
@@ -152,7 +161,7 @@ Use `@/` for imports from `src/`: `import { cn } from '@/utils/utils'`
 
 - Prefer static generation (build time) where possible
 - Use mock data in development (`src/infra/__mocks__/`)
-- Production uses Google Sheets API
+- Application reads from Turso database (data synced via `db:import`)
 
 ## Accessibility Requirements
 
