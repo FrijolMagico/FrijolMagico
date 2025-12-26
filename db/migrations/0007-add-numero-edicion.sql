@@ -1,7 +1,0 @@
--- Migración obsoleta: numero_edicion ahora se crea en 0001-create-tables.sql
--- Esta migración se mantiene vacía para preservar el historial de migraciones
--- en bases de datos donde ya fue aplicada.
---
--- La funcionalidad original (agregar numero_edicion) está ahora en:
--- - 0001-create-tables.sql (para DBs nuevas)
--- - 0008-make-evento-edicion-nombre-optional.sql (recrea la tabla con el campo)
