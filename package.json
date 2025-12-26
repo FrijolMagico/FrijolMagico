@@ -8,10 +8,12 @@
     "postbuild": "next-sitemap",
     "start": "next start",
     "lint": "next lint",
-    "db:migrate": "bash db/scripts/migrate.sh",
-    "db:seed": "bash db/scripts/seed.sh",
-    "db:reset": "bash db/scripts/reset.sh",
-    "db:import": "bun run src/infra/db/imports/index.ts"
+    "db:migrate": "bun run --env-file .env.local geni up",
+    "db:rollback": "bun run --env-file .env.local geni down",
+    "db:status": "bun run --env-file .env.local geni status",
+    "db:new": "bun run --env-file .env.local geni new",
+    "db:seed": "bun run --env-file .env.local turso db shell $TURSO_DATABASE_NAME < db/seed/seed.sql",
+    "db:import": "bun run --env-file .env.local src/infra/db/imports/index.ts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
