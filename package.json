@@ -12,8 +12,7 @@
     "db:rollback": "bun run --env-file .env.local geni down",
     "db:status": "bun run --env-file .env.local geni status",
     "db:new": "bun run --env-file .env.local geni new",
-    "db:seed": "bun run --env-file .env.local turso db shell $TURSO_DATABASE_NAME < db/seed/seed.sql",
-    "db:import": "bun run --env-file .env.local src/infra/db/imports/index.ts"
+    "db:seed": "bun run --env-file .env.local turso db shell $TURSO_DATABASE_NAME < db/seed/seed.sql"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
