@@ -32,13 +32,6 @@ CREATE TABLE disciplina (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL UNIQUE
 , created_at TEXT, updated_at TEXT);
-CREATE TABLE artista (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombre TEXT NOT NULL,
-    pseudonimo TEXT,
-    correo TEXT,
-    rrss TEXT
-, ciudad TEXT, descripcion TEXT, pais TEXT, created_at TEXT, updated_at TEXT, slug TEXT);
 CREATE TABLE artista_imagen (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     artista_id INTEGER NOT NULL,
@@ -210,19 +203,6 @@ WHEN NEW.created_at IS NULL
 BEGIN
     UPDATE disciplina SET created_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
 END;
-CREATE TRIGGER trg_artista_updated_at
-AFTER UPDATE ON artista
-FOR EACH ROW
-BEGIN
-    UPDATE artista SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
-END;
-CREATE TRIGGER trg_artista_created_at
-AFTER INSERT ON artista
-FOR EACH ROW
-WHEN NEW.created_at IS NULL
-BEGIN
-    UPDATE artista SET created_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
-END;
 CREATE TRIGGER trg_artista_imagen_updated_at
 AFTER UPDATE ON artista_imagen
 FOR EACH ROW
@@ -310,7 +290,6 @@ FOR EACH ROW
 BEGIN
     UPDATE evento_edicion_dia SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
 END;
-CREATE UNIQUE INDEX idx_artista_slug ON artista(slug);
 CREATE TABLE lugar (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL,
@@ -339,7 +318,7 @@ CREATE TABLE catalogo_artista (
     destacado INTEGER NOT NULL DEFAULT 0,
     activo INTEGER NOT NULL DEFAULT 1,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, descripcion TEXT,
     CONSTRAINT fk_catalogo_artista FOREIGN KEY (artista_id)
         REFERENCES artista (id) ON DELETE CASCADE,
     CONSTRAINT chk_catalogo_artista_destacado CHECK (destacado IN (0, 1)),
@@ -364,3 +343,5 @@ CREATE TABLE artista_historial (id INTEGER PRIMARY KEY AUTOINCREMENT, artista_id
 CREATE INDEX idx_artista_historial_artista ON artista_historial (artista_id);
 CREATE INDEX idx_artista_historial_pseudonimo ON artista_historial (pseudonimo) WHERE pseudonimo IS NOT NULL;
 CREATE INDEX idx_artista_historial_orden ON artista_historial (artista_id, orden);
+CREATE TABLE "artista" (id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT, pseudonimo TEXT NOT NULL, correo TEXT, rrss TEXT, ciudad TEXT, pais TEXT, created_at TEXT, updated_at TEXT, slug TEXT);
+CREATE UNIQUE INDEX idx_artista_slug ON artista (slug);
