@@ -132,20 +132,6 @@ INSERT INTO artista_imagen VALUES(84,75,'artistas/wasabipng/avatar.webp','avatar
 INSERT INTO artista_imagen VALUES(85,62,'artistas/yatiediciones/avatar.webp','avatar',1,'{"width":800,"height":800,"size":99652,"aspectRatio":"1:1","format":"webp"}','2025-12-26 13:21:22','2025-12-26 13:21:22');
 INSERT INTO artista_imagen VALUES(86,28,'artistas/yem/avatar.webp','avatar',1,'{"width":800,"height":800,"size":26148,"aspectRatio":"1:1","format":"webp"}','2025-12-26 13:21:22','2025-12-26 13:21:22');
 INSERT INTO artista_imagen VALUES(87,86,'artistas/tati-san-martin/avatar.webp','avatar',1,'{"width":800,"height":800,"size":196028,"aspectRatio":"1:1","format":"webp"}','2025-12-26 13:21:33','2025-12-26 13:21:33');
-CREATE TABLE IF NOT EXISTS evento_edicion_postulacion (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    evento_edicion_id INTEGER NOT NULL,
-    nombre TEXT NOT NULL,
-    pseudonimo TEXT,
-    correo TEXT,
-    rrss TEXT,
-    disciplina_id INTEGER NOT NULL,
-    dossier_url TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_postulacion_evento_edicion FOREIGN KEY (evento_edicion_id)
-    REFERENCES evento_edicion (id) ON DELETE CASCADE,
-    CONSTRAINT fk_postulacion_disciplina FOREIGN KEY (disciplina_id)
-    REFERENCES disciplina (id)
-);
 CREATE TABLE IF NOT EXISTS agrupacion (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL,
@@ -154,460 +140,6 @@ CREATE TABLE IF NOT EXISTS agrupacion (
 INSERT INTO agrupacion VALUES(1,'Ruvale y WasabiPNG',NULL,NULL,'2025-12-25 05:11:50','2025-12-25 05:11:50');
 INSERT INTO agrupacion VALUES(2,'Colectivo 8 Ojos','Dos ilustradoras, ocho ojos y un mundo infinito de ideas. Cat_linaa_art y p0chi_kun dibujan desde lo que son: diferentes, intensas y creativas. No creen que todo deba verse igual. Les encanta que sus diferencias se noten y se complementen, creando ilustraciones que pueden ser delicadas, potentes, dulces o explosivas… pero siempre honestas y llenas de vida.','och8jos.studio@gmail.com','2025-12-25 05:11:50','2025-12-25 05:11:50');
 INSERT INTO agrupacion VALUES(3,'Un Chincolito Me Lo Dijo',NULL,'elcorreodelchincol@gmail.com','2025-12-27 04:17:25','2025-12-27 04:17:25');
-CREATE TABLE IF NOT EXISTS agrupacion_miembro (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    agrupacion_id INTEGER NOT NULL,
-    artista_id INTEGER NOT NULL,
-    evento_edicion_id INTEGER NOT NULL, created_at TEXT, updated_at TEXT,
-    CONSTRAINT fk_agrupacion_miembro_agrupacion FOREIGN KEY (agrupacion_id)
-    REFERENCES agrupacion (id) ON DELETE CASCADE,
-    CONSTRAINT fk_agrupacion_miembro_artista FOREIGN KEY (artista_id)
-    REFERENCES artista (id) ON DELETE CASCADE,
-    CONSTRAINT fk_agrupacion_miembro_evento_edicion FOREIGN KEY (evento_edicion_id)
-    REFERENCES evento_edicion (id) ON DELETE CASCADE,
-    CONSTRAINT uq_agrupacion_miembro UNIQUE (artista_id, evento_edicion_id)
-);
-INSERT INTO agrupacion_miembro VALUES(1,3,213,3,'2025-12-27 04:35:23','2025-12-27 04:35:23');
-INSERT INTO agrupacion_miembro VALUES(2,3,213,4,'2025-12-27 04:35:24','2025-12-27 04:35:24');
-INSERT INTO agrupacion_miembro VALUES(3,3,213,8,'2025-12-27 04:35:24','2025-12-27 04:35:24');
-INSERT INTO agrupacion_miembro VALUES(4,3,213,9,'2025-12-27 04:35:24','2025-12-27 04:35:24');
-INSERT INTO agrupacion_miembro VALUES(5,3,158,3,'2025-12-27 04:35:24','2025-12-27 04:35:24');
-INSERT INTO agrupacion_miembro VALUES(6,3,158,4,'2025-12-27 04:35:24','2025-12-27 04:35:24');
-INSERT INTO agrupacion_miembro VALUES(7,3,158,8,'2025-12-27 04:35:24','2025-12-27 04:35:24');
-INSERT INTO agrupacion_miembro VALUES(8,3,158,9,'2025-12-27 04:35:24','2025-12-27 04:35:24');
-CREATE TABLE IF NOT EXISTS evento_edicion_participante (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    evento_edicion_id INTEGER NOT NULL,
-    artista_id INTEGER NOT NULL,
-    disciplina_id INTEGER NOT NULL,
-    agrupacion_id INTEGER,
-    estado TEXT NOT NULL,
-    notas TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_participante_evento_edicion FOREIGN KEY (evento_edicion_id)
-    REFERENCES evento_edicion (id) ON DELETE CASCADE,
-    CONSTRAINT fk_participante_artista FOREIGN KEY (artista_id)
-    REFERENCES artista (id) ON DELETE CASCADE,
-    CONSTRAINT fk_participante_disciplina FOREIGN KEY (disciplina_id)
-    REFERENCES disciplina (id),
-    CONSTRAINT fk_participante_agrupacion FOREIGN KEY (agrupacion_id)
-    REFERENCES agrupacion (id),
-    CONSTRAINT uq_participante UNIQUE (artista_id, evento_edicion_id),
-    CONSTRAINT chk_evento_edicion_participante_estado CHECK (
-        estado IN ('postulado', 'seleccionado', 'confirmado', 'rechazado', 'cancelado')
-    )
-);
-INSERT INTO evento_edicion_participante VALUES(1,8,1,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(2,9,1,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(3,10,1,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(4,10,2,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(5,5,6,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(6,6,6,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(7,7,6,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(8,8,6,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(9,9,6,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(10,10,6,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(11,4,7,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(12,5,7,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(13,6,7,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(14,7,7,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(15,8,9,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(16,3,10,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(17,4,10,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(18,6,10,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(19,10,13,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(20,8,17,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(21,9,17,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(22,10,17,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(23,5,20,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(24,8,20,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(25,1,31,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(26,2,31,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(27,3,31,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(28,1,32,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(29,2,32,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(30,5,32,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(31,6,32,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(32,7,32,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(33,8,32,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(34,9,32,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(35,10,32,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(36,1,33,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(37,2,33,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(38,3,33,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
-INSERT INTO evento_edicion_participante VALUES(39,4,33,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(40,5,33,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(41,6,33,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(42,9,33,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(43,10,33,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(44,4,34,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(45,5,34,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(46,6,34,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(47,7,34,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(48,8,34,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(49,9,34,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(50,10,34,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(51,3,35,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(52,9,35,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(53,1,37,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(54,2,37,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(55,3,37,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(56,4,37,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(57,5,37,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(58,8,37,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(59,5,39,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(60,4,43,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(61,6,43,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(62,7,43,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(63,8,43,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(64,9,43,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(65,10,43,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(66,3,52,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(67,4,52,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(68,5,52,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(69,7,52,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(70,9,52,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(71,6,64,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(72,7,64,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(73,8,64,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(74,9,64,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(75,10,64,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(76,7,68,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(77,8,68,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(78,9,69,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(79,10,69,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(80,1,71,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(81,4,80,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(82,5,80,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(83,6,80,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(84,7,80,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(85,10,80,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(86,1,81,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(87,2,81,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(88,3,81,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(89,5,81,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(90,7,81,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(91,8,81,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
-INSERT INTO evento_edicion_participante VALUES(92,10,81,1,NULL,'confirmado',NULL,'2025-12-25 19:41:57','2025-12-25 19:41:57');
-INSERT INTO evento_edicion_participante VALUES(93,9,45,3,NULL,'confirmado',NULL,'2025-12-25 19:41:57','2025-12-25 19:41:57');
-INSERT INTO evento_edicion_participante VALUES(94,8,48,3,NULL,'confirmado',NULL,'2025-12-25 19:41:57','2025-12-25 19:41:57');
-INSERT INTO evento_edicion_participante VALUES(95,10,48,3,NULL,'confirmado',NULL,'2025-12-25 19:41:57','2025-12-25 19:41:57');
-INSERT INTO evento_edicion_participante VALUES(96,6,88,1,NULL,'confirmado',NULL,'2025-12-27 04:32:59','2025-12-27 04:32:59');
-INSERT INTO evento_edicion_participante VALUES(97,7,88,1,NULL,'confirmado',NULL,'2025-12-27 04:33:00','2025-12-27 04:33:00');
-INSERT INTO evento_edicion_participante VALUES(98,8,88,1,NULL,'confirmado',NULL,'2025-12-27 04:33:00','2025-12-27 04:33:00');
-INSERT INTO evento_edicion_participante VALUES(99,9,88,1,NULL,'confirmado',NULL,'2025-12-27 04:33:00','2025-12-27 04:33:00');
-INSERT INTO evento_edicion_participante VALUES(100,10,88,1,NULL,'confirmado',NULL,'2025-12-27 04:33:01','2025-12-27 04:33:01');
-INSERT INTO evento_edicion_participante VALUES(101,6,89,1,NULL,'confirmado',NULL,'2025-12-27 04:33:01','2025-12-27 04:33:01');
-INSERT INTO evento_edicion_participante VALUES(102,3,90,1,NULL,'confirmado',NULL,'2025-12-27 04:33:01','2025-12-27 04:33:01');
-INSERT INTO evento_edicion_participante VALUES(103,3,91,1,NULL,'confirmado',NULL,'2025-12-27 04:33:02','2025-12-27 04:33:02');
-INSERT INTO evento_edicion_participante VALUES(104,4,91,1,NULL,'confirmado',NULL,'2025-12-27 04:33:02','2025-12-27 04:33:02');
-INSERT INTO evento_edicion_participante VALUES(105,5,91,1,NULL,'confirmado',NULL,'2025-12-27 04:33:02','2025-12-27 04:33:02');
-INSERT INTO evento_edicion_participante VALUES(106,7,92,1,NULL,'confirmado',NULL,'2025-12-27 04:33:02','2025-12-27 04:33:02');
-INSERT INTO evento_edicion_participante VALUES(107,8,92,1,NULL,'confirmado',NULL,'2025-12-27 04:33:03','2025-12-27 04:33:03');
-INSERT INTO evento_edicion_participante VALUES(108,9,92,1,NULL,'confirmado',NULL,'2025-12-27 04:33:03','2025-12-27 04:33:03');
-INSERT INTO evento_edicion_participante VALUES(109,10,92,1,NULL,'confirmado',NULL,'2025-12-27 04:33:03','2025-12-27 04:33:03');
-INSERT INTO evento_edicion_participante VALUES(110,7,93,1,NULL,'confirmado',NULL,'2025-12-27 04:33:04','2025-12-27 04:33:04');
-INSERT INTO evento_edicion_participante VALUES(111,6,94,1,NULL,'confirmado',NULL,'2025-12-27 04:33:04','2025-12-27 04:33:04');
-INSERT INTO evento_edicion_participante VALUES(112,8,94,1,NULL,'confirmado',NULL,'2025-12-27 04:33:04','2025-12-27 04:33:04');
-INSERT INTO evento_edicion_participante VALUES(113,9,94,1,NULL,'confirmado',NULL,'2025-12-27 04:33:05','2025-12-27 04:33:05');
-INSERT INTO evento_edicion_participante VALUES(114,3,95,1,NULL,'confirmado',NULL,'2025-12-27 04:33:05','2025-12-27 04:33:05');
-INSERT INTO evento_edicion_participante VALUES(115,10,95,1,NULL,'confirmado',NULL,'2025-12-27 04:33:05','2025-12-27 04:33:05');
-INSERT INTO evento_edicion_participante VALUES(116,10,96,1,NULL,'confirmado',NULL,'2025-12-27 04:33:05','2025-12-27 04:33:05');
-INSERT INTO evento_edicion_participante VALUES(117,10,97,1,NULL,'confirmado',NULL,'2025-12-27 04:33:06','2025-12-27 04:33:06');
-INSERT INTO evento_edicion_participante VALUES(118,6,98,1,NULL,'confirmado',NULL,'2025-12-27 04:33:06','2025-12-27 04:33:06');
-INSERT INTO evento_edicion_participante VALUES(119,9,98,1,NULL,'confirmado',NULL,'2025-12-27 04:33:06','2025-12-27 04:33:06');
-INSERT INTO evento_edicion_participante VALUES(120,8,99,1,NULL,'confirmado',NULL,'2025-12-27 04:33:07','2025-12-27 04:33:07');
-INSERT INTO evento_edicion_participante VALUES(121,9,99,1,NULL,'confirmado',NULL,'2025-12-27 04:33:07','2025-12-27 04:33:07');
-INSERT INTO evento_edicion_participante VALUES(122,10,99,1,NULL,'confirmado',NULL,'2025-12-27 04:33:07','2025-12-27 04:33:07');
-INSERT INTO evento_edicion_participante VALUES(123,10,100,1,NULL,'confirmado',NULL,'2025-12-27 04:33:08','2025-12-27 04:33:08');
-INSERT INTO evento_edicion_participante VALUES(124,5,101,1,NULL,'confirmado',NULL,'2025-12-27 04:33:08','2025-12-27 04:33:08');
-INSERT INTO evento_edicion_participante VALUES(125,6,102,1,NULL,'confirmado',NULL,'2025-12-27 04:33:08','2025-12-27 04:33:08');
-INSERT INTO evento_edicion_participante VALUES(126,7,102,1,NULL,'confirmado',NULL,'2025-12-27 04:33:09','2025-12-27 04:33:09');
-INSERT INTO evento_edicion_participante VALUES(127,8,102,1,NULL,'confirmado',NULL,'2025-12-27 04:33:09','2025-12-27 04:33:09');
-INSERT INTO evento_edicion_participante VALUES(128,4,103,1,NULL,'confirmado',NULL,'2025-12-27 04:33:09','2025-12-27 04:33:09');
-INSERT INTO evento_edicion_participante VALUES(129,3,104,1,NULL,'confirmado',NULL,'2025-12-27 04:33:09','2025-12-27 04:33:09');
-INSERT INTO evento_edicion_participante VALUES(130,7,104,1,NULL,'confirmado',NULL,'2025-12-27 04:33:10','2025-12-27 04:33:10');
-INSERT INTO evento_edicion_participante VALUES(131,9,104,1,NULL,'confirmado',NULL,'2025-12-27 04:33:10','2025-12-27 04:33:10');
-INSERT INTO evento_edicion_participante VALUES(132,3,105,1,NULL,'confirmado',NULL,'2025-12-27 04:33:10','2025-12-27 04:33:10');
-INSERT INTO evento_edicion_participante VALUES(133,1,106,1,NULL,'confirmado',NULL,'2025-12-27 04:33:11','2025-12-27 04:33:11');
-INSERT INTO evento_edicion_participante VALUES(134,1,107,1,NULL,'confirmado',NULL,'2025-12-27 04:33:11','2025-12-27 04:33:11');
-INSERT INTO evento_edicion_participante VALUES(135,2,107,1,NULL,'confirmado',NULL,'2025-12-27 04:33:11','2025-12-27 04:33:11');
-INSERT INTO evento_edicion_participante VALUES(136,9,108,1,NULL,'confirmado',NULL,'2025-12-27 04:33:12','2025-12-27 04:33:12');
-INSERT INTO evento_edicion_participante VALUES(137,10,108,1,NULL,'confirmado',NULL,'2025-12-27 04:33:12','2025-12-27 04:33:12');
-INSERT INTO evento_edicion_participante VALUES(138,6,109,1,NULL,'confirmado',NULL,'2025-12-27 04:33:12','2025-12-27 04:33:12');
-INSERT INTO evento_edicion_participante VALUES(139,9,110,1,NULL,'confirmado',NULL,'2025-12-27 04:33:13','2025-12-27 04:33:13');
-INSERT INTO evento_edicion_participante VALUES(140,10,110,1,NULL,'confirmado',NULL,'2025-12-27 04:33:13','2025-12-27 04:33:13');
-INSERT INTO evento_edicion_participante VALUES(141,5,111,1,NULL,'confirmado',NULL,'2025-12-27 04:33:13','2025-12-27 04:33:13');
-INSERT INTO evento_edicion_participante VALUES(142,6,111,1,NULL,'confirmado',NULL,'2025-12-27 04:33:14','2025-12-27 04:33:14');
-INSERT INTO evento_edicion_participante VALUES(143,9,111,1,NULL,'confirmado',NULL,'2025-12-27 04:33:14','2025-12-27 04:33:14');
-INSERT INTO evento_edicion_participante VALUES(144,8,112,1,NULL,'confirmado',NULL,'2025-12-27 04:33:14','2025-12-27 04:33:14');
-INSERT INTO evento_edicion_participante VALUES(145,9,113,1,NULL,'confirmado',NULL,'2025-12-27 04:33:14','2025-12-27 04:33:14');
-INSERT INTO evento_edicion_participante VALUES(146,1,114,1,NULL,'confirmado',NULL,'2025-12-27 04:33:15','2025-12-27 04:33:15');
-INSERT INTO evento_edicion_participante VALUES(147,2,114,1,NULL,'confirmado',NULL,'2025-12-27 04:33:15','2025-12-27 04:33:15');
-INSERT INTO evento_edicion_participante VALUES(148,3,114,1,NULL,'confirmado',NULL,'2025-12-27 04:33:15','2025-12-27 04:33:15');
-INSERT INTO evento_edicion_participante VALUES(149,4,114,1,NULL,'confirmado',NULL,'2025-12-27 04:33:16','2025-12-27 04:33:16');
-INSERT INTO evento_edicion_participante VALUES(150,5,114,1,NULL,'confirmado',NULL,'2025-12-27 04:33:16','2025-12-27 04:33:16');
-INSERT INTO evento_edicion_participante VALUES(151,7,114,1,NULL,'confirmado',NULL,'2025-12-27 04:33:16','2025-12-27 04:33:16');
-INSERT INTO evento_edicion_participante VALUES(152,8,114,1,NULL,'confirmado',NULL,'2025-12-27 04:33:17','2025-12-27 04:33:17');
-INSERT INTO evento_edicion_participante VALUES(153,6,115,1,NULL,'confirmado',NULL,'2025-12-27 04:33:17','2025-12-27 04:33:17');
-INSERT INTO evento_edicion_participante VALUES(154,7,115,1,NULL,'confirmado',NULL,'2025-12-27 04:33:17','2025-12-27 04:33:17');
-INSERT INTO evento_edicion_participante VALUES(155,8,115,1,NULL,'confirmado',NULL,'2025-12-27 04:33:18','2025-12-27 04:33:18');
-INSERT INTO evento_edicion_participante VALUES(156,9,115,1,NULL,'confirmado',NULL,'2025-12-27 04:33:18','2025-12-27 04:33:18');
-INSERT INTO evento_edicion_participante VALUES(157,10,115,1,NULL,'confirmado',NULL,'2025-12-27 04:33:18','2025-12-27 04:33:18');
-INSERT INTO evento_edicion_participante VALUES(158,1,116,1,NULL,'confirmado',NULL,'2025-12-27 04:33:19','2025-12-27 04:33:19');
-INSERT INTO evento_edicion_participante VALUES(159,3,116,1,NULL,'confirmado',NULL,'2025-12-27 04:33:19','2025-12-27 04:33:19');
-INSERT INTO evento_edicion_participante VALUES(160,5,116,1,NULL,'confirmado',NULL,'2025-12-27 04:33:19','2025-12-27 04:33:19');
-INSERT INTO evento_edicion_participante VALUES(161,2,117,1,NULL,'confirmado',NULL,'2025-12-27 04:33:19','2025-12-27 04:33:19');
-INSERT INTO evento_edicion_participante VALUES(162,3,117,1,NULL,'confirmado',NULL,'2025-12-27 04:33:20','2025-12-27 04:33:20');
-INSERT INTO evento_edicion_participante VALUES(163,10,117,1,NULL,'confirmado',NULL,'2025-12-27 04:33:20','2025-12-27 04:33:20');
-INSERT INTO evento_edicion_participante VALUES(164,2,118,1,NULL,'confirmado',NULL,'2025-12-27 04:33:20','2025-12-27 04:33:20');
-INSERT INTO evento_edicion_participante VALUES(165,3,118,1,NULL,'confirmado',NULL,'2025-12-27 04:33:21','2025-12-27 04:33:21');
-INSERT INTO evento_edicion_participante VALUES(166,5,118,1,NULL,'confirmado',NULL,'2025-12-27 04:33:21','2025-12-27 04:33:21');
-INSERT INTO evento_edicion_participante VALUES(167,6,118,1,NULL,'confirmado',NULL,'2025-12-27 04:33:21','2025-12-27 04:33:21');
-INSERT INTO evento_edicion_participante VALUES(168,8,118,1,NULL,'confirmado',NULL,'2025-12-27 04:33:22','2025-12-27 04:33:22');
-INSERT INTO evento_edicion_participante VALUES(169,9,118,1,NULL,'confirmado',NULL,'2025-12-27 04:33:22','2025-12-27 04:33:22');
-INSERT INTO evento_edicion_participante VALUES(170,10,118,1,NULL,'confirmado',NULL,'2025-12-27 04:33:22','2025-12-27 04:33:22');
-INSERT INTO evento_edicion_participante VALUES(171,6,119,1,NULL,'confirmado',NULL,'2025-12-27 04:33:23','2025-12-27 04:33:23');
-INSERT INTO evento_edicion_participante VALUES(172,7,120,1,NULL,'confirmado',NULL,'2025-12-27 04:33:23','2025-12-27 04:33:23');
-INSERT INTO evento_edicion_participante VALUES(173,8,121,1,NULL,'confirmado',NULL,'2025-12-27 04:33:23','2025-12-27 04:33:23');
-INSERT INTO evento_edicion_participante VALUES(174,1,122,1,NULL,'confirmado',NULL,'2025-12-27 04:33:24','2025-12-27 04:33:24');
-INSERT INTO evento_edicion_participante VALUES(175,2,122,1,NULL,'confirmado',NULL,'2025-12-27 04:33:24','2025-12-27 04:33:24');
-INSERT INTO evento_edicion_participante VALUES(176,3,122,1,NULL,'confirmado',NULL,'2025-12-27 04:33:24','2025-12-27 04:33:24');
-INSERT INTO evento_edicion_participante VALUES(177,4,122,1,NULL,'confirmado',NULL,'2025-12-27 04:33:24','2025-12-27 04:33:24');
-INSERT INTO evento_edicion_participante VALUES(178,5,122,1,NULL,'confirmado',NULL,'2025-12-27 04:33:25','2025-12-27 04:33:25');
-INSERT INTO evento_edicion_participante VALUES(179,3,123,1,NULL,'confirmado',NULL,'2025-12-27 04:33:25','2025-12-27 04:33:25');
-INSERT INTO evento_edicion_participante VALUES(180,6,124,1,NULL,'confirmado',NULL,'2025-12-27 04:33:25','2025-12-27 04:33:25');
-INSERT INTO evento_edicion_participante VALUES(181,3,125,1,NULL,'confirmado',NULL,'2025-12-27 04:33:26','2025-12-27 04:33:26');
-INSERT INTO evento_edicion_participante VALUES(182,4,125,1,NULL,'confirmado',NULL,'2025-12-27 04:33:26','2025-12-27 04:33:26');
-INSERT INTO evento_edicion_participante VALUES(183,6,125,1,NULL,'confirmado',NULL,'2025-12-27 04:33:26','2025-12-27 04:33:26');
-INSERT INTO evento_edicion_participante VALUES(184,9,126,1,NULL,'confirmado',NULL,'2025-12-27 04:33:27','2025-12-27 04:33:27');
-INSERT INTO evento_edicion_participante VALUES(185,2,127,1,NULL,'confirmado',NULL,'2025-12-27 04:33:27','2025-12-27 04:33:27');
-INSERT INTO evento_edicion_participante VALUES(186,9,128,1,NULL,'confirmado',NULL,'2025-12-27 04:33:27','2025-12-27 04:33:27');
-INSERT INTO evento_edicion_participante VALUES(187,7,129,1,NULL,'confirmado',NULL,'2025-12-27 04:33:28','2025-12-27 04:33:28');
-INSERT INTO evento_edicion_participante VALUES(188,8,129,1,NULL,'confirmado',NULL,'2025-12-27 04:33:28','2025-12-27 04:33:28');
-INSERT INTO evento_edicion_participante VALUES(189,9,129,1,NULL,'confirmado',NULL,'2025-12-27 04:33:28','2025-12-27 04:33:28');
-INSERT INTO evento_edicion_participante VALUES(190,10,130,1,NULL,'confirmado',NULL,'2025-12-27 04:33:29','2025-12-27 04:33:29');
-INSERT INTO evento_edicion_participante VALUES(191,9,131,1,NULL,'confirmado',NULL,'2025-12-27 04:33:29','2025-12-27 04:33:29');
-INSERT INTO evento_edicion_participante VALUES(192,4,132,1,NULL,'confirmado',NULL,'2025-12-27 04:33:29','2025-12-27 04:33:29');
-INSERT INTO evento_edicion_participante VALUES(193,1,133,1,NULL,'confirmado',NULL,'2025-12-27 04:33:29','2025-12-27 04:33:29');
-INSERT INTO evento_edicion_participante VALUES(194,3,133,1,NULL,'confirmado',NULL,'2025-12-27 04:33:30','2025-12-27 04:33:30');
-INSERT INTO evento_edicion_participante VALUES(195,7,133,1,NULL,'confirmado',NULL,'2025-12-27 04:33:30','2025-12-27 04:33:30');
-INSERT INTO evento_edicion_participante VALUES(196,8,134,1,NULL,'confirmado',NULL,'2025-12-27 04:33:30','2025-12-27 04:33:30');
-INSERT INTO evento_edicion_participante VALUES(197,10,135,1,NULL,'confirmado',NULL,'2025-12-27 04:33:31','2025-12-27 04:33:31');
-INSERT INTO evento_edicion_participante VALUES(198,1,136,1,NULL,'confirmado',NULL,'2025-12-27 04:33:31','2025-12-27 04:33:31');
-INSERT INTO evento_edicion_participante VALUES(199,2,136,1,NULL,'confirmado',NULL,'2025-12-27 04:33:31','2025-12-27 04:33:31');
-INSERT INTO evento_edicion_participante VALUES(200,3,136,1,NULL,'confirmado',NULL,'2025-12-27 04:33:32','2025-12-27 04:33:32');
-INSERT INTO evento_edicion_participante VALUES(201,5,136,1,NULL,'confirmado',NULL,'2025-12-27 04:33:32','2025-12-27 04:33:32');
-INSERT INTO evento_edicion_participante VALUES(202,7,136,1,NULL,'confirmado',NULL,'2025-12-27 04:33:32','2025-12-27 04:33:32');
-INSERT INTO evento_edicion_participante VALUES(203,5,137,1,NULL,'confirmado',NULL,'2025-12-27 04:33:33','2025-12-27 04:33:33');
-INSERT INTO evento_edicion_participante VALUES(204,6,137,1,NULL,'confirmado',NULL,'2025-12-27 04:33:33','2025-12-27 04:33:33');
-INSERT INTO evento_edicion_participante VALUES(205,8,137,1,NULL,'confirmado',NULL,'2025-12-27 04:33:33','2025-12-27 04:33:33');
-INSERT INTO evento_edicion_participante VALUES(206,5,138,1,NULL,'confirmado',NULL,'2025-12-27 04:33:33','2025-12-27 04:33:33');
-INSERT INTO evento_edicion_participante VALUES(207,3,139,1,NULL,'confirmado',NULL,'2025-12-27 04:33:34','2025-12-27 04:33:34');
-INSERT INTO evento_edicion_participante VALUES(208,4,139,1,NULL,'confirmado',NULL,'2025-12-27 04:33:34','2025-12-27 04:33:34');
-INSERT INTO evento_edicion_participante VALUES(209,9,139,1,NULL,'confirmado',NULL,'2025-12-27 04:33:34','2025-12-27 04:33:34');
-INSERT INTO evento_edicion_participante VALUES(210,10,139,1,NULL,'confirmado',NULL,'2025-12-27 04:33:35','2025-12-27 04:33:35');
-INSERT INTO evento_edicion_participante VALUES(211,3,140,1,NULL,'confirmado',NULL,'2025-12-27 04:33:35','2025-12-27 04:33:35');
-INSERT INTO evento_edicion_participante VALUES(212,4,141,1,NULL,'confirmado',NULL,'2025-12-27 04:33:35','2025-12-27 04:33:35');
-INSERT INTO evento_edicion_participante VALUES(213,6,141,1,NULL,'confirmado',NULL,'2025-12-27 04:33:36','2025-12-27 04:33:36');
-INSERT INTO evento_edicion_participante VALUES(214,4,142,1,NULL,'confirmado',NULL,'2025-12-27 04:33:36','2025-12-27 04:33:36');
-INSERT INTO evento_edicion_participante VALUES(215,1,143,1,NULL,'confirmado',NULL,'2025-12-27 04:33:36','2025-12-27 04:33:36');
-INSERT INTO evento_edicion_participante VALUES(216,2,143,1,NULL,'confirmado',NULL,'2025-12-27 04:33:37','2025-12-27 04:33:37');
-INSERT INTO evento_edicion_participante VALUES(217,5,143,1,NULL,'confirmado',NULL,'2025-12-27 04:33:37','2025-12-27 04:33:37');
-INSERT INTO evento_edicion_participante VALUES(218,5,144,1,NULL,'confirmado',NULL,'2025-12-27 04:33:37','2025-12-27 04:33:37');
-INSERT INTO evento_edicion_participante VALUES(219,6,144,1,NULL,'confirmado',NULL,'2025-12-27 04:33:37','2025-12-27 04:33:37');
-INSERT INTO evento_edicion_participante VALUES(220,7,144,1,NULL,'confirmado',NULL,'2025-12-27 04:33:38','2025-12-27 04:33:38');
-INSERT INTO evento_edicion_participante VALUES(221,9,144,1,NULL,'confirmado',NULL,'2025-12-27 04:33:38','2025-12-27 04:33:38');
-INSERT INTO evento_edicion_participante VALUES(222,2,145,1,NULL,'confirmado',NULL,'2025-12-27 04:33:38','2025-12-27 04:33:38');
-INSERT INTO evento_edicion_participante VALUES(223,3,145,1,NULL,'confirmado',NULL,'2025-12-27 04:33:39','2025-12-27 04:33:39');
-INSERT INTO evento_edicion_participante VALUES(224,6,145,1,NULL,'confirmado',NULL,'2025-12-27 04:33:39','2025-12-27 04:33:39');
-INSERT INTO evento_edicion_participante VALUES(225,7,145,1,NULL,'confirmado',NULL,'2025-12-27 04:33:39','2025-12-27 04:33:39');
-INSERT INTO evento_edicion_participante VALUES(226,8,145,1,NULL,'confirmado',NULL,'2025-12-27 04:33:40','2025-12-27 04:33:40');
-INSERT INTO evento_edicion_participante VALUES(227,5,146,1,NULL,'confirmado',NULL,'2025-12-27 04:33:40','2025-12-27 04:33:40');
-INSERT INTO evento_edicion_participante VALUES(228,1,147,1,NULL,'confirmado',NULL,'2025-12-27 04:33:40','2025-12-27 04:33:40');
-INSERT INTO evento_edicion_participante VALUES(229,2,147,1,NULL,'confirmado',NULL,'2025-12-27 04:33:40','2025-12-27 04:33:40');
-INSERT INTO evento_edicion_participante VALUES(230,2,148,1,NULL,'confirmado',NULL,'2025-12-27 04:33:41','2025-12-27 04:33:41');
-INSERT INTO evento_edicion_participante VALUES(231,6,148,1,NULL,'confirmado',NULL,'2025-12-27 04:33:41','2025-12-27 04:33:41');
-INSERT INTO evento_edicion_participante VALUES(232,7,148,1,NULL,'confirmado',NULL,'2025-12-27 04:33:41','2025-12-27 04:33:41');
-INSERT INTO evento_edicion_participante VALUES(233,8,148,1,NULL,'confirmado',NULL,'2025-12-27 04:33:42','2025-12-27 04:33:42');
-INSERT INTO evento_edicion_participante VALUES(234,9,148,1,NULL,'confirmado',NULL,'2025-12-27 04:33:42','2025-12-27 04:33:42');
-INSERT INTO evento_edicion_participante VALUES(235,8,149,1,NULL,'confirmado',NULL,'2025-12-27 04:33:42','2025-12-27 04:33:42');
-INSERT INTO evento_edicion_participante VALUES(236,9,149,1,NULL,'confirmado',NULL,'2025-12-27 04:33:43','2025-12-27 04:33:43');
-INSERT INTO evento_edicion_participante VALUES(237,5,150,1,NULL,'confirmado',NULL,'2025-12-27 04:33:43','2025-12-27 04:33:43');
-INSERT INTO evento_edicion_participante VALUES(238,4,151,1,NULL,'confirmado',NULL,'2025-12-27 04:33:43','2025-12-27 04:33:43');
-INSERT INTO evento_edicion_participante VALUES(239,6,152,1,NULL,'confirmado',NULL,'2025-12-27 04:33:44','2025-12-27 04:33:44');
-INSERT INTO evento_edicion_participante VALUES(240,4,153,1,NULL,'confirmado',NULL,'2025-12-27 04:33:44','2025-12-27 04:33:44');
-INSERT INTO evento_edicion_participante VALUES(241,7,153,1,NULL,'confirmado',NULL,'2025-12-27 04:33:44','2025-12-27 04:33:44');
-INSERT INTO evento_edicion_participante VALUES(242,8,154,1,NULL,'confirmado',NULL,'2025-12-27 04:33:44','2025-12-27 04:33:44');
-INSERT INTO evento_edicion_participante VALUES(243,2,155,1,NULL,'confirmado',NULL,'2025-12-27 04:33:45','2025-12-27 04:33:45');
-INSERT INTO evento_edicion_participante VALUES(244,3,155,1,NULL,'confirmado',NULL,'2025-12-27 04:33:45','2025-12-27 04:33:45');
-INSERT INTO evento_edicion_participante VALUES(245,5,155,1,NULL,'confirmado',NULL,'2025-12-27 04:33:45','2025-12-27 04:33:45');
-INSERT INTO evento_edicion_participante VALUES(246,7,155,1,NULL,'confirmado',NULL,'2025-12-27 04:33:46','2025-12-27 04:33:46');
-INSERT INTO evento_edicion_participante VALUES(247,10,155,1,NULL,'confirmado',NULL,'2025-12-27 04:33:46','2025-12-27 04:33:46');
-INSERT INTO evento_edicion_participante VALUES(248,1,156,1,NULL,'confirmado',NULL,'2025-12-27 04:33:46','2025-12-27 04:33:46');
-INSERT INTO evento_edicion_participante VALUES(249,2,156,1,NULL,'confirmado',NULL,'2025-12-27 04:33:47','2025-12-27 04:33:47');
-INSERT INTO evento_edicion_participante VALUES(250,4,156,1,NULL,'confirmado',NULL,'2025-12-27 04:33:47','2025-12-27 04:33:47');
-INSERT INTO evento_edicion_participante VALUES(251,10,156,1,NULL,'confirmado',NULL,'2025-12-27 04:33:47','2025-12-27 04:33:47');
-INSERT INTO evento_edicion_participante VALUES(252,3,157,1,NULL,'confirmado',NULL,'2025-12-27 04:33:48','2025-12-27 04:33:48');
-INSERT INTO evento_edicion_participante VALUES(253,4,157,1,NULL,'confirmado',NULL,'2025-12-27 04:33:48','2025-12-27 04:33:48');
-INSERT INTO evento_edicion_participante VALUES(254,5,157,1,NULL,'confirmado',NULL,'2025-12-27 04:33:48','2025-12-27 04:33:48');
-INSERT INTO evento_edicion_participante VALUES(255,6,157,1,NULL,'confirmado',NULL,'2025-12-27 04:33:48','2025-12-27 04:33:48');
-INSERT INTO evento_edicion_participante VALUES(256,5,158,1,NULL,'confirmado',NULL,'2025-12-27 04:33:49','2025-12-27 04:33:49');
-INSERT INTO evento_edicion_participante VALUES(257,10,159,1,NULL,'confirmado',NULL,'2025-12-27 04:33:49','2025-12-27 04:33:49');
-INSERT INTO evento_edicion_participante VALUES(258,3,160,1,NULL,'confirmado',NULL,'2025-12-27 04:33:49','2025-12-27 04:33:49');
-INSERT INTO evento_edicion_participante VALUES(259,4,160,1,NULL,'confirmado',NULL,'2025-12-27 04:33:50','2025-12-27 04:33:50');
-INSERT INTO evento_edicion_participante VALUES(260,5,160,1,NULL,'confirmado',NULL,'2025-12-27 04:33:50','2025-12-27 04:33:50');
-INSERT INTO evento_edicion_participante VALUES(261,9,160,1,NULL,'confirmado',NULL,'2025-12-27 04:33:50','2025-12-27 04:33:50');
-INSERT INTO evento_edicion_participante VALUES(262,10,160,1,NULL,'confirmado',NULL,'2025-12-27 04:33:51','2025-12-27 04:33:51');
-INSERT INTO evento_edicion_participante VALUES(263,8,161,1,NULL,'confirmado',NULL,'2025-12-27 04:33:51','2025-12-27 04:33:51');
-INSERT INTO evento_edicion_participante VALUES(264,2,162,1,NULL,'confirmado',NULL,'2025-12-27 04:33:51','2025-12-27 04:33:51');
-INSERT INTO evento_edicion_participante VALUES(265,3,162,1,NULL,'confirmado',NULL,'2025-12-27 04:33:52','2025-12-27 04:33:52');
-INSERT INTO evento_edicion_participante VALUES(266,5,162,1,NULL,'confirmado',NULL,'2025-12-27 04:33:52','2025-12-27 04:33:52');
-INSERT INTO evento_edicion_participante VALUES(267,9,163,1,NULL,'confirmado',NULL,'2025-12-27 04:33:52','2025-12-27 04:33:52');
-INSERT INTO evento_edicion_participante VALUES(268,2,164,1,NULL,'confirmado',NULL,'2025-12-27 04:33:52','2025-12-27 04:33:52');
-INSERT INTO evento_edicion_participante VALUES(269,4,164,1,NULL,'confirmado',NULL,'2025-12-27 04:33:53','2025-12-27 04:33:53');
-INSERT INTO evento_edicion_participante VALUES(270,7,165,1,NULL,'confirmado',NULL,'2025-12-27 04:33:53','2025-12-27 04:33:53');
-INSERT INTO evento_edicion_participante VALUES(271,5,166,1,NULL,'confirmado',NULL,'2025-12-27 04:33:53','2025-12-27 04:33:53');
-INSERT INTO evento_edicion_participante VALUES(272,10,166,1,NULL,'confirmado',NULL,'2025-12-27 04:33:54','2025-12-27 04:33:54');
-INSERT INTO evento_edicion_participante VALUES(273,3,167,1,NULL,'confirmado',NULL,'2025-12-27 04:33:54','2025-12-27 04:33:54');
-INSERT INTO evento_edicion_participante VALUES(274,3,168,1,NULL,'confirmado',NULL,'2025-12-27 04:33:54','2025-12-27 04:33:54');
-INSERT INTO evento_edicion_participante VALUES(275,4,168,1,NULL,'confirmado',NULL,'2025-12-27 04:33:55','2025-12-27 04:33:55');
-INSERT INTO evento_edicion_participante VALUES(276,1,169,1,NULL,'confirmado',NULL,'2025-12-27 04:33:55','2025-12-27 04:33:55');
-INSERT INTO evento_edicion_participante VALUES(277,2,169,1,NULL,'confirmado',NULL,'2025-12-27 04:33:55','2025-12-27 04:33:55');
-INSERT INTO evento_edicion_participante VALUES(278,3,169,1,NULL,'confirmado',NULL,'2025-12-27 04:33:55','2025-12-27 04:33:55');
-INSERT INTO evento_edicion_participante VALUES(279,4,170,1,NULL,'confirmado',NULL,'2025-12-27 04:33:56','2025-12-27 04:33:56');
-INSERT INTO evento_edicion_participante VALUES(280,3,171,1,NULL,'confirmado',NULL,'2025-12-27 04:33:56','2025-12-27 04:33:56');
-INSERT INTO evento_edicion_participante VALUES(281,3,172,1,NULL,'confirmado',NULL,'2025-12-27 04:33:56','2025-12-27 04:33:56');
-INSERT INTO evento_edicion_participante VALUES(282,3,173,1,NULL,'confirmado',NULL,'2025-12-27 04:33:57','2025-12-27 04:33:57');
-INSERT INTO evento_edicion_participante VALUES(283,4,173,1,NULL,'confirmado',NULL,'2025-12-27 04:33:57','2025-12-27 04:33:57');
-INSERT INTO evento_edicion_participante VALUES(284,6,173,1,NULL,'confirmado',NULL,'2025-12-27 04:33:57','2025-12-27 04:33:57');
-INSERT INTO evento_edicion_participante VALUES(285,8,174,3,NULL,'confirmado',NULL,'2025-12-27 04:33:58','2025-12-27 04:33:58');
-INSERT INTO evento_edicion_participante VALUES(286,9,175,3,NULL,'confirmado',NULL,'2025-12-27 04:33:58','2025-12-27 04:33:58');
-INSERT INTO evento_edicion_participante VALUES(287,10,175,3,NULL,'confirmado',NULL,'2025-12-27 04:33:58','2025-12-27 04:33:58');
-INSERT INTO evento_edicion_participante VALUES(288,2,176,3,NULL,'confirmado',NULL,'2025-12-27 04:33:59','2025-12-27 04:33:59');
-INSERT INTO evento_edicion_participante VALUES(289,8,177,3,NULL,'confirmado',NULL,'2025-12-27 04:33:59','2025-12-27 04:33:59');
-INSERT INTO evento_edicion_participante VALUES(290,1,178,3,NULL,'confirmado',NULL,'2025-12-27 04:33:59','2025-12-27 04:33:59');
-INSERT INTO evento_edicion_participante VALUES(291,2,178,3,NULL,'confirmado',NULL,'2025-12-27 04:33:59','2025-12-27 04:33:59');
-INSERT INTO evento_edicion_participante VALUES(292,7,179,3,NULL,'confirmado',NULL,'2025-12-27 04:34:00','2025-12-27 04:34:00');
-INSERT INTO evento_edicion_participante VALUES(293,8,179,3,NULL,'confirmado',NULL,'2025-12-27 04:34:00','2025-12-27 04:34:00');
-INSERT INTO evento_edicion_participante VALUES(294,10,180,3,NULL,'confirmado',NULL,'2025-12-27 04:34:00','2025-12-27 04:34:00');
-INSERT INTO evento_edicion_participante VALUES(295,3,181,3,NULL,'confirmado',NULL,'2025-12-27 04:34:01','2025-12-27 04:34:01');
-INSERT INTO evento_edicion_participante VALUES(296,6,181,3,NULL,'confirmado',NULL,'2025-12-27 04:34:01','2025-12-27 04:34:01');
-INSERT INTO evento_edicion_participante VALUES(297,5,182,3,NULL,'confirmado',NULL,'2025-12-27 04:34:01','2025-12-27 04:34:01');
-INSERT INTO evento_edicion_participante VALUES(298,7,182,3,NULL,'confirmado',NULL,'2025-12-27 04:34:02','2025-12-27 04:34:02');
-INSERT INTO evento_edicion_participante VALUES(299,8,182,3,NULL,'confirmado',NULL,'2025-12-27 04:34:02','2025-12-27 04:34:02');
-INSERT INTO evento_edicion_participante VALUES(300,10,182,3,NULL,'confirmado',NULL,'2025-12-27 04:34:02','2025-12-27 04:34:02');
-INSERT INTO evento_edicion_participante VALUES(301,2,183,3,NULL,'confirmado',NULL,'2025-12-27 04:34:02','2025-12-27 04:34:02');
-INSERT INTO evento_edicion_participante VALUES(302,1,184,3,NULL,'confirmado',NULL,'2025-12-27 04:34:03','2025-12-27 04:34:03');
-INSERT INTO evento_edicion_participante VALUES(303,2,184,3,NULL,'confirmado',NULL,'2025-12-27 04:34:03','2025-12-27 04:34:03');
-INSERT INTO evento_edicion_participante VALUES(304,3,184,3,NULL,'confirmado',NULL,'2025-12-27 04:34:03','2025-12-27 04:34:03');
-INSERT INTO evento_edicion_participante VALUES(305,4,184,3,NULL,'confirmado',NULL,'2025-12-27 04:34:04','2025-12-27 04:34:04');
-INSERT INTO evento_edicion_participante VALUES(306,5,184,3,NULL,'confirmado',NULL,'2025-12-27 04:34:04','2025-12-27 04:34:04');
-INSERT INTO evento_edicion_participante VALUES(307,7,184,3,NULL,'confirmado',NULL,'2025-12-27 04:34:04','2025-12-27 04:34:04');
-INSERT INTO evento_edicion_participante VALUES(308,10,184,3,NULL,'confirmado',NULL,'2025-12-27 04:34:05','2025-12-27 04:34:05');
-INSERT INTO evento_edicion_participante VALUES(309,7,185,3,NULL,'confirmado',NULL,'2025-12-27 04:34:05','2025-12-27 04:34:05');
-INSERT INTO evento_edicion_participante VALUES(310,3,186,3,NULL,'confirmado',NULL,'2025-12-27 04:34:05','2025-12-27 04:34:05');
-INSERT INTO evento_edicion_participante VALUES(311,9,187,3,NULL,'confirmado',NULL,'2025-12-27 04:34:06','2025-12-27 04:34:06');
-INSERT INTO evento_edicion_participante VALUES(312,4,188,3,NULL,'confirmado',NULL,'2025-12-27 04:34:06','2025-12-27 04:34:06');
-INSERT INTO evento_edicion_participante VALUES(313,5,189,3,NULL,'confirmado',NULL,'2025-12-27 04:34:06','2025-12-27 04:34:06');
-INSERT INTO evento_edicion_participante VALUES(314,7,189,3,NULL,'confirmado',NULL,'2025-12-27 04:34:06','2025-12-27 04:34:06');
-INSERT INTO evento_edicion_participante VALUES(315,6,190,3,NULL,'confirmado',NULL,'2025-12-27 04:34:07','2025-12-27 04:34:07');
-INSERT INTO evento_edicion_participante VALUES(316,8,190,3,NULL,'confirmado',NULL,'2025-12-27 04:34:07','2025-12-27 04:34:07');
-INSERT INTO evento_edicion_participante VALUES(317,9,190,3,NULL,'confirmado',NULL,'2025-12-27 04:34:07','2025-12-27 04:34:07');
-INSERT INTO evento_edicion_participante VALUES(318,2,191,3,NULL,'confirmado',NULL,'2025-12-27 04:34:08','2025-12-27 04:34:08');
-INSERT INTO evento_edicion_participante VALUES(319,2,192,3,NULL,'confirmado',NULL,'2025-12-27 04:34:08','2025-12-27 04:34:08');
-INSERT INTO evento_edicion_participante VALUES(320,5,193,3,NULL,'confirmado',NULL,'2025-12-27 04:34:08','2025-12-27 04:34:08');
-INSERT INTO evento_edicion_participante VALUES(321,4,194,3,NULL,'confirmado',NULL,'2025-12-27 04:34:08','2025-12-27 04:34:08');
-INSERT INTO evento_edicion_participante VALUES(322,5,194,3,NULL,'confirmado',NULL,'2025-12-27 04:34:09','2025-12-27 04:34:09');
-INSERT INTO evento_edicion_participante VALUES(323,6,194,3,NULL,'confirmado',NULL,'2025-12-27 04:34:09','2025-12-27 04:34:09');
-INSERT INTO evento_edicion_participante VALUES(324,7,194,3,NULL,'confirmado',NULL,'2025-12-27 04:34:09','2025-12-27 04:34:09');
-INSERT INTO evento_edicion_participante VALUES(325,3,195,3,NULL,'confirmado',NULL,'2025-12-27 04:34:10','2025-12-27 04:34:10');
-INSERT INTO evento_edicion_participante VALUES(326,4,195,3,NULL,'confirmado',NULL,'2025-12-27 04:34:10','2025-12-27 04:34:10');
-INSERT INTO evento_edicion_participante VALUES(327,2,196,3,NULL,'confirmado',NULL,'2025-12-27 04:34:10','2025-12-27 04:34:10');
-INSERT INTO evento_edicion_participante VALUES(328,6,197,3,NULL,'confirmado',NULL,'2025-12-27 04:34:11','2025-12-27 04:34:11');
-INSERT INTO evento_edicion_participante VALUES(329,7,197,3,NULL,'confirmado',NULL,'2025-12-27 04:34:11','2025-12-27 04:34:11');
-INSERT INTO evento_edicion_participante VALUES(330,9,197,3,NULL,'confirmado',NULL,'2025-12-27 04:34:11','2025-12-27 04:34:11');
-INSERT INTO evento_edicion_participante VALUES(331,4,198,3,NULL,'confirmado',NULL,'2025-12-27 04:34:12','2025-12-27 04:34:12');
-INSERT INTO evento_edicion_participante VALUES(332,5,198,3,NULL,'confirmado',NULL,'2025-12-27 04:34:12','2025-12-27 04:34:12');
-INSERT INTO evento_edicion_participante VALUES(333,10,199,3,NULL,'confirmado',NULL,'2025-12-27 04:34:12','2025-12-27 04:34:12');
-INSERT INTO evento_edicion_participante VALUES(334,7,200,3,NULL,'confirmado',NULL,'2025-12-27 04:34:12','2025-12-27 04:34:12');
-INSERT INTO evento_edicion_participante VALUES(335,3,201,3,NULL,'confirmado',NULL,'2025-12-27 04:34:13','2025-12-27 04:34:13');
-INSERT INTO evento_edicion_participante VALUES(336,4,201,3,NULL,'confirmado',NULL,'2025-12-27 04:34:13','2025-12-27 04:34:13');
-INSERT INTO evento_edicion_participante VALUES(337,3,202,3,NULL,'confirmado',NULL,'2025-12-27 04:34:13','2025-12-27 04:34:13');
-INSERT INTO evento_edicion_participante VALUES(338,5,202,3,NULL,'confirmado',NULL,'2025-12-27 04:34:14','2025-12-27 04:34:14');
-INSERT INTO evento_edicion_participante VALUES(339,7,202,3,NULL,'confirmado',NULL,'2025-12-27 04:34:14','2025-12-27 04:34:14');
-INSERT INTO evento_edicion_participante VALUES(340,8,202,3,NULL,'confirmado',NULL,'2025-12-27 04:34:14','2025-12-27 04:34:14');
-INSERT INTO evento_edicion_participante VALUES(341,9,202,3,NULL,'confirmado',NULL,'2025-12-27 04:34:14','2025-12-27 04:34:14');
-INSERT INTO evento_edicion_participante VALUES(342,10,202,3,NULL,'confirmado',NULL,'2025-12-27 04:34:15','2025-12-27 04:34:15');
-INSERT INTO evento_edicion_participante VALUES(343,10,203,3,NULL,'confirmado',NULL,'2025-12-27 04:34:15','2025-12-27 04:34:15');
-INSERT INTO evento_edicion_participante VALUES(344,9,204,3,NULL,'confirmado',NULL,'2025-12-27 04:34:15','2025-12-27 04:34:15');
-INSERT INTO evento_edicion_participante VALUES(345,3,205,3,NULL,'confirmado',NULL,'2025-12-27 04:34:16','2025-12-27 04:34:16');
-INSERT INTO evento_edicion_participante VALUES(346,4,205,3,NULL,'confirmado',NULL,'2025-12-27 04:34:16','2025-12-27 04:34:16');
-INSERT INTO evento_edicion_participante VALUES(347,5,205,3,NULL,'confirmado',NULL,'2025-12-27 04:34:16','2025-12-27 04:34:16');
-INSERT INTO evento_edicion_participante VALUES(348,2,206,3,NULL,'confirmado',NULL,'2025-12-27 04:34:17','2025-12-27 04:34:17');
-INSERT INTO evento_edicion_participante VALUES(349,9,207,3,NULL,'confirmado',NULL,'2025-12-27 04:34:17','2025-12-27 04:34:17');
-INSERT INTO evento_edicion_participante VALUES(350,3,208,3,NULL,'confirmado',NULL,'2025-12-27 04:34:17','2025-12-27 04:34:17');
-INSERT INTO evento_edicion_participante VALUES(351,3,209,3,NULL,'confirmado',NULL,'2025-12-27 04:34:18','2025-12-27 04:34:18');
-INSERT INTO evento_edicion_participante VALUES(352,10,210,3,NULL,'confirmado',NULL,'2025-12-27 04:34:18','2025-12-27 04:34:18');
-INSERT INTO evento_edicion_participante VALUES(353,10,211,3,NULL,'confirmado',NULL,'2025-12-27 04:34:18','2025-12-27 04:34:18');
-INSERT INTO evento_edicion_participante VALUES(354,3,212,1,NULL,'confirmado',NULL,'2025-12-27 04:34:54','2025-12-27 04:34:54');
-INSERT INTO evento_edicion_participante VALUES(355,3,213,1,3,'confirmado',NULL,'2025-12-27 04:35:34','2025-12-27 04:35:34');
-INSERT INTO evento_edicion_participante VALUES(356,4,213,1,3,'confirmado',NULL,'2025-12-27 04:35:34','2025-12-27 04:35:34');
-INSERT INTO evento_edicion_participante VALUES(357,8,213,1,3,'confirmado',NULL,'2025-12-27 04:35:34','2025-12-27 04:35:34');
-INSERT INTO evento_edicion_participante VALUES(358,9,213,1,3,'confirmado',NULL,'2025-12-27 04:35:34','2025-12-27 04:35:34');
-INSERT INTO evento_edicion_participante VALUES(359,3,158,1,3,'confirmado',NULL,'2025-12-27 04:35:34','2025-12-27 04:35:34');
-INSERT INTO evento_edicion_participante VALUES(360,4,158,1,3,'confirmado',NULL,'2025-12-27 04:35:34','2025-12-27 04:35:34');
-INSERT INTO evento_edicion_participante VALUES(361,8,158,1,3,'confirmado',NULL,'2025-12-27 04:35:34','2025-12-27 04:35:34');
-INSERT INTO evento_edicion_participante VALUES(362,9,158,1,3,'confirmado',NULL,'2025-12-27 04:35:34','2025-12-27 04:35:34');
-CREATE TABLE IF NOT EXISTS artista_invitado (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombre TEXT NOT NULL,
-    correo TEXT,
-    rrss TEXT
-, created_at TEXT, updated_at TEXT);
-INSERT INTO artista_invitado VALUES(1,'Gabriel Garvo',NULL,NULL,'2025-12-25 19:14:19','2025-12-25 19:14:19');
-INSERT INTO artista_invitado VALUES(2,'Takamo',NULL,NULL,'2025-12-25 19:14:19','2025-12-25 19:14:19');
-INSERT INTO artista_invitado VALUES(3,'Satin',NULL,NULL,'2025-12-25 19:14:19','2025-12-25 19:14:19');
-INSERT INTO artista_invitado VALUES(4,'CaroCelis',NULL,NULL,'2025-12-25 19:14:19','2025-12-25 19:14:19');
-INSERT INTO artista_invitado VALUES(5,'Sephko',NULL,NULL,'2025-12-25 19:14:19','2025-12-25 19:14:19');
-INSERT INTO artista_invitado VALUES(6,'Papafritologia',NULL,NULL,'2025-12-25 19:14:19','2025-12-25 19:14:19');
-INSERT INTO artista_invitado VALUES(7,'Juanca Cortes',NULL,NULL,'2025-12-25 19:14:19','2025-12-25 19:14:19');
-INSERT INTO artista_invitado VALUES(8,'Nico Gonzales',NULL,NULL,'2025-12-25 19:14:19','2025-12-25 19:14:19');
-INSERT INTO artista_invitado VALUES(9,'Rayaismo',NULL,NULL,'2025-12-25 19:14:19','2025-12-25 19:14:19');
-INSERT INTO artista_invitado VALUES(10,'Pablo Delcielo',NULL,NULL,'2025-12-25 19:14:19','2025-12-25 19:14:19');
-INSERT INTO artista_invitado VALUES(11,'Godersi',NULL,NULL,'2025-12-25 19:14:19','2025-12-25 19:14:19');
-INSERT INTO artista_invitado VALUES(12,'Emisario de Greda',NULL,NULL,'2025-12-25 19:14:20','2025-12-25 19:14:20');
-INSERT INTO artista_invitado VALUES(13,'Fakuta',NULL,NULL,'2025-12-25 19:14:20','2025-12-25 19:14:20');
-INSERT INTO artista_invitado VALUES(14,'A Veces Amanda',NULL,NULL,'2025-12-25 19:14:20','2025-12-25 19:14:20');
-INSERT INTO artista_invitado VALUES(15,'El Comodo Silencio de los que Hablan Poco',NULL,NULL,'2025-12-25 19:14:20','2025-12-25 19:14:20');
-INSERT INTO artista_invitado VALUES(16,'Los Animales Tambien Se Suicidan',NULL,NULL,'2025-12-25 19:14:20','2025-12-25 19:14:20');
-CREATE TABLE IF NOT EXISTS evento_edicion_invitado (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    evento_edicion_id INTEGER NOT NULL,
-    artista_invitado_id INTEGER NOT NULL,
-    rol TEXT NOT NULL,
-    notas TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_invitado_evento_edicion FOREIGN KEY (evento_edicion_id)
-    REFERENCES evento_edicion (id) ON DELETE CASCADE,
-    CONSTRAINT fk_invitado_artista FOREIGN KEY (artista_invitado_id)
-    REFERENCES artista_invitado (id) ON DELETE CASCADE,
-    CONSTRAINT chk_evento_edicion_invitado_rol CHECK (LENGTH(TRIM(rol)) > 0)
-);
-INSERT INTO evento_edicion_invitado VALUES(1,5,1,'ilustrador',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
-INSERT INTO evento_edicion_invitado VALUES(2,5,2,'ilustrador',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
-INSERT INTO evento_edicion_invitado VALUES(3,5,13,'musico',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
-INSERT INTO evento_edicion_invitado VALUES(4,6,3,'ilustrador',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
-INSERT INTO evento_edicion_invitado VALUES(5,6,14,'musico',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
-INSERT INTO evento_edicion_invitado VALUES(6,7,4,'ilustrador',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
-INSERT INTO evento_edicion_invitado VALUES(7,8,5,'ilustrador',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
-INSERT INTO evento_edicion_invitado VALUES(8,8,6,'ilustrador',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
-INSERT INTO evento_edicion_invitado VALUES(9,8,7,'ilustrador',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
-INSERT INTO evento_edicion_invitado VALUES(10,8,15,'musico',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
-INSERT INTO evento_edicion_invitado VALUES(11,9,8,'ilustrador',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
-INSERT INTO evento_edicion_invitado VALUES(12,9,9,'ilustrador',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
-INSERT INTO evento_edicion_invitado VALUES(13,10,10,'ilustrador',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
-INSERT INTO evento_edicion_invitado VALUES(14,10,11,'charlista',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
-INSERT INTO evento_edicion_invitado VALUES(15,10,16,'musico',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
-INSERT INTO evento_edicion_invitado VALUES(16,3,12,'musico',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
 CREATE TABLE IF NOT EXISTS evento_edicion_metrica (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     evento_edicion_id INTEGER NOT NULL,
@@ -829,13 +361,10 @@ INSERT INTO catalogo_artista VALUES(85,85,'cD',0,1,'2025-12-26 20:07:29','2025-1
 INSERT INTO catalogo_artista VALUES(86,86,'cE',0,1,'2025-12-26 20:07:29','2025-12-27 04:50:47','Escultora y Licenciada en artes plásticas de la Universidad de Chile, autora de cinco libros para la educación artística para niños en la Editorial Voluntad, Colombia, 1997; 1er lugar en Escultura en la V Bienal Internacional de Suba, Bogotá en 2005; profesora de artes para niños, jóvenes y adultos en colegios, centros culturales y municipalidades desde año 2000 a la fecha; exposiciones de escultura y pintura en Bogotá, Miami, Santiago, Puerto Montt, La Serena y Coquimbo.');
 INSERT INTO catalogo_artista VALUES(87,87,'cB',0,1,'2025-12-26 20:07:29','2025-12-27 04:50:47','Ilustradora digital que destaca por su estilo anime semirealista. Disfruta crear fanarts, doodles sillies y personajes originales que reflejan sus emociones e intereses, siempre explorando nuevas técnicas para dar vida a sus ideas.');
 CREATE TABLE IF NOT EXISTS schema_migrations (id VARCHAR(255) NOT NULL PRIMARY KEY);
-INSERT INTO schema_migrations VALUES('20251226000001');
-INSERT INTO schema_migrations VALUES('20251226000002');
-INSERT INTO schema_migrations VALUES('20251226000003');
-INSERT INTO schema_migrations VALUES('20251226000004');
-INSERT INTO schema_migrations VALUES('20251226000005');
-INSERT INTO schema_migrations VALUES('20251227000001');
-INSERT INTO schema_migrations VALUES('1766810904');
+INSERT INTO schema_migrations VALUES('1766948368');
+INSERT INTO schema_migrations VALUES('1766948369');
+INSERT INTO schema_migrations VALUES('1766948370');
+INSERT INTO schema_migrations VALUES('1766948371');
 CREATE TABLE IF NOT EXISTS artista_historial (id INTEGER PRIMARY KEY AUTOINCREMENT, artista_id INTEGER NOT NULL, pseudonimo TEXT, correo TEXT, rrss TEXT, ciudad TEXT, pais TEXT, orden INTEGER NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, notas TEXT, CONSTRAINT fk_artista_historial_artista FOREIGN KEY (artista_id) REFERENCES artista (id) ON DELETE CASCADE, CONSTRAINT uq_artista_historial_orden UNIQUE (artista_id, orden), CONSTRAINT chk_artista_historial_orden CHECK (orden > 0), CONSTRAINT chk_artista_historial_has_data CHECK (pseudonimo IS NOT NULL OR correo IS NOT NULL OR rrss IS NOT NULL OR ciudad IS NOT NULL OR pais IS NOT NULL));
 INSERT INTO artista_historial VALUES(1,13,NULL,'magda.lena.nt.56@gmail.com',NULL,NULL,NULL,1,'2025-12-27 04:34:18','Importado desde CSV histórico. Pseudónimo original: CANELA');
 INSERT INTO artista_historial VALUES(2,32,'Glitter Illustration','list.retamal@gmail.com','{"instagram":"https://www.instagram.com/glitter.illustration/","facebook":"https://web.facebook.com/glitter.illustration/"}','Coquimbo',NULL,1,'2025-12-27 04:34:19','Importado desde CSV histórico. Pseudónimo original: Glitter Illustration');
@@ -854,220 +383,1116 @@ INSERT INTO artista_historial VALUES(14,71,NULL,'solidediciones@gmail.com',NULL,
 INSERT INTO artista_historial VALUES(15,39,NULL,NULL,NULL,'Tongoy',NULL,1,'2025-12-27 04:34:21','Importado desde CSV histórico. Pseudónimo original: Pancho Valdivia');
 INSERT INTO artista_historial VALUES(16,48,'Kao Joyas',NULL,'{"instagram":"https://www.instagram.com/kao.joyas/","facebook":"https://www.facebook.com/KaOJoyas"}',NULL,NULL,1,'2025-12-27 04:34:21','Importado desde CSV histórico. Pseudónimo original: Kao Joyas');
 INSERT INTO artista_historial VALUES(17,45,'Mamisita Modo On',NULL,'{"instagram":"https://www.instagram.com/mamisitamodeon/","facebook":"https://www.facebook.com/mamisitamodeon/"}',NULL,NULL,1,'2025-12-27 04:34:21','Importado desde CSV histórico. Pseudónimo original: Mamisita Modo On');
-CREATE TABLE IF NOT EXISTS "artista" (id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT, pseudonimo TEXT NOT NULL, correo TEXT, rrss TEXT, ciudad TEXT, pais TEXT, created_at TEXT, updated_at TEXT, slug TEXT);
-INSERT INTO artista VALUES(1,'Paula Rojas Videla','Anima Red','Animared.ilustracion@gmail.com','{"instagram":"https://Instagram.com/anima.red"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:28','anima-red');
-INSERT INTO artista VALUES(2,'Vanesa Estefanie Vargas Leyton','Shobian','shobian.art@gmail.com','{"instagram":"https://www.instagram.com/shobian.art/"}','Coquimbo','Chile','2025-12-25 05:11:50','2025-12-26 04:52:28','shobian');
-INSERT INTO artista VALUES(3,NULL,'Fran.Aerre','fran.aerre@gmail.com','{"instagram":"https://www.instagram.com/fran_aerre/"}','Coquimbo','Chile','2025-12-25 05:11:50','2025-12-26 04:52:29','fran-aerre');
-INSERT INTO artista VALUES(4,'Josefa Aguilera','Skelly.Uwu','skelly.ilustra@gmail.com','{"instagram":"https://www.instagram.com/skelly.uwu/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:30','skelly-uwu');
-INSERT INTO artista VALUES(5,NULL,'P3Dro','p_rojas03@hotmail.com','{"instagram":"https://www.instagram.com/p3dro_rv.03?igsh=MWh2cnRzZHpmeDMzNg=="}','Coquimbo','Chile','2025-12-25 05:11:50','2025-12-26 04:52:31','p3dro');
-INSERT INTO artista VALUES(6,'Ana Aurora Gutierrez Uribe','Catana','holacatana@gmail.com','{"instagram":"https://www.instagram.com/c_a_t_a_n_a/","facebook":"https://web.facebook.com/catanasworld/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:31','catana');
-INSERT INTO artista VALUES(7,'Sebastian Aguirre','Seba Endless','seba.endlesss@gmail.com','{"instagram":"https://www.instagram.com/seba.endless/","facebook":"https://web.facebook.com/Seba.Endless/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:32','seba-endless');
-INSERT INTO artista VALUES(8,NULL,'Viliz_Vz','vilizthementor21@gmail.com','{"instagram":"https://www.instagram.com/viliz_vz?igsh=aTF5dWFzMWl4azl6"}','Vicuña','Chile','2025-12-25 05:11:50','2025-12-26 04:52:33','viliz-vz');
-INSERT INTO artista VALUES(9,'Karime Simon Viñales','Karime Simon','avinagretta@gmail.com','{"instagram":"https://www.instagram.com/trauerkult_/?hl=es"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:33','karime-simon');
-INSERT INTO artista VALUES(10,'Ulises Lopez','Uliseslo','tallerelqui@gmail.com','{"instagram":"https://instagram.com/uliseslo","web":"http://fauna-impo.blogspot.com/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:34','uliseslo');
-INSERT INTO artista VALUES(11,NULL,'Vale Ilustra','valeilustra2@gmail.com','{"instagram":"https://www.instagram.com/vale_ilustra?igsh=a21rMmw0cGx5bDlh"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:35','vale-ilustra');
-INSERT INTO artista VALUES(12,NULL,'Nyxandr','Nyxandr.contacto@gmail.com','{"instagram":"https://www.instagram.com/nyxandr"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:35','nyxandr');
-INSERT INTO artista VALUES(13,'Magdalena Antonia Pizarro Lopez','Canela','Canelaqq@gmail.com','{"instagram":"https://www.instagram.com/canela_qq1?igsh=MXdjbWRxOGRmaWZiYQ=="}','Coquimbo','Chile','2025-12-25 05:11:50','2025-12-26 04:52:36','canela');
-INSERT INTO artista VALUES(14,NULL,'Grabados Aleph','angelbarra07@gmail.com','{"instagram":"https://www.instagram.com/grabados_aleph/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:37','grabados-aleph');
-INSERT INTO artista VALUES(15,'Ivannia Belen Jacob García','Ivichu.Jpg','Ivabelen@gmail.com','{"instagram":"https://www.instagram.com/ivichu.jpg/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:38','ivichu-jpg');
-INSERT INTO artista VALUES(16,NULL,'Osamenta En El Jardin','valeria.suarez.diaz97@gmail.com','{"instagram":"https://www.instagram.com/osamentaseneljardin/"}','Vicuña','Chile','2025-12-25 05:11:50','2025-12-26 04:52:38','osamenta-en-el-jardin');
-INSERT INTO artista VALUES(17,'Camila Rosa Malebrán Cabezas','Ckiryuu','madkiryuu@gmail.com','{"instagram":"https://www.instagram.com/ckiryuu","facebook":"https://www.facebook.com/Kiryuu00/"}','Coquimbo','Chile','2025-12-25 05:11:50','2025-12-26 04:52:39','ckiryuu');
-INSERT INTO artista VALUES(18,NULL,'Aderezo','addless7u7@gmail.com','{"instagram":"https://instagram.com/addless7u7"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:40','aderezo');
-INSERT INTO artista VALUES(19,NULL,'Purr Creatures','purrcreatures@gmail.com','{"instagram":"https://www.instagram.com/purrcreatures/"}','Coquimbo','Chile','2025-12-25 05:11:50','2025-12-26 04:52:40','purr-creatures');
-INSERT INTO artista VALUES(20,'Anastassia Bou Copier','Tachipin','tachipinillustrations@gmail.com','{"web":"https://linktr.ee/Tachipinillustrations13","facebook":"https://web.facebook.com/Tachipin/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-27 04:19:37','tapichin');
-INSERT INTO artista VALUES(21,NULL,'Saturno','saturnooarte@gmail.com','{"instagram":"https://www.instagram.com/sa_tu_rno/"}','Coquimbo','Chile','2025-12-25 05:11:50','2025-12-26 04:52:42','saturno');
-INSERT INTO artista VALUES(22,'Constanza Toro','Fluchinick','Fluchinick@gmail.com','{"instagram":"https://www.instagram.com/fluchinick/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:43','fluchinick');
-INSERT INTO artista VALUES(23,NULL,'Noezzal','noezzal@gmail.com','{"instagram":"https://www.instagram.com/noezzal"}','Coquimbo','Chile','2025-12-25 05:11:50','2025-12-26 04:52:43','noezzal');
-INSERT INTO artista VALUES(24,NULL,'Khyaruu','khyaruustore@gmail.com','{"web":"https://khyaruu.carrd.co/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:44','khyaruu');
-INSERT INTO artista VALUES(25,'Alexis Ivan Cepeda Esquivel','Acekuros','Acekuros@gmail.com','{"instagram":"https://Instagram.com/acekuros"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:45','acekuros');
-INSERT INTO artista VALUES(26,NULL,'Nomito','Olivaresdafne1@gmail.com','{"instagram":"https://www.instagram.com/_n0mito.art_/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:45','nomito');
-INSERT INTO artista VALUES(27,NULL,'Chiimewe','chiimewe@gmail.com','{"instagram":"https://www.instagram.com/chiimewe?igsh=cG96N2txaWdseGtt"}','Coquimbo','Chile','2025-12-25 05:11:50','2025-12-26 04:52:46','chiimewe');
-INSERT INTO artista VALUES(28,NULL,'Yem','j.n.t.c.200312@gmail.com','{"instagram":"https://www.instagram.com/yem.ito_art?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:47','yem');
-INSERT INTO artista VALUES(29,NULL,'Skyderen','marcelovergara4507@gmail.com','{"web":"https://linktr.ee/_skyderen"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:48','skyderen');
-INSERT INTO artista VALUES(30,NULL,'Ghostie','lcmr.brownstone@gmail.com','{"instagram":"https://www.instagram.com/lc_mr.brownstone?igsh=cjFmaHljbjhlczN4"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:48','ghostie');
-INSERT INTO artista VALUES(31,'Camila Guamán','Camila Guaman','camilaguaman.ilustracion@gmail.com','{"instagram":"https://www.instagram.com/camilaguaman.ilustracion","facebook":"https://web.facebook.com/chinchillacosmica/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:49','camila-guaman');
-INSERT INTO artista VALUES(32,'Liset Retamal','Astro Glitter','astroglitter.studio@gmail.com','{"instagram":"https://www.instagram.com/astro.glitter/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:50','astro-glitter');
-INSERT INTO artista VALUES(33,'Jorge Diaz Yueng','Niño Pan','elninopan99@gmail.com','{"instagram":"https://www.instagram.com/elninopan","facebook":"https://web.facebook.com/colectivoninopan/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:50','nino-pan');
-INSERT INTO artista VALUES(34,'Camila Herrera','Camellia Liz','camihlatournerie@gmail.com','{"instagram":"https://www.instagram.com/camellia.liz","facebook":"https://web.facebook.com/camellializ/"}','Coquimbo','Chile','2025-12-25 05:11:50','2025-12-26 04:52:51','camellia-liz');
-INSERT INTO artista VALUES(35,'Alejandra Avilés','Hanrra','hanrra.artwork@gmail.com','{"instagram":"https://www.instagram.com/hanrra.artwork/","facebook":"https://web.facebook.com/hanrraartwork/"}','Coquimbo','Chile','2025-12-25 05:11:50','2025-12-26 04:52:52','hanrra');
-INSERT INTO artista VALUES(36,NULL,'Sakanita','sakanastationery@gmail.com','{"instagram":"https://instagram.com/_sakanita_/"}','Coquimbo','Chile','2025-12-25 05:11:50','2025-12-26 04:52:52','sakanita');
-INSERT INTO artista VALUES(37,'Pablo Araya','Chilensis','Chilensisboy@gmail.com','{"instagram":"https://www.instagram.com/chilensisboy/","facebook":"https://web.facebook.com/chilensisboy/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:53','chilensis');
-INSERT INTO artista VALUES(38,'Alejandro Jorquera','El Ale','creativotrama@gmail.com','{"instagram":"https://www.instagram.com/elale_ilustrador/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:54','el-ale');
-INSERT INTO artista VALUES(39,'Francisco Valdivia Aguirre','Pancho Valdivia','HOMBREMEDIVAL@gmail.com','{"instagram":"https://www.instagram.com/pancho_valdivia/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:54','pancho-valdivia');
-INSERT INTO artista VALUES(40,NULL,'Polet Komiksu','poletcomics@gmail.com','{"instagram":"https://www.instagram.com/poletkomiksu?igsh=MXd1bHdsOTd6YWl4cg=="}','Coquimbo','Chile','2025-12-25 05:11:50','2025-12-26 04:52:55','polet-komiksu');
-INSERT INTO artista VALUES(41,'Diego Maya','Futuro Comics','contactodiegomaya@gmail.com','{"instagram":"http://instagram.com/futurocomics"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:56','futuro-comics');
-INSERT INTO artista VALUES(42,NULL,'Carvajal Ilustraciones','nacionautonoma@yahoo.es','{"instagram":"https://www.instagram.com/carvajalilustraciones/"}','Coquimbo','Chile','2025-12-25 05:11:50','2025-12-26 04:52:57','carvajal-ilustraciones');
-INSERT INTO artista VALUES(43,'Rodan Castro Muñoz','Rotten Monkey','ro.felipe768@gmail.com','{"instagram":"https://instagram.com/rottenmonkey_inc/","facebook":"https://web.facebook.com/rottenmonkeyinc/"}','Coquimbo','Chile','2025-12-25 05:11:50','2025-12-26 04:52:57','rotten-monkey');
-INSERT INTO artista VALUES(44,'Pía Ahumada','Me Pego Un Tiro','tallermepegountiro@gmail.com','{"instagram":"https://www.instagram.com/mepegountiro?igsh=NW40MW5udWl4OGM0"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:58','me-pego-un-tiro');
-INSERT INTO artista VALUES(45,'Fernanda Pérez Pérez','Mami Sita','Mamisitamodeon@gmail.com','{"instagram":"https://Instagram.com/mamisitamodeon"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:59','mami-sita');
-INSERT INTO artista VALUES(46,'Pía Fredes','Sra Tonks','nidoodepajaros@gmail.com','{"instagram":"https://www.instagram.com/sratonks/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:52:59','sra-tonks');
-INSERT INTO artista VALUES(47,NULL,'Alkimia','Valentinasofiascalderon@gmail.com','{"instagram":"https://www.instagram.com/alkimia.cl?igsh=MW9vZDZhcWs2d3YxbQ=="}','Coquimbo','Chile','2025-12-25 05:11:50','2025-12-26 04:53:00','alkimia');
-INSERT INTO artista VALUES(48,'Jessica Gutierrez Vega','Kao Artwork','Kathykiba@gmail.com','{"instagram":"https://www.instagram.com/kao.art.work/"}','Coquimbo','Chile','2025-12-25 05:11:50','2025-12-26 04:53:01','kao-artwork');
-INSERT INTO artista VALUES(49,NULL,'De Cordillera','decordillerachile@gmail.com','{"instagram":"https://www.instagram.com/decordillera"}','Coquimbo','Chile','2025-12-25 05:11:50','2025-12-26 04:53:01','de-cordillera');
-INSERT INTO artista VALUES(50,NULL,'Bolbarán Cómics','jose.bolbaran.r@gmail.com','{"instagram":"https://www.instagram.com/jose.bolbaran.r/"}','Ovalle','Chile','2025-12-25 05:11:50','2025-12-26 04:53:02','bolbaran-comics');
-INSERT INTO artista VALUES(51,NULL,'Pat_trashoart','benjaminurrutiaramos@gmail.com','{"instagram":"https://www.instagram.com/pat_trashoart?igsh=MTZ2b3Q1bDdod2MxeQ=="}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:03','pat-trashoart');
-INSERT INTO artista VALUES(52,'Valeria Venegas Fernández','Blanquis','blanquis.ilustracion@gmail.com','{"instagram":"https://www.instagram.com/blanquis.ilus/","facebook":"https://www.facebook.com/blanquis.ilus/"}','Coquimbo','Chile','2025-12-25 05:11:50','2025-12-26 04:53:04','blanquis');
-INSERT INTO artista VALUES(53,NULL,'Kmilu','camila.inostroza.liebsch@gmail.com','{"instagram":"https://www.instagram.com/kmiluup?igsh=Ym1vbGx3Y3R1ZXNu"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:04','kmilu');
-INSERT INTO artista VALUES(54,'Chris Olivares','Remebranzas Negras','floresolivarescc@gmail.com','{"instagram":"https://www.instagram.com/remembranzas_negras/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:05','remebranzas-negras');
-INSERT INTO artista VALUES(55,'Eve Maluenda','N0tarts','epmg990@gmail.com','{"instagram":"https://www.instagram.com/n0tarts"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:06','n0tarts');
-INSERT INTO artista VALUES(56,NULL,'Microbits','contacto@fabianvallejos.cl','{"instagram":"https://www.instagram.com/maikurobitto/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:06','microbits');
-INSERT INTO artista VALUES(57,NULL,'Bekzar','felipe.becar@mayor.cl','{"instagram":"https://www.instagram.com/bekzar.art/"}','Coquimbo','Chile','2025-12-25 05:11:50','2025-12-26 04:53:07','bekzar');
-INSERT INTO artista VALUES(58,NULL,'Arcanista draws','arcanistadraws@gmail.com','{"instagram":"https://instagram.com/arcanistadraws"}','Ovalle','Chile','2025-12-25 05:11:50','2025-12-26 04:53:08','arcanista-draws');
-INSERT INTO artista VALUES(59,NULL,'Francisco Llimy','francisco.llimy@gmail.com','{"instagram":"https://www.instagram.com/francisco.llimy/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:08','francisco-llimy');
-INSERT INTO artista VALUES(60,NULL,'JaviiIlustrations','javieraramirez351@gmail.com','{"instagram":"https://www.instagram.com/javiiilustrations_?igsh=c2p5bnd4bDNkeDdi"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:09','javiiilustrations');
-INSERT INTO artista VALUES(61,NULL,'Ilustración khasumii','daniela18042@gmail.com','{"instagram":"https://www.instagram.com/_khasumii_/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:10','ilustracion-khasumii');
-INSERT INTO artista VALUES(62,NULL,'Yatiediciones','layatiediciones@gmail.com','{"instagram":"https://www.instagram.com/editorial_yatiediciones"}','Coquimbo','Chile','2025-12-25 05:11:50','2025-12-26 04:53:10','yatiediciones');
-INSERT INTO artista VALUES(63,'Victoria Rubio','Lesbilais','vicky.rubio@gmail.com','{"instagram":"https://www.instagram.com/lesbilais/"}','Crevillent','España','2025-12-25 05:11:50','2025-12-26 04:53:11','lesbilais');
-INSERT INTO artista VALUES(64,'Maira Alday Villalobos','Myru Ann','myruann@gmail.com','{"instagram":"https://www.instagram.com/myru.ann","facebook":"https://web.facebook.com/myruann/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:12','myru-ann');
-INSERT INTO artista VALUES(65,NULL,'Pininati','nati.macaya@gmail.com','{"instagram":"https://www.instagram.com/pininati/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:12','pininati');
-INSERT INTO artista VALUES(66,NULL,'Flowerspower','nramirezrivera1@gmail.com','{"instagram":"https://www.instagram.com/el_flowers_power?igsh=MTdpOW12cWtsNXR2bw=="}','Coquimbo','Chile','2025-12-25 05:11:50','2025-12-26 04:53:13','flowerspower');
-INSERT INTO artista VALUES(67,NULL,'Minino_nyart','ninoskhalohmayer@gmail.com','{"instagram":"https://www.instagram.com/minino_nyart?igsh=MWM2N3Mybm55ZjRhdA=="}','Coquimbo','Chile','2025-12-25 05:11:50','2025-12-26 04:53:14','minino-nyart');
-INSERT INTO artista VALUES(68,'Claudia Lazo Gajardo','Paper pupy','claudialazo.gajardo@gmail.com','{"instagram":"https://www.instagram.com/paperpupy"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:14','paper-pupy');
-INSERT INTO artista VALUES(69,'Javiera Génesis Gonzalez Trujillo','Peliitos','pelitos.pelitos123@gmail.com','{"instagram":"https://www.instagram.com/_peliitos_"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:15','peliitos');
-INSERT INTO artista VALUES(70,NULL,'Planea papeleria','rocio.medina.h@gmail.com','{"instagram":"https://www.instagram.com/planeapapeleria/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:16','planea-papeleria');
-INSERT INTO artista VALUES(71,'Marcelo Tapia','Solid Ediciones','disenorgb@gmail.com','{"instagram":"https://www.instagram.com/solidediciones/","facebook":"https://web.facebook.com/solidediciones"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:17','solid-ediciones');
-INSERT INTO artista VALUES(72,NULL,'Sueño de Pajaro','suenodepajaro@gmail.com','{"instagram":"https://www.instagram.com/suenodepajaro/"}','Vicuña','Chile','2025-12-25 05:11:50','2025-12-26 04:53:17','sueno-de-pajaro');
-INSERT INTO artista VALUES(73,NULL,'Tekaeme','tekaemeilustraciones@gmail.com','{"instagram":"https://www.instagram.com/tekaeme____/"}','Coquimbo','Chile','2025-12-25 05:11:50','2025-12-26 04:53:18','tekaeme');
-INSERT INTO artista VALUES(74,NULL,'Ruvale','ruvale123@gmail.com','{"instagram":"https://www.instagram.com/ruruvale/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:19','ruvale');
-INSERT INTO artista VALUES(75,NULL,'WasabiPNG','powerpowmail@gmail.com','{"instagram":"https://www.instagram.com/sgt_wasabi/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:19','wasabipng');
-INSERT INTO artista VALUES(76,NULL,'Ilustravel','holavelgato@gmail.com','{"instagram":"https://www.instagram.com/bel.ilustravel/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:20','ilustravel');
-INSERT INTO artista VALUES(77,NULL,'Intercultural Arte','josecifuentes983@gmail.com','{"instagram":"https://www.instagram.com/intercultural_arte_/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:21','intercultural-arte');
-INSERT INTO artista VALUES(78,NULL,'Tierramarga','c.diazt92@gmail.com','{"instagram":"https://www.instagram.com/_tierramarga/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:22','tierramarga');
-INSERT INTO artista VALUES(79,NULL,'Ensimismada','ensimismada00@gmail.com','{"instagram":"https://www.instagram.com/ensimismada.cl/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:22','ensimismada');
-INSERT INTO artista VALUES(80,'Karen Valenzuela','Prrr Miaow','karenvalen.diseno@gmail.com','{"instagram":"https://www.instagram.com/prrr.miaow?igsh=MTlxdDE4cDZ2aGx1cA==","facebook":"https://web.facebook.com/Prrr-Miaow-179920085887390/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:23','prrr-miaow');
-INSERT INTO artista VALUES(81,'Javier Carvajal Ramirez','Javo_Siniestro','javosiniestre@gmail.com','{"instagram":"https://www.instagram.com/javo_siniestro/","facebook":"https://web.facebook.com/siniestre/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:24','javo-siniestro');
-INSERT INTO artista VALUES(82,NULL,'Coticocodrila','Holacoticocodrila@gmail.com','{"instagram":"https://www.instagram.com/coticocodrila/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:24','coticocodrila');
-INSERT INTO artista VALUES(83,NULL,'Cat_linaa_art','och8jos.studio@gmail.com','{"instagram":"https://www.instagram.com/cat_linaa_art/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:25','cat-linaa-art');
-INSERT INTO artista VALUES(84,NULL,'Namine Anami','namineanami@gmail.com','{"instagram":"https://www.instagram.com/namineanami/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:26','namine-anami');
-INSERT INTO artista VALUES(85,NULL,'Cazar al tiburon','f.zambranoaviles@gmail.com','{"instagram":"https://www.instagram.com/cazaraltiburon.cl/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:27','cazar-al-tiburon');
-INSERT INTO artista VALUES(86,NULL,'Tati San Martin','tatimartin333@gmail.com','{"instagram":"https://www.instagram.com/tatimartin_artista/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:28','tati-san-martin');
-INSERT INTO artista VALUES(87,NULL,'p0chi_kun','och8jos.studio@gmail.com','{"instagram":"https://www.instagram.com/p0chi_kun/"}','La Serena','Chile','2025-12-25 05:11:50','2025-12-26 04:53:26','p0chi-kun');
-INSERT INTO artista VALUES(88,'Gabriela Contreras Arancibia','Blue Straycatt Art','gabriela95_contreras@hotmail.com','{"instagram":"https://www.instagram.com/blue_straycatt_art/"}','Coquimbo','Chile','2025-12-27 04:02:27','2025-12-27 04:02:27','blue-straycatt-art');
-INSERT INTO artista VALUES(89,'Daniel Allende','Danyfoo','danyfoo.art@gmail.com','{"instagram":"https://www.instagram.com/danyfoo_art/","facebook":"https://web.facebook.com/Danyfooart/"}','Coquimbo','Chile','2025-12-27 04:02:29','2025-12-27 04:02:29','danyfoo');
-INSERT INTO artista VALUES(90,'Cristian Correa Zuleta','Darkos','darkoscorreaz@gmail.com','{"instagram":"https://www.instagram.com/darkoscorrea/"}','Coquimbo','Chile','2025-12-27 04:02:29','2025-12-27 04:02:29','darkos');
-INSERT INTO artista VALUES(91,'Francisco Toro','Decay','f-toro@live.cl','{"instagram":"https://www.instagram.com/decay.ink/","facebook":"https://web.facebook.com/decaying.ink/"}','Coquimbo','Chile','2025-12-27 04:02:30','2025-12-27 04:02:30','decay');
-INSERT INTO artista VALUES(92,'Gabriela Elgueta','Drömmer Art','drommer.art@gmail.com','{"instagram":"https://www.instagram.com/drommer_art/"}','Coquimbo','Chile','2025-12-27 04:02:31','2025-12-27 04:02:31','drommer-art');
-INSERT INTO artista VALUES(93,'Claudia Tardito Herreros','Groteska','hola@groteska.cl','{"instagram":"https://www.instagram.com/lagroteska/"}','Coquimbo','Chile','2025-12-27 04:02:32','2025-12-27 04:02:32','groteska');
-INSERT INTO artista VALUES(94,'Jonathan Barraza Veas','Jonariel','jonathanbv.1995@gmail.com','{"instagram":"https://www.instagram.com/jonariel20/","facebook":"https://web.facebook.com/JonAriel20"}','Coquimbo','Chile','2025-12-27 04:02:33','2025-12-27 04:02:33','jonariel');
-INSERT INTO artista VALUES(95,'Judy Helena Malla','JudyDoodles','j.helenita@gmail.com','{"instagram":"https://www.instagram.com/judy_doodles/","facebook":"https://web.facebook.com/judydoodles/"}','Coquimbo','Chile','2025-12-27 04:02:34','2025-12-27 04:02:34','judydoodles');
-INSERT INTO artista VALUES(96,'Lucas Alvayay Durand','La Nueve Ce','richarhoos@gmail.com','{"instagram":"https://www.instagram.com/lanuevece/?hl=es-la"}','Coquimbo','Chile','2025-12-27 04:02:35','2025-12-27 04:02:35','la-nueve-ce');
-INSERT INTO artista VALUES(97,'Felipe Orlando Larco Mondaca','Larcolepsia','larcolerico@gmail.com','{"instagram":"https://www.instagram.com/larcolepsia/?hl=es-la"}','Coquimbo','Chile','2025-12-27 04:02:35','2025-12-27 04:02:35','larcolepsia');
-INSERT INTO artista VALUES(98,'Maximiliano Roco','MaxRoco','maxroco@gmail.com','{"instagram":"https://www.instagram.com/proyectomaxroco/","facebook":"https://web.facebook.com/proyectomaxroco/"}','Coquimbo','Chile','2025-12-27 04:02:35','2025-12-27 04:02:35','maxroco');
-INSERT INTO artista VALUES(99,'Daniel Alvarez Vega','MonHaku','danielart.195@gmail.com','{"instagram":"https://www.instagram.com/hakuya_kou/"}','Coquimbo','Chile','2025-12-27 04:02:36','2025-12-27 04:02:36','monhaku');
-INSERT INTO artista VALUES(100,'Matias Edurado Palominos Alarcón','Mr. Palominos','mpalominosa@gmail.com','{"instagram":"https://www.instagram.com/malosjuguetes/"}','Coquimbo','Chile','2025-12-27 04:02:37','2025-12-27 04:02:37','mr-palominos');
-INSERT INTO artista VALUES(101,'Arlett Vanessa Carvaja','Mysterylol','mysterylolxd@gmail.com','{"instagram":"https://www.instagram.com/dibujan2_anim3/"}','Coquimbo','Chile','2025-12-27 04:02:38','2025-12-27 04:02:38','mysterylol');
-INSERT INTO artista VALUES(102,'Nevenka Sophia Silva González','Neve.nes','neve.90@gmail.com','{"instagram":"https://www.instagram.com/neve.nes/","facebook":"https://web.facebook.com/Nevenka.Silva.G/"}','Coquimbo','Chile','2025-12-27 04:02:38','2025-12-27 04:02:38','nevenes');
-INSERT INTO artista VALUES(103,'Samuel Araya','Samuel Araya C Artwork (Florido)','samuel.araya.c@gmail.com','{"instagram":"https://www.instagram.com/samarayaart/","facebook":"https://web.facebook.com/Samuelarayac.artworks/"}','Coquimbo','Chile','2025-12-27 04:02:40','2025-12-27 04:02:40','samuel-araya-c-artwork-florido');
-INSERT INTO artista VALUES(104,'Johanina Alfaro Rojas','Simio','johaalfarorojas@gmail.com','{"instagram":"https://www.instagram.com/il_simiox/"}','Coquimbo','Chile','2025-12-27 04:02:40','2025-12-27 04:02:40','simio');
-INSERT INTO artista VALUES(105,'Solange Pacheco Ortiz','Sol Pacheco','solangepacheco.sp@gmail.com',NULL,'Coquimbo','Chile','2025-12-27 04:02:41','2025-12-27 04:02:41','sol-pacheco');
-INSERT INTO artista VALUES(106,NULL,'Tommy Astorga','tepunto@gmail.com','{"instagram":"https://www.instagram.com/tommyastorga/","facebook":"https://web.facebook.com/AstorgaTommy/"}','Coquimbo','Chile','2025-12-27 04:02:42','2025-12-27 04:02:42','tommy-astorga');
-INSERT INTO artista VALUES(107,'Andrea Diaz Godoy','Andreadiasnublados','andriusday93@gmail.com','{"artstation":"https://www.artstation.com/andreadiasnublados"}','Coquimbo','Chile','2025-12-27 04:02:42','2025-12-27 04:02:42','andreadiasnublados');
-INSERT INTO artista VALUES(108,'Nicole Alexa Astorga Vega','exe.cute.me','nicomccurdy@gmail.com','{"instagram":"https://www.instagram.com/exe.cute.me/"}','Illapel','Chile','2025-12-27 04:02:43','2025-12-27 04:02:43','executeme');
-INSERT INTO artista VALUES(109,'Antoniett Rivera Maya','Abejas Negras (Niett)','ant.rivv@gmail.com','{"instagram":"https://www.instagram.com/abejasnegras/"}','La Serena','Chile','2025-12-27 04:02:44','2025-12-27 04:02:44','abejas-negras-niett');
-INSERT INTO artista VALUES(110,'Elba Gamonal Ruiz-Crespo','Agua de Quisco','elbagamonal@gmail.com','{"instagram":"https://www.instagram.com/agua_de_quisco_ilustraciones/"}','La Serena','Chile','2025-12-27 04:02:44','2025-12-27 04:02:44','agua-de-quisco');
-INSERT INTO artista VALUES(111,'Benjamin Vega Rodriguez','Aitue','benja.vega0799@gmail.com','{"instagram":"https://www.instagram.com/aitue_art/?hl=es-la"}','La Serena','Chile','2025-12-27 04:02:45','2025-12-27 04:02:45','aitue');
-INSERT INTO artista VALUES(112,'Margareth Gricell Contreras Mondaca','Amaggieanthine','margareth.gricell@gmail.com','{"instagram":"https://www.instagram.com/_thanksthestars_/"}','La Serena','Chile','2025-12-27 04:02:46','2025-12-27 04:02:46','amaggieanthine');
-INSERT INTO artista VALUES(113,'Valentina Aurora Ravello Argandoña','Aurora Ravello','valeravello1@gmail.com','{"instagram":"https://www.instagram.com/aurora_ravello/"}','La Serena','Chile','2025-12-27 04:02:47','2025-12-27 04:02:47','aurora-ravello');
-INSERT INTO artista VALUES(114,'Camila Olivares/Jose Flores','Camipepe','camiiipepe@gmail.com','{"instagram":"https://www.instagram.com/camiipepe/","facebook":"https://web.facebook.com/camiipepee/"}','La Serena','Chile','2025-12-27 04:02:47','2025-12-27 04:02:47','camipepe');
-INSERT INTO artista VALUES(115,'Fiorella Tosetti Contreras','Caotica Ilustrada','caotica.siempre@gmail.com','{"instagram":"https://www.instagram.com/caotica_ilustrada/","facebook":"https://web.facebook.com/caotica.ilustrada.7"}','La Serena','Chile','2025-12-27 04:02:50','2025-12-27 04:02:50','caotica-ilustrada');
-INSERT INTO artista VALUES(116,'Elisa Carolina Piñones','Caro PZ','caroi.uleta@gmail.com','{"instagram":"https://www.instagram.com/_karo.pezeta_/"}','La Serena','Chile','2025-12-27 04:02:52','2025-12-27 04:02:52','caro-pz');
-INSERT INTO artista VALUES(117,'Belen Aguilar','CLEIB','beleaguilar23@gmail.com','{"instagram":"https://www.instagram.com/_cleib/","facebook":"https://web.facebook.com/Bel%C3%A9n-Aguilar-152951941518422/"}','La Serena','Chile','2025-12-27 04:02:53','2025-12-27 04:02:53','cleib');
-INSERT INTO artista VALUES(118,'Romina Villegas','Collarcitos RV','cabezaortopedica@gmail.com','{"instagram":"https://www.instagram.com/collarcitosrv/","facebook":"https://web.facebook.com/Collarcitos"}','La Serena','Chile','2025-12-27 04:02:54','2025-12-27 04:02:54','collarcitos-rv');
-INSERT INTO artista VALUES(119,'Cristian Marin','Cris Crowfin','cristian.p.marin@gmail.com','{"instagram":"https://www.instagram.com/crowfin_art/","facebook":"https://web.facebook.com/Cris-Crowfin-866981636665660/"}','La Serena','Chile','2025-12-27 04:02:57','2025-12-27 04:02:57','cris-crowfin');
-INSERT INTO artista VALUES(120,'Daniella Le-Brauer','Dani Lee','danille28@gmail.com','{"instagram":"https://www.instagram.com/dani_lee_astro_art/","facebook":"https://www.facebook.com/DaniLeeArt28/"}','La Serena','Chile','2025-12-27 04:02:57','2025-12-27 04:02:57','dani-lee');
-INSERT INTO artista VALUES(121,'Francisca Alejandra Silva Piña','Diseños Pineapple','francisca.silva.2002@gmail.com','{"instagram":"https://www.instagram.com/disenospineapple/","facebook":"https://www.facebook.com/franciscapineapple/"}','La Serena','Chile','2025-12-27 04:02:58','2025-12-27 04:02:58','disenos-pineapple');
-INSERT INTO artista VALUES(122,'Romina Aguilera Zuñiga','Diskettes.ink','dizked.art@gmail.com','{"instagram":"https://www.instagram.com/diskettes.ink/","facebook":"https://web.facebook.com/dizked.art/"}','La Serena','Chile','2025-12-27 04:02:58','2025-12-27 04:02:58','diskettesink');
-INSERT INTO artista VALUES(123,'Christian Herrera','DragoNest Studio','herrera.chris95@gmail.com','{"instagram":"https://www.instagram.com/chriss.herrera/","facebook":"https://web.facebook.com/chrisherrera95/"}','La Serena','Chile','2025-12-27 04:03:00','2025-12-27 04:03:00','dragonest-studio');
-INSERT INTO artista VALUES(124,'Iván Andrés Jorquera Olivares','elMeNeSe','ivanjorquera.o@gmail.com','{"instagram":"https://www.instagram.com/elmenese/","web":"http://www.ivanjorquera.cl/"}','La Serena','Chile','2025-12-27 04:03:01','2025-12-27 04:03:01','elmenese');
-INSERT INTO artista VALUES(125,'Harold Olivares Sarmiento','HOS','hos.artes@gmail.com','{"instagram":"https://www.instagram.com/hos.art/","facebook":"https://web.facebook.com/hos.artes/"}','La Serena','Chile','2025-12-27 04:03:01','2025-12-27 04:03:01','hos');
-INSERT INTO artista VALUES(126,'Ignacio Israel Valdivia Avalos','Ignacio Gato','ignacio.kittycat@gmail.com','{"instagram":"https://www.instagram.com/ignacio_gato_/"}','La Serena','Chile','2025-12-27 04:03:03','2025-12-27 04:03:03','ignacio-gato');
-INSERT INTO artista VALUES(127,'Sofia Rivera','Inky Cotton',NULL,'{"instagram":"https://www.instagram.com/inkycotton/"}','La Serena','Chile','2025-12-27 04:03:03','2025-12-27 04:03:03','inky-cotton');
-INSERT INTO artista VALUES(128,'Isabela Adaos Véliz','Isa Edaliz','isaedaliz@gmail.com','{"instagram":"https://www.instagram.com/isaedaliz/"}','La Serena','Chile','2025-12-27 04:03:04','2025-12-27 04:03:04','isa-edaliz');
-INSERT INTO artista VALUES(129,'José Ignacio Cifuentes Pizarro','Jotace','jc.dibujos@gmail.com','{"instagram":"https://www.instagram.com/jotace_dibujos/"}','La Serena','Chile','2025-12-27 04:03:04','2025-12-27 04:03:04','jotace');
-INSERT INTO artista VALUES(130,'Catalina Ramirez','Katassj','katassjilustra53@gmail.com','{"instagram":"https://www.instagram.com/katassj/?hl=es-la"}','La Serena','Chile','2025-12-27 04:03:06','2025-12-27 04:03:06','katassj');
-INSERT INTO artista VALUES(131,'Sofía Rojas Meza','Keimara','sofiarojasmeza@gmail.com','{"instagram":"https://www.instagram.com/_keimara/"}','La Serena','Chile','2025-12-27 04:03:06','2025-12-27 04:03:06','keimara');
-INSERT INTO artista VALUES(132,'Francisca Rayen Riquelme Araya','Khira Yoshi','onyx.yue@gmail.com','{"instagram":"https://www.instagram.com/khirayoshi/","facebook":"https://web.facebook.com/KhiraYoshi/"}','La Serena','Chile','2025-12-27 04:03:07','2025-12-27 04:03:07','khira-yoshi');
-INSERT INTO artista VALUES(133,'Noelia Guerra Flores','Kompas Ilustration','dallamokompas@gmail.com','{"instagram":"https://www.instagram.com/kompas_ilu/","facebook":"https://web.facebook.com/kompasillustration/"}','La Serena','Chile','2025-12-27 04:03:07','2025-12-27 04:03:07','kompas-ilustration');
-INSERT INTO artista VALUES(134,'Francisca Casanova','KybArt','byeongari.hun@gmail.com','{"instagram":"https://www.instagram.com/kyb_art/"}','La Serena','Chile','2025-12-27 04:03:08','2025-12-27 04:03:08','kybart');
-INSERT INTO artista VALUES(135,'Tamara Sepúlveda','Lady Beelze','tamarasepul@gmail.com','{"instagram":"https://www.instagram.com/ladybeelze/"}','La Serena','Chile','2025-12-27 04:03:09','2025-12-27 04:03:09','lady-beelze');
-INSERT INTO artista VALUES(136,'Yarela Briceño Volta','Manitas E Gato','manitasegato@gmail.com','{"instagram":"https://www.instagram.com/manitas_e_gato/","facebook":"https://web.facebook.com/manitasegato/"}','La Serena','Chile','2025-12-27 04:03:09','2025-12-27 04:03:09','manitas-e-gato');
-INSERT INTO artista VALUES(137,'Soffia Chirino Montaño','Mermaid Curse','scchirinom@gmail.com','{"instagram":"https://www.instagram.com/mermaidcurse.art/","facebook":"https://web.facebook.com/mermaid.curseart/"}','La Serena','Chile','2025-12-27 04:03:11','2025-12-27 04:03:11','mermaid-curse');
-INSERT INTO artista VALUES(138,'Francesca Gamboni Núñez','Momofurambu','fran.gamboni@gmail.com','{"instagram":"https://www.instagram.com/__franbuesa/"}','La Serena','Chile','2025-12-27 04:03:12','2025-12-27 04:03:12','momofurambu');
-INSERT INTO artista VALUES(139,'Rene Araya','Neeh Re','rene.f.arayaramirez@gmail.com','{"instagram":"https://www.instagram.com/neeh_re/"}','La Serena','Chile','2025-12-27 04:03:13','2025-12-27 04:03:13','neeh-re');
-INSERT INTO artista VALUES(140,'Vanessa Gonzalez Schifferli','Nerdy Roll','vanessa.260601@gmail.com','{"facebook":"https://web.facebook.com/NerdyRoll/"}','La Serena','Chile','2025-12-27 04:03:14','2025-12-27 04:03:14','nerdy-roll');
-INSERT INTO artista VALUES(141,'Alan Salinas Angel','Noctam','alansalinasangel@gmail.com','{"instagram":"https://www.instagram.com/noctam.ilustra/","facebook":"https://web.facebook.com/noctam.ilustra/"}','La Serena','Chile','2025-12-27 04:03:15','2025-12-27 04:03:15','noctam');
-INSERT INTO artista VALUES(142,'Fernanda Aguirre Mussa','No Me Dicen Fer','fer.aguirre4@gmail.com','{"instagram":"https://www.instagram.com/nomedicenfer/","facebook":"https://web.facebook.com/nomedicenfer/"}','La Serena','Chile','2025-12-27 04:03:16','2025-12-27 04:03:16','no-me-dicen-fer');
-INSERT INTO artista VALUES(143,'Karla Jeraldo','No Soy Tan Cool','nosoytancool@gmail.com','{"facebook":"https://web.facebook.com/nosoytancool.illustration/"}','La Serena','Chile','2025-12-27 04:03:16','2025-12-27 04:03:16','no-soy-tan-cool');
-INSERT INTO artista VALUES(144,'Pablo Fernández Araya','Pablo Design','pablojfernandezaraya@gmail.com','{"instagram":"https://www.instagram.com/pablofernandez.diseno/"}','La Serena','Chile','2025-12-27 04:03:17','2025-12-27 04:03:17','pablo-design');
-INSERT INTO artista VALUES(145,'Daniela Véliz Baeza','Pezenunpapel','pezenunpapel@gmail.com','{"instagram":"https://www.instagram.com/pezenunpapel/","facebook":"https://web.facebook.com/pezenunpapel/"}','La Serena','Chile','2025-12-27 04:03:19','2025-12-27 04:03:19','pezenunpapel');
-INSERT INTO artista VALUES(146,'Anselmo Grandon','Pez Monstruo (Mo)','anselmo.grahen@gmail.com','{"instagram":"https://www.instagram.com/pezmonstruo/"}','La Serena','Chile','2025-12-27 04:03:21','2025-12-27 04:03:21','pez-monstruo-mo');
-INSERT INTO artista VALUES(147,'Carolina Puerta','PinkuNina (nina racoon)','pinkbang.nina@gmail.com','{"instagram":"https://www.instagram.com/pinku_nina/","facebook":"https://web.facebook.com/PinkuNina/"}','La Serena','Chile','2025-12-27 04:03:21','2025-12-27 04:03:21','pinkunina-nina-racoon');
-INSERT INTO artista VALUES(148,'Camila Fernandez','Planta Verde','plantaaverde@gmail.com','{"instagram":"https://www.instagram.com/plantaaverdeart/","facebook":"https://web.facebook.com/plantaaverde/"}','La Serena','Chile','2025-12-27 04:03:22','2025-12-27 04:03:22','planta-verde');
-INSERT INTO artista VALUES(149,'Sophia Dianne Sánchez D''Arcangeli','Poppy','darcangeli764@gmail.com','{"instagram":"https://www.instagram.com/_poppyxd_/"}','La Serena','Chile','2025-12-27 04:03:24','2025-12-27 04:03:24','poppy');
-INSERT INTO artista VALUES(150,'Pablo Marambio Costagliola','Raigmann (GalactikPainting)','pablomarambio.marambio@gmail.com','{"deviantart":"https://www.deviantart.com/raigmann"}','La Serena','Chile','2025-12-27 04:03:25','2025-12-27 04:03:25','raigmann-galactikpainting');
-INSERT INTO artista VALUES(151,'Daniel Muñoz','Reptilians','st.daniel.ark@gmail.com','{"instagram":"https://www.instagram.com/reptillians.attack/","facebook":"https://www.facebook.com/reptillian.demons/"}','La Serena','Chile','2025-12-27 04:03:25','2025-12-27 04:03:25','reptilians');
-INSERT INTO artista VALUES(152,'Carolina Angélica Barraza Cortés','Shiemi-Hime','shiemi.purr@gmail.com','{"instagram":"https://www.instagram.com/shiemi_hime/","facebook":"https://web.facebook.com/ShiemiHime/"}','La Serena','Chile','2025-12-27 04:03:26','2025-12-27 04:03:26','shiemi-hime');
-INSERT INTO artista VALUES(153,'Valentina Zepeda Jopia','Shishi de Colores (Vandaloves)','valentinaandrea.zepeda@gmail.com','{"instagram":"https://www.instagram.com/shishidecolores/","facebook":"https://web.facebook.com/shishidecolores/"}','La Serena','Chile','2025-12-27 04:03:26','2025-12-27 04:03:26','shishi-de-colores-vandaloves');
-INSERT INTO artista VALUES(154,'Sofía Alexandra Marambio Cortés','Sofi_niscus','sofiadango19@gmail.com','{"instagram":"https://www.instagram.com/sofi_niscus/"}','La Serena','Chile','2025-12-27 04:03:27','2025-12-27 04:03:27','sofiniscus');
-INSERT INTO artista VALUES(155,'Francisca Cortes Santander','Stay Cactus','francilucortes@gmail.com','{"instagram":"https://www.instagram.com/staycactusfanzine/","facebook":"https://web.facebook.com/staycactus/"}','La Serena','Chile','2025-12-27 04:03:28','2025-12-27 04:03:28','stay-cactus');
-INSERT INTO artista VALUES(156,'Sol Morales','Sun morales','sunmorales35@gmail.com','{"instagram":"https://www.instagram.com/sunmorales/","facebook":"https://web.facebook.com/SunmoralesB/"}','La Serena','Chile','2025-12-27 04:03:30','2025-12-27 04:03:30','sun-morales');
-INSERT INTO artista VALUES(157,'Carla Vargas','The Bunny Art','vargascastro.c@gmail.com','{"instagram":"https://www.instagram.com/c.vargasc/","facebook":"https://www.facebook.com/carla.vargascastro"}','La Serena','Chile','2025-12-27 04:03:31','2025-12-27 04:03:31','the-bunny-art');
-INSERT INTO artista VALUES(158,'Alonso Martinez','Tigre Maltés','alonsomartinez07@gmail.com','{"instagram":"https://www.instagram.com/tigre_maltes/","facebook":"https://web.facebook.com/tigremaltes/"}','La Serena','Chile','2025-12-27 04:03:33','2025-12-27 04:19:37','tigre-maltes');
-INSERT INTO artista VALUES(159,'Camila Belén Arévalo Cabrera','Tsuki','camila.barevalo@gmail.com','{"instagram":"https://www.instagram.com/blanchettetsuki","facebook":"https://www.fb.com/Tsukiarte"}','La Serena','Chile','2025-12-27 04:03:33','2025-12-27 04:03:33','tsuki');
-INSERT INTO artista VALUES(160,'Vallery Lorca Toledo','Valerie Lorca','vallery.lorca@hotmail.es','{"instagram":"https://www.instagram.com/valerie_lorca/"}','La Serena','Chile','2025-12-27 04:03:35','2025-12-27 04:03:35','valerie-lorca');
-INSERT INTO artista VALUES(161,'Valentina Fernanda Fuentealba Palavicino','VALESTRINA','valestrina4@gmail.com','{"instagram":"https://www.instagram.com/valestrina_art/","tapas":"https://tapas.io/series/KUSH-ES"}','La Serena','Chile','2025-12-27 04:03:37','2025-12-27 04:03:37','valestrina');
-INSERT INTO artista VALUES(162,'Victor Ledezma Vega','Victor Illustrations','victor.ledezma.vega@gmail.com','{"instagram":"https://www.instagram.com/victor_illustrations/","behance":"https://www.behance.net/VictorLedezma"}','La Serena','Chile','2025-12-27 04:03:37','2025-12-27 04:03:37','victor-illustrations');
-INSERT INTO artista VALUES(163,'Constanza valentina godoy Díaz','Yucenkio','constanza.pgb.2016@gmail.com','{"instagram":"https://www.instagram.com/yucenkio/"}','La Serena','Chile','2025-12-27 04:03:38','2025-12-27 04:03:38','yucenkio');
-INSERT INTO artista VALUES(164,'Camila Rivera','Internet Princess',NULL,'{"instagram":"https://www.instagram.com/miss.camomille/","facebook":"https://web.facebook.com/InternettPrincess/"}','La Serena','Chile','2025-12-27 04:03:39','2025-12-27 04:03:39','internet-princess');
-INSERT INTO artista VALUES(165,'Consuelo Valentina Huerta Pereira','Co(Mentedemente)','consuelo.huerta@outlook.com','{"instagram":"https://www.instagram.com/co.mentedemente/"}','Ovalle','Chile','2025-12-27 04:03:39','2025-12-27 04:03:39','comentedemente');
-INSERT INTO artista VALUES(166,'Giovanna Baldecchi Varela','Olyves (ex Moriciel)','azumaltrejo@gmail.com','{"instagram":"https://www.instagram.com/moriciel_/","facebook":"https://web.facebook.com/Giovy-293827087299049/"}','Tongoy','Chile','2025-12-27 04:03:40','2025-12-27 04:03:40','olyves-ex-moriciel');
-INSERT INTO artista VALUES(167,'Felipe de Ferari Prats','Felipe de Ferari','felipedeferari@gmail.com','{"instagram":"https://www.instagram.com/felipedeferari/","facebook":"https://web.facebook.com/Artes-Visuales-Felipe-De-Ferari-wwwdeferaricl-130585523670889/"}','La Serena','Chile','2025-12-27 04:03:43','2025-12-27 04:03:43','felipe-de-ferari');
-INSERT INTO artista VALUES(168,'Carolina Aguirre','We Are Tea','carolina.aguirre.skarlis@gmail.com','{"instagram":"https://www.instagram.com/we.are.tea.ilustraciones/","tumblr":"https://wearetea.tumblr.com/"}','La Serena','Chile','2025-12-27 04:03:43','2025-12-27 04:03:43','we-are-tea');
-INSERT INTO artista VALUES(169,'Nicolas Torres','Nico el Mito','nicolas.torrestapia@gmail.com','{"instagram":"https://www.instagram.com/nicoelmito/","facebook":"https://web.facebook.com/nicoelmito/"}','La Serena','Chile','2025-12-27 04:03:44','2025-12-27 04:03:44','nico-el-mito');
-INSERT INTO artista VALUES(170,'Cynthia Vega','Kio PsicodelicArt','cynthia.vega@gmail.com','{"facebook":"https://web.facebook.com/Kio-PsicodelicArt-1711808738837633/"}','La Serena','Chile','2025-12-27 04:03:45','2025-12-27 04:03:45','kio-psicodelicart');
-INSERT INTO artista VALUES(171,'Bryan Bautista Correa','Crazy Monkey','cm.diseno7@gmail.com','{"facebook":"https://web.facebook.com/crazymonkeydesing/"}','Coquimbo','Chile','2025-12-27 04:03:46','2025-12-27 04:03:46','crazy-monkey');
-INSERT INTO artista VALUES(172,'Lia Ponce Montecinos','Bubble Trafic','liarqponce@gmail.com','{"instagram":"https://www.instagram.com/bubbletrafic/","facebook":"https://web.facebook.com/BuuubbleTraaafic/"}','Coquimbo','Chile','2025-12-27 04:03:46','2025-12-27 04:03:46','bubble-trafic');
-INSERT INTO artista VALUES(173,'André Alejandro Pizarro','André','aerograndes@gmail.com','{"instagram":"https://www.instagram.com/andrekamin/","facebook":"https://web.facebook.com/andre.alejand"}','Ovalle','Chile','2025-12-27 04:03:47','2025-12-27 04:03:47','andre');
-INSERT INTO artista VALUES(174,'Pamela Alejandra Contreras Guerra','Alza el Vuelo','pamela.contreras@live.com','{"instagram":"https://www.instagram.com/tiendalzaelvuelo/","facebook":"https://www.facebook.com/Alza-el-vuelo-860809420599226/"}','La Serena','Chile','2025-12-27 04:03:48','2025-12-27 04:03:48','alza-el-vuelo');
-INSERT INTO artista VALUES(175,'Ellizabeth Fernanda Araya Loyola','Anticática Accesorios','ellizabeth.araya@gmail.com','{"instagram":"https://www.instagram.com/anti.accesorios/"}','Ovalle','Chile','2025-12-27 04:03:49','2025-12-27 04:03:49','anticatica-accesorios');
-INSERT INTO artista VALUES(176,'Sebastian Oteiza','Antítesis Editorial','oteiza.sebastian@gmail.com','{"facebook":"https://web.facebook.com/EditorialAntitesis/"}','La Serena','Chile','2025-12-27 04:03:49','2025-12-27 04:03:49','antitesis-editorial');
-INSERT INTO artista VALUES(177,'Karina Constanza Berríos Cortés','Artbutterfly','kony1288@gmail.com','{"instagram":"https://www.instagram.com/_artbutterfly_/","web":"https://unibles.com/Artbutterfly"}','La Serena','Chile','2025-12-27 04:03:50','2025-12-27 04:03:50','artbutterfly');
-INSERT INTO artista VALUES(178,'Sofia Ramirez','Astronomical Patches',NULL,'{"facebook":"https://web.facebook.com/astronomicalpatch3s/"}','Coquimbo','Chile','2025-12-27 04:03:50','2025-12-27 04:03:50','astronomical-patches');
-INSERT INTO artista VALUES(179,'Andrea Nicol Ledezma Díaz','BordabaMoza','andrea.ledezmad@gmail.com','{"instagram":"https://www.instagram.com/bordabamoza/"}','La Serena','Chile','2025-12-27 04:03:51','2025-12-27 04:03:51','bordabamoza');
-INSERT INTO artista VALUES(180,'Pablo Durand Alegre','Brodat','p.durand.a@gmail.com','{"instagram":"https://www.instagram.com/tienda.brodat/"}','La Serena','Chile','2025-12-27 04:03:52','2025-12-27 04:03:52','brodat');
-INSERT INTO artista VALUES(181,'Bastian Tello Campusano','Cala Cala Ká','botc@live.cl','{"facebook":"https://www.facebook.com/Editorial-Cala-Cala-k%C3%81-232505914219389/"}','La Serena','Chile','2025-12-27 04:03:53','2025-12-27 04:03:53','cala-cala-ka');
-INSERT INTO artista VALUES(182,'Paula Gonzalez','Cielomenta','paual12021@gmail.com','{"facebook":"https://web.facebook.com/cielomentaaccesorios/"}','La Serena','Chile','2025-12-27 04:03:53','2025-12-27 04:03:53','cielomenta');
-INSERT INTO artista VALUES(183,'Gonzalo Vilo','Experimental Lunch',NULL,NULL,'Coquimbo','Chile','2025-12-27 04:03:55','2025-12-27 04:03:55','experimental-lunch');
-INSERT INTO artista VALUES(184,'Francisca Vergara','Flancito Store','fran.vergara94@gmail.com','{"facebook":"https://web.facebook.com/FlancitoStore/"}','La Serena','Chile','2025-12-27 04:03:56','2025-12-27 04:03:56','flancito-store');
-INSERT INTO artista VALUES(185,'Guillermo Francisco Nuñez Perez','Guillermo Francisco','guillermo.francisco.n@gmail.com','{"instagram":"https://instagram.com/_guillermofrancisco"}','La Serena','Chile','2025-12-27 04:03:58','2025-12-27 04:03:58','guillermo-francisco');
-INSERT INTO artista VALUES(186,'Marisol Ahumada Diaz','Gumis de Colores','maiteka2003@hotmail.com','{"facebook":"https://web.facebook.com/Gumisdecolores/"}','La Serena','Chile','2025-12-27 04:03:59','2025-12-27 04:03:59','gumis-de-colores');
-INSERT INTO artista VALUES(187,'Felipe Monje Pinto','Hamabeads La Serena','hamabeads.ls2019@gmail.com','{"instagram":"https://www.instagram.com/hamabeads_ls/"}','La Serena','Chile','2025-12-27 04:03:59','2025-12-27 04:03:59','hamabeads-la-serena');
-INSERT INTO artista VALUES(188,'Carolina Vivanco','Ivory Market','ivory.im.different@gmail.com','{"facebook":"https://web.facebook.com/IvoryMarket/"}','La Serena','Chile','2025-12-27 04:04:00','2025-12-27 04:04:00','ivory-market');
-INSERT INTO artista VALUES(189,'Javiera Fernández Barahona','Javi Accesorios (ex Miko)','javieramfb@gmail.com',NULL,'La Serena','Chile','2025-12-27 04:04:00','2025-12-27 04:04:00','javi-accesorios-ex-miko');
-INSERT INTO artista VALUES(190,'Evelyn Carolina Alday Espinosa','Kallfu','evelynalday@hotmail.com','{"instagram":"https://www.instagram.com/_kallfu_/","facebook":"https://web.facebook.com/kallfu.accesorios/"}','La Serena','Chile','2025-12-27 04:04:01','2025-12-27 04:04:01','kallfu');
-INSERT INTO artista VALUES(191,NULL,'Kaptus','kaptusregalaydecora@gmail.com','{"facebook":"https://web.facebook.com/kaptus.ls/"}','Coquimbo','Chile','2025-12-27 04:04:02','2025-12-27 04:04:02','kaptus');
-INSERT INTO artista VALUES(192,'Viviana Vega','Kguai Store','viviana.vegam@gmail.com','{"facebook":"https://web.facebook.com/kguai.store/"}','Vicuña','Chile','2025-12-27 04:04:02','2025-12-27 04:04:02','kguai-store');
-INSERT INTO artista VALUES(193,NULL,'Koko',NULL,'{"instagram":"https://www.instagram.com/koko_diseno/"}','La Serena','Chile','2025-12-27 04:04:03','2025-12-27 04:04:03','koko');
-INSERT INTO artista VALUES(194,'Andrea Aquea Carmona','Kusudumame','kusudamame0@gmail.com','{"instagram":"https://www.instagram.com/kusudamame_/","facebook":"https://web.facebook.com/kusudamame0/"}','La Serena','Chile','2025-12-27 04:04:03','2025-12-27 04:04:03','kusudumame');
-INSERT INTO artista VALUES(195,'Karla Pineda','Limon Ventitas','k.p.angel93@gmail.com','{"facebook":"https://web.facebook.com/LimonVentitas/"}','Coquimbo','Chile','2025-12-27 04:04:05','2025-12-27 04:04:05','limon-ventitas');
-INSERT INTO artista VALUES(196,NULL,'Macanudo Design','macanudo.design@gmail.com','{"facebook":"https://web.facebook.com/macanudo.design/"}','La Serena','Chile','2025-12-27 04:04:06','2025-12-27 04:04:06','macanudo-design');
-INSERT INTO artista VALUES(197,'Paula Pacheco Orellana','Mallwa','paulapacheco.p@gmail.com','{"instagram":"https://www.instagram.com/mallwa_accesorios/"}','Coquimbo','Chile','2025-12-27 04:04:06','2025-12-27 04:04:06','mallwa');
-INSERT INTO artista VALUES(198,'Carolina Casanova','Manitos de Quinqui','carolina.casanova.garcia@gmail.com','{"facebook":"https://web.facebook.com/manitosdequinqui/"}','Coquimbo','Chile','2025-12-27 04:04:07','2025-12-27 04:04:07','manitos-de-quinqui');
-INSERT INTO artista VALUES(199,'Javiera Paz Carrillos Gonzalez','Mestiza Joyeria','javiera.carrillos@gmail.com','{"instagram":"https://www.instagram.com/mestizajoyeria/"}','Santiago','Chile','2025-12-27 04:04:08','2025-12-27 04:04:08','mestiza-joyeria');
-INSERT INTO artista VALUES(200,'María Paulina Godoy Álvarez','Mi Colet','paaiflor@gmail.com','{"instagram":"https://www.instagram.com/micolet.ls/"}','La Serena','Chile','2025-12-27 04:04:09','2025-12-27 04:04:09','mi-colet');
-INSERT INTO artista VALUES(201,'Melissa Osandon','Mi Chamaca','melissandon.araya@gmail.com','{"facebook":"https://web.facebook.com/michamacailustraciones/"}','La Serena','Chile','2025-12-27 04:04:09','2025-12-27 04:04:09','mi-chamaca');
-INSERT INTO artista VALUES(202,'Elizabeth Pasmiño','Mi Croquera','elipasmino@gmail.com','{"instagram":"https://www.instagram.com/microquera/","facebook":"https://web.facebook.com/microquera/"}','Coquimbo','Chile','2025-12-27 04:04:10','2025-12-27 04:04:10','mi-croquera');
-INSERT INTO artista VALUES(203,'Rocio Muñoz Morales','Moiris Design','moiris.design@gmail.com','{"instagram":"https://www.instagram.com/moiris.design/"}','La Serena','Chile','2025-12-27 04:04:12','2025-12-27 04:04:12','moiris-design');
-INSERT INTO artista VALUES(204,'Nicole Ibarra Jara','Nicfotos','nicoleibarraj@gmail.com','{"instagram":"https://www.instagram.com/nicfotos/","behance":"https://www.behance.net/nicoleibarra"}','La Serena','Chile','2025-12-27 04:04:12','2025-12-27 04:04:12','nicfotos');
-INSERT INTO artista VALUES(205,'Manuel Pereira Araya','Okato Design****','okatown@gmail.com','{"instagram":"https://www.instagram.com/okatodesign/","facebook":"https://web.facebook.com/disenos.okatodesign"}','La Serena','Chile','2025-12-27 04:04:13','2025-12-27 04:04:13','okato-design');
-INSERT INTO artista VALUES(206,'Carolina Contreras Soto','Pochi Amigurumi','amigurumisosweet@gmail.com','{"facebook":"https://web.facebook.com/pochi.amigurumi"}','Coquimbo','Chile','2025-12-27 04:04:14','2025-12-27 04:04:14','pochi-amigurumi');
-INSERT INTO artista VALUES(207,'Katterine del Rosario Aguilera Olivares','Primavera de Prados','primaveradeprados@gmail.com','{"instagram":"https://www.instagram.com/primaveradeprados/"}','La Serena','Chile','2025-12-27 04:04:14','2025-12-27 04:04:14','primavera-de-prados');
-INSERT INTO artista VALUES(208,'Carolina Paz Garcia','Remolino','carolinapaz.garcia@outlook.com','{"facebook":"https://web.facebook.com/artesaniaremolino/"}','La Serena','Chile','2025-12-27 04:04:15','2025-12-27 04:04:15','remolino');
-INSERT INTO artista VALUES(209,'Francisca Gonzales Cornejo','Soy de Lanita','fgc023@alumnos.ucn.cl','{"facebook":"https://web.facebook.com/soydelanita/"}','Coquimbo','Chile','2025-12-27 04:04:15','2025-12-27 04:04:15','soy-de-lanita');
-INSERT INTO artista VALUES(210,'Rocío Josefa Segovia Sanchez','Tienda Shibarita','rocio001122@gmail.com','{"instagram":"https://www.instagram.com/tienda_shibarita/"}','Coquimbo','Chile','2025-12-27 04:04:16','2025-12-27 04:04:16','tienda-shibarita');
-INSERT INTO artista VALUES(211,'Sol Vielma Ramos','Vicent Design','svr1906@gmail.com','{"instagram":"https://www.instagram.com/designvicent/"}','La Serena','Chile','2025-12-27 04:04:16','2025-12-27 04:04:16','vicent-design');
-INSERT INTO artista VALUES(212,'Carlos Herrera','Carlos Herrera (Dragonest Studio)','cherreradraw@gmail.com','{"instagram": "https://www.instagram.com/carlosdracoherrera/", "behance": "https://www.behance.net/Chaos-Draco"}','La Serena','Chile','2025-12-27 04:14:01','2025-12-27 04:14:01','carlos-herrera-dragonest-studio');
-INSERT INTO artista VALUES(213,NULL,'Philippe Sapiains','philippe.sapiains@gmail.com','{"instagram": "https://www.instagram.com/philippe.sapiains_artista/", "web": "https://philippesapiains.cl/"}','La Serena','Chile','2025-12-27 04:17:15','2025-12-27 04:17:15','philippe-sapiains');
+CREATE TABLE IF NOT EXISTS "evento_edicion_postulacion" (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    evento_edicion_id INTEGER NOT NULL,
+    nombre TEXT NOT NULL,
+    pseudonimo TEXT,
+    correo TEXT,
+    rrss TEXT,
+    disciplina_id INTEGER NOT NULL,
+    dossier_url TEXT,
+    estado TEXT NOT NULL DEFAULT 'pendiente',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_postulacion_evento_edicion 
+        FOREIGN KEY (evento_edicion_id) REFERENCES evento_edicion (id) ON DELETE CASCADE,
+    CONSTRAINT fk_postulacion_disciplina 
+        FOREIGN KEY (disciplina_id) REFERENCES disciplina (id),
+    CONSTRAINT chk_postulacion_estado 
+        CHECK (estado IN ('pendiente', 'seleccionado', 'rechazado', 'invitado'))
+);
+CREATE TABLE IF NOT EXISTS "artista" (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT,
+    pseudonimo TEXT NOT NULL,
+    correo TEXT,
+    rrss TEXT,
+    ciudad TEXT,
+    pais TEXT,
+    slug TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+INSERT INTO artista VALUES(1,'Paula Rojas Videla','Anima Red','Animared.ilustracion@gmail.com','{"instagram":"https://Instagram.com/anima.red"}','La Serena','Chile','anima-red','2025-12-25 05:11:50','2025-12-26 04:52:28');
+INSERT INTO artista VALUES(2,'Vanesa Estefanie Vargas Leyton','Shobian','shobian.art@gmail.com','{"instagram":"https://www.instagram.com/shobian.art/"}','Coquimbo','Chile','shobian','2025-12-25 05:11:50','2025-12-26 04:52:28');
+INSERT INTO artista VALUES(3,NULL,'Fran.Aerre','fran.aerre@gmail.com','{"instagram":"https://www.instagram.com/fran_aerre/"}','Coquimbo','Chile','fran-aerre','2025-12-25 05:11:50','2025-12-26 04:52:29');
+INSERT INTO artista VALUES(4,'Josefa Aguilera','Skelly.Uwu','skelly.ilustra@gmail.com','{"instagram":"https://www.instagram.com/skelly.uwu/"}','La Serena','Chile','skelly-uwu','2025-12-25 05:11:50','2025-12-26 04:52:30');
+INSERT INTO artista VALUES(5,NULL,'P3Dro','p_rojas03@hotmail.com','{"instagram":"https://www.instagram.com/p3dro_rv.03?igsh=MWh2cnRzZHpmeDMzNg=="}','Coquimbo','Chile','p3dro','2025-12-25 05:11:50','2025-12-26 04:52:31');
+INSERT INTO artista VALUES(6,'Ana Aurora Gutierrez Uribe','Catana','holacatana@gmail.com','{"instagram":"https://www.instagram.com/c_a_t_a_n_a/","facebook":"https://web.facebook.com/catanasworld/"}','La Serena','Chile','catana','2025-12-25 05:11:50','2025-12-26 04:52:31');
+INSERT INTO artista VALUES(7,'Sebastian Aguirre','Seba Endless','seba.endlesss@gmail.com','{"instagram":"https://www.instagram.com/seba.endless/","facebook":"https://web.facebook.com/Seba.Endless/"}','La Serena','Chile','seba-endless','2025-12-25 05:11:50','2025-12-26 04:52:32');
+INSERT INTO artista VALUES(8,NULL,'Viliz_Vz','vilizthementor21@gmail.com','{"instagram":"https://www.instagram.com/viliz_vz?igsh=aTF5dWFzMWl4azl6"}','Vicuña','Chile','viliz-vz','2025-12-25 05:11:50','2025-12-26 04:52:33');
+INSERT INTO artista VALUES(9,'Karime Simon Viñales','Karime Simon','avinagretta@gmail.com','{"instagram":"https://www.instagram.com/trauerkult_/?hl=es"}','La Serena','Chile','karime-simon','2025-12-25 05:11:50','2025-12-26 04:52:33');
+INSERT INTO artista VALUES(10,'Ulises Lopez','Uliseslo','tallerelqui@gmail.com','{"instagram":"https://instagram.com/uliseslo","web":"http://fauna-impo.blogspot.com/"}','La Serena','Chile','uliseslo','2025-12-25 05:11:50','2025-12-26 04:52:34');
+INSERT INTO artista VALUES(11,NULL,'Vale Ilustra','valeilustra2@gmail.com','{"instagram":"https://www.instagram.com/vale_ilustra?igsh=a21rMmw0cGx5bDlh"}','La Serena','Chile','vale-ilustra','2025-12-25 05:11:50','2025-12-26 04:52:35');
+INSERT INTO artista VALUES(12,NULL,'Nyxandr','Nyxandr.contacto@gmail.com','{"instagram":"https://www.instagram.com/nyxandr"}','La Serena','Chile','nyxandr','2025-12-25 05:11:50','2025-12-26 04:52:35');
+INSERT INTO artista VALUES(13,'Magdalena Antonia Pizarro Lopez','Canela','Canelaqq@gmail.com','{"instagram":"https://www.instagram.com/canela_qq1?igsh=MXdjbWRxOGRmaWZiYQ=="}','Coquimbo','Chile','canela','2025-12-25 05:11:50','2025-12-26 04:52:36');
+INSERT INTO artista VALUES(14,NULL,'Grabados Aleph','angelbarra07@gmail.com','{"instagram":"https://www.instagram.com/grabados_aleph/"}','La Serena','Chile','grabados-aleph','2025-12-25 05:11:50','2025-12-26 04:52:37');
+INSERT INTO artista VALUES(15,'Ivannia Belen Jacob García','Ivichu.Jpg','Ivabelen@gmail.com','{"instagram":"https://www.instagram.com/ivichu.jpg/"}','La Serena','Chile','ivichu-jpg','2025-12-25 05:11:50','2025-12-26 04:52:38');
+INSERT INTO artista VALUES(16,NULL,'Osamenta En El Jardin','valeria.suarez.diaz97@gmail.com','{"instagram":"https://www.instagram.com/osamentaseneljardin/"}','Vicuña','Chile','osamenta-en-el-jardin','2025-12-25 05:11:50','2025-12-26 04:52:38');
+INSERT INTO artista VALUES(17,'Camila Rosa Malebrán Cabezas','Ckiryuu','madkiryuu@gmail.com','{"instagram":"https://www.instagram.com/ckiryuu","facebook":"https://www.facebook.com/Kiryuu00/"}','Coquimbo','Chile','ckiryuu','2025-12-25 05:11:50','2025-12-26 04:52:39');
+INSERT INTO artista VALUES(18,NULL,'Aderezo','addless7u7@gmail.com','{"instagram":"https://instagram.com/addless7u7"}','La Serena','Chile','aderezo','2025-12-25 05:11:50','2025-12-26 04:52:40');
+INSERT INTO artista VALUES(19,NULL,'Purr Creatures','purrcreatures@gmail.com','{"instagram":"https://www.instagram.com/purrcreatures/"}','Coquimbo','Chile','purr-creatures','2025-12-25 05:11:50','2025-12-26 04:52:40');
+INSERT INTO artista VALUES(20,'Anastassia Bou Copier','Tachipin','tachipinillustrations@gmail.com','{"web":"https://linktr.ee/Tachipinillustrations13","facebook":"https://web.facebook.com/Tachipin/"}','La Serena','Chile','tapichin','2025-12-25 05:11:50','2025-12-27 04:19:37');
+INSERT INTO artista VALUES(21,NULL,'Saturno','saturnooarte@gmail.com','{"instagram":"https://www.instagram.com/sa_tu_rno/"}','Coquimbo','Chile','saturno','2025-12-25 05:11:50','2025-12-26 04:52:42');
+INSERT INTO artista VALUES(22,'Constanza Toro','Fluchinick','Fluchinick@gmail.com','{"instagram":"https://www.instagram.com/fluchinick/"}','La Serena','Chile','fluchinick','2025-12-25 05:11:50','2025-12-26 04:52:43');
+INSERT INTO artista VALUES(23,NULL,'Noezzal','noezzal@gmail.com','{"instagram":"https://www.instagram.com/noezzal"}','Coquimbo','Chile','noezzal','2025-12-25 05:11:50','2025-12-26 04:52:43');
+INSERT INTO artista VALUES(24,NULL,'Khyaruu','khyaruustore@gmail.com','{"web":"https://khyaruu.carrd.co/"}','La Serena','Chile','khyaruu','2025-12-25 05:11:50','2025-12-26 04:52:44');
+INSERT INTO artista VALUES(25,'Alexis Ivan Cepeda Esquivel','Acekuros','Acekuros@gmail.com','{"instagram":"https://Instagram.com/acekuros"}','La Serena','Chile','acekuros','2025-12-25 05:11:50','2025-12-26 04:52:45');
+INSERT INTO artista VALUES(26,NULL,'Nomito','Olivaresdafne1@gmail.com','{"instagram":"https://www.instagram.com/_n0mito.art_/"}','La Serena','Chile','nomito','2025-12-25 05:11:50','2025-12-26 04:52:45');
+INSERT INTO artista VALUES(27,NULL,'Chiimewe','chiimewe@gmail.com','{"instagram":"https://www.instagram.com/chiimewe?igsh=cG96N2txaWdseGtt"}','Coquimbo','Chile','chiimewe','2025-12-25 05:11:50','2025-12-26 04:52:46');
+INSERT INTO artista VALUES(28,NULL,'Yem','j.n.t.c.200312@gmail.com','{"instagram":"https://www.instagram.com/yem.ito_art?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="}','La Serena','Chile','yem','2025-12-25 05:11:50','2025-12-26 04:52:47');
+INSERT INTO artista VALUES(29,NULL,'Skyderen','marcelovergara4507@gmail.com','{"web":"https://linktr.ee/_skyderen"}','La Serena','Chile','skyderen','2025-12-25 05:11:50','2025-12-26 04:52:48');
+INSERT INTO artista VALUES(30,NULL,'Ghostie','lcmr.brownstone@gmail.com','{"instagram":"https://www.instagram.com/lc_mr.brownstone?igsh=cjFmaHljbjhlczN4"}','La Serena','Chile','ghostie','2025-12-25 05:11:50','2025-12-26 04:52:48');
+INSERT INTO artista VALUES(31,'Camila Guamán','Camila Guaman','camilaguaman.ilustracion@gmail.com','{"instagram":"https://www.instagram.com/camilaguaman.ilustracion","facebook":"https://web.facebook.com/chinchillacosmica/"}','La Serena','Chile','camila-guaman','2025-12-25 05:11:50','2025-12-26 04:52:49');
+INSERT INTO artista VALUES(32,'Liset Retamal','Astro Glitter','astroglitter.studio@gmail.com','{"instagram":"https://www.instagram.com/astro.glitter/"}','La Serena','Chile','astro-glitter','2025-12-25 05:11:50','2025-12-26 04:52:50');
+INSERT INTO artista VALUES(33,'Jorge Diaz Yueng','Niño Pan','elninopan99@gmail.com','{"instagram":"https://www.instagram.com/elninopan","facebook":"https://web.facebook.com/colectivoninopan/"}','La Serena','Chile','nino-pan','2025-12-25 05:11:50','2025-12-26 04:52:50');
+INSERT INTO artista VALUES(34,'Camila Herrera','Camellia Liz','camihlatournerie@gmail.com','{"instagram":"https://www.instagram.com/camellia.liz","facebook":"https://web.facebook.com/camellializ/"}','Coquimbo','Chile','camellia-liz','2025-12-25 05:11:50','2025-12-26 04:52:51');
+INSERT INTO artista VALUES(35,'Alejandra Avilés','Hanrra','hanrra.artwork@gmail.com','{"instagram":"https://www.instagram.com/hanrra.artwork/","facebook":"https://web.facebook.com/hanrraartwork/"}','Coquimbo','Chile','hanrra','2025-12-25 05:11:50','2025-12-26 04:52:52');
+INSERT INTO artista VALUES(36,NULL,'Sakanita','sakanastationery@gmail.com','{"instagram":"https://instagram.com/_sakanita_/"}','Coquimbo','Chile','sakanita','2025-12-25 05:11:50','2025-12-26 04:52:52');
+INSERT INTO artista VALUES(37,'Pablo Araya','Chilensis','Chilensisboy@gmail.com','{"instagram":"https://www.instagram.com/chilensisboy/","facebook":"https://web.facebook.com/chilensisboy/"}','La Serena','Chile','chilensis','2025-12-25 05:11:50','2025-12-26 04:52:53');
+INSERT INTO artista VALUES(38,'Alejandro Jorquera','El Ale','creativotrama@gmail.com','{"instagram":"https://www.instagram.com/elale_ilustrador/"}','La Serena','Chile','el-ale','2025-12-25 05:11:50','2025-12-26 04:52:54');
+INSERT INTO artista VALUES(39,'Francisco Valdivia Aguirre','Pancho Valdivia','HOMBREMEDIVAL@gmail.com','{"instagram":"https://www.instagram.com/pancho_valdivia/"}','La Serena','Chile','pancho-valdivia','2025-12-25 05:11:50','2025-12-26 04:52:54');
+INSERT INTO artista VALUES(40,NULL,'Polet Komiksu','poletcomics@gmail.com','{"instagram":"https://www.instagram.com/poletkomiksu?igsh=MXd1bHdsOTd6YWl4cg=="}','Coquimbo','Chile','polet-komiksu','2025-12-25 05:11:50','2025-12-26 04:52:55');
+INSERT INTO artista VALUES(41,'Diego Maya','Futuro Comics','contactodiegomaya@gmail.com','{"instagram":"http://instagram.com/futurocomics"}','La Serena','Chile','futuro-comics','2025-12-25 05:11:50','2025-12-26 04:52:56');
+INSERT INTO artista VALUES(42,NULL,'Carvajal Ilustraciones','nacionautonoma@yahoo.es','{"instagram":"https://www.instagram.com/carvajalilustraciones/"}','Coquimbo','Chile','carvajal-ilustraciones','2025-12-25 05:11:50','2025-12-26 04:52:57');
+INSERT INTO artista VALUES(43,'Rodan Castro Muñoz','Rotten Monkey','ro.felipe768@gmail.com','{"instagram":"https://instagram.com/rottenmonkey_inc/","facebook":"https://web.facebook.com/rottenmonkeyinc/"}','Coquimbo','Chile','rotten-monkey','2025-12-25 05:11:50','2025-12-26 04:52:57');
+INSERT INTO artista VALUES(44,'Pía Ahumada','Me Pego Un Tiro','tallermepegountiro@gmail.com','{"instagram":"https://www.instagram.com/mepegountiro?igsh=NW40MW5udWl4OGM0"}','La Serena','Chile','me-pego-un-tiro','2025-12-25 05:11:50','2025-12-26 04:52:58');
+INSERT INTO artista VALUES(45,'Fernanda Pérez Pérez','Mami Sita','Mamisitamodeon@gmail.com','{"instagram":"https://Instagram.com/mamisitamodeon"}','La Serena','Chile','mami-sita','2025-12-25 05:11:50','2025-12-26 04:52:59');
+INSERT INTO artista VALUES(46,'Pía Fredes','Sra Tonks','nidoodepajaros@gmail.com','{"instagram":"https://www.instagram.com/sratonks/"}','La Serena','Chile','sra-tonks','2025-12-25 05:11:50','2025-12-26 04:52:59');
+INSERT INTO artista VALUES(47,NULL,'Alkimia','Valentinasofiascalderon@gmail.com','{"instagram":"https://www.instagram.com/alkimia.cl?igsh=MW9vZDZhcWs2d3YxbQ=="}','Coquimbo','Chile','alkimia','2025-12-25 05:11:50','2025-12-26 04:53:00');
+INSERT INTO artista VALUES(48,'Jessica Gutierrez Vega','Kao Artwork','Kathykiba@gmail.com','{"instagram":"https://www.instagram.com/kao.art.work/"}','Coquimbo','Chile','kao-artwork','2025-12-25 05:11:50','2025-12-26 04:53:01');
+INSERT INTO artista VALUES(49,NULL,'De Cordillera','decordillerachile@gmail.com','{"instagram":"https://www.instagram.com/decordillera"}','Coquimbo','Chile','de-cordillera','2025-12-25 05:11:50','2025-12-26 04:53:01');
+INSERT INTO artista VALUES(50,NULL,'Bolbarán Cómics','jose.bolbaran.r@gmail.com','{"instagram":"https://www.instagram.com/jose.bolbaran.r/"}','Ovalle','Chile','bolbaran-comics','2025-12-25 05:11:50','2025-12-26 04:53:02');
+INSERT INTO artista VALUES(51,NULL,'Pat_trashoart','benjaminurrutiaramos@gmail.com','{"instagram":"https://www.instagram.com/pat_trashoart?igsh=MTZ2b3Q1bDdod2MxeQ=="}','La Serena','Chile','pat-trashoart','2025-12-25 05:11:50','2025-12-26 04:53:03');
+INSERT INTO artista VALUES(52,'Valeria Venegas Fernández','Blanquis','blanquis.ilustracion@gmail.com','{"instagram":"https://www.instagram.com/blanquis.ilus/","facebook":"https://www.facebook.com/blanquis.ilus/"}','Coquimbo','Chile','blanquis','2025-12-25 05:11:50','2025-12-26 04:53:04');
+INSERT INTO artista VALUES(53,NULL,'Kmilu','camila.inostroza.liebsch@gmail.com','{"instagram":"https://www.instagram.com/kmiluup?igsh=Ym1vbGx3Y3R1ZXNu"}','La Serena','Chile','kmilu','2025-12-25 05:11:50','2025-12-26 04:53:04');
+INSERT INTO artista VALUES(54,'Chris Olivares','Remebranzas Negras','floresolivarescc@gmail.com','{"instagram":"https://www.instagram.com/remembranzas_negras/"}','La Serena','Chile','remebranzas-negras','2025-12-25 05:11:50','2025-12-26 04:53:05');
+INSERT INTO artista VALUES(55,'Eve Maluenda','N0tarts','epmg990@gmail.com','{"instagram":"https://www.instagram.com/n0tarts"}','La Serena','Chile','n0tarts','2025-12-25 05:11:50','2025-12-26 04:53:06');
+INSERT INTO artista VALUES(56,NULL,'Microbits','contacto@fabianvallejos.cl','{"instagram":"https://www.instagram.com/maikurobitto/"}','La Serena','Chile','microbits','2025-12-25 05:11:50','2025-12-26 04:53:06');
+INSERT INTO artista VALUES(57,NULL,'Bekzar','felipe.becar@mayor.cl','{"instagram":"https://www.instagram.com/bekzar.art/"}','Coquimbo','Chile','bekzar','2025-12-25 05:11:50','2025-12-26 04:53:07');
+INSERT INTO artista VALUES(58,NULL,'Arcanista draws','arcanistadraws@gmail.com','{"instagram":"https://instagram.com/arcanistadraws"}','Ovalle','Chile','arcanista-draws','2025-12-25 05:11:50','2025-12-26 04:53:08');
+INSERT INTO artista VALUES(59,NULL,'Francisco Llimy','francisco.llimy@gmail.com','{"instagram":"https://www.instagram.com/francisco.llimy/"}','La Serena','Chile','francisco-llimy','2025-12-25 05:11:50','2025-12-26 04:53:08');
+INSERT INTO artista VALUES(60,NULL,'JaviiIlustrations','javieraramirez351@gmail.com','{"instagram":"https://www.instagram.com/javiiilustrations_?igsh=c2p5bnd4bDNkeDdi"}','La Serena','Chile','javiiilustrations','2025-12-25 05:11:50','2025-12-26 04:53:09');
+INSERT INTO artista VALUES(61,NULL,'Ilustración khasumii','daniela18042@gmail.com','{"instagram":"https://www.instagram.com/_khasumii_/"}','La Serena','Chile','ilustracion-khasumii','2025-12-25 05:11:50','2025-12-26 04:53:10');
+INSERT INTO artista VALUES(62,NULL,'Yatiediciones','layatiediciones@gmail.com','{"instagram":"https://www.instagram.com/editorial_yatiediciones"}','Coquimbo','Chile','yatiediciones','2025-12-25 05:11:50','2025-12-26 04:53:10');
+INSERT INTO artista VALUES(63,'Victoria Rubio','Lesbilais','vicky.rubio@gmail.com','{"instagram":"https://www.instagram.com/lesbilais/"}','Crevillent','España','lesbilais','2025-12-25 05:11:50','2025-12-26 04:53:11');
+INSERT INTO artista VALUES(64,'Maira Alday Villalobos','Myru Ann','myruann@gmail.com','{"instagram":"https://www.instagram.com/myru.ann","facebook":"https://web.facebook.com/myruann/"}','La Serena','Chile','myru-ann','2025-12-25 05:11:50','2025-12-26 04:53:12');
+INSERT INTO artista VALUES(65,NULL,'Pininati','nati.macaya@gmail.com','{"instagram":"https://www.instagram.com/pininati/"}','La Serena','Chile','pininati','2025-12-25 05:11:50','2025-12-26 04:53:12');
+INSERT INTO artista VALUES(66,NULL,'Flowerspower','nramirezrivera1@gmail.com','{"instagram":"https://www.instagram.com/el_flowers_power?igsh=MTdpOW12cWtsNXR2bw=="}','Coquimbo','Chile','flowerspower','2025-12-25 05:11:50','2025-12-26 04:53:13');
+INSERT INTO artista VALUES(67,NULL,'Minino_nyart','ninoskhalohmayer@gmail.com','{"instagram":"https://www.instagram.com/minino_nyart?igsh=MWM2N3Mybm55ZjRhdA=="}','Coquimbo','Chile','minino-nyart','2025-12-25 05:11:50','2025-12-26 04:53:14');
+INSERT INTO artista VALUES(68,'Claudia Lazo Gajardo','Paper pupy','claudialazo.gajardo@gmail.com','{"instagram":"https://www.instagram.com/paperpupy"}','La Serena','Chile','paper-pupy','2025-12-25 05:11:50','2025-12-26 04:53:14');
+INSERT INTO artista VALUES(69,'Javiera Génesis Gonzalez Trujillo','Peliitos','pelitos.pelitos123@gmail.com','{"instagram":"https://www.instagram.com/_peliitos_"}','La Serena','Chile','peliitos','2025-12-25 05:11:50','2025-12-26 04:53:15');
+INSERT INTO artista VALUES(70,NULL,'Planea papeleria','rocio.medina.h@gmail.com','{"instagram":"https://www.instagram.com/planeapapeleria/"}','La Serena','Chile','planea-papeleria','2025-12-25 05:11:50','2025-12-26 04:53:16');
+INSERT INTO artista VALUES(71,'Marcelo Tapia','Solid Ediciones','disenorgb@gmail.com','{"instagram":"https://www.instagram.com/solidediciones/","facebook":"https://web.facebook.com/solidediciones"}','La Serena','Chile','solid-ediciones','2025-12-25 05:11:50','2025-12-26 04:53:17');
+INSERT INTO artista VALUES(72,NULL,'Sueño de Pajaro','suenodepajaro@gmail.com','{"instagram":"https://www.instagram.com/suenodepajaro/"}','Vicuña','Chile','sueno-de-pajaro','2025-12-25 05:11:50','2025-12-26 04:53:17');
+INSERT INTO artista VALUES(73,NULL,'Tekaeme','tekaemeilustraciones@gmail.com','{"instagram":"https://www.instagram.com/tekaeme____/"}','Coquimbo','Chile','tekaeme','2025-12-25 05:11:50','2025-12-26 04:53:18');
+INSERT INTO artista VALUES(74,NULL,'Ruvale','ruvale123@gmail.com','{"instagram":"https://www.instagram.com/ruruvale/"}','La Serena','Chile','ruvale','2025-12-25 05:11:50','2025-12-26 04:53:19');
+INSERT INTO artista VALUES(75,NULL,'WasabiPNG','powerpowmail@gmail.com','{"instagram":"https://www.instagram.com/sgt_wasabi/"}','La Serena','Chile','wasabipng','2025-12-25 05:11:50','2025-12-26 04:53:19');
+INSERT INTO artista VALUES(76,NULL,'Ilustravel','holavelgato@gmail.com','{"instagram":"https://www.instagram.com/bel.ilustravel/"}','La Serena','Chile','ilustravel','2025-12-25 05:11:50','2025-12-26 04:53:20');
+INSERT INTO artista VALUES(77,NULL,'Intercultural Arte','josecifuentes983@gmail.com','{"instagram":"https://www.instagram.com/intercultural_arte_/"}','La Serena','Chile','intercultural-arte','2025-12-25 05:11:50','2025-12-26 04:53:21');
+INSERT INTO artista VALUES(78,NULL,'Tierramarga','c.diazt92@gmail.com','{"instagram":"https://www.instagram.com/_tierramarga/"}','La Serena','Chile','tierramarga','2025-12-25 05:11:50','2025-12-26 04:53:22');
+INSERT INTO artista VALUES(79,NULL,'Ensimismada','ensimismada00@gmail.com','{"instagram":"https://www.instagram.com/ensimismada.cl/"}','La Serena','Chile','ensimismada','2025-12-25 05:11:50','2025-12-26 04:53:22');
+INSERT INTO artista VALUES(80,'Karen Valenzuela','Prrr Miaow','karenvalen.diseno@gmail.com','{"instagram":"https://www.instagram.com/prrr.miaow?igsh=MTlxdDE4cDZ2aGx1cA==","facebook":"https://web.facebook.com/Prrr-Miaow-179920085887390/"}','La Serena','Chile','prrr-miaow','2025-12-25 05:11:50','2025-12-26 04:53:23');
+INSERT INTO artista VALUES(81,'Javier Carvajal Ramirez','Javo_Siniestro','javosiniestre@gmail.com','{"instagram":"https://www.instagram.com/javo_siniestro/","facebook":"https://web.facebook.com/siniestre/"}','La Serena','Chile','javo-siniestro','2025-12-25 05:11:50','2025-12-26 04:53:24');
+INSERT INTO artista VALUES(82,NULL,'Coticocodrila','Holacoticocodrila@gmail.com','{"instagram":"https://www.instagram.com/coticocodrila/"}','La Serena','Chile','coticocodrila','2025-12-25 05:11:50','2025-12-26 04:53:24');
+INSERT INTO artista VALUES(83,NULL,'Cat_linaa_art','och8jos.studio@gmail.com','{"instagram":"https://www.instagram.com/cat_linaa_art/"}','La Serena','Chile','cat-linaa-art','2025-12-25 05:11:50','2025-12-26 04:53:25');
+INSERT INTO artista VALUES(84,NULL,'Namine Anami','namineanami@gmail.com','{"instagram":"https://www.instagram.com/namineanami/"}','La Serena','Chile','namine-anami','2025-12-25 05:11:50','2025-12-26 04:53:26');
+INSERT INTO artista VALUES(85,NULL,'Cazar al tiburon','f.zambranoaviles@gmail.com','{"instagram":"https://www.instagram.com/cazaraltiburon.cl/"}','La Serena','Chile','cazar-al-tiburon','2025-12-25 05:11:50','2025-12-26 04:53:27');
+INSERT INTO artista VALUES(86,NULL,'Tati San Martin','tatimartin333@gmail.com','{"instagram":"https://www.instagram.com/tatimartin_artista/"}','La Serena','Chile','tati-san-martin','2025-12-25 05:11:50','2025-12-26 04:53:28');
+INSERT INTO artista VALUES(87,NULL,'p0chi_kun','och8jos.studio@gmail.com','{"instagram":"https://www.instagram.com/p0chi_kun/"}','La Serena','Chile','p0chi-kun','2025-12-25 05:11:50','2025-12-26 04:53:26');
+INSERT INTO artista VALUES(88,'Gabriela Contreras Arancibia','Blue Straycatt Art','gabriela95_contreras@hotmail.com','{"instagram":"https://www.instagram.com/blue_straycatt_art/"}','Coquimbo','Chile','blue-straycatt-art','2025-12-27 04:02:27','2025-12-27 04:02:27');
+INSERT INTO artista VALUES(89,'Daniel Allende','Danyfoo','danyfoo.art@gmail.com','{"instagram":"https://www.instagram.com/danyfoo_art/","facebook":"https://web.facebook.com/Danyfooart/"}','Coquimbo','Chile','danyfoo','2025-12-27 04:02:29','2025-12-27 04:02:29');
+INSERT INTO artista VALUES(90,'Cristian Correa Zuleta','Darkos','darkoscorreaz@gmail.com','{"instagram":"https://www.instagram.com/darkoscorrea/"}','Coquimbo','Chile','darkos','2025-12-27 04:02:29','2025-12-27 04:02:29');
+INSERT INTO artista VALUES(91,'Francisco Toro','Decay','f-toro@live.cl','{"instagram":"https://www.instagram.com/decay.ink/","facebook":"https://web.facebook.com/decaying.ink/"}','Coquimbo','Chile','decay','2025-12-27 04:02:30','2025-12-27 04:02:30');
+INSERT INTO artista VALUES(92,'Gabriela Elgueta','Drömmer Art','drommer.art@gmail.com','{"instagram":"https://www.instagram.com/drommer_art/"}','Coquimbo','Chile','drommer-art','2025-12-27 04:02:31','2025-12-27 04:02:31');
+INSERT INTO artista VALUES(93,'Claudia Tardito Herreros','Groteska','hola@groteska.cl','{"instagram":"https://www.instagram.com/lagroteska/"}','Coquimbo','Chile','groteska','2025-12-27 04:02:32','2025-12-27 04:02:32');
+INSERT INTO artista VALUES(94,'Jonathan Barraza Veas','Jonariel','jonathanbv.1995@gmail.com','{"instagram":"https://www.instagram.com/jonariel20/","facebook":"https://web.facebook.com/JonAriel20"}','Coquimbo','Chile','jonariel','2025-12-27 04:02:33','2025-12-27 04:02:33');
+INSERT INTO artista VALUES(95,'Judy Helena Malla','JudyDoodles','j.helenita@gmail.com','{"instagram":"https://www.instagram.com/judy_doodles/","facebook":"https://web.facebook.com/judydoodles/"}','Coquimbo','Chile','judydoodles','2025-12-27 04:02:34','2025-12-27 04:02:34');
+INSERT INTO artista VALUES(96,'Lucas Alvayay Durand','La Nueve Ce','richarhoos@gmail.com','{"instagram":"https://www.instagram.com/lanuevece/?hl=es-la"}','Coquimbo','Chile','la-nueve-ce','2025-12-27 04:02:35','2025-12-27 04:02:35');
+INSERT INTO artista VALUES(97,'Felipe Orlando Larco Mondaca','Larcolepsia','larcolerico@gmail.com','{"instagram":"https://www.instagram.com/larcolepsia/?hl=es-la"}','Coquimbo','Chile','larcolepsia','2025-12-27 04:02:35','2025-12-27 04:02:35');
+INSERT INTO artista VALUES(98,'Maximiliano Roco','MaxRoco','maxroco@gmail.com','{"instagram":"https://www.instagram.com/proyectomaxroco/","facebook":"https://web.facebook.com/proyectomaxroco/"}','Coquimbo','Chile','maxroco','2025-12-27 04:02:35','2025-12-27 04:02:35');
+INSERT INTO artista VALUES(99,'Daniel Alvarez Vega','MonHaku','danielart.195@gmail.com','{"instagram":"https://www.instagram.com/hakuya_kou/"}','Coquimbo','Chile','monhaku','2025-12-27 04:02:36','2025-12-27 04:02:36');
+INSERT INTO artista VALUES(100,'Matias Edurado Palominos Alarcón','Mr. Palominos','mpalominosa@gmail.com','{"instagram":"https://www.instagram.com/malosjuguetes/"}','Coquimbo','Chile','mr-palominos','2025-12-27 04:02:37','2025-12-27 04:02:37');
+INSERT INTO artista VALUES(101,'Arlett Vanessa Carvaja','Mysterylol','mysterylolxd@gmail.com','{"instagram":"https://www.instagram.com/dibujan2_anim3/"}','Coquimbo','Chile','mysterylol','2025-12-27 04:02:38','2025-12-27 04:02:38');
+INSERT INTO artista VALUES(102,'Nevenka Sophia Silva González','Neve.nes','neve.90@gmail.com','{"instagram":"https://www.instagram.com/neve.nes/","facebook":"https://web.facebook.com/Nevenka.Silva.G/"}','Coquimbo','Chile','nevenes','2025-12-27 04:02:38','2025-12-27 04:02:38');
+INSERT INTO artista VALUES(103,'Samuel Araya','Samuel Araya C Artwork (Florido)','samuel.araya.c@gmail.com','{"instagram":"https://www.instagram.com/samarayaart/","facebook":"https://web.facebook.com/Samuelarayac.artworks/"}','Coquimbo','Chile','samuel-araya-c-artwork-florido','2025-12-27 04:02:40','2025-12-27 04:02:40');
+INSERT INTO artista VALUES(104,'Johanina Alfaro Rojas','Simio','johaalfarorojas@gmail.com','{"instagram":"https://www.instagram.com/il_simiox/"}','Coquimbo','Chile','simio','2025-12-27 04:02:40','2025-12-27 04:02:40');
+INSERT INTO artista VALUES(105,'Solange Pacheco Ortiz','Sol Pacheco','solangepacheco.sp@gmail.com',NULL,'Coquimbo','Chile','sol-pacheco','2025-12-27 04:02:41','2025-12-27 04:02:41');
+INSERT INTO artista VALUES(106,NULL,'Tommy Astorga','tepunto@gmail.com','{"instagram":"https://www.instagram.com/tommyastorga/","facebook":"https://web.facebook.com/AstorgaTommy/"}','Coquimbo','Chile','tommy-astorga','2025-12-27 04:02:42','2025-12-27 04:02:42');
+INSERT INTO artista VALUES(107,'Andrea Diaz Godoy','Andreadiasnublados','andriusday93@gmail.com','{"artstation":"https://www.artstation.com/andreadiasnublados"}','Coquimbo','Chile','andreadiasnublados','2025-12-27 04:02:42','2025-12-27 04:02:42');
+INSERT INTO artista VALUES(108,'Nicole Alexa Astorga Vega','exe.cute.me','nicomccurdy@gmail.com','{"instagram":"https://www.instagram.com/exe.cute.me/"}','Illapel','Chile','executeme','2025-12-27 04:02:43','2025-12-27 04:02:43');
+INSERT INTO artista VALUES(109,'Antoniett Rivera Maya','Abejas Negras (Niett)','ant.rivv@gmail.com','{"instagram":"https://www.instagram.com/abejasnegras/"}','La Serena','Chile','abejas-negras-niett','2025-12-27 04:02:44','2025-12-27 04:02:44');
+INSERT INTO artista VALUES(110,'Elba Gamonal Ruiz-Crespo','Agua de Quisco','elbagamonal@gmail.com','{"instagram":"https://www.instagram.com/agua_de_quisco_ilustraciones/"}','La Serena','Chile','agua-de-quisco','2025-12-27 04:02:44','2025-12-27 04:02:44');
+INSERT INTO artista VALUES(111,'Benjamin Vega Rodriguez','Aitue','benja.vega0799@gmail.com','{"instagram":"https://www.instagram.com/aitue_art/?hl=es-la"}','La Serena','Chile','aitue','2025-12-27 04:02:45','2025-12-27 04:02:45');
+INSERT INTO artista VALUES(112,'Margareth Gricell Contreras Mondaca','Amaggieanthine','margareth.gricell@gmail.com','{"instagram":"https://www.instagram.com/_thanksthestars_/"}','La Serena','Chile','amaggieanthine','2025-12-27 04:02:46','2025-12-27 04:02:46');
+INSERT INTO artista VALUES(113,'Valentina Aurora Ravello Argandoña','Aurora Ravello','valeravello1@gmail.com','{"instagram":"https://www.instagram.com/aurora_ravello/"}','La Serena','Chile','aurora-ravello','2025-12-27 04:02:47','2025-12-27 04:02:47');
+INSERT INTO artista VALUES(114,'Camila Olivares/Jose Flores','Camipepe','camiiipepe@gmail.com','{"instagram":"https://www.instagram.com/camiipepe/","facebook":"https://web.facebook.com/camiipepee/"}','La Serena','Chile','camipepe','2025-12-27 04:02:47','2025-12-27 04:02:47');
+INSERT INTO artista VALUES(115,'Fiorella Tosetti Contreras','Caotica Ilustrada','caotica.siempre@gmail.com','{"instagram":"https://www.instagram.com/caotica_ilustrada/","facebook":"https://web.facebook.com/caotica.ilustrada.7"}','La Serena','Chile','caotica-ilustrada','2025-12-27 04:02:50','2025-12-27 04:02:50');
+INSERT INTO artista VALUES(116,'Elisa Carolina Piñones','Caro PZ','caroi.uleta@gmail.com','{"instagram":"https://www.instagram.com/_karo.pezeta_/"}','La Serena','Chile','caro-pz','2025-12-27 04:02:52','2025-12-27 04:02:52');
+INSERT INTO artista VALUES(117,'Belen Aguilar','CLEIB','beleaguilar23@gmail.com','{"instagram":"https://www.instagram.com/_cleib/","facebook":"https://web.facebook.com/Bel%C3%A9n-Aguilar-152951941518422/"}','La Serena','Chile','cleib','2025-12-27 04:02:53','2025-12-27 04:02:53');
+INSERT INTO artista VALUES(118,'Romina Villegas','Collarcitos RV','cabezaortopedica@gmail.com','{"instagram":"https://www.instagram.com/collarcitosrv/","facebook":"https://web.facebook.com/Collarcitos"}','La Serena','Chile','collarcitos-rv','2025-12-27 04:02:54','2025-12-27 04:02:54');
+INSERT INTO artista VALUES(119,'Cristian Marin','Cris Crowfin','cristian.p.marin@gmail.com','{"instagram":"https://www.instagram.com/crowfin_art/","facebook":"https://web.facebook.com/Cris-Crowfin-866981636665660/"}','La Serena','Chile','cris-crowfin','2025-12-27 04:02:57','2025-12-27 04:02:57');
+INSERT INTO artista VALUES(120,'Daniella Le-Brauer','Dani Lee','danille28@gmail.com','{"instagram":"https://www.instagram.com/dani_lee_astro_art/","facebook":"https://www.facebook.com/DaniLeeArt28/"}','La Serena','Chile','dani-lee','2025-12-27 04:02:57','2025-12-27 04:02:57');
+INSERT INTO artista VALUES(121,'Francisca Alejandra Silva Piña','Diseños Pineapple','francisca.silva.2002@gmail.com','{"instagram":"https://www.instagram.com/disenospineapple/","facebook":"https://www.facebook.com/franciscapineapple/"}','La Serena','Chile','disenos-pineapple','2025-12-27 04:02:58','2025-12-27 04:02:58');
+INSERT INTO artista VALUES(122,'Romina Aguilera Zuñiga','Diskettes.ink','dizked.art@gmail.com','{"instagram":"https://www.instagram.com/diskettes.ink/","facebook":"https://web.facebook.com/dizked.art/"}','La Serena','Chile','diskettesink','2025-12-27 04:02:58','2025-12-27 04:02:58');
+INSERT INTO artista VALUES(123,'Christian Herrera','DragoNest Studio','herrera.chris95@gmail.com','{"instagram":"https://www.instagram.com/chriss.herrera/","facebook":"https://web.facebook.com/chrisherrera95/"}','La Serena','Chile','dragonest-studio','2025-12-27 04:03:00','2025-12-27 04:03:00');
+INSERT INTO artista VALUES(124,'Iván Andrés Jorquera Olivares','elMeNeSe','ivanjorquera.o@gmail.com','{"instagram":"https://www.instagram.com/elmenese/","web":"http://www.ivanjorquera.cl/"}','La Serena','Chile','elmenese','2025-12-27 04:03:01','2025-12-27 04:03:01');
+INSERT INTO artista VALUES(125,'Harold Olivares Sarmiento','HOS','hos.artes@gmail.com','{"instagram":"https://www.instagram.com/hos.art/","facebook":"https://web.facebook.com/hos.artes/"}','La Serena','Chile','hos','2025-12-27 04:03:01','2025-12-27 04:03:01');
+INSERT INTO artista VALUES(126,'Ignacio Israel Valdivia Avalos','Ignacio Gato','ignacio.kittycat@gmail.com','{"instagram":"https://www.instagram.com/ignacio_gato_/"}','La Serena','Chile','ignacio-gato','2025-12-27 04:03:03','2025-12-27 04:03:03');
+INSERT INTO artista VALUES(127,'Sofia Rivera','Inky Cotton',NULL,'{"instagram":"https://www.instagram.com/inkycotton/"}','La Serena','Chile','inky-cotton','2025-12-27 04:03:03','2025-12-27 04:03:03');
+INSERT INTO artista VALUES(128,'Isabela Adaos Véliz','Isa Edaliz','isaedaliz@gmail.com','{"instagram":"https://www.instagram.com/isaedaliz/"}','La Serena','Chile','isa-edaliz','2025-12-27 04:03:04','2025-12-27 04:03:04');
+INSERT INTO artista VALUES(129,'José Ignacio Cifuentes Pizarro','Jotace','jc.dibujos@gmail.com','{"instagram":"https://www.instagram.com/jotace_dibujos/"}','La Serena','Chile','jotace','2025-12-27 04:03:04','2025-12-27 04:03:04');
+INSERT INTO artista VALUES(130,'Catalina Ramirez','Katassj','katassjilustra53@gmail.com','{"instagram":"https://www.instagram.com/katassj/?hl=es-la"}','La Serena','Chile','katassj','2025-12-27 04:03:06','2025-12-27 04:03:06');
+INSERT INTO artista VALUES(131,'Sofía Rojas Meza','Keimara','sofiarojasmeza@gmail.com','{"instagram":"https://www.instagram.com/_keimara/"}','La Serena','Chile','keimara','2025-12-27 04:03:06','2025-12-27 04:03:06');
+INSERT INTO artista VALUES(132,'Francisca Rayen Riquelme Araya','Khira Yoshi','onyx.yue@gmail.com','{"instagram":"https://www.instagram.com/khirayoshi/","facebook":"https://web.facebook.com/KhiraYoshi/"}','La Serena','Chile','khira-yoshi','2025-12-27 04:03:07','2025-12-27 04:03:07');
+INSERT INTO artista VALUES(133,'Noelia Guerra Flores','Kompas Ilustration','dallamokompas@gmail.com','{"instagram":"https://www.instagram.com/kompas_ilu/","facebook":"https://web.facebook.com/kompasillustration/"}','La Serena','Chile','kompas-ilustration','2025-12-27 04:03:07','2025-12-27 04:03:07');
+INSERT INTO artista VALUES(134,'Francisca Casanova','KybArt','byeongari.hun@gmail.com','{"instagram":"https://www.instagram.com/kyb_art/"}','La Serena','Chile','kybart','2025-12-27 04:03:08','2025-12-27 04:03:08');
+INSERT INTO artista VALUES(135,'Tamara Sepúlveda','Lady Beelze','tamarasepul@gmail.com','{"instagram":"https://www.instagram.com/ladybeelze/"}','La Serena','Chile','lady-beelze','2025-12-27 04:03:09','2025-12-27 04:03:09');
+INSERT INTO artista VALUES(136,'Yarela Briceño Volta','Manitas E Gato','manitasegato@gmail.com','{"instagram":"https://www.instagram.com/manitas_e_gato/","facebook":"https://web.facebook.com/manitasegato/"}','La Serena','Chile','manitas-e-gato','2025-12-27 04:03:09','2025-12-27 04:03:09');
+INSERT INTO artista VALUES(137,'Soffia Chirino Montaño','Mermaid Curse','scchirinom@gmail.com','{"instagram":"https://www.instagram.com/mermaidcurse.art/","facebook":"https://web.facebook.com/mermaid.curseart/"}','La Serena','Chile','mermaid-curse','2025-12-27 04:03:11','2025-12-27 04:03:11');
+INSERT INTO artista VALUES(138,'Francesca Gamboni Núñez','Momofurambu','fran.gamboni@gmail.com','{"instagram":"https://www.instagram.com/__franbuesa/"}','La Serena','Chile','momofurambu','2025-12-27 04:03:12','2025-12-27 04:03:12');
+INSERT INTO artista VALUES(139,'Rene Araya','Neeh Re','rene.f.arayaramirez@gmail.com','{"instagram":"https://www.instagram.com/neeh_re/"}','La Serena','Chile','neeh-re','2025-12-27 04:03:13','2025-12-27 04:03:13');
+INSERT INTO artista VALUES(140,'Vanessa Gonzalez Schifferli','Nerdy Roll','vanessa.260601@gmail.com','{"facebook":"https://web.facebook.com/NerdyRoll/"}','La Serena','Chile','nerdy-roll','2025-12-27 04:03:14','2025-12-27 04:03:14');
+INSERT INTO artista VALUES(141,'Alan Salinas Angel','Noctam','alansalinasangel@gmail.com','{"instagram":"https://www.instagram.com/noctam.ilustra/","facebook":"https://web.facebook.com/noctam.ilustra/"}','La Serena','Chile','noctam','2025-12-27 04:03:15','2025-12-27 04:03:15');
+INSERT INTO artista VALUES(142,'Fernanda Aguirre Mussa','No Me Dicen Fer','fer.aguirre4@gmail.com','{"instagram":"https://www.instagram.com/nomedicenfer/","facebook":"https://web.facebook.com/nomedicenfer/"}','La Serena','Chile','no-me-dicen-fer','2025-12-27 04:03:16','2025-12-27 04:03:16');
+INSERT INTO artista VALUES(143,'Karla Jeraldo','No Soy Tan Cool','nosoytancool@gmail.com','{"facebook":"https://web.facebook.com/nosoytancool.illustration/"}','La Serena','Chile','no-soy-tan-cool','2025-12-27 04:03:16','2025-12-27 04:03:16');
+INSERT INTO artista VALUES(144,'Pablo Fernández Araya','Pablo Design','pablojfernandezaraya@gmail.com','{"instagram":"https://www.instagram.com/pablofernandez.diseno/"}','La Serena','Chile','pablo-design','2025-12-27 04:03:17','2025-12-27 04:03:17');
+INSERT INTO artista VALUES(145,'Daniela Véliz Baeza','Pezenunpapel','pezenunpapel@gmail.com','{"instagram":"https://www.instagram.com/pezenunpapel/","facebook":"https://web.facebook.com/pezenunpapel/"}','La Serena','Chile','pezenunpapel','2025-12-27 04:03:19','2025-12-27 04:03:19');
+INSERT INTO artista VALUES(146,'Anselmo Grandon','Pez Monstruo (Mo)','anselmo.grahen@gmail.com','{"instagram":"https://www.instagram.com/pezmonstruo/"}','La Serena','Chile','pez-monstruo-mo','2025-12-27 04:03:21','2025-12-27 04:03:21');
+INSERT INTO artista VALUES(147,'Carolina Puerta','PinkuNina (nina racoon)','pinkbang.nina@gmail.com','{"instagram":"https://www.instagram.com/pinku_nina/","facebook":"https://web.facebook.com/PinkuNina/"}','La Serena','Chile','pinkunina-nina-racoon','2025-12-27 04:03:21','2025-12-27 04:03:21');
+INSERT INTO artista VALUES(148,'Camila Fernandez','Planta Verde','plantaaverde@gmail.com','{"instagram":"https://www.instagram.com/plantaaverdeart/","facebook":"https://web.facebook.com/plantaaverde/"}','La Serena','Chile','planta-verde','2025-12-27 04:03:22','2025-12-27 04:03:22');
+INSERT INTO artista VALUES(149,'Sophia Dianne Sánchez D''Arcangeli','Poppy','darcangeli764@gmail.com','{"instagram":"https://www.instagram.com/_poppyxd_/"}','La Serena','Chile','poppy','2025-12-27 04:03:24','2025-12-27 04:03:24');
+INSERT INTO artista VALUES(150,'Pablo Marambio Costagliola','Raigmann (GalactikPainting)','pablomarambio.marambio@gmail.com','{"deviantart":"https://www.deviantart.com/raigmann"}','La Serena','Chile','raigmann-galactikpainting','2025-12-27 04:03:25','2025-12-27 04:03:25');
+INSERT INTO artista VALUES(151,'Daniel Muñoz','Reptilians','st.daniel.ark@gmail.com','{"instagram":"https://www.instagram.com/reptillians.attack/","facebook":"https://www.facebook.com/reptillian.demons/"}','La Serena','Chile','reptilians','2025-12-27 04:03:25','2025-12-27 04:03:25');
+INSERT INTO artista VALUES(152,'Carolina Angélica Barraza Cortés','Shiemi-Hime','shiemi.purr@gmail.com','{"instagram":"https://www.instagram.com/shiemi_hime/","facebook":"https://web.facebook.com/ShiemiHime/"}','La Serena','Chile','shiemi-hime','2025-12-27 04:03:26','2025-12-27 04:03:26');
+INSERT INTO artista VALUES(153,'Valentina Zepeda Jopia','Shishi de Colores (Vandaloves)','valentinaandrea.zepeda@gmail.com','{"instagram":"https://www.instagram.com/shishidecolores/","facebook":"https://web.facebook.com/shishidecolores/"}','La Serena','Chile','shishi-de-colores-vandaloves','2025-12-27 04:03:26','2025-12-27 04:03:26');
+INSERT INTO artista VALUES(154,'Sofía Alexandra Marambio Cortés','Sofi_niscus','sofiadango19@gmail.com','{"instagram":"https://www.instagram.com/sofi_niscus/"}','La Serena','Chile','sofiniscus','2025-12-27 04:03:27','2025-12-27 04:03:27');
+INSERT INTO artista VALUES(155,'Francisca Cortes Santander','Stay Cactus','francilucortes@gmail.com','{"instagram":"https://www.instagram.com/staycactusfanzine/","facebook":"https://web.facebook.com/staycactus/"}','La Serena','Chile','stay-cactus','2025-12-27 04:03:28','2025-12-27 04:03:28');
+INSERT INTO artista VALUES(156,'Sol Morales','Sun morales','sunmorales35@gmail.com','{"instagram":"https://www.instagram.com/sunmorales/","facebook":"https://web.facebook.com/SunmoralesB/"}','La Serena','Chile','sun-morales','2025-12-27 04:03:30','2025-12-27 04:03:30');
+INSERT INTO artista VALUES(157,'Carla Vargas','The Bunny Art','vargascastro.c@gmail.com','{"instagram":"https://www.instagram.com/c.vargasc/","facebook":"https://www.facebook.com/carla.vargascastro"}','La Serena','Chile','the-bunny-art','2025-12-27 04:03:31','2025-12-27 04:03:31');
+INSERT INTO artista VALUES(158,'Alonso Martinez','Tigre Maltés','alonsomartinez07@gmail.com','{"instagram":"https://www.instagram.com/tigre_maltes/","facebook":"https://web.facebook.com/tigremaltes/"}','La Serena','Chile','tigre-maltes','2025-12-27 04:03:33','2025-12-27 04:19:37');
+INSERT INTO artista VALUES(159,'Camila Belén Arévalo Cabrera','Tsuki','camila.barevalo@gmail.com','{"instagram":"https://www.instagram.com/blanchettetsuki","facebook":"https://www.fb.com/Tsukiarte"}','La Serena','Chile','tsuki','2025-12-27 04:03:33','2025-12-27 04:03:33');
+INSERT INTO artista VALUES(160,'Vallery Lorca Toledo','Valerie Lorca','vallery.lorca@hotmail.es','{"instagram":"https://www.instagram.com/valerie_lorca/"}','La Serena','Chile','valerie-lorca','2025-12-27 04:03:35','2025-12-27 04:03:35');
+INSERT INTO artista VALUES(161,'Valentina Fernanda Fuentealba Palavicino','VALESTRINA','valestrina4@gmail.com','{"instagram":"https://www.instagram.com/valestrina_art/","tapas":"https://tapas.io/series/KUSH-ES"}','La Serena','Chile','valestrina','2025-12-27 04:03:37','2025-12-27 04:03:37');
+INSERT INTO artista VALUES(162,'Victor Ledezma Vega','Victor Illustrations','victor.ledezma.vega@gmail.com','{"instagram":"https://www.instagram.com/victor_illustrations/","behance":"https://www.behance.net/VictorLedezma"}','La Serena','Chile','victor-illustrations','2025-12-27 04:03:37','2025-12-27 04:03:37');
+INSERT INTO artista VALUES(163,'Constanza valentina godoy Díaz','Yucenkio','constanza.pgb.2016@gmail.com','{"instagram":"https://www.instagram.com/yucenkio/"}','La Serena','Chile','yucenkio','2025-12-27 04:03:38','2025-12-27 04:03:38');
+INSERT INTO artista VALUES(164,'Camila Rivera','Internet Princess',NULL,'{"instagram":"https://www.instagram.com/miss.camomille/","facebook":"https://web.facebook.com/InternettPrincess/"}','La Serena','Chile','internet-princess','2025-12-27 04:03:39','2025-12-27 04:03:39');
+INSERT INTO artista VALUES(165,'Consuelo Valentina Huerta Pereira','Co(Mentedemente)','consuelo.huerta@outlook.com','{"instagram":"https://www.instagram.com/co.mentedemente/"}','Ovalle','Chile','comentedemente','2025-12-27 04:03:39','2025-12-27 04:03:39');
+INSERT INTO artista VALUES(166,'Giovanna Baldecchi Varela','Olyves (ex Moriciel)','azumaltrejo@gmail.com','{"instagram":"https://www.instagram.com/moriciel_/","facebook":"https://web.facebook.com/Giovy-293827087299049/"}','Tongoy','Chile','olyves-ex-moriciel','2025-12-27 04:03:40','2025-12-27 04:03:40');
+INSERT INTO artista VALUES(167,'Felipe de Ferari Prats','Felipe de Ferari','felipedeferari@gmail.com','{"instagram":"https://www.instagram.com/felipedeferari/","facebook":"https://web.facebook.com/Artes-Visuales-Felipe-De-Ferari-wwwdeferaricl-130585523670889/"}','La Serena','Chile','felipe-de-ferari','2025-12-27 04:03:43','2025-12-27 04:03:43');
+INSERT INTO artista VALUES(168,'Carolina Aguirre','We Are Tea','carolina.aguirre.skarlis@gmail.com','{"instagram":"https://www.instagram.com/we.are.tea.ilustraciones/","tumblr":"https://wearetea.tumblr.com/"}','La Serena','Chile','we-are-tea','2025-12-27 04:03:43','2025-12-27 04:03:43');
+INSERT INTO artista VALUES(169,'Nicolas Torres','Nico el Mito','nicolas.torrestapia@gmail.com','{"instagram":"https://www.instagram.com/nicoelmito/","facebook":"https://web.facebook.com/nicoelmito/"}','La Serena','Chile','nico-el-mito','2025-12-27 04:03:44','2025-12-27 04:03:44');
+INSERT INTO artista VALUES(170,'Cynthia Vega','Kio PsicodelicArt','cynthia.vega@gmail.com','{"facebook":"https://web.facebook.com/Kio-PsicodelicArt-1711808738837633/"}','La Serena','Chile','kio-psicodelicart','2025-12-27 04:03:45','2025-12-27 04:03:45');
+INSERT INTO artista VALUES(171,'Bryan Bautista Correa','Crazy Monkey','cm.diseno7@gmail.com','{"facebook":"https://web.facebook.com/crazymonkeydesing/"}','Coquimbo','Chile','crazy-monkey','2025-12-27 04:03:46','2025-12-27 04:03:46');
+INSERT INTO artista VALUES(172,'Lia Ponce Montecinos','Bubble Trafic','liarqponce@gmail.com','{"instagram":"https://www.instagram.com/bubbletrafic/","facebook":"https://web.facebook.com/BuuubbleTraaafic/"}','Coquimbo','Chile','bubble-trafic','2025-12-27 04:03:46','2025-12-27 04:03:46');
+INSERT INTO artista VALUES(173,'André Alejandro Pizarro','André','aerograndes@gmail.com','{"instagram":"https://www.instagram.com/andrekamin/","facebook":"https://web.facebook.com/andre.alejand"}','Ovalle','Chile','andre','2025-12-27 04:03:47','2025-12-27 04:03:47');
+INSERT INTO artista VALUES(174,'Pamela Alejandra Contreras Guerra','Alza el Vuelo','pamela.contreras@live.com','{"instagram":"https://www.instagram.com/tiendalzaelvuelo/","facebook":"https://www.facebook.com/Alza-el-vuelo-860809420599226/"}','La Serena','Chile','alza-el-vuelo','2025-12-27 04:03:48','2025-12-27 04:03:48');
+INSERT INTO artista VALUES(175,'Ellizabeth Fernanda Araya Loyola','Anticática Accesorios','ellizabeth.araya@gmail.com','{"instagram":"https://www.instagram.com/anti.accesorios/"}','Ovalle','Chile','anticatica-accesorios','2025-12-27 04:03:49','2025-12-27 04:03:49');
+INSERT INTO artista VALUES(176,'Sebastian Oteiza','Antítesis Editorial','oteiza.sebastian@gmail.com','{"facebook":"https://web.facebook.com/EditorialAntitesis/"}','La Serena','Chile','antitesis-editorial','2025-12-27 04:03:49','2025-12-27 04:03:49');
+INSERT INTO artista VALUES(177,'Karina Constanza Berríos Cortés','Artbutterfly','kony1288@gmail.com','{"instagram":"https://www.instagram.com/_artbutterfly_/","web":"https://unibles.com/Artbutterfly"}','La Serena','Chile','artbutterfly','2025-12-27 04:03:50','2025-12-27 04:03:50');
+INSERT INTO artista VALUES(178,'Sofia Ramirez','Astronomical Patches',NULL,'{"facebook":"https://web.facebook.com/astronomicalpatch3s/"}','Coquimbo','Chile','astronomical-patches','2025-12-27 04:03:50','2025-12-27 04:03:50');
+INSERT INTO artista VALUES(179,'Andrea Nicol Ledezma Díaz','BordabaMoza','andrea.ledezmad@gmail.com','{"instagram":"https://www.instagram.com/bordabamoza/"}','La Serena','Chile','bordabamoza','2025-12-27 04:03:51','2025-12-27 04:03:51');
+INSERT INTO artista VALUES(180,'Pablo Durand Alegre','Brodat','p.durand.a@gmail.com','{"instagram":"https://www.instagram.com/tienda.brodat/"}','La Serena','Chile','brodat','2025-12-27 04:03:52','2025-12-27 04:03:52');
+INSERT INTO artista VALUES(181,'Bastian Tello Campusano','Cala Cala Ká','botc@live.cl','{"facebook":"https://www.facebook.com/Editorial-Cala-Cala-k%C3%81-232505914219389/"}','La Serena','Chile','cala-cala-ka','2025-12-27 04:03:53','2025-12-27 04:03:53');
+INSERT INTO artista VALUES(182,'Paula Gonzalez','Cielomenta','paual12021@gmail.com','{"facebook":"https://web.facebook.com/cielomentaaccesorios/"}','La Serena','Chile','cielomenta','2025-12-27 04:03:53','2025-12-27 04:03:53');
+INSERT INTO artista VALUES(183,'Gonzalo Vilo','Experimental Lunch',NULL,NULL,'Coquimbo','Chile','experimental-lunch','2025-12-27 04:03:55','2025-12-27 04:03:55');
+INSERT INTO artista VALUES(184,'Francisca Vergara','Flancito Store','fran.vergara94@gmail.com','{"facebook":"https://web.facebook.com/FlancitoStore/"}','La Serena','Chile','flancito-store','2025-12-27 04:03:56','2025-12-27 04:03:56');
+INSERT INTO artista VALUES(185,'Guillermo Francisco Nuñez Perez','Guillermo Francisco','guillermo.francisco.n@gmail.com','{"instagram":"https://instagram.com/_guillermofrancisco"}','La Serena','Chile','guillermo-francisco','2025-12-27 04:03:58','2025-12-27 04:03:58');
+INSERT INTO artista VALUES(186,'Marisol Ahumada Diaz','Gumis de Colores','maiteka2003@hotmail.com','{"facebook":"https://web.facebook.com/Gumisdecolores/"}','La Serena','Chile','gumis-de-colores','2025-12-27 04:03:59','2025-12-27 04:03:59');
+INSERT INTO artista VALUES(187,'Felipe Monje Pinto','Hamabeads La Serena','hamabeads.ls2019@gmail.com','{"instagram":"https://www.instagram.com/hamabeads_ls/"}','La Serena','Chile','hamabeads-la-serena','2025-12-27 04:03:59','2025-12-27 04:03:59');
+INSERT INTO artista VALUES(188,'Carolina Vivanco','Ivory Market','ivory.im.different@gmail.com','{"facebook":"https://web.facebook.com/IvoryMarket/"}','La Serena','Chile','ivory-market','2025-12-27 04:04:00','2025-12-27 04:04:00');
+INSERT INTO artista VALUES(189,'Javiera Fernández Barahona','Javi Accesorios (ex Miko)','javieramfb@gmail.com',NULL,'La Serena','Chile','javi-accesorios-ex-miko','2025-12-27 04:04:00','2025-12-27 04:04:00');
+INSERT INTO artista VALUES(190,'Evelyn Carolina Alday Espinosa','Kallfu','evelynalday@hotmail.com','{"instagram":"https://www.instagram.com/_kallfu_/","facebook":"https://web.facebook.com/kallfu.accesorios/"}','La Serena','Chile','kallfu','2025-12-27 04:04:01','2025-12-27 04:04:01');
+INSERT INTO artista VALUES(191,NULL,'Kaptus','kaptusregalaydecora@gmail.com','{"facebook":"https://web.facebook.com/kaptus.ls/"}','Coquimbo','Chile','kaptus','2025-12-27 04:04:02','2025-12-27 04:04:02');
+INSERT INTO artista VALUES(192,'Viviana Vega','Kguai Store','viviana.vegam@gmail.com','{"facebook":"https://web.facebook.com/kguai.store/"}','Vicuña','Chile','kguai-store','2025-12-27 04:04:02','2025-12-27 04:04:02');
+INSERT INTO artista VALUES(193,NULL,'Koko',NULL,'{"instagram":"https://www.instagram.com/koko_diseno/"}','La Serena','Chile','koko','2025-12-27 04:04:03','2025-12-27 04:04:03');
+INSERT INTO artista VALUES(194,'Andrea Aquea Carmona','Kusudumame','kusudamame0@gmail.com','{"instagram":"https://www.instagram.com/kusudamame_/","facebook":"https://web.facebook.com/kusudamame0/"}','La Serena','Chile','kusudumame','2025-12-27 04:04:03','2025-12-27 04:04:03');
+INSERT INTO artista VALUES(195,'Karla Pineda','Limon Ventitas','k.p.angel93@gmail.com','{"facebook":"https://web.facebook.com/LimonVentitas/"}','Coquimbo','Chile','limon-ventitas','2025-12-27 04:04:05','2025-12-27 04:04:05');
+INSERT INTO artista VALUES(196,NULL,'Macanudo Design','macanudo.design@gmail.com','{"facebook":"https://web.facebook.com/macanudo.design/"}','La Serena','Chile','macanudo-design','2025-12-27 04:04:06','2025-12-27 04:04:06');
+INSERT INTO artista VALUES(197,'Paula Pacheco Orellana','Mallwa','paulapacheco.p@gmail.com','{"instagram":"https://www.instagram.com/mallwa_accesorios/"}','Coquimbo','Chile','mallwa','2025-12-27 04:04:06','2025-12-27 04:04:06');
+INSERT INTO artista VALUES(198,'Carolina Casanova','Manitos de Quinqui','carolina.casanova.garcia@gmail.com','{"facebook":"https://web.facebook.com/manitosdequinqui/"}','Coquimbo','Chile','manitos-de-quinqui','2025-12-27 04:04:07','2025-12-27 04:04:07');
+INSERT INTO artista VALUES(199,'Javiera Paz Carrillos Gonzalez','Mestiza Joyeria','javiera.carrillos@gmail.com','{"instagram":"https://www.instagram.com/mestizajoyeria/"}','Santiago','Chile','mestiza-joyeria','2025-12-27 04:04:08','2025-12-27 04:04:08');
+INSERT INTO artista VALUES(200,'María Paulina Godoy Álvarez','Mi Colet','paaiflor@gmail.com','{"instagram":"https://www.instagram.com/micolet.ls/"}','La Serena','Chile','mi-colet','2025-12-27 04:04:09','2025-12-27 04:04:09');
+INSERT INTO artista VALUES(201,'Melissa Osandon','Mi Chamaca','melissandon.araya@gmail.com','{"facebook":"https://web.facebook.com/michamacailustraciones/"}','La Serena','Chile','mi-chamaca','2025-12-27 04:04:09','2025-12-27 04:04:09');
+INSERT INTO artista VALUES(202,'Elizabeth Pasmiño','Mi Croquera','elipasmino@gmail.com','{"instagram":"https://www.instagram.com/microquera/","facebook":"https://web.facebook.com/microquera/"}','Coquimbo','Chile','mi-croquera','2025-12-27 04:04:10','2025-12-27 04:04:10');
+INSERT INTO artista VALUES(203,'Rocio Muñoz Morales','Moiris Design','moiris.design@gmail.com','{"instagram":"https://www.instagram.com/moiris.design/"}','La Serena','Chile','moiris-design','2025-12-27 04:04:12','2025-12-27 04:04:12');
+INSERT INTO artista VALUES(204,'Nicole Ibarra Jara','Nicfotos','nicoleibarraj@gmail.com','{"instagram":"https://www.instagram.com/nicfotos/","behance":"https://www.behance.net/nicoleibarra"}','La Serena','Chile','nicfotos','2025-12-27 04:04:12','2025-12-27 04:04:12');
+INSERT INTO artista VALUES(205,'Manuel Pereira Araya','Okato Design****','okatown@gmail.com','{"instagram":"https://www.instagram.com/okatodesign/","facebook":"https://web.facebook.com/disenos.okatodesign"}','La Serena','Chile','okato-design','2025-12-27 04:04:13','2025-12-27 04:04:13');
+INSERT INTO artista VALUES(206,'Carolina Contreras Soto','Pochi Amigurumi','amigurumisosweet@gmail.com','{"facebook":"https://web.facebook.com/pochi.amigurumi"}','Coquimbo','Chile','pochi-amigurumi','2025-12-27 04:04:14','2025-12-27 04:04:14');
+INSERT INTO artista VALUES(207,'Katterine del Rosario Aguilera Olivares','Primavera de Prados','primaveradeprados@gmail.com','{"instagram":"https://www.instagram.com/primaveradeprados/"}','La Serena','Chile','primavera-de-prados','2025-12-27 04:04:14','2025-12-27 04:04:14');
+INSERT INTO artista VALUES(208,'Carolina Paz Garcia','Remolino','carolinapaz.garcia@outlook.com','{"facebook":"https://web.facebook.com/artesaniaremolino/"}','La Serena','Chile','remolino','2025-12-27 04:04:15','2025-12-27 04:04:15');
+INSERT INTO artista VALUES(209,'Francisca Gonzales Cornejo','Soy de Lanita','fgc023@alumnos.ucn.cl','{"facebook":"https://web.facebook.com/soydelanita/"}','Coquimbo','Chile','soy-de-lanita','2025-12-27 04:04:15','2025-12-27 04:04:15');
+INSERT INTO artista VALUES(210,'Rocío Josefa Segovia Sanchez','Tienda Shibarita','rocio001122@gmail.com','{"instagram":"https://www.instagram.com/tienda_shibarita/"}','Coquimbo','Chile','tienda-shibarita','2025-12-27 04:04:16','2025-12-27 04:04:16');
+INSERT INTO artista VALUES(211,'Sol Vielma Ramos','Vicent Design','svr1906@gmail.com','{"instagram":"https://www.instagram.com/designvicent/"}','La Serena','Chile','vicent-design','2025-12-27 04:04:16','2025-12-27 04:04:16');
+INSERT INTO artista VALUES(212,'Carlos Herrera','Carlos Herrera (Dragonest Studio)','cherreradraw@gmail.com','{"instagram": "https://www.instagram.com/carlosdracoherrera/", "behance": "https://www.behance.net/Chaos-Draco"}','La Serena','Chile','carlos-herrera-dragonest-studio','2025-12-27 04:14:01','2025-12-27 04:14:01');
+INSERT INTO artista VALUES(213,NULL,'Philippe Sapiains','philippe.sapiains@gmail.com','{"instagram": "https://www.instagram.com/philippe.sapiains_artista/", "web": "https://philippesapiains.cl/"}','La Serena','Chile','philippe-sapiains','2025-12-27 04:17:15','2025-12-27 04:17:15');
+INSERT INTO artista VALUES(214,NULL,'Gabriel Garvo',NULL,NULL,NULL,NULL,NULL,'2025-12-25 19:14:19','2025-12-25 19:14:19');
+INSERT INTO artista VALUES(215,NULL,'Takamo',NULL,NULL,NULL,NULL,NULL,'2025-12-25 19:14:19','2025-12-25 19:14:19');
+INSERT INTO artista VALUES(216,NULL,'Satin',NULL,NULL,NULL,NULL,NULL,'2025-12-25 19:14:19','2025-12-25 19:14:19');
+INSERT INTO artista VALUES(217,NULL,'CaroCelis',NULL,NULL,NULL,NULL,NULL,'2025-12-25 19:14:19','2025-12-25 19:14:19');
+INSERT INTO artista VALUES(218,NULL,'Sephko',NULL,NULL,NULL,NULL,NULL,'2025-12-25 19:14:19','2025-12-25 19:14:19');
+INSERT INTO artista VALUES(219,NULL,'Papafritologia',NULL,NULL,NULL,NULL,NULL,'2025-12-25 19:14:19','2025-12-25 19:14:19');
+INSERT INTO artista VALUES(220,NULL,'Juanca Cortes',NULL,NULL,NULL,NULL,NULL,'2025-12-25 19:14:19','2025-12-25 19:14:19');
+INSERT INTO artista VALUES(221,NULL,'Nico Gonzales',NULL,NULL,NULL,NULL,NULL,'2025-12-25 19:14:19','2025-12-25 19:14:19');
+INSERT INTO artista VALUES(222,NULL,'Rayaismo',NULL,NULL,NULL,NULL,NULL,'2025-12-25 19:14:19','2025-12-25 19:14:19');
+INSERT INTO artista VALUES(223,NULL,'Pablo Delcielo',NULL,NULL,NULL,NULL,NULL,'2025-12-25 19:14:19','2025-12-25 19:14:19');
+INSERT INTO artista VALUES(224,NULL,'Godersi',NULL,NULL,NULL,NULL,NULL,'2025-12-25 19:14:19','2025-12-25 19:14:19');
+INSERT INTO artista VALUES(225,NULL,'Emisario de Greda',NULL,NULL,NULL,NULL,NULL,'2025-12-25 19:14:20','2025-12-25 19:14:20');
+INSERT INTO artista VALUES(226,NULL,'Fakuta',NULL,NULL,NULL,NULL,NULL,'2025-12-25 19:14:20','2025-12-25 19:14:20');
+INSERT INTO artista VALUES(227,NULL,'A Veces Amanda',NULL,NULL,NULL,NULL,NULL,'2025-12-25 19:14:20','2025-12-25 19:14:20');
+INSERT INTO artista VALUES(228,NULL,'El Comodo Silencio de los que Hablan Poco',NULL,NULL,NULL,NULL,NULL,'2025-12-25 19:14:20','2025-12-25 19:14:20');
+INSERT INTO artista VALUES(229,NULL,'Los Animales Tambien Se Suicidan',NULL,NULL,NULL,NULL,NULL,'2025-12-25 19:14:20','2025-12-25 19:14:20');
+CREATE TABLE IF NOT EXISTS tipo_actividad (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL,
+    descripcion TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT uq_tipo_actividad_nombre UNIQUE (nombre)
+);
+INSERT INTO tipo_actividad VALUES(1,'Taller','Actividad práctica con participación de asistentes','2025-12-28 18:27:07','2025-12-28 19:09:23');
+INSERT INTO tipo_actividad VALUES(2,'Charla','Presentación o conferencia','2025-12-28 18:27:07','2025-12-28 19:09:23');
+INSERT INTO tipo_actividad VALUES(3,'Música','Presentación musical en vivo','2025-12-28 18:27:07','2025-12-28 19:09:23');
+CREATE TABLE IF NOT EXISTS participante_exposicion (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    participante_id INTEGER NOT NULL,
+    disciplina_id INTEGER NOT NULL,
+    agrupacion_id INTEGER,
+    estado TEXT NOT NULL DEFAULT 'confirmado',
+    notas TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_exposicion_participante 
+        FOREIGN KEY (participante_id) REFERENCES evento_edicion_participante (id) ON DELETE CASCADE,
+    CONSTRAINT fk_exposicion_disciplina 
+        FOREIGN KEY (disciplina_id) REFERENCES disciplina (id),
+    CONSTRAINT fk_exposicion_agrupacion 
+        FOREIGN KEY (agrupacion_id) REFERENCES agrupacion (id),
+    CONSTRAINT uq_exposicion_participante UNIQUE (participante_id),
+    CONSTRAINT chk_exposicion_estado 
+        CHECK (estado IN ('seleccionado', 'confirmado', 'cancelado', 'no_asistio'))
+);
+INSERT INTO participante_exposicion VALUES(1,1,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(2,2,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(3,3,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(4,4,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(5,5,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(6,6,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(7,7,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(8,8,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(9,9,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(10,10,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(11,11,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(12,12,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(13,13,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(14,14,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(15,15,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(16,16,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(17,17,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(18,18,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(19,19,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(20,20,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(21,21,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(22,22,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(23,23,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(24,24,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(25,25,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(26,26,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(27,27,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(28,28,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(29,29,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(30,30,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(31,31,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(32,32,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(33,33,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(34,34,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(35,35,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(36,36,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(37,37,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(38,38,1,NULL,'confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO participante_exposicion VALUES(39,39,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(40,40,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(41,41,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(42,42,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(43,43,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(44,44,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(45,45,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(46,46,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(47,47,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(48,48,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(49,49,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(50,50,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(51,51,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(52,52,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(53,53,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(54,54,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(55,55,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(56,56,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(57,57,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(58,58,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(59,59,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(60,60,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(61,61,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(62,62,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(63,63,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(64,64,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(65,65,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(66,66,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(67,67,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(68,68,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(69,69,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(70,70,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(71,71,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(72,72,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(73,73,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(74,74,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(75,75,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(76,76,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(77,77,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(78,78,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(79,79,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(80,80,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(81,81,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(82,82,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(83,83,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(84,84,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(85,85,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(86,86,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(87,87,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(88,88,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(89,89,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(90,90,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(91,91,1,NULL,'confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO participante_exposicion VALUES(92,92,1,NULL,'confirmado',NULL,'2025-12-25 19:41:57','2025-12-25 19:41:57');
+INSERT INTO participante_exposicion VALUES(93,93,3,NULL,'confirmado',NULL,'2025-12-25 19:41:57','2025-12-25 19:41:57');
+INSERT INTO participante_exposicion VALUES(94,94,3,NULL,'confirmado',NULL,'2025-12-25 19:41:57','2025-12-25 19:41:57');
+INSERT INTO participante_exposicion VALUES(95,95,3,NULL,'confirmado',NULL,'2025-12-25 19:41:57','2025-12-25 19:41:57');
+INSERT INTO participante_exposicion VALUES(96,96,1,NULL,'confirmado',NULL,'2025-12-27 04:32:59','2025-12-27 04:32:59');
+INSERT INTO participante_exposicion VALUES(97,97,1,NULL,'confirmado',NULL,'2025-12-27 04:33:00','2025-12-27 04:33:00');
+INSERT INTO participante_exposicion VALUES(98,98,1,NULL,'confirmado',NULL,'2025-12-27 04:33:00','2025-12-27 04:33:00');
+INSERT INTO participante_exposicion VALUES(99,99,1,NULL,'confirmado',NULL,'2025-12-27 04:33:00','2025-12-27 04:33:00');
+INSERT INTO participante_exposicion VALUES(100,100,1,NULL,'confirmado',NULL,'2025-12-27 04:33:01','2025-12-27 04:33:01');
+INSERT INTO participante_exposicion VALUES(101,101,1,NULL,'confirmado',NULL,'2025-12-27 04:33:01','2025-12-27 04:33:01');
+INSERT INTO participante_exposicion VALUES(102,102,1,NULL,'confirmado',NULL,'2025-12-27 04:33:01','2025-12-27 04:33:01');
+INSERT INTO participante_exposicion VALUES(103,103,1,NULL,'confirmado',NULL,'2025-12-27 04:33:02','2025-12-27 04:33:02');
+INSERT INTO participante_exposicion VALUES(104,104,1,NULL,'confirmado',NULL,'2025-12-27 04:33:02','2025-12-27 04:33:02');
+INSERT INTO participante_exposicion VALUES(105,105,1,NULL,'confirmado',NULL,'2025-12-27 04:33:02','2025-12-27 04:33:02');
+INSERT INTO participante_exposicion VALUES(106,106,1,NULL,'confirmado',NULL,'2025-12-27 04:33:02','2025-12-27 04:33:02');
+INSERT INTO participante_exposicion VALUES(107,107,1,NULL,'confirmado',NULL,'2025-12-27 04:33:03','2025-12-27 04:33:03');
+INSERT INTO participante_exposicion VALUES(108,108,1,NULL,'confirmado',NULL,'2025-12-27 04:33:03','2025-12-27 04:33:03');
+INSERT INTO participante_exposicion VALUES(109,109,1,NULL,'confirmado',NULL,'2025-12-27 04:33:03','2025-12-27 04:33:03');
+INSERT INTO participante_exposicion VALUES(110,110,1,NULL,'confirmado',NULL,'2025-12-27 04:33:04','2025-12-27 04:33:04');
+INSERT INTO participante_exposicion VALUES(111,111,1,NULL,'confirmado',NULL,'2025-12-27 04:33:04','2025-12-27 04:33:04');
+INSERT INTO participante_exposicion VALUES(112,112,1,NULL,'confirmado',NULL,'2025-12-27 04:33:04','2025-12-27 04:33:04');
+INSERT INTO participante_exposicion VALUES(113,113,1,NULL,'confirmado',NULL,'2025-12-27 04:33:05','2025-12-27 04:33:05');
+INSERT INTO participante_exposicion VALUES(114,114,1,NULL,'confirmado',NULL,'2025-12-27 04:33:05','2025-12-27 04:33:05');
+INSERT INTO participante_exposicion VALUES(115,115,1,NULL,'confirmado',NULL,'2025-12-27 04:33:05','2025-12-27 04:33:05');
+INSERT INTO participante_exposicion VALUES(116,116,1,NULL,'confirmado',NULL,'2025-12-27 04:33:05','2025-12-27 04:33:05');
+INSERT INTO participante_exposicion VALUES(117,117,1,NULL,'confirmado',NULL,'2025-12-27 04:33:06','2025-12-27 04:33:06');
+INSERT INTO participante_exposicion VALUES(118,118,1,NULL,'confirmado',NULL,'2025-12-27 04:33:06','2025-12-27 04:33:06');
+INSERT INTO participante_exposicion VALUES(119,119,1,NULL,'confirmado',NULL,'2025-12-27 04:33:06','2025-12-27 04:33:06');
+INSERT INTO participante_exposicion VALUES(120,120,1,NULL,'confirmado',NULL,'2025-12-27 04:33:07','2025-12-27 04:33:07');
+INSERT INTO participante_exposicion VALUES(121,121,1,NULL,'confirmado',NULL,'2025-12-27 04:33:07','2025-12-27 04:33:07');
+INSERT INTO participante_exposicion VALUES(122,122,1,NULL,'confirmado',NULL,'2025-12-27 04:33:07','2025-12-27 04:33:07');
+INSERT INTO participante_exposicion VALUES(123,123,1,NULL,'confirmado',NULL,'2025-12-27 04:33:08','2025-12-27 04:33:08');
+INSERT INTO participante_exposicion VALUES(124,124,1,NULL,'confirmado',NULL,'2025-12-27 04:33:08','2025-12-27 04:33:08');
+INSERT INTO participante_exposicion VALUES(125,125,1,NULL,'confirmado',NULL,'2025-12-27 04:33:08','2025-12-27 04:33:08');
+INSERT INTO participante_exposicion VALUES(126,126,1,NULL,'confirmado',NULL,'2025-12-27 04:33:09','2025-12-27 04:33:09');
+INSERT INTO participante_exposicion VALUES(127,127,1,NULL,'confirmado',NULL,'2025-12-27 04:33:09','2025-12-27 04:33:09');
+INSERT INTO participante_exposicion VALUES(128,128,1,NULL,'confirmado',NULL,'2025-12-27 04:33:09','2025-12-27 04:33:09');
+INSERT INTO participante_exposicion VALUES(129,129,1,NULL,'confirmado',NULL,'2025-12-27 04:33:09','2025-12-27 04:33:09');
+INSERT INTO participante_exposicion VALUES(130,130,1,NULL,'confirmado',NULL,'2025-12-27 04:33:10','2025-12-27 04:33:10');
+INSERT INTO participante_exposicion VALUES(131,131,1,NULL,'confirmado',NULL,'2025-12-27 04:33:10','2025-12-27 04:33:10');
+INSERT INTO participante_exposicion VALUES(132,132,1,NULL,'confirmado',NULL,'2025-12-27 04:33:10','2025-12-27 04:33:10');
+INSERT INTO participante_exposicion VALUES(133,133,1,NULL,'confirmado',NULL,'2025-12-27 04:33:11','2025-12-27 04:33:11');
+INSERT INTO participante_exposicion VALUES(134,134,1,NULL,'confirmado',NULL,'2025-12-27 04:33:11','2025-12-27 04:33:11');
+INSERT INTO participante_exposicion VALUES(135,135,1,NULL,'confirmado',NULL,'2025-12-27 04:33:11','2025-12-27 04:33:11');
+INSERT INTO participante_exposicion VALUES(136,136,1,NULL,'confirmado',NULL,'2025-12-27 04:33:12','2025-12-27 04:33:12');
+INSERT INTO participante_exposicion VALUES(137,137,1,NULL,'confirmado',NULL,'2025-12-27 04:33:12','2025-12-27 04:33:12');
+INSERT INTO participante_exposicion VALUES(138,138,1,NULL,'confirmado',NULL,'2025-12-27 04:33:12','2025-12-27 04:33:12');
+INSERT INTO participante_exposicion VALUES(139,139,1,NULL,'confirmado',NULL,'2025-12-27 04:33:13','2025-12-27 04:33:13');
+INSERT INTO participante_exposicion VALUES(140,140,1,NULL,'confirmado',NULL,'2025-12-27 04:33:13','2025-12-27 04:33:13');
+INSERT INTO participante_exposicion VALUES(141,141,1,NULL,'confirmado',NULL,'2025-12-27 04:33:13','2025-12-27 04:33:13');
+INSERT INTO participante_exposicion VALUES(142,142,1,NULL,'confirmado',NULL,'2025-12-27 04:33:14','2025-12-27 04:33:14');
+INSERT INTO participante_exposicion VALUES(143,143,1,NULL,'confirmado',NULL,'2025-12-27 04:33:14','2025-12-27 04:33:14');
+INSERT INTO participante_exposicion VALUES(144,144,1,NULL,'confirmado',NULL,'2025-12-27 04:33:14','2025-12-27 04:33:14');
+INSERT INTO participante_exposicion VALUES(145,145,1,NULL,'confirmado',NULL,'2025-12-27 04:33:14','2025-12-27 04:33:14');
+INSERT INTO participante_exposicion VALUES(146,146,1,NULL,'confirmado',NULL,'2025-12-27 04:33:15','2025-12-27 04:33:15');
+INSERT INTO participante_exposicion VALUES(147,147,1,NULL,'confirmado',NULL,'2025-12-27 04:33:15','2025-12-27 04:33:15');
+INSERT INTO participante_exposicion VALUES(148,148,1,NULL,'confirmado',NULL,'2025-12-27 04:33:15','2025-12-27 04:33:15');
+INSERT INTO participante_exposicion VALUES(149,149,1,NULL,'confirmado',NULL,'2025-12-27 04:33:16','2025-12-27 04:33:16');
+INSERT INTO participante_exposicion VALUES(150,150,1,NULL,'confirmado',NULL,'2025-12-27 04:33:16','2025-12-27 04:33:16');
+INSERT INTO participante_exposicion VALUES(151,151,1,NULL,'confirmado',NULL,'2025-12-27 04:33:16','2025-12-27 04:33:16');
+INSERT INTO participante_exposicion VALUES(152,152,1,NULL,'confirmado',NULL,'2025-12-27 04:33:17','2025-12-27 04:33:17');
+INSERT INTO participante_exposicion VALUES(153,153,1,NULL,'confirmado',NULL,'2025-12-27 04:33:17','2025-12-27 04:33:17');
+INSERT INTO participante_exposicion VALUES(154,154,1,NULL,'confirmado',NULL,'2025-12-27 04:33:17','2025-12-27 04:33:17');
+INSERT INTO participante_exposicion VALUES(155,155,1,NULL,'confirmado',NULL,'2025-12-27 04:33:18','2025-12-27 04:33:18');
+INSERT INTO participante_exposicion VALUES(156,156,1,NULL,'confirmado',NULL,'2025-12-27 04:33:18','2025-12-27 04:33:18');
+INSERT INTO participante_exposicion VALUES(157,157,1,NULL,'confirmado',NULL,'2025-12-27 04:33:18','2025-12-27 04:33:18');
+INSERT INTO participante_exposicion VALUES(158,158,1,NULL,'confirmado',NULL,'2025-12-27 04:33:19','2025-12-27 04:33:19');
+INSERT INTO participante_exposicion VALUES(159,159,1,NULL,'confirmado',NULL,'2025-12-27 04:33:19','2025-12-27 04:33:19');
+INSERT INTO participante_exposicion VALUES(160,160,1,NULL,'confirmado',NULL,'2025-12-27 04:33:19','2025-12-27 04:33:19');
+INSERT INTO participante_exposicion VALUES(161,161,1,NULL,'confirmado',NULL,'2025-12-27 04:33:19','2025-12-27 04:33:19');
+INSERT INTO participante_exposicion VALUES(162,162,1,NULL,'confirmado',NULL,'2025-12-27 04:33:20','2025-12-27 04:33:20');
+INSERT INTO participante_exposicion VALUES(163,163,1,NULL,'confirmado',NULL,'2025-12-27 04:33:20','2025-12-27 04:33:20');
+INSERT INTO participante_exposicion VALUES(164,164,1,NULL,'confirmado',NULL,'2025-12-27 04:33:20','2025-12-27 04:33:20');
+INSERT INTO participante_exposicion VALUES(165,165,1,NULL,'confirmado',NULL,'2025-12-27 04:33:21','2025-12-27 04:33:21');
+INSERT INTO participante_exposicion VALUES(166,166,1,NULL,'confirmado',NULL,'2025-12-27 04:33:21','2025-12-27 04:33:21');
+INSERT INTO participante_exposicion VALUES(167,167,1,NULL,'confirmado',NULL,'2025-12-27 04:33:21','2025-12-27 04:33:21');
+INSERT INTO participante_exposicion VALUES(168,168,1,NULL,'confirmado',NULL,'2025-12-27 04:33:22','2025-12-27 04:33:22');
+INSERT INTO participante_exposicion VALUES(169,169,1,NULL,'confirmado',NULL,'2025-12-27 04:33:22','2025-12-27 04:33:22');
+INSERT INTO participante_exposicion VALUES(170,170,1,NULL,'confirmado',NULL,'2025-12-27 04:33:22','2025-12-27 04:33:22');
+INSERT INTO participante_exposicion VALUES(171,171,1,NULL,'confirmado',NULL,'2025-12-27 04:33:23','2025-12-27 04:33:23');
+INSERT INTO participante_exposicion VALUES(172,172,1,NULL,'confirmado',NULL,'2025-12-27 04:33:23','2025-12-27 04:33:23');
+INSERT INTO participante_exposicion VALUES(173,173,1,NULL,'confirmado',NULL,'2025-12-27 04:33:23','2025-12-27 04:33:23');
+INSERT INTO participante_exposicion VALUES(174,174,1,NULL,'confirmado',NULL,'2025-12-27 04:33:24','2025-12-27 04:33:24');
+INSERT INTO participante_exposicion VALUES(175,175,1,NULL,'confirmado',NULL,'2025-12-27 04:33:24','2025-12-27 04:33:24');
+INSERT INTO participante_exposicion VALUES(176,176,1,NULL,'confirmado',NULL,'2025-12-27 04:33:24','2025-12-27 04:33:24');
+INSERT INTO participante_exposicion VALUES(177,177,1,NULL,'confirmado',NULL,'2025-12-27 04:33:24','2025-12-27 04:33:24');
+INSERT INTO participante_exposicion VALUES(178,178,1,NULL,'confirmado',NULL,'2025-12-27 04:33:25','2025-12-27 04:33:25');
+INSERT INTO participante_exposicion VALUES(179,179,1,NULL,'confirmado',NULL,'2025-12-27 04:33:25','2025-12-27 04:33:25');
+INSERT INTO participante_exposicion VALUES(180,180,1,NULL,'confirmado',NULL,'2025-12-27 04:33:25','2025-12-27 04:33:25');
+INSERT INTO participante_exposicion VALUES(181,181,1,NULL,'confirmado',NULL,'2025-12-27 04:33:26','2025-12-27 04:33:26');
+INSERT INTO participante_exposicion VALUES(182,182,1,NULL,'confirmado',NULL,'2025-12-27 04:33:26','2025-12-27 04:33:26');
+INSERT INTO participante_exposicion VALUES(183,183,1,NULL,'confirmado',NULL,'2025-12-27 04:33:26','2025-12-27 04:33:26');
+INSERT INTO participante_exposicion VALUES(184,184,1,NULL,'confirmado',NULL,'2025-12-27 04:33:27','2025-12-27 04:33:27');
+INSERT INTO participante_exposicion VALUES(185,185,1,NULL,'confirmado',NULL,'2025-12-27 04:33:27','2025-12-27 04:33:27');
+INSERT INTO participante_exposicion VALUES(186,186,1,NULL,'confirmado',NULL,'2025-12-27 04:33:27','2025-12-27 04:33:27');
+INSERT INTO participante_exposicion VALUES(187,187,1,NULL,'confirmado',NULL,'2025-12-27 04:33:28','2025-12-27 04:33:28');
+INSERT INTO participante_exposicion VALUES(188,188,1,NULL,'confirmado',NULL,'2025-12-27 04:33:28','2025-12-27 04:33:28');
+INSERT INTO participante_exposicion VALUES(189,189,1,NULL,'confirmado',NULL,'2025-12-27 04:33:28','2025-12-27 04:33:28');
+INSERT INTO participante_exposicion VALUES(190,190,1,NULL,'confirmado',NULL,'2025-12-27 04:33:29','2025-12-27 04:33:29');
+INSERT INTO participante_exposicion VALUES(191,191,1,NULL,'confirmado',NULL,'2025-12-27 04:33:29','2025-12-27 04:33:29');
+INSERT INTO participante_exposicion VALUES(192,192,1,NULL,'confirmado',NULL,'2025-12-27 04:33:29','2025-12-27 04:33:29');
+INSERT INTO participante_exposicion VALUES(193,193,1,NULL,'confirmado',NULL,'2025-12-27 04:33:29','2025-12-27 04:33:29');
+INSERT INTO participante_exposicion VALUES(194,194,1,NULL,'confirmado',NULL,'2025-12-27 04:33:30','2025-12-27 04:33:30');
+INSERT INTO participante_exposicion VALUES(195,195,1,NULL,'confirmado',NULL,'2025-12-27 04:33:30','2025-12-27 04:33:30');
+INSERT INTO participante_exposicion VALUES(196,196,1,NULL,'confirmado',NULL,'2025-12-27 04:33:30','2025-12-27 04:33:30');
+INSERT INTO participante_exposicion VALUES(197,197,1,NULL,'confirmado',NULL,'2025-12-27 04:33:31','2025-12-27 04:33:31');
+INSERT INTO participante_exposicion VALUES(198,198,1,NULL,'confirmado',NULL,'2025-12-27 04:33:31','2025-12-27 04:33:31');
+INSERT INTO participante_exposicion VALUES(199,199,1,NULL,'confirmado',NULL,'2025-12-27 04:33:31','2025-12-27 04:33:31');
+INSERT INTO participante_exposicion VALUES(200,200,1,NULL,'confirmado',NULL,'2025-12-27 04:33:32','2025-12-27 04:33:32');
+INSERT INTO participante_exposicion VALUES(201,201,1,NULL,'confirmado',NULL,'2025-12-27 04:33:32','2025-12-27 04:33:32');
+INSERT INTO participante_exposicion VALUES(202,202,1,NULL,'confirmado',NULL,'2025-12-27 04:33:32','2025-12-27 04:33:32');
+INSERT INTO participante_exposicion VALUES(203,203,1,NULL,'confirmado',NULL,'2025-12-27 04:33:33','2025-12-27 04:33:33');
+INSERT INTO participante_exposicion VALUES(204,204,1,NULL,'confirmado',NULL,'2025-12-27 04:33:33','2025-12-27 04:33:33');
+INSERT INTO participante_exposicion VALUES(205,205,1,NULL,'confirmado',NULL,'2025-12-27 04:33:33','2025-12-27 04:33:33');
+INSERT INTO participante_exposicion VALUES(206,206,1,NULL,'confirmado',NULL,'2025-12-27 04:33:33','2025-12-27 04:33:33');
+INSERT INTO participante_exposicion VALUES(207,207,1,NULL,'confirmado',NULL,'2025-12-27 04:33:34','2025-12-27 04:33:34');
+INSERT INTO participante_exposicion VALUES(208,208,1,NULL,'confirmado',NULL,'2025-12-27 04:33:34','2025-12-27 04:33:34');
+INSERT INTO participante_exposicion VALUES(209,209,1,NULL,'confirmado',NULL,'2025-12-27 04:33:34','2025-12-27 04:33:34');
+INSERT INTO participante_exposicion VALUES(210,210,1,NULL,'confirmado',NULL,'2025-12-27 04:33:35','2025-12-27 04:33:35');
+INSERT INTO participante_exposicion VALUES(211,211,1,NULL,'confirmado',NULL,'2025-12-27 04:33:35','2025-12-27 04:33:35');
+INSERT INTO participante_exposicion VALUES(212,212,1,NULL,'confirmado',NULL,'2025-12-27 04:33:35','2025-12-27 04:33:35');
+INSERT INTO participante_exposicion VALUES(213,213,1,NULL,'confirmado',NULL,'2025-12-27 04:33:36','2025-12-27 04:33:36');
+INSERT INTO participante_exposicion VALUES(214,214,1,NULL,'confirmado',NULL,'2025-12-27 04:33:36','2025-12-27 04:33:36');
+INSERT INTO participante_exposicion VALUES(215,215,1,NULL,'confirmado',NULL,'2025-12-27 04:33:36','2025-12-27 04:33:36');
+INSERT INTO participante_exposicion VALUES(216,216,1,NULL,'confirmado',NULL,'2025-12-27 04:33:37','2025-12-27 04:33:37');
+INSERT INTO participante_exposicion VALUES(217,217,1,NULL,'confirmado',NULL,'2025-12-27 04:33:37','2025-12-27 04:33:37');
+INSERT INTO participante_exposicion VALUES(218,218,1,NULL,'confirmado',NULL,'2025-12-27 04:33:37','2025-12-27 04:33:37');
+INSERT INTO participante_exposicion VALUES(219,219,1,NULL,'confirmado',NULL,'2025-12-27 04:33:37','2025-12-27 04:33:37');
+INSERT INTO participante_exposicion VALUES(220,220,1,NULL,'confirmado',NULL,'2025-12-27 04:33:38','2025-12-27 04:33:38');
+INSERT INTO participante_exposicion VALUES(221,221,1,NULL,'confirmado',NULL,'2025-12-27 04:33:38','2025-12-27 04:33:38');
+INSERT INTO participante_exposicion VALUES(222,222,1,NULL,'confirmado',NULL,'2025-12-27 04:33:38','2025-12-27 04:33:38');
+INSERT INTO participante_exposicion VALUES(223,223,1,NULL,'confirmado',NULL,'2025-12-27 04:33:39','2025-12-27 04:33:39');
+INSERT INTO participante_exposicion VALUES(224,224,1,NULL,'confirmado',NULL,'2025-12-27 04:33:39','2025-12-27 04:33:39');
+INSERT INTO participante_exposicion VALUES(225,225,1,NULL,'confirmado',NULL,'2025-12-27 04:33:39','2025-12-27 04:33:39');
+INSERT INTO participante_exposicion VALUES(226,226,1,NULL,'confirmado',NULL,'2025-12-27 04:33:40','2025-12-27 04:33:40');
+INSERT INTO participante_exposicion VALUES(227,227,1,NULL,'confirmado',NULL,'2025-12-27 04:33:40','2025-12-27 04:33:40');
+INSERT INTO participante_exposicion VALUES(228,228,1,NULL,'confirmado',NULL,'2025-12-27 04:33:40','2025-12-27 04:33:40');
+INSERT INTO participante_exposicion VALUES(229,229,1,NULL,'confirmado',NULL,'2025-12-27 04:33:40','2025-12-27 04:33:40');
+INSERT INTO participante_exposicion VALUES(230,230,1,NULL,'confirmado',NULL,'2025-12-27 04:33:41','2025-12-27 04:33:41');
+INSERT INTO participante_exposicion VALUES(231,231,1,NULL,'confirmado',NULL,'2025-12-27 04:33:41','2025-12-27 04:33:41');
+INSERT INTO participante_exposicion VALUES(232,232,1,NULL,'confirmado',NULL,'2025-12-27 04:33:41','2025-12-27 04:33:41');
+INSERT INTO participante_exposicion VALUES(233,233,1,NULL,'confirmado',NULL,'2025-12-27 04:33:42','2025-12-27 04:33:42');
+INSERT INTO participante_exposicion VALUES(234,234,1,NULL,'confirmado',NULL,'2025-12-27 04:33:42','2025-12-27 04:33:42');
+INSERT INTO participante_exposicion VALUES(235,235,1,NULL,'confirmado',NULL,'2025-12-27 04:33:42','2025-12-27 04:33:42');
+INSERT INTO participante_exposicion VALUES(236,236,1,NULL,'confirmado',NULL,'2025-12-27 04:33:43','2025-12-27 04:33:43');
+INSERT INTO participante_exposicion VALUES(237,237,1,NULL,'confirmado',NULL,'2025-12-27 04:33:43','2025-12-27 04:33:43');
+INSERT INTO participante_exposicion VALUES(238,238,1,NULL,'confirmado',NULL,'2025-12-27 04:33:43','2025-12-27 04:33:43');
+INSERT INTO participante_exposicion VALUES(239,239,1,NULL,'confirmado',NULL,'2025-12-27 04:33:44','2025-12-27 04:33:44');
+INSERT INTO participante_exposicion VALUES(240,240,1,NULL,'confirmado',NULL,'2025-12-27 04:33:44','2025-12-27 04:33:44');
+INSERT INTO participante_exposicion VALUES(241,241,1,NULL,'confirmado',NULL,'2025-12-27 04:33:44','2025-12-27 04:33:44');
+INSERT INTO participante_exposicion VALUES(242,242,1,NULL,'confirmado',NULL,'2025-12-27 04:33:44','2025-12-27 04:33:44');
+INSERT INTO participante_exposicion VALUES(243,243,1,NULL,'confirmado',NULL,'2025-12-27 04:33:45','2025-12-27 04:33:45');
+INSERT INTO participante_exposicion VALUES(244,244,1,NULL,'confirmado',NULL,'2025-12-27 04:33:45','2025-12-27 04:33:45');
+INSERT INTO participante_exposicion VALUES(245,245,1,NULL,'confirmado',NULL,'2025-12-27 04:33:45','2025-12-27 04:33:45');
+INSERT INTO participante_exposicion VALUES(246,246,1,NULL,'confirmado',NULL,'2025-12-27 04:33:46','2025-12-27 04:33:46');
+INSERT INTO participante_exposicion VALUES(247,247,1,NULL,'confirmado',NULL,'2025-12-27 04:33:46','2025-12-27 04:33:46');
+INSERT INTO participante_exposicion VALUES(248,248,1,NULL,'confirmado',NULL,'2025-12-27 04:33:46','2025-12-27 04:33:46');
+INSERT INTO participante_exposicion VALUES(249,249,1,NULL,'confirmado',NULL,'2025-12-27 04:33:47','2025-12-27 04:33:47');
+INSERT INTO participante_exposicion VALUES(250,250,1,NULL,'confirmado',NULL,'2025-12-27 04:33:47','2025-12-27 04:33:47');
+INSERT INTO participante_exposicion VALUES(251,251,1,NULL,'confirmado',NULL,'2025-12-27 04:33:47','2025-12-27 04:33:47');
+INSERT INTO participante_exposicion VALUES(252,252,1,NULL,'confirmado',NULL,'2025-12-27 04:33:48','2025-12-27 04:33:48');
+INSERT INTO participante_exposicion VALUES(253,253,1,NULL,'confirmado',NULL,'2025-12-27 04:33:48','2025-12-27 04:33:48');
+INSERT INTO participante_exposicion VALUES(254,254,1,NULL,'confirmado',NULL,'2025-12-27 04:33:48','2025-12-27 04:33:48');
+INSERT INTO participante_exposicion VALUES(255,255,1,NULL,'confirmado',NULL,'2025-12-27 04:33:48','2025-12-27 04:33:48');
+INSERT INTO participante_exposicion VALUES(256,256,1,NULL,'confirmado',NULL,'2025-12-27 04:33:49','2025-12-27 04:33:49');
+INSERT INTO participante_exposicion VALUES(257,257,1,NULL,'confirmado',NULL,'2025-12-27 04:33:49','2025-12-27 04:33:49');
+INSERT INTO participante_exposicion VALUES(258,258,1,NULL,'confirmado',NULL,'2025-12-27 04:33:49','2025-12-27 04:33:49');
+INSERT INTO participante_exposicion VALUES(259,259,1,NULL,'confirmado',NULL,'2025-12-27 04:33:50','2025-12-27 04:33:50');
+INSERT INTO participante_exposicion VALUES(260,260,1,NULL,'confirmado',NULL,'2025-12-27 04:33:50','2025-12-27 04:33:50');
+INSERT INTO participante_exposicion VALUES(261,261,1,NULL,'confirmado',NULL,'2025-12-27 04:33:50','2025-12-27 04:33:50');
+INSERT INTO participante_exposicion VALUES(262,262,1,NULL,'confirmado',NULL,'2025-12-27 04:33:51','2025-12-27 04:33:51');
+INSERT INTO participante_exposicion VALUES(263,263,1,NULL,'confirmado',NULL,'2025-12-27 04:33:51','2025-12-27 04:33:51');
+INSERT INTO participante_exposicion VALUES(264,264,1,NULL,'confirmado',NULL,'2025-12-27 04:33:51','2025-12-27 04:33:51');
+INSERT INTO participante_exposicion VALUES(265,265,1,NULL,'confirmado',NULL,'2025-12-27 04:33:52','2025-12-27 04:33:52');
+INSERT INTO participante_exposicion VALUES(266,266,1,NULL,'confirmado',NULL,'2025-12-27 04:33:52','2025-12-27 04:33:52');
+INSERT INTO participante_exposicion VALUES(267,267,1,NULL,'confirmado',NULL,'2025-12-27 04:33:52','2025-12-27 04:33:52');
+INSERT INTO participante_exposicion VALUES(268,268,1,NULL,'confirmado',NULL,'2025-12-27 04:33:52','2025-12-27 04:33:52');
+INSERT INTO participante_exposicion VALUES(269,269,1,NULL,'confirmado',NULL,'2025-12-27 04:33:53','2025-12-27 04:33:53');
+INSERT INTO participante_exposicion VALUES(270,270,1,NULL,'confirmado',NULL,'2025-12-27 04:33:53','2025-12-27 04:33:53');
+INSERT INTO participante_exposicion VALUES(271,271,1,NULL,'confirmado',NULL,'2025-12-27 04:33:53','2025-12-27 04:33:53');
+INSERT INTO participante_exposicion VALUES(272,272,1,NULL,'confirmado',NULL,'2025-12-27 04:33:54','2025-12-27 04:33:54');
+INSERT INTO participante_exposicion VALUES(273,273,1,NULL,'confirmado',NULL,'2025-12-27 04:33:54','2025-12-27 04:33:54');
+INSERT INTO participante_exposicion VALUES(274,274,1,NULL,'confirmado',NULL,'2025-12-27 04:33:54','2025-12-27 04:33:54');
+INSERT INTO participante_exposicion VALUES(275,275,1,NULL,'confirmado',NULL,'2025-12-27 04:33:55','2025-12-27 04:33:55');
+INSERT INTO participante_exposicion VALUES(276,276,1,NULL,'confirmado',NULL,'2025-12-27 04:33:55','2025-12-27 04:33:55');
+INSERT INTO participante_exposicion VALUES(277,277,1,NULL,'confirmado',NULL,'2025-12-27 04:33:55','2025-12-27 04:33:55');
+INSERT INTO participante_exposicion VALUES(278,278,1,NULL,'confirmado',NULL,'2025-12-27 04:33:55','2025-12-27 04:33:55');
+INSERT INTO participante_exposicion VALUES(279,279,1,NULL,'confirmado',NULL,'2025-12-27 04:33:56','2025-12-27 04:33:56');
+INSERT INTO participante_exposicion VALUES(280,280,1,NULL,'confirmado',NULL,'2025-12-27 04:33:56','2025-12-27 04:33:56');
+INSERT INTO participante_exposicion VALUES(281,281,1,NULL,'confirmado',NULL,'2025-12-27 04:33:56','2025-12-27 04:33:56');
+INSERT INTO participante_exposicion VALUES(282,282,1,NULL,'confirmado',NULL,'2025-12-27 04:33:57','2025-12-27 04:33:57');
+INSERT INTO participante_exposicion VALUES(283,283,1,NULL,'confirmado',NULL,'2025-12-27 04:33:57','2025-12-27 04:33:57');
+INSERT INTO participante_exposicion VALUES(284,284,1,NULL,'confirmado',NULL,'2025-12-27 04:33:57','2025-12-27 04:33:57');
+INSERT INTO participante_exposicion VALUES(285,285,3,NULL,'confirmado',NULL,'2025-12-27 04:33:58','2025-12-27 04:33:58');
+INSERT INTO participante_exposicion VALUES(286,286,3,NULL,'confirmado',NULL,'2025-12-27 04:33:58','2025-12-27 04:33:58');
+INSERT INTO participante_exposicion VALUES(287,287,3,NULL,'confirmado',NULL,'2025-12-27 04:33:58','2025-12-27 04:33:58');
+INSERT INTO participante_exposicion VALUES(288,288,3,NULL,'confirmado',NULL,'2025-12-27 04:33:59','2025-12-27 04:33:59');
+INSERT INTO participante_exposicion VALUES(289,289,3,NULL,'confirmado',NULL,'2025-12-27 04:33:59','2025-12-27 04:33:59');
+INSERT INTO participante_exposicion VALUES(290,290,3,NULL,'confirmado',NULL,'2025-12-27 04:33:59','2025-12-27 04:33:59');
+INSERT INTO participante_exposicion VALUES(291,291,3,NULL,'confirmado',NULL,'2025-12-27 04:33:59','2025-12-27 04:33:59');
+INSERT INTO participante_exposicion VALUES(292,292,3,NULL,'confirmado',NULL,'2025-12-27 04:34:00','2025-12-27 04:34:00');
+INSERT INTO participante_exposicion VALUES(293,293,3,NULL,'confirmado',NULL,'2025-12-27 04:34:00','2025-12-27 04:34:00');
+INSERT INTO participante_exposicion VALUES(294,294,3,NULL,'confirmado',NULL,'2025-12-27 04:34:00','2025-12-27 04:34:00');
+INSERT INTO participante_exposicion VALUES(295,295,3,NULL,'confirmado',NULL,'2025-12-27 04:34:01','2025-12-27 04:34:01');
+INSERT INTO participante_exposicion VALUES(296,296,3,NULL,'confirmado',NULL,'2025-12-27 04:34:01','2025-12-27 04:34:01');
+INSERT INTO participante_exposicion VALUES(297,297,3,NULL,'confirmado',NULL,'2025-12-27 04:34:01','2025-12-27 04:34:01');
+INSERT INTO participante_exposicion VALUES(298,298,3,NULL,'confirmado',NULL,'2025-12-27 04:34:02','2025-12-27 04:34:02');
+INSERT INTO participante_exposicion VALUES(299,299,3,NULL,'confirmado',NULL,'2025-12-27 04:34:02','2025-12-27 04:34:02');
+INSERT INTO participante_exposicion VALUES(300,300,3,NULL,'confirmado',NULL,'2025-12-27 04:34:02','2025-12-27 04:34:02');
+INSERT INTO participante_exposicion VALUES(301,301,3,NULL,'confirmado',NULL,'2025-12-27 04:34:02','2025-12-27 04:34:02');
+INSERT INTO participante_exposicion VALUES(302,302,3,NULL,'confirmado',NULL,'2025-12-27 04:34:03','2025-12-27 04:34:03');
+INSERT INTO participante_exposicion VALUES(303,303,3,NULL,'confirmado',NULL,'2025-12-27 04:34:03','2025-12-27 04:34:03');
+INSERT INTO participante_exposicion VALUES(304,304,3,NULL,'confirmado',NULL,'2025-12-27 04:34:03','2025-12-27 04:34:03');
+INSERT INTO participante_exposicion VALUES(305,305,3,NULL,'confirmado',NULL,'2025-12-27 04:34:04','2025-12-27 04:34:04');
+INSERT INTO participante_exposicion VALUES(306,306,3,NULL,'confirmado',NULL,'2025-12-27 04:34:04','2025-12-27 04:34:04');
+INSERT INTO participante_exposicion VALUES(307,307,3,NULL,'confirmado',NULL,'2025-12-27 04:34:04','2025-12-27 04:34:04');
+INSERT INTO participante_exposicion VALUES(308,308,3,NULL,'confirmado',NULL,'2025-12-27 04:34:05','2025-12-27 04:34:05');
+INSERT INTO participante_exposicion VALUES(309,309,3,NULL,'confirmado',NULL,'2025-12-27 04:34:05','2025-12-27 04:34:05');
+INSERT INTO participante_exposicion VALUES(310,310,3,NULL,'confirmado',NULL,'2025-12-27 04:34:05','2025-12-27 04:34:05');
+INSERT INTO participante_exposicion VALUES(311,311,3,NULL,'confirmado',NULL,'2025-12-27 04:34:06','2025-12-27 04:34:06');
+INSERT INTO participante_exposicion VALUES(312,312,3,NULL,'confirmado',NULL,'2025-12-27 04:34:06','2025-12-27 04:34:06');
+INSERT INTO participante_exposicion VALUES(313,313,3,NULL,'confirmado',NULL,'2025-12-27 04:34:06','2025-12-27 04:34:06');
+INSERT INTO participante_exposicion VALUES(314,314,3,NULL,'confirmado',NULL,'2025-12-27 04:34:06','2025-12-27 04:34:06');
+INSERT INTO participante_exposicion VALUES(315,315,3,NULL,'confirmado',NULL,'2025-12-27 04:34:07','2025-12-27 04:34:07');
+INSERT INTO participante_exposicion VALUES(316,316,3,NULL,'confirmado',NULL,'2025-12-27 04:34:07','2025-12-27 04:34:07');
+INSERT INTO participante_exposicion VALUES(317,317,3,NULL,'confirmado',NULL,'2025-12-27 04:34:07','2025-12-27 04:34:07');
+INSERT INTO participante_exposicion VALUES(318,318,3,NULL,'confirmado',NULL,'2025-12-27 04:34:08','2025-12-27 04:34:08');
+INSERT INTO participante_exposicion VALUES(319,319,3,NULL,'confirmado',NULL,'2025-12-27 04:34:08','2025-12-27 04:34:08');
+INSERT INTO participante_exposicion VALUES(320,320,3,NULL,'confirmado',NULL,'2025-12-27 04:34:08','2025-12-27 04:34:08');
+INSERT INTO participante_exposicion VALUES(321,321,3,NULL,'confirmado',NULL,'2025-12-27 04:34:08','2025-12-27 04:34:08');
+INSERT INTO participante_exposicion VALUES(322,322,3,NULL,'confirmado',NULL,'2025-12-27 04:34:09','2025-12-27 04:34:09');
+INSERT INTO participante_exposicion VALUES(323,323,3,NULL,'confirmado',NULL,'2025-12-27 04:34:09','2025-12-27 04:34:09');
+INSERT INTO participante_exposicion VALUES(324,324,3,NULL,'confirmado',NULL,'2025-12-27 04:34:09','2025-12-27 04:34:09');
+INSERT INTO participante_exposicion VALUES(325,325,3,NULL,'confirmado',NULL,'2025-12-27 04:34:10','2025-12-27 04:34:10');
+INSERT INTO participante_exposicion VALUES(326,326,3,NULL,'confirmado',NULL,'2025-12-27 04:34:10','2025-12-27 04:34:10');
+INSERT INTO participante_exposicion VALUES(327,327,3,NULL,'confirmado',NULL,'2025-12-27 04:34:10','2025-12-27 04:34:10');
+INSERT INTO participante_exposicion VALUES(328,328,3,NULL,'confirmado',NULL,'2025-12-27 04:34:11','2025-12-27 04:34:11');
+INSERT INTO participante_exposicion VALUES(329,329,3,NULL,'confirmado',NULL,'2025-12-27 04:34:11','2025-12-27 04:34:11');
+INSERT INTO participante_exposicion VALUES(330,330,3,NULL,'confirmado',NULL,'2025-12-27 04:34:11','2025-12-27 04:34:11');
+INSERT INTO participante_exposicion VALUES(331,331,3,NULL,'confirmado',NULL,'2025-12-27 04:34:12','2025-12-27 04:34:12');
+INSERT INTO participante_exposicion VALUES(332,332,3,NULL,'confirmado',NULL,'2025-12-27 04:34:12','2025-12-27 04:34:12');
+INSERT INTO participante_exposicion VALUES(333,333,3,NULL,'confirmado',NULL,'2025-12-27 04:34:12','2025-12-27 04:34:12');
+INSERT INTO participante_exposicion VALUES(334,334,3,NULL,'confirmado',NULL,'2025-12-27 04:34:12','2025-12-27 04:34:12');
+INSERT INTO participante_exposicion VALUES(335,335,3,NULL,'confirmado',NULL,'2025-12-27 04:34:13','2025-12-27 04:34:13');
+INSERT INTO participante_exposicion VALUES(336,336,3,NULL,'confirmado',NULL,'2025-12-27 04:34:13','2025-12-27 04:34:13');
+INSERT INTO participante_exposicion VALUES(337,337,3,NULL,'confirmado',NULL,'2025-12-27 04:34:13','2025-12-27 04:34:13');
+INSERT INTO participante_exposicion VALUES(338,338,3,NULL,'confirmado',NULL,'2025-12-27 04:34:14','2025-12-27 04:34:14');
+INSERT INTO participante_exposicion VALUES(339,339,3,NULL,'confirmado',NULL,'2025-12-27 04:34:14','2025-12-27 04:34:14');
+INSERT INTO participante_exposicion VALUES(340,340,3,NULL,'confirmado',NULL,'2025-12-27 04:34:14','2025-12-27 04:34:14');
+INSERT INTO participante_exposicion VALUES(341,341,3,NULL,'confirmado',NULL,'2025-12-27 04:34:14','2025-12-27 04:34:14');
+INSERT INTO participante_exposicion VALUES(342,342,3,NULL,'confirmado',NULL,'2025-12-27 04:34:15','2025-12-27 04:34:15');
+INSERT INTO participante_exposicion VALUES(343,343,3,NULL,'confirmado',NULL,'2025-12-27 04:34:15','2025-12-27 04:34:15');
+INSERT INTO participante_exposicion VALUES(344,344,3,NULL,'confirmado',NULL,'2025-12-27 04:34:15','2025-12-27 04:34:15');
+INSERT INTO participante_exposicion VALUES(345,345,3,NULL,'confirmado',NULL,'2025-12-27 04:34:16','2025-12-27 04:34:16');
+INSERT INTO participante_exposicion VALUES(346,346,3,NULL,'confirmado',NULL,'2025-12-27 04:34:16','2025-12-27 04:34:16');
+INSERT INTO participante_exposicion VALUES(347,347,3,NULL,'confirmado',NULL,'2025-12-27 04:34:16','2025-12-27 04:34:16');
+INSERT INTO participante_exposicion VALUES(348,348,3,NULL,'confirmado',NULL,'2025-12-27 04:34:17','2025-12-27 04:34:17');
+INSERT INTO participante_exposicion VALUES(349,349,3,NULL,'confirmado',NULL,'2025-12-27 04:34:17','2025-12-27 04:34:17');
+INSERT INTO participante_exposicion VALUES(350,350,3,NULL,'confirmado',NULL,'2025-12-27 04:34:17','2025-12-27 04:34:17');
+INSERT INTO participante_exposicion VALUES(351,351,3,NULL,'confirmado',NULL,'2025-12-27 04:34:18','2025-12-27 04:34:18');
+INSERT INTO participante_exposicion VALUES(352,352,3,NULL,'confirmado',NULL,'2025-12-27 04:34:18','2025-12-27 04:34:18');
+INSERT INTO participante_exposicion VALUES(353,353,3,NULL,'confirmado',NULL,'2025-12-27 04:34:18','2025-12-27 04:34:18');
+INSERT INTO participante_exposicion VALUES(354,354,1,NULL,'confirmado',NULL,'2025-12-27 04:34:54','2025-12-27 04:34:54');
+INSERT INTO participante_exposicion VALUES(355,355,1,3,'confirmado',NULL,'2025-12-27 04:35:34','2025-12-28 18:27:11');
+INSERT INTO participante_exposicion VALUES(356,356,1,3,'confirmado',NULL,'2025-12-27 04:35:34','2025-12-28 18:27:11');
+INSERT INTO participante_exposicion VALUES(357,357,1,3,'confirmado',NULL,'2025-12-27 04:35:34','2025-12-28 18:27:11');
+INSERT INTO participante_exposicion VALUES(358,358,1,3,'confirmado',NULL,'2025-12-27 04:35:34','2025-12-28 18:27:11');
+INSERT INTO participante_exposicion VALUES(359,359,1,3,'confirmado',NULL,'2025-12-27 04:35:34','2025-12-28 18:27:11');
+INSERT INTO participante_exposicion VALUES(360,360,1,3,'confirmado',NULL,'2025-12-27 04:35:34','2025-12-28 18:27:11');
+INSERT INTO participante_exposicion VALUES(361,361,1,3,'confirmado',NULL,'2025-12-27 04:35:34','2025-12-28 18:27:11');
+INSERT INTO participante_exposicion VALUES(362,362,1,3,'confirmado',NULL,'2025-12-27 04:35:34','2025-12-28 18:27:11');
+INSERT INTO participante_exposicion VALUES(363,363,1,NULL,'confirmado',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO participante_exposicion VALUES(364,364,1,NULL,'confirmado',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO participante_exposicion VALUES(365,365,1,NULL,'confirmado',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO participante_exposicion VALUES(366,366,1,NULL,'confirmado',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO participante_exposicion VALUES(367,367,1,NULL,'confirmado',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO participante_exposicion VALUES(368,368,1,NULL,'confirmado',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO participante_exposicion VALUES(369,369,1,NULL,'confirmado',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO participante_exposicion VALUES(370,370,1,NULL,'confirmado',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO participante_exposicion VALUES(371,371,1,NULL,'confirmado',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO participante_exposicion VALUES(372,372,1,NULL,'confirmado',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO participante_exposicion VALUES(373,373,1,NULL,'confirmado',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO participante_exposicion VALUES(374,374,1,NULL,'confirmado',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO participante_exposicion VALUES(375,375,1,NULL,'confirmado',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO participante_exposicion VALUES(376,376,1,NULL,'confirmado',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO participante_exposicion VALUES(377,377,1,NULL,'confirmado',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO participante_exposicion VALUES(378,378,1,NULL,'confirmado',NULL,'2025-12-25 19:14:36','2025-12-25 19:14:36');
+CREATE TABLE IF NOT EXISTS participante_actividad (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    participante_id INTEGER NOT NULL,
+    tipo_actividad_id INTEGER NOT NULL,
+    agrupacion_id INTEGER,
+    estado TEXT NOT NULL DEFAULT 'confirmado',
+    notas TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_actividad_participante 
+        FOREIGN KEY (participante_id) REFERENCES evento_edicion_participante (id) ON DELETE CASCADE,
+    CONSTRAINT fk_actividad_tipo 
+        FOREIGN KEY (tipo_actividad_id) REFERENCES tipo_actividad (id),
+    CONSTRAINT fk_actividad_agrupacion 
+        FOREIGN KEY (agrupacion_id) REFERENCES agrupacion (id),
+    CONSTRAINT chk_actividad_estado 
+        CHECK (estado IN ('seleccionado', 'confirmado', 'cancelado', 'no_asistio'))
+);
+INSERT INTO participante_actividad VALUES(1,365,3,NULL,'confirmado','[Rol: musico]','2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO participante_actividad VALUES(2,367,3,NULL,'confirmado','[Rol: musico]','2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO participante_actividad VALUES(3,372,3,NULL,'confirmado','[Rol: musico]','2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO participante_actividad VALUES(4,376,2,NULL,'confirmado','[Rol: charlista]','2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO participante_actividad VALUES(5,377,3,NULL,'confirmado','[Rol: musico]','2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO participante_actividad VALUES(6,378,3,NULL,'confirmado','[Rol: musico]','2025-12-25 19:14:36','2025-12-25 19:14:36');
+CREATE TABLE IF NOT EXISTS "evento_edicion_participante" (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    evento_edicion_id INTEGER NOT NULL,
+    artista_id INTEGER NOT NULL,
+    modo_ingreso TEXT NOT NULL DEFAULT 'seleccion',
+    estado TEXT NOT NULL DEFAULT 'confirmado',
+    notas TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_participante_evento_edicion 
+        FOREIGN KEY (evento_edicion_id) REFERENCES evento_edicion (id) ON DELETE CASCADE,
+    CONSTRAINT fk_participante_artista 
+        FOREIGN KEY (artista_id) REFERENCES artista (id) ON DELETE CASCADE,
+    CONSTRAINT uq_participante UNIQUE (artista_id, evento_edicion_id),
+    CONSTRAINT chk_participante_modo_ingreso 
+        CHECK (modo_ingreso IN ('seleccion', 'invitacion')),
+    CONSTRAINT chk_participante_estado 
+        CHECK (estado IN ('seleccionado', 'confirmado', 'cancelado', 'no_asistio'))
+);
+INSERT INTO evento_edicion_participante VALUES(1,8,1,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(2,9,1,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(3,10,1,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(4,10,2,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(5,5,6,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(6,6,6,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(7,7,6,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(8,8,6,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(9,9,6,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(10,10,6,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(11,4,7,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(12,5,7,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(13,6,7,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(14,7,7,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(15,8,9,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(16,3,10,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(17,4,10,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(18,6,10,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(19,10,13,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(20,8,17,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(21,9,17,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(22,10,17,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(23,5,20,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(24,8,20,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(25,1,31,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(26,2,31,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(27,3,31,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(28,1,32,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(29,2,32,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(30,5,32,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(31,6,32,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(32,7,32,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(33,8,32,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(34,9,32,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(35,10,32,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(36,1,33,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(37,2,33,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(38,3,33,'seleccion','confirmado',NULL,'2025-12-25 19:41:55','2025-12-25 19:41:55');
+INSERT INTO evento_edicion_participante VALUES(39,4,33,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(40,5,33,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(41,6,33,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(42,9,33,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(43,10,33,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(44,4,34,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(45,5,34,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(46,6,34,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(47,7,34,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(48,8,34,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(49,9,34,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(50,10,34,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(51,3,35,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(52,9,35,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(53,1,37,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(54,2,37,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(55,3,37,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(56,4,37,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(57,5,37,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(58,8,37,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(59,5,39,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(60,4,43,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(61,6,43,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(62,7,43,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(63,8,43,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(64,9,43,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(65,10,43,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(66,3,52,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(67,4,52,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(68,5,52,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(69,7,52,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(70,9,52,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(71,6,64,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(72,7,64,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(73,8,64,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(74,9,64,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(75,10,64,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(76,7,68,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(77,8,68,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(78,9,69,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(79,10,69,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(80,1,71,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(81,4,80,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(82,5,80,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(83,6,80,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(84,7,80,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(85,10,80,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(86,1,81,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(87,2,81,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(88,3,81,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(89,5,81,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(90,7,81,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(91,8,81,'seleccion','confirmado',NULL,'2025-12-25 19:41:56','2025-12-25 19:41:56');
+INSERT INTO evento_edicion_participante VALUES(92,10,81,'seleccion','confirmado',NULL,'2025-12-25 19:41:57','2025-12-25 19:41:57');
+INSERT INTO evento_edicion_participante VALUES(93,9,45,'seleccion','confirmado',NULL,'2025-12-25 19:41:57','2025-12-25 19:41:57');
+INSERT INTO evento_edicion_participante VALUES(94,8,48,'seleccion','confirmado',NULL,'2025-12-25 19:41:57','2025-12-25 19:41:57');
+INSERT INTO evento_edicion_participante VALUES(95,10,48,'seleccion','confirmado',NULL,'2025-12-25 19:41:57','2025-12-25 19:41:57');
+INSERT INTO evento_edicion_participante VALUES(96,6,88,'seleccion','confirmado',NULL,'2025-12-27 04:32:59','2025-12-27 04:32:59');
+INSERT INTO evento_edicion_participante VALUES(97,7,88,'seleccion','confirmado',NULL,'2025-12-27 04:33:00','2025-12-27 04:33:00');
+INSERT INTO evento_edicion_participante VALUES(98,8,88,'seleccion','confirmado',NULL,'2025-12-27 04:33:00','2025-12-27 04:33:00');
+INSERT INTO evento_edicion_participante VALUES(99,9,88,'seleccion','confirmado',NULL,'2025-12-27 04:33:00','2025-12-27 04:33:00');
+INSERT INTO evento_edicion_participante VALUES(100,10,88,'seleccion','confirmado',NULL,'2025-12-27 04:33:01','2025-12-27 04:33:01');
+INSERT INTO evento_edicion_participante VALUES(101,6,89,'seleccion','confirmado',NULL,'2025-12-27 04:33:01','2025-12-27 04:33:01');
+INSERT INTO evento_edicion_participante VALUES(102,3,90,'seleccion','confirmado',NULL,'2025-12-27 04:33:01','2025-12-27 04:33:01');
+INSERT INTO evento_edicion_participante VALUES(103,3,91,'seleccion','confirmado',NULL,'2025-12-27 04:33:02','2025-12-27 04:33:02');
+INSERT INTO evento_edicion_participante VALUES(104,4,91,'seleccion','confirmado',NULL,'2025-12-27 04:33:02','2025-12-27 04:33:02');
+INSERT INTO evento_edicion_participante VALUES(105,5,91,'seleccion','confirmado',NULL,'2025-12-27 04:33:02','2025-12-27 04:33:02');
+INSERT INTO evento_edicion_participante VALUES(106,7,92,'seleccion','confirmado',NULL,'2025-12-27 04:33:02','2025-12-27 04:33:02');
+INSERT INTO evento_edicion_participante VALUES(107,8,92,'seleccion','confirmado',NULL,'2025-12-27 04:33:03','2025-12-27 04:33:03');
+INSERT INTO evento_edicion_participante VALUES(108,9,92,'seleccion','confirmado',NULL,'2025-12-27 04:33:03','2025-12-27 04:33:03');
+INSERT INTO evento_edicion_participante VALUES(109,10,92,'seleccion','confirmado',NULL,'2025-12-27 04:33:03','2025-12-27 04:33:03');
+INSERT INTO evento_edicion_participante VALUES(110,7,93,'seleccion','confirmado',NULL,'2025-12-27 04:33:04','2025-12-27 04:33:04');
+INSERT INTO evento_edicion_participante VALUES(111,6,94,'seleccion','confirmado',NULL,'2025-12-27 04:33:04','2025-12-27 04:33:04');
+INSERT INTO evento_edicion_participante VALUES(112,8,94,'seleccion','confirmado',NULL,'2025-12-27 04:33:04','2025-12-27 04:33:04');
+INSERT INTO evento_edicion_participante VALUES(113,9,94,'seleccion','confirmado',NULL,'2025-12-27 04:33:05','2025-12-27 04:33:05');
+INSERT INTO evento_edicion_participante VALUES(114,3,95,'seleccion','confirmado',NULL,'2025-12-27 04:33:05','2025-12-27 04:33:05');
+INSERT INTO evento_edicion_participante VALUES(115,10,95,'seleccion','confirmado',NULL,'2025-12-27 04:33:05','2025-12-27 04:33:05');
+INSERT INTO evento_edicion_participante VALUES(116,10,96,'seleccion','confirmado',NULL,'2025-12-27 04:33:05','2025-12-27 04:33:05');
+INSERT INTO evento_edicion_participante VALUES(117,10,97,'seleccion','confirmado',NULL,'2025-12-27 04:33:06','2025-12-27 04:33:06');
+INSERT INTO evento_edicion_participante VALUES(118,6,98,'seleccion','confirmado',NULL,'2025-12-27 04:33:06','2025-12-27 04:33:06');
+INSERT INTO evento_edicion_participante VALUES(119,9,98,'seleccion','confirmado',NULL,'2025-12-27 04:33:06','2025-12-27 04:33:06');
+INSERT INTO evento_edicion_participante VALUES(120,8,99,'seleccion','confirmado',NULL,'2025-12-27 04:33:07','2025-12-27 04:33:07');
+INSERT INTO evento_edicion_participante VALUES(121,9,99,'seleccion','confirmado',NULL,'2025-12-27 04:33:07','2025-12-27 04:33:07');
+INSERT INTO evento_edicion_participante VALUES(122,10,99,'seleccion','confirmado',NULL,'2025-12-27 04:33:07','2025-12-27 04:33:07');
+INSERT INTO evento_edicion_participante VALUES(123,10,100,'seleccion','confirmado',NULL,'2025-12-27 04:33:08','2025-12-27 04:33:08');
+INSERT INTO evento_edicion_participante VALUES(124,5,101,'seleccion','confirmado',NULL,'2025-12-27 04:33:08','2025-12-27 04:33:08');
+INSERT INTO evento_edicion_participante VALUES(125,6,102,'seleccion','confirmado',NULL,'2025-12-27 04:33:08','2025-12-27 04:33:08');
+INSERT INTO evento_edicion_participante VALUES(126,7,102,'seleccion','confirmado',NULL,'2025-12-27 04:33:09','2025-12-27 04:33:09');
+INSERT INTO evento_edicion_participante VALUES(127,8,102,'seleccion','confirmado',NULL,'2025-12-27 04:33:09','2025-12-27 04:33:09');
+INSERT INTO evento_edicion_participante VALUES(128,4,103,'seleccion','confirmado',NULL,'2025-12-27 04:33:09','2025-12-27 04:33:09');
+INSERT INTO evento_edicion_participante VALUES(129,3,104,'seleccion','confirmado',NULL,'2025-12-27 04:33:09','2025-12-27 04:33:09');
+INSERT INTO evento_edicion_participante VALUES(130,7,104,'seleccion','confirmado',NULL,'2025-12-27 04:33:10','2025-12-27 04:33:10');
+INSERT INTO evento_edicion_participante VALUES(131,9,104,'seleccion','confirmado',NULL,'2025-12-27 04:33:10','2025-12-27 04:33:10');
+INSERT INTO evento_edicion_participante VALUES(132,3,105,'seleccion','confirmado',NULL,'2025-12-27 04:33:10','2025-12-27 04:33:10');
+INSERT INTO evento_edicion_participante VALUES(133,1,106,'seleccion','confirmado',NULL,'2025-12-27 04:33:11','2025-12-27 04:33:11');
+INSERT INTO evento_edicion_participante VALUES(134,1,107,'seleccion','confirmado',NULL,'2025-12-27 04:33:11','2025-12-27 04:33:11');
+INSERT INTO evento_edicion_participante VALUES(135,2,107,'seleccion','confirmado',NULL,'2025-12-27 04:33:11','2025-12-27 04:33:11');
+INSERT INTO evento_edicion_participante VALUES(136,9,108,'seleccion','confirmado',NULL,'2025-12-27 04:33:12','2025-12-27 04:33:12');
+INSERT INTO evento_edicion_participante VALUES(137,10,108,'seleccion','confirmado',NULL,'2025-12-27 04:33:12','2025-12-27 04:33:12');
+INSERT INTO evento_edicion_participante VALUES(138,6,109,'seleccion','confirmado',NULL,'2025-12-27 04:33:12','2025-12-27 04:33:12');
+INSERT INTO evento_edicion_participante VALUES(139,9,110,'seleccion','confirmado',NULL,'2025-12-27 04:33:13','2025-12-27 04:33:13');
+INSERT INTO evento_edicion_participante VALUES(140,10,110,'seleccion','confirmado',NULL,'2025-12-27 04:33:13','2025-12-27 04:33:13');
+INSERT INTO evento_edicion_participante VALUES(141,5,111,'seleccion','confirmado',NULL,'2025-12-27 04:33:13','2025-12-27 04:33:13');
+INSERT INTO evento_edicion_participante VALUES(142,6,111,'seleccion','confirmado',NULL,'2025-12-27 04:33:14','2025-12-27 04:33:14');
+INSERT INTO evento_edicion_participante VALUES(143,9,111,'seleccion','confirmado',NULL,'2025-12-27 04:33:14','2025-12-27 04:33:14');
+INSERT INTO evento_edicion_participante VALUES(144,8,112,'seleccion','confirmado',NULL,'2025-12-27 04:33:14','2025-12-27 04:33:14');
+INSERT INTO evento_edicion_participante VALUES(145,9,113,'seleccion','confirmado',NULL,'2025-12-27 04:33:14','2025-12-27 04:33:14');
+INSERT INTO evento_edicion_participante VALUES(146,1,114,'seleccion','confirmado',NULL,'2025-12-27 04:33:15','2025-12-27 04:33:15');
+INSERT INTO evento_edicion_participante VALUES(147,2,114,'seleccion','confirmado',NULL,'2025-12-27 04:33:15','2025-12-27 04:33:15');
+INSERT INTO evento_edicion_participante VALUES(148,3,114,'seleccion','confirmado',NULL,'2025-12-27 04:33:15','2025-12-27 04:33:15');
+INSERT INTO evento_edicion_participante VALUES(149,4,114,'seleccion','confirmado',NULL,'2025-12-27 04:33:16','2025-12-27 04:33:16');
+INSERT INTO evento_edicion_participante VALUES(150,5,114,'seleccion','confirmado',NULL,'2025-12-27 04:33:16','2025-12-27 04:33:16');
+INSERT INTO evento_edicion_participante VALUES(151,7,114,'seleccion','confirmado',NULL,'2025-12-27 04:33:16','2025-12-27 04:33:16');
+INSERT INTO evento_edicion_participante VALUES(152,8,114,'seleccion','confirmado',NULL,'2025-12-27 04:33:17','2025-12-27 04:33:17');
+INSERT INTO evento_edicion_participante VALUES(153,6,115,'seleccion','confirmado',NULL,'2025-12-27 04:33:17','2025-12-27 04:33:17');
+INSERT INTO evento_edicion_participante VALUES(154,7,115,'seleccion','confirmado',NULL,'2025-12-27 04:33:17','2025-12-27 04:33:17');
+INSERT INTO evento_edicion_participante VALUES(155,8,115,'seleccion','confirmado',NULL,'2025-12-27 04:33:18','2025-12-27 04:33:18');
+INSERT INTO evento_edicion_participante VALUES(156,9,115,'seleccion','confirmado',NULL,'2025-12-27 04:33:18','2025-12-27 04:33:18');
+INSERT INTO evento_edicion_participante VALUES(157,10,115,'seleccion','confirmado',NULL,'2025-12-27 04:33:18','2025-12-27 04:33:18');
+INSERT INTO evento_edicion_participante VALUES(158,1,116,'seleccion','confirmado',NULL,'2025-12-27 04:33:19','2025-12-27 04:33:19');
+INSERT INTO evento_edicion_participante VALUES(159,3,116,'seleccion','confirmado',NULL,'2025-12-27 04:33:19','2025-12-27 04:33:19');
+INSERT INTO evento_edicion_participante VALUES(160,5,116,'seleccion','confirmado',NULL,'2025-12-27 04:33:19','2025-12-27 04:33:19');
+INSERT INTO evento_edicion_participante VALUES(161,2,117,'seleccion','confirmado',NULL,'2025-12-27 04:33:19','2025-12-27 04:33:19');
+INSERT INTO evento_edicion_participante VALUES(162,3,117,'seleccion','confirmado',NULL,'2025-12-27 04:33:20','2025-12-27 04:33:20');
+INSERT INTO evento_edicion_participante VALUES(163,10,117,'seleccion','confirmado',NULL,'2025-12-27 04:33:20','2025-12-27 04:33:20');
+INSERT INTO evento_edicion_participante VALUES(164,2,118,'seleccion','confirmado',NULL,'2025-12-27 04:33:20','2025-12-27 04:33:20');
+INSERT INTO evento_edicion_participante VALUES(165,3,118,'seleccion','confirmado',NULL,'2025-12-27 04:33:21','2025-12-27 04:33:21');
+INSERT INTO evento_edicion_participante VALUES(166,5,118,'seleccion','confirmado',NULL,'2025-12-27 04:33:21','2025-12-27 04:33:21');
+INSERT INTO evento_edicion_participante VALUES(167,6,118,'seleccion','confirmado',NULL,'2025-12-27 04:33:21','2025-12-27 04:33:21');
+INSERT INTO evento_edicion_participante VALUES(168,8,118,'seleccion','confirmado',NULL,'2025-12-27 04:33:22','2025-12-27 04:33:22');
+INSERT INTO evento_edicion_participante VALUES(169,9,118,'seleccion','confirmado',NULL,'2025-12-27 04:33:22','2025-12-27 04:33:22');
+INSERT INTO evento_edicion_participante VALUES(170,10,118,'seleccion','confirmado',NULL,'2025-12-27 04:33:22','2025-12-27 04:33:22');
+INSERT INTO evento_edicion_participante VALUES(171,6,119,'seleccion','confirmado',NULL,'2025-12-27 04:33:23','2025-12-27 04:33:23');
+INSERT INTO evento_edicion_participante VALUES(172,7,120,'seleccion','confirmado',NULL,'2025-12-27 04:33:23','2025-12-27 04:33:23');
+INSERT INTO evento_edicion_participante VALUES(173,8,121,'seleccion','confirmado',NULL,'2025-12-27 04:33:23','2025-12-27 04:33:23');
+INSERT INTO evento_edicion_participante VALUES(174,1,122,'seleccion','confirmado',NULL,'2025-12-27 04:33:24','2025-12-27 04:33:24');
+INSERT INTO evento_edicion_participante VALUES(175,2,122,'seleccion','confirmado',NULL,'2025-12-27 04:33:24','2025-12-27 04:33:24');
+INSERT INTO evento_edicion_participante VALUES(176,3,122,'seleccion','confirmado',NULL,'2025-12-27 04:33:24','2025-12-27 04:33:24');
+INSERT INTO evento_edicion_participante VALUES(177,4,122,'seleccion','confirmado',NULL,'2025-12-27 04:33:24','2025-12-27 04:33:24');
+INSERT INTO evento_edicion_participante VALUES(178,5,122,'seleccion','confirmado',NULL,'2025-12-27 04:33:25','2025-12-27 04:33:25');
+INSERT INTO evento_edicion_participante VALUES(179,3,123,'seleccion','confirmado',NULL,'2025-12-27 04:33:25','2025-12-27 04:33:25');
+INSERT INTO evento_edicion_participante VALUES(180,6,124,'seleccion','confirmado',NULL,'2025-12-27 04:33:25','2025-12-27 04:33:25');
+INSERT INTO evento_edicion_participante VALUES(181,3,125,'seleccion','confirmado',NULL,'2025-12-27 04:33:26','2025-12-27 04:33:26');
+INSERT INTO evento_edicion_participante VALUES(182,4,125,'seleccion','confirmado',NULL,'2025-12-27 04:33:26','2025-12-27 04:33:26');
+INSERT INTO evento_edicion_participante VALUES(183,6,125,'seleccion','confirmado',NULL,'2025-12-27 04:33:26','2025-12-27 04:33:26');
+INSERT INTO evento_edicion_participante VALUES(184,9,126,'seleccion','confirmado',NULL,'2025-12-27 04:33:27','2025-12-27 04:33:27');
+INSERT INTO evento_edicion_participante VALUES(185,2,127,'seleccion','confirmado',NULL,'2025-12-27 04:33:27','2025-12-27 04:33:27');
+INSERT INTO evento_edicion_participante VALUES(186,9,128,'seleccion','confirmado',NULL,'2025-12-27 04:33:27','2025-12-27 04:33:27');
+INSERT INTO evento_edicion_participante VALUES(187,7,129,'seleccion','confirmado',NULL,'2025-12-27 04:33:28','2025-12-27 04:33:28');
+INSERT INTO evento_edicion_participante VALUES(188,8,129,'seleccion','confirmado',NULL,'2025-12-27 04:33:28','2025-12-27 04:33:28');
+INSERT INTO evento_edicion_participante VALUES(189,9,129,'seleccion','confirmado',NULL,'2025-12-27 04:33:28','2025-12-27 04:33:28');
+INSERT INTO evento_edicion_participante VALUES(190,10,130,'seleccion','confirmado',NULL,'2025-12-27 04:33:29','2025-12-27 04:33:29');
+INSERT INTO evento_edicion_participante VALUES(191,9,131,'seleccion','confirmado',NULL,'2025-12-27 04:33:29','2025-12-27 04:33:29');
+INSERT INTO evento_edicion_participante VALUES(192,4,132,'seleccion','confirmado',NULL,'2025-12-27 04:33:29','2025-12-27 04:33:29');
+INSERT INTO evento_edicion_participante VALUES(193,1,133,'seleccion','confirmado',NULL,'2025-12-27 04:33:29','2025-12-27 04:33:29');
+INSERT INTO evento_edicion_participante VALUES(194,3,133,'seleccion','confirmado',NULL,'2025-12-27 04:33:30','2025-12-27 04:33:30');
+INSERT INTO evento_edicion_participante VALUES(195,7,133,'seleccion','confirmado',NULL,'2025-12-27 04:33:30','2025-12-27 04:33:30');
+INSERT INTO evento_edicion_participante VALUES(196,8,134,'seleccion','confirmado',NULL,'2025-12-27 04:33:30','2025-12-27 04:33:30');
+INSERT INTO evento_edicion_participante VALUES(197,10,135,'seleccion','confirmado',NULL,'2025-12-27 04:33:31','2025-12-27 04:33:31');
+INSERT INTO evento_edicion_participante VALUES(198,1,136,'seleccion','confirmado',NULL,'2025-12-27 04:33:31','2025-12-27 04:33:31');
+INSERT INTO evento_edicion_participante VALUES(199,2,136,'seleccion','confirmado',NULL,'2025-12-27 04:33:31','2025-12-27 04:33:31');
+INSERT INTO evento_edicion_participante VALUES(200,3,136,'seleccion','confirmado',NULL,'2025-12-27 04:33:32','2025-12-27 04:33:32');
+INSERT INTO evento_edicion_participante VALUES(201,5,136,'seleccion','confirmado',NULL,'2025-12-27 04:33:32','2025-12-27 04:33:32');
+INSERT INTO evento_edicion_participante VALUES(202,7,136,'seleccion','confirmado',NULL,'2025-12-27 04:33:32','2025-12-27 04:33:32');
+INSERT INTO evento_edicion_participante VALUES(203,5,137,'seleccion','confirmado',NULL,'2025-12-27 04:33:33','2025-12-27 04:33:33');
+INSERT INTO evento_edicion_participante VALUES(204,6,137,'seleccion','confirmado',NULL,'2025-12-27 04:33:33','2025-12-27 04:33:33');
+INSERT INTO evento_edicion_participante VALUES(205,8,137,'seleccion','confirmado',NULL,'2025-12-27 04:33:33','2025-12-27 04:33:33');
+INSERT INTO evento_edicion_participante VALUES(206,5,138,'seleccion','confirmado',NULL,'2025-12-27 04:33:33','2025-12-27 04:33:33');
+INSERT INTO evento_edicion_participante VALUES(207,3,139,'seleccion','confirmado',NULL,'2025-12-27 04:33:34','2025-12-27 04:33:34');
+INSERT INTO evento_edicion_participante VALUES(208,4,139,'seleccion','confirmado',NULL,'2025-12-27 04:33:34','2025-12-27 04:33:34');
+INSERT INTO evento_edicion_participante VALUES(209,9,139,'seleccion','confirmado',NULL,'2025-12-27 04:33:34','2025-12-27 04:33:34');
+INSERT INTO evento_edicion_participante VALUES(210,10,139,'seleccion','confirmado',NULL,'2025-12-27 04:33:35','2025-12-27 04:33:35');
+INSERT INTO evento_edicion_participante VALUES(211,3,140,'seleccion','confirmado',NULL,'2025-12-27 04:33:35','2025-12-27 04:33:35');
+INSERT INTO evento_edicion_participante VALUES(212,4,141,'seleccion','confirmado',NULL,'2025-12-27 04:33:35','2025-12-27 04:33:35');
+INSERT INTO evento_edicion_participante VALUES(213,6,141,'seleccion','confirmado',NULL,'2025-12-27 04:33:36','2025-12-27 04:33:36');
+INSERT INTO evento_edicion_participante VALUES(214,4,142,'seleccion','confirmado',NULL,'2025-12-27 04:33:36','2025-12-27 04:33:36');
+INSERT INTO evento_edicion_participante VALUES(215,1,143,'seleccion','confirmado',NULL,'2025-12-27 04:33:36','2025-12-27 04:33:36');
+INSERT INTO evento_edicion_participante VALUES(216,2,143,'seleccion','confirmado',NULL,'2025-12-27 04:33:37','2025-12-27 04:33:37');
+INSERT INTO evento_edicion_participante VALUES(217,5,143,'seleccion','confirmado',NULL,'2025-12-27 04:33:37','2025-12-27 04:33:37');
+INSERT INTO evento_edicion_participante VALUES(218,5,144,'seleccion','confirmado',NULL,'2025-12-27 04:33:37','2025-12-27 04:33:37');
+INSERT INTO evento_edicion_participante VALUES(219,6,144,'seleccion','confirmado',NULL,'2025-12-27 04:33:37','2025-12-27 04:33:37');
+INSERT INTO evento_edicion_participante VALUES(220,7,144,'seleccion','confirmado',NULL,'2025-12-27 04:33:38','2025-12-27 04:33:38');
+INSERT INTO evento_edicion_participante VALUES(221,9,144,'seleccion','confirmado',NULL,'2025-12-27 04:33:38','2025-12-27 04:33:38');
+INSERT INTO evento_edicion_participante VALUES(222,2,145,'seleccion','confirmado',NULL,'2025-12-27 04:33:38','2025-12-27 04:33:38');
+INSERT INTO evento_edicion_participante VALUES(223,3,145,'seleccion','confirmado',NULL,'2025-12-27 04:33:39','2025-12-27 04:33:39');
+INSERT INTO evento_edicion_participante VALUES(224,6,145,'seleccion','confirmado',NULL,'2025-12-27 04:33:39','2025-12-27 04:33:39');
+INSERT INTO evento_edicion_participante VALUES(225,7,145,'seleccion','confirmado',NULL,'2025-12-27 04:33:39','2025-12-27 04:33:39');
+INSERT INTO evento_edicion_participante VALUES(226,8,145,'seleccion','confirmado',NULL,'2025-12-27 04:33:40','2025-12-27 04:33:40');
+INSERT INTO evento_edicion_participante VALUES(227,5,146,'seleccion','confirmado',NULL,'2025-12-27 04:33:40','2025-12-27 04:33:40');
+INSERT INTO evento_edicion_participante VALUES(228,1,147,'seleccion','confirmado',NULL,'2025-12-27 04:33:40','2025-12-27 04:33:40');
+INSERT INTO evento_edicion_participante VALUES(229,2,147,'seleccion','confirmado',NULL,'2025-12-27 04:33:40','2025-12-27 04:33:40');
+INSERT INTO evento_edicion_participante VALUES(230,2,148,'seleccion','confirmado',NULL,'2025-12-27 04:33:41','2025-12-27 04:33:41');
+INSERT INTO evento_edicion_participante VALUES(231,6,148,'seleccion','confirmado',NULL,'2025-12-27 04:33:41','2025-12-27 04:33:41');
+INSERT INTO evento_edicion_participante VALUES(232,7,148,'seleccion','confirmado',NULL,'2025-12-27 04:33:41','2025-12-27 04:33:41');
+INSERT INTO evento_edicion_participante VALUES(233,8,148,'seleccion','confirmado',NULL,'2025-12-27 04:33:42','2025-12-27 04:33:42');
+INSERT INTO evento_edicion_participante VALUES(234,9,148,'seleccion','confirmado',NULL,'2025-12-27 04:33:42','2025-12-27 04:33:42');
+INSERT INTO evento_edicion_participante VALUES(235,8,149,'seleccion','confirmado',NULL,'2025-12-27 04:33:42','2025-12-27 04:33:42');
+INSERT INTO evento_edicion_participante VALUES(236,9,149,'seleccion','confirmado',NULL,'2025-12-27 04:33:43','2025-12-27 04:33:43');
+INSERT INTO evento_edicion_participante VALUES(237,5,150,'seleccion','confirmado',NULL,'2025-12-27 04:33:43','2025-12-27 04:33:43');
+INSERT INTO evento_edicion_participante VALUES(238,4,151,'seleccion','confirmado',NULL,'2025-12-27 04:33:43','2025-12-27 04:33:43');
+INSERT INTO evento_edicion_participante VALUES(239,6,152,'seleccion','confirmado',NULL,'2025-12-27 04:33:44','2025-12-27 04:33:44');
+INSERT INTO evento_edicion_participante VALUES(240,4,153,'seleccion','confirmado',NULL,'2025-12-27 04:33:44','2025-12-27 04:33:44');
+INSERT INTO evento_edicion_participante VALUES(241,7,153,'seleccion','confirmado',NULL,'2025-12-27 04:33:44','2025-12-27 04:33:44');
+INSERT INTO evento_edicion_participante VALUES(242,8,154,'seleccion','confirmado',NULL,'2025-12-27 04:33:44','2025-12-27 04:33:44');
+INSERT INTO evento_edicion_participante VALUES(243,2,155,'seleccion','confirmado',NULL,'2025-12-27 04:33:45','2025-12-27 04:33:45');
+INSERT INTO evento_edicion_participante VALUES(244,3,155,'seleccion','confirmado',NULL,'2025-12-27 04:33:45','2025-12-27 04:33:45');
+INSERT INTO evento_edicion_participante VALUES(245,5,155,'seleccion','confirmado',NULL,'2025-12-27 04:33:45','2025-12-27 04:33:45');
+INSERT INTO evento_edicion_participante VALUES(246,7,155,'seleccion','confirmado',NULL,'2025-12-27 04:33:46','2025-12-27 04:33:46');
+INSERT INTO evento_edicion_participante VALUES(247,10,155,'seleccion','confirmado',NULL,'2025-12-27 04:33:46','2025-12-27 04:33:46');
+INSERT INTO evento_edicion_participante VALUES(248,1,156,'seleccion','confirmado',NULL,'2025-12-27 04:33:46','2025-12-27 04:33:46');
+INSERT INTO evento_edicion_participante VALUES(249,2,156,'seleccion','confirmado',NULL,'2025-12-27 04:33:47','2025-12-27 04:33:47');
+INSERT INTO evento_edicion_participante VALUES(250,4,156,'seleccion','confirmado',NULL,'2025-12-27 04:33:47','2025-12-27 04:33:47');
+INSERT INTO evento_edicion_participante VALUES(251,10,156,'seleccion','confirmado',NULL,'2025-12-27 04:33:47','2025-12-27 04:33:47');
+INSERT INTO evento_edicion_participante VALUES(252,3,157,'seleccion','confirmado',NULL,'2025-12-27 04:33:48','2025-12-27 04:33:48');
+INSERT INTO evento_edicion_participante VALUES(253,4,157,'seleccion','confirmado',NULL,'2025-12-27 04:33:48','2025-12-27 04:33:48');
+INSERT INTO evento_edicion_participante VALUES(254,5,157,'seleccion','confirmado',NULL,'2025-12-27 04:33:48','2025-12-27 04:33:48');
+INSERT INTO evento_edicion_participante VALUES(255,6,157,'seleccion','confirmado',NULL,'2025-12-27 04:33:48','2025-12-27 04:33:48');
+INSERT INTO evento_edicion_participante VALUES(256,5,158,'seleccion','confirmado',NULL,'2025-12-27 04:33:49','2025-12-27 04:33:49');
+INSERT INTO evento_edicion_participante VALUES(257,10,159,'seleccion','confirmado',NULL,'2025-12-27 04:33:49','2025-12-27 04:33:49');
+INSERT INTO evento_edicion_participante VALUES(258,3,160,'seleccion','confirmado',NULL,'2025-12-27 04:33:49','2025-12-27 04:33:49');
+INSERT INTO evento_edicion_participante VALUES(259,4,160,'seleccion','confirmado',NULL,'2025-12-27 04:33:50','2025-12-27 04:33:50');
+INSERT INTO evento_edicion_participante VALUES(260,5,160,'seleccion','confirmado',NULL,'2025-12-27 04:33:50','2025-12-27 04:33:50');
+INSERT INTO evento_edicion_participante VALUES(261,9,160,'seleccion','confirmado',NULL,'2025-12-27 04:33:50','2025-12-27 04:33:50');
+INSERT INTO evento_edicion_participante VALUES(262,10,160,'seleccion','confirmado',NULL,'2025-12-27 04:33:51','2025-12-27 04:33:51');
+INSERT INTO evento_edicion_participante VALUES(263,8,161,'seleccion','confirmado',NULL,'2025-12-27 04:33:51','2025-12-27 04:33:51');
+INSERT INTO evento_edicion_participante VALUES(264,2,162,'seleccion','confirmado',NULL,'2025-12-27 04:33:51','2025-12-27 04:33:51');
+INSERT INTO evento_edicion_participante VALUES(265,3,162,'seleccion','confirmado',NULL,'2025-12-27 04:33:52','2025-12-27 04:33:52');
+INSERT INTO evento_edicion_participante VALUES(266,5,162,'seleccion','confirmado',NULL,'2025-12-27 04:33:52','2025-12-27 04:33:52');
+INSERT INTO evento_edicion_participante VALUES(267,9,163,'seleccion','confirmado',NULL,'2025-12-27 04:33:52','2025-12-27 04:33:52');
+INSERT INTO evento_edicion_participante VALUES(268,2,164,'seleccion','confirmado',NULL,'2025-12-27 04:33:52','2025-12-27 04:33:52');
+INSERT INTO evento_edicion_participante VALUES(269,4,164,'seleccion','confirmado',NULL,'2025-12-27 04:33:53','2025-12-27 04:33:53');
+INSERT INTO evento_edicion_participante VALUES(270,7,165,'seleccion','confirmado',NULL,'2025-12-27 04:33:53','2025-12-27 04:33:53');
+INSERT INTO evento_edicion_participante VALUES(271,5,166,'seleccion','confirmado',NULL,'2025-12-27 04:33:53','2025-12-27 04:33:53');
+INSERT INTO evento_edicion_participante VALUES(272,10,166,'seleccion','confirmado',NULL,'2025-12-27 04:33:54','2025-12-27 04:33:54');
+INSERT INTO evento_edicion_participante VALUES(273,3,167,'seleccion','confirmado',NULL,'2025-12-27 04:33:54','2025-12-27 04:33:54');
+INSERT INTO evento_edicion_participante VALUES(274,3,168,'seleccion','confirmado',NULL,'2025-12-27 04:33:54','2025-12-27 04:33:54');
+INSERT INTO evento_edicion_participante VALUES(275,4,168,'seleccion','confirmado',NULL,'2025-12-27 04:33:55','2025-12-27 04:33:55');
+INSERT INTO evento_edicion_participante VALUES(276,1,169,'seleccion','confirmado',NULL,'2025-12-27 04:33:55','2025-12-27 04:33:55');
+INSERT INTO evento_edicion_participante VALUES(277,2,169,'seleccion','confirmado',NULL,'2025-12-27 04:33:55','2025-12-27 04:33:55');
+INSERT INTO evento_edicion_participante VALUES(278,3,169,'seleccion','confirmado',NULL,'2025-12-27 04:33:55','2025-12-27 04:33:55');
+INSERT INTO evento_edicion_participante VALUES(279,4,170,'seleccion','confirmado',NULL,'2025-12-27 04:33:56','2025-12-27 04:33:56');
+INSERT INTO evento_edicion_participante VALUES(280,3,171,'seleccion','confirmado',NULL,'2025-12-27 04:33:56','2025-12-27 04:33:56');
+INSERT INTO evento_edicion_participante VALUES(281,3,172,'seleccion','confirmado',NULL,'2025-12-27 04:33:56','2025-12-27 04:33:56');
+INSERT INTO evento_edicion_participante VALUES(282,3,173,'seleccion','confirmado',NULL,'2025-12-27 04:33:57','2025-12-27 04:33:57');
+INSERT INTO evento_edicion_participante VALUES(283,4,173,'seleccion','confirmado',NULL,'2025-12-27 04:33:57','2025-12-27 04:33:57');
+INSERT INTO evento_edicion_participante VALUES(284,6,173,'seleccion','confirmado',NULL,'2025-12-27 04:33:57','2025-12-27 04:33:57');
+INSERT INTO evento_edicion_participante VALUES(285,8,174,'seleccion','confirmado',NULL,'2025-12-27 04:33:58','2025-12-27 04:33:58');
+INSERT INTO evento_edicion_participante VALUES(286,9,175,'seleccion','confirmado',NULL,'2025-12-27 04:33:58','2025-12-27 04:33:58');
+INSERT INTO evento_edicion_participante VALUES(287,10,175,'seleccion','confirmado',NULL,'2025-12-27 04:33:58','2025-12-27 04:33:58');
+INSERT INTO evento_edicion_participante VALUES(288,2,176,'seleccion','confirmado',NULL,'2025-12-27 04:33:59','2025-12-27 04:33:59');
+INSERT INTO evento_edicion_participante VALUES(289,8,177,'seleccion','confirmado',NULL,'2025-12-27 04:33:59','2025-12-27 04:33:59');
+INSERT INTO evento_edicion_participante VALUES(290,1,178,'seleccion','confirmado',NULL,'2025-12-27 04:33:59','2025-12-27 04:33:59');
+INSERT INTO evento_edicion_participante VALUES(291,2,178,'seleccion','confirmado',NULL,'2025-12-27 04:33:59','2025-12-27 04:33:59');
+INSERT INTO evento_edicion_participante VALUES(292,7,179,'seleccion','confirmado',NULL,'2025-12-27 04:34:00','2025-12-27 04:34:00');
+INSERT INTO evento_edicion_participante VALUES(293,8,179,'seleccion','confirmado',NULL,'2025-12-27 04:34:00','2025-12-27 04:34:00');
+INSERT INTO evento_edicion_participante VALUES(294,10,180,'seleccion','confirmado',NULL,'2025-12-27 04:34:00','2025-12-27 04:34:00');
+INSERT INTO evento_edicion_participante VALUES(295,3,181,'seleccion','confirmado',NULL,'2025-12-27 04:34:01','2025-12-27 04:34:01');
+INSERT INTO evento_edicion_participante VALUES(296,6,181,'seleccion','confirmado',NULL,'2025-12-27 04:34:01','2025-12-27 04:34:01');
+INSERT INTO evento_edicion_participante VALUES(297,5,182,'seleccion','confirmado',NULL,'2025-12-27 04:34:01','2025-12-27 04:34:01');
+INSERT INTO evento_edicion_participante VALUES(298,7,182,'seleccion','confirmado',NULL,'2025-12-27 04:34:02','2025-12-27 04:34:02');
+INSERT INTO evento_edicion_participante VALUES(299,8,182,'seleccion','confirmado',NULL,'2025-12-27 04:34:02','2025-12-27 04:34:02');
+INSERT INTO evento_edicion_participante VALUES(300,10,182,'seleccion','confirmado',NULL,'2025-12-27 04:34:02','2025-12-27 04:34:02');
+INSERT INTO evento_edicion_participante VALUES(301,2,183,'seleccion','confirmado',NULL,'2025-12-27 04:34:02','2025-12-27 04:34:02');
+INSERT INTO evento_edicion_participante VALUES(302,1,184,'seleccion','confirmado',NULL,'2025-12-27 04:34:03','2025-12-27 04:34:03');
+INSERT INTO evento_edicion_participante VALUES(303,2,184,'seleccion','confirmado',NULL,'2025-12-27 04:34:03','2025-12-27 04:34:03');
+INSERT INTO evento_edicion_participante VALUES(304,3,184,'seleccion','confirmado',NULL,'2025-12-27 04:34:03','2025-12-27 04:34:03');
+INSERT INTO evento_edicion_participante VALUES(305,4,184,'seleccion','confirmado',NULL,'2025-12-27 04:34:04','2025-12-27 04:34:04');
+INSERT INTO evento_edicion_participante VALUES(306,5,184,'seleccion','confirmado',NULL,'2025-12-27 04:34:04','2025-12-27 04:34:04');
+INSERT INTO evento_edicion_participante VALUES(307,7,184,'seleccion','confirmado',NULL,'2025-12-27 04:34:04','2025-12-27 04:34:04');
+INSERT INTO evento_edicion_participante VALUES(308,10,184,'seleccion','confirmado',NULL,'2025-12-27 04:34:05','2025-12-27 04:34:05');
+INSERT INTO evento_edicion_participante VALUES(309,7,185,'seleccion','confirmado',NULL,'2025-12-27 04:34:05','2025-12-27 04:34:05');
+INSERT INTO evento_edicion_participante VALUES(310,3,186,'seleccion','confirmado',NULL,'2025-12-27 04:34:05','2025-12-27 04:34:05');
+INSERT INTO evento_edicion_participante VALUES(311,9,187,'seleccion','confirmado',NULL,'2025-12-27 04:34:06','2025-12-27 04:34:06');
+INSERT INTO evento_edicion_participante VALUES(312,4,188,'seleccion','confirmado',NULL,'2025-12-27 04:34:06','2025-12-27 04:34:06');
+INSERT INTO evento_edicion_participante VALUES(313,5,189,'seleccion','confirmado',NULL,'2025-12-27 04:34:06','2025-12-27 04:34:06');
+INSERT INTO evento_edicion_participante VALUES(314,7,189,'seleccion','confirmado',NULL,'2025-12-27 04:34:06','2025-12-27 04:34:06');
+INSERT INTO evento_edicion_participante VALUES(315,6,190,'seleccion','confirmado',NULL,'2025-12-27 04:34:07','2025-12-27 04:34:07');
+INSERT INTO evento_edicion_participante VALUES(316,8,190,'seleccion','confirmado',NULL,'2025-12-27 04:34:07','2025-12-27 04:34:07');
+INSERT INTO evento_edicion_participante VALUES(317,9,190,'seleccion','confirmado',NULL,'2025-12-27 04:34:07','2025-12-27 04:34:07');
+INSERT INTO evento_edicion_participante VALUES(318,2,191,'seleccion','confirmado',NULL,'2025-12-27 04:34:08','2025-12-27 04:34:08');
+INSERT INTO evento_edicion_participante VALUES(319,2,192,'seleccion','confirmado',NULL,'2025-12-27 04:34:08','2025-12-27 04:34:08');
+INSERT INTO evento_edicion_participante VALUES(320,5,193,'seleccion','confirmado',NULL,'2025-12-27 04:34:08','2025-12-27 04:34:08');
+INSERT INTO evento_edicion_participante VALUES(321,4,194,'seleccion','confirmado',NULL,'2025-12-27 04:34:08','2025-12-27 04:34:08');
+INSERT INTO evento_edicion_participante VALUES(322,5,194,'seleccion','confirmado',NULL,'2025-12-27 04:34:09','2025-12-27 04:34:09');
+INSERT INTO evento_edicion_participante VALUES(323,6,194,'seleccion','confirmado',NULL,'2025-12-27 04:34:09','2025-12-27 04:34:09');
+INSERT INTO evento_edicion_participante VALUES(324,7,194,'seleccion','confirmado',NULL,'2025-12-27 04:34:09','2025-12-27 04:34:09');
+INSERT INTO evento_edicion_participante VALUES(325,3,195,'seleccion','confirmado',NULL,'2025-12-27 04:34:10','2025-12-27 04:34:10');
+INSERT INTO evento_edicion_participante VALUES(326,4,195,'seleccion','confirmado',NULL,'2025-12-27 04:34:10','2025-12-27 04:34:10');
+INSERT INTO evento_edicion_participante VALUES(327,2,196,'seleccion','confirmado',NULL,'2025-12-27 04:34:10','2025-12-27 04:34:10');
+INSERT INTO evento_edicion_participante VALUES(328,6,197,'seleccion','confirmado',NULL,'2025-12-27 04:34:11','2025-12-27 04:34:11');
+INSERT INTO evento_edicion_participante VALUES(329,7,197,'seleccion','confirmado',NULL,'2025-12-27 04:34:11','2025-12-27 04:34:11');
+INSERT INTO evento_edicion_participante VALUES(330,9,197,'seleccion','confirmado',NULL,'2025-12-27 04:34:11','2025-12-27 04:34:11');
+INSERT INTO evento_edicion_participante VALUES(331,4,198,'seleccion','confirmado',NULL,'2025-12-27 04:34:12','2025-12-27 04:34:12');
+INSERT INTO evento_edicion_participante VALUES(332,5,198,'seleccion','confirmado',NULL,'2025-12-27 04:34:12','2025-12-27 04:34:12');
+INSERT INTO evento_edicion_participante VALUES(333,10,199,'seleccion','confirmado',NULL,'2025-12-27 04:34:12','2025-12-27 04:34:12');
+INSERT INTO evento_edicion_participante VALUES(334,7,200,'seleccion','confirmado',NULL,'2025-12-27 04:34:12','2025-12-27 04:34:12');
+INSERT INTO evento_edicion_participante VALUES(335,3,201,'seleccion','confirmado',NULL,'2025-12-27 04:34:13','2025-12-27 04:34:13');
+INSERT INTO evento_edicion_participante VALUES(336,4,201,'seleccion','confirmado',NULL,'2025-12-27 04:34:13','2025-12-27 04:34:13');
+INSERT INTO evento_edicion_participante VALUES(337,3,202,'seleccion','confirmado',NULL,'2025-12-27 04:34:13','2025-12-27 04:34:13');
+INSERT INTO evento_edicion_participante VALUES(338,5,202,'seleccion','confirmado',NULL,'2025-12-27 04:34:14','2025-12-27 04:34:14');
+INSERT INTO evento_edicion_participante VALUES(339,7,202,'seleccion','confirmado',NULL,'2025-12-27 04:34:14','2025-12-27 04:34:14');
+INSERT INTO evento_edicion_participante VALUES(340,8,202,'seleccion','confirmado',NULL,'2025-12-27 04:34:14','2025-12-27 04:34:14');
+INSERT INTO evento_edicion_participante VALUES(341,9,202,'seleccion','confirmado',NULL,'2025-12-27 04:34:14','2025-12-27 04:34:14');
+INSERT INTO evento_edicion_participante VALUES(342,10,202,'seleccion','confirmado',NULL,'2025-12-27 04:34:15','2025-12-27 04:34:15');
+INSERT INTO evento_edicion_participante VALUES(343,10,203,'seleccion','confirmado',NULL,'2025-12-27 04:34:15','2025-12-27 04:34:15');
+INSERT INTO evento_edicion_participante VALUES(344,9,204,'seleccion','confirmado',NULL,'2025-12-27 04:34:15','2025-12-27 04:34:15');
+INSERT INTO evento_edicion_participante VALUES(345,3,205,'seleccion','confirmado',NULL,'2025-12-27 04:34:16','2025-12-27 04:34:16');
+INSERT INTO evento_edicion_participante VALUES(346,4,205,'seleccion','confirmado',NULL,'2025-12-27 04:34:16','2025-12-27 04:34:16');
+INSERT INTO evento_edicion_participante VALUES(347,5,205,'seleccion','confirmado',NULL,'2025-12-27 04:34:16','2025-12-27 04:34:16');
+INSERT INTO evento_edicion_participante VALUES(348,2,206,'seleccion','confirmado',NULL,'2025-12-27 04:34:17','2025-12-27 04:34:17');
+INSERT INTO evento_edicion_participante VALUES(349,9,207,'seleccion','confirmado',NULL,'2025-12-27 04:34:17','2025-12-27 04:34:17');
+INSERT INTO evento_edicion_participante VALUES(350,3,208,'seleccion','confirmado',NULL,'2025-12-27 04:34:17','2025-12-27 04:34:17');
+INSERT INTO evento_edicion_participante VALUES(351,3,209,'seleccion','confirmado',NULL,'2025-12-27 04:34:18','2025-12-27 04:34:18');
+INSERT INTO evento_edicion_participante VALUES(352,10,210,'seleccion','confirmado',NULL,'2025-12-27 04:34:18','2025-12-27 04:34:18');
+INSERT INTO evento_edicion_participante VALUES(353,10,211,'seleccion','confirmado',NULL,'2025-12-27 04:34:18','2025-12-27 04:34:18');
+INSERT INTO evento_edicion_participante VALUES(354,3,212,'seleccion','confirmado',NULL,'2025-12-27 04:34:54','2025-12-27 04:34:54');
+INSERT INTO evento_edicion_participante VALUES(355,3,213,'seleccion','confirmado',NULL,'2025-12-27 04:35:34','2025-12-27 04:35:34');
+INSERT INTO evento_edicion_participante VALUES(356,4,213,'seleccion','confirmado',NULL,'2025-12-27 04:35:34','2025-12-27 04:35:34');
+INSERT INTO evento_edicion_participante VALUES(357,8,213,'seleccion','confirmado',NULL,'2025-12-27 04:35:34','2025-12-27 04:35:34');
+INSERT INTO evento_edicion_participante VALUES(358,9,213,'seleccion','confirmado',NULL,'2025-12-27 04:35:34','2025-12-27 04:35:34');
+INSERT INTO evento_edicion_participante VALUES(359,3,158,'seleccion','confirmado',NULL,'2025-12-27 04:35:34','2025-12-27 04:35:34');
+INSERT INTO evento_edicion_participante VALUES(360,4,158,'seleccion','confirmado',NULL,'2025-12-27 04:35:34','2025-12-27 04:35:34');
+INSERT INTO evento_edicion_participante VALUES(361,8,158,'seleccion','confirmado',NULL,'2025-12-27 04:35:34','2025-12-27 04:35:34');
+INSERT INTO evento_edicion_participante VALUES(362,9,158,'seleccion','confirmado',NULL,'2025-12-27 04:35:34','2025-12-27 04:35:34');
+INSERT INTO evento_edicion_participante VALUES(363,5,214,'invitacion','confirmado','[Rol: ilustrador]','2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO evento_edicion_participante VALUES(364,5,215,'invitacion','confirmado','[Rol: ilustrador]','2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO evento_edicion_participante VALUES(365,5,226,'invitacion','confirmado','[Rol: musico]','2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO evento_edicion_participante VALUES(366,6,216,'invitacion','confirmado','[Rol: ilustrador]','2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO evento_edicion_participante VALUES(367,6,227,'invitacion','confirmado','[Rol: musico]','2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO evento_edicion_participante VALUES(368,7,217,'invitacion','confirmado','[Rol: ilustrador]','2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO evento_edicion_participante VALUES(369,8,218,'invitacion','confirmado','[Rol: ilustrador]','2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO evento_edicion_participante VALUES(370,8,219,'invitacion','confirmado','[Rol: ilustrador]','2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO evento_edicion_participante VALUES(371,8,220,'invitacion','confirmado','[Rol: ilustrador]','2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO evento_edicion_participante VALUES(372,8,228,'invitacion','confirmado','[Rol: musico]','2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO evento_edicion_participante VALUES(373,9,221,'invitacion','confirmado','[Rol: ilustrador]','2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO evento_edicion_participante VALUES(374,9,222,'invitacion','confirmado','[Rol: ilustrador]','2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO evento_edicion_participante VALUES(375,10,223,'invitacion','confirmado','[Rol: ilustrador]','2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO evento_edicion_participante VALUES(376,10,224,'invitacion','confirmado','[Rol: charlista]','2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO evento_edicion_participante VALUES(377,10,229,'invitacion','confirmado','[Rol: musico]','2025-12-25 19:14:36','2025-12-25 19:14:36');
+INSERT INTO evento_edicion_participante VALUES(378,3,225,'invitacion','confirmado','[Rol: musico]','2025-12-25 19:14:36','2025-12-25 19:14:36');
+CREATE TABLE IF NOT EXISTS actividad (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    participante_actividad_id INTEGER NOT NULL,
+    titulo TEXT,
+    descripcion TEXT,
+    duracion_minutos INTEGER,
+    ubicacion TEXT,
+    hora_inicio TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_actividad_participante_actividad 
+        FOREIGN KEY (participante_actividad_id) REFERENCES participante_actividad (id) ON DELETE CASCADE,
+    CONSTRAINT uq_actividad_participante_actividad UNIQUE (participante_actividad_id),
+    CONSTRAINT chk_actividad_duracion CHECK (duracion_minutos IS NULL OR duracion_minutos > 0)
+);
 DELETE FROM sqlite_sequence;
 INSERT INTO sqlite_sequence VALUES('disciplina',4);
 INSERT INTO sqlite_sequence VALUES('agrupacion',3);
@@ -1076,27 +1501,16 @@ INSERT INTO sqlite_sequence VALUES('evento',2);
 INSERT INTO sqlite_sequence VALUES('evento_edicion',13);
 INSERT INTO sqlite_sequence VALUES('evento_edicion_dia',18);
 INSERT INTO sqlite_sequence VALUES('evento_edicion_metrica',30);
-INSERT INTO sqlite_sequence VALUES('artista_invitado',16);
-INSERT INTO sqlite_sequence VALUES('evento_edicion_invitado',16);
 INSERT INTO sqlite_sequence VALUES('artista_imagen',87);
 INSERT INTO sqlite_sequence VALUES('lugar',3);
 INSERT INTO sqlite_sequence VALUES('catalogo_artista',87);
-INSERT INTO sqlite_sequence VALUES('artista',213);
 INSERT INTO sqlite_sequence VALUES('artista_historial',17);
-INSERT INTO sqlite_sequence VALUES('agrupacion_miembro',8);
-INSERT INTO sqlite_sequence VALUES('evento_edicion_participante',362);
-CREATE INDEX idx_participante_evento_edicion
-ON evento_edicion_participante (evento_edicion_id);
-CREATE INDEX idx_participante_artista
-ON evento_edicion_participante (artista_id);
-CREATE INDEX idx_participante_estado
-ON evento_edicion_participante (estado);
-CREATE INDEX idx_agrupacion_miembro_evento_edicion
-ON agrupacion_miembro (evento_edicion_id);
-CREATE INDEX idx_agrupacion_miembro_agrupacion
-ON agrupacion_miembro (agrupacion_id);
-CREATE INDEX idx_evento_edicion_invitado_evento_edicion
-ON evento_edicion_invitado (evento_edicion_id);
+INSERT INTO sqlite_sequence VALUES('evento_edicion_postulacion',0);
+INSERT INTO sqlite_sequence VALUES('artista',229);
+INSERT INTO sqlite_sequence VALUES('tipo_actividad',4);
+INSERT INTO sqlite_sequence VALUES('participante_exposicion',378);
+INSERT INTO sqlite_sequence VALUES('participante_actividad',6);
+INSERT INTO sqlite_sequence VALUES('evento_edicion_participante',378);
 CREATE INDEX idx_evento_edicion_metrica_evento_edicion
 ON evento_edicion_metrica (evento_edicion_id);
 CREATE INDEX idx_evento_edicion_metrica_fecha
@@ -1120,24 +1534,6 @@ AFTER UPDATE ON evento
 FOR EACH ROW
 BEGIN
     UPDATE evento SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
-END;
-CREATE TRIGGER trg_evento_edicion_invitado_updated_at
-AFTER UPDATE ON evento_edicion_invitado
-FOR EACH ROW
-BEGIN
-    UPDATE evento_edicion_invitado SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
-END;
-CREATE TRIGGER trg_evento_edicion_participante_updated_at
-AFTER UPDATE ON evento_edicion_participante
-FOR EACH ROW
-BEGIN
-    UPDATE evento_edicion_participante SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
-END;
-CREATE TRIGGER trg_evento_edicion_postulacion_updated_at
-AFTER UPDATE ON evento_edicion_postulacion
-FOR EACH ROW
-BEGIN
-    UPDATE evento_edicion_postulacion SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
 END;
 CREATE TRIGGER trg_disciplina_updated_at
 AFTER UPDATE ON disciplina
@@ -1165,19 +1561,6 @@ WHEN NEW.created_at IS NULL
 BEGIN
     UPDATE artista_imagen SET created_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
 END;
-CREATE TRIGGER trg_artista_invitado_updated_at
-AFTER UPDATE ON artista_invitado
-FOR EACH ROW
-BEGIN
-    UPDATE artista_invitado SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
-END;
-CREATE TRIGGER trg_artista_invitado_created_at
-AFTER INSERT ON artista_invitado
-FOR EACH ROW
-WHEN NEW.created_at IS NULL
-BEGIN
-    UPDATE artista_invitado SET created_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
-END;
 CREATE TRIGGER trg_agrupacion_updated_at
 AFTER UPDATE ON agrupacion
 FOR EACH ROW
@@ -1190,19 +1573,6 @@ FOR EACH ROW
 WHEN NEW.created_at IS NULL
 BEGIN
     UPDATE agrupacion SET created_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
-END;
-CREATE TRIGGER trg_agrupacion_miembro_updated_at
-AFTER UPDATE ON agrupacion_miembro
-FOR EACH ROW
-BEGIN
-    UPDATE agrupacion_miembro SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
-END;
-CREATE TRIGGER trg_agrupacion_miembro_created_at
-AFTER INSERT ON agrupacion_miembro
-FOR EACH ROW
-WHEN NEW.created_at IS NULL
-BEGIN
-    UPDATE agrupacion_miembro SET created_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
 END;
 CREATE TRIGGER trg_evento_edicion_updated_at
 AFTER UPDATE ON evento_edicion
@@ -1244,5 +1614,55 @@ CREATE INDEX idx_evento_edicion_dia_lugar ON evento_edicion_dia (lugar_id);
 CREATE INDEX idx_artista_historial_artista ON artista_historial (artista_id);
 CREATE INDEX idx_artista_historial_pseudonimo ON artista_historial (pseudonimo) WHERE pseudonimo IS NOT NULL;
 CREATE INDEX idx_artista_historial_orden ON artista_historial (artista_id, orden);
-CREATE UNIQUE INDEX idx_artista_slug ON artista (slug);
+CREATE TRIGGER trg_evento_edicion_postulacion_updated_at
+AFTER UPDATE ON evento_edicion_postulacion
+FOR EACH ROW
+BEGIN
+    UPDATE evento_edicion_postulacion SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+END;
+CREATE UNIQUE INDEX idx_artista_slug ON artista (slug) WHERE slug IS NOT NULL;
+CREATE UNIQUE INDEX idx_artista_correo_pseudonimo ON artista (correo, pseudonimo) WHERE correo IS NOT NULL;
+CREATE TRIGGER trg_tipo_actividad_updated_at
+AFTER UPDATE ON tipo_actividad
+FOR EACH ROW
+BEGIN
+    UPDATE tipo_actividad SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+END;
+CREATE INDEX idx_exposicion_participante ON participante_exposicion (participante_id);
+CREATE INDEX idx_exposicion_disciplina ON participante_exposicion (disciplina_id);
+CREATE INDEX idx_exposicion_agrupacion ON participante_exposicion (agrupacion_id);
+CREATE INDEX idx_exposicion_estado ON participante_exposicion (estado);
+CREATE TRIGGER trg_participante_exposicion_updated_at
+AFTER UPDATE ON participante_exposicion
+FOR EACH ROW
+BEGIN
+    UPDATE participante_exposicion SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+END;
+CREATE INDEX idx_actividad_participante ON participante_actividad (participante_id);
+CREATE INDEX idx_actividad_tipo ON participante_actividad (tipo_actividad_id);
+CREATE INDEX idx_actividad_agrupacion ON participante_actividad (agrupacion_id);
+CREATE INDEX idx_actividad_estado ON participante_actividad (estado);
+CREATE TRIGGER trg_participante_actividad_updated_at
+AFTER UPDATE ON participante_actividad
+FOR EACH ROW
+BEGIN
+    UPDATE participante_actividad SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+END;
+CREATE INDEX idx_participante_evento_edicion ON evento_edicion_participante (evento_edicion_id);
+CREATE INDEX idx_participante_artista ON evento_edicion_participante (artista_id);
+CREATE INDEX idx_participante_estado ON evento_edicion_participante (estado);
+CREATE INDEX idx_participante_modo_ingreso ON evento_edicion_participante (modo_ingreso);
+CREATE TRIGGER trg_evento_edicion_participante_updated_at
+AFTER UPDATE ON evento_edicion_participante
+FOR EACH ROW
+BEGIN
+    UPDATE evento_edicion_participante SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+END;
+CREATE INDEX idx_actividad_participante_actividad ON actividad (participante_actividad_id);
+CREATE TRIGGER trg_actividad_updated_at
+AFTER UPDATE ON actividad
+FOR EACH ROW
+BEGIN
+    UPDATE actividad SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+END;
 COMMIT;
