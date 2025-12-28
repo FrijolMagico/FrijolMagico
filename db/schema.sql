@@ -42,77 +42,11 @@ CREATE TABLE artista_imagen (
     CONSTRAINT fk_artista_imagen_artista FOREIGN KEY (artista_id)
     REFERENCES artista (id) ON DELETE CASCADE
 );
-CREATE TABLE evento_edicion_postulacion (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    evento_edicion_id INTEGER NOT NULL,
-    nombre TEXT NOT NULL,
-    pseudonimo TEXT,
-    correo TEXT,
-    rrss TEXT,
-    disciplina_id INTEGER NOT NULL,
-    dossier_url TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_postulacion_evento_edicion FOREIGN KEY (evento_edicion_id)
-    REFERENCES evento_edicion (id) ON DELETE CASCADE,
-    CONSTRAINT fk_postulacion_disciplina FOREIGN KEY (disciplina_id)
-    REFERENCES disciplina (id)
-);
 CREATE TABLE agrupacion (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL,
     descripcion TEXT
 , correo TEXT, created_at TEXT, updated_at TEXT);
-CREATE TABLE agrupacion_miembro (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    agrupacion_id INTEGER NOT NULL,
-    artista_id INTEGER NOT NULL,
-    evento_edicion_id INTEGER NOT NULL, created_at TEXT, updated_at TEXT,
-    CONSTRAINT fk_agrupacion_miembro_agrupacion FOREIGN KEY (agrupacion_id)
-    REFERENCES agrupacion (id) ON DELETE CASCADE,
-    CONSTRAINT fk_agrupacion_miembro_artista FOREIGN KEY (artista_id)
-    REFERENCES artista (id) ON DELETE CASCADE,
-    CONSTRAINT fk_agrupacion_miembro_evento_edicion FOREIGN KEY (evento_edicion_id)
-    REFERENCES evento_edicion (id) ON DELETE CASCADE,
-    CONSTRAINT uq_agrupacion_miembro UNIQUE (artista_id, evento_edicion_id)
-);
-CREATE TABLE evento_edicion_participante (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    evento_edicion_id INTEGER NOT NULL,
-    artista_id INTEGER NOT NULL,
-    disciplina_id INTEGER NOT NULL,
-    agrupacion_id INTEGER,
-    estado TEXT NOT NULL,
-    notas TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_participante_evento_edicion FOREIGN KEY (evento_edicion_id)
-    REFERENCES evento_edicion (id) ON DELETE CASCADE,
-    CONSTRAINT fk_participante_artista FOREIGN KEY (artista_id)
-    REFERENCES artista (id) ON DELETE CASCADE,
-    CONSTRAINT fk_participante_disciplina FOREIGN KEY (disciplina_id)
-    REFERENCES disciplina (id),
-    CONSTRAINT fk_participante_agrupacion FOREIGN KEY (agrupacion_id)
-    REFERENCES agrupacion (id),
-    CONSTRAINT uq_participante UNIQUE (artista_id, evento_edicion_id),
-    CONSTRAINT chk_evento_edicion_participante_estado CHECK (
-        estado IN ('postulado', 'seleccionado', 'confirmado', 'rechazado', 'cancelado')
-    )
-);
-CREATE TABLE artista_invitado (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombre TEXT NOT NULL,
-    correo TEXT,
-    rrss TEXT
-, created_at TEXT, updated_at TEXT);
-CREATE TABLE evento_edicion_invitado (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    evento_edicion_id INTEGER NOT NULL,
-    artista_invitado_id INTEGER NOT NULL,
-    rol TEXT NOT NULL,
-    notas TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_invitado_evento_edicion FOREIGN KEY (evento_edicion_id)
-    REFERENCES evento_edicion (id) ON DELETE CASCADE,
-    CONSTRAINT fk_invitado_artista FOREIGN KEY (artista_invitado_id)
-    REFERENCES artista_invitado (id) ON DELETE CASCADE,
-    CONSTRAINT chk_evento_edicion_invitado_rol CHECK (LENGTH(TRIM(rol)) > 0)
-);
 CREATE TABLE evento_edicion_metrica (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     evento_edicion_id INTEGER NOT NULL,
@@ -136,18 +70,6 @@ CREATE TABLE evento_edicion_snapshot (
     REFERENCES evento_edicion (id) ON DELETE CASCADE,
     CONSTRAINT uq_snapshot UNIQUE (evento_edicion_id, tipo)
 );
-CREATE INDEX idx_participante_evento_edicion
-ON evento_edicion_participante (evento_edicion_id);
-CREATE INDEX idx_participante_artista
-ON evento_edicion_participante (artista_id);
-CREATE INDEX idx_participante_estado
-ON evento_edicion_participante (estado);
-CREATE INDEX idx_agrupacion_miembro_evento_edicion
-ON agrupacion_miembro (evento_edicion_id);
-CREATE INDEX idx_agrupacion_miembro_agrupacion
-ON agrupacion_miembro (agrupacion_id);
-CREATE INDEX idx_evento_edicion_invitado_evento_edicion
-ON evento_edicion_invitado (evento_edicion_id);
 CREATE INDEX idx_evento_edicion_metrica_evento_edicion
 ON evento_edicion_metrica (evento_edicion_id);
 CREATE INDEX idx_evento_edicion_metrica_fecha
@@ -171,24 +93,6 @@ AFTER UPDATE ON evento
 FOR EACH ROW
 BEGIN
     UPDATE evento SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
-END;
-CREATE TRIGGER trg_evento_edicion_invitado_updated_at
-AFTER UPDATE ON evento_edicion_invitado
-FOR EACH ROW
-BEGIN
-    UPDATE evento_edicion_invitado SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
-END;
-CREATE TRIGGER trg_evento_edicion_participante_updated_at
-AFTER UPDATE ON evento_edicion_participante
-FOR EACH ROW
-BEGIN
-    UPDATE evento_edicion_participante SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
-END;
-CREATE TRIGGER trg_evento_edicion_postulacion_updated_at
-AFTER UPDATE ON evento_edicion_postulacion
-FOR EACH ROW
-BEGIN
-    UPDATE evento_edicion_postulacion SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
 END;
 CREATE TRIGGER trg_disciplina_updated_at
 AFTER UPDATE ON disciplina
@@ -216,19 +120,6 @@ WHEN NEW.created_at IS NULL
 BEGIN
     UPDATE artista_imagen SET created_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
 END;
-CREATE TRIGGER trg_artista_invitado_updated_at
-AFTER UPDATE ON artista_invitado
-FOR EACH ROW
-BEGIN
-    UPDATE artista_invitado SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
-END;
-CREATE TRIGGER trg_artista_invitado_created_at
-AFTER INSERT ON artista_invitado
-FOR EACH ROW
-WHEN NEW.created_at IS NULL
-BEGIN
-    UPDATE artista_invitado SET created_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
-END;
 CREATE TRIGGER trg_agrupacion_updated_at
 AFTER UPDATE ON agrupacion
 FOR EACH ROW
@@ -241,19 +132,6 @@ FOR EACH ROW
 WHEN NEW.created_at IS NULL
 BEGIN
     UPDATE agrupacion SET created_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
-END;
-CREATE TRIGGER trg_agrupacion_miembro_updated_at
-AFTER UPDATE ON agrupacion_miembro
-FOR EACH ROW
-BEGIN
-    UPDATE agrupacion_miembro SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
-END;
-CREATE TRIGGER trg_agrupacion_miembro_created_at
-AFTER INSERT ON agrupacion_miembro
-FOR EACH ROW
-WHEN NEW.created_at IS NULL
-BEGIN
-    UPDATE agrupacion_miembro SET created_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
 END;
 CREATE TABLE evento_edicion (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -343,5 +221,170 @@ CREATE TABLE artista_historial (id INTEGER PRIMARY KEY AUTOINCREMENT, artista_id
 CREATE INDEX idx_artista_historial_artista ON artista_historial (artista_id);
 CREATE INDEX idx_artista_historial_pseudonimo ON artista_historial (pseudonimo) WHERE pseudonimo IS NOT NULL;
 CREATE INDEX idx_artista_historial_orden ON artista_historial (artista_id, orden);
-CREATE TABLE "artista" (id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT, pseudonimo TEXT NOT NULL, correo TEXT, rrss TEXT, ciudad TEXT, pais TEXT, created_at TEXT, updated_at TEXT, slug TEXT);
-CREATE UNIQUE INDEX idx_artista_slug ON artista (slug);
+CREATE TABLE "evento_edicion_postulacion" (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    evento_edicion_id INTEGER NOT NULL,
+    nombre TEXT NOT NULL,
+    pseudonimo TEXT,
+    correo TEXT,
+    rrss TEXT,
+    disciplina_id INTEGER NOT NULL,
+    dossier_url TEXT,
+    estado TEXT NOT NULL DEFAULT 'pendiente',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_postulacion_evento_edicion 
+        FOREIGN KEY (evento_edicion_id) REFERENCES evento_edicion (id) ON DELETE CASCADE,
+    CONSTRAINT fk_postulacion_disciplina 
+        FOREIGN KEY (disciplina_id) REFERENCES disciplina (id),
+    CONSTRAINT chk_postulacion_estado 
+        CHECK (estado IN ('pendiente', 'seleccionado', 'rechazado', 'invitado'))
+);
+CREATE TRIGGER trg_evento_edicion_postulacion_updated_at
+AFTER UPDATE ON evento_edicion_postulacion
+FOR EACH ROW
+BEGIN
+    UPDATE evento_edicion_postulacion SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+END;
+CREATE TABLE "artista" (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT,
+    pseudonimo TEXT NOT NULL,
+    correo TEXT,
+    rrss TEXT,
+    ciudad TEXT,
+    pais TEXT,
+    slug TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX idx_artista_slug ON artista (slug) WHERE slug IS NOT NULL;
+CREATE UNIQUE INDEX idx_artista_correo_pseudonimo ON artista (correo, pseudonimo) WHERE correo IS NOT NULL;
+CREATE TABLE tipo_actividad (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL,
+    descripcion TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT uq_tipo_actividad_nombre UNIQUE (nombre)
+);
+CREATE TRIGGER trg_tipo_actividad_updated_at
+AFTER UPDATE ON tipo_actividad
+FOR EACH ROW
+BEGIN
+    UPDATE tipo_actividad SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+END;
+CREATE TABLE participante_exposicion (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    participante_id INTEGER NOT NULL,
+    disciplina_id INTEGER NOT NULL,
+    agrupacion_id INTEGER,
+    estado TEXT NOT NULL DEFAULT 'confirmado',
+    notas TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_exposicion_participante 
+        FOREIGN KEY (participante_id) REFERENCES evento_edicion_participante (id) ON DELETE CASCADE,
+    CONSTRAINT fk_exposicion_disciplina 
+        FOREIGN KEY (disciplina_id) REFERENCES disciplina (id),
+    CONSTRAINT fk_exposicion_agrupacion 
+        FOREIGN KEY (agrupacion_id) REFERENCES agrupacion (id),
+    CONSTRAINT uq_exposicion_participante UNIQUE (participante_id),
+    CONSTRAINT chk_exposicion_estado 
+        CHECK (estado IN ('seleccionado', 'confirmado', 'cancelado', 'no_asistio'))
+);
+CREATE INDEX idx_exposicion_participante ON participante_exposicion (participante_id);
+CREATE INDEX idx_exposicion_disciplina ON participante_exposicion (disciplina_id);
+CREATE INDEX idx_exposicion_agrupacion ON participante_exposicion (agrupacion_id);
+CREATE INDEX idx_exposicion_estado ON participante_exposicion (estado);
+CREATE TRIGGER trg_participante_exposicion_updated_at
+AFTER UPDATE ON participante_exposicion
+FOR EACH ROW
+BEGIN
+    UPDATE participante_exposicion SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+END;
+CREATE TABLE participante_actividad (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    participante_id INTEGER NOT NULL,
+    tipo_actividad_id INTEGER NOT NULL,
+    agrupacion_id INTEGER,
+    estado TEXT NOT NULL DEFAULT 'confirmado',
+    notas TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_actividad_participante 
+        FOREIGN KEY (participante_id) REFERENCES evento_edicion_participante (id) ON DELETE CASCADE,
+    CONSTRAINT fk_actividad_tipo 
+        FOREIGN KEY (tipo_actividad_id) REFERENCES tipo_actividad (id),
+    CONSTRAINT fk_actividad_agrupacion 
+        FOREIGN KEY (agrupacion_id) REFERENCES agrupacion (id),
+    CONSTRAINT chk_actividad_estado 
+        CHECK (estado IN ('seleccionado', 'confirmado', 'cancelado', 'no_asistio'))
+);
+CREATE INDEX idx_actividad_participante ON participante_actividad (participante_id);
+CREATE INDEX idx_actividad_tipo ON participante_actividad (tipo_actividad_id);
+CREATE INDEX idx_actividad_agrupacion ON participante_actividad (agrupacion_id);
+CREATE INDEX idx_actividad_estado ON participante_actividad (estado);
+CREATE TRIGGER trg_participante_actividad_updated_at
+AFTER UPDATE ON participante_actividad
+FOR EACH ROW
+BEGIN
+    UPDATE participante_actividad SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+END;
+CREATE TABLE "evento_edicion_participante" (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    evento_edicion_id INTEGER NOT NULL,
+    artista_id INTEGER NOT NULL,
+    modo_ingreso TEXT NOT NULL DEFAULT 'seleccion',
+    estado TEXT NOT NULL DEFAULT 'confirmado',
+    notas TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_participante_evento_edicion 
+        FOREIGN KEY (evento_edicion_id) REFERENCES evento_edicion (id) ON DELETE CASCADE,
+    CONSTRAINT fk_participante_artista 
+        FOREIGN KEY (artista_id) REFERENCES artista (id) ON DELETE CASCADE,
+    CONSTRAINT uq_participante UNIQUE (artista_id, evento_edicion_id),
+    CONSTRAINT chk_participante_modo_ingreso 
+        CHECK (modo_ingreso IN ('seleccion', 'invitacion')),
+    CONSTRAINT chk_participante_estado 
+        CHECK (estado IN ('seleccionado', 'confirmado', 'cancelado', 'no_asistio'))
+);
+CREATE INDEX idx_participante_evento_edicion ON evento_edicion_participante (evento_edicion_id);
+CREATE INDEX idx_participante_artista ON evento_edicion_participante (artista_id);
+CREATE INDEX idx_participante_estado ON evento_edicion_participante (estado);
+CREATE INDEX idx_participante_modo_ingreso ON evento_edicion_participante (modo_ingreso);
+CREATE TRIGGER trg_evento_edicion_participante_updated_at
+AFTER UPDATE ON evento_edicion_participante
+FOR EACH ROW
+BEGIN
+    UPDATE evento_edicion_participante SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+END;
+CREATE TABLE actividad (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    participante_actividad_id INTEGER NOT NULL,
+    titulo TEXT,
+    descripcion TEXT,
+    duracion_minutos INTEGER,
+    ubicacion TEXT,
+    hora_inicio TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_actividad_participante_actividad 
+        FOREIGN KEY (participante_actividad_id) REFERENCES participante_actividad (id) ON DELETE CASCADE,
+    CONSTRAINT uq_actividad_participante_actividad UNIQUE (participante_actividad_id),
+    CONSTRAINT chk_actividad_duracion CHECK (duracion_minutos IS NULL OR duracion_minutos > 0)
+);
+CREATE INDEX idx_actividad_participante_actividad ON actividad (participante_actividad_id);
+CREATE TRIGGER trg_actividad_updated_at
+AFTER UPDATE ON actividad
+FOR EACH ROW
+BEGIN
+    UPDATE actividad SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+END;
