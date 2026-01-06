@@ -142,11 +142,19 @@ CREATE TABLE tipo_actividad (
     
     CONSTRAINT uq_tipo_actividad_nombre UNIQUE (nombre)
 );
+CREATE TABLE modo_ingreso (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    modo TEXT NOT NULL UNIQUE,
+    descripcion TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 CREATE TABLE participante_exposicion (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     participante_id INTEGER NOT NULL,
     disciplina_id INTEGER NOT NULL,
     agrupacion_id INTEGER,
+    modo_ingreso_id INTEGER NOT NULL DEFAULT 1,
     estado TEXT NOT NULL DEFAULT 'confirmado',
     notas TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -158,6 +166,8 @@ CREATE TABLE participante_exposicion (
         FOREIGN KEY (disciplina_id) REFERENCES disciplina (id),
     CONSTRAINT fk_exposicion_agrupacion 
         FOREIGN KEY (agrupacion_id) REFERENCES agrupacion (id),
+    CONSTRAINT fk_exposicion_modo_ingreso 
+        FOREIGN KEY (modo_ingreso_id) REFERENCES modo_ingreso (id),
     CONSTRAINT uq_exposicion_participante UNIQUE (participante_id),
     CONSTRAINT chk_exposicion_estado 
         CHECK (estado IN ('seleccionado', 'confirmado', 'cancelado', 'no_asistio'))
@@ -167,6 +177,7 @@ CREATE TABLE participante_actividad (
     participante_id INTEGER NOT NULL,
     tipo_actividad_id INTEGER NOT NULL,
     agrupacion_id INTEGER,
+    modo_ingreso_id INTEGER NOT NULL DEFAULT 2,
     estado TEXT NOT NULL DEFAULT 'confirmado',
     notas TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -178,6 +189,8 @@ CREATE TABLE participante_actividad (
         FOREIGN KEY (tipo_actividad_id) REFERENCES tipo_actividad (id),
     CONSTRAINT fk_actividad_agrupacion 
         FOREIGN KEY (agrupacion_id) REFERENCES agrupacion (id),
+    CONSTRAINT fk_actividad_modo_ingreso 
+        FOREIGN KEY (modo_ingreso_id) REFERENCES modo_ingreso (id),
     CONSTRAINT chk_actividad_estado 
         CHECK (estado IN ('seleccionado', 'confirmado', 'cancelado', 'no_asistio'))
 );
@@ -185,7 +198,6 @@ CREATE TABLE "evento_edicion_participante" (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     evento_edicion_id INTEGER NOT NULL,
     artista_id INTEGER NOT NULL,
-    modo_ingreso TEXT NOT NULL DEFAULT 'seleccion',
     estado TEXT NOT NULL DEFAULT 'confirmado',
     notas TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -196,8 +208,6 @@ CREATE TABLE "evento_edicion_participante" (
     CONSTRAINT fk_participante_artista 
         FOREIGN KEY (artista_id) REFERENCES artista (id) ON DELETE CASCADE,
     CONSTRAINT uq_participante UNIQUE (artista_id, evento_edicion_id),
-    CONSTRAINT chk_participante_modo_ingreso 
-        CHECK (modo_ingreso IN ('seleccion', 'invitacion')),
     CONSTRAINT chk_participante_estado 
         CHECK (estado IN ('seleccionado', 'confirmado', 'cancelado', 'no_asistio'))
 );
@@ -210,7 +220,7 @@ CREATE TABLE actividad (
     ubicacion TEXT,
     hora_inicio TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, cupos INTEGER,
     
     CONSTRAINT fk_actividad_participante_actividad 
         FOREIGN KEY (participante_actividad_id) REFERENCES participante_actividad (id) ON DELETE CASCADE,
@@ -256,6 +266,9 @@ CREATE INDEX idx_evento_edicion_metrica_fecha
 ON evento_edicion_metrica (fecha_registro);
 CREATE INDEX idx_evento_edicion_snapshot_evento_edicion
 ON evento_edicion_snapshot (evento_edicion_id);
+CREATE INDEX idx_postulacion_evento_edicion ON evento_edicion_postulacion (evento_edicion_id);
+CREATE INDEX idx_postulacion_disciplina ON evento_edicion_postulacion (disciplina_id);
+CREATE INDEX idx_organizacion_equipo_organizacion ON organizacion_equipo (organizacion_id);
 CREATE TRIGGER trg_organizacion_updated_at
 AFTER UPDATE ON organizacion
 FOR EACH ROW
@@ -350,7 +363,14 @@ END;
 CREATE INDEX idx_participante_evento_edicion ON evento_edicion_participante (evento_edicion_id);
 CREATE INDEX idx_participante_artista ON evento_edicion_participante (artista_id);
 CREATE INDEX idx_participante_estado ON evento_edicion_participante (estado);
-CREATE INDEX idx_participante_modo_ingreso ON evento_edicion_participante (modo_ingreso);
+CREATE INDEX idx_exposicion_modo_ingreso ON participante_exposicion (modo_ingreso_id);
+CREATE INDEX idx_actividad_modo_ingreso ON participante_actividad (modo_ingreso_id);
+CREATE TRIGGER trg_modo_ingreso_updated_at
+AFTER UPDATE ON modo_ingreso
+FOR EACH ROW
+BEGIN
+    UPDATE modo_ingreso SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+END;
 CREATE TRIGGER trg_evento_edicion_participante_updated_at
 AFTER UPDATE ON evento_edicion_participante
 FOR EACH ROW
