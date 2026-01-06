@@ -19,6 +19,10 @@
 -- DROP INDEX IF EXISTS idx_artista_imagen_artista;
 -- DROP TABLE IF EXISTS artista_imagen;
 
+-- DROP INDEX IF EXISTS idx_artista_estado;
 -- DROP INDEX IF EXISTS idx_artista_correo_pseudonimo;
 -- DROP INDEX IF EXISTS idx_artista_slug;
 -- DROP TABLE IF EXISTS artista;
+
+-- DROP TRIGGER IF EXISTS trg_artista_estado_updated_at;
+-- DROP TABLE IF EXISTS artista_estado;

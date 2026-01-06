@@ -1,8 +1,23 @@
 -- ============================================
 -- Migración: 002_artista
 -- Descripción: Tablas del dominio artistas
--- Tablas: artista, artista_imagen, artista_historial, catalogo_artista
+-- Tablas: artista_estado, artista, artista_imagen, artista_historial, catalogo_artista
 -- ============================================
+
+-- artista_estado (debe crearse antes de artista por la FK)
+CREATE TABLE IF NOT EXISTS artista_estado (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    estado TEXT NOT NULL UNIQUE,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER IF NOT EXISTS trg_artista_estado_updated_at
+AFTER UPDATE ON artista_estado
+FOR EACH ROW
+BEGIN
+    UPDATE artista_estado SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+END;
 
 -- artista
 CREATE TABLE IF NOT EXISTS artista (
@@ -14,12 +29,24 @@ CREATE TABLE IF NOT EXISTS artista (
     ciudad TEXT,
     pais TEXT,
     slug TEXT,
+    estado_id INTEGER DEFAULT 1,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_artista_estado FOREIGN KEY (estado_id)
+        REFERENCES artista_estado (id)
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_artista_slug ON artista (slug) WHERE slug IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_artista_correo_pseudonimo ON artista (correo, pseudonimo) WHERE correo IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_artista_estado ON artista (estado_id);
+
+CREATE TRIGGER IF NOT EXISTS trg_artista_updated_at
+AFTER UPDATE ON artista
+FOR EACH ROW
+BEGIN
+    UPDATE artista SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+END;
 
 -- artista_imagen
 CREATE TABLE IF NOT EXISTS artista_imagen (
@@ -29,8 +56,8 @@ CREATE TABLE IF NOT EXISTS artista_imagen (
     tipo TEXT,
     orden INTEGER,
     metadata TEXT,
-    created_at TEXT,
-    updated_at TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_artista_imagen_artista FOREIGN KEY (artista_id)
         REFERENCES artista (id) ON DELETE CASCADE
@@ -43,14 +70,6 @@ AFTER UPDATE ON artista_imagen
 FOR EACH ROW
 BEGIN
     UPDATE artista_imagen SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
-END;
-
-CREATE TRIGGER IF NOT EXISTS trg_artista_imagen_created_at
-AFTER INSERT ON artista_imagen
-FOR EACH ROW
-WHEN NEW.created_at IS NULL
-BEGIN
-    UPDATE artista_imagen SET created_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
 END;
 
 -- artista_historial
