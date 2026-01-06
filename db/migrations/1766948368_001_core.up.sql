@@ -40,6 +40,8 @@ CREATE TABLE IF NOT EXISTS organizacion_equipo (
 )
 ;
 
+CREATE INDEX IF NOT EXISTS idx_organizacion_equipo_organizacion ON organizacion_equipo (organizacion_id);
+
 CREATE TRIGGER IF NOT EXISTS trg_organizacion_equipo_updated_at
 AFTER UPDATE ON organizacion_equipo
 FOR EACH ROW

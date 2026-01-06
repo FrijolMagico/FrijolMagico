@@ -139,6 +139,9 @@ CREATE TABLE IF NOT EXISTS evento_edicion_postulacion (
     CONSTRAINT chk_postulacion_estado CHECK (estado IN ('pendiente', 'seleccionado', 'rechazado', 'invitado'))
 );
 
+CREATE INDEX IF NOT EXISTS idx_postulacion_evento_edicion ON evento_edicion_postulacion (evento_edicion_id);
+CREATE INDEX IF NOT EXISTS idx_postulacion_disciplina ON evento_edicion_postulacion (disciplina_id);
+
 CREATE TRIGGER IF NOT EXISTS trg_evento_edicion_postulacion_updated_at
 AFTER UPDATE ON evento_edicion_postulacion
 FOR EACH ROW
