@@ -2,33 +2,32 @@
 
 ## Project Overview
 
-Frijol Magico is a Next.js 15 (App Router) web platform for the Frijol Magico Festival, showcasing illustrators from the Coquimbo Region, Chile. Built with React 19, TypeScript, and Tailwind CSS v4. Uses Google Sheets as CMS with Turso (libSQL) as the primary database.
+Next.js 15 (App Router) web platform for the Frijol Magico Festival, showcasing illustrators from the Coquimbo Region, Chile. Built with React 19, TypeScript (strict), and Tailwind CSS v4.
 
 ## Tech Stack
 
 - **Framework**: Next.js 15 (App Router) with Turbopack
-- **UI**: React 19, TypeScript (strict mode)
-- **Styling**: Tailwind CSS v4, tailwind-variants, clsx, tailwind-merge
+- **UI**: React 19, TypeScript (strict mode), Tailwind CSS v4
 - **State**: Zustand for client-side state
 - **Animation**: GSAP with ScrollTrigger
-- **Package Manager**: Bun (preferred) or npm
-- **CMS**: Google Sheets via google-spreadsheet library
 - **Database**: Turso (libSQL) with Geni for migrations
+- **CMS**: Google Sheets via google-spreadsheet library
+- **Package Manager**: Bun (preferred)
 
 ## Build/Lint/Test Commands
 
 ```bash
 bun install          # Install dependencies
-bun run dev          # Development server (with Turbopack)
+bun run dev          # Development server (Turbopack)
 bun run build        # Production build
 bun run start        # Start production server
-bun run lint         # Lint code (ESLint + Prettier)
+bun run lint         # Lint code (ESLint)
+bun run lint:fix     # Lint and auto-fix issues
 bun run db:migrate   # Run pending migrations
 bun run db:rollback  # Rollback last migration
 bun run db:status    # Show pending migrations
 bun run db:new       # Create new migration (e.g., bun run db:new add_users)
 bun run db:seed      # Seed database
-bun run db:import    # Import data from Google Sheets
 ```
 
 **Note**: No test framework is currently configured in this project.
@@ -48,10 +47,9 @@ Organize imports with blank lines between groups:
 // 1. React/Next.js
 import { Suspense } from 'react'
 import Image from 'next/image'
-import type { Metadata } from 'next'
 // 2. External libraries
 import { create } from 'zustand'
-import { Instagram, Mail } from 'lucide-react'
+import { Instagram } from 'lucide-react'
 // 3. Internal absolute imports (@/)
 import { cn } from '@/utils/utils'
 import { Header } from '@/components/Header'
@@ -66,7 +64,6 @@ import type { CatalogArtist } from '../types/catalog'
 - **Strict mode enabled** - all code must be strongly typed
 - Use `type` keyword for type-only imports: `import type { Foo } from './types'`
 - Place global types in `src/types/`, section-specific types in `[section]/types/`
-- Use descriptive interface names with suffixes: `Props`, `State`, `Config`
 
 ### Naming Conventions
 
@@ -111,10 +108,19 @@ export const useMyStore = create<MyState>((set) => ({
 
 ### Error Handling
 
-- Return `{ data, error }` pattern from data fetching functions
-- Use `ErrorSection` component for displaying errors
-- Log errors to console with descriptive messages
-- Provide graceful fallbacks (empty arrays, default values)
+Return `{ data, error }` pattern from data fetching functions. Use `ErrorSection` component for displaying errors. Provide graceful fallbacks (empty arrays, default values).
+
+```typescript
+export async function getData(): Promise<{ data: Item[]; error: ErrorObject }> {
+  try {
+    const data = await repository()
+    return { data, error: null }
+  } catch (error) {
+    console.error((error as Error).message)
+    return { data: [], error: { message: 'Error message' } }
+  }
+}
+```
 
 ## Directory Structure
 
@@ -122,19 +128,15 @@ export const useMyStore = create<MyState>((set) => ({
 src/
 ├── app/                 # Next.js App Router
 │   ├── (home)/          # Home page route group
-│   ├── (sections)/      # Main sections (catalogo, festivales, convocatoria)
-│   │   └── [section]/   # Each with: components/, store/, types/, lib/
-│   └── layout.tsx
+│   └── (sections)/      # Main sections (catalogo, festivales, convocatoria)
+│       └── [section]/   # Each with: components/, store/, types/, lib/
 ├── components/          # Shared components (ui/, icons/)
 ├── config/              # App configuration
-├── data/                # Static data (site.json)
-├── infra/               # Infrastructure (database adapters, importers)
+├── infra/               # Infrastructure (database adapters)
 ├── schemas/             # Zod validation schemas
-├── services/            # External service integrations
 ├── styles/              # Global styles and palettes
 ├── types/               # Global TypeScript types
 └── utils/               # Utility functions
-
 db/
 ├── migrations/          # Database migrations (Geni)
 └── seed/                # Seed data
@@ -142,35 +144,26 @@ db/
 
 ## Key Patterns
 
-### Path Aliases
+- **Path Aliases**: Use `@/` for imports from `src/`
+- **Styling**: Use custom color tokens (`text-fm-orange`, `bg-fm-white`) and `tailwind-variants`
+- **Images**: Use Next.js `<Image />`, store in `public/sections/[section]/images/`
+- **Data Fetching**: Prefer static generation, use mock data in development (`src/infra/__mocks__/`)
 
-Use `@/` for imports from `src/`: `import { cn } from '@/utils/utils'`
-
-### Styling with Tailwind
-
-- Use custom color tokens: `text-fm-orange`, `bg-fm-white`, `text-fm-black`
-- Use `tailwind-variants` for component variants
-
-### Images
-
-- Use Next.js `<Image />` component for all images
-- Store images in `public/sections/[section]/images/`
-- Always provide descriptive `alt` text
-
-### Data Fetching
-
-- Prefer static generation (build time) where possible
-- Use mock data in development (`src/infra/__mocks__/`)
-- Application reads from Turso database (data synced via `db:import`)
-
-## Accessibility Requirements
+## Accessibility
 
 - Use semantic HTML elements
 - Provide `aria-label` for interactive elements
-- Ensure keyboard navigation works
 - Include alt text for all images
+- ESLint jsx-a11y plugin enforces accessibility rules
+
+## Verification Workflow
+
+Before running `bun run build`, always follow this order:
+
+1. Run `bun run lint` to check for linting errors
+2. Ask the user to verify `bun run dev` looks correct visually
+3. Only after user confirmation, proceed with `bun run build`
 
 ## Additional Resources
 
 - See `.github/copilot-instructions.md` for detailed architectural patterns
-- See `README.md` for project setup and environment variables
