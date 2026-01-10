@@ -1,24 +1,23 @@
-import { dirname } from 'path'
-import { fileURLToPath } from 'url'
-import { FlatCompat } from '@eslint/eslintrc'
+import { defineConfig, globalIgnores } from 'eslint/config'
+import nextVitals from 'eslint-config-next/core-web-vitals'
+import nextTs from 'eslint-config-next/typescript'
+import prettier from 'eslint-config-prettier/flat'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-})
-
-const eslintConfig = [
-  ...compat.extends(
-    'next/core-web-vitals',
-    'next/typescript',
-    'prettier',
-    'plugin:jsx-a11y/recommended',
-  ),
-  {
-    ignores: ['node_modules', 'dist'],
-  },
-]
+const eslintConfig = defineConfig([
+  // Next.js core-web-vitals (includes react, react-hooks, next, jsx-a11y)
+  ...nextVitals,
+  // TypeScript rules
+  ...nextTs,
+  // Prettier (disables rules that conflict with prettier)
+  prettier,
+  // Ignores
+  globalIgnores([
+    '.next/**',
+    'out/**',
+    'build/**',
+    'node_modules/**',
+    'next-env.d.ts',
+  ]),
+])
 
 export default eslintConfig
