@@ -1,3 +1,5 @@
+import Image from 'next/image'
+
 import { Header } from '@/components/Header'
 import siteData from '@/data/site.json'
 import { ViewTransition } from 'react'
@@ -41,38 +43,55 @@ export default async function NosotrosPage() {
             <GridItem
               row={{ base: 1 }}
               col={{ base: 1 }}
-              className='flex items-center'>
+              className='order-0 flex items-center'>
               <article className='space-y-3'>
-                <h2 className='font-noto text-fm-orange text-right text-2xl font-black md:text-7xl'>
+                <h2 className='font-noto text-fm-orange text-right text-5xl font-black lg:text-7xl'>
                   Misión
                 </h2>
-                <p className='text-fm-black text-right text-base leading-relaxed md:text-lg'>
+                <p className='text-fm-black text-right text-sm leading-relaxed lg:text-lg'>
                   {data?.mision}
                 </p>
               </article>
             </GridItem>
-            <GridItem row={{ base: 1 }} col={{ base: 1 }}>
-              {/* Imagen 1 placeholder */}
-              <div className='aspect-square w-full rounded-2xl bg-neutral-200' />
+            <GridItem
+              row={{ base: 1 }}
+              col={{ base: 1 }}
+              className='order-1 md:order-0'>
+              <div className='relative aspect-square w-full overflow-hidden rounded-2xl'>
+                <Image
+                  src='/sections/nosotros/frijol-1.webp'
+                  alt='Imágen de una edición de Festival Frijol Mágico en el Centro Cultural Santa Inés'
+                  fill
+                  className='object-cover'
+                  sizes='(max-width: 768px) 100vw, 50vw'
+                />
+              </div>
             </GridItem>
 
             {/* Fila 2: Imagen 2 (izq) + Visión (der) */}
             <GridItem
               row={{ base: 1 }}
               col={{ base: 1 }}
-              className='order-1 md:order-0'>
-              {/* Imagen 2 placeholder */}
-              <div className='aspect-square w-full rounded-2xl bg-neutral-200' />
+              className='order-3 md:order-0'>
+              <div className='relative aspect-square w-full overflow-hidden rounded-2xl'>
+                <Image
+                  src='/sections/nosotros/frijol-2.webp'
+                  alt='Imágen de una edición de Festival Frijol Mágico al aire libre'
+                  fill
+                  className='object-cover'
+                  sizes='(max-width: 768px) 100vw, 50vw'
+                />
+              </div>
             </GridItem>
             <GridItem
               row={{ base: 1 }}
               col={{ base: 1 }}
-              className='flex items-center'>
+              className='order-2 flex items-center md:order-0'>
               <article className='space-y-3'>
-                <h2 className='font-noto text-fm-orange text-2xl font-black md:text-7xl'>
+                <h2 className='font-noto text-fm-orange text-5xl font-black lg:text-7xl'>
                   Visión
                 </h2>
-                <p className='text-fm-black text-base leading-relaxed md:text-lg'>
+                <p className='text-fm-black text-sm leading-relaxed lg:text-lg'>
                   {data?.vision}
                 </p>
               </article>
@@ -82,9 +101,16 @@ export default async function NosotrosPage() {
             <GridItem
               row={{ base: 1 }}
               col={{ base: 1, md: 2 }}
-              className='h-fit'>
-              {/* Imagen 3 placeholder */}
-              <div className='h-120 w-full rounded-2xl bg-neutral-200' />
+              className='order-4 h-fit md:order-0'>
+              <div className='relative h-90 w-full overflow-hidden rounded-2xl lg:h-120'>
+                <Image
+                  src='/sections/nosotros/equipo.webp'
+                  alt='Equipo de Frijol Mágico frente a mural del festival'
+                  fill
+                  className='object-cover'
+                  sizes='(max-width: 768px) 100vw, 100vw'
+                />
+              </div>
             </GridItem>
           </Grid>
         )}
