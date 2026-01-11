@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "dev:real": "DATA_SOURCE=real next dev --turbopack",
     "build": "next build",
     "postbuild": "next-sitemap",
     "start": "next start",
@@ -47,5 +48,6 @@
     "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "^4.1.18",
     "typescript": "^5.9.3"
-  }
+  },
+  "packageManager": "bun@1.2.2"
 }

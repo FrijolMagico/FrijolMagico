@@ -32,7 +32,7 @@ export const Header = ({
         <ReactMarkdown
           components={{
             h1: ({ ...props }) => (
-              // eslint-disable-next-line jsx-a11y/heading-has-content
+               
               <h1
                 className={cn(
                   'py-2 text-center',
@@ -50,7 +50,7 @@ export const Header = ({
           <ReactMarkdown
             components={{
               h2: ({ ...props }) => (
-                // eslint-disable-next-line jsx-a11y/heading-has-content
+                 
                 <h2
                   className={cn(
                     '-mt-6 py-2 text-center',

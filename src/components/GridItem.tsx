@@ -11,6 +11,25 @@ interface Props {
   as?: React.ElementType
 }
 
+/**
+ * Componente hijo de Grid para posicionar elementos en celdas específicas.
+ *
+ * NOTA: Los arrays de clases están explícitamente definidos (no generados
+ * dinámicamente) para garantizar que Tailwind detecte y compile todas las
+ * clases necesarias. Este es un patrón conocido como "safelist pattern".
+ *
+ * @example
+ * <GridItem row={{ base: 1, md: 2 }} col={{ base: 1, md: 3 }}>
+ *   Contenido que ocupa 1 fila y 1 columna en mobile,
+ *   2 filas y 3 columnas en md+
+ * </GridItem>
+ *
+ * @example
+ * // Con elemento semántico personalizado
+ * <GridItem as="article" row={{ base: 1 }} col={{ base: 2 }}>
+ *   ...
+ * </GridItem>
+ */
 export const GridItem = ({
   hidden,
   children,
@@ -53,6 +72,8 @@ const gridSpanVariants = {
       'row-span-8',
       'row-span-9',
       'row-span-10',
+      'row-span-11',
+      'row-span-12',
     ],
     sm: [
       'sm:row-span-1',
@@ -65,6 +86,8 @@ const gridSpanVariants = {
       'sm:row-span-8',
       'sm:row-span-9',
       'sm:row-span-10',
+      'sm:row-span-11',
+      'sm:row-span-12',
     ],
     md: [
       'md:row-span-1',
@@ -77,6 +100,8 @@ const gridSpanVariants = {
       'md:row-span-8',
       'md:row-span-9',
       'md:row-span-10',
+      'md:row-span-11',
+      'md:row-span-12',
     ],
     lg: [
       'lg:row-span-1',
@@ -89,6 +114,8 @@ const gridSpanVariants = {
       'lg:row-span-8',
       'lg:row-span-9',
       'lg:row-span-10',
+      'lg:row-span-11',
+      'lg:row-span-12',
     ],
     xl: [
       'xl:row-span-1',
@@ -101,6 +128,8 @@ const gridSpanVariants = {
       'xl:row-span-8',
       'xl:row-span-9',
       'xl:row-span-10',
+      'xl:row-span-11',
+      'xl:row-span-12',
     ],
   },
   col: {
@@ -115,6 +144,8 @@ const gridSpanVariants = {
       'col-span-8',
       'col-span-9',
       'col-span-10',
+      'col-span-11',
+      'col-span-12',
     ],
     sm: [
       'sm:col-span-1',
@@ -127,6 +158,8 @@ const gridSpanVariants = {
       'sm:col-span-8',
       'sm:col-span-9',
       'sm:col-span-10',
+      'sm:col-span-11',
+      'sm:col-span-12',
     ],
     md: [
       'md:col-span-1',
@@ -139,6 +172,8 @@ const gridSpanVariants = {
       'md:col-span-8',
       'md:col-span-9',
       'md:col-span-10',
+      'md:col-span-11',
+      'md:col-span-12',
     ],
     lg: [
       'lg:col-span-1',
@@ -151,6 +186,8 @@ const gridSpanVariants = {
       'lg:col-span-8',
       'lg:col-span-9',
       'lg:col-span-10',
+      'lg:col-span-11',
+      'lg:col-span-12',
     ],
     xl: [
       'xl:col-span-1',
@@ -163,6 +200,8 @@ const gridSpanVariants = {
       'xl:col-span-8',
       'xl:col-span-9',
       'xl:col-span-10',
+      'xl:col-span-11',
+      'xl:col-span-12',
     ],
   },
 }

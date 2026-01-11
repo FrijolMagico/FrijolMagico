@@ -7,6 +7,7 @@ export const paths = {
   home: '/',
   catalog: '/catalogo',
   apply: '/convocatoria',
+  about: '/nosotros',
   festival: {
     base: '/festivales',
     2025: {

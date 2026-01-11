@@ -51,7 +51,7 @@ export default function ConvocatoriaPage() {
               <ReactMarkdown
                 components={{
                   h3: ({ ...props }) => (
-                    // eslint-disable-next-line jsx-a11y/heading-has-content
+                     
                     <h3
                       className='text-fm-white font-noto text-4xl font-bold sm:text-5xl lg:text-6xl'
                       {...props}
@@ -81,7 +81,7 @@ export default function ConvocatoriaPage() {
               <ReactMarkdown
                 components={{
                   h3: ({ ...props }) => (
-                    // eslint-disable-next-line jsx-a11y/heading-has-content
+                     
                     <h3
                       className='text-fm-black font-noto text-4xl font-bold sm:text-5xl lg:text-6xl'
                       {...props}
