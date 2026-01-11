@@ -1,10 +1,16 @@
-import { SCHEDULE_CONFIG } from '../constants/scheduleConfig'
 import { getDataFromCMS } from '@/infra/getDataFromCMS'
-import { RawSchedule } from '../types/schedule'
+import { getDataSource } from '@/infra/config/dataSourceConfig'
+
 import { getDataFromMock } from './mocks/scheduleData.mock'
 
+import { SCHEDULE_CONFIG } from '../constants/scheduleConfig'
+
+import type { RawSchedule } from '../types/schedule'
+
 export async function ScheduleRepository(): Promise<RawSchedule[][]> {
-  if (!process.env.VERCEL_ENV || process.env.VERCEL_ENV === 'development') {
+  const source = getDataSource({ prod: 'cms' })
+
+  if (source === 'mock') {
     return getDataFromMock()
   }
 

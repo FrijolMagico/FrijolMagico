@@ -1,10 +1,16 @@
 import { getDataFromCMS } from '@/infra/getDataFromCMS'
-import { RawCatalogArtist } from '../types/catalog'
+import { getDataSource } from '@/infra/config/dataSourceConfig'
+
 import { getDataFromCatalogMock } from './mocks/catalogData.mock'
+
 import { CATALOG_CONFIG } from '../constants/catalogConfig'
 
+import type { RawCatalogArtist } from '../types/catalog'
+
 export async function catalogRepository(): Promise<RawCatalogArtist[]> {
-  if (!process.env.VERCEL_ENV || process.env.VERCEL_ENV === 'development') {
+  const source = getDataSource({ prod: 'cms' })
+
+  if (source === 'mock') {
     return getDataFromCatalogMock()
   }
 
