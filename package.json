@@ -7,7 +7,8 @@
     "build": "next build",
     "postbuild": "next-sitemap",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
     "db:migrate": "bun run --env-file .env.local geni up",
     "db:rollback": "bun run --env-file .env.local geni down",
     "db:status": "bun run --env-file .env.local geni status",
@@ -34,7 +35,6 @@
     "zustand": "^5.0.9"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.3",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^25.0.3",
     "@types/react": "^19.2.7",
