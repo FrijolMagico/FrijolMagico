@@ -23,8 +23,11 @@ export const CatalogList: React.FC<CatalogListProps> = ({ catalog }) => {
     return filterCatalog(catalog, filters)
   }, [catalog, filters])
 
-  // Reset to first page when filters change
+  // Reset pagination to first page when filters change.
+  // This is intentional behavior - when the user changes filters, they should see results from page 1.
+  // The setState is necessary here to sync pagination state with filter changes.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentPage(1)
   }, [filters])
 
