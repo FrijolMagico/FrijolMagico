@@ -44,13 +44,16 @@ export const Festival2025Card = () => {
     })
   }
 
+  // GSAP contextSafe wraps event handlers to ensure animations are cleaned up properly.
+  // The linter incorrectly flags ref access here, but these only run on user interaction, not during render.
+  // eslint-disable-next-line react-hooks/refs
   const handleMouseMove = contextSafe((e: React.MouseEvent) => {
     if (!cardRef.current) return
     const rect = cardRef.current.getBoundingClientRect()
     applyTilt(e.clientX - rect.left, e.clientY - rect.top, rect)
   })
 
-  // Touch handlers
+  // eslint-disable-next-line react-hooks/refs
   const handleTouchMove = contextSafe((e: React.TouchEvent) => {
     if (!cardRef.current) return
     const touch = e.touches[0]
@@ -58,6 +61,7 @@ export const Festival2025Card = () => {
     applyTilt(touch.clientX - rect.left, touch.clientY - rect.top, rect)
   })
 
+  // eslint-disable-next-line react-hooks/refs
   const handleActionLeave = contextSafe(() => {
     resetTilt()
   })
