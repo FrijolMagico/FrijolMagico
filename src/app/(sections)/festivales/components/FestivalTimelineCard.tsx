@@ -1,6 +1,6 @@
 import Image from 'next/image'
 // import Link from 'next/link'
-import { Calendar, MapPin, Users, Music, Wrench } from 'lucide-react'
+import { Calendar, MapPin } from 'lucide-react'
 
 import { cn } from '@/utils/utils'
 import { getDaysDisplay, getLocation } from '../utils/timelineUtils'
@@ -19,8 +19,8 @@ export const FestivalTimelineCard = ({
 }: FestivalTimelineCardProps) => {
   const { evento, resumen } = festival
 
-  // Obtener todas las disciplinas ordenadas
-  const allDisciplines = Object.entries(resumen.por_disciplina)
+  // TODO: Uncomment when discipline breakdown is needed in the UI
+  // const allDisciplines = Object.entries(resumen.por_disciplina)
   // Link a detalles
   // const detailsLink = `/festivales/${evento.edicion.toLowerCase()}`
 
