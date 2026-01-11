@@ -43,9 +43,13 @@ export const CatalogPanel = ({
     }
   }, [isArtistPanelOpen, selectedArtist, trackArtistView])
 
-  // Handle animation when opening/closing
+  // Handle mount/unmount animation sequence for the panel.
+  // We need to mount the component first (setIsMounted), then trigger the visibility animation.
+  // This two-phase approach allows CSS transitions to work properly on mount.
+  // The setState is intentional here to coordinate the animation lifecycle.
   useEffect(() => {
     if (isArtistPanelOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsMounted(true)
       setTimeout(() => setIsVisible(true), 10) // allow mount before animating in
       window.history.pushState({ artistPanel: true }, '')
