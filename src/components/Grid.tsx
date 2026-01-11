@@ -8,17 +8,40 @@ interface Props {
   row?: Selector
   col?: Selector
   className?: string
+  as?: React.ElementType
 }
 
+/**
+ * Componente contenedor de Grid responsivo compatible con Tailwind CSS v4 JIT.
+ *
+ * NOTA: Los arrays de clases están explícitamente definidos (no generados
+ * dinámicamente) para garantizar que Tailwind detecte y compile todas las
+ * clases necesarias. Este es un patrón conocido como "safelist pattern".
+ *
+ * @example
+ * <Grid row={{ base: 2, md: 4 }} col={{ base: 1, md: 6 }}>
+ *   <GridItem row={{ base: 1 }} col={{ base: 1, md: 3 }}>
+ *     Contenido
+ *   </GridItem>
+ * </Grid>
+ *
+ * @example
+ * // Con elemento semántico personalizado
+ * <Grid as="article" row={{ base: 2 }} col={{ base: 4 }}>
+ *   ...
+ * </Grid>
+ */
 export const Grid = ({
   container = false,
   children,
   row = { base: 1 },
   col = { base: 1 },
   className,
+  as,
 }: Props) => {
+  const Component = as || 'section'
   return (
-    <section
+    <Component
       className={clsx(
         'relative grid',
         container && 'container',
@@ -33,7 +56,7 @@ export const Grid = ({
         className,
       )}>
       {children}
-    </section>
+    </Component>
   )
 }
 
@@ -50,6 +73,8 @@ const gridTemplateVariants = {
       'grid-rows-8',
       'grid-rows-9',
       'grid-rows-10',
+      'grid-rows-11',
+      'grid-rows-12',
     ],
     sm: [
       'sm:grid-rows-1',
@@ -62,6 +87,8 @@ const gridTemplateVariants = {
       'sm:grid-rows-8',
       'sm:grid-rows-9',
       'sm:grid-rows-10',
+      'sm:grid-rows-11',
+      'sm:grid-rows-12',
     ],
     md: [
       'md:grid-rows-1',
@@ -74,6 +101,8 @@ const gridTemplateVariants = {
       'md:grid-rows-8',
       'md:grid-rows-9',
       'md:grid-rows-10',
+      'md:grid-rows-11',
+      'md:grid-rows-12',
     ],
     lg: [
       'lg:grid-rows-1',
@@ -86,6 +115,8 @@ const gridTemplateVariants = {
       'lg:grid-rows-8',
       'lg:grid-rows-9',
       'lg:grid-rows-10',
+      'lg:grid-rows-11',
+      'lg:grid-rows-12',
     ],
     xl: [
       'xl:grid-rows-1',
@@ -98,6 +129,8 @@ const gridTemplateVariants = {
       'xl:grid-rows-8',
       'xl:grid-rows-9',
       'xl:grid-rows-10',
+      'xl:grid-rows-11',
+      'xl:grid-rows-12',
     ],
   },
   col: {
@@ -112,6 +145,8 @@ const gridTemplateVariants = {
       'grid-cols-8',
       'grid-cols-9',
       'grid-cols-10',
+      'grid-cols-11',
+      'grid-cols-12',
     ],
     sm: [
       'sm:grid-cols-1',
@@ -124,6 +159,8 @@ const gridTemplateVariants = {
       'sm:grid-cols-8',
       'sm:grid-cols-9',
       'sm:grid-cols-10',
+      'sm:grid-cols-11',
+      'sm:grid-cols-12',
     ],
     md: [
       'md:grid-cols-1',
@@ -136,6 +173,8 @@ const gridTemplateVariants = {
       'md:grid-cols-8',
       'md:grid-cols-9',
       'md:grid-cols-10',
+      'md:grid-cols-11',
+      'md:grid-cols-12',
     ],
     lg: [
       'lg:grid-cols-1',
@@ -148,6 +187,8 @@ const gridTemplateVariants = {
       'lg:grid-cols-8',
       'lg:grid-cols-9',
       'lg:grid-cols-10',
+      'lg:grid-cols-11',
+      'lg:grid-cols-12',
     ],
     xl: [
       'xl:grid-cols-1',
@@ -160,6 +201,8 @@ const gridTemplateVariants = {
       'xl:grid-cols-8',
       'xl:grid-cols-9',
       'xl:grid-cols-10',
+      'xl:grid-cols-11',
+      'xl:grid-cols-12',
     ],
   },
 }

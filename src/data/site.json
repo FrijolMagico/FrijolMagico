@@ -80,5 +80,14 @@
         }
       }
     }
+  },
+  "about": {
+    "title": "# Nosotros",
+    "subtitle": "## Asociación Cultural **Frijol Mágico**",
+    "description": "Frijol Mágico es un espacio que reúne a las y los Ilustradores de la Región de Coquimbo, generando distintas instancias que ayuden a potenciar su trabajo.",
+    "seo": {
+      "title": "Nosotros - Asociación Cultural Frijol Mágico",
+      "description": "Conoce la misión y visión de la Asociación Cultural Frijol Mágico, un espacio que reúne a ilustradores de la Región de Coquimbo."
+    }
   }
 }

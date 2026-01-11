@@ -8,6 +8,7 @@ import { RRSSCard } from './components/RRSSCard'
 import { Festival2025Card } from './components/Festival2025Card'
 import { DoodleLine } from '@/components/DoodleLine'
 import { ViewTransition } from 'react'
+import { NosotrosCard } from './components/NosotrosCard'
 
 export default function Home() {
   return (
@@ -34,7 +35,7 @@ export default function Home() {
           <CatalogCard />
         </GridItem>
         <GridItem
-          className='order-last sm:order-first lg:order-none'
+          className='order-last sm:order-first lg:order-0'
           row={{ base: 1, sm: 1, lg: 1 }}
           col={{ base: 1, sm: 2, lg: 3 }}>
           <div className='flex size-full flex-col items-center justify-center'>
@@ -56,7 +57,10 @@ export default function Home() {
         <GridItem
           row={{ base: 1, sm: 1, lg: 1 }}
           col={{ base: 1, sm: 3, lg: 3 }}>
-          <RRSSCard />
+          <div className='flex h-full flex-col gap-4'>
+            <RRSSCard />
+            <NosotrosCard />
+          </div>
         </GridItem>
       </Grid>
     </main>
