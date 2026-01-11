@@ -51,6 +51,16 @@ declare module '@/data/site.json' {
         description: string
       }
     }
+    about: {
+      title: string
+      subtitle: string
+      description: string
+      seo: {
+        title: string
+        description: string
+      }
+      gallery: string[]
+    }
     selected_artists: {
       title: string
       subtitle: string
