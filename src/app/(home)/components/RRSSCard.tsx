@@ -20,16 +20,14 @@ export const RRSSCard = ({
   return (
     <div
       className={clsx(
-        'bg-flexible-orange font-josefin text-flexible-white flex size-full items-center justify-center rounded-2xl',
+        'bg-flexible-orange font-josefin text-flexible-white flex size-full grow items-center justify-center rounded-2xl',
         {
-          'flex-col gap-2 p-2': orientation === 'vertical',
-          'flex-row gap-8 p-3': orientation === 'horizontal',
+          'flex-col px-2 py-3': orientation === 'vertical',
+          'flex-row gap-6 p-3': orientation === 'horizontal',
         },
       )}>
-      <p className='-mb-1 text-2xl leading-none font-black uppercase'>
-        Síguenos!
-      </p>
-      <div className='flex items-center gap-8'>
+      <p className='text-2xl leading-none font-black uppercase'>Síguenos!</p>
+      <div className='flex items-center gap-4'>
         <Link
           href={SITE.social_media.ig}
           target='_blank'
@@ -39,7 +37,7 @@ export const RRSSCard = ({
             trackSocialClick({ platform: 'instagram', location: 'footer' })
           }
           className='hover:text-flexible-yellow transition duration-150 hover:scale-110 hover:rotate-6'>
-          <Instagram size={orientation === 'vertical' ? 52 : 32} />
+          <Instagram size={orientation === 'vertical' ? 42 : 32} />
         </Link>
         <Link
           href={SITE.social_media.fb}
@@ -50,7 +48,7 @@ export const RRSSCard = ({
             trackSocialClick({ platform: 'facebook', location: 'footer' })
           }
           className='hover:text-flexible-yellow transition duration-150 hover:scale-110 hover:rotate-6'>
-          <Facebook size={orientation === 'vertical' ? 44 : 28} />
+          <Facebook size={orientation === 'vertical' ? 36 : 28} />
         </Link>
       </div>
     </div>
