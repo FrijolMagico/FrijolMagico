@@ -59,7 +59,6 @@ declare module '@/data/site.json' {
         title: string
         description: string
       }
-      gallery: string[]
     }
     selected_artists: {
       title: string
