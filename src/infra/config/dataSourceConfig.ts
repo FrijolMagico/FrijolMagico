@@ -11,10 +11,13 @@ interface DataSourceConfig {
  * Determina la fuente de datos basandose en la configuracion del modulo y el ambiente.
  *
  * Prioridad:
- * 1. Produccion/Preview -> siempre usa config.prod
+ * 1. Produccion/Preview -> siempre usa config.prod (NUNCA mock)
  * 2. Desarrollo con DATA_SOURCE=real -> usa config.prod
  * 3. Desarrollo con DATA_SOURCE=mock -> usa 'mock'
  * 4. Desarrollo sin override -> usa config.dev (default: 'mock')
+ *
+ * IMPORTANTE: En produccion, mock data NUNCA es permitida, independiente de
+ * cualquier variable de entorno. Esta es una proteccion de seguridad.
  *
  * @example
  * // Modulo que usa CMS en produccion, mock en desarrollo
@@ -27,9 +30,16 @@ interface DataSourceConfig {
 export function getDataSource(config: DataSourceConfig): DataSource {
   const { prod, dev = 'mock' } = config
   const vercelEnv = process.env.VERCEL_ENV
+  const nodeEnv = process.env.NODE_ENV
 
-  // Produccion/Preview: siempre usar la fuente real
-  if (vercelEnv === 'production' || vercelEnv === 'preview') {
+  // Produccion/Preview: siempre usar la fuente real, NUNCA mock
+  // Proteccion doble: VERCEL_ENV para Vercel, NODE_ENV para otros hostings
+  const isProduction =
+    vercelEnv === 'production' ||
+    vercelEnv === 'preview' ||
+    nodeEnv === 'production'
+
+  if (isProduction) {
     return prod
   }
 
