@@ -1,4 +1,5 @@
 import { executeQuery } from '@/infra/services/tursoClient'
+import { getDataSource } from '@/infra/config/dataSourceConfig'
 import { mapFestivalEdicion } from './mappers/festivalMapper'
 import { getFestivalesMock } from './mocks/festivalesData.mock'
 
@@ -82,8 +83,9 @@ ORDER BY (
 `
 
 export async function festivalesRepository(): Promise<FestivalEdicion[]> {
-  // En desarrollo local, usar mock data
-  if (process.env.NODE_ENV === 'development') {
+  const source = getDataSource({ prod: 'database' })
+
+  if (source === 'mock') {
     const mockData = getFestivalesMock()
     return mockData
       .sort((a, b) => {
