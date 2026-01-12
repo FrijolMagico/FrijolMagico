@@ -1,6 +1,6 @@
 import { AppSchedule } from '../types/schedule'
 import { mapToAppSchedule } from '../utils/scheduleMapper'
-import { ScheduleRepository } from '../adapters/ScheduleRepository'
+import { scheduleRepository } from '../adapters/scheduleRepository'
 import { ErrorObject } from '@/types/errors'
 
 export async function getFestivalScheduleData(): Promise<{
@@ -11,7 +11,7 @@ export async function getFestivalScheduleData(): Promise<{
   error: ErrorObject
 }> {
   try {
-    const [firstDay, secondDay] = await ScheduleRepository()
+    const [firstDay, secondDay] = await scheduleRepository()
 
     const firstDayAppData = mapToAppSchedule(firstDay)
     const secondDayAppData = mapToAppSchedule(secondDay)

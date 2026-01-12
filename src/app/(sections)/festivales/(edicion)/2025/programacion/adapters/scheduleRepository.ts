@@ -7,7 +7,7 @@ import { SCHEDULE_CONFIG } from '../constants/scheduleConfig'
 
 import type { RawSchedule } from '../types/schedule'
 
-export async function ScheduleRepository(): Promise<RawSchedule[][]> {
+export async function scheduleRepository(): Promise<RawSchedule[][]> {
   const source = getDataSource({ prod: 'cms' })
 
   if (source === 'mock') {
