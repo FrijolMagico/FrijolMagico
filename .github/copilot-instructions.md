@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-- **Frijol Mágico** is a Next.js 15 (App Router) web platform for the Frijol Mágico Festival, focused on illustrators from the Coquimbo Region.
+- **Frijol Mágico** is a Next.js 19 (App Router) web platform for the Frijol Mágico Festival, focused on illustrators from the Coquimbo Region.
 - Built with React 19, TypeScript, and Tailwind CSS. Uses Bun as the package manager.
 - Google Sheets is used as a headless CMS for static content (see `src/services/googleSpreadsheetController.ts`).
 

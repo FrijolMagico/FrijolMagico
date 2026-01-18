@@ -122,25 +122,44 @@ CREATE INDEX IF NOT EXISTS idx_evento_edicion_snapshot_evento_edicion ON evento_
 CREATE TABLE IF NOT EXISTS evento_edicion_postulacion (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     evento_edicion_id INTEGER NOT NULL,
+    artista_id INTEGER NOT NULL,
+    tipo_participacion TEXT NOT NULL CHECK (tipo_participacion IN ('exposicion', 'actividad')),
+    disciplina_id INTEGER,
+    tipo_actividad_id INTEGER,
     nombre TEXT NOT NULL,
     pseudonimo TEXT,
     correo TEXT,
     rrss TEXT,
-    disciplina_id INTEGER NOT NULL,
     dossier_url TEXT,
+    puntaje INTEGER,
+    notas_evaluacion TEXT,
     estado TEXT NOT NULL DEFAULT 'pendiente',
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT fk_postulacion_evento_edicion FOREIGN KEY (evento_edicion_id)
-        REFERENCES evento_edicion (id) ON DELETE CASCADE,
-    CONSTRAINT fk_postulacion_disciplina FOREIGN KEY (disciplina_id)
-        REFERENCES disciplina (id),
-    CONSTRAINT chk_postulacion_estado CHECK (estado IN ('pendiente', 'seleccionado', 'rechazado', 'invitado'))
+    CONSTRAINT fk_postulacion_evento_edicion
+        FOREIGN KEY (evento_edicion_id) REFERENCES evento_edicion (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_postulacion_artista
+        FOREIGN KEY (artista_id) REFERENCES artista (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_postulacion_disciplina
+        FOREIGN KEY (disciplina_id) REFERENCES disciplina (id),
+    CONSTRAINT fk_postulacion_tipo_actividad
+        FOREIGN KEY (tipo_actividad_id) REFERENCES tipo_actividad (id),
+
+    CONSTRAINT chk_postulacion_tipo_disciplina
+        CHECK (
+            (tipo_participacion = 'exposicion' AND disciplina_id IS NOT NULL AND tipo_actividad_id IS NULL)
+            OR (tipo_participacion = 'actividad' AND tipo_actividad_id IS NOT NULL AND disciplina_id IS NULL)
+        ),
+    CONSTRAINT chk_postulacion_estado
+        CHECK (estado IN ('pendiente', 'en_revision', 'seleccionado', 'rechazado', 'invitado'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_postulacion_evento_edicion ON evento_edicion_postulacion (evento_edicion_id);
-CREATE INDEX IF NOT EXISTS idx_postulacion_disciplina ON evento_edicion_postulacion (disciplina_id);
+CREATE INDEX IF NOT EXISTS idx_postulacion_artista ON evento_edicion_postulacion (artista_id);
+CREATE INDEX IF NOT EXISTS idx_postulacion_estado ON evento_edicion_postulacion (estado);
+CREATE INDEX IF NOT EXISTS idx_postulacion_tipo ON evento_edicion_postulacion (tipo_participacion);
+CREATE INDEX IF NOT EXISTS idx_postulacion_puntaje ON evento_edicion_postulacion (puntaje DESC) WHERE puntaje IS NOT NULL;
 
 CREATE TRIGGER IF NOT EXISTS trg_evento_edicion_postulacion_updated_at
 AFTER UPDATE ON evento_edicion_postulacion
@@ -148,3 +167,4 @@ FOR EACH ROW
 BEGIN
     UPDATE evento_edicion_postulacion SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
 END;
+

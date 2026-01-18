@@ -1,19 +1,34 @@
-import type { CatalogArtist, RawCatalogArtist } from '../types/catalog'
+import { unstable_cache } from 'next/cache'
+
 import { formatUrlWithoutQuery } from '@/utils/utils'
 import { catalogRepository } from '../adapters/catalogRepository'
-import { ErrorObject } from '@/types/errors'
+
+import type { CatalogArtist } from '../types/catalog'
+import type { ErrorObject } from '@/types/errors'
+
+/**
+ * Obtiene los datos del catálogo con cache de Next.js.
+ */
+const getCachedCatalogData = unstable_cache(
+  async (): Promise<CatalogArtist[]> => {
+    return catalogRepository()
+  },
+  ['catalog-list'],
+  {
+    revalidate: false,
+    tags: ['catalog'],
+  },
+)
 
 export async function getCatalogData(): Promise<{
   data: CatalogArtist[]
   error: ErrorObject
 }> {
   try {
-    const data = await catalogRepository()
-
-    const catalogData = addCollectiveRelationship(data)
+    const data = await getCachedCatalogData()
 
     return {
-      data: formatArtistData(catalogData),
+      data: formatArtistData(data),
       error: null,
     }
   } catch (error) {
@@ -23,35 +38,17 @@ export async function getCatalogData(): Promise<{
       data: [],
       error: {
         message:
-          'Error al obtener los artistas del catálogo. Por favor intente nuevamente más tarde.',
+          'Error al obtener los artistas del catalogo. Por favor intente nuevamente mas tarde.',
       },
     }
   }
 }
 
-export const addCollectiveRelationship = (
-  artists: RawCatalogArtist[],
-): CatalogArtist[] => {
-  return artists.map((artist) => {
-    if (!artist.collective) return { ...artist, collective: null }
-
-    const collectiveMembers = artists.filter((member) => {
-      return member.collective === artist.collective && member.id !== artist.id
-    })
-
-    return {
-      ...artist,
-      collective: {
-        name: artist.collective,
-        members: collectiveMembers.map((member) => ({
-          id: member.id,
-          name: member.name,
-        })),
-      },
-    }
-  }) as CatalogArtist[]
-}
-
+/**
+ * Formatea los datos del artista para la UI.
+ * - Formatea bio (markdown)
+ * - Formatea URLs de redes sociales
+ */
 export const formatArtistData = (
   artistsData: CatalogArtist[],
 ): CatalogArtist[] => {

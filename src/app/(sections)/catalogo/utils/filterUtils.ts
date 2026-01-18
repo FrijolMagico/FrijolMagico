@@ -10,10 +10,13 @@ export const parseParamArray = (param?: string | null) =>
 export const dedupeArray = (arr: string[]) =>
   Array.from(new Set(arr.map(normalizeString)))
 
+// Keys that can be used for filtering (string fields only)
+type FilterableKey = 'city' | 'country' | 'category'
+
 // Get unique filter options for the given key
 export const getFiltersData = (
   catalog: CatalogArtist[],
-  key: keyof CatalogArtist,
+  key: FilterableKey,
 ): { value: string }[] => {
   const uniqueValues = new Set<string>()
 
@@ -43,7 +46,7 @@ export const filterCatalog = (
       !searchValue ||
       normalizeString(item.name).includes(normalizedSearch) ||
       (item.collective &&
-        normalizeString(item.collective.name).includes(normalizedSearch))
+        normalizeString(item.collective).includes(normalizedSearch))
 
     // Filter by city
     const matchesCity =

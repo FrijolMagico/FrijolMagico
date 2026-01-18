@@ -1,169 +1,184 @@
-# AGENTS.md - Frijol Magico
+# AGENTS.md - Frijol Magico (Agent Guidance)
 
-## Project Overview
+## Purpose
 
-Next.js 15 (App Router) web platform for the Frijol Magico Festival, showcasing illustrators from the Coquimbo Region, Chile. Built with React 19, TypeScript (strict), and Tailwind CSS v4.
+This file contains concise, actionable rules and conventions for agentic coding assistants working in this repository. It collects build/test commands, code-style expectations, workspace structure, and operational rules agents must follow.
 
 ## Tech Stack
 
-- **Framework**: Next.js 15 (App Router) with Turbopack
-- **UI**: React 19, TypeScript (strict mode), Tailwind CSS v4
-- **State**: Zustand for client-side state
-- **Animation**: GSAP with ScrollTrigger
-- **Database**: Turso (libSQL) with Geni for migrations
-- **CMS**: Google Sheets via google-spreadsheet library
-- **Package Manager**: Bun (preferred)
+- Framework: Next.js 16 (App Router) with Turbopack
+- UI: React 19, TypeScript (strict mode), Tailwind CSS v4
+- State: Zustand
+- Animation: GSAP with ScrollTrigger
+- Database: Turso (libSQL) with Geni migrations
+- CMS: Google Sheets via `google-spreadsheet`
+- Package manager: Bun (preferred)
 
-## Build/Lint/Test Commands
+## Build / Lint / Test Commands
 
-```bash
-bun install          # Install dependencies
-bun run dev          # Development server (Turbopack)
-bun run build        # Production build
-bun run start        # Start production server
-bun run lint         # Lint code (ESLint)
-bun run lint:fix     # Lint and auto-fix issues
-bun run db:migrate   # Run pending migrations
-bun run db:rollback  # Rollback last migration
-bun run db:status    # Show pending migrations
-bun run db:new       # Create new migration (e.g., bun run db:new add_users)
-bun run db:seed      # Seed database
-```
+Primary scripts (see `package.json`):
 
-**Note**: No test framework is currently configured in this project.
+- `bun install` — install dependencies (preferred)
+- `bun run dev` — development server (Turbopack)
+- `bun run build` — production build
+- `bun run start` — start production server
+- `bun run lint` — run ESLint on `src/`
+- `bun run lint:fix` — run ESLint with `--fix`
+
+Database commands (via Geni/Turso):
+
+- `bun run db:migrate` — run pending migrations
+- `bun run db:rollback` — rollback last migration
+- `bun run db:status` — show migration status
+- `bun run db:new <name>` — create new migration
+- `bun run db:seed` — run seed.sql against configured Turso DB
+
+Testing notes
+
+- Currently no test framework is configured in the repo.
+- Recommended test stack for agents making test changes: Vitest + Testing Library (fast, works well with Bun). If adding tests, add scripts to `package.json` like:
+  - `test` -> `vitest` (or `bun run vitest`)
+  - `test:run` -> `vitest run`
+  - `test:watch` -> `vitest`
+
+How to run a single test (examples):
+
+- Vitest (recommended):
+  - `bun run vitest -- tests/path/to/file.test.ts` or `bun run vitest -- -t "test name"`
+  - `npx vitest run tests/path/to/file.test.ts`
+- Jest (if introduced):
+  - `npx jest tests/path/to/file.test.ts` or `npx jest -t "test name"`
+- Playwright (for E2E):
+  - `npx playwright test tests/e2e/spec.spec.ts -g "test name"`
+
+Agents: If you add tests, also add appropriate `devDependencies` and `package.json` scripts and document them here.
+
+## Repository Notes for Agents
+
+- Read `package.json` before changing scripts (`package.json`: `dev`, `build`, `lint`, `db:*`).
+- If you modify database migration/seed files, follow the DB Data Management rules below and always ask for explicit user consent before running destructive DB operations.
+- Consult `.github/copilot-instructions.md` for high-level architectural guidance; agents should not overwrite that file without maintainers' approval.
 
 ## Code Style Guidelines
 
-### Prettier Configuration
+Formatting / Prettier
 
-- No semicolons, single quotes (including JSX), trailing commas (all)
-- 2-space indentation, bracket same line for JSX
+- Prettier config: no semicolons, single quotes (including JSX), 2-space indent, no trailing commas.
+- Use `prettier-plugin-tailwindcss` to keep class names ordered.
+- Format on save or run the configured Prettier task.
 
-### Import Order
+Imports
 
-Organize imports with blank lines between groups:
+- Group imports with blank lines between groups in this order:
+  1. React / Next.js
+  2. External libraries
+  3. Internal absolute imports (alias `@/` for `src/`)
+  4. Relative imports
+  5. Type-only imports (`import type { ... } from '...'`)
+- Example:
+  - `import { Suspense } from 'react'`
+  - `import Image from 'next/image'`
+  - `import { create } from 'zustand'`
+  - `import { cn } from '@/utils/utils'`
+  - `import { LocalComponent } from './components/LocalComponent'`
+  - `import type { MyType } from '@/types'`
 
-```typescript
-// 1. React/Next.js
-import { Suspense } from 'react'
-import Image from 'next/image'
-// 2. External libraries
-import { create } from 'zustand'
-import { Instagram } from 'lucide-react'
-// 3. Internal absolute imports (@/)
-import { cn } from '@/utils/utils'
-import { Header } from '@/components/Header'
-// 4. Relative imports
-import { CatalogList } from './components/CatalogList'
-// 5. Types (use 'type' keyword)
-import type { CatalogArtist } from '../types/catalog'
-```
+TypeScript conventions
 
-### TypeScript Conventions
+- Project uses strict TypeScript. Do not disable `strict` or `noImplicitAny` locally.
+- Use `type` keyword for type-only imports and exports: `import type { X } from '...'`.
+- Global types: `src/types/`.
+- Section-specific types: `[section]/types/` inside its route folder.
+- Prefer small, composable types over large ad-hoc interfaces. Use Zod schemas for runtime validation where necessary.
 
-- **Strict mode enabled** - all code must be strongly typed
-- Use `type` keyword for type-only imports: `import type { Foo } from './types'`
-- Place global types in `src/types/`, section-specific types in `[section]/types/`
+Naming conventions
 
-### Naming Conventions
+- Components: PascalCase (e.g., `CatalogArtistCard.tsx`). Use named exports, not default exports.
+- Hooks / stores: camelCase with prefix `use` (e.g., `useCatalogFiltersStore.ts`).
+- Utilities: camelCase (e.g., `formatUrl`).
+- Constants: UPPER_SNAKE_CASE (e.g., `DEFAULT_FILTERS`).
+- Types / interfaces: PascalCase (e.g., `CatalogArtist`).
 
-| Element          | Convention            | Example                         |
-| ---------------- | --------------------- | ------------------------------- |
-| Components       | PascalCase            | `CatalogArtistCard.tsx`         |
-| Hooks/Stores     | camelCase with prefix | `useCatalogFiltersStore.ts`     |
-| Utilities        | camelCase             | `formatUrl`, `normalizeString`  |
-| Constants        | UPPER_SNAKE_CASE      | `DEFAULT_FILTERS`               |
-| Types/Interfaces | PascalCase            | `CatalogArtist`, `FilterValues` |
+React / Component patterns
 
-### Component Patterns
+- Use App Router (`src/app/`). Prefer server components by default; mark client components with `'use client'` at the top.
+- Destructure props in the function signature.
+- Keep components small and focused. Move shared UI into `src/components/`.
+- Use `cn()` utility for conditional classnames.
+- Avoid direct DOM manipulation; use refs and GSAP where needed for animations.
 
-- Use **named exports** for components (not default exports)
-- Mark client components with `'use client'` directive at top
-- Destructure props directly in function signature
-- Use `cn()` utility for conditional classnames:
+State management (Zustand)
 
-```typescript
-export const MyComponent = ({ isActive, className }: Props) => {
-  return (
-    <div className={cn('base-styles', { 'active-styles': isActive }, className)}>
-      {/* content */}
-    </div>
-  )
-}
-```
+- Use the repo's established Zustand pattern:
+  - `export const useStore = create<MyState>((set) => ({ ... }))`
+- Keep stores minimal and focused on UI state; persist only when necessary.
 
-### Zustand Store Pattern
+Styling / Tailwind
 
-```typescript
-import { create } from 'zustand'
-interface MyState {
-  value: string
-  setValue: (value: string) => void
-}
-export const useMyStore = create<MyState>((set) => ({
-  value: '',
-  setValue: (value) => set({ value }),
-}))
-```
+- Use Tailwind v4 tokens and `tailwind-variants` for component variants.
+- Keep long class lists organized via `tv()` utilities or `cn` helpers.
+- Place global styles in `src/styles/`.
 
-### Error Handling
+Error handling
 
-Return `{ data, error }` pattern from data fetching functions. Use `ErrorSection` component for displaying errors. Provide graceful fallbacks (empty arrays, default values).
+- Data-fetching functions should return the `{ data, error }` shape: `{ data: T | null, error: ErrorObject | null }`.
+- Log errors with `console.error()` for server-side operations, and use a user-friendly `ErrorSection` component on the UI.
+- Provide safe fallbacks (empty arrays, sensible defaults) to avoid runtime crashes.
 
-```typescript
-export async function getData(): Promise<{ data: Item[]; error: ErrorObject }> {
-  try {
-    const data = await repository()
-    return { data, error: null }
-  } catch (error) {
-    console.error((error as Error).message)
-    return { data: [], error: { message: 'Error message' } }
-  }
-}
-```
+Security and Secrets
 
-## Directory Structure
+- Never commit secrets or `.env` values. Use environment files and `.env.local` which must be kept out of git.
+- When an agent must run commands that require credentials (db migrations, seeds), ask the user for permission.
 
-```
-src/
-├── app/                 # Next.js App Router
-│   ├── (home)/          # Home page route group
-│   └── (sections)/      # Main sections (catalogo, festivales, convocatoria)
-│       └── [section]/   # Each with: components/, store/, types/, lib/
-├── components/          # Shared components (ui/, icons/)
-├── config/              # App configuration
-├── infra/               # Infrastructure (database adapters)
-├── schemas/             # Zod validation schemas
-├── styles/              # Global styles and palettes
-├── types/               # Global TypeScript types
-└── utils/               # Utility functions
-db/
-├── migrations/          # Database migrations (Geni)
-└── seed/                # Seed data
-```
+Accessibility
 
-## Key Patterns
+- Use semantic HTML elements and `aria-*` attributes where appropriate.
+- Provide `alt` text for all images. Lint rules include `jsx-a11y` plugin.
 
-- **Path Aliases**: Use `@/` for imports from `src/`
-- **Styling**: Use custom color tokens (`text-fm-orange`, `bg-fm-white`) and `tailwind-variants`
-- **Images**: Use Next.js `<Image />`, store in `public/sections/[section]/images/`
-- **Data Fetching**: Prefer static generation, use mock data in development (`src/infra/__mocks__/`)
+## Directory Structure (short)
 
-## Accessibility
+- `src/app/` — Next.js App Router
+- `src/components/` — shared UI
+- `src/config/` — configuration
+- `src/infra/` — infra/database adapters
+- `src/schemas/` — Zod schemas
+- `src/styles/` — global styles
+- `src/types/` — global types
+- `db/migrations/`, `db/seed/` — DB migrations & seed files
 
-- Use semantic HTML elements
-- Provide `aria-label` for interactive elements
-- Include alt text for all images
-- ESLint jsx-a11y plugin enforces accessibility rules
+## Database Data Management (agents)
 
-## Verification Workflow
+- Non-seed data insertions: create a new numbered SQL file in `db/data/` (e.g., `013_insert_users.sql`). Do not execute these without explicit user consent.
+- Seeds in `db/seed/` are reserved for catalog/system data only.
+- For structural schema changes, run `PRAGMA foreign_key_list(table_name)` to inspect relations, backup `db/dump.sql`, and obtain user consent before applying destructive migrations.
 
-Before running `bun run build`, always follow this order:
+## Tests & CI (agent guidance)
 
-1. Run `bun run lint` to check for linting errors
-2. Ask the user to verify `bun run dev` looks correct visually
-3. Only after user confirmation, proceed with `bun run build`
+- There are no tests by default. If you add a test framework, update this file and `package.json` with scripts for:
+  - running all tests
+  - running a single test
+  - running tests in watch mode
+- When adding CI (GitHub Actions), keep jobs minimal: install deps, lint, build, and run tests. Prefer cache for Bun/Node modules.
 
-## Additional Resources
+## Copilot / Cursor Rules
 
-- See `.github/copilot-instructions.md` for detailed architectural patterns
+- Copilot rules: see `.github/copilot-instructions.md` for architectural patterns and conventions — agents should consult it for higher-level guidance.
+- Cursor rules: no `.cursor` rules found in the repo. If introduced, add a section here summarizing them.
+
+## Operational Rules for Agents
+
+- Always read relevant files before editing them (we already applied this rule).
+- When making code changes:
+  - Keep changes minimal and focused to solve the stated task.
+  - Do not run destructive commands (e.g., `git reset --hard`, force pushes) without user approval.
+  - Do not commit changes unless the user explicitly requests it. If asked to commit, produce a concise commit message focusing on the why.
+- Before running `bun run build`, run `bun run lint` and ask the user to verify `bun run dev` visually if UI changes are involved.
+
+## If you modify this file
+
+- Keep this file concise and actionable. Mention any new tooling (tests, linters) and how to run a single test.
+- If you change build/test scripts, update the `package.json` and document the new commands here.
+
+---
+
+For further project-specific clarifications, consult `README.md` and `.github/copilot-instructions.md`.

@@ -1,4 +1,4 @@
-import { mapPorDisciplina } from './disciplineMapper'
+import { mapPorDisciplina } from '@/app/(sections)/adapters/mappers/disciplineMapper'
 
 import type { FestivalEdicion } from '../../types/festival'
 

@@ -37,7 +37,7 @@ export const CatalogPanel = ({
     if (isArtistPanelOpen && selectedArtist) {
       trackArtistView({
         artist_name: selectedArtist.name,
-        artist_category: selectedArtist.category,
+        artist_category: selectedArtist.category ?? undefined,
         artist_city: selectedArtist.city,
       })
     }
@@ -74,9 +74,16 @@ export const CatalogPanel = ({
     }
   }, [isArtistPanelOpen, setArtistPanelOpen])
 
-  const handleChangePanelToCollectiveMember = (collectiveMemberId: string) => {
-    if (!selectedArtist?.collective) return
+  // Obtener miembros del colectivo actual buscando otros artistas con el mismo collective
+  const collectiveMembers = selectedArtist?.collective
+    ? catalogData.filter(
+        (artist) =>
+          artist.collective === selectedArtist.collective &&
+          artist.id !== selectedArtist.id,
+      )
+    : []
 
+  const handleChangePanelToCollectiveMember = (collectiveMemberId: string) => {
     const collectiveMember = catalogData.find(
       (artist) => artist.id === collectiveMemberId,
     )
@@ -126,9 +133,7 @@ export const CatalogPanel = ({
               <section className='flex items-center space-x-4'>
                 <figure className='relative h-20 w-20 shrink-0'>
                   <Image
-                    src={encodeURI(
-                      `/sections/catalogo/images/artists/${selectedArtist.avatar}`,
-                    )}
+                    src={selectedArtist.avatar}
                     alt={`Imagen de ${selectedArtist.name}`}
                     fill
                     className='border-fm-green rounded-full border-2 object-cover'
@@ -141,23 +146,26 @@ export const CatalogPanel = ({
                   <p className='text-sm text-gray-600'>
                     {selectedArtist.city} - {selectedArtist.country}
                   </p>
-                  <span className='bg-fm-green/10 text-fm-green mt-1 inline-block rounded-sm px-2 py-1 text-xs'>
-                    {selectedArtist.category}
-                  </span>
+                  {selectedArtist.category && (
+                    <span className='bg-fm-green/10 text-fm-green mt-1 inline-block rounded-sm px-2 py-1 text-xs'>
+                      {selectedArtist.category}
+                    </span>
+                  )}
                 </div>
               </section>
 
+              {/* Colectivo actual y miembros */}
               {selectedArtist.collective && (
                 <section>
                   <p className='text-fm-black'>
-                    <strong>Colectivo</strong>: {selectedArtist.collective.name}
+                    <strong>Colectivo</strong>: {selectedArtist.collective}
                   </p>
-                  <div className='flex gap-1 text-sm'>
-                    <p>Miembros:</p>
-                    <ul className='flex gap-2'>
-                      {selectedArtist.collective.members.map(
-                        (member, index) => (
-                          <li key={index}>
+                  {collectiveMembers.length > 0 && (
+                    <div className='flex gap-1 text-sm'>
+                      <p>Miembros:</p>
+                      <ul className='flex flex-wrap gap-2'>
+                        {collectiveMembers.map((member) => (
+                          <li key={member.id}>
                             <button
                               onClick={() =>
                                 handleChangePanelToCollectiveMember(member.id)
@@ -166,15 +174,56 @@ export const CatalogPanel = ({
                               {member.name}
                             </button>
                           </li>
-                        ),
-                      )}
-                    </ul>
-                  </div>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </section>
+              )}
+
+              {/* Historial de participaciones en colectivos */}
+              {selectedArtist.collectives.length > 0 && (
+                <section>
+                  <h4 className='mb-2 font-semibold'>
+                    Participaciones en Colectivos
+                  </h4>
+                  <ul className='space-y-1 text-sm'>
+                    {selectedArtist.collectives.map((participation, index) => (
+                      <li key={index} className='flex items-center gap-2'>
+                        <span className='bg-fm-orange/10 text-fm-orange rounded px-2 py-0.5 text-xs'>
+                          {participation.edicion}
+                        </span>
+                        <span>{participation.name}</span>
+                        <span className='text-gray-500'>
+                          ({participation.evento})
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+
+              {/* Ediciones en las que ha participado */}
+              {selectedArtist.editions.length > 0 && (
+                <section>
+                  <h4 className='mb-2 font-semibold'>
+                    Participaciones en Festivales
+                  </h4>
+                  <ul className='flex flex-wrap gap-2'>
+                    {selectedArtist.editions.map((edition, index) => (
+                      <li
+                        key={index}
+                        className='bg-fm-green/10 text-fm-green rounded px-2 py-1 text-xs'>
+                        {edition.evento} {edition.edicion}
+                        {edition.año && ` (${edition.año})`}
+                      </li>
+                    ))}
+                  </ul>
                 </section>
               )}
 
               <section>
-                <h4 className='mb-2 font-semibold'>Biografía</h4>
+                <h4 className='mb-2 font-semibold'>Biografia</h4>
                 <div className='flex flex-col gap-2 text-sm'>
                   <Markdown>{selectedArtist.bio}</Markdown>
                 </div>

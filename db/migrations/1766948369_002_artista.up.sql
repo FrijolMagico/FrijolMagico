@@ -7,7 +7,7 @@
 -- artista_estado (debe crearse antes de artista por la FK)
 CREATE TABLE IF NOT EXISTS artista_estado (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    estado TEXT NOT NULL UNIQUE,
+    slug TEXT NOT NULL UNIQUE,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -64,6 +64,7 @@ CREATE TABLE IF NOT EXISTS artista_imagen (
 );
 
 CREATE INDEX IF NOT EXISTS idx_artista_imagen_artista ON artista_imagen (artista_id);
+CREATE INDEX IF NOT EXISTS idx_artista_imagen_artista_tipo ON artista_imagen (artista_id, tipo);
 
 CREATE TRIGGER IF NOT EXISTS trg_artista_imagen_updated_at
 AFTER UPDATE ON artista_imagen

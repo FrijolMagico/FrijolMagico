@@ -78,7 +78,7 @@ END
 -- disciplina
 CREATE TABLE IF NOT EXISTS disciplina (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombre TEXT NOT NULL UNIQUE,
+    slug TEXT NOT NULL UNIQUE,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 )
@@ -114,22 +114,6 @@ END
 ;
 
 -- tipo_actividad
-CREATE TABLE IF NOT EXISTS tipo_actividad (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombre TEXT NOT NULL,
-    descripcion TEXT,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT uq_tipo_actividad_nombre UNIQUE (nombre)
-)
-;
-
-CREATE TRIGGER IF NOT EXISTS trg_tipo_actividad_updated_at
-AFTER UPDATE ON tipo_actividad
-FOR EACH ROW
-BEGIN
-    UPDATE tipo_actividad SET updated_at = CURRENT_TIMESTAMP
-    WHERE id = old.id;
-END
-;
+-- NOTE: `tipo_actividad` definition moved to the participante migration
+-- (see db/migrations/1766948371_004_participante.up.sql). Keeping a
+-- placeholder comment here to indicate its intended location.

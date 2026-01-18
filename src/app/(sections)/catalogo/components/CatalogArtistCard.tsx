@@ -10,6 +10,7 @@ export const CatalogArtistCard = ({
   id,
   avatar,
   name,
+  slug,
   city,
   country,
   category,
@@ -17,6 +18,10 @@ export const CatalogArtistCard = ({
   email,
   rrss,
   collective,
+  collectives,
+  editions,
+  orden,
+  destacado,
 }: CatalogArtist) => {
   const selectedArtist = useCatalogPanelStore((state) => state.selectedArtist)
   const setSelectedArtist = useCatalogPanelStore(
@@ -33,6 +38,7 @@ export const CatalogArtistCard = ({
       id,
       avatar,
       name,
+      slug,
       city,
       country,
       category,
@@ -40,6 +46,10 @@ export const CatalogArtistCard = ({
       email,
       rrss,
       collective,
+      collectives,
+      editions,
+      orden,
+      destacado,
     })
     setArtistPanelOpen(true)
   }
@@ -56,8 +66,8 @@ export const CatalogArtistCard = ({
       <section className='flex items-center gap-4'>
         <Image
           loading='lazy'
-          src={encodeURI(`/sections/catalogo/images/artists/${avatar}`)}
-          alt={`Imágen de ${name}`}
+          src={avatar}
+          alt={`Imagen de ${name}`}
           width={48}
           height={48}
           className='h-12 w-12 shrink-0 overflow-hidden rounded-full bg-slate-300 object-cover'
@@ -68,17 +78,20 @@ export const CatalogArtistCard = ({
           </h2>
           {collective && (
             <p className='text-fm-black mt-1 text-sm leading-none'>
-              <span className='font-semibold'>Colectivo:</span>{' '}
-              {collective.name}
+              <span className='font-semibold'>Colectivo:</span> {collective}
             </p>
           )}
           <div className='flex gap-2 py-1'>
-            <span className='bg-fm-orange/20 text-fm-orange rounded px-2 py-1 text-xs leading-none font-medium'>
-              {category}
-            </span>
-            <span className='bg-fm-orange/20 text-fm-orange rounded px-2 py-1 text-xs leading-none font-medium'>
-              {city}
-            </span>
+            {category && (
+              <span className='bg-fm-orange/20 text-fm-orange rounded px-2 py-1 text-xs leading-none font-medium'>
+                {category}
+              </span>
+            )}
+            {city && (
+              <span className='bg-fm-orange/20 text-fm-orange rounded px-2 py-1 text-xs leading-none font-medium'>
+                {city}
+              </span>
+            )}
           </div>
         </section>
       </section>

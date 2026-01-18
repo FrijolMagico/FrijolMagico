@@ -29,6 +29,7 @@ INSERT OR IGNORE INTO artista_estado (slug) VALUES ('cancelado');
 
 INSERT OR IGNORE INTO modo_ingreso (slug, descripcion) VALUES ('seleccion', 'Artista seleccionado mediante convocatoria abierta');
 INSERT OR IGNORE INTO modo_ingreso (slug, descripcion) VALUES ('invitacion', 'Artista invitado directamente por la organización');
+INSERT OR IGNORE INTO modo_ingreso (id, slug, descripcion) VALUES (3, 'suplencia', 'Artista agregado desde la lista de suplentes');
 
 -- =============================================================================
 -- TIPOS DE ACTIVIDAD

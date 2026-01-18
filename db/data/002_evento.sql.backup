@@ -1,0 +1,91 @@
+
+INSERT INTO evento VALUES(1,1,'Festival Frijol Mágico','Frijol Mágico es un espacio que reúne a las y los Ilustradores de la Región de Coquimbo, generando distintas instancias que ayuden a potenciar su trabajo.','2025-12-25 17:15:49','2025-12-26 15:21:42','frijol-magico');
+INSERT INTO evento VALUES(2,1,'Ilustradores en Benders',NULL,'2025-12-26 15:59:11','2025-12-26 15:59:11','ilustra-benders');
+
+
+INSERT INTO evento_edicion_metrica VALUES(1,1,'participantes',27,'{"ilustracion":27,"manualidades":0,"fotografia":0,"narrativa_grafica":0}','Base de Datos - Exponentes - Festival','2025-12-25 19:11:20','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(2,1,'bandas',6,NULL,'Base de Datos - Exponentes - Festival','2025-12-25 19:11:20','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(3,1,'total_talleres',5,NULL,'Base de Datos - Exponentes - Festival','2025-12-25 19:11:20','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(4,2,'participantes',33,'{"ilustracion":26,"manualidades":7,"fotografia":0,"narrativa_grafica":0}','Base de Datos - Exponentes - Festival','2025-12-25 19:11:20','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(5,2,'bandas',6,NULL,'Base de Datos - Exponentes - Festival','2025-12-25 19:11:20','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(6,2,'total_talleres',4,NULL,'Base de Datos - Exponentes - Festival','2025-12-25 19:11:20','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(7,3,'participantes',39,'{"ilustracion":33,"manualidades":9,"fotografia":0,"narrativa_grafica":0}','Base de Datos - Exponentes - Festival','2025-12-25 19:11:20','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(8,3,'bandas',5,NULL,'Base de Datos - Exponentes - Festival','2025-12-25 19:11:20','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(9,3,'total_talleres',3,NULL,'Base de Datos - Exponentes - Festival','2025-12-25 19:11:20','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(10,4,'participantes',30,'{"ilustracion":23,"manualidades":7,"fotografia":0,"narrativa_grafica":0}','Base de Datos - Exponentes - Festival','2025-12-25 19:11:20','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(11,4,'bandas',5,NULL,'Base de Datos - Exponentes - Festival','2025-12-25 19:11:20','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(12,4,'total_talleres',9,NULL,'Base de Datos - Exponentes - Festival','2025-12-25 19:11:20','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(13,5,'participantes',50,'{"ilustracion":41,"manualidades":9,"fotografia":0,"narrativa_grafica":0}','Base de Datos - Exponentes - Festival','2025-12-25 19:11:20','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(14,5,'bandas',5,NULL,'Base de Datos - Exponentes - Festival','2025-12-25 19:11:20','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(15,5,'total_talleres',5,NULL,'Base de Datos - Exponentes - Festival','2025-12-25 19:11:21','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(16,6,'participantes',40,'{"ilustracion":35,"manualidades":5,"fotografia":1,"narrativa_grafica":0}','Base de Datos - Exponentes - Festival','2025-12-25 19:11:21','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(17,6,'bandas',4,NULL,'Base de Datos - Exponentes - Festival','2025-12-25 19:11:21','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(18,6,'total_talleres',4,NULL,'Base de Datos - Exponentes - Festival','2025-12-25 19:11:21','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(19,7,'participantes',39,'{"ilustracion":28,"manualidades":11,"fotografia":0,"narrativa_grafica":0}','Base de Datos - Exponentes - Festival','2025-12-25 19:11:21','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(20,7,'bandas',5,NULL,'Base de Datos - Exponentes - Festival','2025-12-25 19:11:21','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(21,7,'total_talleres',3,NULL,'Base de Datos - Exponentes - Festival','2025-12-25 19:11:21','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(22,8,'participantes',54,'{"ilustracion":47,"manualidades":7,"fotografia":0,"narrativa_grafica":0}','Base de Datos - Exponentes - Festival','2025-12-25 19:11:21','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(23,8,'bandas',5,NULL,'Base de Datos - Exponentes - Festival','2025-12-25 19:11:21','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(24,8,'total_talleres',4,NULL,'Base de Datos - Exponentes - Festival','2025-12-25 19:11:21','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(25,9,'participantes',51,'{"ilustracion":43,"manualidades":7,"fotografia":1,"narrativa_grafica":0}','Base de Datos - Exponentes - Festival','2025-12-25 19:11:21','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(26,9,'bandas',4,NULL,'Base de Datos - Exponentes - Festival','2025-12-25 19:11:21','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(27,9,'total_talleres',4,NULL,'Base de Datos - Exponentes - Festival','2025-12-25 19:11:21','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(28,10,'participantes',50,'{"ilustracion":41,"manualidades":9,"fotografia":0,"narrativa_grafica":0}','Base de Datos - Exponentes - Festival','2025-12-25 19:11:21','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(29,10,'bandas',4,NULL,'Base de Datos - Exponentes - Festival','2025-12-25 19:11:21','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+INSERT INTO evento_edicion_metrica VALUES(30,10,'total_talleres',2,NULL,'Base de Datos - Exponentes - Festival','2025-12-25 19:11:21','datos preliminares extraídos de google sheets Base de Datos - Exponentes - Festival');
+
+
+INSERT INTO evento_edicion VALUES(1,1,NULL,'I','https://cdn.frijolmagico.cl/festivales/frijol-magico/afiche-i.webp','2025-12-25 18:32:03','2025-12-26 15:55:20','i');
+INSERT INTO evento_edicion VALUES(2,1,'Día del Libro','II','https://cdn.frijolmagico.cl/festivales/frijol-magico/afiche-ii.webp','2025-12-25 18:32:03','2025-12-26 15:55:20','ii');
+INSERT INTO evento_edicion VALUES(3,1,NULL,'III','https://cdn.frijolmagico.cl/festivales/frijol-magico/afiche-iii.webp','2025-12-25 18:32:03','2025-12-26 15:55:20','iii');
+INSERT INTO evento_edicion VALUES(4,1,'En Búsqueda del Secreto del Frijol','IV','https://cdn.frijolmagico.cl/festivales/frijol-magico/afiche-iv.webp','2025-12-25 18:32:03','2025-12-26 15:55:20','iv');
+INSERT INTO evento_edicion VALUES(5,1,'I Aniversario','V','https://cdn.frijolmagico.cl/festivales/frijol-magico/afiche-v.webp','2025-12-25 18:32:03','2025-12-26 15:55:20','v');
+INSERT INTO evento_edicion VALUES(6,1,'Descubriendo nuevas raíces','VI','https://cdn.frijolmagico.cl/festivales/frijol-magico/afiche-vi.webp','2025-12-25 18:32:03','2025-12-26 15:55:20','vi');
+INSERT INTO evento_edicion VALUES(7,1,'Recolectando Semillas','VII','https://cdn.frijolmagico.cl/festivales/frijol-magico/afiche-vii.webp','2025-12-25 18:32:03','2025-12-26 15:55:20','vii');
+INSERT INTO evento_edicion VALUES(8,1,'II Aniversario','VIII','https://cdn.frijolmagico.cl/festivales/frijol-magico/afiche-viii.webp','2025-12-25 18:32:03','2025-12-26 15:55:20','viii');
+INSERT INTO evento_edicion VALUES(9,1,'Frijoles con Riendas','IX','https://cdn.frijolmagico.cl/festivales/frijol-magico/afiche-ix.webp','2025-12-25 18:32:03','2025-12-26 15:55:20','ix');
+INSERT INTO evento_edicion VALUES(10,1,'III Aniversario','X','https://cdn.frijolmagico.cl/festivales/frijol-magico/afiche-x.webp','2025-12-25 18:32:03','2025-12-26 15:55:20','x');
+INSERT INTO evento_edicion VALUES(11,2,NULL,'1','https://cdn.frijolmagico.cl/festivales/ilustra-benders/afiche-1.webp','2025-12-26 18:01:15','2025-12-26 18:01:15','1');
+INSERT INTO evento_edicion VALUES(12,2,'Season 2','2','https://cdn.frijolmagico.cl/festivales/ilustra-benders/afiche-2.webp','2025-12-26 18:01:15','2025-12-26 18:01:15','2');
+INSERT INTO evento_edicion VALUES(13,2,'Season 3','3','https://cdn.frijolmagico.cl/festivales/ilustra-benders/afiche-3.webp','2025-12-26 18:01:15','2025-12-26 18:01:15','3');
+INSERT INTO evento_edicion VALUES(14,1,'Vía Streaming','XI','https://cdn.frijolmagico.cl/festivales/frijol-magico/afiche-xi.webp','2026-01-05 21:47:14','2026-01-07 03:03:47','xi');
+INSERT INTO evento_edicion VALUES(15,1,'','XII','https://cdn.frijolmagico.cl/festivales/frijol-magico/afiche-xii.webp','2026-01-05 21:47:14','2026-01-07 03:03:47','xii');
+INSERT INTO evento_edicion VALUES(16,1,'','XIII','https://cdn.frijolmagico.cl/festivales/frijol-magico/afiche-xiii.webp','2026-01-05 21:47:14','2026-01-07 03:03:47','xiii');
+INSERT INTO evento_edicion VALUES(17,1,'','XIV','https://cdn.frijolmagico.cl/festivales/frijol-magico/afiche-xiv.webp','2026-01-05 21:47:14','2026-01-07 03:03:47','xiv');
+INSERT INTO evento_edicion VALUES(18,1,'','XV','https://cdn.frijolmagico.cl/festivales/frijol-magico/afiche-xv.webp','2026-01-05 21:47:14','2026-01-07 03:03:47','xv');
+
+
+INSERT INTO evento_edicion_dia VALUES(1,1,'2017-02-25','14:00','20:00','2025-12-25 18:32:21','2026-01-05 22:18:49',1,'presencial');
+INSERT INTO evento_edicion_dia VALUES(2,2,'2017-04-22','12:00','20:30','2025-12-25 18:32:21','2026-01-05 22:18:49',2,'presencial');
+INSERT INTO evento_edicion_dia VALUES(3,3,'2017-08-19','11:30','20:30','2025-12-25 18:32:21','2026-01-05 22:18:49',2,'presencial');
+INSERT INTO evento_edicion_dia VALUES(4,4,'2017-12-16','12:30','20:00','2025-12-25 18:32:21','2026-01-05 22:18:49',1,'presencial');
+INSERT INTO evento_edicion_dia VALUES(5,5,'2018-02-23','12:00','20:30','2025-12-25 18:32:21','2026-01-05 22:18:49',2,'presencial');
+INSERT INTO evento_edicion_dia VALUES(6,5,'2018-02-24','12:00','20:30','2025-12-25 18:32:21','2026-01-05 22:18:49',2,'presencial');
+INSERT INTO evento_edicion_dia VALUES(7,6,'2018-08-10','12:00','20:30','2025-12-25 18:32:21','2026-01-05 22:18:49',2,'presencial');
+INSERT INTO evento_edicion_dia VALUES(8,6,'2018-08-11','12:00','20:30','2025-12-25 18:32:21','2026-01-05 22:18:49',2,'presencial');
+INSERT INTO evento_edicion_dia VALUES(9,7,'2018-12-22','12:00','20:00','2025-12-25 18:32:21','2026-01-05 22:18:49',2,'presencial');
+INSERT INTO evento_edicion_dia VALUES(10,8,'2019-03-01','12:00','20:00','2025-12-25 18:32:21','2026-01-05 22:18:49',2,'presencial');
+INSERT INTO evento_edicion_dia VALUES(11,8,'2019-03-02','12:00','20:00','2025-12-25 18:32:21','2026-01-05 22:18:49',2,'presencial');
+INSERT INTO evento_edicion_dia VALUES(12,9,'2019-08-16','12:00','20:00','2025-12-25 18:32:21','2026-01-05 22:18:49',2,'presencial');
+INSERT INTO evento_edicion_dia VALUES(13,9,'2019-08-17','12:00','20:00','2025-12-25 18:32:21','2026-01-05 22:18:49',2,'presencial');
+INSERT INTO evento_edicion_dia VALUES(14,10,'2020-02-28','12:00','20:00','2025-12-25 18:32:21','2026-01-05 22:18:49',2,'presencial');
+INSERT INTO evento_edicion_dia VALUES(15,10,'2020-02-29','12:00','20:00','2025-12-25 18:32:21','2026-01-05 22:18:49',2,'presencial');
+INSERT INTO evento_edicion_dia VALUES(16,11,'2016-02-18','15:00','21:00','2025-12-26 18:01:20','2026-01-05 22:20:45',3,'presencial');
+INSERT INTO evento_edicion_dia VALUES(17,12,'2016-08-15','14:20','20:00','2025-12-26 18:01:20','2026-01-05 22:20:45',3,'presencial');
+INSERT INTO evento_edicion_dia VALUES(18,13,'2016-10-31','14:00','20:00','2025-12-26 18:01:20','2026-01-05 22:20:45',3,'presencial');
+INSERT INTO evento_edicion_dia VALUES(20,14,'2021-04-16','18:00','21:00','2026-01-05 22:11:38','2026-01-05 22:11:38',6,'online');
+INSERT INTO evento_edicion_dia VALUES(21,14,'2021-04-17','17:30','20:30','2026-01-05 22:11:39','2026-01-05 22:11:39',6,'online');
+INSERT INTO evento_edicion_dia VALUES(22,14,'2021-04-18','17:30','21:00','2026-01-05 22:11:39','2026-01-05 22:11:39',6,'online');
+INSERT INTO evento_edicion_dia VALUES(23,15,'2022-04-09','12:00','21:00','2026-01-05 22:11:39','2026-01-05 22:11:39',2,'presencial');
+INSERT INTO evento_edicion_dia VALUES(24,16,'2024-05-18','10:00','20:00','2026-01-05 22:11:39','2026-01-05 22:11:39',4,'presencial');
+INSERT INTO evento_edicion_dia VALUES(25,17,'2024-10-19','10:00','20:00','2026-01-05 22:11:39','2026-01-05 22:11:39',4,'presencial');
+INSERT INTO evento_edicion_dia VALUES(26,18,'2025-10-03','10:30','18:30','2026-01-05 22:11:39','2026-01-05 22:11:39',5,'presencial');
+INSERT INTO evento_edicion_dia VALUES(27,18,'2025-10-04','10:00','18:00','2026-01-05 22:11:39','2026-01-05 22:11:39',5,'presencial');
+
+
+INSERT INTO lugar VALUES(1,'Monasterio Casa Taller','Peatonal Santo Domingo #228, La Serena','{"lat": -29.904389, "lng": -71.253670}',NULL,'2025-12-26 15:00:04','2025-12-26 15:00:04',NULL);
+INSERT INTO lugar VALUES(2,'Centro Cultural Santa Inés','Almagro #232, La Serena','{"lat": -29.898163, "lng": -71.252212}',NULL,'2025-12-26 15:00:04','2026-01-05 16:19:38','La Serena');
+INSERT INTO lugar VALUES(3,'Bender''s Games','Lautaro #856, La Serena','{"lat": -29.90528, "lng": -71.24533}',NULL,'2025-12-26 17:41:12','2026-01-05 16:19:38','La Serena');
+INSERT INTO lugar VALUES(4,'Mall VIVO Coquimbo','Avenida Varela #1524, Coquimbo','{"lat": -29.95786, "lng": -71.33737}','https://www.mallsyoutletsvivo.cl/vivo-coquimbo/','2026-01-05 16:16:18','2026-01-05 16:16:18','Coquimbo');
+INSERT INTO lugar VALUES(5,'Casa Editorial Universidad de La Serena','Amunátegui #851, La Serena','{"lat": -29.91030, "lng": -71.24648}',NULL,'2026-01-05 16:16:18','2026-01-05 16:16:18','La Serena');
+INSERT INTO lugar VALUES(6,'Festival Virtual','Grabado en Estudio19, Coquimbo',NULL,'https://www.youtube.com/c/FestivalFrijolMágico','2026-01-05 16:19:38','2026-01-05 16:23:34',NULL);
