@@ -20,7 +20,7 @@ SELECT json_object(
                     'hora_inicio', eed.hora_inicio,
                     'hora_fin', eed.hora_fin,
                     'modalidad', eed.modalidad,
-                    'lugar', CASE 
+                    'lugar', CASE
                         WHEN l.id IS NOT NULL THEN json_object(
                             'nombre', l.nombre,
                             'direccion', l.direccion
@@ -38,35 +38,31 @@ SELECT json_object(
     'resumen', json_object(
         'total_participantes', json_object(
             'exponentes', (
-                SELECT COUNT(DISTINCT COALESCE(pe.agrupacion_id, eep.artista_id))
-                FROM evento_edicion_participante eep
-                JOIN participante_exposicion pe ON eep.id = pe.participante_id
-                WHERE eep.evento_edicion_id = ee.id
+                SELECT COUNT(DISTINCT COALESCE(pe.agrupacion_id, pe.artista_id))
+                FROM participante_exposicion pe
+                WHERE pe.evento_edicion_id = ee.id
             ),
             'talleres', (
-                SELECT COUNT(DISTINCT eep.artista_id)
-                FROM evento_edicion_participante eep
-                JOIN participante_actividad pa ON eep.id = pa.participante_id
+                SELECT COUNT(DISTINCT pa.artista_id)
+                FROM participante_actividad pa
                 JOIN tipo_actividad ta ON pa.tipo_actividad_id = ta.id
-                WHERE eep.evento_edicion_id = ee.id
+                WHERE pa.evento_edicion_id = ee.id
                   AND LOWER(ta.slug) LIKE '%taller%'
             ),
             'musica', (
-                SELECT COUNT(DISTINCT COALESCE(pa.agrupacion_id, eep.artista_id))
-                FROM evento_edicion_participante eep
-                JOIN participante_actividad pa ON eep.id = pa.participante_id
+                SELECT COUNT(DISTINCT COALESCE(pa.agrupacion_id, pa.artista_id))
+                FROM participante_actividad pa
                 JOIN tipo_actividad ta ON pa.tipo_actividad_id = ta.id
-                WHERE eep.evento_edicion_id = ee.id
+                WHERE pa.evento_edicion_id = ee.id
                   AND (LOWER(ta.slug) LIKE '%music%' OR LOWER(ta.slug) LIKE '%banda%')
             )
         ),
         'por_disciplina', COALESCE((
             SELECT json_group_object(d.slug, cnt)
             FROM (
-                SELECT pe.disciplina_id, COUNT(DISTINCT COALESCE(pe.agrupacion_id, eep.artista_id)) as cnt
-                FROM evento_edicion_participante eep
-                JOIN participante_exposicion pe ON eep.id = pe.participante_id
-                WHERE eep.evento_edicion_id = ee.id
+                SELECT pe.disciplina_id, COUNT(DISTINCT COALESCE(pe.agrupacion_id, pe.artista_id)) as cnt
+                FROM participante_exposicion pe
+                WHERE pe.evento_edicion_id = ee.id
                 GROUP BY pe.disciplina_id
             ) sub
             JOIN disciplina d ON sub.disciplina_id = d.id
@@ -91,7 +87,7 @@ export async function festivalesRepository(): Promise<FestivalEdicion[]> {
       .sort((a, b) => {
         const dateA = a.evento.dias[0]?.fecha || ''
         const dateB = b.evento.dias[0]?.fecha || ''
-        return dateB.localeCompare(dateA) // Descendente (mas reciente primero)
+        return dateB.localeCompare(dateA)
       })
       .map(mapFestivalEdicion)
   }

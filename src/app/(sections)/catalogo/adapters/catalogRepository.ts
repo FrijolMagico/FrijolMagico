@@ -28,25 +28,23 @@ SELECT json_object(
   ),
   'category', (
     SELECT d.slug
-    FROM evento_edicion_participante eep
-    JOIN participante_exposicion pe ON eep.id = pe.participante_id
+    FROM participante_exposicion pe
     JOIN disciplina d ON pe.disciplina_id = d.id
-    JOIN evento_edicion ee ON eep.evento_edicion_id = ee.id
+    JOIN evento_edicion ee ON pe.evento_edicion_id = ee.id
     LEFT JOIN evento_edicion_dia eed ON ee.id = eed.evento_edicion_id
-    WHERE eep.artista_id = a.id
-    GROUP BY eep.id
+    WHERE pe.artista_id = a.id
+    GROUP BY pe.id
     ORDER BY MAX(eed.fecha) DESC
     LIMIT 1
   ),
   'collective', (
     SELECT ag.nombre
-    FROM evento_edicion_participante eep
-    JOIN participante_exposicion pe ON eep.id = pe.participante_id
+    FROM participante_exposicion pe
     JOIN agrupacion ag ON pe.agrupacion_id = ag.id
-    JOIN evento_edicion ee ON eep.evento_edicion_id = ee.id
+    JOIN evento_edicion ee ON pe.evento_edicion_id = ee.id
     LEFT JOIN evento_edicion_dia eed ON ee.id = eed.evento_edicion_id
-    WHERE eep.artista_id = a.id
-    GROUP BY eep.id
+    WHERE pe.artista_id = a.id
+    GROUP BY pe.id
     ORDER BY MAX(eed.fecha) DESC
     LIMIT 1
   ),
@@ -58,12 +56,11 @@ SELECT json_object(
         'evento', ev.nombre
       )
     )
-    FROM evento_edicion_participante eep
-    JOIN participante_exposicion pe ON eep.id = pe.participante_id
+    FROM participante_exposicion pe
     JOIN agrupacion ag ON pe.agrupacion_id = ag.id
-    JOIN evento_edicion ee ON eep.evento_edicion_id = ee.id
+    JOIN evento_edicion ee ON pe.evento_edicion_id = ee.id
     JOIN evento ev ON ee.evento_id = ev.id
-    WHERE eep.artista_id = a.id
+    WHERE pe.artista_id = a.id
   ), '[]'),
   'editions', COALESCE((
     SELECT json_group_array(
@@ -78,11 +75,11 @@ SELECT json_object(
         ee.numero_edicion,
         ev.nombre as evento_nombre,
         SUBSTR(MIN(eed.fecha), 1, 4) as año
-      FROM evento_edicion_participante eep
-      JOIN evento_edicion ee ON eep.evento_edicion_id = ee.id
+      FROM participante_exposicion pe
+      JOIN evento_edicion ee ON pe.evento_edicion_id = ee.id
       JOIN evento ev ON ee.evento_id = ev.id
       LEFT JOIN evento_edicion_dia eed ON ee.id = eed.evento_edicion_id
-      WHERE eep.artista_id = a.id
+      WHERE pe.artista_id = a.id
       GROUP BY ee.id, ee.numero_edicion, ev.nombre
     ) sub
   ), '[]')
