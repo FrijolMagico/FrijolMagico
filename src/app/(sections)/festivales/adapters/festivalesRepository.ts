@@ -8,6 +8,7 @@ import type { FestivalEdicion, RawFestivalEdicion } from '../types/festival'
 const FESTIVALES_QUERY = `
 SELECT json_object(
     'evento', json_object(
+        'evento_id', e.id,
         'nombre', e.nombre,
         'slug', e.slug,
         'edicion', ee.numero_edicion,
