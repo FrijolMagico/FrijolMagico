@@ -11,6 +11,7 @@
 @theme {
   --animate-card-slides: card-slides 12s linear infinite;
   --animate-soft-bounce: soft-bounce 5s ease-in-out infinite;
+  --animate-gradient-shift: gradient-shift 20s ease-in-out infinite;
 
   @keyframes card-slides {
     from {
@@ -29,6 +30,24 @@
     }
     50% {
       transform: translateY(-20px);
+    }
+  }
+
+  @keyframes gradient-shift {
+    0% {
+      background-position: 0% 50%;
+    }
+    25% {
+      background-position: 50% 100%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    75% {
+      background-position: 50% 0%;
+    }
+    100% {
+      background-position: 0% 50%;
     }
   }
 }
