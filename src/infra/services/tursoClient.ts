@@ -15,18 +15,21 @@ export interface TursoConfig {
 /**
  * Get or create a Turso database client
  * Uses environment variables by default: TURSO_DATABASE_URL and TURSO_AUTH_TOKEN
+ *
+ * Supports both remote databases (https:// or libsql://) and local files (file:)
  */
 export function getTursoClient(config?: TursoConfig): Client {
   if (client) return client
 
   const url = config?.url || process.env.TURSO_DATABASE_URL
-  const authToken = config?.authToken || process.env.TURSO_AUTH_TOKEN
 
   if (!url) {
     throw new Error(
       'Missing Turso database URL. Set TURSO_DATABASE_URL environment variable.',
     )
   }
+
+  const authToken = config?.authToken || process.env.TURSO_AUTH_TOKEN
 
   client = createClient({
     url,
@@ -97,15 +100,5 @@ export async function executeInsert(
     return { lastInsertRowid: result.lastInsertRowid, error: null }
   } catch (error) {
     return { lastInsertRowid: undefined, error: error as Error }
-  }
-}
-
-/**
- * Close the database connection
- */
-export function closeTursoClient(): void {
-  if (client) {
-    client.close()
-    client = null
   }
 }

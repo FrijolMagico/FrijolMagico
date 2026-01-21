@@ -1,9 +1,9 @@
-export type DataSource = 'mock' | 'cms' | 'database'
+export type DataSource = 'mock' | 'cms' | 'database' | 'local'
 
 interface DataSourceConfig {
   /** Fuente de datos en produccion/preview (requerido) */
   prod: DataSource
-  /** Fuente de datos en desarrollo (opcional, default: 'mock') */
+  /** Fuente de datos en desarrollo (opcional, usa default inteligente si no se especifica) */
   dev?: DataSource
 }
 
@@ -12,23 +12,31 @@ interface DataSourceConfig {
  *
  * Prioridad:
  * 1. Produccion/Preview -> siempre usa config.prod (NUNCA mock)
- * 2. Desarrollo con DATA_SOURCE=real -> usa config.prod
- * 3. Desarrollo con DATA_SOURCE=mock -> usa 'mock'
- * 4. Desarrollo sin override -> usa config.dev (default: 'mock')
+ * 2. Desarrollo con DATA_SOURCE=real -> usa config.prod para todos los modulos
+ * 3. Desarrollo con DATA_SOURCE=local -> usa defaults inteligentes (cms->mock, database->local)
+ * 4. Desarrollo sin override -> usa defaults inteligentes (misma logica que DATA_SOURCE=local)
+ *
+ * Defaults inteligentes:
+ * - Modulos con prod='cms' -> dev usa 'mock'
+ * - Modulos con prod='database' -> dev usa 'local' (file:local.db)
  *
  * IMPORTANTE: En produccion, mock data NUNCA es permitida, independiente de
  * cualquier variable de entorno. Esta es una proteccion de seguridad.
  *
  * @example
  * // Modulo que usa CMS en produccion, mock en desarrollo
- * const source = getDataSource({ prod: 'cms' })
+ * const source = getDataSource({ prod: 'cms' }) // development: 'mock'
  *
  * @example
- * // Modulo que usa database en produccion, database tambien en desarrollo
- * const source = getDataSource({ prod: 'database', dev: 'database' })
+ * // Modulo que usa database en produccion, local en desarrollo
+ * const source = getDataSource({ prod: 'database' }) // development: 'local'
+ *
+ * @example
+ * // Override para usar data real en desarrollo
+ * DATA_SOURCE=real bun run dev
  */
 export function getDataSource(config: DataSourceConfig): DataSource {
-  const { prod, dev = 'mock' } = config
+  const { prod, dev } = config
   const vercelEnv = process.env.VERCEL_ENV
   const nodeEnv = process.env.NODE_ENV
 
@@ -50,12 +58,15 @@ export function getDataSource(config: DataSourceConfig): DataSource {
     return prod
   }
 
-  if (override === 'mock') {
-    return 'mock'
+  // DATA_SOURCE=local o sin override: usar defaults inteligentes
+  if (dev) {
+    return dev
   }
 
-  // Sin override: usar configuracion de desarrollo del modulo
-  return dev
+  // Default inteligente si no hay config.dev explicito:
+  // - cms -> mock
+  // - database -> local
+  return prod === 'cms' ? 'mock' : 'local'
 }
 
 export function isMockMode(config: DataSourceConfig): boolean {
