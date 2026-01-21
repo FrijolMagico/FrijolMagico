@@ -152,6 +152,58 @@ Accessibility
 - Seeds in `db/seed/` are reserved for catalog/system data only.
 - For structural schema changes, run `PRAGMA foreign_key_list(table_name)` to inspect relations, backup `db/dump.sql`, and obtain user consent before applying destructive migrations.
 
+## Data Source Configuration
+
+The app uses a flexible data source system that determines where each repository fetches data from (mock, CMS, or database).
+
+### Development Data Source Options
+
+The `DATA_SOURCE` environment variable (in `.env.local`) controls data sources in development:
+
+- **Not set (default)**: Uses intelligent defaults:
+  - Modules with `prod='cms'` → use `'mock'` in development
+  - Modules with `prod='database'` → use `'local'` (file:local.db) in development
+- **`DATA_SOURCE=real`**: Force all modules to use their production data source (remote DB/CMS)
+- **`DATA_SOURCE=local`**: Same as not set, uses intelligent defaults
+
+### Repository Configuration
+
+Each repository is configured with its production source:
+
+```typescript
+// CMS-based repository (uses mock in development by default)
+const source = getDataSource({ prod: 'cms' })
+
+// Database-based repository (uses local file:local.db in development by default)
+const source = getDataSource({ prod: 'database' })
+```
+
+### Local Database Setup
+
+For modules with `prod='database'` in development:
+
+1. Set `TURSO_DATABASE_URL=file:local.db` in `.env.local`
+2. Import dump from remote DB to local file (manual process)
+3. The libSQL client directly accesses the local SQLite file
+
+### Automatic Fallback
+
+Database repositories (`prod='database'`) include automatic fallback to mock data:
+
+- If the local DB file doesn't exist or query fails → fallback to mock
+- If the query returns no data → fallback to mock
+- A warning is logged when fallback is used
+
+If mock data is not available, an error is thrown.
+
+### Production Behavior
+
+In production/preview (when `VERCEL_ENV` is 'production' or 'preview'):
+
+- All repositories always use their configured `prod` source
+- `DATA_SOURCE` variable is ignored
+- Mock data is never allowed (security enforcement)
+
 ## Tests & CI (agent guidance)
 
 - There are no tests by default. If you add a test framework, update this file and `package.json` with scripts for:
