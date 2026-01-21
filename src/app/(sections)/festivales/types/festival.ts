@@ -23,6 +23,7 @@ export interface FestivalResumen {
 }
 
 export interface FestivalEvento {
+  evento_id: number
   nombre: string
   slug: string
   edicion: string
