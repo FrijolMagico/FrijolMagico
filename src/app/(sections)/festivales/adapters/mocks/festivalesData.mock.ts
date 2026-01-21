@@ -5,7 +5,7 @@ export function getFestivalesMock(): FestivalEdicion[] {
     // Festival Frijol Mágico XV - 2025
     {
       evento: {
-        id: 1,
+        evento_id: 1,
         nombre: 'Festival Frijol Mágico',
         slug: 'frijol-magico',
         edicion: 'XV',
@@ -51,7 +51,7 @@ export function getFestivalesMock(): FestivalEdicion[] {
     // Ilustradores en Benders 3 - 2025
     {
       evento: {
-        id: 2,
+        evento_id: 2,
         nombre: 'Ilustradores en Benders',
         slug: 'ilustra-benders',
         edicion: '3',
@@ -85,7 +85,7 @@ export function getFestivalesMock(): FestivalEdicion[] {
     // Festival Frijol Mágico XIV - 2024
     {
       evento: {
-        id: 1,
+        evento_id: 1,
         nombre: 'Festival Frijol Mágico',
         slug: 'frijol-magico',
         edicion: 'XIV',
@@ -121,7 +121,7 @@ export function getFestivalesMock(): FestivalEdicion[] {
     // Ilustradores en Benders 2 - 2024
     {
       evento: {
-        id: 2,
+        evento_id: 2,
         nombre: 'Ilustradores en Benders',
         slug: 'ilustra-benders',
         edicion: '2',
@@ -155,7 +155,7 @@ export function getFestivalesMock(): FestivalEdicion[] {
     // Festival Frijol Mágico XIII - 2024
     {
       evento: {
-        id: 1,
+        evento_id: 1,
         nombre: 'Festival Frijol Mágico',
         slug: 'frijol-magico',
         edicion: 'XIII',
@@ -191,7 +191,7 @@ export function getFestivalesMock(): FestivalEdicion[] {
     // Ilustradores en Benders 1 - 2023
     {
       evento: {
-        id: 2,
+        evento_id: 2,
         nombre: 'Ilustradores en Benders',
         slug: 'ilustra-benders',
         edicion: '1',
@@ -225,7 +225,7 @@ export function getFestivalesMock(): FestivalEdicion[] {
     // Festival Frijol Mágico XII - 2022
     {
       evento: {
-        id: 1,
+        evento_id: 1,
         nombre: 'Festival Frijol Mágico',
         slug: 'frijol-magico',
         edicion: 'XII',
@@ -260,7 +260,7 @@ export function getFestivalesMock(): FestivalEdicion[] {
     // Festival Frijol Mágico XI - 2021 (Online)
     {
       evento: {
-        id: 1,
+        evento_id: 1,
         nombre: 'Festival Frijol Mágico',
         slug: 'frijol-magico',
         edicion: 'XI',
@@ -306,7 +306,7 @@ export function getFestivalesMock(): FestivalEdicion[] {
     // Festival Frijol Mágico X - 2020
     {
       evento: {
-        id: 1,
+        evento_id: 1,
         nombre: 'Festival Frijol Mágico',
         slug: 'frijol-magico',
         edicion: 'X',
