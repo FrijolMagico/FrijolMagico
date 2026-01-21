@@ -20,7 +20,7 @@ export const FestivalesTimeline = ({ festivales }: FestivalesTimelineProps) => {
   // usaremos gsap para animar el avance por la línea al hacer scroll
 
   return (
-    <div className='relative container mx-auto px-4 py-12 [--festivals-cards-overlap:3rem]'>
+    <div className='relative container mx-auto px-4 py-12 [--festivals-cards-overlap:5rem]'>
       {/* Timeline items */}
       <div className='relative flex flex-col'>
         {festivales.map((festival, index) => {
@@ -30,7 +30,7 @@ export const FestivalesTimeline = ({ festivales }: FestivalesTimelineProps) => {
           return (
             <div
               key={`${festival.evento.slug}-${festival.evento.edicion}`}
-              className='relative grid grid-cols-1 gap-x-4 lg:grid-cols-2'>
+              className='relative grid grid-cols-1 gap-x-2 lg:grid-cols-2'>
               {/* Columna izquierda - Card si index impar */}
               <div
                 className={cn(
