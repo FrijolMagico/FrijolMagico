@@ -10,14 +10,16 @@ export const FestivalFooterStats = ({
   talleresCount,
   musicaCount,
 }: FestivalFooterStatsProps) => (
-  <div className='flex items-center gap-3'>
+  <div className='flex items-center justify-end gap-3'>
     {talleresCount > 0 && (
       <FestivalFooterStatItem
         icon={Ticket}
         label='Talleres'
         count={talleresCount}
-        bgColor='bg-fm-yellow/10'
-        iconColor='text-fm-orange'
+        color={{
+          bg: 'bg-fm-yellow/10',
+          icon: 'text-fm-yellow',
+        }}
       />
     )}
     {musicaCount > 0 && (
@@ -25,8 +27,7 @@ export const FestivalFooterStats = ({
         icon={Music}
         label='Música'
         count={musicaCount}
-        bgColor='bg-2025-pink/10'
-        iconColor='text-2025-pink'
+        color={{ bg: 'bg-fm-orange/10', icon: 'text-fm-orange' }}
       />
     )}
   </div>
@@ -36,32 +37,33 @@ interface FestivalFooterStatItemProps {
   icon: LucideIcon
   label: string
   count: number
-  bgColor: string
-  iconColor: string
+  color: {
+    bg: string
+    icon: string
+  }
 }
 
 export const FestivalFooterStatItem = ({
   icon: Icon,
   label,
   count,
-  bgColor,
-  iconColor,
+  color,
 }: FestivalFooterStatItemProps) => (
   <div
     className={cn(
-      'border-fm-white/20 flex flex-1 items-center gap-3 rounded-2xl border px-3 py-2 transition-colors',
-      bgColor,
+      'border-fm-white/20 flex max-w-42 flex-1 items-center gap-3 rounded-2xl border px-3 py-2 transition-colors',
+      color.bg,
     )}>
     <div className='bg-fm-white rounded-full p-2 shadow-sm'>
-      <Icon className={`h-3.5 w-3.5 ${iconColor}`} />
+      <Icon className={`h-3.5 w-3.5 ${color.icon}`} />
     </div>
     <div className='flex flex-col'>
-      <span className='text-fm-black/50 text-xs font-bold tracking-wider uppercase'>
-        {label}
-      </span>
       <strong className='text-fm-black text-lg leading-none font-black'>
         {count}
       </strong>
+      <span className='text-fm-black/50 text-xs font-bold tracking-wider uppercase'>
+        {label}
+      </span>
     </div>
   </div>
 )

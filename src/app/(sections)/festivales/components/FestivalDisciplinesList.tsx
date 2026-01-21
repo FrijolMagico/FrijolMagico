@@ -21,7 +21,7 @@ export const FestivalDisciplinesList = ({
     'bg-2025-green',
   ],
 }: FestivalDisciplinesListProps) => (
-  <div className='flex flex-1 flex-col justify-center space-y-2'>
+  <div className='flex flex-1 flex-col justify-center gap-1'>
     {disciplines.length > 0 ? (
       disciplines.map(({ label, count }, index) => (
         <Fragment key={label}>
@@ -45,7 +45,9 @@ export const FestivalDisciplinesList = ({
         </Fragment>
       ))
     ) : (
-      <p className='text-fm-black/40 text-xs'>Sin disciplinas registradas</p>
+      <p className='text-fm-black/40 text-xs'>
+        Sin participaciones registradas
+      </p>
     )}
   </div>
 )
