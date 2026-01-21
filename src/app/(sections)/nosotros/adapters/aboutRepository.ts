@@ -14,14 +14,27 @@ export async function aboutRepository(): Promise<AboutData | null> {
     return getAboutDataMock()
   }
 
-  const { data, error } = await executeQuery<AboutData>(
-    'SELECT id, nombre, descripcion, mision, vision FROM organizacion WHERE id = ?',
-    [ORGANIZATION_ID],
-  )
+  if (source === 'local' || source === 'database') {
+    const { data, error } = await executeQuery<AboutData>(
+      'SELECT id, nombre, descripcion, mision, vision FROM organizacion WHERE id = ?',
+      [ORGANIZATION_ID],
+    )
 
-  if (error) {
-    throw new Error(`Error fetching organization data: ${error.message}`)
+    if (error) {
+      console.warn(
+        '⚠️ Database query failed, falling back to mock data:',
+        error.message,
+      )
+      return getAboutDataMock()
+    }
+
+    if (!data || data.length === 0) {
+      console.warn('⚠️ No data found in database, falling back to mock data')
+      return getAboutDataMock()
+    }
+
+    return data[0] || null
   }
 
-  return data[0] || null
+  throw new Error(`Unsupported data source: ${source}`)
 }
