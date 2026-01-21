@@ -1,4 +1,5 @@
 import { FestivalTimelineCard } from './FestivalTimelineCard'
+import { TimelineConnector } from './TimelineConnector'
 
 import type { FestivalEdicion } from '../types/festival'
 import { cn } from '@/utils/utils'
@@ -16,30 +17,32 @@ export const FestivalesTimeline = ({ festivales }: FestivalesTimelineProps) => {
     )
   }
 
-  // TODO: Cambiar estrategia de maquetación, usar filas en vez de columnas, cada fila contiene 2 columnas, una para evento otra para line
-  // usaremos gsap para animar el avance por la línea al hacer scroll
-
   return (
-    <div className='relative container mx-auto px-4 py-12 [--festivals-cards-overlap:5rem]'>
+    <div className='relative container mx-auto px-4 py-12 [--festivals-cards-overlap:8rem]'>
       {/* Timeline items */}
-      <div className='relative flex flex-col'>
+      <div className='relative flex flex-col items-center'>
         {festivales.map((festival, index) => {
           const isLeft = index % 2 === 1
           const isLast = index === festivales.length - 1
-
+          const connectorColor =
+            festival.evento.evento_id === 1
+              ? 'stroke-fm-orange'
+              : 'stroke-fm-green'
           return (
             <div
               key={`${festival.evento.slug}-${festival.evento.edicion}`}
-              className='relative grid grid-cols-1 gap-x-2 lg:grid-cols-2'>
+              className='relative grid grid-cols-1 gap-8 lg:grid-cols-[40rem_40rem]'>
               {/* Columna izquierda - Card si index impar */}
               <div
                 className={cn(
                   'hidden lg:flex lg:items-center',
                   !isLast && '-mb-(--festivals-cards-overlap)',
                 )}>
-                {!isLeft && (
+                {!isLeft ? (
                   <FestivalTimelineCard festival={festival} alignment='right' />
-                )}
+                ) : !isLast ? (
+                  <TimelineConnector color={connectorColor} toLeft />
+                ) : null}
               </div>
 
               {/* Columna derecha - Card si index par */}
@@ -48,9 +51,11 @@ export const FestivalesTimeline = ({ festivales }: FestivalesTimelineProps) => {
                   'hidden lg:flex lg:items-center lg:justify-end',
                   !isLast && '-mb-(--festivals-cards-overlap)',
                 )}>
-                {isLeft && (
+                {isLeft ? (
                   <FestivalTimelineCard festival={festival} alignment='left' />
-                )}
+                ) : !isLast ? (
+                  <TimelineConnector color={connectorColor} />
+                ) : null}
               </div>
 
               {/* Mobile: Card centrada debajo del circulo */}
