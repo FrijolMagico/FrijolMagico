@@ -45,7 +45,7 @@ export const FestivalsSidebarNav = ({ items }: FestivalsSidebarNavProps) => {
           )}>
           <div
             className={cn(
-              'size-2 flex-shrink-0 rounded-full',
+              'size-2 shrink-0 rounded-full',
               activeId ? 'bg-fm-black/50' : 'bg-fm-orange/50',
             )}
             aria-hidden='true'
@@ -82,7 +82,7 @@ export const FestivalsSidebarNav = ({ items }: FestivalsSidebarNavProps) => {
             {/* Active indicator dot */}
             <div
               className={cn(
-                'mt-1 size-2 flex-shrink-0 rounded-full transition-all duration-300',
+                'mt-1 size-2 shrink-0 rounded-full transition-all duration-300',
                 isActive
                   ? isOrangeEvent
                     ? 'bg-fm-orange scale-100'
