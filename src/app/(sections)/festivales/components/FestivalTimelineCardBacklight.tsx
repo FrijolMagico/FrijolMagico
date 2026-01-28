@@ -24,11 +24,11 @@ export const FestivalTimelineCardBacklight = ({
     <div
       ref={ref}
       className={cn(
-        'absolute inset-6 -z-10 rounded-3xl blur-3xl transition-opacity duration-500',
+        'absolute -inset-1 -z-10 rounded-xl blur-2xl transition-opacity duration-500',
         isActive ? 'opacity-100' : 'opacity-30',
       )}
       style={{
-        backgroundImage: `linear-gradient(90deg, ${colors.join(', ')})`,
+        backgroundImage: `linear-gradient(0, ${colors.join(', ')})`,
         backgroundSize: '100% 100%',
       }}></div>
   )

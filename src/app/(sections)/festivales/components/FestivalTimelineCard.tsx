@@ -19,6 +19,7 @@ interface FestivalTimelineCardProps {
   alignment?: 'left' | 'right'
   festivalId?: string
   isActive?: boolean
+  priority?: boolean
 }
 
 export const FestivalTimelineCard = ({
@@ -26,6 +27,7 @@ export const FestivalTimelineCard = ({
   alignment = 'left',
   festivalId,
   isActive = false,
+  priority = false,
 }: FestivalTimelineCardProps) => {
   const { evento, resumen } = festival
 
@@ -47,7 +49,6 @@ export const FestivalTimelineCard = ({
       <article
         id={festivalId}
         data-festival-id={festivalId}
-        scroll-snap-type='start'
         className={cn(
           'group bg-fm-white outline-fm-black/20 flex flex-col overflow-hidden rounded-3xl shadow-lg outline transition-all duration-300 outline-dashed hover:shadow-xl',
           alignment === 'right' ? 'md:flex-row-reverse' : 'md:flex-row',
@@ -75,7 +76,10 @@ export const FestivalTimelineCard = ({
               count={resumen.total_participantes.exponentes}
             />
 
-            <div className='via-fm-black/10 w-px bg-linear-to-b from-transparent to-transparent'></div>
+            <div
+              className='via-fm-black/10 w-px bg-linear-to-b from-transparent to-transparent'
+              aria-hidden='true'
+            />
 
             <FestivalDisciplinesList
               disciplines={allDisciplines}
@@ -94,6 +98,8 @@ export const FestivalTimelineCard = ({
           posterUrl={evento.poster_url}
           nombre={evento.nombre}
           edicion={evento.edicion}
+          isActive={isActive}
+          priority={priority}
         />
       </article>
 

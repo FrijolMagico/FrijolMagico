@@ -69,6 +69,7 @@ export const FestivalesTimelineContent = ({
           {festivales.map((festival, index) => {
             const isLeft = index % 2 === 1
             const isLast = index === festivales.length - 1
+            const isFirstCard = index === 0
             const connectorColor =
               festival.evento.evento_id === 1
                 ? 'stroke-fm-orange'
@@ -76,9 +77,10 @@ export const FestivalesTimelineContent = ({
             const festivalId = `festival-${festival.evento.evento_id}-${festival.evento.edicion}`
             const isActive = activeId === festivalId
             return (
-              <div
+              <section
                 key={`${festival.evento.slug}-${festival.evento.edicion}`}
-                className='relative grid grid-cols-1 gap-8 lg:grid-cols-[40rem_40rem]'>
+                className='relative grid grid-cols-1 gap-8 lg:grid-cols-[40rem_40rem]'
+                aria-label={`${festival.evento.nombre} - Edición ${festival.evento.edicion}`}>
                 {/* Columna izquierda - Card si index impar */}
                 <div
                   className={cn(
@@ -91,6 +93,7 @@ export const FestivalesTimelineContent = ({
                       alignment='right'
                       festivalId={festivalId}
                       isActive={isActive}
+                      priority={isFirstCard}
                     />
                   ) : !isLast ? (
                     <TimelineConnector color={connectorColor} toLeft />
@@ -109,6 +112,7 @@ export const FestivalesTimelineContent = ({
                       alignment='left'
                       festivalId={festivalId}
                       isActive={isActive}
+                      priority={isFirstCard}
                     />
                   ) : !isLast ? (
                     <TimelineConnector color={connectorColor} />
@@ -121,9 +125,10 @@ export const FestivalesTimelineContent = ({
                     festival={festival}
                     festivalId={festivalId}
                     isActive={isActive}
+                    priority={isFirstCard}
                   />
                 </div>
-              </div>
+              </section>
             )
           })}
 

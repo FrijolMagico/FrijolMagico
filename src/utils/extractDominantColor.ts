@@ -1,3 +1,26 @@
+/**
+ * Calcula la luminancia relativa de un color RGB según WCAG 2.0
+ * @see https://www.w3.org/TR/WCAG20/#relativeluminancedef
+ */
+function getRelativeLuminance(r: number, g: number, b: number): number {
+  const [rs, gs, bs] = [r, g, b].map((c) => {
+    const val = c / 255
+    return val <= 0.03928 ? val / 12.92 : Math.pow((val + 0.055) / 1.055, 2.4)
+  })
+  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs
+}
+
+/**
+ * Calcula el ratio de contraste entre dos colores según WCAG 2.0
+ * El fondo blanco tiene luminancia = 1.0
+ */
+function getContrastRatio(r: number, g: number, b: number): number {
+  const luminance = getRelativeLuminance(r, g, b)
+  const whiteLuminance = 1.0
+  // Ratio = (lighter + 0.05) / (darker + 0.05)
+  return (whiteLuminance + 0.05) / (luminance + 0.05)
+}
+
 export function extractDominantColors(
   imgElement: HTMLImageElement,
 ): string[] | null {
@@ -14,19 +37,11 @@ export function extractDominantColors(
   try {
     ctx.drawImage(imgElement, 0, 0)
 
-    const startX = Math.floor(canvas.width * 0.1)
-    const startY = Math.floor(canvas.height * 0.1)
-    const extractWidth = Math.floor(canvas.width * 0.8)
-    const extractHeight = Math.floor(canvas.height * 0.8)
-
-    const imageData = ctx.getImageData(
-      startX,
-      startY,
-      extractWidth,
-      extractHeight,
-    )
+    // Analizar el 100% de la imagen (sin recortar bordes)
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
     const data = imageData.data
 
+    // Contar frecuencia de colores (agrupados por cubos de 16x16x16)
     const colorCounts: Map<string, number> = new Map()
     const maxSamples = 10000
     const step = Math.max(1, Math.floor(data.length / 4 / maxSamples))
@@ -37,23 +52,37 @@ export function extractDominantColors(
       const b = data[i + 2]
       const a = data[i + 3]
 
+      // Ignorar píxeles transparentes
       if (a < 128) continue
 
+      // Agrupar colores similares (reducción de 256^3 a 16^3 espacios)
       const key = `${Math.round(r / 16) * 16},${Math.round(g / 16) * 16},${Math.round(b / 16) * 16}`
       colorCounts.set(key, (colorCounts.get(key) || 0) + 1)
     }
 
+    // Ordenar por frecuencia y calcular contraste con fondo blanco
     const sortedColors = Array.from(colorCounts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .map(([color]) => `rgb(${color})`)
+      .map(([color, count]) => {
+        const [r, g, b] = color.split(',').map(Number)
+        const contrast = getContrastRatio(r, g, b)
+        return { color, count, contrast, rgb: [r, g, b] }
+      })
+      // Priorizar colores con MAYOR contraste (más oscuros)
+      // Peso: 70% contraste + 30% frecuencia
+      .sort((a, b) => {
+        const scoreA = a.contrast * 0.7 + (a.count / colorCounts.size) * 0.3
+        const scoreB = b.contrast * 0.7 + (b.count / colorCounts.size) * 0.3
+        return scoreB - scoreA
+      })
 
+    // Filtrar colores muy similares entre sí (diversidad)
     const filteredColors: string[] = []
-    const minDistance = 60
+    const minDistance = 60 // Distancia mínima euclidiana en espacio RGB
 
-    for (const color of sortedColors) {
-      if (filteredColors.length >= 5) break
+    for (const colorData of sortedColors) {
+      if (filteredColors.length >= 4) break
 
-      const rgb = color.match(/\d+/g)?.map(Number) || [0, 0, 0]
+      const rgb = colorData.rgb
 
       const isTooSimilar = filteredColors.some((existingColor) => {
         const existingRgb = existingColor.match(/\d+/g)?.map(Number) || [
@@ -68,11 +97,12 @@ export function extractDominantColors(
       })
 
       if (!isTooSimilar) {
-        filteredColors.push(color)
+        filteredColors.push(`rgb(${colorData.color})`)
       }
     }
 
-    return filteredColors.length > 0 ? filteredColors : null
+    // Retornar exactamente 4 colores (o null si no hay suficientes)
+    return filteredColors.length === 4 ? filteredColors : null
   } catch {
     return null
   }

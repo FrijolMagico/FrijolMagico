@@ -54,13 +54,12 @@ export const FestivalFooterStatItem = ({
       'border-fm-white/20 flex max-w-42 flex-1 items-center gap-3 rounded-2xl border px-3 py-2 transition-colors',
       color.bg,
     )}>
-    <div className='bg-fm-white rounded-full p-2 shadow-sm'>
-      <Icon className={`h-3.5 w-3.5 ${color.icon}`} />
+    <div className='bg-fm-white flex-shrink-0 rounded-full p-2 shadow-sm'>
+      <Icon className={`h-3.5 w-3.5 ${color.icon}`} aria-hidden='true' />
     </div>
-    <div className='flex flex-col'>
-      <strong className='text-fm-black text-lg leading-none font-black'>
-        {count}
-      </strong>
+    <div className='flex min-w-0 flex-col'>
+      <dt className='sr-only'>{label}</dt>
+      <dd className='text-fm-black text-lg leading-none font-black'>{count}</dd>
       <span className='text-fm-black/50 text-xs font-bold tracking-wider uppercase'>
         {label}
       </span>

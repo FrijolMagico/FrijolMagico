@@ -43,7 +43,8 @@ export const TimelineConnector = ({
       <svg
         className='size-full'
         viewBox={`0 0 ${width} ${height}`}
-        preserveAspectRatio='none'>
+        preserveAspectRatio='none'
+        aria-hidden='true'>
         <path
           fill='none'
           strokeWidth={strokeWidth}
