@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useScrollStore } from '../store/useScrollStore'
 
 interface UseScrollSpyOptions {
   threshold?: number
@@ -13,6 +14,11 @@ export const useScrollSpy = (
 ) => {
   const { threshold = 0.8, offset = 0 } = options
   const [activeId, setActiveId] = useState<string | null>(null)
+  const activeIdRef = useRef<string | null>(null)
+  const rafIdRef = useRef<number | null>(null)
+
+  // Get programmatic scroll state from store
+  const { isProgrammaticScroll, targetId } = useScrollStore()
 
   useEffect(() => {
     const elements = ids
@@ -28,6 +34,16 @@ export const useScrollSpy = (
     if (elements.length === 0) return
 
     const handleScroll = () => {
+      // If we're in programmatic scroll mode, don't detect intermediate elements
+      if (isProgrammaticScroll) {
+        // Only update to target if not already set
+        if (activeIdRef.current !== targetId && targetId) {
+          activeIdRef.current = targetId
+          setActiveId(targetId)
+        }
+        return
+      }
+
       const viewportCenter = window.innerHeight / 2 + offset
       const thresholdDistance = viewportCenter * threshold
 
@@ -47,18 +63,37 @@ export const useScrollSpy = (
         }
       })
 
-      if (closestId !== activeId) {
+      // Only update state if changed
+      if (closestId !== activeIdRef.current) {
+        activeIdRef.current = closestId
         setActiveId(closestId)
       }
     }
 
-    window.addEventListener('scroll', handleScroll, { passive: true })
+    const onWindowScroll = () => {
+      // Cancel previous rAF if exists
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current)
+      }
+
+      // Schedule scroll handler on next animation frame (max 60fps)
+      rafIdRef.current = requestAnimationFrame(() => {
+        handleScroll()
+        rafIdRef.current = null
+      })
+    }
+
+    window.addEventListener('scroll', onWindowScroll, { passive: true })
     handleScroll() // Call once on mount
 
     return () => {
-      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('scroll', onWindowScroll)
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current)
+      }
     }
-  }, [ids, threshold, offset, activeId])
+    // Remove activeId from dependencies - it's managed via ref
+  }, [ids, threshold, offset, isProgrammaticScroll, targetId])
 
   return activeId
 }
