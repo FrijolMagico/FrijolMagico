@@ -17,11 +17,15 @@ import { FestivalTimelineCardBacklight } from './FestivalTimelineCardBacklight'
 interface FestivalTimelineCardProps {
   festival: FestivalEdicion
   alignment?: 'left' | 'right'
+  festivalId?: string
+  isActive?: boolean
 }
 
 export const FestivalTimelineCard = ({
   festival,
   alignment = 'left',
+  festivalId,
+  isActive = false,
 }: FestivalTimelineCardProps) => {
   const { evento, resumen } = festival
 
@@ -41,6 +45,9 @@ export const FestivalTimelineCard = ({
   return (
     <div className='relative w-full max-w-160'>
       <article
+        id={festivalId}
+        data-festival-id={festivalId}
+        scroll-snap-type='start'
         className={cn(
           'group bg-fm-white outline-fm-black/20 flex flex-col overflow-hidden rounded-3xl shadow-lg outline transition-all duration-300 outline-dashed hover:shadow-xl',
           alignment === 'right' ? 'md:flex-row-reverse' : 'md:flex-row',
@@ -90,7 +97,7 @@ export const FestivalTimelineCard = ({
         />
       </article>
 
-      <FestivalTimelineCardBacklight />
+      <FestivalTimelineCardBacklight isActive={isActive} />
     </div>
   )
 }
