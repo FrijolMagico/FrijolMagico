@@ -59,3 +59,6 @@ db/backups/
 
 # database data insertion scripts (keep README and .gitkeep)
 db/data/*.sql
+
+# Turborepo
+.turbo

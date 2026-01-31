@@ -3,52 +3,26 @@
   "version": "2.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "dev:real": "DATA_SOURCE=real next dev --turbopack",
-    "build": "next build",
-    "postbuild": "next-sitemap",
-    "start": "next start",
-    "lint": "eslint src/",
-    "lint:fix": "eslint src/ --fix",
-    "db:migrate": "bun run --env-file .env.local geni up",
-    "db:rollback": "bun run --env-file .env.local geni down",
-    "db:status": "bun run --env-file .env.local geni status",
-    "db:new": "bun run --env-file .env.local geni new",
-    "db:seed": "bun run --env-file .env.local turso db shell $TURSO_DATABASE_NAME < db/seed/seed.sql"
-  },
-  "dependencies": {
-    "@gsap/react": "^2.1.2",
-    "@libsql/client": "^0.15.15",
-    "@vercel/analytics": "^1.6.1",
-    "@vercel/speed-insights": "^1.3.1",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "google-spreadsheet": "^5.0.2",
-    "gsap": "^3.14.2",
-    "lucide-react": "^0.562.0",
-    "next": "^16.1.1",
-    "next-sitemap": "^4.2.3",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
-    "react-markdown": "^10.1.0",
-    "tailwind-merge": "^3.4.0",
-    "tailwind-variants": "^3.2.2",
-    "zod": "^4.2.1",
-    "zustand": "^5.0.9"
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "dev:real": "DATA_SOURCE=real turbo run dev",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint:fix",
+    "type-check": "turbo run type-check",
+    "db:migrate": "turbo run db:migrate --filter @frijolmagico/database",
+    "db:rollback": "turbo run db:rollback --filter @frijolmagico/database",
+    "db:status": "turbo run db:status --filter @frijolmagico/database",
+    "db:new": "turbo run db:new --filter @frijolmagico/database",
+    "db:seed": "turbo run db:seed --filter @frijolmagico/database",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\" --ignore-path .gitignore"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.18",
-    "@types/node": "^25.0.3",
-    "@types/react": "^19.2.7",
-    "@types/react-dom": "^19.2.3",
-    "eslint": "^9.39.2",
-    "eslint-config-next": "16.1.1",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-jsx-a11y": "^6.10.2",
-    "prettier": "3.7.4",
-    "prettier-plugin-tailwindcss": "^0.7.2",
-    "tailwindcss": "^4.1.18",
-    "typescript": "^5.9.3"
+    "prettier": "^3.7.4",
+    "turbo": "^2.8.1"
   },
-  "packageManager": "bun@1.2.2"
+  "packageManager": "bun@1.2.2",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
 }

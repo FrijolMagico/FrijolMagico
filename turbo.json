@@ -1,0 +1,55 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [".env.local"],
+  "globalEnv": [
+    "NODE_ENV",
+    "TURSO_DATABASE_URL",
+    "TURSO_AUTH_TOKEN",
+    "DATA_SOURCE"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env.local"],
+      "outputs": [".next/**", "!.next/cache/**"],
+      "outputMode": "hash-only"
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "interactive": true
+    },
+    "lint": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "lint:fix": {
+      "cache": false,
+      "outputs": []
+    },
+    "type-check": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "db:migrate": {
+      "cache": false,
+      "env": ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN"]
+    },
+    "db:rollback": {
+      "cache": false,
+      "env": ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN"]
+    },
+    "db:status": {
+      "cache": false,
+      "env": ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN"]
+    },
+    "db:new": {
+      "cache": false,
+      "env": ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN"]
+    },
+    "db:seed": {
+      "cache": false,
+      "env": ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN"]
+    }
+  }
+}
