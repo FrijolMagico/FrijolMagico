@@ -11,8 +11,7 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env.local"],
-      "outputs": [".next/**", "!.next/cache/**"],
-      "outputMode": "hash-only"
+      "outputs": [".next/**", "!.next/cache/**"]
     },
     "dev": {
       "cache": false,
