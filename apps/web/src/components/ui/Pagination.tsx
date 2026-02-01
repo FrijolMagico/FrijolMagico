@@ -1,7 +1,7 @@
 'use client'
 
-import { cn } from '@/utils/utils'
-import { Button } from './button'
+import { cn } from '@frijolmagico/ui/cn'
+import { Button } from '@frijolmagico/ui/button'
 import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react'
 
 interface PaginationProps {
@@ -17,7 +17,7 @@ export function Pagination({
   totalItems,
   itemsPerPage,
   onPageChange,
-  className = '',
+  className = ''
 }: PaginationProps) {
   const totalPages = Math.ceil(totalItems / itemsPerPage)
 
@@ -59,9 +59,10 @@ export function Pagination({
           size='sm'
           onClick={() => onPageChange(1)}
           aria-current={1 === currentPage ? 'page' : undefined}
-          className='h-8'>
+          className='h-8'
+        >
           1
-        </Button>,
+        </Button>
       )
 
       if (startPage > 2) {
@@ -72,9 +73,10 @@ export function Pagination({
             size='sm'
             className='cursor-default'
             disabled
-            aria-hidden='true'>
+            aria-hidden='true'
+          >
             <MoreHorizontal className='h-4 w-4' />
-          </Button>,
+          </Button>
         )
       }
     }
@@ -88,9 +90,10 @@ export function Pagination({
           size='sm'
           onClick={() => onPageChange(i)}
           aria-current={i === currentPage ? 'page' : undefined}
-          className='h-8'>
+          className='h-8'
+        >
           {i}
-        </Button>,
+        </Button>
       )
     }
 
@@ -104,9 +107,10 @@ export function Pagination({
             size='sm'
             className='cursor-default'
             disabled
-            aria-hidden='true'>
+            aria-hidden='true'
+          >
             <MoreHorizontal className='h-4 w-4' />
-          </Button>,
+          </Button>
         )
       }
 
@@ -115,9 +119,10 @@ export function Pagination({
           key={totalPages}
           variant={totalPages === currentPage ? 'default' : 'ghost'}
           size='sm'
-          onClick={() => onPageChange(totalPages)}>
+          onClick={() => onPageChange(totalPages)}
+        >
           {totalPages}
-        </Button>,
+        </Button>
       )
     }
 
@@ -130,8 +135,9 @@ export function Pagination({
       aria-label='Paginación de resultados'
       className={cn(
         'flex w-full flex-col items-center justify-between gap-4 sm:flex-row',
-        className,
-      )}>
+        className
+      )}
+    >
       <div className='text-fm-dark/80 text-sm whitespace-nowrap'>
         Mostrando{' '}
         <span className='font-medium'>
@@ -148,7 +154,8 @@ export function Pagination({
           onClick={handlePrevious}
           disabled={currentPage === 1}
           aria-label='Página anterior'
-          className='h-8 w-8 p-0'>
+          className='h-8 w-8 p-0'
+        >
           <ChevronLeft className='h-4 w-4' />
         </Button>
 
@@ -160,7 +167,8 @@ export function Pagination({
           onClick={handleNext}
           disabled={currentPage === totalPages}
           aria-label='Página siguiente'
-          className='h-8 w-8 p-0'>
+          className='h-8 w-8 p-0'
+        >
           <ChevronRight className='h-4 w-4' />
         </Button>
       </div>
