@@ -19,7 +19,7 @@
   "devDependencies": {
     "prettier": "^3.7.4",
     "prettier-plugin-tailwindcss": "^0.7.2",
-    "turbo": "^2.8.1"
+    "turbo": "latest"
   },
   "packageManager": "bun@1.2.2",
   "workspaces": [
