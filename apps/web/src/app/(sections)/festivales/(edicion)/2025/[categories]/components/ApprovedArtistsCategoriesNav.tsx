@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import siteData from '@/data/site.json'
 import { cn, normalizeString } from '@/utils/utils'
-import { paths } from '@frijolmagico/config'
+import { paths } from '@/config/paths'
 
 export const ApprovedArtistsCategoriesNav = ({
   currentCategory,

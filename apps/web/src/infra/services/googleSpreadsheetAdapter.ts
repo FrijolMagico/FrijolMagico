@@ -9,7 +9,7 @@ export interface GoogleSpreadsheetConfig {
 export async function googleSpreadsheetAdapter<T = Record<string, unknown>>({
   sheetId,
   sheetIndex = 0,
-  startRow = 1,
+  startRow = 1
 }: GoogleSpreadsheetConfig): Promise<{
   data: T[] | T[][]
   error: Error | null
@@ -18,11 +18,11 @@ export async function googleSpreadsheetAdapter<T = Record<string, unknown>>({
     const apiKey = process.env.GOOGLE_API_KEY
 
     if (!sheetId || !apiKey) {
-      throw new Error('Falta configuración de Google Sheets: sheetId o apiKey.')
+      throw new Error('Falta configuracion de Google Sheets: sheetId o apiKey.')
     }
 
     const doc = new GoogleSpreadsheet(sheetId, {
-      apiKey,
+      apiKey
     })
 
     await doc.loadInfo()
@@ -58,14 +58,14 @@ export async function googleSpreadsheetAdapter<T = Record<string, unknown>>({
 
     return {
       data: [],
-      error: err,
+      error: err
     }
   }
 }
 
 export const normalizeData = (
   rows: GoogleSpreadsheetRow<Record<string, unknown>>[],
-  headers: string[],
+  headers: string[]
 ) => {
   return rows.map((row) =>
     headers.reduce(
@@ -73,7 +73,7 @@ export const normalizeData = (
         acc[header] = row.get(header)
         return acc
       },
-      {} as Record<string, unknown>,
-    ),
+      {} as Record<string, unknown>
+    )
   )
 }

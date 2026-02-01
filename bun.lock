@@ -6,6 +6,7 @@
       "name": "frijolmagico",
       "devDependencies": {
         "prettier": "^3.7.4",
+        "prettier-plugin-tailwindcss": "^0.7.2",
         "turbo": "^2.8.1",
       },
     },
@@ -13,7 +14,6 @@
       "name": "@frijolmagico/admin",
       "version": "0.0.0",
       "dependencies": {
-        "@frijolmagico/config": "*",
         "@frijolmagico/database": "*",
         "next": "^16.1.1",
         "react": "^19.2.3",
@@ -22,15 +22,12 @@
       },
       "devDependencies": {
         "@frijolmagico/eslint-config": "*",
-        "@frijolmagico/prettier-config": "*",
         "@frijolmagico/typescript-config": "*",
         "@tailwindcss/postcss": "^4.1.18",
         "@types/node": "^25.0.3",
         "@types/react": "^19.2.7",
         "@types/react-dom": "^19.2.3",
         "eslint": "^9.39.2",
-        "prettier": "^3.7.4",
-        "prettier-plugin-tailwindcss": "^0.7.2",
         "tailwindcss": "^4.1.18",
         "typescript": "^5.9.3",
       },
@@ -39,7 +36,6 @@
       "name": "@frijolmagico/web",
       "version": "2.1.0",
       "dependencies": {
-        "@frijolmagico/config": "*",
         "@frijolmagico/database": "*",
         "@gsap/react": "^2.1.2",
         "@vercel/analytics": "^1.6.1",
@@ -61,24 +57,13 @@
       },
       "devDependencies": {
         "@frijolmagico/eslint-config": "*",
-        "@frijolmagico/prettier-config": "*",
         "@frijolmagico/typescript-config": "*",
         "@tailwindcss/postcss": "^4.1.18",
         "@types/node": "^25.0.3",
         "@types/react": "^19.2.7",
         "@types/react-dom": "^19.2.3",
         "eslint": "^9.39.2",
-        "prettier": "^3.7.4",
-        "prettier-plugin-tailwindcss": "^0.7.2",
         "tailwindcss": "^4.1.18",
-        "typescript": "^5.9.3",
-      },
-    },
-    "packages/config": {
-      "name": "@frijolmagico/config",
-      "version": "0.0.0",
-      "devDependencies": {
-        "@frijolmagico/typescript-config": "*",
         "typescript": "^5.9.3",
       },
     },
@@ -100,10 +85,6 @@
       "dependencies": {
         "eslint-config-prettier": "^10.1.8",
       },
-    },
-    "packages/prettier-config": {
-      "name": "@frijolmagico/prettier-config",
-      "version": "0.0.0",
     },
     "packages/typescript-config": {
       "name": "@frijolmagico/typescript-config",
@@ -137,13 +118,9 @@
 
     "@frijolmagico/admin": ["@frijolmagico/admin@workspace:apps/admin"],
 
-    "@frijolmagico/config": ["@frijolmagico/config@workspace:packages/config"],
-
     "@frijolmagico/database": ["@frijolmagico/database@workspace:packages/database"],
 
     "@frijolmagico/eslint-config": ["@frijolmagico/eslint-config@workspace:packages/eslint-config"],
-
-    "@frijolmagico/prettier-config": ["@frijolmagico/prettier-config@workspace:packages/prettier-config"],
 
     "@frijolmagico/typescript-config": ["@frijolmagico/typescript-config@workspace:packages/typescript-config"],
 

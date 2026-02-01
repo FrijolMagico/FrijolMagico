@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { DoodleLine } from '@/components/DoodleLine'
 import Link from 'next/link'
-import { paths } from '@frijolmagico/config'
+import { paths } from '@/config/paths'
 import { NewBadget } from './NewBadget'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'

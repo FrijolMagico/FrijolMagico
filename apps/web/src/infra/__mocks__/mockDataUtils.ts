@@ -8,7 +8,7 @@ const adjectives = [
   'colorido',
   'mágico',
   'artístico',
-  'expresivo',
+  'expresivo'
 ]
 
 const names = [
@@ -31,7 +31,7 @@ const names = [
   'Cristóbal',
   'Alejandro',
   'Camila',
-  'Martín',
+  'Martín'
 ]
 
 const lastNames = [
@@ -54,7 +54,7 @@ const lastNames = [
   'Muñoz',
   'Sánchez',
   'Paz',
-  'Alejandra',
+  'Alejandra'
 ]
 
 export function getRandomName() {

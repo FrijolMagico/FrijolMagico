@@ -1,12 +1,12 @@
 import {
   googleSpreadsheetAdapter,
-  GoogleSpreadsheetConfig,
+  GoogleSpreadsheetConfig
 } from './services/googleSpreadsheetAdapter'
 
 export type CMSConfig = GoogleSpreadsheetConfig
 
 export async function getDataFromCMS<T>(
-  config: CMSConfig,
+  config: CMSConfig
 ): Promise<T[] | T[][]> {
   try {
     const { data, error } = await googleSpreadsheetAdapter<T>(config)

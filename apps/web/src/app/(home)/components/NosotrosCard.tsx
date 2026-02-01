@@ -1,4 +1,4 @@
-import { paths } from '@frijolmagico/config'
+import { paths } from '@/config/paths'
 import { ArrowUpRight } from 'lucide-react'
 import Link from 'next/link'
 

@@ -3,7 +3,7 @@ import { Grid } from '@/components/Grid'
 import { FestivalHeader } from './components/FestivalHeader'
 import { GridItem } from '@/components/GridItem'
 import { FestivalCard } from './components/FestivalCard'
-import { paths } from '@frijolmagico/config'
+import { paths } from '@/config/paths'
 import { SectionHomeButton } from '@/components/SectionsHomeButton'
 import { TrackPageView } from '@/components/analytics/TrackPageView'
 
