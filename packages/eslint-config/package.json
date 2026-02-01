@@ -1,14 +1,26 @@
 {
   "name": "@frijolmagico/eslint-config",
-  "version": "0.0.0",
-  "private": true,
   "type": "module",
+  "private": true,
   "main": "base.js",
   "files": [
     "base.js",
-    "next.js"
+    "base.d.ts",
+    "next.js",
+    "next.d.ts"
   ],
+  "exports": {
+    "./base": {
+      "types": "./base.d.ts",
+      "default": "./base.js"
+    },
+    "./next": {
+      "types": "./next.d.ts",
+      "default": "./next.js"
+    }
+  },
   "dependencies": {
-    "eslint-config-prettier": "^10.1.8"
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-config-next": "16.1.1"
   }
 }
