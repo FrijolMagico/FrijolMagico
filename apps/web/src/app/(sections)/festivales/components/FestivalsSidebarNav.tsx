@@ -27,7 +27,7 @@ export const FestivalsSidebarNav = ({ items }: FestivalsSidebarNavProps) => {
     if (activeItemRef.current) {
       activeItemRef.current.scrollIntoView({
         behavior: 'smooth',
-        block: 'nearest',
+        block: 'nearest'
       })
     }
   }, [activeId])
@@ -35,18 +35,20 @@ export const FestivalsSidebarNav = ({ items }: FestivalsSidebarNavProps) => {
   return (
     <nav
       className='sticky top-8 flex flex-col gap-2 p-1'
-      aria-label='Timeline navigation'>
+      aria-label='Timeline navigation'
+    >
       {/* "Ahora" indicator - top */}
       <div className='flex flex-col gap-1 rounded-lg px-3 text-left'>
         <div
           className={cn(
             'flex items-center gap-2',
-            activeId ? 'text-fm-black' : 'text-fm-orange',
-          )}>
+            activeId ? 'text-fm-black' : 'text-fm-orange'
+          )}
+        >
           <div
             className={cn(
               'size-2 shrink-0 rounded-full',
-              activeId ? 'bg-fm-black/50' : 'bg-fm-orange/50',
+              activeId ? 'bg-fm-black/50' : 'bg-fm-orange/50'
             )}
             aria-hidden='true'
           />
@@ -77,8 +79,9 @@ export const FestivalsSidebarNav = ({ items }: FestivalsSidebarNavProps) => {
               isActive &&
                 (isOrangeEvent
                   ? 'bg-fm-orange/20 outline-fm-orange'
-                  : 'bg-fm-green/20 outline-fm-green'),
-            )}>
+                  : 'bg-fm-green/20 outline-fm-green')
+            )}
+          >
             {/* Active indicator dot */}
             <div
               className={cn(
@@ -87,7 +90,7 @@ export const FestivalsSidebarNav = ({ items }: FestivalsSidebarNavProps) => {
                   ? isOrangeEvent
                     ? 'bg-fm-orange scale-100'
                     : 'bg-fm-green scale-100'
-                  : 'bg-fm-black/20 scale-75',
+                  : 'bg-fm-black/20 scale-75'
               )}
               aria-hidden='true'
             />
@@ -101,8 +104,9 @@ export const FestivalsSidebarNav = ({ items }: FestivalsSidebarNavProps) => {
                     ? isOrangeEvent
                       ? 'text-fm-orange'
                       : 'text-fm-green'
-                    : 'text-fm-black/50 group-hover:text-fm-black/70',
-                )}>
+                    : 'text-fm-black/50 group-hover:text-fm-black/70'
+                )}
+              >
                 {item.nombre} <strong>{item.edicion}</strong>
               </span>
             </div>
