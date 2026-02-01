@@ -1,7 +1,7 @@
 'use client'
 
 import { LogoHomeLink } from '@/components/LogoHomeLink'
-import { cn } from '@/utils/utils'
+import { cn } from '@frijolmagico/ui/cn'
 
 export const SectionHomeButton = () => {
   return (

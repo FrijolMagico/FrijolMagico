@@ -7,7 +7,7 @@ import { SpotifyCard } from '@/app/(home)/components/SpotifyCard'
 import { RRSSCard } from '@/app/(home)/components/RRSSCard'
 import { BackToTop } from './BackToTop'
 import { paths } from '@/config/paths'
-import { cn } from '@/utils/utils'
+import { cn } from '@frijolmagico/ui/cn'
 
 interface FooterProps {
   doodleColor?: string
@@ -21,13 +21,16 @@ export const Footer = ({ doodleColor = 'text-fm-green' }: FooterProps) => {
       <Grid
         row={{ base: 6, sm: 4, lg: 4 }}
         col={{ base: 1, sm: 6, lg: 8 }}
-        className='gap-2 pt-4 sm:gap-4'>
+        className='gap-2 pt-4 sm:gap-4'
+      >
         <GridItem
           row={{ base: 2, sm: 2, lg: 2 }}
-          col={{ base: 1, sm: 4, lg: 6 }}>
+          col={{ base: 1, sm: 4, lg: 6 }}
+        >
           <Link
             href={paths.home}
-            className='bg-flexible-dark group relative grid size-full place-items-center overflow-hidden rounded-2xl text-center'>
+            className='bg-flexible-dark group relative grid size-full place-items-center overflow-hidden rounded-2xl text-center'
+          >
             <Image
               src='/images/enredadera.png'
               alt='Frijol Mágico'
@@ -44,7 +47,8 @@ export const Footer = ({ doodleColor = 'text-fm-green' }: FooterProps) => {
 
         <GridItem
           row={{ base: 2, sm: 2, lg: 3 }}
-          col={{ base: 1, sm: 2, lg: 2 }}>
+          col={{ base: 1, sm: 2, lg: 2 }}
+        >
           <SpotifyCard />
         </GridItem>
 
@@ -64,7 +68,8 @@ export const Footer = ({ doodleColor = 'text-fm-green' }: FooterProps) => {
 
             <Link
               href='https://github.com/Strocs'
-              className='hover:text-flexible-orange text-flexible-green text-center text-sm transition duration-150'>
+              className='hover:text-flexible-orange text-flexible-green text-center text-sm transition duration-150'
+            >
               Desarrollado con ❤ por StrocsDev
             </Link>
           </div>

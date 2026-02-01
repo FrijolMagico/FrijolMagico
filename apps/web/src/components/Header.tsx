@@ -1,6 +1,6 @@
 import ReactMarkdown from 'react-markdown'
 import { DoodleLine } from './DoodleLine'
-import { cn } from '@/utils/utils'
+import { cn } from '@frijolmagico/ui/cn'
 
 export const Header = ({
   title,

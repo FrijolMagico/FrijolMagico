@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import siteData from '@/data/site.json'
-import { cn } from '@/utils/utils'
+import { cn } from '@frijolmagico/ui/cn'
 import { paths } from '@/config/paths'
 const { top_bar } = siteData
 
