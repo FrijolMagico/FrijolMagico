@@ -1,4 +1,4 @@
-import { normalizeString } from '@/utils/utils'
+import { normalizeString } from '@frijolmagico/utils/string'
 import { CatalogArtist } from '../types/catalog'
 import { CatalogFilterValues } from '../types/filters'
 
@@ -16,7 +16,7 @@ type FilterableKey = 'city' | 'country' | 'category'
 // Get unique filter options for the given key
 export const getFiltersData = (
   catalog: CatalogArtist[],
-  key: FilterableKey,
+  key: FilterableKey
 ): { value: string }[] => {
   const uniqueValues = new Set<string>()
 
@@ -35,7 +35,7 @@ export const getFiltersData = (
 // Filter catalog based on search and filters
 export const filterCatalog = (
   catalog: CatalogArtist[],
-  filters: CatalogFilterValues,
+  filters: CatalogFilterValues
 ): CatalogArtist[] => {
   const searchValue = filters.search
   const normalizedSearch = normalizeString(searchValue)

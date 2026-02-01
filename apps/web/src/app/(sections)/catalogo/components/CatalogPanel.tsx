@@ -6,7 +6,8 @@ import { Instagram, Mail, X } from 'lucide-react'
 import Markdown from 'react-markdown'
 
 import { useCatalogPanelStore } from '../store/useCatalogPanelStore'
-import { getInstagramUserTag, cn } from '@/utils/utils'
+import { cn } from '@frijolmagico/ui/cn'
+import { getInstagramUserTag } from '@frijolmagico/utils/string'
 import { useAnalytics } from '@/components/analytics/useAnalytics'
 
 import type { CatalogArtist } from '../types/catalog'

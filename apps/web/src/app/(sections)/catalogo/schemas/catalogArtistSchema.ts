@@ -5,7 +5,7 @@ import { getDisciplineLabel } from '@/app/(sections)/adapters/mappers/discipline
 import {
   CatalogArtistFromDBSchema,
   CollectiveParticipationSchema,
-  EditionParticipationSchema,
+  EditionParticipationSchema
 } from './catalogDBSchema'
 
 const CDN_BASE_URL = process.env.CDN_URL ?? ''
@@ -35,9 +35,9 @@ export const CollectiveSchema = z
     members: z.array(
       z.object({
         id: z.string(),
-        name: z.string(),
-      }),
-    ),
+        name: z.string()
+      })
+    )
   })
   .nullable()
 
@@ -65,8 +65,8 @@ export const CatalogArtistSchema = CatalogArtistFromDBSchema.transform(
     category: data.category ? getDisciplineLabel(data.category) : null,
     collective: data.collective,
     collectives: data.collectives,
-    editions: data.editions,
-  }),
+    editions: data.editions
+  })
 )
 
 export { CollectiveParticipationSchema, EditionParticipationSchema }

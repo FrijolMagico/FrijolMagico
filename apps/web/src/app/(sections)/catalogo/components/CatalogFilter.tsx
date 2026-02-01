@@ -1,6 +1,6 @@
 import { Check, PlusCircle } from 'lucide-react'
 import { useRef, useEffect } from 'react'
-import { normalizeString } from '@/utils/utils'
+import { normalizeString } from '@frijolmagico/utils/string'
 import { CatalogSelectionFilterKey } from '../types/filters'
 
 interface Option {

@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react'
 
 import { CatalogFilter } from './CatalogFilter'
-import { normalizeString } from '@/utils/utils'
+import { normalizeString } from '@frijolmagico/utils/string'
 import { useCatalogFiltersStore } from '../store/useCatalogFiltersStore'
 import { CatalogFiltersBarLoader } from './CatalogSkeletonLoaders'
 import { urlHasFilters } from '../utils/urlFilters'

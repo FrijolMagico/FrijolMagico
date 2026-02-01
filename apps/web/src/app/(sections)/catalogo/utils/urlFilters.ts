@@ -1,4 +1,4 @@
-import { normalizeString } from '@/utils/utils'
+import { normalizeString } from '@frijolmagico/utils/string'
 import type { CatalogFilterValues } from '../types/filters'
 import { FILTER_KEYS } from '../constants/filterConstants'
 

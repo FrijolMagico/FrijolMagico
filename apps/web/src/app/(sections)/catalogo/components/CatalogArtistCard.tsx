@@ -4,7 +4,7 @@ import Image from 'next/image'
 import type { CatalogArtist } from '../types/catalog'
 import { Instagram, Mail } from 'lucide-react'
 import { useCatalogPanelStore } from '../store/useCatalogPanelStore'
-import { cn } from '@/utils/utils'
+import { cn } from '@frijolmagico/ui/cn'
 
 export const CatalogArtistCard = ({
   id,

@@ -1,6 +1,6 @@
 import { unstable_cache } from 'next/cache'
 
-import { formatUrlWithoutQuery } from '@/utils/utils'
+import { formatUrlWithoutQuery } from '@frijolmagico/utils/url'
 import { catalogRepository } from '../adapters/catalogRepository'
 
 import type { CatalogArtist } from '../types/catalog'
