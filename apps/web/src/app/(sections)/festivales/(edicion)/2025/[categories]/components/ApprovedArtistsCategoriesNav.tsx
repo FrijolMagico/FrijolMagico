@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import siteData from '@/data/site.json'
-import { cn, normalizeString } from '@frijolmagico/ui/cn'
+import { cn } from '@frijolmagico/ui/cn'
 import { paths } from '@/config/paths'
+import { normalizeString } from '@frijolmagico/utils/string'
 
 export const ApprovedArtistsCategoriesNav = ({
-  currentCategory,
+  currentCategory
 }: {
   currentCategory: string
 }) => {
@@ -18,8 +19,8 @@ export const ApprovedArtistsCategoriesNav = ({
             'font-superfortress bg-2025-white text-2025-orange outline-2025-orange rounded-lg px-4 py-1 leading-none font-light outline transition duration-300 outline-dashed md:px-6 md:text-xl md:hover:scale-105',
             {
               'bg-2025-orange text-fm-white outline-none md:scale-110':
-                normalizeString(category) === currentCategory,
-            },
+                normalizeString(category) === currentCategory
+            }
           )}
           href={
             paths.festival[2025][
@@ -29,7 +30,8 @@ export const ApprovedArtistsCategoriesNav = ({
                 | 'narrativagrafica'
             ]
           }
-          aria-label={`Ir a la categoría ${category}`}>
+          aria-label={`Ir a la categoría ${category}`}
+        >
           {category}
         </Link>
       ))}
