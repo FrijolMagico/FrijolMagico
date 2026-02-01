@@ -1,6 +1,6 @@
 {
   "name": "@frijolmagico/admin",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack --port 3001",
@@ -12,6 +12,9 @@
   },
   "dependencies": {
     "@frijolmagico/database": "*",
+    "@frijolmagico/tailwind-config": "workspace:*",
+    "@frijolmagico/ui": "workspace:*",
+    "@frijolmagico/utils": "workspace:*",
     "next": "^16.1.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
