@@ -3,7 +3,7 @@
  * Add domain-specific types here as needed
  */
 
-export interface DatabaseConfig {
+export interface TursoConfig {
   url: string
   authToken?: string
 }

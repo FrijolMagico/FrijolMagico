@@ -2,15 +2,11 @@ import {
   createClient,
   type Client,
   type ResultSet,
-  type InValue,
+  type InValue
 } from '@libsql/client'
+import { TursoConfig } from './types'
 
 let client: Client | null = null
-
-export interface TursoConfig {
-  url?: string
-  authToken?: string
-}
 
 /**
  * Get or create a Turso database client
@@ -25,7 +21,7 @@ export function getTursoClient(config?: TursoConfig): Client {
 
   if (!url) {
     throw new Error(
-      'Missing Turso database URL. Set TURSO_DATABASE_URL environment variable.',
+      'Missing Turso database URL. Set TURSO_DATABASE_URL environment variable.'
     )
   }
 
@@ -33,7 +29,7 @@ export function getTursoClient(config?: TursoConfig): Client {
 
   client = createClient({
     url,
-    authToken,
+    authToken
   })
 
   return client
@@ -44,7 +40,7 @@ export function getTursoClient(config?: TursoConfig): Client {
  */
 export async function executeQuery<T = Record<string, unknown>>(
   sql: string,
-  params: InValue[] = [],
+  params: InValue[] = []
 ): Promise<{ data: T[]; error: Error | null }> {
   try {
     const db = getTursoClient()
@@ -68,7 +64,7 @@ export async function executeQuery<T = Record<string, unknown>>(
  * Execute multiple SQL statements in a batch
  */
 export async function executeBatch(
-  statements: { sql: string; params?: InValue[] }[],
+  statements: { sql: string; params?: InValue[] }[]
 ): Promise<{ success: boolean; error: Error | null }> {
   try {
     const db = getTursoClient()
@@ -76,8 +72,8 @@ export async function executeBatch(
     await db.batch(
       statements.map((stmt) => ({
         sql: stmt.sql,
-        args: stmt.params || [],
-      })),
+        args: stmt.params || []
+      }))
     )
 
     return { success: true, error: null }
@@ -91,7 +87,7 @@ export async function executeBatch(
  */
 export async function executeInsert(
   sql: string,
-  params: InValue[] = [],
+  params: InValue[] = []
 ): Promise<{ lastInsertRowid: bigint | undefined; error: Error | null }> {
   try {
     const db = getTursoClient()
