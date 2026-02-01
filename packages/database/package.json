@@ -1,6 +1,5 @@
 {
   "name": "@frijolmagico/database",
-  "version": "0.0.0",
   "private": true,
   "type": "module",
   "exports": {
@@ -18,11 +17,11 @@
     }
   },
   "scripts": {
-    "db:migrate": "bun run --env-file ../../.env.local geni up",
-    "db:rollback": "bun run --env-file ../../.env.local geni down",
-    "db:status": "bun run --env-file ../../.env.local geni status",
-    "db:new": "bun run --env-file ../../.env.local geni new",
-    "db:seed": "bun run --env-file ../../.env.local turso db shell $TURSO_DATABASE_NAME < seed/seed.sql",
+    "db:migrate": "bun run --env-file .env.local geni up",
+    "db:rollback": "bun run --env-file .env.local geni down",
+    "db:status": "bun run --env-file .env.local geni status",
+    "db:new": "bun run --env-file .env.local geni new",
+    "db:seed": "bun run --env-file .env.local turso db shell $TURSO_DATABASE_NAME < seed/seed.sql",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
@@ -30,7 +29,7 @@
     "zod": "^4.2.1"
   },
   "devDependencies": {
-    "@frijolmagico/typescript-config": "*",
+    "@frijolmagico/typescript-config": "workspace:*",
     "typescript": "^5.9.3"
   }
 }
