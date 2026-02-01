@@ -1,4 +1,4 @@
-import { cn } from '@/utils/utils'
+import { cn } from '@frijolmagico/ui/cn'
 
 export const NewBadget = ({
   color = 'text-fm-orange',

@@ -10,7 +10,7 @@ import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 
-import { cn } from '@/utils/utils'
+import { cn } from '@frijolmagico/ui/cn'
 
 const SITE = siteData
 
