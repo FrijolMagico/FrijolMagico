@@ -1,7 +1,12 @@
 {
-  "extends": "@frijolmagico/typescript-config/nextjs.json",
+  "extends": "@frijolmagico/typescript-config/next",
   "compilerOptions": {
-    "baseUrl": "."
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    }
   },
   "include": [
     "next-env.d.ts",
