@@ -1,4 +1,4 @@
-import { cn } from '@/utils/utils'
+import { cn } from '@frijolmagico/ui/cn'
 import Image from 'next/image'
 
 interface FestivalPosterProps {

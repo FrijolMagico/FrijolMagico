@@ -1,6 +1,6 @@
 'use client'
 
-import { formatUrl } from '@/utils/utils'
+import { formatUrl } from '@frijolmagico/utils/url'
 import { ApprovedArtist } from '../types'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'

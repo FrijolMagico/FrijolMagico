@@ -1,6 +1,6 @@
 'use client'
 
-import { cn } from '@/utils/utils'
+import { cn } from '@frijolmagico/ui/cn'
 import { usePosterDominantColor } from '@/hooks/usePosterDominantColor'
 
 interface FestivalTimelineCardBacklightProps {

@@ -1,4 +1,4 @@
-import { cn } from '@/utils/utils'
+import { cn } from '@frijolmagico/ui/cn'
 import { Ticket, Music, LucideIcon } from 'lucide-react'
 
 interface FestivalFooterStatsProps {

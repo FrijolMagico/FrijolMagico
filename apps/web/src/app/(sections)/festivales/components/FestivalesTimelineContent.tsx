@@ -3,7 +3,7 @@ import { TimelineConnector } from './TimelineConnector'
 import { FestivalsSidebarNav } from './FestivalsSidebarNav'
 
 import type { FestivalEdicion } from '../types/festival'
-import { cn } from '@/utils/utils'
+import { cn } from '@frijolmagico/ui/cn'
 
 interface FestivalesTimelineContentProps {
   festivales: FestivalEdicion[]

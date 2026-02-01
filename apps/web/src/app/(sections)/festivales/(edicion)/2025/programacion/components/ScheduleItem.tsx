@@ -1,4 +1,4 @@
-import { cn } from '@/utils/utils'
+import { cn } from '@frijolmagico/ui/cn'
 import { type AppSchedule as ScheduleItemProps } from '../types/schedule'
 import { ScheduleItemLabel } from './SchceduleItemLabel'
 import { ScheduleSpeakerName } from './ScheduleSpeakerName'
