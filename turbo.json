@@ -10,6 +10,7 @@
       "dependsOn": ["^build"],
       "env": [
         "TURSO_DATABASE_URL",
+        "TURSO_DATABASE_NAME",
         "TURSO_AUTH_TOKEN",
         "GOOGLE_API_KEY",
         "CATALOG_SHEET_ID",
