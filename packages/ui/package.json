@@ -1,0 +1,14 @@
+{
+  "name": "@frijolmagico/ui",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./button": "./components/button.tsx",
+    "./cn": "./utils/cn.ts"
+  },
+  "files": [
+    "components/",
+    "utils/"
+  ]
+}

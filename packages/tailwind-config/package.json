@@ -1,0 +1,15 @@
+{
+  "name": "@frijolmagico/tailwind-config",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./css": "./globals.css",
+    "./palettes/base": "./palettes/base.css",
+    "./palettes/2025": "./palettes/festivales-2025.css"
+  },
+  "files": [
+    "globals.css",
+    "palettes/"
+  ]
+}

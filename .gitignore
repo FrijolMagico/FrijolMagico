@@ -16,10 +16,13 @@ package-lock.json
 
 # public files that are generated
 /public/*.xml
+apps/*/public/*.xml
+**/public/sitemap*.xml
 
 # next.js
 /.next/
 /out/
+apps/*/.next/
 
 # production
 /build
@@ -53,9 +56,14 @@ next-env.d.ts
 
 tmp/
 local.db
+dump.sql
 
 # database backups
 db/backups/
 
 # database data insertion scripts (keep README and .gitkeep)
 db/data/*.sql
+packages/database/data/*.sql
+
+# Turborepo
+.turbo

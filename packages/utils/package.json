@@ -1,0 +1,16 @@
+{
+  "name": "@frijolmagico/utils",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./string": "./string.ts",
+    "./url": "./url.ts",
+    "./css": "./css.ts"
+  },
+  "files": [
+    "string.ts",
+    "url.ts",
+    "css.ts"
+  ]
+}
