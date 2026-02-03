@@ -1,4 +1,4 @@
-import { executeQuery } from '@frijolmagico/database'
+import { executeQuery } from '@frijolmagico/database/client'
 import { getDataSource } from '@/infra/config/dataSourceConfig'
 import { mapFestivalEdicion } from './mappers/festivalMapper'
 import { getFestivalesMock } from './mocks/festivalesData.mock'
@@ -12,13 +12,13 @@ export async function festivalesRepository(): Promise<FestivalEdicion[]> {
   if (source === 'local' || source === 'database') {
     const { data, error } = await executeQuery<RawFestivalEdicion>(
       FESTIVALES_QUERY,
-      [],
+      []
     )
 
     if (error) {
       console.warn(
         '⚠️ Database query failed, falling back to mock data:',
-        error.message,
+        error.message
       )
       return getFestivalesMock().map(mapFestivalEdicion)
     }

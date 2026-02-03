@@ -1,4 +1,4 @@
-import { executeQuery } from '@frijolmagico/database'
+import { executeQuery } from '@frijolmagico/database/client'
 import { getDataSource } from '@/infra/config/dataSourceConfig'
 
 import { getAboutDataMock } from './mocks/aboutData.mock'
@@ -17,13 +17,13 @@ export async function aboutRepository(): Promise<AboutData | null> {
   if (source === 'local' || source === 'database') {
     const { data, error } = await executeQuery<AboutData>(
       'SELECT id, nombre, descripcion, mision, vision FROM organizacion WHERE id = ?',
-      [ORGANIZATION_ID],
+      [ORGANIZATION_ID]
     )
 
     if (error) {
       console.warn(
         '⚠️ Database query failed, falling back to mock data:',
-        error.message,
+        error.message
       )
       return getAboutDataMock()
     }

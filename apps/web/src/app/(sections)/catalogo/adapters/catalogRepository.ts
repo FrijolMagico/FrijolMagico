@@ -1,4 +1,4 @@
-import { executeQuery } from '@frijolmagico/database'
+import { executeQuery } from '@frijolmagico/database/client'
 import { getDataSource } from '@/infra/config/dataSourceConfig'
 
 import { mapCatalogArtists } from './mappers/catalogMapper'
@@ -14,13 +14,13 @@ export async function catalogRepository(): Promise<CatalogArtist[]> {
   if (source === 'local' || source === 'database') {
     const { data, error } = await executeQuery<RawCatalogResult>(
       CATALOG_QUERY,
-      [],
+      []
     )
 
     if (error) {
       console.warn(
         '⚠️ Database query failed, falling back to mock data:',
-        error.message,
+        error.message
       )
       return getDataFromCatalogMock()
     }
@@ -31,7 +31,7 @@ export async function catalogRepository(): Promise<CatalogArtist[]> {
     }
 
     const parsedData = data.map((row: RawCatalogResult) =>
-      JSON.parse(row.resultado),
+      JSON.parse(row.resultado)
     )
     return mapCatalogArtists(parsedData)
   }
