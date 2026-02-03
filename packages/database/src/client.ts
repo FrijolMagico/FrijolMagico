@@ -4,9 +4,13 @@ import {
   type ResultSet,
   type InValue
 } from '@libsql/client'
-import { TursoConfig } from './types'
 
 let client: Client | null = null
+
+export interface TursoConfig {
+  url: string
+  authToken?: string
+}
 
 /**
  * Get or create a Turso database client

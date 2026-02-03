@@ -1,3 +1,5 @@
+-- Custom SQL migration file, put your code below! --
+
 -- Migración: 004_participante
 -- Descripción: Tablas del dominio participantes
 
@@ -9,7 +11,7 @@ CREATE TABLE IF NOT EXISTS tipo_actividad (
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-
+--> statement-breakpoint
 
 CREATE TABLE IF NOT EXISTS modo_ingreso (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -18,6 +20,7 @@ CREATE TABLE IF NOT EXISTS modo_ingreso (
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+--> statement-breakpoint
 
 
 -- evento_edicion_participante (SIN modo_ingreso - movido a tablas hijas)
@@ -43,6 +46,7 @@ CREATE TABLE IF NOT EXISTS evento_edicion_participante (
         )
     )
 );
+--> statement-breakpoint
 
 
 -- participante_exposicion 
@@ -73,6 +77,7 @@ CREATE TABLE IF NOT EXISTS participante_exposicion (
     CONSTRAINT chk_exposicion_estado
         CHECK (estado IN ('seleccionado', 'confirmado', 'desistido', 'cancelado', 'ausente', 'completado'))
 );
+--> statement-breakpoint
 
 -- participante_actividad (CON modo_ingreso_id)
 CREATE TABLE IF NOT EXISTS participante_actividad (
@@ -108,6 +113,7 @@ CREATE TABLE IF NOT EXISTS participante_actividad (
     CONSTRAINT chk_actividad_estado
         CHECK (estado IN ('seleccionado', 'confirmado', 'desistido', 'cancelado', 'ausente', 'completado'))
 );
+--> statement-breakpoint
 
 -- actividad (CON cupos)
 CREATE TABLE IF NOT EXISTS actividad (
@@ -125,40 +131,64 @@ CREATE TABLE IF NOT EXISTS actividad (
     CONSTRAINT fk_actividad_participante_actividad  FOREIGN KEY (participante_actividad_id) REFERENCES participante_actividad (id) ON DELETE CASCADE,
     CONSTRAINT chk_actividad_duracion CHECK (duracion_minutos IS NULL OR duracion_minutos > 0)
 );
+--> statement-breakpoint
 
 
 -- INDEXES
 CREATE INDEX IF NOT EXISTS idx_participante_evento_edicion ON evento_edicion_participante (evento_edicion_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_participante_artista ON evento_edicion_participante (artista_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_participante_estado ON evento_edicion_participante (estado);
+--> statement-breakpoint
 
 
 CREATE INDEX IF NOT EXISTS idx_exposicion_artista ON participante_exposicion (artista_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_exposicion_evento_edicion ON participante_exposicion (evento_edicion_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_exposicion_postulacion ON participante_exposicion (postulacion_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_exposicion_participante ON participante_exposicion (participante_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_exposicion_estado ON participante_exposicion (estado);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_exposicion_disciplina ON participante_exposicion (disciplina_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_exposicion_agrupacion ON participante_exposicion (agrupacion_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_exposicion_modo_ingreso ON participante_exposicion (modo_ingreso_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_exposicion_puntaje ON participante_exposicion (puntaje DESC) WHERE puntaje IS NOT NULL;
+--> statement-breakpoint
 
 
 CREATE INDEX IF NOT EXISTS idx_actividad_artista ON participante_actividad (artista_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_actividad_evento_edicion ON participante_actividad (evento_edicion_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_actividad_postulacion ON participante_actividad (postulacion_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_actividad_participante ON participante_actividad (participante_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_actividad_estado ON participante_actividad (estado);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_actividad_tipo_actividad ON participante_actividad (tipo_actividad_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_actividad_agrupacion ON participante_actividad (agrupacion_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_actividad_modo_ingreso ON participante_actividad (modo_ingreso_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_actividad_puntaje ON participante_actividad (puntaje DESC) WHERE puntaje IS NOT NULL;
+--> statement-breakpoint
 
 CREATE INDEX IF NOT EXISTS idx_actividad_participante_actividad ON actividad (participante_actividad_id);
+--> statement-breakpoint
 
 -- TRIGGERS: updated_at (non-recursive pattern)
 
 DROP TRIGGER IF EXISTS trg_tipo_actividad_updated_at;
+--> statement-breakpoint
 CREATE TRIGGER trg_tipo_actividad_updated_at
 BEFORE UPDATE ON tipo_actividad
 FOR EACH ROW
@@ -166,10 +196,12 @@ WHEN OLD.updated_at IS DISTINCT FROM NEW.updated_at OR NEW.updated_at IS NULL
 BEGIN
     SELECT RAISE(IGNORE) WHERE NEW.updated_at IS NOT NULL AND NEW.updated_at != CURRENT_TIMESTAMP;
 END;
+--> statement-breakpoint
 
 -- Note: BEFORE UPDATE cannot modify NEW row in all SQLite versions reliably.
 -- Alternative pattern (AFTER UPDATE with guard clause):
 DROP TRIGGER IF EXISTS trg_tipo_actividad_updated_at;
+--> statement-breakpoint
 CREATE TRIGGER trg_tipo_actividad_updated_at
 AFTER UPDATE ON tipo_actividad
 FOR EACH ROW
@@ -177,8 +209,10 @@ WHEN OLD.updated_at != NEW.updated_at
 BEGIN
     UPDATE tipo_actividad SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = NEW.updated_at;
 END;
+--> statement-breakpoint
 
 DROP TRIGGER IF EXISTS trg_modo_ingreso_updated_at;
+--> statement-breakpoint
 CREATE TRIGGER trg_modo_ingreso_updated_at
 AFTER UPDATE ON modo_ingreso
 FOR EACH ROW
@@ -186,8 +220,10 @@ WHEN OLD.updated_at != NEW.updated_at
 BEGIN
     UPDATE modo_ingreso SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = NEW.updated_at;
 END;
+--> statement-breakpoint
 
 DROP TRIGGER IF EXISTS trg_evento_edicion_participante_updated_at;
+--> statement-breakpoint
 CREATE TRIGGER trg_evento_edicion_participante_updated_at
 AFTER UPDATE ON evento_edicion_participante
 FOR EACH ROW
@@ -195,8 +231,10 @@ WHEN OLD.updated_at != NEW.updated_at
 BEGIN
     UPDATE evento_edicion_participante SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = NEW.updated_at;
 END;
+--> statement-breakpoint
 
 DROP TRIGGER IF EXISTS trg_participante_exposicion_updated_at;
+--> statement-breakpoint
 CREATE TRIGGER trg_participante_exposicion_updated_at
 AFTER UPDATE ON participante_exposicion
 FOR EACH ROW
@@ -204,8 +242,10 @@ WHEN OLD.updated_at != NEW.updated_at
 BEGIN
     UPDATE participante_exposicion SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = NEW.updated_at;
 END;
+--> statement-breakpoint
 
 DROP TRIGGER IF EXISTS trg_participante_actividad_updated_at;
+--> statement-breakpoint
 CREATE TRIGGER trg_participante_actividad_updated_at
 AFTER UPDATE ON participante_actividad
 FOR EACH ROW
@@ -213,8 +253,10 @@ WHEN OLD.updated_at != NEW.updated_at
 BEGIN
     UPDATE participante_actividad SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = NEW.updated_at;
 END;
+--> statement-breakpoint
 
 DROP TRIGGER IF EXISTS trg_actividad_updated_at;
+--> statement-breakpoint
 CREATE TRIGGER trg_actividad_updated_at
 AFTER UPDATE ON actividad
 FOR EACH ROW
@@ -222,6 +264,7 @@ WHEN OLD.updated_at != NEW.updated_at
 BEGIN
     UPDATE actividad SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = NEW.updated_at;
 END;
+--> statement-breakpoint
 
 
 -- ============================================
@@ -233,6 +276,7 @@ END;
 
 -- Triggers: cascade cancel
 DROP TRIGGER IF EXISTS trg_cascade_cancel_to_exposicion;
+--> statement-breakpoint
 CREATE TRIGGER trg_cascade_cancel_to_exposicion
 AFTER UPDATE ON evento_edicion_participante
 FOR EACH ROW
@@ -250,11 +294,13 @@ BEGIN
     WHERE participante_id = NEW.id
       AND estado NOT IN ('cancelado', 'desistido', 'ausente', 'completado');
 END;
+--> statement-breakpoint
 
 -- Triggers: veto prevention on insert
 -- Consistent logic: prevent insertion of vetoed artists unless estado = 'completado'
 -- This ensures consistent behavior across both exposicion and actividad tables
 DROP TRIGGER IF EXISTS trg_prevent_vetado_exposicion;
+--> statement-breakpoint
 CREATE TRIGGER trg_prevent_vetado_exposicion
 BEFORE INSERT ON participante_exposicion
 FOR EACH ROW
@@ -269,8 +315,10 @@ WHEN
 BEGIN
   SELECT RAISE(ABORT, 'artist_vetado: artista.estado_id = 4');
 END;
+--> statement-breakpoint
 
 DROP TRIGGER IF EXISTS trg_prevent_vetado_actividad;
+--> statement-breakpoint
 CREATE TRIGGER trg_prevent_vetado_actividad
 BEFORE INSERT ON participante_actividad
 FOR EACH ROW
@@ -285,8 +333,10 @@ WHEN
 BEGIN
   SELECT RAISE(ABORT, 'artist_vetado: artista.estado_id = 4');
 END;
+--> statement-breakpoint
 
 DROP TRIGGER IF EXISTS trg_cancel_all_on_veto;
+--> statement-breakpoint
 CREATE TRIGGER trg_cancel_all_on_veto
 AFTER UPDATE OF estado_id ON artista
 FOR EACH ROW

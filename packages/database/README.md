@@ -1,68 +1,461 @@
-**Overview**
+# @frijolmagico/database
 
-- Esta carpeta contiene la definición de esquema, migraciones y scripts de datos para la base de datos del proyecto.
-- El diseño prioriza integridad referencial, trazabilidad temporal (`created_at`, `updated_at`) y reglas de negocio implementadas mediante triggers y constraints.
+Paquete de base de datos centralizado para el monorepo de Frijol Mágico. Proporciona acceso a la base de datos Turso/libSQL mediante dos interfaces:
 
-**Core Tables**
+- **Cliente Raw (libSQL)**: Para queries SQL directas (usado en `web`)
+- **Cliente Drizzle ORM**: Para queries type-safe con relaciones (usado en `admin`)
 
-- `evento`: entidad principal que agrupa ediciones.
-- `evento_edicion`: instancia de un evento (edición). Relaciona con `evento`.
-- `evento_edicion_participante`: tabla "maestra" de participantes por edición; representa la relación única entre un `artista` y una `evento_edicion`.
-- `participante_exposicion`: participación en la sección de exposición; referencia al maestro `evento_edicion_participante`.
-- `participante_actividad`: participación en actividades; referencia al maestro `evento_edicion_participante`.
-- `actividad`: detalles concretos de una actividad (vinculada a `participante_actividad`).
-- `artista`: entidad que representa a la persona o agrupación participante.
-- `disciplina`: catálogo de disciplinas usadas en postulaciones y exposiciones.
-- `evento_edicion_postulacion`: registros de postulaciones a una edición (separada de participantes finales).
+---
 
-**Key Relationships & Referential Behavior**
+## 📦 Instalación
 
-- `evento_edicion_participante` tiene claves foráneas a `evento_edicion` y `artista`. La eliminación de una edición o artista propaga en cascada según la definición de la FK.
-- `participante_exposicion` y `participante_actividad` referencian a `evento_edicion_participante` mediante `participante_id`. Estas relaciones están definidas para evitar borrados accidentales del maestro (restricciones `ON DELETE RESTRICT` o comportamiento equivalente) salvo cuando está explícitamente indicado.
-- `actividad` está anclada a `participante_actividad` con `ON DELETE CASCADE` (borrar la participación borra la actividad asociada).
+Este paquete es interno del monorepo y se instala automáticamente:
 
-**Constraints & Business Rules**
+```bash
+bun install
+```
 
-- Integridad única: `evento_edicion_participante` garantiza unicidad por par (`artista_id`, `evento_edicion_id`).
-- Estados controlados: varias tablas usan columnas `estado` con conjuntos cerrados de valores (ej.: `seleccionado`, `confirmado`, `desistido`, `cancelado`, `ausente`, `completado`).
-- Triggers `updated_at`: existe una familia de triggers que mantienen `updated_at` de forma idempotente para evitar recursión indeseada.
+---
 
-**Triggers relevantes y decisiones de diseño**
+## 🗂️ Estructura del Proyecto
 
-- Triggers de veto: existen triggers que previenen la inserción de participaciones para artistas vetados y que cancelan participaciones activas cuando un artista es vetado, con la lógica de no afectar participaciones `completado` de eventos pasados.
-- Triggers de cascada de cancelación: si el maestro (`evento_edicion_participante`) pasa a `cancelado`, los hijos en `participante_exposicion` y `participante_actividad` se actualizan acorde (se respetan estados finales como `completado`).
-- Cambio importante: los triggers automáticos que creaban filas en `evento_edicion_participante` a partir de inserciones/actualizaciones en las tablas hijas fueron removidos deliberadamente. La creación de la fila "maestra" ahora debe hacerse desde la capa de aplicación antes de insertar registros hijos. Se conservaron los triggers que realizan veto y cascada.
+```
+packages/database/
+├── src/
+│   ├── db/
+│   │   ├── schema.ts      # Definición de tablas (Drizzle)
+│   │   ├── relations.ts   # Relaciones entre tablas
+│   │   └── types.ts       # Tipos TypeScript inferidos
+│   ├── client.ts          # Cliente raw libSQL
+│   ├── drizzle.ts         # Cliente Drizzle ORM
+│   ├── index.ts           # Re-exports principales
+│   └── types/
+│       └── index.ts       # Tipos personalizados
+├── migrations/            # Migraciones SQL
+├── drizzle.config.ts      # Configuración Drizzle Kit
+└── package.json
+```
 
-**Data Backfills & Seed Files**
+---
 
-- La carpeta `db/data/` contiene scripts SQL para inserciones históricas y backfills. Estos archivos están pensados para ejecución manual y no deberían versionarse con datos sensibles.
-- Se añadió un script de backfill que genera los registros faltantes en `evento_edicion_participante` a partir de las tablas hijas. El script es idempotente y previsto para uso en despliegues donde sea necesario reproducir el backfill.
-- Para reversiones, la convención es crear archivos `.rollback.sql` que reviertan los cambios introducidos por el candidato de inserción.
+## 🚀 Uso
 
-**Migrations**
+### Opción 1: Cliente Drizzle ORM (Recomendado para Admin)
 
-- Las migraciones se encuentran en `db/migrations/` y siguen la convención `NNNN_description.up.sql` y `NNNN_description.down.sql`.
-- El motor de migraciones usado localmente es `geni` (invocado desde los scripts definidos en el proyecto); las tareas relacionadas a migraciones están documentadas en el archivo principal del proyecto.
-- Recomendación de práctica: antes de aplicar migraciones en entornos remotos, ejecutar una prueba en una sesión transaccional y asegurar backups si el cambio es destructivo.
+Cliente type-safe con soporte completo para relaciones y autocomplete.
 
-**Operational Notes**
+```typescript
+// Importar el cliente Drizzle
+import { db } from '@frijolmagico/database/orm'
+import { artista, artistaImagen } from '@frijolmagico/database/schema'
+import type { Artista, NewArtista } from '@frijolmagico/database/types'
 
-- Variables de conexión: el acceso a la base remota se gestiona mediante variables/credenciales externas; en entornos con Turso se usan tokens y URLs específicos que deben mantenerse fuera del control de versiones.
-- Aplicación: la lógica de negocio ahora requiere que la aplicación inserte o actualice `evento_edicion_participante` (registro maestro) antes de crear registros en `participante_exposicion` o `participante_actividad`.
-- Pruebas: al validar modificaciones en producción, comparar conteos de pares únicos en tablas hijas con el conteo en `evento_edicion_participante` y revisar que no existan referencias hijas con `participante_id` nulo.
+// ✅ Query simple
+const artistas = await db.select().from(artista)
 
-**Checks y validación rápida**
+// ✅ Query con filtros
+import { eq, and, like } from 'drizzle-orm'
 
-- Validar número de pares únicos en las tablas hijas frente a la tabla maestra para detectar discrepancias.
-- Verificar que no existan filas hijas con `participante_id` nulo.
-- Confirmar que los triggers relevantes (veto y cascade) están presentes y que los `updated_at` se actualizan correctamente.
+const artistasPorEstado = await db
+  .select()
+  .from(artista)
+  .where(eq(artista.estadoId, 1))
 
-**Dónde mirar en el repositorio**
+// ✅ Query con relaciones (relational queries)
+const artistasConImagenes = await db.query.artista.findMany({
+  with: {
+    imagenes: true,
+    estado: true,
+    catalogoArtista: true
+  }
+})
 
-- Migraciones: `db/migrations/`
-- Scripts históricos: `db/data/`
-- Esquema actual: `db/schema.sql`
+// ✅ Insert
+const nuevoArtista: NewArtista = {
+  pseudonimo: 'El Artista',
+  slug: 'el-artista',
+  nombre: 'Juan Pérez',
+  correo: 'juan@example.com'
+}
 
-**Notas finales**
+const resultado = await db.insert(artista).values(nuevoArtista).returning()
 
-- Este archivo documenta la estructura, las decisiones de diseño y las prácticas operativas básicas. Para cambios estructurales mayores (nuevas FKs, columnas obligatorias o eliminación de tablas) seguir el flujo de migraciones y coordinar backups y ventanas de mantenimiento.
+// ✅ Update
+await db.update(artista).set({ ciudad: 'Santiago' }).where(eq(artista.id, 1))
+
+// ✅ Delete
+await db.delete(artista).where(eq(artista.id, 1))
+
+// ✅ Transacciones
+await db.transaction(async (tx) => {
+  const [nuevoArtista] = await tx
+    .insert(artista)
+    .values({
+      pseudonimo: 'Nuevo',
+      slug: 'nuevo'
+    })
+    .returning()
+
+  await tx.insert(artistaImagen).values({
+    artistaId: nuevoArtista.id,
+    imagenUrl: '/avatar.jpg',
+    tipo: 'avatar'
+  })
+})
+```
+
+### Opción 2: Cliente Raw libSQL (Para Web o SQL Directo)
+
+Cliente directo para queries SQL raw (mantiene compatibilidad con código existente).
+
+```typescript
+// Importar el cliente raw
+import { executeQuery, getTursoClient } from '@frijolmagico/database/client'
+
+// ✅ Query simple
+const { data, error } = await executeQuery<{ id: number; nombre: string }>(
+  'SELECT id, nombre FROM artista WHERE estado_id = ?',
+  [1]
+)
+
+if (error) {
+  console.error('Error:', error)
+} else {
+  console.log('Artistas:', data)
+}
+
+// ✅ Insert con lastInsertRowid
+import { executeInsert } from '@frijolmagico/database/client'
+
+const { lastInsertRowid, error: insertError } = await executeInsert(
+  'INSERT INTO artista (pseudonimo, slug) VALUES (?, ?)',
+  ['El Artista', 'el-artista']
+)
+
+// ✅ Batch de queries
+import { executeBatch } from '@frijolmagico/database/client'
+
+const { success, error: batchError } = await executeBatch([
+  {
+    sql: 'UPDATE artista SET ciudad = ? WHERE id = ?',
+    params: ['Santiago', 1]
+  },
+  { sql: 'UPDATE artista SET pais = ? WHERE id = ?', params: ['Chile', 1] }
+])
+
+// ✅ Cliente directo para casos avanzados
+const client = getTursoClient()
+const result = await client.execute('SELECT * FROM artista')
+```
+
+---
+
+## 📚 Schema y Tipos
+
+### Tablas Disponibles
+
+El schema incluye 24 tablas organizadas por dominio:
+
+**Core:**
+
+- `organizacion`, `organizacionEquipo`
+- `lugar`, `disciplina`
+
+**Artistas:**
+
+- `artistaEstado`, `artista`, `artistaImagen`, `artistaHistorial`
+- `catalogoArtista`, `agrupacion`
+
+**Eventos:**
+
+- `evento`, `eventoEdicion`, `eventoEdicionDia`
+- `eventoEdicionMetrica`, `eventoEdicionSnapshot`, `eventoEdicionPostulacion`
+
+**Participantes:**
+
+- `tipoActividad`, `modoIngreso`
+- `eventoEdicionParticipante`, `participanteExposicion`, `participanteActividad`, `actividad`
+
+### Tipos TypeScript
+
+Cada tabla tiene tipos inferidos automáticamente:
+
+```typescript
+import type {
+  Artista, // Tipo para SELECT
+  NewArtista, // Tipo para INSERT
+  Evento,
+  NewEvento
+  // ... etc
+} from '@frijolmagico/database/types'
+
+// Uso en funciones
+async function crearArtista(data: NewArtista): Promise<Artista> {
+  const [artista] = await db.insert(artista).values(data).returning()
+  return artista
+}
+```
+
+### Relaciones
+
+Las relaciones están definidas y se pueden usar en queries relacionales:
+
+```typescript
+// Query con múltiples niveles de relaciones
+const eventos = await db.query.evento.findMany({
+  with: {
+    organizacion: true,
+    ediciones: {
+      with: {
+        dias: {
+          with: {
+            lugar: true
+          }
+        },
+        participantes: {
+          with: {
+            artista: {
+              with: {
+                estado: true,
+                imagenes: true
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+})
+```
+
+---
+
+## 🔄 Migraciones
+
+### Crear una Nueva Migración
+
+```bash
+# En packages/database/
+bun run db:new nombre-de-migracion
+```
+
+Esto creará un archivo `.sql` vacío en `migrations/`. Edita el archivo con tu SQL:
+
+```sql
+-- Custom SQL migration file, put your code below! --
+
+CREATE TABLE nueva_tabla (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nombre TEXT NOT NULL
+);
+--> statement-breakpoint
+
+CREATE INDEX idx_nueva_tabla_nombre ON nueva_tabla (nombre);
+```
+
+**Importante:** Usa `--> statement-breakpoint` entre statements para compatibilidad con Turso.
+
+### Aplicar Migraciones
+
+```bash
+# Aplicar migraciones pendientes
+bun run db:migrate
+```
+
+### Sincronizar Schema con Migraciones
+
+Si modificas `src/db/schema.ts`, debes generar una migración que refleje esos cambios en SQL:
+
+1. Actualiza `schema.ts` con tus cambios
+2. Genera migración: `bun run db:new nombre-descriptivo`
+3. Revisa el SQL generado en `migrations/`
+4. Aplica: `bun run db:migrate`
+
+---
+
+## 🌍 Variables de Entorno
+
+Crea `.env.local` en `packages/database/`:
+
+```env
+TURSO_DATABASE_URL=libsql://your-database.turso.io
+TURSO_AUTH_TOKEN=your-auth-token
+```
+
+O para desarrollo local:
+
+```env
+TURSO_DATABASE_URL=file:./local.db
+```
+
+---
+
+## 📖 Ejemplos por Caso de Uso
+
+### Consultar artistas del catálogo activo
+
+```typescript
+import { db } from '@frijolmagico/database/drizzle'
+import { catalogoArtista } from '@frijolmagico/database/schema'
+import { eq } from 'drizzle-orm'
+
+const artistasActivos = await db.query.catalogoArtista.findMany({
+  where: eq(catalogoArtista.activo, true),
+  with: {
+    artista: {
+      with: {
+        imagenes: {
+          where: eq(artistaImagen.tipo, 'avatar')
+        }
+      }
+    }
+  },
+  orderBy: (catalogo) => catalogo.orden
+})
+```
+
+### Crear un participante de evento
+
+```typescript
+import { db } from '@frijolmagico/database/drizzle'
+import {
+  eventoEdicionParticipante,
+  participanteExposicion
+} from '@frijolmagico/database/schema'
+
+await db.transaction(async (tx) => {
+  // 1. Crear registro maestro
+  const [participante] = await tx
+    .insert(eventoEdicionParticipante)
+    .values({
+      eventoEdicionId: 1,
+      artistaId: 5,
+      estado: 'activo'
+    })
+    .returning()
+
+  // 2. Crear registro de exposición
+  await tx.insert(participanteExposicion).values({
+    artistaId: 5,
+    eventoEdicionId: 1,
+    participanteId: participante.id,
+    disciplinaId: 2,
+    modoIngresoId: 1,
+    estado: 'confirmado'
+  })
+})
+```
+
+### Buscar eventos con sus días
+
+```typescript
+import { db } from '@frijolmagico/database/drizzle'
+import { like } from 'drizzle-orm'
+import { evento } from '@frijolmagico/database/schema'
+
+const festivalFrijol = await db.query.evento.findFirst({
+  where: like(evento.nombre, '%Frijol%'),
+  with: {
+    ediciones: {
+      with: {
+        dias: {
+          with: {
+            lugar: true
+          }
+        }
+      },
+      orderBy: (edicion) => edicion.numeroEdicion
+    }
+  }
+})
+```
+
+---
+
+## 🔧 Drizzle Studio (Opcional)
+
+Para explorar la base de datos visualmente:
+
+```bash
+# En packages/database/
+bunx drizzle-kit studio
+```
+
+Abre `https://local.drizzle.studio` en tu navegador.
+
+---
+
+## 🎯 Decisiones de Diseño
+
+### ¿Por qué dos clientes?
+
+- **Admin** necesita queries complejas con relaciones → Drizzle ORM
+- **Web** usa queries optimizadas manuales → Raw SQL (más control)
+- Ambos comparten la misma conexión subyacente (sin overhead)
+
+### ¿Por qué custom SQL migrations?
+
+Drizzle Kit no soporta triggers, constraints complejas ni lógica de negocio avanzada. Las migraciones custom SQL nos dan control total.
+
+### Integridad referencial
+
+Las FKs y constraints están definidas en:
+
+1. **Schema Drizzle** (para validación a nivel de código)
+2. **Migraciones SQL** (para enforcement a nivel de BD)
+
+---
+
+## 🐛 Troubleshooting
+
+### Error: `SQL_MANY_STATEMENTS`
+
+**Causa:** Falta `--> statement-breakpoint` en tus migraciones.
+
+**Solución:** Agrega el breakpoint entre statements en el archivo `.sql`.
+
+### Error: No se pueden importar tipos
+
+**Causa:** Tu IDE/TypeScript no reconoce los exports.
+
+**Solución:**
+
+```bash
+# Re-instalar dependencias
+bun install
+
+# Reiniciar el servidor de TypeScript (VSCode: Cmd+Shift+P → "Restart TS Server")
+```
+
+### Queries lentas
+
+**Causa:** Falta índice o query no optimizada.
+
+**Solución:**
+
+1. Revisa con `EXPLAIN QUERY PLAN` en Drizzle Studio
+2. Agrega índice en migración
+3. Considera usar raw SQL para queries críticas
+
+---
+
+## 📝 Notas Importantes
+
+- **Triggers y constraints:** Definidos en migraciones SQL, no en schema Drizzle (limitación del ORM)
+- **Better Auth:** Las tablas de auth se agregarán en una migración futura
+- **Backfills:** Scripts de datos históricos en `migrations/` (ejecutar manualmente si es necesario)
+- **Testing:** No borrar `__drizzle_migrations` en producción
+
+---
+
+## 🔗 Referencias
+
+- [Drizzle ORM Docs](https://orm.drizzle.team/docs/overview)
+- [Turso Docs](https://docs.turso.tech/)
+- [libSQL Client](https://github.com/tursodatabase/libsql-client-ts)
+
+---
+
+## 📞 Soporte
+
+Para dudas o problemas con la base de datos, contactar al equipo de desarrollo.

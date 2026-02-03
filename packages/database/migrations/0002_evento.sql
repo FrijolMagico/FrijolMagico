@@ -1,3 +1,5 @@
+-- Custom SQL migration file, put your code below! --
+
 -- Migración: 003_evento
 -- Descripción: Tablas del dominio eventos
 
@@ -15,6 +17,7 @@ CREATE TABLE IF NOT EXISTS evento (
         organizacion_id
     ) REFERENCES organizacion (id) ON DELETE SET NULL
 );
+--> statement-breakpoint
 
 -- evento_edicion
 CREATE TABLE IF NOT EXISTS evento_edicion (
@@ -31,6 +34,7 @@ CREATE TABLE IF NOT EXISTS evento_edicion (
         evento_id
     ) REFERENCES evento (id) ON DELETE SET NULL
 );
+--> statement-breakpoint
 
 -- evento_edicion_dia
 CREATE TABLE IF NOT EXISTS evento_edicion_dia (
@@ -55,6 +59,7 @@ CREATE TABLE IF NOT EXISTS evento_edicion_dia (
         modalidad IN ('presencial', 'online', 'hibrido')
     )
 );
+--> statement-breakpoint
 
 -- evento_edicion_metrica
 CREATE TABLE IF NOT EXISTS evento_edicion_metrica (
@@ -71,6 +76,7 @@ CREATE TABLE IF NOT EXISTS evento_edicion_metrica (
         evento_edicion_id
     ) REFERENCES evento_edicion (id) ON DELETE SET NULL
 );
+--> statement-breakpoint
 
 -- evento_edicion_snapshot
 CREATE TABLE IF NOT EXISTS evento_edicion_snapshot (
@@ -86,6 +92,7 @@ CREATE TABLE IF NOT EXISTS evento_edicion_snapshot (
     ) REFERENCES evento_edicion (id) ON DELETE SET NULL,
     CONSTRAINT uq_snapshot UNIQUE (evento_edicion_id, tipo)
 );
+--> statement-breakpoint
 
 -- evento_edicion_postulacion
 CREATE TABLE IF NOT EXISTS evento_edicion_postulacion (
@@ -108,57 +115,71 @@ CREATE TABLE IF NOT EXISTS evento_edicion_postulacion (
     CONSTRAINT chk_postulacion_estado
         CHECK (estado IN ('pendiente', 'seleccionado', 'rechazado', 'invitado'))
 );
+--> statement-breakpoint
 
 
 -- INDEXES
 -- evento
 CREATE UNIQUE INDEX IF NOT EXISTS idx_evento_slug ON evento (slug);
+--> statement-breakpoint
 
 -- evento_edicion
 CREATE UNIQUE INDEX IF NOT EXISTS idx_evento_edicion_numero ON evento_edicion (
     evento_id, numero_edicion
 );
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS idx_evento_edicion_slug ON evento_edicion (
     evento_id, slug
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_evento_edicion_evento ON evento_edicion (
     evento_id
 );
+--> statement-breakpoint
 
 -- evento_edicion_dia
 CREATE INDEX IF NOT EXISTS idx_evento_edicion_dia_edicion ON evento_edicion_dia (
     evento_edicion_id
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_evento_edicion_dia_fecha ON evento_edicion_dia (
     fecha
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_evento_edicion_dia_lugar ON evento_edicion_dia (
     lugar_id
 );
+--> statement-breakpoint
 
 -- evento_edicion_metrica
 CREATE INDEX IF NOT EXISTS idx_evento_edicion_metrica_evento_edicion ON evento_edicion_metrica (
     evento_edicion_id
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_evento_edicion_metrica_fecha ON evento_edicion_metrica (
     fecha_registro
 );
+--> statement-breakpoint
 
 CREATE INDEX IF NOT EXISTS idx_evento_edicion_snapshot_evento_edicion ON evento_edicion_snapshot (
     evento_edicion_id
 );
+--> statement-breakpoint
 
 -- evento_edicion_postulacion
 CREATE INDEX IF NOT EXISTS idx_postulacion_evento_edicion ON evento_edicion_postulacion (
     evento_edicion_id
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_postulacion_disciplina ON evento_edicion_postulacion (
     disciplina_id
 );
+--> statement-breakpoint
 
 -- TRIGGERS
 -- updated_at triggers (idempotent, guarded to avoid re-updates)
 DROP TRIGGER IF EXISTS trg_evento_updated_at;
+--> statement-breakpoint
 CREATE TRIGGER trg_evento_updated_at
 AFTER UPDATE ON evento
 FOR EACH ROW
@@ -167,8 +188,10 @@ BEGIN
     UPDATE evento SET updated_at = CURRENT_TIMESTAMP
     WHERE id = NEW.id AND updated_at = OLD.updated_at;
 END;
+--> statement-breakpoint
 
 DROP TRIGGER IF EXISTS trg_evento_edicion_updated_at;
+--> statement-breakpoint
 CREATE TRIGGER trg_evento_edicion_updated_at
 AFTER UPDATE ON evento_edicion
 FOR EACH ROW
@@ -177,9 +200,11 @@ BEGIN
     UPDATE evento_edicion SET updated_at = CURRENT_TIMESTAMP
     WHERE id = NEW.id AND updated_at = OLD.updated_at;
 END;
+--> statement-breakpoint
 
 
 DROP TRIGGER IF EXISTS trg_evento_edicion_dia_updated_at;
+--> statement-breakpoint
 CREATE TRIGGER trg_evento_edicion_dia_updated_at
 AFTER UPDATE ON evento_edicion_dia
 FOR EACH ROW
@@ -188,9 +213,11 @@ BEGIN
     UPDATE evento_edicion_dia SET updated_at = CURRENT_TIMESTAMP
     WHERE id = NEW.id AND updated_at = OLD.updated_at;
 END;
+--> statement-breakpoint
 
 -- evento_edicion_postulacion
 DROP TRIGGER IF EXISTS trg_evento_edicion_postulacion_updated_at;
+--> statement-breakpoint
 CREATE TRIGGER trg_evento_edicion_postulacion_updated_at
 AFTER UPDATE ON evento_edicion_postulacion
 FOR EACH ROW

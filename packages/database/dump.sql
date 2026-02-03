@@ -1988,11 +1988,16 @@ CREATE TABLE IF NOT EXISTS evento_edicion_postulacion (
     CONSTRAINT chk_postulacion_estado 
         CHECK (estado IN ('pendiente', 'seleccionado', 'rechazado', 'invitado'))
 );
-CREATE TABLE IF NOT EXISTS schema_migrations (id VARCHAR(255) NOT NULL PRIMARY KEY);
-INSERT INTO schema_migrations VALUES('1766948368');
-INSERT INTO schema_migrations VALUES('1766948369');
-INSERT INTO schema_migrations VALUES('1766948370');
-INSERT INTO schema_migrations VALUES('1766948371');
+CREATE TABLE IF NOT EXISTS "__drizzle_migrations" (
+			id SERIAL PRIMARY KEY,
+			hash text NOT NULL,
+			created_at numeric
+		);
+INSERT INTO __drizzle_migrations VALUES(NULL,'c04f5bff2c2c50e75b3270ea928970932c04528dcd0b08136d88cbd4544f9591',1770073267816);
+INSERT INTO __drizzle_migrations VALUES(NULL,'351a5b206a1d7732f015cb851c836555b396a52f4e7f348b2f77710f70eff033',1770073280889);
+INSERT INTO __drizzle_migrations VALUES(NULL,'34ace7c996682420c0708b3be649f27699f2d594b95ddbb00441a4cce267f4fa',1770073286659);
+INSERT INTO __drizzle_migrations VALUES(NULL,'4f8ae51b1ce1f207762785e6e9580eb0532412d11fb9dd29e78270479327f41c',1770073293418);
+INSERT INTO __drizzle_migrations VALUES(NULL,'73a0ae2682ca54aa80c4ee1888e812deb8a8ddacf896e957d95638b92618f47c',1770073317802);
 DELETE FROM sqlite_sequence;
 INSERT INTO sqlite_sequence VALUES('disciplina',4);
 INSERT INTO sqlite_sequence VALUES('artista_estado',5);
@@ -2096,79 +2101,204 @@ CREATE INDEX idx_actividad_puntaje ON participante_actividad (puntaje DESC) WHER
 CREATE INDEX idx_actividad_participante_actividad ON actividad (participante_actividad_id);
 CREATE INDEX idx_postulacion_evento_edicion ON evento_edicion_postulacion (evento_edicion_id);
 CREATE INDEX idx_postulacion_disciplina ON evento_edicion_postulacion (disciplina_id);
-CREATE TRIGGER trg_organizacion_updated_at AFTER UPDATE ON organizacion FOR EACH ROW WHEN NEW.updated_at = OLD.updated_at BEGIN
-UPDATE organizacion SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = OLD.updated_at;
+CREATE TRIGGER trg_organizacion_updated_at
+AFTER UPDATE ON organizacion
+FOR EACH ROW
+WHEN new.updated_at = old.updated_at
+BEGIN
+    UPDATE organizacion SET updated_at = CURRENT_TIMESTAMP
+    WHERE id = new.id AND updated_at = old.updated_at;
 END;
-CREATE TRIGGER trg_organizacion_equipo_updated_at AFTER UPDATE ON organizacion_equipo FOR EACH ROW WHEN NEW.updated_at = OLD.updated_at BEGIN
-UPDATE organizacion_equipo SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = OLD.updated_at;
+CREATE TRIGGER trg_organizacion_equipo_updated_at
+AFTER UPDATE ON organizacion_equipo
+FOR EACH ROW
+WHEN new.updated_at = old.updated_at
+BEGIN
+    UPDATE organizacion_equipo SET updated_at = CURRENT_TIMESTAMP
+    WHERE id = new.id AND updated_at = old.updated_at;
 END;
-CREATE TRIGGER trg_lugar_updated_at AFTER UPDATE ON lugar FOR EACH ROW WHEN NEW.updated_at = OLD.updated_at BEGIN
-UPDATE lugar SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = OLD.updated_at;
+CREATE TRIGGER trg_lugar_updated_at
+AFTER UPDATE ON lugar
+FOR EACH ROW
+WHEN new.updated_at = old.updated_at
+BEGIN
+    UPDATE lugar SET updated_at = CURRENT_TIMESTAMP
+    WHERE id = new.id AND updated_at = old.updated_at;
 END;
-CREATE TRIGGER trg_disciplina_updated_at AFTER UPDATE ON disciplina FOR EACH ROW WHEN NEW.updated_at = OLD.updated_at BEGIN
-UPDATE disciplina SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = OLD.updated_at;
+CREATE TRIGGER trg_disciplina_updated_at
+AFTER UPDATE ON disciplina
+FOR EACH ROW
+WHEN new.updated_at = old.updated_at
+BEGIN
+    UPDATE disciplina SET updated_at = CURRENT_TIMESTAMP
+    WHERE id = new.id AND updated_at = old.updated_at;
 END;
-CREATE TRIGGER trg_artista_estado_updated_at AFTER UPDATE ON artista_estado FOR EACH ROW WHEN NEW.updated_at = OLD.updated_at BEGIN
-UPDATE artista_estado SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = OLD.updated_at;
+CREATE TRIGGER trg_artista_estado_updated_at
+AFTER UPDATE ON artista_estado
+FOR EACH ROW
+WHEN NEW.updated_at = OLD.updated_at
+BEGIN
+    UPDATE artista_estado SET updated_at = CURRENT_TIMESTAMP
+    WHERE id = NEW.id AND updated_at = OLD.updated_at;
 END;
-CREATE TRIGGER trg_artista_updated_at AFTER UPDATE ON artista FOR EACH ROW WHEN NEW.updated_at = OLD.updated_at BEGIN
-UPDATE artista SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = OLD.updated_at;
+CREATE TRIGGER trg_artista_updated_at
+AFTER UPDATE ON artista
+FOR EACH ROW
+WHEN NEW.updated_at = OLD.updated_at
+BEGIN
+    UPDATE artista SET updated_at = CURRENT_TIMESTAMP
+    WHERE id = NEW.id AND updated_at = OLD.updated_at;
 END;
-CREATE TRIGGER trg_artista_imagen_updated_at AFTER UPDATE ON artista_imagen FOR EACH ROW WHEN NEW.updated_at = OLD.updated_at BEGIN
-UPDATE artista_imagen SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = OLD.updated_at;
+CREATE TRIGGER trg_artista_imagen_updated_at
+AFTER UPDATE ON artista_imagen
+FOR EACH ROW
+WHEN NEW.updated_at = OLD.updated_at
+BEGIN
+    UPDATE artista_imagen SET updated_at = CURRENT_TIMESTAMP
+    WHERE id = NEW.id AND updated_at = OLD.updated_at;
 END;
-CREATE TRIGGER trg_catalogo_artista_updated_at AFTER UPDATE ON catalogo_artista FOR EACH ROW WHEN NEW.updated_at = OLD.updated_at BEGIN
-UPDATE catalogo_artista SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = OLD.updated_at;
+CREATE TRIGGER trg_catalogo_artista_updated_at
+AFTER UPDATE ON catalogo_artista
+FOR EACH ROW
+WHEN NEW.updated_at = OLD.updated_at
+BEGIN
+    UPDATE catalogo_artista SET updated_at = CURRENT_TIMESTAMP
+    WHERE id = NEW.id AND updated_at = OLD.updated_at;
 END;
-CREATE TRIGGER trg_agrupacion_updated_at AFTER UPDATE ON agrupacion FOR EACH ROW WHEN NEW.updated_at = OLD.updated_at BEGIN
-UPDATE agrupacion SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = OLD.updated_at;
+CREATE TRIGGER trg_agrupacion_updated_at
+AFTER UPDATE ON agrupacion
+FOR EACH ROW
+WHEN NEW.updated_at = OLD.updated_at
+BEGIN
+    UPDATE agrupacion SET updated_at = CURRENT_TIMESTAMP
+    WHERE id = NEW.id AND updated_at = OLD.updated_at;
 END;
-CREATE TRIGGER trg_evento_updated_at AFTER UPDATE ON evento FOR EACH ROW WHEN NEW.updated_at = OLD.updated_at BEGIN
-UPDATE evento SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = OLD.updated_at;
+CREATE TRIGGER trg_evento_updated_at
+AFTER UPDATE ON evento
+FOR EACH ROW
+WHEN NEW.updated_at = OLD.updated_at
+BEGIN
+    UPDATE evento SET updated_at = CURRENT_TIMESTAMP
+    WHERE id = NEW.id AND updated_at = OLD.updated_at;
 END;
-CREATE TRIGGER trg_evento_edicion_updated_at AFTER UPDATE ON evento_edicion FOR EACH ROW WHEN NEW.updated_at = OLD.updated_at BEGIN
-UPDATE evento_edicion SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = OLD.updated_at;
+CREATE TRIGGER trg_evento_edicion_updated_at
+AFTER UPDATE ON evento_edicion
+FOR EACH ROW
+WHEN NEW.updated_at = OLD.updated_at
+BEGIN
+    UPDATE evento_edicion SET updated_at = CURRENT_TIMESTAMP
+    WHERE id = NEW.id AND updated_at = OLD.updated_at;
 END;
-CREATE TRIGGER trg_evento_edicion_dia_updated_at AFTER UPDATE ON evento_edicion_dia FOR EACH ROW WHEN NEW.updated_at = OLD.updated_at BEGIN
-UPDATE evento_edicion_dia SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = OLD.updated_at;
+CREATE TRIGGER trg_evento_edicion_dia_updated_at
+AFTER UPDATE ON evento_edicion_dia
+FOR EACH ROW
+WHEN NEW.updated_at = OLD.updated_at
+BEGIN
+    UPDATE evento_edicion_dia SET updated_at = CURRENT_TIMESTAMP
+    WHERE id = NEW.id AND updated_at = OLD.updated_at;
 END;
-CREATE TRIGGER trg_evento_edicion_postulacion_updated_at AFTER UPDATE ON evento_edicion_postulacion FOR EACH ROW WHEN NEW.updated_at = OLD.updated_at BEGIN
-UPDATE evento_edicion_postulacion SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = OLD.updated_at;
+CREATE TRIGGER trg_evento_edicion_postulacion_updated_at
+AFTER UPDATE ON evento_edicion_postulacion
+FOR EACH ROW
+WHEN NEW.updated_at = OLD.updated_at
+BEGIN
+    UPDATE evento_edicion_postulacion SET updated_at = CURRENT_TIMESTAMP
+    WHERE id = NEW.id AND updated_at = OLD.updated_at;
 END;
-CREATE TRIGGER trg_tipo_actividad_updated_at AFTER UPDATE ON tipo_actividad FOR EACH ROW WHEN OLD.updated_at <> NEW.updated_at BEGIN
-UPDATE tipo_actividad SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = NEW.updated_at;
+CREATE TRIGGER trg_tipo_actividad_updated_at
+AFTER UPDATE ON tipo_actividad
+FOR EACH ROW
+WHEN OLD.updated_at != NEW.updated_at
+BEGIN
+    UPDATE tipo_actividad SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = NEW.updated_at;
 END;
-CREATE TRIGGER trg_modo_ingreso_updated_at AFTER UPDATE ON modo_ingreso FOR EACH ROW WHEN OLD.updated_at <> NEW.updated_at BEGIN
-UPDATE modo_ingreso SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = NEW.updated_at;
+CREATE TRIGGER trg_modo_ingreso_updated_at
+AFTER UPDATE ON modo_ingreso
+FOR EACH ROW
+WHEN OLD.updated_at != NEW.updated_at
+BEGIN
+    UPDATE modo_ingreso SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = NEW.updated_at;
 END;
-CREATE TRIGGER trg_evento_edicion_participante_updated_at AFTER UPDATE ON evento_edicion_participante FOR EACH ROW WHEN OLD.updated_at <> NEW.updated_at BEGIN
-UPDATE evento_edicion_participante SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = NEW.updated_at;
+CREATE TRIGGER trg_evento_edicion_participante_updated_at
+AFTER UPDATE ON evento_edicion_participante
+FOR EACH ROW
+WHEN OLD.updated_at != NEW.updated_at
+BEGIN
+    UPDATE evento_edicion_participante SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = NEW.updated_at;
 END;
-CREATE TRIGGER trg_participante_exposicion_updated_at AFTER UPDATE ON participante_exposicion FOR EACH ROW WHEN OLD.updated_at <> NEW.updated_at BEGIN
-UPDATE participante_exposicion SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = NEW.updated_at;
+CREATE TRIGGER trg_participante_exposicion_updated_at
+AFTER UPDATE ON participante_exposicion
+FOR EACH ROW
+WHEN OLD.updated_at != NEW.updated_at
+BEGIN
+    UPDATE participante_exposicion SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = NEW.updated_at;
 END;
-CREATE TRIGGER trg_participante_actividad_updated_at AFTER UPDATE ON participante_actividad FOR EACH ROW WHEN OLD.updated_at <> NEW.updated_at BEGIN
-UPDATE participante_actividad SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = NEW.updated_at;
+CREATE TRIGGER trg_participante_actividad_updated_at
+AFTER UPDATE ON participante_actividad
+FOR EACH ROW
+WHEN OLD.updated_at != NEW.updated_at
+BEGIN
+    UPDATE participante_actividad SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = NEW.updated_at;
 END;
-CREATE TRIGGER trg_actividad_updated_at AFTER UPDATE ON actividad FOR EACH ROW WHEN OLD.updated_at <> NEW.updated_at BEGIN
-UPDATE actividad SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = NEW.updated_at;
+CREATE TRIGGER trg_actividad_updated_at
+AFTER UPDATE ON actividad
+FOR EACH ROW
+WHEN OLD.updated_at != NEW.updated_at
+BEGIN
+    UPDATE actividad SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = NEW.updated_at;
 END;
-CREATE TRIGGER trg_cascade_cancel_to_exposicion AFTER UPDATE ON evento_edicion_participante FOR EACH ROW WHEN NEW.estado = 'cancelado' AND OLD.estado <> 'cancelado' BEGIN
-UPDATE participante_exposicion SET estado = 'cancelado', notas = COALESCE (notas || ' | ', '') || 'Cancelado por estado global: ' || datetime ('now') WHERE participante_id = NEW.id AND estado NOT IN ('cancelado', 'desistido', 'ausente', 'completado');
-UPDATE participante_actividad SET estado = 'cancelado', notas = COALESCE (notas || ' | ', '') || 'Cancelado por estado global: ' || datetime ('now') WHERE participante_id = NEW.id AND estado NOT IN ('cancelado', 'desistido', 'ausente', 'completado');
+CREATE TRIGGER trg_cascade_cancel_to_exposicion
+AFTER UPDATE ON evento_edicion_participante
+FOR EACH ROW
+WHEN NEW.estado = 'cancelado' AND OLD.estado != 'cancelado'
+BEGIN
+    UPDATE participante_exposicion
+    SET estado = 'cancelado',
+        notas = COALESCE(notas || ' | ', '') || 'Cancelado por estado global: ' || datetime('now')
+    WHERE participante_id = NEW.id
+      AND estado NOT IN ('cancelado', 'desistido', 'ausente', 'completado');
+
+    UPDATE participante_actividad
+    SET estado = 'cancelado',
+        notas = COALESCE(notas || ' | ', '') || 'Cancelado por estado global: ' || datetime('now')
+    WHERE participante_id = NEW.id
+      AND estado NOT IN ('cancelado', 'desistido', 'ausente', 'completado');
 END;
-CREATE TRIGGER trg_prevent_vetado_exposicion BEFORE INSERT ON participante_exposicion FOR EACH ROW WHEN NEW.artista_id IS NOT NULL AND (NEW.estado IS NULL OR NEW.estado <> 'completado') AND (SELECT estado_id FROM artista WHERE id = NEW.artista_id) = 4 BEGIN
-SELECT RAISE (ABORT, 'artist_vetado: artista.estado_id = 4');
+CREATE TRIGGER trg_prevent_vetado_exposicion
+BEFORE INSERT ON participante_exposicion
+FOR EACH ROW
+WHEN
+    NEW.artista_id IS NOT NULL
+  AND (NEW.estado IS NULL OR NEW.estado != 'completado')
+  AND (
+    SELECT estado_id
+    FROM artista
+    WHERE id = NEW.artista_id
+  ) = 4
+BEGIN
+  SELECT RAISE(ABORT, 'artist_vetado: artista.estado_id = 4');
 END;
-CREATE TRIGGER trg_prevent_vetado_actividad BEFORE INSERT ON participante_actividad FOR EACH ROW WHEN NEW.artista_id IS NOT NULL AND (NEW.estado IS NULL OR NEW.estado <> 'completado') AND (SELECT estado_id FROM artista WHERE id = NEW.artista_id) = 4 BEGIN
-SELECT RAISE (ABORT, 'artist_vetado: artista.estado_id = 4');
+CREATE TRIGGER trg_prevent_vetado_actividad
+BEFORE INSERT ON participante_actividad
+FOR EACH ROW
+WHEN
+  NEW.artista_id IS NOT NULL
+  AND (NEW.estado IS NULL OR NEW.estado != 'completado')
+  AND (
+    SELECT estado_id
+    FROM artista
+    WHERE id = NEW.artista_id
+  ) = 4
+BEGIN
+  SELECT RAISE(ABORT, 'artist_vetado: artista.estado_id = 4');
 END;
 CREATE TRIGGER trg_cancel_all_on_veto
 AFTER UPDATE OF estado_id ON artista
 FOR EACH ROW
 WHEN NEW.estado_id = 4 AND OLD.estado_id != 4
 BEGIN
-  -- Cancelar solo registros maestros 'activo' que tengan participaciones hijas activas
+  -- Cancel solo participaciones 'activo' con hijas en estados 'seleccionado' o 'confirmado'
+  -- NO cancela participaciones 'completado' (eventos pasados)
   UPDATE evento_edicion_participante
   SET estado = 'cancelado',
       updated_at = CURRENT_TIMESTAMP,
