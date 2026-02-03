@@ -20,7 +20,7 @@ The website serves as a digital meeting point for this community, providing info
 - Node.js (v18 or later)
 - Bun (preferred) or npm package manager
 - Turso CLI (for database management) - [Installation guide](https://docs.turso.tech/cli/installation)
-- Geni (for database migrations) - `brew install geni`
+- Drizzle Kit (for database migrations)
 - Google Cloud Platform account (for Google Sheets API)
 
 ### Installation
@@ -186,39 +186,29 @@ The project uses [Turso](https://turso.tech), a SQLite-compatible database optim
 - SQLite compatibility
 - Simple authentication with tokens
 
-### Migrations with Geni
+### Migrations with Drizzle Kit
 
-[Geni](https://github.com/emilpriver/geni) is a standalone migration tool that manages database schema changes.
+[Drizzle Kit](https://orm.drizzle.team/docs/kit-overview) is the migration runner for this repo.
 
 #### Creating a New Migration
 
 ```bash
-# Generate migration files
+# Generate a custom SQL migration file
 bun run db:new add_new_feature
-
-# This creates:
-# db/migrations/20251226123456_add_new_feature.up.sql   (changes to apply)
-# db/migrations/20251226123456_add_new_feature.down.sql (rollback)
 ```
 
 #### Applying Migrations
 
 ```bash
-# Check pending migrations
-bun run db:status
-
 # Apply all pending migrations
 bun run db:migrate
-
-# Rollback last migration
-bun run db:rollback
 ```
 
 #### Migration Best Practices
 
-- Use `IF NOT EXISTS` / `IF EXISTS` for idempotent migrations
+- Use custom SQL migrations for triggers, constraints, and advanced DDL
+- Keep migrations idempotent where possible (`IF NOT EXISTS` / `IF EXISTS`)
 - One logical change per migration
-- Always write the `.down.sql` rollback (even if SQLite has limitations)
 - Use descriptive names: `add_website_to_artista`, `create_sponsors_table`
 
 ### Local Development
