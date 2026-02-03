@@ -11,18 +11,19 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@frijolmagico/database": "*",
+    "@frijolmagico/database": "workspace:*",
     "@frijolmagico/tailwind-config": "workspace:*",
     "@frijolmagico/ui": "workspace:*",
     "@frijolmagico/utils": "workspace:*",
+    "better-auth": "^1.4.18",
     "next": "^16.1.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "zod": "^4.2.1"
   },
   "devDependencies": {
-    "@frijolmagico/eslint-config": "*",
-    "@frijolmagico/typescript-config": "*",
+    "@frijolmagico/eslint-config": "workspace:*",
+    "@frijolmagico/typescript-config": "workspace:*",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^25.0.3",
     "@types/react": "^19.2.7",
