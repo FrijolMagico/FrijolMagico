@@ -16,7 +16,11 @@
         "CATALOG_SHEET_ID",
         "APPROVED_ARTISTS_SHEET_ID",
         "FESTIVAL_2025_SCHEDULE_SHEET_ID",
-        "CDN_URL"
+        "CDN_URL",
+        "BETTER_AUTH_SECRET",
+        "BETTER_AUTH_URL",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET"
       ],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": [".next/**", "!.next/cache/**"]
@@ -44,21 +48,6 @@
     },
 
     "db:migrate": {
-      "cache": false,
-      "env": ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN"]
-    },
-
-    "db:rollback": {
-      "cache": false,
-      "env": ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN"]
-    },
-
-    "db:status": {
-      "cache": false,
-      "env": ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN"]
-    },
-
-    "db:seed": {
       "cache": false,
       "env": ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN"]
     }
