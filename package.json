@@ -5,19 +5,16 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "dev:real": "DATA_SOURCE=real turbo run dev",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
     "type-check": "turbo run type-check",
-    "db:migrate": "turbo run db:migrate --filter @frijolmagico/database",
-    "db:new": "turbo run db:new --filter @frijolmagico/database",
-    "db:seed": "turbo run db:seed --filter @frijolmagico/database",
+    "db:migrate": "turbo run migrate --filter @frijolmagico/database",
     "format": "prettier --write \"**/*.{ts,tsx,md}\" --ignore-path .gitignore"
   },
   "devDependencies": {
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
-    "turbo": "^2.8.1"
+    "turbo": "^2.8.3"
   },
   "packageManager": "bun@1.2.2",
   "workspaces": [
