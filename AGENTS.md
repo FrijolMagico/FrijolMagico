@@ -1,236 +1,209 @@
-# AGENTS.md - Frijol Magico (Agent Guidance)
+# AGENTS.md - Frijol Magico
 
-## Purpose
-
-This file contains concise, actionable rules and conventions for agentic coding assistants working in this repository. It collects build/test commands, code-style expectations, workspace structure, and operational rules agents must follow.
+Concise rules for agentic coding assistants in this Turborepo monorepo.
 
 ## Tech Stack
 
-- Framework: Next.js 16 (App Router) with Turbopack
-- UI: React 19, TypeScript (strict mode), Tailwind CSS v4
-- State: Zustand
-- Animation: GSAP with ScrollTrigger
-- Database: Turso (libSQL) with Geni migrations
-- CMS: Google Sheets via `google-spreadsheet`
-- Package manager: Bun (preferred)
+- **Monorepo:** Turborepo + Bun workspaces (`apps/*`, `packages/*`)
+- **Apps:** `web` (port 3000), `admin` (port 3001)
+- **Framework:** Next.js 16 (App Router) with Turbopack
+- **UI:** React 19, TypeScript (strict), Tailwind CSS v4
+- **State:** Zustand
+- **Animation:** GSAP with ScrollTrigger
+- **Database:** Turso (libSQL) with Drizzle ORM
+- **CMS:** Google Sheets via `google-spreadsheet`
+- **Package Manager:** Bun
 
-## Build / Lint / Test Commands
+## Build / Lint / Format Commands
 
-Primary scripts (see `package.json`):
+Root commands:
 
-- `bun install` — install dependencies (preferred)
-- `bun run dev` — development server (Turbopack)
-- `bun run build` — production build
-- `bun run start` — start production server
-- `bun run lint` — run ESLint on `src/`
-- `bun run lint:fix` — run ESLint with `--fix`
+```bash
+bun install                    # Install dependencies
+bun run dev                    # Start all apps (Turbo)
+bun run dev:real               # Dev with DATA_SOURCE=real
+bun run build                  # Production build (all apps)
+bun run lint                   # ESLint all apps
+bun run lint:fix               # ESLint with auto-fix
+bun run format                 # Prettier format (run this!)
+bun run type-check             # TypeScript check all packages
+```
 
-Database commands (via Geni/Turso):
+Per-app commands (in `apps/web/` or `apps/admin/`):
 
-- `bun run db:migrate` — run pending migrations
-- `bun run db:rollback` — rollback last migration
-- `bun run db:status` — show migration status
-- `bun run db:new <name>` — create new migration
-- `bun run db:seed` — run seed.sql against configured Turso DB
+```bash
+bun run dev                    # Next.js dev with Turbopack
+bun run build                  # Production build
+bun run lint                   # ESLint
+bun run lint:fix               # ESLint --fix
+bun run type-check             # tsc --noEmit
+```
 
-Testing notes
+## Database Commands (Drizzle)
 
-- Currently no test framework is configured in the repo.
-- Recommended test stack for agents making test changes: Vitest + Testing Library (fast, works well with Bun). If adding tests, add scripts to `package.json` like:
-  - `test` -> `vitest` (or `bun run vitest`)
-  - `test:run` -> `vitest run`
-  - `test:watch` -> `vitest`
+```bash
+bun run db:migrate             # Run pending migrations
+bun run db:new <name>          # Create new migration
+bun run db:seed                # Run seed.sql
+```
 
-How to run a single test (examples):
+**Note:** Uses Drizzle ORM, NOT Geni. Migrations via `drizzle-kit`.
 
-- Vitest (recommended):
-  - `bun run vitest -- tests/path/to/file.test.ts` or `bun run vitest -- -t "test name"`
-  - `npx vitest run tests/path/to/file.test.ts`
-- Jest (if introduced):
-  - `npx jest tests/path/to/file.test.ts` or `npx jest -t "test name"`
-- Playwright (for E2E):
-  - `npx playwright test tests/e2e/spec.spec.ts -g "test name"`
+## Testing
 
-Agents: If you add tests, also add appropriate `devDependencies` and `package.json` scripts and document them here.
+**No test framework configured.**
 
-## Repository Notes for Agents
+## Code Style
 
-- Read `package.json` before changing scripts (`package.json`: `dev`, `build`, `lint`, `db:*`).
-- If you modify database migration/seed files, follow the DB Data Management rules below and always ask for explicit user consent before running destructive DB operations.
-- Consult `.github/copilot-instructions.md` for high-level architectural guidance; agents should not overwrite that file without maintainers' approval.
+### Prettier Config
 
-## Code Style Guidelines
+- No semicolons
+- Single quotes (JSX too)
+- 2-space indent
+- No trailing commas
+- `prettier-plugin-tailwindcss` for class ordering
 
-Formatting / Prettier
+### Import Order
 
-- Prettier config: no semicolons, single quotes (including JSX), 2-space indent, no trailing commas.
-- Use `prettier-plugin-tailwindcss` to keep class names ordered.
-- Format on save or run the configured Prettier task.
+Group with blank lines between:
 
-Imports
+1. React / Next.js (`react`, `next/*`)
+2. External libraries
+3. Workspace imports (`@frijolmagico/*`)
+4. Internal absolute imports (`@/` = `src/`)
+5. Relative imports
+6. Type-only imports (`import type`)
 
-- Group imports with blank lines between groups in this order:
-  1. React / Next.js
-  2. External libraries
-  3. Internal absolute imports (alias `@/` for `src/`)
-  4. Relative imports
-  5. Type-only imports (`import type { ... } from '...'`)
-- Example:
-  - `import { Suspense } from 'react'`
-  - `import Image from 'next/image'`
-  - `import { create } from 'zustand'`
-  - `import { cn } from '@/utils/utils'`
-  - `import { LocalComponent } from './components/LocalComponent'`
-  - `import type { MyType } from '@/types'`
+Example:
 
-TypeScript conventions
+```typescript
+import { useState } from 'react'
+import Image from 'next/image'
 
-- Project uses strict TypeScript. Do not disable `strict` or `noImplicitAny` locally.
-- Use `type` keyword for type-only imports and exports: `import type { X } from '...'`.
-- Global types: `src/types/`.
-- Section-specific types: `[section]/types/` inside its route folder.
-- Prefer small, composable types over large ad-hoc interfaces. Use Zod schemas for runtime validation where necessary.
+import { create } from 'zustand'
 
-Naming conventions
+import { cn } from '@frijolmagico/ui/cn'
 
-- Components: PascalCase (e.g., `CatalogArtistCard.tsx`). Use named exports, not default exports.
-- Hooks / stores: camelCase with prefix `use` (e.g., `useCatalogFiltersStore.ts`).
-- Utilities: camelCase (e.g., `formatUrl`).
-- Constants: UPPER_SNAKE_CASE (e.g., `DEFAULT_FILTERS`).
-- Types / interfaces: PascalCase (e.g., `CatalogArtist`).
+import { paths } from '@/config/paths'
+import { Header } from '@/components/Header'
 
-React / Component patterns
+import { LocalComponent } from './LocalComponent'
 
-- Use App Router (`src/app/`). Prefer server components by default; mark client components with `'use client'` at the top.
-- Destructure props in the function signature.
-- Keep components small and focused. Move shared UI into `src/components/`.
-- Use `cn()` utility for conditional classnames.
-- Avoid direct DOM manipulation; use refs and GSAP where needed for animations.
+import type { Artist } from '@/types/artists'
+```
 
-State management (Zustand)
+### Naming Conventions
 
-- Use the repo's established Zustand pattern:
-  - `export const useStore = create<MyState>((set) => ({ ... }))`
-- Keep stores minimal and focused on UI state; persist only when necessary.
+| Type         | Convention                    | Example                     |
+| ------------ | ----------------------------- | --------------------------- |
+| Components   | PascalCase, **named exports** | `CatalogArtistCard.tsx`     |
+| Hooks/Stores | camelCase with `use` prefix   | `useCatalogFiltersStore.ts` |
+| Utilities    | camelCase                     | `formatUrl`, `cn`           |
+| Constants    | UPPER_SNAKE_CASE              | `DEFAULT_FILTERS`           |
+| Types        | PascalCase                    | `CatalogArtist`             |
+| Zod Schemas  | camelCase with `Schema`       | `artistaSchema.ts`          |
 
-Styling / Tailwind
+### TypeScript
 
-- Use Tailwind v4 tokens and `tailwind-variants` for component variants.
-- Keep long class lists organized via `tv()` utilities or `cn` helpers.
-- Place global styles in `src/styles/`.
+- Strict mode. Never disable `strict` or `noImplicitAny`.
+- Use `import type { X }` for type-only imports.
+- Global types: `src/types/` (e.g., `artists.d.ts`)
+- Section types: `app/(sections)/[name]/types/`
+- Use Zod v4 schemas for runtime validation.
 
-Error handling
+### React Patterns
 
-- Data-fetching functions should return the `{ data, error }` shape: `{ data: T | null, error: ErrorObject | null }`.
-- Log errors with `console.error()` for server-side operations, and use a user-friendly `ErrorSection` component on the UI.
-- Provide safe fallbacks (empty arrays, sensible defaults) to avoid runtime crashes.
+- Use **App Router** (`src/app/`). Prefer Server Components.
+- Mark Client Components with `'use client'`.
+- **Named exports only** - never default exports.
+- Destructure props in function signature.
+- Use `cn()` for conditional classnames.
+- Avoid direct DOM manipulation; use refs + GSAP.
 
-Security and Secrets
+### Workspace Imports
 
-- Never commit secrets or `.env` values. Use environment files and `.env.local` which must be kept out of git.
-- When an agent must run commands that require credentials (db migrations, seeds), ask the user for permission.
+```typescript
+import { cn } from '@frijolmagico/ui/cn'
+import { Button } from '@frijolmagico/ui/button'
+import { db } from '@frijolmagico/database'
+import { schema } from '@frijolmagico/database/schema'
+import { classVariantSelector } from '@frijolmagico/utils/css'
+```
 
-Accessibility
+### Tailwind v4
 
-- Use semantic HTML elements and `aria-*` attributes where appropriate.
-- Provide `alt` text for all images. Lint rules include `jsx-a11y` plugin.
+- Use `tailwind-variants` (`tv()`) for component variants.
+- Keep long class lists organized via `cn()`.
 
-## Directory Structure (short)
+### Error Handling
 
-- `src/app/` — Next.js App Router
-- `src/components/` — shared UI
-- `src/config/` — configuration
-- `src/infra/` — infra/database adapters
-- `src/schemas/` — Zod schemas
-- `src/styles/` — global styles
-- `src/types/` — global types
-- `db/migrations/`, `db/seed/` — DB migrations & seed files
+- Data-fetching returns `{ data, error }` shape.
+- Log errors with `console.error()` server-side.
+- Use `ErrorSection` component for UI errors.
+- Provide safe fallbacks (empty arrays, defaults).
 
-## Database Data Management (agents)
+### Security
 
-- Non-seed data insertions: create a new numbered SQL file in `db/data/` (e.g., `013_insert_users.sql`). Do not execute these without explicit user consent.
-- Seeds in `db/seed/` are reserved for catalog/system data only.
-- For structural schema changes, run `PRAGMA foreign_key_list(table_name)` to inspect relations, backup `db/dump.sql`, and obtain user consent before applying destructive migrations.
+- **Never commit secrets or `.env` files.**
+- Use `.env.local` (gitignored) for secrets.
+- Ask permission before destructive DB operations.
+
+## Directory Structure
+
+```
+apps/
+  web/                    # Main Next.js app (frijolmagico.cl)
+    src/
+      app/                # App Router with (sections) groups
+      components/         # Shared UI
+      config/             # Configuration
+      hooks/              # Shared hooks
+      infra/              # Adapters (DB, CMS)
+      schemas/            # Zod schemas
+      styles/             # Global styles
+      types/              # Global types
+      utils/              # Utilities
+  admin/                  # Admin panel (port 3001)
+
+packages/
+  database/               # Drizzle ORM + Turso
+  ui/                     # Shared UI components
+  utils/                  # Shared utilities
+  eslint-config/          # Shared ESLint
+  typescript-config/      # Shared TS config
+  tailwind-config/        # Shared Tailwind
+```
 
 ## Data Source Configuration
 
-The app uses a flexible data source system that determines where each repository fetches data from (mock, CMS, or database).
+`DATA_SOURCE` env variable controls data sources in development:
 
-### Development Data Source Options
+- **Not set (default):** Intelligent defaults:
+  - `prod='cms'` → use `'mock'` in dev
+  - `prod='database'` → use `'local'` (file:local.db)
+- **`DATA_SOURCE=real`:** Force production data sources
+- **`DATA_SOURCE=local`:** Same as default
 
-The `DATA_SOURCE` environment variable (in `.env.local`) controls data sources in development:
+**Production:** `DATA_SOURCE` ignored. Mock data never allowed.
 
-- **Not set (default)**: Uses intelligent defaults:
-  - Modules with `prod='cms'` → use `'mock'` in development
-  - Modules with `prod='database'` → use `'local'` (file:local.db) in development
-- **`DATA_SOURCE=real`**: Force all modules to use their production data source (remote DB/CMS)
-- **`DATA_SOURCE=local`**: Same as not set, uses intelligent defaults
+## Database Operations
 
-### Repository Configuration
+- Migrations: `drizzle-kit` via `bun run db:migrate`
+- Seeds: `db/seed/seed.sql`
+- Non-seed data: Numbered files in `db/data/`
+- Always ask permission before destructive operations.
 
-Each repository is configured with its production source:
+## Operational Rules
 
-```typescript
-// CMS-based repository (uses mock in development by default)
-const source = getDataSource({ prod: 'cms' })
+1. **Read before editing** - Always read files first.
+2. **Minimal changes** - Keep focused on the task.
+3. **No destructive commands** without user approval.
+4. **Do not commit** unless user explicitly requests.
+5. **Before build:** Run `bun run lint` and `bun run format`.
+6. **UI changes:** Ask user to verify with `bun run dev`.
 
-// Database-based repository (uses local file:local.db in development by default)
-const source = getDataSource({ prod: 'database' })
-```
+## If You Modify This File
 
-### Local Database Setup
-
-For modules with `prod='database'` in development:
-
-1. Set `TURSO_DATABASE_URL=file:local.db` in `.env.local`
-2. Import dump from remote DB to local file (manual process)
-3. The libSQL client directly accesses the local SQLite file
-
-### Automatic Fallback
-
-Database repositories (`prod='database'`) include automatic fallback to mock data:
-
-- If the local DB file doesn't exist or query fails → fallback to mock
-- If the query returns no data → fallback to mock
-- A warning is logged when fallback is used
-
-If mock data is not available, an error is thrown.
-
-### Production Behavior
-
-In production/preview (when `VERCEL_ENV` is 'production' or 'preview'):
-
-- All repositories always use their configured `prod` source
-- `DATA_SOURCE` variable is ignored
-- Mock data is never allowed (security enforcement)
-
-## Tests & CI (agent guidance)
-
-- There are no tests by default. If you add a test framework, update this file and `package.json` with scripts for:
-  - running all tests
-  - running a single test
-  - running tests in watch mode
-- When adding CI (GitHub Actions), keep jobs minimal: install deps, lint, build, and run tests. Prefer cache for Bun/Node modules.
-
-## Copilot / Cursor Rules
-
-- Copilot rules: see `.github/copilot-instructions.md` for architectural patterns and conventions — agents should consult it for higher-level guidance.
-- Cursor rules: no `.cursor` rules found in the repo. If introduced, add a section here summarizing them.
-
-## Operational Rules for Agents
-
-- Always read relevant files before editing them (we already applied this rule).
-- When making code changes:
-  - Keep changes minimal and focused to solve the stated task.
-  - Do not run destructive commands (e.g., `git reset --hard`, force pushes) without user approval.
-  - Do not commit changes unless the user explicitly requests it. If asked to commit, produce a concise commit message focusing on the why.
-- Before running `bun run build`, run `bun run lint` and ask the user to verify `bun run dev` visually if UI changes are involved.
-
-## If you modify this file
-
-- Keep this file concise and actionable. Mention any new tooling (tests, linters) and how to run a single test.
-- If you change build/test scripts, update the `package.json` and document the new commands here.
-
----
-
-For further project-specific clarifications, consult `README.md` and `.github/copilot-instructions.md`.
+- Keep concise and actionable.
+- Document new tooling and single-test commands.
+- Update `package.json` if adding scripts.
