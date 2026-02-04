@@ -4,13 +4,17 @@
   "type": "module",
   "private": true,
   "exports": {
-    "./string": "./string.ts",
-    "./url": "./url.ts",
-    "./css": "./css.ts"
+    "./string": "./src/string.ts",
+    "./url": "./src/url.ts",
+    "./css": "./src/css.ts"
   },
   "files": [
-    "string.ts",
-    "url.ts",
-    "css.ts"
-  ]
+    "./src/string.ts",
+    "./src/url.ts",
+    "./src/css.ts"
+  ],
+  "devDependencies": {
+    "@frijolmagico/typescript-config": "workspace:*",
+    "@frijolmagico/eslint-config": "workspace:*"
+  }
 }
