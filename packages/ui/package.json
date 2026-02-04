@@ -4,11 +4,15 @@
   "type": "module",
   "private": true,
   "exports": {
-    "./button": "./components/button.tsx",
-    "./cn": "./utils/cn.ts"
+    "./button": "./src/components/button.tsx",
+    "./cn": "./src/utils/cn.ts"
   },
   "files": [
-    "components/",
-    "utils/"
-  ]
+    "./src/components/",
+    "./src/utils/"
+  ],
+  "devDependencies": {
+    "@frijolmagico/typescript-config": "workspace:*",
+    "@frijolmagico/eslint-config": "workspace:*"
+  }
 }
