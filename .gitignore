@@ -55,14 +55,10 @@ next-env.d.ts
 .codecompanion-workspace.json
 
 tmp/
-local.db
-dump.sql
-
-# database backups
-db/backups/
+*/**/dump.sql
+*/**/local.db*
 
 # database data insertion scripts (keep README and .gitkeep)
-db/data/*.sql
 packages/database/data/*.sql
 
 # Turborepo
