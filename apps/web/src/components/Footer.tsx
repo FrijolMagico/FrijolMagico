@@ -7,7 +7,7 @@ import { SpotifyCard } from '@/app/(home)/components/SpotifyCard'
 import { RRSSCard } from '@/app/(home)/components/RRSSCard'
 import { BackToTop } from './BackToTop'
 import { paths } from '@/config/paths'
-import { cn } from '@frijolmagico/ui/cn'
+import { cn } from '@/utils/cn'
 
 interface FooterProps {
   doodleColor?: string

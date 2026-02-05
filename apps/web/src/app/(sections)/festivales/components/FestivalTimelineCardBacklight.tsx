@@ -1,6 +1,6 @@
 'use client'
 
-import { cn } from '@frijolmagico/ui/cn'
+import { cn } from '@/utils/cn'
 import { usePosterDominantColor } from '@/hooks/usePosterDominantColor'
 
 interface FestivalTimelineCardBacklightProps {
@@ -8,7 +8,7 @@ interface FestivalTimelineCardBacklightProps {
 }
 
 export const FestivalTimelineCardBacklight = ({
-  isActive = false,
+  isActive = false
 }: FestivalTimelineCardBacklightProps) => {
   const { dominantColors, ref } = usePosterDominantColor()
 
@@ -17,7 +17,7 @@ export const FestivalTimelineCardBacklight = ({
     : [
         'var(--color-fm-orange)',
         'var(--color-fm-green)',
-        'var(--color-fm-yellow)',
+        'var(--color-fm-yellow)'
       ]
 
   return (
@@ -25,11 +25,12 @@ export const FestivalTimelineCardBacklight = ({
       ref={ref}
       className={cn(
         'absolute -inset-1 -z-10 rounded-xl blur-2xl transition-opacity duration-500',
-        isActive ? 'opacity-100' : 'opacity-30',
+        isActive ? 'opacity-100' : 'opacity-30'
       )}
       style={{
         backgroundImage: `linear-gradient(0, ${colors.join(', ')})`,
-        backgroundSize: '100% 100%',
-      }}></div>
+        backgroundSize: '100% 100%'
+      }}
+    ></div>
   )
 }

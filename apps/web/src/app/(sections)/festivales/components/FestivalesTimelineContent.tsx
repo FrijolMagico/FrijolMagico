@@ -3,7 +3,7 @@ import { TimelineConnector } from './TimelineConnector'
 import { FestivalsSidebarNav } from './FestivalsSidebarNav'
 
 import type { FestivalEdicion } from '../types/festival'
-import { cn } from '@frijolmagico/ui/cn'
+import { cn } from '@/utils/cn'
 
 interface FestivalesTimelineContentProps {
   festivales: FestivalEdicion[]
@@ -12,7 +12,7 @@ interface FestivalesTimelineContentProps {
 
 export const FestivalesTimelineContent = ({
   festivales,
-  activeId,
+  activeId
 }: FestivalesTimelineContentProps) => {
   if (festivales.length === 0) {
     return (
@@ -28,7 +28,7 @@ export const FestivalesTimelineContent = ({
     nombre: f.evento.nombre,
     edicion: f.evento.edicion,
     eventoId: f.evento.evento_id,
-    year: new Date(f.evento.dias[0].fecha).getFullYear(),
+    year: new Date(f.evento.dias[0].fecha).getFullYear()
   }))
 
   return (
@@ -54,7 +54,8 @@ export const FestivalesTimelineContent = ({
               <svg
                 className='h-30'
                 viewBox={`0 0 20 120`}
-                preserveAspectRatio='none'>
+                preserveAspectRatio='none'
+              >
                 <path
                   fill='none'
                   strokeWidth={6}
@@ -80,13 +81,15 @@ export const FestivalesTimelineContent = ({
               <section
                 key={`${festival.evento.slug}-${festival.evento.edicion}`}
                 className='relative grid grid-cols-1 gap-8 lg:grid-cols-[40rem_40rem]'
-                aria-label={`${festival.evento.nombre} - Edición ${festival.evento.edicion}`}>
+                aria-label={`${festival.evento.nombre} - Edición ${festival.evento.edicion}`}
+              >
                 {/* Columna izquierda - Card si index impar */}
                 <div
                   className={cn(
                     'hidden justify-center lg:flex lg:items-center',
-                    !isLast && '',
-                  )}>
+                    !isLast && ''
+                  )}
+                >
                   {!isLeft ? (
                     <FestivalTimelineCard
                       festival={festival}
@@ -104,8 +107,9 @@ export const FestivalesTimelineContent = ({
                 <div
                   className={cn(
                     'hidden lg:flex lg:items-center lg:justify-end',
-                    !isLast && '',
-                  )}>
+                    !isLast && ''
+                  )}
+                >
                   {isLeft ? (
                     <FestivalTimelineCard
                       festival={festival}
@@ -138,7 +142,8 @@ export const FestivalesTimelineContent = ({
               <svg
                 className='h-30'
                 viewBox={`0 0 20 120`}
-                preserveAspectRatio='none'>
+                preserveAspectRatio='none'
+              >
                 <path
                   fill='none'
                   strokeWidth={6}

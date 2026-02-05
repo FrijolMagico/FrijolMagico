@@ -1,4 +1,4 @@
-import { cn } from '@frijolmagico/ui/cn'
+import { cn } from '@/utils/cn'
 
 interface ScheduleNavProps {
   onSelectDay: (day: 1 | 2) => void
@@ -12,10 +12,11 @@ export const ScheduleNav = ({ onSelectDay, selectedDay }: ScheduleNavProps) => {
           'font-superfortress bg-2025-white text-2025-orange outline-2025-orange cursor-pointer rounded-lg px-4 py-1 leading-none font-light outline transition duration-300 outline-dashed md:px-6 md:text-xl md:hover:scale-105',
           {
             'bg-2025-orange text-fm-white outline-none md:scale-110':
-              selectedDay === 1,
-          },
+              selectedDay === 1
+          }
         )}
-        onClick={() => onSelectDay(1)}>
+        onClick={() => onSelectDay(1)}
+      >
         Viernes 3
       </button>
       <button
@@ -23,10 +24,11 @@ export const ScheduleNav = ({ onSelectDay, selectedDay }: ScheduleNavProps) => {
           'font-superfortress bg-2025-white text-2025-orange outline-2025-orange cursor-pointer rounded-lg px-4 py-1 leading-none font-light outline transition duration-300 outline-dashed md:px-6 md:text-xl md:hover:scale-105',
           {
             'bg-2025-orange text-fm-white outline-none md:scale-110':
-              selectedDay === 2,
-          },
+              selectedDay === 2
+          }
         )}
-        onClick={() => onSelectDay(2)}>
+        onClick={() => onSelectDay(2)}
+      >
         Sábado 4
       </button>
     </nav>

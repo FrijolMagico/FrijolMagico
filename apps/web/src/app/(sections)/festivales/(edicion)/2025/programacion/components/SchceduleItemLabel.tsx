@@ -1,4 +1,4 @@
-import { cn } from '@frijolmagico/ui/cn'
+import { cn } from '@/utils/cn'
 import { isWorkshop } from '../constants/rules'
 
 interface ScheduleItemLabelProps {
@@ -11,8 +11,9 @@ export const ScheduleItemLabel = ({ text }: ScheduleItemLabelProps) => {
     <span
       className={cn(
         'bg-fm-black text-2025-white absolute -top-3 -skew-y-6 px-4 py-2 font-bold capitalize',
-        labelColor,
-      )}>
+        labelColor
+      )}
+    >
       {text}
     </span>
   )

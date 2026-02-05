@@ -10,24 +10,24 @@ import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 
-import { cn } from '@frijolmagico/ui/cn'
+import { cn } from '@/utils/cn'
 
 const SITE = siteData
 
 const josefinSans = Josefin_Sans({
   variable: '--font-josefin-sans',
-  subsets: ['latin'],
+  subsets: ['latin']
 })
 
 const notoSans = Noto_Sans({
   variable: '--font-noto-sans',
-  subsets: ['latin'],
+  subsets: ['latin']
 })
 
 const superFortress = localFont({
   src: '../../public/fonts/sections/festivales/2025/SuperFortress.woff2',
   variable: '--font-superfortress',
-  display: 'swap',
+  display: 'swap'
 })
 
 export const metadata: Metadata = {
@@ -39,9 +39,9 @@ export const metadata: Metadata = {
     url: SITE.url,
     images: [
       {
-        url: SITE.image,
-      },
-    ],
+        url: SITE.image
+      }
+    ]
   },
   twitter: {
     title: SITE.title,
@@ -49,17 +49,17 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     images: [
       {
-        url: SITE.image,
-      },
-    ],
+        url: SITE.image
+      }
+    ]
   },
   icons: {
-    icon: SITE.favicon,
-  },
+    icon: SITE.favicon
+  }
 }
 
 export default function RootLayout({
-  children,
+  children
 }: Readonly<{
   children: React.ReactNode
 }>) {
@@ -70,8 +70,9 @@ export default function RootLayout({
           'bg-fm-white font-noto relative flex size-full min-h-dvh flex-col antialiased',
           josefinSans.variable,
           notoSans.variable,
-          superFortress.variable,
-        )}>
+          superFortress.variable
+        )}
+      >
         <GoogleAnalytics />
         <SpeedInsights />
         <Analytics />

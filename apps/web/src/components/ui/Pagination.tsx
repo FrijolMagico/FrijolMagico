@@ -1,7 +1,7 @@
 'use client'
 
-import { cn } from '@frijolmagico/ui/cn'
-import { Button } from '@frijolmagico/ui/button'
+import { cn } from '@/utils/cn'
+import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react'
 
 interface PaginationProps {

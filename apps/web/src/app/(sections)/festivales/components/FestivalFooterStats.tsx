@@ -1,4 +1,4 @@
-import { cn } from '@frijolmagico/ui/cn'
+import { cn } from '@/utils/cn'
 import { Ticket, Music, LucideIcon } from 'lucide-react'
 
 interface FestivalFooterStatsProps {
@@ -8,7 +8,7 @@ interface FestivalFooterStatsProps {
 
 export const FestivalFooterStats = ({
   talleresCount,
-  musicaCount,
+  musicaCount
 }: FestivalFooterStatsProps) => (
   <div className='flex items-center justify-end gap-3'>
     {talleresCount > 0 && (
@@ -18,7 +18,7 @@ export const FestivalFooterStats = ({
         count={talleresCount}
         color={{
           bg: 'bg-fm-yellow/10',
-          icon: 'text-fm-yellow',
+          icon: 'text-fm-yellow'
         }}
       />
     )}
@@ -47,13 +47,14 @@ export const FestivalFooterStatItem = ({
   icon: Icon,
   label,
   count,
-  color,
+  color
 }: FestivalFooterStatItemProps) => (
   <div
     className={cn(
       'border-fm-white/20 flex max-w-42 flex-1 items-center gap-3 rounded-2xl border px-3 py-2 transition-colors',
-      color.bg,
-    )}>
+      color.bg
+    )}
+  >
     <div className='bg-fm-white flex-shrink-0 rounded-full p-2 shadow-sm'>
       <Icon className={`h-3.5 w-3.5 ${color.icon}`} aria-hidden='true' />
     </div>

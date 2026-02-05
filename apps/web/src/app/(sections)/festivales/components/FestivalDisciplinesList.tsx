@@ -1,4 +1,4 @@
-import { cn } from '@frijolmagico/ui/cn'
+import { cn } from '@/utils/cn'
 
 export interface Discipline {
   label: string
@@ -16,8 +16,8 @@ export const FestivalDisciplinesList = ({
     'bg-fm-orange',
     'bg-fm-green',
     'bg-fm-yellow',
-    'bg-2025-green',
-  ],
+    'bg-2025-green'
+  ]
 }: FestivalDisciplinesListProps) => (
   <dl className='flex flex-1 flex-col justify-center gap-1'>
     {disciplines.length > 0 ? (
@@ -27,7 +27,7 @@ export const FestivalDisciplinesList = ({
             <span
               className={cn(
                 'h-1.5 w-1.5 shrink-0 rounded-full transition-transform group-hover/item:scale-125',
-                disciplineColors[index % disciplineColors.length],
+                disciplineColors[index % disciplineColors.length]
               )}
               aria-hidden='true'
             />

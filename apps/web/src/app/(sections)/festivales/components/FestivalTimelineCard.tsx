@@ -1,4 +1,4 @@
-import { cn } from '@frijolmagico/ui/cn'
+import { cn } from '@/utils/cn'
 import { getDaysDisplay, getLocation } from '../utils/timelineUtils'
 
 import type { FestivalEdicion } from '../types/festival'
@@ -8,7 +8,7 @@ import { FestivalEventDetails } from './FestivalEventDetails'
 import { FestivalExponentesCount } from './FestivalExponentesCount'
 import {
   FestivalDisciplinesList,
-  type Discipline,
+  type Discipline
 } from './FestivalDisciplinesList'
 import { FestivalPoster } from './FestivalPoster'
 import { FestivalFooterStats } from './FestivalFooterStats'
@@ -27,15 +27,15 @@ export const FestivalTimelineCard = ({
   alignment = 'left',
   festivalId,
   isActive = false,
-  priority = false,
+  priority = false
 }: FestivalTimelineCardProps) => {
   const { evento, resumen } = festival
 
   const allDisciplines: Discipline[] = Object.entries(
-    resumen.por_disciplina,
+    resumen.por_disciplina
   ).map(([label, count]) => ({
     label,
-    count: count as number,
+    count: count as number
   }))
 
   const daysDisplay = getDaysDisplay(evento.dias)
@@ -51,8 +51,9 @@ export const FestivalTimelineCard = ({
         data-festival-id={festivalId}
         className={cn(
           'group bg-fm-white outline-fm-black/20 flex flex-col overflow-hidden rounded-3xl shadow-lg outline transition-all duration-300 outline-dashed hover:shadow-xl',
-          alignment === 'right' ? 'md:flex-row-reverse' : 'md:flex-row',
-        )}>
+          alignment === 'right' ? 'md:flex-row-reverse' : 'md:flex-row'
+        )}
+      >
         {/* Left Panel: Info */}
         <div className='relative z-10 flex w-full flex-col justify-between p-6'>
           {/* Header Section */}

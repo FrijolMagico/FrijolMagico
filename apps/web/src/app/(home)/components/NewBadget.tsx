@@ -1,9 +1,9 @@
-import { cn } from '@frijolmagico/ui/cn'
+import { cn } from '@/utils/cn'
 
 export const NewBadget = ({
   color = 'text-fm-orange',
   backgroundColor = 'bg-fm-white',
-  outlineColor = 'outline-fm-white',
+  outlineColor = 'outline-fm-white'
 }) => {
   return (
     <span
@@ -11,8 +11,9 @@ export const NewBadget = ({
         'absolute -top-2 -left-2 z-20 -rotate-6 rounded-md px-2 font-bold outline-2',
         color,
         backgroundColor,
-        outlineColor,
-      )}>
+        outlineColor
+      )}
+    >
       Nuevo!
     </span>
   )

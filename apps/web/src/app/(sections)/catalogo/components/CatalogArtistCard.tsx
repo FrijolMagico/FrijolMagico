@@ -4,7 +4,7 @@ import Image from 'next/image'
 import type { CatalogArtist } from '../types/catalog'
 import { Instagram, Mail } from 'lucide-react'
 import { useCatalogPanelStore } from '../store/useCatalogPanelStore'
-import { cn } from '@frijolmagico/ui/cn'
+import { cn } from '@/utils/cn'
 
 export const CatalogArtistCard = ({
   id,
@@ -21,14 +21,14 @@ export const CatalogArtistCard = ({
   collectives,
   editions,
   orden,
-  destacado,
+  destacado
 }: CatalogArtist) => {
   const selectedArtist = useCatalogPanelStore((state) => state.selectedArtist)
   const setSelectedArtist = useCatalogPanelStore(
-    (state) => state.setSelectedArtist,
+    (state) => state.setSelectedArtist
   )
   const setArtistPanelOpen = useCatalogPanelStore(
-    (state) => state.setArtistPanelOpen,
+    (state) => state.setArtistPanelOpen
   )
 
   const isSelected = selectedArtist?.id === id
@@ -49,7 +49,7 @@ export const CatalogArtistCard = ({
       collectives,
       editions,
       orden,
-      destacado,
+      destacado
     })
     setArtistPanelOpen(true)
   }
@@ -60,9 +60,10 @@ export const CatalogArtistCard = ({
         'text-fm-orange group hover:bg-fm-white outline-fm-dark/50 w-full cursor-default bg-transparent outline-1 outline-dashed hover:outline-solid sm:max-w-xs lg:max-w-sm',
         'relative flex flex-col justify-around space-y-6 rounded-xl p-4 transition-all duration-300',
         {
-          'bg-fm-white scale-105 outline-solid': isSelected,
-        },
-      )}>
+          'bg-fm-white scale-105 outline-solid': isSelected
+        }
+      )}
+    >
       <section className='flex items-center gap-4'>
         <Image
           loading='lazy'
@@ -104,13 +105,15 @@ export const CatalogArtistCard = ({
             aria-label='Instagram'
             className='hover:text-fm-orange transition duration-300 hover:scale-105'
             target='_blank'
-            rel='noopener noreferrer'>
+            rel='noopener noreferrer'
+          >
             <Instagram size={18} />
           </a>
           <a
             href={`mailto:${email}`}
             aria-label='Email'
-            className='hover:text-fm-orange transition duration-300 hover:scale-105'>
+            className='hover:text-fm-orange transition duration-300 hover:scale-105'
+          >
             <Mail size={18} />
           </a>
         </section>
@@ -121,8 +124,9 @@ export const CatalogArtistCard = ({
           className={cn([
             'outline-fm-white absolute right-4 bottom-4 rotate-6 cursor-pointer outline group-hover:rotate-0',
             'text-fm-white hover:bg-fm-orange outline-fm-orange hover:text-fm-white rounded px-3 py-1.5 text-xs outline transition duration-300',
-            isSelected ? 'bg-fm-orange rotate-0' : 'bg-fm-white text-fm-orange',
-          ])}>
+            isSelected ? 'bg-fm-orange rotate-0' : 'bg-fm-white text-fm-orange'
+          ])}
+        >
           Ver más
         </button>
       </section>

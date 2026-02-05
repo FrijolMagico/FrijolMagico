@@ -1,6 +1,6 @@
 import ReactMarkdown from 'react-markdown'
 import { DoodleLine } from './DoodleLine'
-import { cn } from '@frijolmagico/ui/cn'
+import { cn } from '@/utils/cn'
 
 export const Header = ({
   title,
@@ -9,21 +9,21 @@ export const Header = ({
   doodleColor = 'text-fm-green',
   fontFamily,
   textColor,
-  fontSize,
+  fontSize
 }: HeaderProps) => {
   const finalFontFamily = {
     ...defaultFontFamily,
-    ...fontFamily,
+    ...fontFamily
   }
 
   const finalTextColor = {
     ...defaultTextColor,
-    ...textColor,
+    ...textColor
   }
 
   const finalFontSize = {
     ...defaultFontSize,
-    ...fontSize,
+    ...fontSize
   }
 
   return (
@@ -32,36 +32,36 @@ export const Header = ({
         <ReactMarkdown
           components={{
             h1: ({ ...props }) => (
-               
               <h1
                 className={cn(
                   'py-2 text-center',
                   finalTextColor.titleClass,
                   finalFontFamily.titleClass,
-                  finalFontSize.titleClass,
+                  finalFontSize.titleClass
                 )}
                 {...props}
               />
-            ),
-          }}>
+            )
+          }}
+        >
           {title}
         </ReactMarkdown>
         {!!subTitle && (
           <ReactMarkdown
             components={{
               h2: ({ ...props }) => (
-                 
                 <h2
                   className={cn(
                     '-mt-6 py-2 text-center',
                     finalTextColor.subTitleClass,
                     finalFontFamily.subTitleClass,
-                    finalFontSize.subTitleClass,
+                    finalFontSize.subTitleClass
                   )}
                   {...props}
                 />
-              ),
-            }}>
+              )
+            }}
+          >
             {subTitle}
           </ReactMarkdown>
         )}
@@ -75,12 +75,13 @@ export const Header = ({
                   'mx-auto max-w-prose text-center font-normal',
                   finalTextColor.descriptionClass,
                   finalFontFamily.descriptionClass,
-                  finalFontSize.descriptionClass,
+                  finalFontSize.descriptionClass
                 )}
                 {...props}
               />
-            ),
-          }}>
+            )
+          }}
+        >
           {description}
         </ReactMarkdown>
       )}
@@ -108,18 +109,18 @@ interface HeaderProps {
 const defaultFontFamily: StylesClassProps = {
   titleClass: 'font-josefin',
   subTitleClass: 'font-josefin',
-  descriptionClass: 'font-noto',
+  descriptionClass: 'font-noto'
 }
 
 const defaultTextColor: StylesClassProps = {
   titleClass:
     'from-flexible-orange to-flexible-yellow bg-gradient-to-r bg-clip-text text-transparent',
   subTitleClass: 'text-flexible-orange',
-  descriptionClass: 'text-flexible-green',
+  descriptionClass: 'text-flexible-green'
 }
 
 const defaultFontSize: StylesClassProps = {
   titleClass: 'text-5xl sm:text-6xl',
   subTitleClass: 'text-4xl',
-  descriptionClass: 'text-base',
+  descriptionClass: 'text-base'
 }

@@ -1,4 +1,4 @@
-import { cn } from '@frijolmagico/ui/cn'
+import { cn } from '@/utils/cn'
 
 interface TimelineConnectorProps {
   toLeft?: boolean
@@ -17,7 +17,7 @@ export const TimelineConnector = ({
   curveRadius = 24,
   color = 'stroke-fm-yellow',
   width = 640,
-  height = 400,
+  height = 400
 }: TimelineConnectorProps) => {
   const pathData =
     toLeft === false
@@ -38,13 +38,15 @@ export const TimelineConnector = ({
     <div
       className={cn(
         '-z-10 size-full',
-        toLeft ? 'translate-x-8' : '-translate-x-8',
-      )}>
+        toLeft ? 'translate-x-8' : '-translate-x-8'
+      )}
+    >
       <svg
         className='size-full'
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio='none'
-        aria-hidden='true'>
+        aria-hidden='true'
+      >
         <path
           fill='none'
           strokeWidth={strokeWidth}

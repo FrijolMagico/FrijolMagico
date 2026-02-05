@@ -6,25 +6,25 @@ import { Instagram, Mail, X } from 'lucide-react'
 import Markdown from 'react-markdown'
 
 import { useCatalogPanelStore } from '../store/useCatalogPanelStore'
-import { cn } from '@frijolmagico/ui/cn'
+import { cn } from '@/utils/cn'
 import { getInstagramUserTag } from '@frijolmagico/utils/string'
 import { useAnalytics } from '@/components/analytics/useAnalytics'
 
 import type { CatalogArtist } from '../types/catalog'
 
 export const CatalogPanel = ({
-  catalogData,
+  catalogData
 }: {
   catalogData: CatalogArtist[]
 }) => {
   const isArtistPanelOpen = useCatalogPanelStore(
-    (state) => state.isArtistPanelOpen,
+    (state) => state.isArtistPanelOpen
   )
   const setArtistPanelOpen = useCatalogPanelStore(
-    (state) => state.setArtistPanelOpen,
+    (state) => state.setArtistPanelOpen
   )
   const setSelectedArtist = useCatalogPanelStore(
-    (state) => state.setSelectedArtist,
+    (state) => state.setSelectedArtist
   )
 
   const selectedArtist = useCatalogPanelStore((state) => state.selectedArtist)
@@ -39,7 +39,7 @@ export const CatalogPanel = ({
       trackArtistView({
         artist_name: selectedArtist.name,
         artist_category: selectedArtist.category ?? undefined,
-        artist_city: selectedArtist.city,
+        artist_city: selectedArtist.city
       })
     }
   }, [isArtistPanelOpen, selectedArtist, trackArtistView])
@@ -80,13 +80,13 @@ export const CatalogPanel = ({
     ? catalogData.filter(
         (artist) =>
           artist.collective === selectedArtist.collective &&
-          artist.id !== selectedArtist.id,
+          artist.id !== selectedArtist.id
       )
     : []
 
   const handleChangePanelToCollectiveMember = (collectiveMemberId: string) => {
     const collectiveMember = catalogData.find(
-      (artist) => artist.id === collectiveMemberId,
+      (artist) => artist.id === collectiveMemberId
     )
 
     if (collectiveMember) {
@@ -101,9 +101,10 @@ export const CatalogPanel = ({
     <div
       className={cn(
         'text-fm-black fixed inset-0 z-50 overflow-hidden backdrop-blur-sm transition-opacity duration-300',
-        isVisible ? 'opacity-100' : 'pointer-events-none opacity-0',
+        isVisible ? 'opacity-100' : 'pointer-events-none opacity-0'
       )}
-      aria-label='Panel de detalles del artista'>
+      aria-label='Panel de detalles del artista'
+    >
       <div
         className='fixed inset-0'
         onClick={() => setArtistPanelOpen(false)}
@@ -113,9 +114,10 @@ export const CatalogPanel = ({
       <aside
         className={cn(
           'bg-fm-white fixed inset-0 w-full max-w-md shadow-xl transition-transform duration-300 ease-in-out sm:top-4 sm:right-4 sm:bottom-4 sm:left-auto sm:rounded-2xl',
-          isVisible ? 'translate-x-0' : 'translate-x-full',
+          isVisible ? 'translate-x-0' : 'translate-x-full'
         )}
-        aria-labelledby='artist-details-heading'>
+        aria-labelledby='artist-details-heading'
+      >
         <div className='h-full overflow-y-auto p-6'>
           <header className='mb-6 flex items-start justify-between'>
             <h2 id='artist-details-heading' className='text-2xl font-bold'>
@@ -124,7 +126,8 @@ export const CatalogPanel = ({
             <button
               onClick={() => setArtistPanelOpen(false)}
               className='hover:text-fm-orange cursor-pointer rounded-full p-1 transition duration-150 hover:scale-110'
-              aria-label='Cerrar panel'>
+              aria-label='Cerrar panel'
+            >
               <X className='h-6 w-6' />
             </button>
           </header>
@@ -171,7 +174,8 @@ export const CatalogPanel = ({
                               onClick={() =>
                                 handleChangePanelToCollectiveMember(member.id)
                               }
-                              className='text-fm-orange cursor-pointer hover:underline'>
+                              className='text-fm-orange cursor-pointer hover:underline'
+                            >
                               {member.name}
                             </button>
                           </li>
@@ -214,7 +218,8 @@ export const CatalogPanel = ({
                     {selectedArtist.editions.map((edition, index) => (
                       <li
                         key={index}
-                        className='bg-fm-green/10 text-fm-green rounded px-2 py-1 text-xs'>
+                        className='bg-fm-green/10 text-fm-green rounded px-2 py-1 text-xs'
+                      >
                         {edition.evento} {edition.edicion}
                         {edition.año && ` (${edition.año})`}
                       </li>
@@ -241,9 +246,10 @@ export const CatalogPanel = ({
                     onClick={() =>
                       trackSocialClick({
                         platform: 'email',
-                        location: 'artist_panel',
+                        location: 'artist_panel'
                       })
-                    }>
+                    }
+                  >
                     <span className='w-6'>
                       <Mail size={18} />
                     </span>
@@ -257,9 +263,10 @@ export const CatalogPanel = ({
                     onClick={() =>
                       trackSocialClick({
                         platform: 'instagram',
-                        location: 'artist_panel',
+                        location: 'artist_panel'
                       })
-                    }>
+                    }
+                  >
                     <span className='w-6'>
                       <Instagram size={18} />
                     </span>

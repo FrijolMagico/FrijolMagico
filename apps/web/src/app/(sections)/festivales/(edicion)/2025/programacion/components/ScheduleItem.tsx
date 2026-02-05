@@ -1,4 +1,4 @@
-import { cn } from '@frijolmagico/ui/cn'
+import { cn } from '@/utils/cn'
 import { type AppSchedule as ScheduleItemProps } from '../types/schedule'
 import { ScheduleItemLabel } from './SchceduleItemLabel'
 import { ScheduleSpeakerName } from './ScheduleSpeakerName'
@@ -12,7 +12,7 @@ export const ScheduleItem = ({
   infoLink,
   speaker,
   speakerSocialLink,
-  inscriptionLink,
+  inscriptionLink
 }: ScheduleItemProps) => {
   return (
     <li
@@ -20,8 +20,9 @@ export const ScheduleItem = ({
         'hover:text-2025-white text-fm-black before:bg-2025-white after:bg-fm-black',
         'group relative grid h-fit min-h-44 w-full max-w-[340px] gap-4 px-4 pt-8 leading-4 shadow-lg duration-300',
         "before:absolute before:-z-20 before:h-full before:w-full before:rounded-xl before:content-['']",
-        "after:absolute after:bottom-0 after:-z-10 after:h-7 after:w-full after:rounded-b-xl after:duration-300 after:content-[''] hover:after:h-full hover:after:rounded-t-xl",
-      ])}>
+        "after:absolute after:bottom-0 after:-z-10 after:h-7 after:w-full after:rounded-b-xl after:duration-300 after:content-[''] hover:after:h-full hover:after:rounded-t-xl"
+      ])}
+    >
       <ScheduleItemLabel text={activityType} />
       <header>
         <h2 className='group-hover:text-2025-yellow text-fm-black font-bold tracking-wide uppercase duration-300'>
@@ -46,7 +47,8 @@ export const ScheduleItem = ({
               target='_blank'
               rel='noopener noreferrer'
               href={infoLink}
-              className='hover:text-2025-yellow w-full py-1.5 whitespace-nowrap transition duration-300'>
+              className='hover:text-2025-yellow w-full py-1.5 whitespace-nowrap transition duration-300'
+            >
               Más info
             </a>
             <hr className='border-2025-white w-4 rotate-90 border-1' />
@@ -57,7 +59,8 @@ export const ScheduleItem = ({
             target='_blank'
             rel='noopener noreferrer'
             className='hover:text-2025-yellow w-full py-1.5 whitespace-nowrap transition duration-300'
-            href={inscriptionLink}>
+            href={inscriptionLink}
+          >
             Inscríbete aquí
           </a>
         )}

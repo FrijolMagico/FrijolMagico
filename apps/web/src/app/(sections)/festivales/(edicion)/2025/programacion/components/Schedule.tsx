@@ -1,4 +1,4 @@
-import { cn } from '@frijolmagico/ui/cn'
+import { cn } from '@/utils/cn'
 import { ScheduleItem } from './ScheduleItem'
 import { type AppSchedule } from '../types/schedule'
 
@@ -27,8 +27,9 @@ export const Schedule = ({ schedule }: ScheduleProps) => {
         <section className='flex h-fit gap-2 md:gap-10'>
           <h3
             className={cn([
-              'font-superfortress text-2025-white -scale-100 text-center text-2xl leading-[1.5rem] font-bold tracking-wider [writing-mode:vertical-lr] md:text-4xl',
-            ])}>
+              'font-superfortress text-2025-white -scale-100 text-center text-2xl leading-[1.5rem] font-bold tracking-wider [writing-mode:vertical-lr] md:text-4xl'
+            ])}
+          >
             {time}
           </h3>
           <ul className='flex w-full flex-wrap gap-x-6 gap-y-10'>
