@@ -4,41 +4,38 @@ Admin panel for Frijol Mágico Cultural Association. Built with Next.js 16, Reac
 
 ## Overview
 
-The admin app provides a management interface for:
+The admin app provides a protected management interface for:
 
-- **Artist Management**: View, edit, and manage artist profiles
-- **Festival Management**: Create and manage festival editions
-- **Open Calls**: Manage convocatorias and applications
-- **User Management**: Admin user accounts and permissions (planned)
-- **Content Management**: Manage CMS content via Google Sheets
+- **Dashboard**: Overview and quick actions
+- **Artist Management**: View and manage artist profiles (planned)
+- **Festival Management**: Manage festival editions (planned)
+- **User Management**: Admin accounts via Better Auth
 
 ## Tech Stack
 
 - **Framework**: Next.js 16 with App Router and Turbopack
 - **UI**: React 19, Tailwind CSS v4
-- **State**: Zustand for client-side state
-- **Data**: Drizzle ORM with Turso Database
-- **Auth**: Better Auth (planned)
+- **Auth**: Better Auth with Google OAuth
+- **Data**: Drizzle ORM with Turso Database via `@frijolmagico/database`
 
 ## Project Structure
 
 ```
 src/
-├── app/                      # Next.js App Router
-│   ├── (auth)/               # Auth-related routes
-│   ├── (dashboard)/          # Main dashboard routes
-│   ├── api/                  # API routes
-│   ├── layout.tsx            # Root layout
-│   └── page.tsx              # Root page
-├── components/               # Shared components
-├── config/                   # Configuration
-├── hooks/                    # Shared hooks
-├── lib/                      # Library utilities
-├── schemas/                  # Zod validation schemas
-├── services/                 # Data fetching services
-├── styles/                   # Global styles
-├── types/                    # TypeScript types
-└── utils/                    # Utilities
+├── app/                       # Next.js App Router
+│   ├── api/auth/[...all]/     # Better Auth API routes
+│   ├── auth/lib/              # Auth configuration
+│   │   ├── auth.ts            # Better Auth config
+│   │   ├── auth-client.ts     # Client-side auth
+│   │   └── get-session.ts     # Server session helper
+│   ├── dashboard/             # Protected dashboard
+│   ├── login/                 # Login page
+│   ├── layout.tsx
+│   └── page.tsx               # Redirects to dashboard
+├── components/                # Shared components
+├── lib/                       # Utilities
+├── styles/                    # Global styles
+└── types/                     # TypeScript types
 ```
 
 ## Available Scripts
@@ -59,35 +56,60 @@ bun run type-check             # TypeScript check
 
 ## Environment Variables
 
-Create `.env.local` in `apps/admin/`:
+See `.env.example` in this directory for all required and optional environment variables.
+
+Copy the example file and fill in your values:
 
 ```bash
-# Required
-TURSO_DATABASE_URL=https://your-database.turso.io
-TURSO_AUTH_TOKEN=your-auth-token
-BETTER_AUTH_URL=http://localhost:3001
-NEXT_PUBLIC_APP_URL=http://localhost:3001
-
-# Google OAuth (for authentication)
-GOOGLE_CLIENT_ID=your-client-id
-GOOGLE_CLIENT_SECRET=your-client-secret
-
-# Optional
-NEXT_PUBLIC_GA_MEASUREMENT_ID=your-ga-id
+cp .env.example .env.local
 ```
 
-## Key Dependencies
+Key variable categories:
+- **Turso Database**: `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`
+- **Better Auth**: `BETTER_AUTH_URL`, `NEXT_PUBLIC_APP_URL`
+- **Google OAuth**: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
 
-- `next` - Next.js 16
-- `react` - React 19
-- `@frijolmagico/database` - Workspace database package (with Drizzle ORM)
-- `@frijolmagico/ui` - Workspace UI components
-- `zustand` - State management
-- `better-auth` - Authentication (planned)
+**Note:** Do not commit `.env.local` with secrets. Keep it in `.gitignore`.
+
+## Authentication
+
+Better Auth with Google OAuth:
+
+- **Provider**: Better Auth with Drizzle adapter
+- **Method**: Google OAuth only (no email/password)
+- **Restriction**: Only `@frijolmagico.cl` domain allowed
+- **Session**: 3-day expiration, 24-hour update age
+
+### Auth Flow
+
+1. User visits `/login` → Google OAuth button
+2. Callback handled by Better Auth at `/api/auth/[...all]/`
+3. Domain verified in middleware
+4. Session stored in cookies
+5. Protected routes check session via `get-session.ts`
+
+### Protecting Routes
+
+```typescript
+import { auth } from '@/app/auth/lib/auth'
+import { headers } from 'next/headers'
+
+export default async function DashboardPage() {
+  const session = await auth.api.getSession({
+    headers: await headers()
+  })
+  
+  if (!session) {
+    redirect('/login')
+  }
+  
+  // ...
+}
+```
 
 ## Database Integration
 
-The admin app primarily uses the Drizzle ORM client for type-safe database operations:
+Uses Drizzle ORM client for type-safe operations:
 
 ```typescript
 import { db } from '@frijolmagico/database/orm'
@@ -105,101 +127,27 @@ const artistas = await db.query.artista.findMany({
 // Insert
 const [nuevo] = await db
   .insert(artista)
-  .values({
-    pseudonimo: 'El Artista',
-    slug: 'el-artista'
-  })
+  .values({ pseudonimo: 'El Artista', slug: 'el-artista' })
   .returning()
-
-// Update
-await db.update(artista).set({ ciudad: 'Santiago' }).where(eq(artista.id, 1))
 ```
 
-## Features
+## Security
 
-### Type-Safe Database Operations
-
-Full Drizzle ORM integration with:
-
-- Automatic type inference
-- Relational queries
-- Transactions support
-
-### Admin Dashboard
-
-- Overview of key metrics
-- Quick actions for common tasks
-- Recent activity feed
-
-### Data Management
-
-- CRUD operations for all entities
-- Bulk operations
-- Data validation with Zod schemas
-
-## Routing
-
-Using Next.js App Router with route groups:
-
-- `(auth)` - Authentication routes (login, register)
-- `(dashboard)` - Main admin interface
-
-## Authentication (Planned)
-
-Integration with Better Auth for:
-
-- Google OAuth login
-- Session management
-- Role-based access control
-
-## Styling
-
-- Tailwind CSS v4
-- Dark mode support (planned)
-- Responsive design for desktop/tablet use
-
-## Development
-
-### Adding a New Admin Feature
-
-1. Create route in `src/app/(dashboard)/`
-2. Add page component with data fetching
-3. Use Drizzle ORM for database operations
-4. Add Zod schemas for validation
-
-### Database Migrations
-
-Run from root:
-
-```bash
-bun run db:migrate
-```
-
-Or from database package:
-
-```bash
-cd packages/database
-bun run db:migrate
-```
+- Authentication required for all admin routes
+- Domain restriction to `@frijolmagico.cl`
+- Database operations validated
+- Input sanitization with Zod
 
 ## Deployment
 
 Deployed to Vercel alongside the web app:
-
 - Separate deployment configuration
-- Shared database via Turso
-- Environment-specific variables
-
-## Security Considerations
-
-- Authentication required for all admin routes
-- Database operations validated
-- Input sanitization with Zod
-- Environment variables for sensitive data
+- Port 3001 in development
 
 ## See Also
 
 - [Root README](../../README.md) - Project overview
-- [AGENTS.md](../../AGENTS.md) - Development conventions
+- [AGENTS.md](../../AGENTS.md) - Monorepo conventions
+- [Admin AGENTS.md](./AGENTS.md) - Admin app detailed conventions
 - [packages/database/README.md](../../packages/database/README.md) - Database docs
-- [apps/web/README.md](../web/README.md) - Web app docs
+- [Better Auth Docs](https://www.better-auth.com/)

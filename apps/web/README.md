@@ -6,48 +6,45 @@ Main website for Frijol Mágico Cultural Association (frijolmagico.cl). Built wi
 
 The web app serves as the digital hub for the Frijol Mágico Festival, featuring:
 
-- **Home Page**: Festival announcements and featured content
-- **Catalog**: Artist catalog with filters and search
-- **Festivals**: Festival editions and event information
-- **Open Calls**: Current and past convocatorias
-- **About**: Organization information and team
+- **Home Page**: Bento grid with festival announcements and featured content
+- **Catalog**: Artist catalog with filters, search, and panel view
+- **Festivals**: Festival editions with timeline, schedule, and participant info
+- **Open Calls**: Convocatorias for festival participation
+- **About**: Organization information
 
 ## Tech Stack
 
 - **Framework**: Next.js 16 with App Router and Turbopack
 - **UI**: React 19, Tailwind CSS v4, GSAP animations
 - **State**: Zustand for client-side state
-- **Data**: Google Sheets (CMS) + Turso Database
-- **Auth**: Better Auth (planned)
+- **Data**: Google Sheets (CMS) + Turso Database via `@frijolmagico/database`
+- **Analytics**: Vercel Analytics, Google Analytics, SpeedInsights
 
 ## Project Structure
 
 ```
 src/
-├── app/                      # Next.js App Router
-│   ├── (home)/               # Home page route group
-│   ├── (sections)/           # Main sections
-│   │   ├── catalogo/         # Artist catalog
-│   │   ├── convocatoria/     # Open calls
-│   │   ├── festivales/       # Festival pages
-│   │   ├── nosotros/         # About page
-│   │   └── quienes-somos/    # Who we are
-│   ├── api/                  # API routes
-│   ├── layout.tsx            # Root layout
-│   └── page.tsx              # Root page (redirects to home)
-├── components/               # Shared components
-│   ├── ui/                   # UI primitives
-│   └── [section]/            # Section-specific components
-├── config/                   # Configuration (paths, etc.)
-├── hooks/                    # Shared hooks
-├── infra/                    # Infrastructure adapters
-│   ├── db/                   # Database adapters
-│   └── sheets/               # Google Sheets integration
-├── schemas/                  # Zod validation schemas
-├── services/                 # Data fetching services
-├── styles/                   # Global styles
-├── types/                    # TypeScript types
-└── utils/                    # Utilities
+├── app/                       # Next.js App Router
+│   ├── (home)/                # Home page route group
+│   │   ├── components/        # Home-specific components
+│   │   └── page.tsx
+│   ├── (sections)/            # Main content sections
+│   │   ├── catalogo/          # Artist catalog
+│   │   ├── convocatoria/      # Open calls
+│   │   ├── festivales/        # Festival pages
+│   │   └── nosotros/          # About page
+│   ├── layout.tsx
+│   └── not-found.tsx
+├── components/                # Shared components
+├── config/                    # Configuration
+├── hooks/                     # Shared hooks
+├── infra/                     # Infrastructure adapters
+│   ├── config/                # Data source config
+│   └── services/              # Google Sheets adapter
+├── schemas/                   # Zod validation schemas
+├── styles/                    # Global styles
+├── types/                     # TypeScript types
+└── utils/                     # Utilities
 ```
 
 ## Available Scripts
@@ -55,7 +52,6 @@ src/
 ```bash
 # Development
 bun run dev                    # Start dev server with Turbopack (port 3000)
-bun run dev:real               # Dev with DATA_SOURCE=real
 
 # Build
 bun run build                  # Production build
@@ -69,128 +65,90 @@ bun run type-check             # TypeScript check
 
 ## Environment Variables
 
-Create `.env.local` in `apps/web/`:
+See `.env.example` in this directory for all required and optional environment variables.
+
+Copy the example file and fill in your values:
 
 ```bash
-# Required
-TURSO_DATABASE_URL=https://your-database.turso.io
-TURSO_AUTH_TOKEN=your-auth-token
-GOOGLE_API_KEY=your_google_api_key
-CATALOG_SHEET_ID=your_sheet_id
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-
-# Optional
-DATA_SOURCE=real              # Force production data sources
-NEXT_PUBLIC_GA_MEASUREMENT_ID=your-ga-id
-CDN_URL=your-cdn-url
+cp .env.example .env.local
 ```
+
+Key variable categories:
+- **Turso Database**: `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`
+- **Google Sheets**: `GOOGLE_API_KEY`, sheet IDs for catalog and festivals
+- **Analytics**: `NEXT_PUBLIC_GA_MEASUREMENT_ID`
+- **Data Source**: `DATA_SOURCE` (controls mock/real data in development)
 
 ## Data Sources
 
 The app supports multiple data sources controlled by `DATA_SOURCE`:
 
-- **Default**: Intelligent defaults (mock for CMS in dev, local DB for database)
+- **Default**: Intelligent defaults (mock for CMS in dev, local DB for database queries)
 - **DATA_SOURCE=real**: Always use production data
 - **DATA_SOURCE=local**: Use local SQLite file
 
-## Key Dependencies
+## Section Pattern
 
-- `next` - Next.js 16
-- `react` - React 19
-- `gsap` - Animation library with ScrollTrigger
-- `zustand` - State management
-- `google-spreadsheet` - Google Sheets API
-- `lucide-react` - Icons
-- `@frijolmagico/database` - Workspace database package
-- `@frijolmagico/ui` - Workspace UI components
+Each section follows a consistent architecture:
+
+```
+(sections)/[section]/
+├── adapters/         # Repository pattern - data source logic
+│   ├── mappers/      # Data transformation
+│   ├── mocks/        # Development mock data
+│   └── queries/      # SQL queries
+├── components/       # Section-specific components
+├── constants/        # Config and constants
+├── lib/             # Data fetching functions
+├── store/           # Zustand stores
+├── types/           # TypeScript types
+├── utils/           # Utilities
+├── layout.tsx
+└── page.tsx
+```
+
+## Animation
+
+GSAP ScrollTrigger for scroll-based animations:
+
+```typescript
+'use client'
+import { useGSAP } from '@gsap/react'
+import { gsap } from 'gsap'
+
+useGSAP(() => {
+  gsap.from('.element', {
+    scrollTrigger: { trigger: '.element', start: 'top 80%' },
+    opacity: 0,
+    y: 50
+  })
+})
+```
 
 ## Features
 
 ### Responsive Design
-
 Mobile-first responsive design with Tailwind CSS v4.
 
-### Animations
-
-GSAP-powered animations including:
-
-- Scroll-triggered animations
-- Page transitions
-- Micro-interactions
-
 ### SEO
-
 - Automatic sitemap generation via `next-sitemap`
 - Meta tags and Open Graph
 - Structured data
 
 ### Performance
-
 - Static generation for most pages
 - Image optimization with Next.js Image
-- Code splitting
-
-## Routing
-
-Using Next.js App Router with route groups:
-
-- `(home)` - Home page and layout
-- `(sections)` - Main content sections
-
-## State Management
-
-Zustand stores located in `src/app/(sections)/[section]/store/`:
-
-- `useCatalogFiltersStore.ts` - Catalog filtering state
-- Section-specific stores for complex state
-
-## Styling
-
-- Tailwind CSS v4 with custom theme tokens
-- CSS variables for dynamic theming
-- `[data-palette]` attributes for context-specific styling
-
-## Development
-
-### Adding a New Section
-
-1. Create folder in `src/app/(sections)/`
-2. Add `page.tsx` and `layout.tsx`
-3. Create section-specific components in `src/components/[section]/`
-4. Add types to `src/types/` or section folder
-
-### Database Integration
-
-Use workspace database package:
-
-```typescript
-import { executeQuery } from '@frijolmagico/database/client'
-
-const { data, error } = await executeQuery(
-  'SELECT * FROM artista WHERE estado_id = ?',
-  [1]
-)
-```
-
-Or for type-safe queries with Drizzle ORM:
-
-```typescript
-import { db } from '@frijolmagico/database/orm'
-import { artista } from '@frijolmagico/database/schema'
-
-const artistas = await db.select().from(artista)
-```
+- Code splitting with Turbopack
 
 ## Deployment
 
 Deployed to Vercel with:
-
 - Automatic deployments on push to main
 - Preview deployments for PRs
-- Edge functions for dynamic routes
 
 ## See Also
 
 - [Root README](../../README.md) - Project overview
-- [AGENTS.md](../../AGENTS.md) - Development conventions
+- [AGENTS.md](../../AGENTS.md) - Monorepo conventions
+- [Web AGENTS.md](./AGENTS.md) - Web app detailed conventions
 - [packages/database/README.md](../../packages/database/README.md) - Database docs

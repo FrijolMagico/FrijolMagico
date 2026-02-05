@@ -66,12 +66,19 @@ This is a **Turborepo** monorepo with the following architecture:
 
 3. **Set up environment variables**
 
+   Copy the example env files and fill in the required values:
+
    ```bash
-   # Root environment (for both apps)
+   # Root environment
    cp .env.example .env.local
+   
+   # App-specific environments (see each app's README for details)
+   cp apps/web/.env.example apps/web/.env.local
+   cp apps/admin/.env.example apps/admin/.env.local
+   cp packages/database/.env.example packages/database/.env.local
    ```
 
-   Edit `.env.local` and fill in the required values (see [Environment Variables](#environment-variables) section).
+   See each app's README for environment variable details.
 
 4. **Run database migrations**
 
@@ -89,40 +96,6 @@ This is a **Turborepo** monorepo with the following architecture:
    - Web app: http://localhost:3000
    - Admin app: http://localhost:3001
 
-## Environment Variables
-
-Create a `.env.local` file in the root directory:
-
-### Required Variables
-
-```bash
-# Turso Database
-TURSO_DATABASE_URL=https://your-database-org.turso.io
-TURSO_AUTH_TOKEN=your-auth-token
-
-# Google Sheets API Configuration
-GOOGLE_API_KEY=your_google_api_key_here
-CATALOG_SHEET_ID=your_catalog_sheet_id_here
-APPROVED_ARTISTS_SHEET_ID=your_approved_sheet_id_here
-
-# Application URLs
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-BETTER_AUTH_URL=http://localhost:3001
-
-# Analytics
-NEXT_PUBLIC_GA_MEASUREMENT_ID=your-ga-id
-```
-
-### Development Configuration
-
-```bash
-# Data Source Configuration
-# Not set (default): Intelligent defaults based on environment
-# DATA_SOURCE=real: Force production data sources
-# DATA_SOURCE=local: Use local SQLite database
-DATA_SOURCE=real
-```
-
 ## Available Scripts
 
 ### Root Level
@@ -130,7 +103,6 @@ DATA_SOURCE=real
 ```bash
 # Development
 bun run dev                    # Start all apps with Turborepo
-bun run dev:real               # Dev with DATA_SOURCE=real
 
 # Build
 bun run build                  # Production build (all apps)
@@ -141,10 +113,8 @@ bun run lint:fix               # ESLint with auto-fix
 bun run type-check             # TypeScript check all packages
 bun run format                 # Prettier format
 
-# Database (via @frijolmagico/database package)
+# Database
 bun run db:migrate             # Run pending migrations
-bun run db:new <name>          # Create new migration
-bun run db:seed                # Run seed.sql
 ```
 
 ### Per-App Commands
@@ -166,6 +136,15 @@ For detailed documentation on each app and package, see:
 - **[apps/web/README.md](apps/web/README.md)** - Main website documentation
 - **[apps/admin/README.md](apps/admin/README.md)** - Admin panel documentation
 - **[packages/database/README.md](packages/database/README.md)** - Database/Drizzle ORM documentation
+
+### Agent Conventions
+
+For development conventions and coding standards, see the AGENTS.md files:
+
+- **[AGENTS.md](./AGENTS.md)** - Monorepo-wide conventions
+- **[apps/web/AGENTS.md](./apps/web/AGENTS.md)** - Web app architecture
+- **[apps/admin/AGENTS.md](./apps/admin/AGENTS.md)** - Admin app architecture
+- **[packages/database/AGENTS.md](./packages/database/AGENTS.md)** - Database package
 
 ## Development Guidelines
 
