@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { cn } from '@frijolmagico/ui/cn'
+import { cn } from '@/utils/cn'
 import { useScrollSpy } from '../hooks/useScrollSpy'
 import { useScrollToCenter } from '../hooks/useScrollToCenter'
 

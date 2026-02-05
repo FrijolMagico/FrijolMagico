@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import siteData from '@/data/site.json'
-import { cn } from '@frijolmagico/ui/cn'
+import { cn } from '@/utils/cn'
 import { paths } from '@/config/paths'
 import { normalizeString } from '@frijolmagico/utils/string'
 
