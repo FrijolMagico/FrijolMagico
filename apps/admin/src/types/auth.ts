@@ -3,7 +3,7 @@ export interface AuthUser {
   name: string
   email: string
   emailVerified: boolean
-  image?: string
+  image?: string | null
   createdAt: Date
   updatedAt: Date
 }
