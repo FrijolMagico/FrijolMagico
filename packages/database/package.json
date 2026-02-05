@@ -3,10 +3,6 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
-    },
     "./client": {
       "types": "./src/client.ts",
       "default": "./src/client.ts"
@@ -21,9 +17,9 @@
     }
   },
   "scripts": {
-    "db:migrate": "bun run --env-file .env.local drizzle-kit migrate --config drizzle.config.ts",
-    "db:new": "bun run --env-file .env.local drizzle-kit generate --custom --name",
-    "db:seed": "bun run --env-file .env.local turso db shell $TURSO_DATABASE_NAME < seed/seed.sql",
+    "migrate": "bun run --env-file .env.local drizzle-kit migrate --config drizzle.config.ts",
+    "new": "bun run --env-file .env.local drizzle-kit generate --custom --name",
+    "seed": "bun run --env-file .env.local turso db shell $TURSO_DATABASE_NAME < seed/seed.sql",
     "lint": "eslint .",
     "type-check": "tsc --noEmit"
   },
@@ -36,6 +32,7 @@
     "@frijolmagico/typescript-config": "workspace:*",
     "@frijolmagico/eslint-config": "workspace:*",
     "drizzle-kit": "^0.31.8",
+    "eslint": "^9.39.2",
     "typescript": "^5.9.3"
   }
 }

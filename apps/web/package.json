@@ -14,7 +14,6 @@
   "dependencies": {
     "@frijolmagico/database": "workspace:*",
     "@frijolmagico/tailwind-config": "workspace:*",
-    "@frijolmagico/ui": "workspace:*",
     "@frijolmagico/utils": "workspace:*",
     "@gsap/react": "^2.1.2",
     "@vercel/analytics": "^1.6.1",

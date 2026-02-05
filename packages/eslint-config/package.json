@@ -19,7 +19,9 @@
       "default": "./next.js"
     }
   },
-  "dependencies": {
+  "devDependencies": {
+    "eslint": "^9.39.2",
+    "typescript": "^5.9.3",
     "eslint-config-prettier": "^10.1.8",
     "eslint-config-next": "16.1.1"
   }
