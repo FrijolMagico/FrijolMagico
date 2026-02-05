@@ -2,12 +2,6 @@
 @import './palettes/base.css';
 
 @theme {
-  --font-noto: 'Noto Sans', sans-serif;
-  --font-josefin: 'Josefin Sans', sans-serif;
-  --font-superfortress: 'Superfortress', sans-serif;
-}
-
-@theme {
   --animate-card-slides: card-slides 12s linear infinite;
   --animate-soft-bounce: soft-bounce 5s ease-in-out infinite;
   --animate-gradient-shift: gradient-shift 20s ease-in-out infinite;
