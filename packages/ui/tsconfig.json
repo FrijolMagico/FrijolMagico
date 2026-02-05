@@ -1,6 +1,0 @@
-{
-  "extends": "@frijolmagico/typescript-config/next",
-  "include": [
-    "src/**/*"
-  ]
-}
