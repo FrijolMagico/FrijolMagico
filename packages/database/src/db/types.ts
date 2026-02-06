@@ -35,6 +35,8 @@ import {
   catalogoArtista
 } from './schema/artist'
 
+import { account, session, user, verification } from './schema/auth'
+
 // ============================================
 // Core Types
 // ============================================
@@ -138,3 +140,12 @@ export type NewParticipanteActividad = InferInsertModel<
 
 export type Actividad = InferSelectModel<typeof actividad>
 export type NewActividad = InferInsertModel<typeof actividad>
+
+// ============================================
+// Auth Types
+// ============================================
+
+export type User = InferSelectModel<typeof user>
+export type Session = InferSelectModel<typeof session>
+export type Account = InferSelectModel<typeof account>
+export type Verification = InferSelectModel<typeof verification>
