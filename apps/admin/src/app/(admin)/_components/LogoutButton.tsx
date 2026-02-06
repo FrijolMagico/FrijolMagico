@@ -1,6 +1,7 @@
 'use client'
 
 import { authClient } from '@/app/(auth)/lib/auth-client'
+import { Button } from '@/components/ui/button'
 import { useState } from 'react'
 
 export function LogoutButton() {
@@ -18,12 +19,13 @@ export function LogoutButton() {
   }
 
   return (
-    <button
+    <Button
       onClick={handleLogout}
       disabled={isLoading}
-      className='cursor-pointer rounded-md bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-700 disabled:opacity-50'
+      className='cursor-pointer'
+      variant='destructive'
     >
       {isLoading ? 'Cerrando sesión...' : 'Cerrar sesión'}
-    </button>
+    </Button>
   )
 }
