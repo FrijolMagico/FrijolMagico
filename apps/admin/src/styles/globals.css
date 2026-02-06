@@ -1,7 +1,12 @@
-@import "tailwindcss";
+@import "@frijolmagico/tailwind-config/css";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
+
+@theme {
+  --font-rubik: var(--font-rubik-bubbles);
+  --font-inter: var(--font-inter);
+}
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
