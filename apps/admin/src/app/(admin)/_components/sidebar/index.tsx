@@ -6,9 +6,9 @@ import {
   SidebarFooter,
   SidebarHeader
 } from '@/components/ui/sidebar'
-import type { AuthUser } from '@/types/auth'
 import { SidebarNavigationMenu } from './SidebarNavigationMenu'
 import Image from 'next/image'
+import { AuthUser } from '../../_types'
 
 interface AdminSidebarProps {
   user: AuthUser

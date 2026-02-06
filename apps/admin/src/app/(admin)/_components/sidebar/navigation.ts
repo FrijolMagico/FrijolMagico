@@ -26,10 +26,6 @@ export const navigation = [
       {
         title: 'Artistas',
         href: '/catalogo/artistas'
-      },
-      {
-        title: 'Disciplinas',
-        href: '/catalogo/disciplinas'
       }
     ]
   },
