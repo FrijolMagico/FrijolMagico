@@ -1,4 +1,7 @@
 import Link from 'next/link'
+import Image from 'next/image'
+
+import type { User } from '@frijolmagico/database/orm'
 
 import {
   Sidebar,
@@ -7,8 +10,9 @@ import {
   SidebarHeader
 } from '@/components/ui/sidebar'
 import { SidebarNavigationMenu } from './SidebarNavigationMenu'
-import Image from 'next/image'
-import { AuthUser } from '../../_types'
+
+// Better Auth may omit the image field entirely, making it undefined
+type AuthUser = Omit<User, 'image'> & { image?: string | null }
 
 interface AdminSidebarProps {
   user: AuthUser
