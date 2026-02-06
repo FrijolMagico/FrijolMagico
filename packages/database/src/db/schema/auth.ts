@@ -14,12 +14,12 @@ export const user = sqliteTable(
       .default(false),
     name: text('name'),
     image: text('image'),
-    createdAt: text('created_at')
+    createdAt: integer('created_at', { mode: 'timestamp' })
       .notNull()
-      .default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: text('updated_at')
+      .default(sql`(unixepoch())`),
+    updatedAt: integer('updated_at', { mode: 'timestamp' })
       .notNull()
-      .default(sql`CURRENT_TIMESTAMP`)
+      .default(sql`(unixepoch())`)
   },
   (table) => [index('idx_user_email').on(table.email)]
 )
@@ -33,12 +33,12 @@ export const session = sqliteTable(
     id: text('id').primaryKey(),
     expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
     token: text('token').notNull().unique(),
-    createdAt: text('created_at')
+    createdAt: integer('created_at', { mode: 'timestamp' })
       .notNull()
-      .default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: text('updated_at')
+      .default(sql`(unixepoch())`),
+    updatedAt: integer('updated_at', { mode: 'timestamp' })
       .notNull()
-      .default(sql`CURRENT_TIMESTAMP`),
+      .default(sql`(unixepoch())`),
     ipAddress: text('ip_address'),
     userAgent: text('user_agent'),
     userId: text('user_id')
@@ -62,16 +62,20 @@ export const account = sqliteTable(
       .references(() => user.id, { onDelete: 'cascade' }),
     accessToken: text('access_token'),
     refreshToken: text('refresh_token'),
-    accessTokenExpiresAt: text('access_token_expires_at'),
-    refreshTokenExpiresAt: text('refresh_token_expires_at'),
+    accessTokenExpiresAt: integer('access_token_expires_at', {
+      mode: 'timestamp'
+    }),
+    refreshTokenExpiresAt: integer('refresh_token_expires_at', {
+      mode: 'timestamp'
+    }),
     scope: text('scope'),
     idToken: text('id_token'),
-    createdAt: text('created_at')
+    createdAt: integer('created_at', { mode: 'timestamp' })
       .notNull()
-      .default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: text('updated_at')
+      .default(sql`(unixepoch())`),
+    updatedAt: integer('updated_at', { mode: 'timestamp' })
       .notNull()
-      .default(sql`CURRENT_TIMESTAMP`)
+      .default(sql`(unixepoch())`)
   },
   (table) => [index('idx_account_user_id').on(table.userId)]
 )
@@ -86,12 +90,12 @@ export const verification = sqliteTable(
     identifier: text('identifier').notNull(),
     value: text('value').notNull(),
     expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
-    createdAt: text('created_at')
+    createdAt: integer('created_at', { mode: 'timestamp' })
       .notNull()
-      .default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: text('updated_at')
+      .default(sql`(unixepoch())`),
+    updatedAt: integer('updated_at', { mode: 'timestamp' })
       .notNull()
-      .default(sql`CURRENT_TIMESTAMP`)
+      .default(sql`(unixepoch())`)
   },
   (table) => [index('idx_verification_identifier').on(table.identifier)]
 )
