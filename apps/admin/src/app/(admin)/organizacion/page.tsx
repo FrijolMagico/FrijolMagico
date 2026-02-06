@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getSession } from '@/app/(auth)/lib/get-session'
-import { getOrganizacionData } from './lib/getOrganizacionData'
-import { OrganizacionForm } from './components/OrganizacionForm'
+import { getOrganizacionData } from './_lib/getOrganizacionData'
+import { OrganizacionForm } from './_components/OrganizacionForm'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Suspense } from 'react'
 

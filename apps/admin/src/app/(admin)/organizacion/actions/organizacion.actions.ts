@@ -9,7 +9,7 @@ const { organizacion, organizacionEquipo } = core
 import type {
   OrganizacionFormData,
   UpdateOrganizacionResult
-} from '../types/organizacion'
+} from '../_types/organizacion'
 
 const ORGANIZATION_ID = 1
 
