@@ -172,6 +172,82 @@ export async function toggleCatalogoField(
   }
 }
 
+// Check if reindexing is needed (keys too long)
+export async function checkReindexNeeded(): Promise<{
+  needed: boolean
+  maxLength: number
+  count: number
+}> {
+  try {
+    const entries = await db
+      .select({
+        orden: catalogoArtista.orden
+      })
+      .from(catalogoArtista)
+      .orderBy(asc(catalogoArtista.orden))
+
+    const maxLength = entries.reduce((max, e) => Math.max(max, e.orden.length), 0)
+    const longKeysCount = entries.filter(e => e.orden.length > 32).length
+
+    return {
+      needed: maxLength > 50 || longKeysCount > entries.length * 0.1, // 10% of keys too long
+      maxLength,
+      count: longKeysCount
+    }
+  } catch (error) {
+    console.error('Error checking reindex:', error)
+    return { needed: false, maxLength: 0, count: 0 }
+  }
+}
+
+// Reindex all entries with compact fractional keys
+export async function compactCatalogoOrders(): Promise<OperationResult> {
+  try {
+    // Get all entries ordered by current order
+    const entries = await db
+      .select({
+        id: catalogoArtista.id,
+        artistaId: catalogoArtista.artistaId
+      })
+      .from(catalogoArtista)
+      .orderBy(asc(catalogoArtista.orden))
+
+    // Use fractional-indexing to generate compact keys
+    const { generateKeyBetween } = await import('fractional-indexing')
+    
+    let previousKey: string | null = null
+    
+    // Update each entry with a compact key
+    for (const entry of entries) {
+      const newKey = generateKeyBetween(previousKey, null)
+      
+      await db
+        .update(catalogoArtista)
+        .set({
+          orden: newKey,
+          updatedAt: new Date().toISOString()
+        })
+        .where(eq(catalogoArtista.id, entry.id))
+      
+      previousKey = newKey
+    }
+
+    // Revalidate paths
+    revalidatePath('/catalogo/artistas')
+    revalidatePath('/(sections)/catalogo')
+
+    return { 
+      success: true,
+    }
+  } catch (error) {
+    console.error('Error compacting orders:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error al compactar órdenes'
+    }
+  }
+}
+
 // Guardar cambios en batch (reorders + toggles)
 export async function saveCatalogoChanges(
   changes: PendingChanges
@@ -199,11 +275,21 @@ export async function saveCatalogoChanges(
         .where(eq(catalogoArtista.artistaId, toggle.artistaId))
     }
 
+    // Check if reindexing is needed after changes
+    const reindexStatus = await checkReindexNeeded()
+    
     // Revalidate paths
     revalidatePath('/catalogo/artistas')
     revalidatePath('/(sections)/catalogo')
 
-    return { success: true }
+    return { 
+      success: true,
+      reindexNeeded: reindexStatus.needed,
+      reindexInfo: reindexStatus.needed ? {
+        maxLength: reindexStatus.maxLength,
+        count: reindexStatus.count
+      } : undefined
+    }
   } catch (error) {
     console.error('Error saving catalogo changes:', error)
     return {
