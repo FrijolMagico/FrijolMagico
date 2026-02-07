@@ -1,11 +1,8 @@
-'use client'
-
 import { User } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { getAvatarUrl } from '../_lib/cdn'
 
 interface ArtistaAvatarProps {
-  src: string | null
+  src: string
   alt: string
   size?: 'sm' | 'md' | 'lg'
   className?: string
@@ -23,13 +20,11 @@ export function ArtistaAvatar({
   size = 'md',
   className
 }: ArtistaAvatarProps) {
-  const avatarUrl = getAvatarUrl(src)
-
   return (
     <Avatar className={`${sizeClasses[size]} ${className || ''}`}>
-      <AvatarImage src={avatarUrl} alt={alt} />
-      <AvatarFallback className="bg-gray-100">
-        <User className="h-4 w-4 text-gray-400" />
+      <AvatarImage src={src} alt={alt} />
+      <AvatarFallback className='bg-gray-100'>
+        <User className='h-4 w-4 text-gray-400' />
       </AvatarFallback>
     </Avatar>
   )
