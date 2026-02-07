@@ -1,6 +1,7 @@
 'use client'
 
 import { create } from 'zustand'
+import { generateKeyBetween } from 'fractional-indexing'
 import type {
   CatalogoArtista,
   CatalogoEntryFormData,
@@ -58,7 +59,7 @@ interface CatalogoFormState {
   // Actions - Drag & Drop
   startDrag: (artistaId: number) => void
   endDrag: () => void
-  reorderArtistas: (newOrder: CatalogoArtista[]) => void
+  reorderArtistas: (newOrder: CatalogoArtista[], draggedArtistaId?: number) => void
 
   // Actions - Toggles (local only, tracked in pending)
   toggleField: (
@@ -177,39 +178,90 @@ export const useCatalogoForm = create<CatalogoFormState>((set, get) => ({
     })
   },
 
-  reorderArtistas: (newOrder) => {
+  reorderArtistas: (newOrder, draggedArtistaId?: number) => {
     set((state) => {
-      // Calculate which items changed order
-      const reorders: Array<{ artistaId: number; newOrden: string }> = []
+      if (!state.originalArtistas || !draggedArtistaId) return state
 
-      newOrder.forEach((item, index) => {
-        const originalItem = state.originalArtistas?.find(
-          (a) => a.artistaId === item.artistaId
-        )
-        if (originalItem) {
-          // Calculate new order value
-          const prevItem = newOrder[index - 1]
-          const nextItem = newOrder[index + 1]
-          let newOrden: string
+      // Create map for efficient lookup
+      const originalById = new Map(state.originalArtistas.map(a => [a.artistaId, a]))
 
-          if (!prevItem) {
-            newOrden = nextItem ? String(parseFloat(nextItem.orden) / 2) : '1'
-          } else if (!nextItem) {
-            newOrden = String(parseFloat(prevItem.orden) + 1)
-          } else {
-            const prevOrder = parseFloat(prevItem.orden)
-            const nextOrder = parseFloat(nextItem.orden)
-            newOrden = String((prevOrder + nextOrder) / 2)
-          }
+      // Find the dragged item in the new order
+      const draggedNewIndex = newOrder.findIndex(item => item.artistaId === draggedArtistaId)
+      if (draggedNewIndex === -1) return state
 
-          if (newOrden !== originalItem.orden) {
-            reorders.push({ artistaId: item.artistaId, newOrden })
-          }
+      const draggedItem = newOrder[draggedNewIndex]
+      
+      // Get the CURRENT item from state.artistas (includes previous changes), not original
+      const currentDraggedItem = state.artistas.find(a => a.artistaId === draggedArtistaId)
+      const currentOrder = currentDraggedItem?.orden ?? originalById.get(draggedArtistaId)?.orden ?? ''
+      
+      if (!currentDraggedItem && !originalById.has(draggedArtistaId)) return state
+
+      // Get the neighbors in the NEW order
+      const prevItem = newOrder[draggedNewIndex - 1]
+      const nextItem = newOrder[draggedNewIndex + 1]
+      
+      // Get their CURRENT order values from newOrder (which includes accumulated changes)
+      const prevOrder = prevItem?.orden ?? null
+      const nextOrder = nextItem?.orden ?? null
+      
+      // Debug logging
+      console.log('Reorder debug:', {
+        draggedArtistaId,
+        draggedNewIndex,
+        currentOrder,
+        prevOrder,
+        nextOrder,
+        prevItem: prevItem?.artistaId,
+        nextItem: nextItem?.artistaId
+      })
+      
+      // Generate new key between neighbors for the dragged item only
+      let newOrden: string
+      try {
+        newOrden = generateKeyBetween(prevOrder, nextOrder)
+        console.log('Generated key:', newOrden, 'between', prevOrder, 'and', nextOrder)
+      } catch (e) {
+        console.error('Error generating key between', prevOrder, 'and', nextOrder, e)
+        // Fallback: if moving to first position, use a key that comes before the next item
+        if (!prevOrder && nextOrder) {
+          newOrden = nextOrder + 'Z'
+        } else if (prevOrder && !nextOrder) {
+          newOrden = prevOrder + 'm'
+        } else {
+          newOrden = 'a0'
         }
+      }
+      
+      // Only add to reorders if the order actually changed from CURRENT value
+      const orderChanged = newOrden !== currentOrder
+      
+      if (!orderChanged) {
+        return state
+      }
+
+      // Build the reorders list with only the dragged item
+      const reorders = [...state.pendingChanges.reorders]
+      
+      // Remove any existing reorder for this artistaId
+      const existingIndex = reorders.findIndex(r => r.artistaId === draggedArtistaId)
+      if (existingIndex !== -1) {
+        reorders.splice(existingIndex, 1)
+      }
+      
+      // Add the new reorder
+      reorders.push({ artistaId: draggedArtistaId, newOrden })
+
+      // Build updated artistas list - only update the dragged item
+      const updatedArtistas = newOrder.map(item => {
+        if (item.artistaId === draggedArtistaId) {
+          return { ...item, orden: newOrden }
+        }
+        return item
       })
 
       return {
-        artistas: newOrder,
+        artistas: updatedArtistas,
         pendingChanges: {
           ...state.pendingChanges,
           reorders

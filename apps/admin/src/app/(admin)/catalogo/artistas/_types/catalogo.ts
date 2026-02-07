@@ -9,7 +9,7 @@ export interface CatalogoArtista {
   rrss: string | null
   ciudad: string | null
   pais: string | null
-  avatarUrl: string | null
+  avatarUrl: string
 
   // From catalogo_artista table
   catalogoId: number
@@ -86,4 +86,9 @@ export interface CatalogoListFormData {
 export interface OperationResult {
   success: boolean
   error?: string
+  reindexNeeded?: boolean
+  reindexInfo?: {
+    maxLength: number
+    count: number
+  }
 }
