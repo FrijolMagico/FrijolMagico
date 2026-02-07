@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useCallback, useMemo, useState } from 'react'
+import { useEffect, useCallback, useMemo, useState, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { CatalogoFilters } from './CatalogoFilters'
 import { CatalogoTable } from './CatalogoTable'
@@ -18,7 +18,10 @@ import {
   setArtistaDraftManager
 } from '../_hooks/useCatalogoForm'
 import { createDraftManager } from '@/app/(admin)/_lib/draft'
-import { saveCatalogoChanges } from '../actions/catalogo.actions'
+import {
+  saveCatalogoChanges,
+  compactCatalogoOrders
+} from '../actions/catalogo.actions'
 import { toast } from 'sonner'
 import type {
   CatalogoArtista,
@@ -42,9 +45,6 @@ export function CatalogoArtistasContainer({
 
   const initializeList = useCatalogoForm((state) => state.initializeList)
   const artistas = useCatalogoForm((state) => state.artistas)
-  // const originalArtistas = useCatalogoForm((state) => state.originalArtistas)
-  // const page = useCatalogoForm((state) => state.page)
-  // const filters = useCatalogoForm((state) => state.filters)
   const pendingChanges = useCatalogoForm((state) => state.pendingChanges)
   const isDirty = useCatalogoForm((state) => state.isDirty)
   const isSaving = useCatalogoForm((state) => state.isSaving)
@@ -60,11 +60,13 @@ export function CatalogoArtistasContainer({
   const setFilters = useCatalogoForm((state) => state.setFilters)
   const markAsSaving = useCatalogoForm((state) => state.markAsSaving)
   const markAsSaved = useCatalogoForm((state) => state.markAsSaved)
-  // const resetToOriginal = useCatalogoForm((state) => state.resetToOriginal)
   const restoreDraft = useCatalogoForm((state) => state.restoreDraft)
   const clearListDraft = useCatalogoForm((state) => state.clearListDraft)
 
   const [hasDraftNotification, setHasDraftNotification] = useState(false)
+
+  // Ref for table container (used for edge detection in drag and drop)
+  const tableContainerRef = useRef<HTMLDivElement>(null)
 
   // Initialize with server data
   useEffect(() => {
@@ -179,6 +181,29 @@ export function CatalogoArtistasContainer({
         listDraftManager.clear()
         setHasDraftNotification(false)
         toast.success('Cambios guardados correctamente')
+
+        // Check if reindexing is needed
+        if (result.reindexNeeded && result.reindexInfo) {
+          toast.warning(
+            `Las claves de orden están creciendo (max: ${result.reindexInfo.maxLength} chars). ` +
+              `Considere compactar el índice.`,
+            {
+              action: {
+                label: 'Compactar ahora',
+                onClick: async () => {
+                  const compactResult = await compactCatalogoOrders()
+                  if (compactResult.success) {
+                    toast.success('Índice compactado correctamente')
+                    // Refresh the page to get new data
+                    window.location.reload()
+                  } else {
+                    toast.error(compactResult.error || 'Error al compactar')
+                  }
+                }
+              }
+            }
+          )
+        }
       } else {
         throw new Error(result.error || 'Error al guardar')
       }
@@ -292,10 +317,17 @@ export function CatalogoArtistasContainer({
 
       <CatalogoFilters onFiltersChange={handleFiltersChange} />
 
-      <div className='rounded-md border bg-white'>
-        <CatalogoTable onEdit={handleEdit} />
+      {/* Pagination on top */}
+      <CatalogoPagination onPageChange={handlePageChange} />
+
+      <div
+        ref={tableContainerRef}
+        className='overflow-x-hidden rounded-md border bg-white'
+      >
+        <CatalogoTable onEdit={handleEdit} containerRef={tableContainerRef} />
       </div>
 
+      {/* Pagination on bottom */}
       <CatalogoPagination onPageChange={handlePageChange} />
 
       {/* Sticky Save Button */}
