@@ -1,0 +1,71 @@
+import { useShallow } from 'zustand/react/shallow'
+import { useOrganizationUIStore } from '../_store/organization-ui-store'
+
+export function useOrgEffectiveData() {
+  return useOrganizationUIStore(useShallow((state) => state.selectOne()))
+}
+
+export function useOrgHasChanges() {
+  return useOrganizationUIStore((state) => state.getHasChanges())
+}
+
+export function useOrgHasUnsavedEdits() {
+  return useOrganizationUIStore((state) => state.getHasUnsavedEdits())
+}
+
+export function useOrgChangesCount() {
+  return useOrganizationUIStore((state) => {
+    const applied = state.appliedChanges
+    const current = state.currentEdits
+
+    const appliedOps = applied?.operations ?? []
+    const currentOps = current?.operations ?? []
+
+    const uniqueIds = new Set([
+      ...appliedOps.map((op) => op.id),
+      ...currentOps.map((op) => op.id)
+    ])
+
+    return uniqueIds.size
+  })
+}
+
+export function useOrgRemoteData() {
+  return useOrganizationUIStore(
+    useShallow((state) => {
+      const remote = state.remoteData
+      if (!remote) return null
+
+      const id = remote.ids[0]
+      return id ? remote.entities[id] : null
+    })
+  )
+}
+
+export function useOrgError() {
+  return useOrganizationUIStore((state) => state.error)
+}
+
+export function useOrgActions() {
+  return useOrganizationUIStore(
+    useShallow((state) => ({
+      set: state.set,
+      setRemoteData: state.setRemoteData,
+      update: state.update,
+      commitCurrentEdits: state.commitCurrentEdits,
+      clearAppliedChanges: state.clearAppliedChanges,
+      clearCurrentEdits: state.clearCurrentEdits,
+      reset: state.reset,
+      setLoading: state.setLoading,
+      setError: state.setError
+    }))
+  )
+}
+
+export function useOrgAppliedChanges() {
+  return useOrganizationUIStore(useShallow((state) => state.appliedChanges))
+}
+
+export function useOrgCurrentEdits() {
+  return useOrganizationUIStore(useShallow((state) => state.currentEdits))
+}
