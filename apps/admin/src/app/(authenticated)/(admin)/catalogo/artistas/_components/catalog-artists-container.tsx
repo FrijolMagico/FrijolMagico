@@ -1,5 +1,6 @@
 'use client'
 import { useCallback, useRef, useEffect } from 'react'
+import { useDebouncedCallback } from 'use-debounce'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { CatalogFilters as CatalogFiltersComponent } from './catalog-filters'
 import { CatalogTable } from './catalog-table'
@@ -11,10 +12,9 @@ import { EmptyState } from '@/shared/components/empty-state'
 import { Card } from '@/shared/components/ui/card'
 import { useArtistaUI } from '../_hooks/use-artist-ui'
 import { useCatalogView } from '../_hooks/use-catalog-view'
-import { useArtistaUIStore } from '../_store/artist-ui-store'
-import { saveCatalogBatch } from '../_actions/catalog.actions'
-import { toast } from 'sonner'
-import { GlobalSaveButton } from '@/shared/global-save'
+// import { useArtistaUIStore } from '../_store/artist-ui-store'
+// import { saveCatalogBatch } from '../_actions/catalog.actions'
+// import { toast } from 'sonner'
 
 interface CatalogArtistsContainerProps {
   initialData: PaginatedResult<CatalogArtist>
@@ -39,18 +39,44 @@ export function CatalogArtistsContainer({
     pageSize
   } = useCatalogView()
 
-  // Initialize data
+  // Initialize data and sync state
   useEffect(() => {
     setRemoteData(initialData.data)
     setTotalItems(initialData.total)
-    setTotalPages(initialData.totalPages)
-  }, [initialData, setRemoteData, setTotalItems, setTotalPages])
+    // Calculate pages locally based on pageSize
+    setTotalPages(Math.ceil(initialData.total / pageSize))
+
+    // Sync filters from URL to Store
+    const activoParam = searchParams.get('activo')
+    const destacadoParam = searchParams.get('destacado')
+    const searchParam = searchParams.get('search')
+    const pageParam = searchParams.get('page')
+
+    setFilters({
+      activo: activoParam === null ? null : activoParam === 'true',
+      destacado: destacadoParam === null ? null : destacadoParam === 'true',
+      search: searchParam || ''
+    })
+
+    if (pageParam) {
+      setPage(Number(pageParam))
+    }
+  }, [
+    initialData,
+    setRemoteData,
+    setTotalItems,
+    setTotalPages,
+    pageSize,
+    searchParams,
+    setFilters,
+    setPage
+  ])
 
   // Handle URL sync
-  const handleFiltersChange = useCallback(
+  const handleFiltersChange = useDebouncedCallback(
     (newFilters: {
-      activo?: boolean
-      destacado?: boolean
+      activo?: boolean | null
+      destacado?: boolean | null
       search?: string
     }) => {
       const params = new URLSearchParams(searchParams.toString())
@@ -73,42 +99,50 @@ export function CatalogArtistsContainer({
       setPage(1)
       router.push(`?${params.toString()}`, { scroll: false })
     },
-    [router, searchParams, setPage]
+    300
   )
 
   const handlePageChange = useCallback(
     (newPage: number) => {
       setPage(newPage)
+      const params = new URLSearchParams(searchParams.toString())
+      if (newPage === 1) {
+        params.delete('page')
+      } else {
+        params.set('page', String(newPage))
+      }
+      router.push(`?${params.toString()}`, { scroll: false })
     },
-    [setPage]
+    [setPage, router, searchParams]
   )
 
-  const handleSave = useCallback(async () => {
-    const currentEdits =
-      useArtistaUIStore.getState().currentEdits?.operations || []
-    if (currentEdits.length === 0) return
-
-    // Group updates by ID
-    const updates: Record<number, Partial<CatalogArtist>> = {}
-
-    for (const op of currentEdits) {
-      if (op.type === 'UPDATE' && op.data) {
-        const id = Number(op.id)
-        updates[id] = { ...updates[id], ...op.data }
-      }
-    }
-
-    // Call server action
-    const result = await saveCatalogBatch(updates)
-
-    if (result.success) {
-      toast.success('Cambios guardados correctamente')
-      // Clear L3 edits since they are now applied on server
-      useArtistaUIStore.getState().clearCurrentEdits()
-    } else {
-      toast.error(result.error || 'Error al guardar')
-    }
-  }, [])
+  // TODO: Add "Save Changes" button in the UI, enabled when hasAppliedEdits (that means changes are applied to L2 - Journal/Draft persistense) ore something is true
+  // const handleSave = useCallback(async () => {
+  //   const currentEdits =
+  //     useArtistaUIStore.getState().currentEdits?.operations || []
+  //   if (currentEdits.length === 0) return
+  //
+  //   // Group updates by ID
+  //   const updates: Record<number, Partial<CatalogArtist>> = {}
+  //
+  //   for (const op of currentEdits) {
+  //     if (op.type === 'UPDATE' && op.data) {
+  //       const id = Number(op.id)
+  //       updates[id] = { ...updates[id], ...op.data }
+  //     }
+  //   }
+  //
+  //   // Call server action
+  //   const result = await saveCatalogBatch(updates)
+  //
+  //   if (result.success) {
+  //     toast.success('Cambios guardados correctamente')
+  //     // Clear L3 edits since they are now applied on server
+  //     useArtistaUIStore.getState().clearCurrentEdits()
+  //   } else {
+  //     toast.error(result.error || 'Error al guardar')
+  //   }
+  // }, [])
 
   const handleEdit = useCallback(
     (artista: CatalogArtist) => {
@@ -123,14 +157,7 @@ export function CatalogArtistsContainer({
     <div className='space-y-4'>
       <div className='flex items-center justify-between'>
         <CatalogFiltersComponent onFiltersChange={handleFiltersChange} />
-
-        {hasUnsavedEdits && (
-          <GlobalSaveButton
-            hasChanges={hasUnsavedEdits}
-            onSave={handleSave}
-            isSaving={false} // We could track saving state if we want
-          />
-        )}
+        {/* Here will be the "save Changes" button, disabled if there are no unsaved edits */}
       </div>
 
       {isEmpty ? (
@@ -141,13 +168,13 @@ export function CatalogArtistsContainer({
             label: 'Limpiar filtros',
             onClick: () => {
               setFilters({
-                activo: undefined,
-                destacado: undefined,
+                activo: null,
+                destacado: null,
                 search: ''
               })
               handleFiltersChange({
-                activo: undefined,
-                destacado: undefined,
+                activo: null,
+                destacado: null,
                 search: ''
               })
             }

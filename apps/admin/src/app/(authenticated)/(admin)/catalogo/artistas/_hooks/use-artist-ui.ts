@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { useArtistaUIStore } from '../_store/artist-ui-store'
 import { generateKeyBetween } from 'fractional-indexing'
@@ -6,20 +6,29 @@ import { useCatalogViewStore } from '../_store/catalog-view-store'
 import { CatalogArtist } from '../_types'
 
 export function useArtistaUI() {
-  const store = useArtistaUIStore()
   const startDrag = useCatalogViewStore((s) => s.startDrag)
   const endDrag = useCatalogViewStore((s) => s.endDrag)
 
-  // Select and sort artists by 'orden' for UI display
-  const artistas = useArtistaUIStore(
-    useShallow((s) =>
-      s.selectAll().sort((a, b) => {
+  const store = useArtistaUIStore()
+  const { remoteData, appliedChanges, currentEdits } = useArtistaUIStore(
+    useShallow((s) => ({
+      remoteData: s.remoteData,
+      appliedChanges: s.appliedChanges,
+      currentEdits: s.currentEdits
+    }))
+  )
+
+  const artistas = useMemo(() => {
+    const effectiveData = store.getEffectiveData()
+    return effectiveData.ids
+      .map((id) => effectiveData.entities[id])
+      .filter(Boolean)
+      .sort((a, b) => {
         if (a.orden < b.orden) return -1
         if (a.orden > b.orden) return 1
         return 0
       })
-    )
-  )
+  }, [remoteData, appliedChanges, currentEdits, store])
 
   const reorder = useCallback(
     (newOrder: CatalogArtist[], draggedArtistaId: number) => {
@@ -55,10 +64,12 @@ export function useArtistaUI() {
         .selectById(String(draggedArtistaId))
 
       if (currentEntity && newOrden !== currentEntity.orden) {
-        store.updateOne(String(draggedArtistaId), { orden: newOrden })
+        useArtistaUIStore
+          .getState()
+          .updateOne(String(draggedArtistaId), { orden: newOrden })
       }
     },
-    [store]
+    []
   )
 
   const handleDragStart = useCallback(
@@ -81,17 +92,49 @@ export function useArtistaUI() {
     ),
 
     // Actions
-    setRemoteData: store.setRemoteData,
-    addOne: store.addOne,
-    updateOne: store.updateOne,
-    removeOne: store.removeOne,
-    commitCurrentEdits: store.commitCurrentEdits,
+    setRemoteData: useArtistaUIStore.getState().setRemoteData,
+    addOne: useArtistaUIStore.getState().addOne,
+    updateOne: useArtistaUIStore.getState().updateOne,
+    removeOne: useArtistaUIStore.getState().removeOne,
+    commitCurrentEdits: useArtistaUIStore.getState().commitCurrentEdits,
     reorder,
 
     // UI specific
     handleDragStart,
     handleDragEnd
   }
+}
+
+export function useVisibleArtists() {
+  const page = useCatalogViewStore((s) => s.page)
+  const pageSize = useCatalogViewStore((s) => s.pageSize)
+
+  const store = useArtistaUIStore()
+  const { remoteData, appliedChanges, currentEdits } = useArtistaUIStore(
+    useShallow((s) => ({
+      remoteData: s.remoteData,
+      appliedChanges: s.appliedChanges,
+      currentEdits: s.currentEdits
+    }))
+  )
+
+  const visibleArtists = useMemo(() => {
+    const effectiveData = store.getEffectiveData()
+    const sorted = effectiveData.ids
+      .map((id) => effectiveData.entities[id])
+      .filter(Boolean)
+      .sort((a, b) => {
+        if (a.orden < b.orden) return -1
+        if (a.orden > b.orden) return 1
+        return 0
+      })
+
+    const startIndex = (page - 1) * pageSize
+    const endIndex = startIndex + pageSize
+    return sorted.slice(startIndex, endIndex)
+  }, [remoteData, appliedChanges, currentEdits, page, pageSize, store])
+
+  return visibleArtists
 }
 
 export function useArtistaById(id: number) {
