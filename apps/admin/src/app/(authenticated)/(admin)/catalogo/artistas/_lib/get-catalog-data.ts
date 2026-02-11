@@ -3,7 +3,6 @@ import { artist } from '@frijolmagico/database/schema'
 import { eq, and, like, or, asc, count } from 'drizzle-orm'
 import { getAvatarUrl } from '@/lib/cdn'
 import type { CatalogArtist, PaginatedResult, CatalogFilters } from '../_types'
-import { unstable_cache as cache, revalidateTag } from 'next/cache'
 import { cacheTag } from 'next/cache'
 import { ARTISTA_CACHE_TAG } from '../_constants'
 
@@ -12,13 +11,10 @@ const { catalogoArtista, artista, artistaImagen } = artist
 const ITEMS_PER_PAGE = 20
 
 export async function getCatalogArtists(
-  page: number = 1,
   filters: CatalogFilters = { activo: null, destacado: null, search: '' }
 ): Promise<PaginatedResult<CatalogArtist>> {
   'use cache'
   cacheTag(ARTISTA_CACHE_TAG)
-
-  const offset = (page - 1) * ITEMS_PER_PAGE
 
   // Build where conditions
   const conditions = []
@@ -50,10 +46,9 @@ export async function getCatalogArtists(
     .innerJoin(artista, eq(catalogoArtista.artistaId, artista.id))
     .where(whereClause)
 
-  const total = countResult[0]?.count ?? 0
-  const totalPages = Math.ceil(total / ITEMS_PER_PAGE)
+  const total = countResult[0]?.count || 0
 
-  // Get paginated data
+  // Get ALL data (no pagination)
   const results = await db
     .select({
       artistaId: artista.id,
@@ -83,8 +78,6 @@ export async function getCatalogArtists(
     )
     .where(whereClause)
     .orderBy(asc(catalogoArtista.orden))
-    .limit(ITEMS_PER_PAGE)
-    .offset(offset)
 
   // Map results to CatalogArtist
   const artistasWithMetadata: CatalogArtist[] = results.map((row) => ({
@@ -110,9 +103,9 @@ export async function getCatalogArtists(
   return {
     data: artistasWithMetadata,
     total,
-    page,
-    totalPages,
-    hasNext: page < totalPages,
-    hasPrev: page > 1
+    page: 1,
+    totalPages: 1,
+    hasNext: false,
+    hasPrev: false
   }
 }

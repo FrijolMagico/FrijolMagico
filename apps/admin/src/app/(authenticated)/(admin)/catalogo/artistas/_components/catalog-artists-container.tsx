@@ -1,5 +1,4 @@
 'use client'
-
 import { useCallback, useRef, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { CatalogFilters as CatalogFiltersComponent } from './catalog-filters'
@@ -36,16 +35,16 @@ export function CatalogArtistsContainer({
     setFilters,
     catalogDialogOpen,
     artistaDialogOpen,
-    openCatalogDialog
+    openCatalogDialog,
+    pageSize
   } = useCatalogView()
 
   // Initialize data
   useEffect(() => {
     setRemoteData(initialData.data)
-    setPage(initialData.page)
-    setTotalPages(initialData.totalPages)
     setTotalItems(initialData.total)
-  }, [initialData, setRemoteData, setPage, setTotalPages, setTotalItems])
+    setTotalPages(initialData.totalPages)
+  }, [initialData, setRemoteData, setTotalItems, setTotalPages])
 
   // Handle URL sync
   const handleFiltersChange = useCallback(
@@ -71,21 +70,17 @@ export function CatalogArtistsContainer({
         else params.set('search', newFilters.search)
       }
 
-      // Reset page when filtering
-      params.delete('page')
-
+      setPage(1)
       router.push(`?${params.toString()}`, { scroll: false })
     },
-    [router, searchParams]
+    [router, searchParams, setPage]
   )
 
   const handlePageChange = useCallback(
     (newPage: number) => {
-      const params = new URLSearchParams(searchParams.toString())
-      params.set('page', newPage.toString())
-      router.push(`?${params.toString()}`, { scroll: false })
+      setPage(newPage)
     },
-    [router, searchParams]
+    [setPage]
   )
 
   const handleSave = useCallback(async () => {
