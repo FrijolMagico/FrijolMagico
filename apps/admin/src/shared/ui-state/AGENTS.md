@@ -83,6 +83,54 @@ O(1) for all operations regardless of collection size:
 - ❌ Nested entities in state
 - ✅ Flat structures with relations
 
+## Hook Facade Pattern
+
+**MANDATORY**: Always implement a "Hook Facade" layer between the store and components.
+
+### Why?
+
+The factory creates a vanilla store. It cannot enforce `useShallow` or memoization policies. The Facade ensures safety and performance by centralizing these patterns.
+
+### Implementation Guide
+
+1. **Create Store** (`_store/feature-store.ts`):
+
+   ```typescript
+   export const useFeatureStore = createEntityUIStateStore<T>({...})
+   ```
+
+2. **Create Facade** (`_hooks/use-feature-ui.ts`):
+
+   ```typescript
+   // 1. Import store and useShallow
+   import { useShallow } from 'zustand/react/shallow'
+   import { useFeatureStore } from '../_store/feature-store'
+
+   // 2. Export optimized hooks
+   export function useFeatureData() {
+     // ✅ Apply useShallow here once
+     return useFeatureStore(useShallow((state) => state.selectAll()))
+   }
+
+   export function useFeatureActions() {
+     // ✅ Select actions as a stable object
+     return useFeatureStore(
+       useShallow((state) => ({
+         add: state.addOne,
+         update: state.updateOne
+       }))
+     )
+   }
+   ```
+
+3. **Use in Components**:
+   ```typescript
+   // ✅ Clean, safe, implementation-agnostic
+   const data = useFeatureData()
+   ```
+
+**Rule**: Never export the raw store hook to components if possible. Force usage through the Facade.
+
 ## API
 
 ### Selectors
