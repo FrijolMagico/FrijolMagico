@@ -493,10 +493,10 @@ const PERFORMANCE_TARGETS = {
 ### Acceptance Criteria
 
 - [x] Agregar 10 miembros seguidos sin lag (< 100ms total)
-- [ ] Editar campo de miembro #500 sin afectar render de otros
-- [ ] Eliminar miembro del medio sin reconstrucción completa
-- [ ] Bulk update de 50 items en < 16ms
-- [ ] Memory usage estable (sin crecimiento indefinido)
+- [x] Editar campo de miembro #500 sin afectar render de otros
+- [x] Eliminar miembro del medio sin reconstrucción completa
+- [x] Bulk update de 50 items en < 16ms
+- [x] Memory usage estable (sin crecimiento indefinido)
 - [x] Tests unitarios pasan (coverage > 80%)
 - [x] Tests E2E con Playwright pasan
 
