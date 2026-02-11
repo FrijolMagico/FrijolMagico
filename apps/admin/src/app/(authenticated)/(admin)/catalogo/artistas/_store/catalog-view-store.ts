@@ -4,6 +4,7 @@ import { CatalogFilters } from '../_types'
 interface CatalogViewState {
   // Pagination
   page: number
+  pageSize: number
   totalPages: number
   totalItems: number
 
@@ -21,6 +22,7 @@ interface CatalogViewState {
 
   // Actions
   setPage: (page: number) => void
+  setPageSize: (size: number) => void
   setTotalPages: (total: number) => void
   setTotalItems: (total: number) => void
   setFilters: (filters: Partial<CatalogFilters>) => void
@@ -39,6 +41,7 @@ interface CatalogViewState {
 
 export const useCatalogViewStore = create<CatalogViewState>((set) => ({
   page: 1,
+  pageSize: 20,
   totalPages: 1,
   totalItems: 0,
   filters: { activo: null, destacado: null, search: '' },
@@ -51,6 +54,7 @@ export const useCatalogViewStore = create<CatalogViewState>((set) => ({
   selectedArtistaId: null,
 
   setPage: (page) => set({ page }),
+  setPageSize: (pageSize) => set({ pageSize }),
   setTotalPages: (totalPages) => set({ totalPages }),
   setTotalItems: (totalItems) => set({ totalItems }),
   setFilters: (filters) =>

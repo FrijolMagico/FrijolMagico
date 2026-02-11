@@ -2,6 +2,9 @@
 
 Main website (frijolmagico.cl) - Port 3000
 
+**Generated**: 2026-02-11
+**Mode**: Update
+
 ## Tech Stack
 
 - **Framework:** Next.js 16 (App Router) with Turbopack
@@ -76,11 +79,32 @@ Each section follows a consistent structure:
 - `useGSAP()` hook in client components
 - Avoid direct DOM manipulation; use refs
 
+### Component Pattern
+
+Server component wrapper → Client component:
+
+```typescript
+// Server component (no 'use client')
+export const FestivalesTimeline = ({ data }) => {
+  return <FestivalesTimelineClient data={data} />
+}
+
+// Client component
+'use client'
+export const FestivalesTimelineClient = ({ data }) => {
+  // interactive logic
+}
+```
+
 ### Components
 
 - **Shared:** `src/components/` - Header, Footer, Grid, UI primitives
 - **Section-local:** `app/(sections)/[section]/components/`
 - **Pattern:** PascalCase, named exports, props destructured in signature
+
+## Imports
+
+Order: React/Next → External → Workspace → Internal (`@/`) → Relative → Type imports
 
 ### State Management
 
@@ -96,6 +120,7 @@ Each section follows a consistent structure:
 ## Data Source Config
 
 Uses root `DATA_SOURCE` env:
+
 - `mock`: Google Sheets mock data
 - `local`: Local SQLite via Turso
 - `database`: Production database

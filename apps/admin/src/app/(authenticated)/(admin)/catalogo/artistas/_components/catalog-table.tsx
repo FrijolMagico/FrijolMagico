@@ -31,7 +31,7 @@ import { Card } from '@/shared/components/ui/card'
 import { DraggableCatalogRow } from './draggable-catalog-row'
 import { toast } from 'sonner'
 import type { CatalogArtist } from '../_types'
-import { useArtistaUI } from '../_hooks/use-artist-ui'
+import { useArtistaUI, useVisibleArtists } from '../_hooks/use-artist-ui'
 import { useCatalogView } from '../_hooks/use-catalog-view'
 
 interface CatalogTableProps {
@@ -40,6 +40,7 @@ interface CatalogTableProps {
   onPageChange?: (page: number) => void
 }
 
+// TODO: Extract DnD and auto-pagination logic into a reusable hook for other catalog tables (e.g. obras)
 // Constants for auto-pagination
 const PAGE_EDGE_THRESHOLD = 60 // px from edge to trigger page change
 const PAGE_CHANGE_DELAY = 600 // ms to hold before changing page
@@ -50,9 +51,17 @@ export function CatalogTable({
   containerRef,
   onPageChange
 }: CatalogTableProps) {
-  const { artistas, reorder, updateOne } = useArtistaUI()
-  const { page, totalPages, setPage, startDrag, endDrag, draggedArtistaId } =
-    useCatalogView()
+  const { artistas: allArtists, reorder, updateOne } = useArtistaUI()
+  const visibleArtists = useVisibleArtists()
+  const {
+    page,
+    pageSize,
+    totalPages,
+    setPage,
+    startDrag,
+    endDrag,
+    draggedArtistaId
+  } = useCatalogView()
 
   // Refs for auto-pagination timers
   const pageChangeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -171,15 +180,25 @@ export function CatalogTable({
     }
 
     if (over && active.id !== over.id) {
-      const oldIndex = artistas.findIndex((a) => a.artistaId === draggedId)
-      const newIndex = artistas.findIndex(
+      // Calculate indices based on GLOBAL list
+      const globalOldIndex = allArtists.findIndex(
+        (a) => a.artistaId === draggedId
+      )
+
+      const localNewIndex = visibleArtists.findIndex(
         (a) => a.artistaId === Number(over.id)
       )
 
-      if (oldIndex !== -1 && newIndex !== -1) {
-        // We calculate the new order array locally to pass to reorder logic
-        const newOrder = arrayMove(artistas, oldIndex, newIndex)
-        reorder(newOrder, draggedId)
+      if (globalOldIndex !== -1 && localNewIndex !== -1) {
+        const startIndex = (page - 1) * pageSize
+        const globalNewIndex = startIndex + localNewIndex
+
+        const newGlobalOrder = arrayMove(
+          allArtists,
+          globalOldIndex,
+          globalNewIndex
+        )
+        reorder(newGlobalOrder, draggedId)
       }
     }
   }
@@ -196,9 +215,8 @@ export function CatalogTable({
     )
   }
 
-  // Get the dragged artista for the overlay
   const draggedArtista = draggedArtistaId
-    ? artistas.find((a) => a.artistaId === draggedArtistaId)
+    ? allArtists.find((a) => a.artistaId === draggedArtistaId)
     : null
 
   return (
@@ -224,10 +242,10 @@ export function CatalogTable({
         </TableHeader>
         <TableBody>
           <SortableContext
-            items={artistas.map((a) => a.artistaId)}
+            items={visibleArtists.map((a) => a.artistaId)}
             strategy={verticalListSortingStrategy}
           >
-            {artistas.map((artista) => (
+            {visibleArtists.map((artista) => (
               <DraggableCatalogRow
                 key={artista.artistaId}
                 artista={artista}

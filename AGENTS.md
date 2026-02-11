@@ -2,6 +2,9 @@
 
 Monorepo configuration for agentic coding assistants.
 
+**Generated**: 2026-02-11
+**Mode**: Update
+
 ## Monorepo Structure
 
 - **Turborepo** + Bun workspaces (`apps/*`, `packages/*`)
@@ -29,9 +32,17 @@ bun run db:migrate             # Run DB migrations
 - **Naming:** PascalCase components (named exports), camelCase hooks with `use` prefix, UPPER_SNAKE_CASE constants
 - **TypeScript:** Strict mode, `import type { X }` for type-only imports
 
+## Forbidden Patterns
+
+- **NEVER use barrel files** (`index.ts` exports) — import directly from source
+- **NEVER default exports for components** — use named exports only
+- **NEVER disable strict mode** — TypeScript strict is enforced
+- **NEVER Pages Router** — App Router only for all new code
+
 ## Data Source
 
 `DATA_SOURCE` env controls dev data:
+
 - Not set: Intelligent defaults (mock for CMS, local DB for database)
 - `real`: Production data sources
 - `local`: Local SQLite

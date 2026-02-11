@@ -2,6 +2,9 @@
 
 Admin panel - Port 3001
 
+**Generated**: 2026-02-11
+**Mode**: Update
+
 ## Tech Stack
 
 - **Framework:** Next.js 16+ (App Router) with Turbopack
@@ -19,16 +22,19 @@ bun run type-check             # tsc --noEmit
 ```
 
 ## Architecture
+
 Featured-based Architecture with clear separation of concerns.
 
 ### App Router Architecture First
+
 - ALL routes MUST use App Router - never use Pages Router for new projects
 - Leverage Server Components by default, Client Components only when necessary
 - Use proper file conventions: page.tsx, layout.tsx, loading.tsx, error.tsx, not-found.tsx
 - Implement route groups (group-name) for organization without affecting URL structure
-- Use private folders _folder to opt out of routing system
+- Use private folders \_folder to opt out of routing system
 
 ### Server-First Architecture
+
 - Server Components by default - add "use client" only when required
 - Optimize data fetching at the server level
 - Implement streaming with loading.tsx and Suspense boundaries
@@ -38,6 +44,7 @@ Featured-based Architecture with clear separation of concerns.
 - To prevent accidental usage in Client Components, you can use the server-only package, this is a MUST for Server Actions and recommended for all server-only code
 
 ### Screaming Architecture for Next.js
+
 Your structures must IMMEDIATELY communicate what the application does:
 
 - Feature names must describe business functionality, not technical implementation
@@ -62,7 +69,7 @@ src/
     │   │   ├── error.tsx           # Error UI
     │   │   └── page.tsx            # /dashboard route
     │   ├── profile/                # Profile management (future) with same principles as dashboard
-    │   │   ├── _lib/                   
+    │   │   ├── _lib/
     │   │   ├── _actions/
     │   │   ├── _hooks/
     │   │   ├── loading.tsx
@@ -107,26 +114,27 @@ El sistema de gestión de estado UI utiliza una **arquitectura de 3 capas** basa
 
 #### Factory Comparison
 
-| Caso de Uso | Factory Recomendada | Razón |
-|-------------|---------------------|-------|
-| Objetos planos | `createUIStateStore` | Simple, sin overhead de normalización |
-| Colecciones pequeñas (< 50) | `createUIStateStore` | Suficiente para estados simples |
-| Colecciones grandes (200+) | `createEntityUIStateStore` | **OBLIGATORIO**: O(1) en todas las operaciones |
-| Modo Singleton | `createEntityUIStateStore` | Usar `isSingleton: true` para objetos únicos con journal |
+| Caso de Uso                 | Factory Recomendada        | Razón                                                    |
+| --------------------------- | -------------------------- | -------------------------------------------------------- |
+| Objetos planos              | `createUIStateStore`       | Simple, sin overhead de normalización                    |
+| Colecciones pequeñas (< 50) | `createUIStateStore`       | Suficiente para estados simples                          |
+| Colecciones grandes (200+)  | `createEntityUIStateStore` | **OBLIGATORIO**: O(1) en todas las operaciones           |
+| Modo Singleton              | `createEntityUIStateStore` | Usar `isSingleton: true` para objetos únicos con journal |
 
 #### Performance Targets
 
-| Operación | Objetivo |
-|-----------|----------|
-| Lookup | < 1ms |
-| Update | < 1ms |
-| Delete | < 1ms |
-| Bulk (50 items) | < 16ms |
-| Scroll FPS | 60fps |
+| Operación       | Objetivo |
+| --------------- | -------- |
+| Lookup          | < 1ms    |
+| Update          | < 1ms    |
+| Delete          | < 1ms    |
+| Bulk (50 items) | < 16ms   |
+| Scroll FPS      | 60fps    |
 
 Para más detalles, consultar [apps/admin/src/shared/ui-state/README.md](./src/shared/ui-state/README.md).
 
 ### Components
+
 - **Own:** snake-case for components (e.g., `user-profile.tsx`)
 - **Shadcn/ui:** default naming conventions
 
@@ -140,15 +148,26 @@ Para más detalles, consultar [apps/admin/src/shared/ui-state/README.md](./src/s
 - Better Auth Drizzle adapter for user/session tables
 - SQLite provider (Turso/libSQL)
 
-## General rules
-- Dashboard and future admin pages should verify session server-side using `get-session.ts` helper.
-- No client-side auth checks (except for UI adjustments), all auth logic must be server-side.
-- AVOID barrel files / export files as index.tsx/ts/js as much as possible.
-- Follow the arqhitectural principles of feature-based organization and clear separation of concerns.
-- Use related Skills and Tools when applicable, if there is not skills present in the list, ask to user if want to add one.
-- Use the provided `cn()` utility for conditional class names and Tailwind CSS integration.
-- Any new feature must follow the same architectural principles and be organized within its own folder with clear separation of components, hooks, actions, and lib as needed.
-- Avoid make client component if not necessary, try to make server or static components as much as possible.
-- If some part of a component need to be client, try to split the section that need interactivity into a separate client component and keep the rest as server component.
-- For a implementation based on interactivity, use playwright tools for interact and read possible client errors.
-- A feature or request is finished when no linter errors, no format errors, no server or client errros as present and all interaction using playwright tools are working as expected, and also we follow the arquitecture principles defined above.
+## Forbidden Patterns
+
+- **NEVER barrel files** — import directly from source
+- **NEVER default exports** — named exports only
+- **NEVER client-side auth checks** — all auth server-side
+- **NEVER unnecessary client components** — prefer Server Components
+- **NEVER Pages Router** — App Router only
+
+## UI State Management
+
+Uses **Entity State Pattern** with 3-layer architecture.
+
+See [shared/ui-state/AGENTS.md](./src/shared/ui-state/AGENTS.md) for details.
+
+## General Rules
+
+- Dashboard and future admin pages should verify session server-side using `get-session.ts` helper
+- No client-side auth checks (except for UI adjustments), all auth logic must be server-side
+- Follow feature-based organization and clear separation of concerns
+- Use `cn()` utility for conditional class names
+- Avoid client components if not necessary — prefer Server Components
+- Split interactive sections into separate client components, keep rest as server
+- A feature is finished when: no linter/format errors, no runtime errors, Playwright tests pass

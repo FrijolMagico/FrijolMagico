@@ -2,47 +2,51 @@ import { useCatalogViewStore } from '../_store/catalog-view-store'
 import { useShallow } from 'zustand/react/shallow'
 
 export function useCatalogView() {
-  const store = useCatalogViewStore()
+  return useCatalogViewStore(
+    useShallow((store) => ({
+      // Pagination
+      page: store.page,
+      pageSize: store.pageSize,
+      totalPages: store.totalPages,
+      totalItems: store.totalItems,
+      setPage: store.setPage,
+      setPageSize: store.setPageSize,
+      setTotalPages: store.setTotalPages,
+      setTotalItems: store.setTotalItems,
 
-  return {
-    // Pagination
-    page: store.page,
-    totalPages: store.totalPages,
-    totalItems: store.totalItems,
-    setPage: store.setPage,
-    setTotalPages: store.setTotalPages,
-    setTotalItems: store.setTotalItems,
+      // Filters
+      filters: store.filters,
+      setFilters: store.setFilters,
 
-    // Filters
-    filters: store.filters,
-    setFilters: store.setFilters,
+      // Drag & Drop
+      isDragging: store.isDragging,
+      draggedArtistaId: store.draggedArtistaId,
+      startDrag: store.startDrag,
+      endDrag: store.endDrag,
 
-    // Drag & Drop
-    isDragging: store.isDragging,
-    draggedArtistaId: store.draggedArtistaId,
-    startDrag: store.startDrag,
-    endDrag: store.endDrag,
+      // Dialogs
+      catalogDialogOpen: store.catalogDialogOpen,
+      artistaDialogOpen: store.artistaDialogOpen,
+      selectedArtistaId: store.selectedArtistaId,
 
-    // Dialogs
-    catalogDialogOpen: store.catalogDialogOpen,
-    artistaDialogOpen: store.artistaDialogOpen,
-    selectedArtistaId: store.selectedArtistaId,
-
-    openCatalogDialog: store.openCatalogDialog,
-    closeCatalogDialog: store.closeCatalogDialog,
-    openArtistaDialog: store.openArtistaDialog,
-    closeArtistaDialog: store.closeArtistaDialog,
-    closeAllDialogs: store.closeAllDialogs
-  }
+      openCatalogDialog: store.openCatalogDialog,
+      closeCatalogDialog: store.closeCatalogDialog,
+      openArtistaDialog: store.openArtistaDialog,
+      closeArtistaDialog: store.closeArtistaDialog,
+      closeAllDialogs: store.closeAllDialogs
+    }))
+  )
 }
 
 export function useCatalogPagination() {
   return useCatalogViewStore(
     useShallow((state) => ({
       page: state.page,
+      pageSize: state.pageSize,
       totalPages: state.totalPages,
       totalItems: state.totalItems,
-      setPage: state.setPage
+      setPage: state.setPage,
+      setPageSize: state.setPageSize
     }))
   )
 }

@@ -10,10 +10,10 @@ interface CatalogPaginationProps {
 }
 
 export function CatalogPagination({ onPageChange }: CatalogPaginationProps) {
-  const { page, totalPages, totalItems } = useCatalogView()
+  const { page, totalPages, totalItems, pageSize } = useCatalogView()
 
-  const startItem = (page - 1) * 20 + 1
-  const endItem = Math.min(page * 20, totalItems)
+  const startItem = (page - 1) * pageSize + 1
+  const endItem = Math.min(page * pageSize, totalItems)
 
   const handlePrev = () => {
     if (page > 1) {
@@ -92,7 +92,7 @@ export function CatalogPagination({ onPageChange }: CatalogPaginationProps) {
                   variant={page === pageNum ? 'default' : 'outline'}
                   size='sm'
                   onClick={() => onPageChange(pageNum as number)}
-                  className='min-w-[36px]'
+                  className='min-w-9'
                 >
                   {pageNum}
                 </Button>

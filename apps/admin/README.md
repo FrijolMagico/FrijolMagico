@@ -24,7 +24,7 @@ The admin app provides a protected management interface for:
 src/
 ├── app/                       # Next.js App Router
 │   ├── api/auth/[...all]/     # Better Auth API routes
-│   ├── auth/lib/              # Auth configuration
+│   ├── (auth)/lib/              # Auth configuration
 │   │   ├── auth.ts            # Better Auth config
 │   │   ├── auth-client.ts     # Client-side auth
 │   │   └── get-session.ts     # Server session helper

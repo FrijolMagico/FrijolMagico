@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import '@/styles/globals.css'
-import { Toaster } from '@/components/ui/sonner'
+import { Toaster } from '@/shared/components/ui/sonner'
+import { ThemeProvider } from '@/shared/components/theme-provider'
 import { Inter, Rubik_Bubbles } from 'next/font/google'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
@@ -25,10 +26,16 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang='es' className={(inter.variable, rubikBubble.variable)}>
+    <html
+      lang='es'
+      suppressHydrationWarning
+      className={`${inter.variable} ${rubikBubble.variable}`}
+    >
       <body className='font-inter'>
-        {children}
-        <Toaster position='top-right' />
+        <ThemeProvider>
+          {children}
+          <Toaster position='top-right' />
+        </ThemeProvider>
       </body>
     </html>
   )

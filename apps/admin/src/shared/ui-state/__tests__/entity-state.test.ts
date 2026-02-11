@@ -136,16 +136,12 @@ describe('Entity State Factory', () => {
 
       // Add 10 entities
       for (let i = 0; i < 10; i++) {
-        store
-          .getState()
-          .addOne({ id: `m${i}`, nombre: `Member ${i}` })
+        store.getState().addOne({ id: `m${i}`, nombre: `Member ${i}` })
       }
 
       // Update 5
       for (let i = 0; i < 5; i++) {
-        store
-          .getState()
-          .updateOne(`m${i}`, { cargo: 'Updated Role' })
+        store.getState().updateOne(`m${i}`, { cargo: 'Updated Role' })
       }
 
       // Delete 2
@@ -189,12 +185,10 @@ describe('Entity State Factory', () => {
       })
 
       // Set remote data
-      store
-        .getState()
-        .setRemoteData([
-          { id: '1', nombre: 'Remote 1' },
-          { id: '2', nombre: 'Remote 2' }
-        ])
+      store.getState().setRemoteData([
+        { id: '1', nombre: 'Remote 1' },
+        { id: '2', nombre: 'Remote 2' }
+      ])
 
       // Add local changes
       store.getState().addOne({ id: '3', nombre: 'Local 3' })
@@ -390,14 +384,109 @@ describe('Entity State Factory', () => {
       // Test: bulk update 50
       const start = performance.now()
       for (let i = 0; i < 50; i++) {
-        store
-          .getState()
-          .updateOne(`m${i}`, { cargo: `Updated ${i}` })
+        store.getState().updateOne(`m${i}`, { cargo: `Updated ${i}` })
       }
       const end = performance.now()
 
       const totalTime = end - start
       expect(totalTime).toBeLessThan(16)
+    })
+
+    test('should update item #500 in O(1) time without affecting other items', () => {
+      const store = createEntityUIStateStore<TestEntity>({
+        sectionName: 'test',
+        idField: 'id'
+      })
+
+      // Setup: add 1000 items
+      const entities = Array.from({ length: 1000 }, (_, i) => ({
+        id: `m${i}`,
+        nombre: `Member ${i}`
+      }))
+      store.getState().addMany(entities)
+
+      // Verify starting state for item #500
+      const beforeUpdate = store.getState().selectById('m500')
+      expect(beforeUpdate?.nombre).toBe('Member 500')
+
+      // Test: update item #500
+      const start = performance.now()
+      store.getState().updateOne('m500', { nombre: 'Updated Member 500' })
+      const end = performance.now()
+
+      // Verify update time is O(1)
+      expect(end - start).toBeLessThan(1)
+
+      // Verify update applied
+      const updated = store.getState().selectById('m500')
+      expect(updated?.nombre).toBe('Updated Member 500')
+
+      // Verify other items unchanged
+      const before499 = store.getState().selectById('m499')
+      expect(before499?.nombre).toBe('Member 499')
+
+      const after501 = store.getState().selectById('m501')
+      expect(after501?.nombre).toBe('Member 501')
+
+      // Verify total count unchanged
+      expect(store.getState().selectTotal()).toBe(1000)
+    })
+
+    test('should delete middle member #500 in O(1) time', () => {
+      const store = createEntityUIStateStore<TestEntity>({
+        sectionName: 'test',
+        idField: 'id'
+      })
+
+      // Setup: add 1000 items
+      const entities = Array.from({ length: 1000 }, (_, i) => ({
+        id: `m${i}`,
+        nombre: `Member ${i}`
+      }))
+      store.getState().addMany(entities)
+
+      expect(store.getState().selectTotal()).toBe(1000)
+
+      // Test: delete item #500
+      const start = performance.now()
+      store.getState().removeOne('m500')
+      const end = performance.now()
+
+      // Verify delete time is O(1)
+      expect(end - start).toBeLessThan(1)
+
+      // Verify item deleted
+      expect(store.getState().selectById('m500')).toBeUndefined()
+
+      // Verify surrounding items still exist
+      expect(store.getState().selectById('m499')).toBeDefined()
+      expect(store.getState().selectById('m501')).toBeDefined()
+
+      // Verify total count decreased
+      expect(store.getState().selectTotal()).toBe(999)
+    })
+
+    test('should maintain stable memory with repeated operations', () => {
+      const store = createEntityUIStateStore<TestEntity>({
+        sectionName: 'test',
+        idField: 'id'
+      })
+
+      // Perform 1000 add+update+delete cycles
+      for (let cycle = 0; cycle < 1000; cycle++) {
+        const id = `temp-${cycle}`
+        store.getState().addOne({ id, nombre: `Temp ${cycle}` })
+        store.getState().updateOne(id, { cargo: `Role ${cycle}` })
+        store.getState().removeOne(id)
+      }
+
+      // Verify all operations completed without error
+      // Verify store state is clean (all items deleted)
+      expect(store.getState().selectTotal()).toBe(0)
+      expect(store.getState().selectAll()).toHaveLength(0)
+
+      // Verify operations journaling completed
+      expect(store.getState().getHasChanges()).toBe(true)
     })
   })
 

@@ -2,6 +2,9 @@
 
 Drizzle ORM + Turso (libSQL) database package.
 
+**Generated**: 2026-02-11
+**Mode**: Update
+
 ## Tech Stack
 
 - **ORM:** Drizzle ORM
@@ -25,9 +28,9 @@ bun run type-check             # TypeScript check
 ### Package Exports
 
 ```typescript
-import { db } from '@frijolmagico/database/orm'      // Drizzle ORM client
-import { executeQuery } from '@frijolmagico/database/client'  // Raw SQL client
-import { schema } from '@frijolmagico/database/schema'        // Schema exports
+import { db } from '@frijolmagico/database/orm' // Drizzle ORM client
+import { executeQuery } from '@frijolmagico/database/client' // Raw SQL client
+import { schema } from '@frijolmagico/database/schema' // Schema exports
 ```
 
 ### Directory Structure
@@ -64,6 +67,7 @@ seed/
 ### Dual Client Pattern
 
 **1. Drizzle ORM Client** (`src/drizzle.ts`)
+
 - Type-safe queries with TypeScript
 - Relations support
 - Use for: Complex queries, type safety, relational data
@@ -76,6 +80,7 @@ const artistas = await db.select().from(artista)
 ```
 
 **2. Raw SQL Client** (`src/client.ts`)
+
 - Direct SQL execution
 - Custom queries, JSON aggregation
 - Use for: Complex aggregations, JSON results, custom SQL
@@ -96,13 +101,15 @@ Tables defined with `drizzle-orm/sqlite-core`:
 ```typescript
 import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core'
 
-export const artista = sqliteTable('artista', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  pseudonimo: text('pseudonimo').notNull().unique(),
-  // ...
-}, (table) => [
-  index('idx_artista_estado').on(table.estadoId)
-])
+export const artista = sqliteTable(
+  'artista',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    pseudonimo: text('pseudonimo').notNull().unique()
+    // ...
+  },
+  (table) => [index('idx_artista_estado').on(table.estadoId)]
+)
 ```
 
 ## Migrations
@@ -124,6 +131,7 @@ TURSO_AUTH_TOKEN=your-auth-token           # Required for remote
 ## Data Files (Reference)
 
 The `data/` directory contains reference SQL for schema design:
+
 - Numbered sequentially (001, 002, ...)
 - Not executed by migrations
 - Use as reference for custom migrations

@@ -8,8 +8,6 @@ import { ARTISTA_CACHE_TAG } from '../_constants'
 
 const { catalogoArtista, artista, artistaImagen } = artist
 
-const ITEMS_PER_PAGE = 20
-
 export async function getCatalogArtists(
   filters: CatalogFilters = { activo: null, destacado: null, search: '' }
 ): Promise<PaginatedResult<CatalogArtist>> {

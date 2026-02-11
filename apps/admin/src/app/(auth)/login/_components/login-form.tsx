@@ -1,7 +1,7 @@
 'use client'
 
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription } from '@/shared/components/ui/alert'
+import { Button } from '@/shared/components/ui/button'
 import { useGoogleLogin } from '../_hooks/use-google-login'
 import { AlertCircle, Loader2 } from 'lucide-react'
 

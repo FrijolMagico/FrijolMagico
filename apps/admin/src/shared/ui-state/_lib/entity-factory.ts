@@ -3,9 +3,7 @@ import type {
   EntityUIStateStore,
   EntityState,
   EntityOperation,
-  RemoteEntityData,
-  AppliedChanges,
-  CurrentEdits
+  RemoteEntityData
 } from './entity-types'
 import {
   generateTempId,

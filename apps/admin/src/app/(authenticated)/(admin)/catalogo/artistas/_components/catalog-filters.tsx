@@ -14,8 +14,8 @@ import { useCatalogView } from '../_hooks/use-catalog-view'
 
 interface CatalogFiltersProps {
   onFiltersChange: (filters: {
-    activo?: boolean
-    destacado?: boolean
+    activo?: boolean | null
+    destacado?: boolean | null
     search?: string
   }) => void
 }
@@ -38,28 +38,31 @@ export function CatalogFilters({ onFiltersChange }: CatalogFiltersProps) {
   }
 
   const handleActivoChange = (value: string | null) => {
-    const activo = value === 'all' ? null : value === 'true' ? true : false
+    if (!value) return
+    const activo = value === 'all' ? null : value === 'true'
     setFilters({ activo })
     onFiltersChange({
-      activo: activo ?? undefined,
-      destacado: filters.destacado ?? undefined,
+      activo: activo,
+      destacado: filters.destacado,
       search: filters.search
     })
   }
 
   const handleDestacadoChange = (value: string | null) => {
-    const destacado = value === 'all' ? null : value === 'true' ? true : false
+    if (!value) return
+    const destacado = value === 'all' ? null : value === 'true'
     setFilters({ destacado })
     onFiltersChange({
-      activo: filters.activo ?? undefined,
-      destacado: destacado ?? undefined,
+      activo: filters.activo,
+      destacado: destacado,
       search: filters.search
     })
   }
 
   const clearFilters = () => {
     setFilters({ activo: null, destacado: null, search: '' })
-    onFiltersChange({})
+    // Fix: Pass explicit nulls so the parent knows to remove params
+    onFiltersChange({ activo: null, destacado: null, search: '' })
   }
 
   return (
@@ -108,14 +111,9 @@ export function CatalogFilters({ onFiltersChange }: CatalogFiltersProps) {
         </Select>
 
         {hasActiveFilters && (
-          <Button
-            variant='ghost'
-            size='sm'
-            onClick={clearFilters}
-            className='ml-2'
-            title='Limpiar filtros'
-          >
-            <X className='h-4 w-4' />
+          <Button variant='ghost' size='sm' onClick={clearFilters}>
+            <X className='mr-1 h-4 w-4' />
+            Limpiar
           </Button>
         )}
       </div>

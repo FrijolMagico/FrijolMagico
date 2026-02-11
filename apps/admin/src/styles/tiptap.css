@@ -8,7 +8,7 @@
 .ProseMirror p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   float: left;
-  color: #9ca3af;
+  color: var(--muted-foreground);
   pointer-events: none;
   height: 0;
 }
@@ -38,13 +38,14 @@
 }
 
 .ProseMirror a {
-  color: #2563eb;
+  color: var(--primary);
   text-decoration: underline;
   cursor: pointer;
 }
 
 .ProseMirror a:hover {
-  color: #1d4ed8;
+  color: var(--primary);
+  opacity: 0.8;
 }
 
 .ProseMirror strong {
@@ -56,10 +57,10 @@
 }
 
 .ProseMirror blockquote {
-  border-left: 3px solid #e5e7eb;
+  border-left: 3px solid var(--border);
   padding-left: 1em;
   margin: 0.5em 0;
-  color: #6b7280;
+  color: var(--muted-foreground);
 }
 
 /* Focus styles */
