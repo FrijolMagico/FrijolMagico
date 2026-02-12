@@ -10,7 +10,7 @@ import {
   SelectValue
 } from '@/shared/components/ui/select'
 import { Button } from '@/shared/components/ui/button'
-import { useCatalogView } from '../_hooks/use-catalog-view'
+import { useCatalogFilters } from '../_hooks/use-catalog-view'
 
 interface CatalogFiltersProps {
   onFiltersChange: (filters: {
@@ -21,7 +21,7 @@ interface CatalogFiltersProps {
 }
 
 export function CatalogFilters({ onFiltersChange }: CatalogFiltersProps) {
-  const { filters, setFilters } = useCatalogView()
+  const { filters, setFilters } = useCatalogFilters()
 
   const hasActiveFilters =
     filters.activo !== null ||
@@ -81,7 +81,13 @@ export function CatalogFilters({ onFiltersChange }: CatalogFiltersProps) {
 
       <div className='flex items-center gap-2'>
         <Select
-          value={filters.activo === null ? 'all' : filters.activo.toString()}
+          value={
+            filters.activo === null
+              ? 'Todos'
+              : filters.activo
+                ? 'Activo'
+                : 'Inactivo'
+          }
           onValueChange={handleActivoChange}
         >
           <SelectTrigger className='w-35'>
@@ -96,7 +102,11 @@ export function CatalogFilters({ onFiltersChange }: CatalogFiltersProps) {
 
         <Select
           value={
-            filters.destacado === null ? 'all' : filters.destacado.toString()
+            filters.destacado === null
+              ? 'Todos'
+              : filters.destacado
+                ? 'Destacados'
+                : 'No destacados'
           }
           onValueChange={handleDestacadoChange}
         >
