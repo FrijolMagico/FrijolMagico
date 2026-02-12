@@ -2,7 +2,7 @@
  * Entity State Factory Tests
  */
 
-import { createEntityUIStateStore } from '@/shared/ui-state/_lib/entity-factory'
+import { createEntityUIStateStore } from '@/shared/ui-state/entity-state'
 import { describe, expect, test, beforeEach } from 'bun:test'
 
 interface TestEntity {

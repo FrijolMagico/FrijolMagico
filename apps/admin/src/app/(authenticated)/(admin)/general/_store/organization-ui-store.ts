@@ -1,5 +1,5 @@
-import { createEntityUIStateStore } from '@/shared/ui-state'
-import type { EntityOperation } from '@/shared/ui-state'
+import { createEntityUIStateStore } from '@/shared/ui-state/entity-state'
+import type { EntityOperation } from '@/shared/ui-state/entity-state'
 import { Organization } from '../_types'
 import { ORGANIZATION_SECTION_NAME } from '../_constants'
 
