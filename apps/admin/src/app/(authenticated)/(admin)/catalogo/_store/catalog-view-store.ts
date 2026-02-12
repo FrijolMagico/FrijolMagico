@@ -1,13 +1,8 @@
 import { create } from 'zustand'
 import { CatalogFilters } from '../_types'
+import { useCatalogPaginationStore } from './catalog-pagination-store'
 
 interface CatalogViewState {
-  // Pagination
-  page: number
-  pageSize: number
-  totalPages: number
-  totalItems: number
-
   // Filters
   filters: CatalogFilters
 
@@ -21,10 +16,6 @@ interface CatalogViewState {
   selectedArtistId: number | null
 
   // Actions
-  setPage: (page: number) => void
-  setPageSize: (size: number) => void
-  setTotalPages: (total: number) => void
-  setTotalItems: (total: number) => void
   setFilters: (filters: Partial<CatalogFilters>) => void
 
   startDrag: (artistId: number) => void
@@ -40,10 +31,6 @@ interface CatalogViewState {
 }
 
 export const useCatalogViewStore = create<CatalogViewState>((set) => ({
-  page: 1,
-  pageSize: 20,
-  totalPages: 1,
-  totalItems: 0,
   filters: { activo: null, destacado: null, search: '' },
 
   isDragging: false,
@@ -53,15 +40,12 @@ export const useCatalogViewStore = create<CatalogViewState>((set) => ({
   artistDialogOpen: false,
   selectedArtistId: null,
 
-  setPage: (page) => set({ page }),
-  setPageSize: (pageSize) => set({ pageSize }),
-  setTotalPages: (totalPages) => set({ totalPages }),
-  setTotalItems: (totalItems) => set({ totalItems }),
-  setFilters: (filters) =>
+  setFilters: (filters) => {
+    useCatalogPaginationStore.getState().reset()
     set((state) => ({
-      filters: { ...state.filters, ...filters },
-      page: 1 // Reset to first page on filter change
-    })),
+      filters: { ...state.filters, ...filters }
+    }))
+  },
 
   startDrag: (artistId) => set({ isDragging: true, draggedArtistId: artistId }),
   endDrag: () => set({ isDragging: false, draggedArtistId: null }),

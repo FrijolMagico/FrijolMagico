@@ -1,19 +1,28 @@
 import { useCatalogViewStore } from '../_store/catalog-view-store'
+import { useCatalogPaginationStore } from '../_store/catalog-pagination-store'
 import { useShallow } from 'zustand/react/shallow'
 
 export function useCatalogView() {
-  return useCatalogViewStore(
-    useShallow((store) => ({
-      // Pagination
-      page: store.page,
-      pageSize: store.pageSize,
-      totalPages: store.totalPages,
-      totalItems: store.totalItems,
-      setPage: store.setPage,
-      setPageSize: store.setPageSize,
-      setTotalPages: store.setTotalPages,
-      setTotalItems: store.setTotalItems,
+  // Get pagination state from dedicated store
+  const pagination = useCatalogPaginationStore(
+    useShallow((state) => ({
+      page: state.page,
+      pageSize: state.pageSize,
+      totalItems: state.totalItems,
+      getTotalPages: state.getTotalPages,
+      getVisibleRange: state.getVisibleRange,
+      setPage: state.setPage,
+      setPageSize: state.setPageSize,
+      setTotalItems: state.setTotalItems,
+      reset: state.reset,
+      goNext: state.goNext,
+      goPrev: state.goPrev
+    }))
+  )
 
+  // Get view state from existing store
+  const viewState = useCatalogViewStore(
+    useShallow((store) => ({
       // Filters
       filters: store.filters,
       setFilters: store.setFilters,
@@ -36,17 +45,39 @@ export function useCatalogView() {
       closeAllDialogs: store.closeAllDialogs
     }))
   )
+
+  // Return combined state for backward compatibility
+  return {
+    ...viewState,
+    // Pagination from separate store
+    page: pagination.page,
+    pageSize: pagination.pageSize,
+    totalItems: pagination.totalItems,
+    getTotalPages: pagination.getTotalPages,
+    getVisibleRange: pagination.getVisibleRange,
+    setPage: pagination.setPage,
+    setPageSize: pagination.setPageSize,
+    setTotalItems: pagination.setTotalItems,
+    resetPage: pagination.reset,
+    goNext: pagination.goNext,
+    goPrev: pagination.goPrev
+  }
 }
 
 export function useCatalogPagination() {
-  return useCatalogViewStore(
+  return useCatalogPaginationStore(
     useShallow((state) => ({
       page: state.page,
       pageSize: state.pageSize,
-      totalPages: state.totalPages,
+      getTotalPages: state.getTotalPages,
       totalItems: state.totalItems,
+      getVisibleRange: state.getVisibleRange,
       setPage: state.setPage,
-      setPageSize: state.setPageSize
+      setPageSize: state.setPageSize,
+      setTotalItems: state.setTotalItems,
+      reset: state.reset,
+      goNext: state.goNext,
+      goPrev: state.goPrev
     }))
   )
 }
