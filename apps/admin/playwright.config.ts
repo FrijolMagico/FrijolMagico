@@ -6,8 +6,10 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: [['html', { outputFolder: './__tests__/playwright-report' }]],
-  outputDir: './__tests__/test-results',
+  reporter: [
+    ['html', { outputFolder: './__tests__/e2e/_report/playwright-report' }]
+  ],
+  outputDir: './__tests__/e2e/_reports/test-results',
   use: {
     baseURL: process.env.BASE_URL || 'http://localhost:3001',
     trace: 'on-first-retry',
