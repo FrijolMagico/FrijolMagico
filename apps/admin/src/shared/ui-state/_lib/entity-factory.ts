@@ -21,6 +21,22 @@ export interface CreateEntityUIStateStoreConfig<T> {
 export function createEntityUIStateStore<T>(
   config: CreateEntityUIStateStoreConfig<T>
 ) {
+  // Per-store instance memoization cache
+  const memoCache = {
+    selectAll: {
+      input: null as EntityState<T> | null,
+      result: null as T[] | null
+    },
+    selectIds: {
+      input: null as EntityState<T> | null,
+      result: null as string[] | null
+    },
+    selectEntities: {
+      input: null as EntityState<T> | null,
+      result: null as Record<string, T> | null
+    }
+  }
+
   return create<EntityUIStateStore<T>>((set, get) => ({
     remoteData: null,
     appliedChanges: null,
@@ -84,7 +100,17 @@ export function createEntityUIStateStore<T>(
     },
 
     selectAll(): T[] {
-      return denormalizeEntities(get().getEffectiveData())
+      const effectiveData = get().getEffectiveData()
+      if (
+        effectiveData === memoCache.selectAll.input &&
+        memoCache.selectAll.result !== null
+      ) {
+        return memoCache.selectAll.result
+      }
+      const result = denormalizeEntities(effectiveData)
+      memoCache.selectAll.input = effectiveData
+      memoCache.selectAll.result = result
+      return result
     },
 
     selectById(id: string): T | undefined {
@@ -92,11 +118,31 @@ export function createEntityUIStateStore<T>(
     },
 
     selectIds(): string[] {
-      return get().getEffectiveData().ids
+      const effectiveData = get().getEffectiveData()
+      if (
+        effectiveData === memoCache.selectIds.input &&
+        memoCache.selectIds.result !== null
+      ) {
+        return memoCache.selectIds.result
+      }
+      const result = effectiveData.ids
+      memoCache.selectIds.input = effectiveData
+      memoCache.selectIds.result = result
+      return result
     },
 
     selectEntities(): Record<string, T> {
-      return get().getEffectiveData().entities
+      const effectiveData = get().getEffectiveData()
+      if (
+        effectiveData === memoCache.selectEntities.input &&
+        memoCache.selectEntities.result !== null
+      ) {
+        return memoCache.selectEntities.result
+      }
+      const result = effectiveData.entities
+      memoCache.selectEntities.input = effectiveData
+      memoCache.selectEntities.result = result
+      return result
     },
 
     selectTotal(): number {

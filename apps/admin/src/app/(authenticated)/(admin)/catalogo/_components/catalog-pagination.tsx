@@ -4,13 +4,18 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/shared/components/ui/button'
 import { Separator } from '@/shared/components/ui/separator'
 import { useCatalogView } from '../_hooks/use-catalog-view'
+import { useFilteredArtistCount } from '../_hooks/use-artist-ui'
 
 interface CatalogPaginationProps {
   onPageChange: (page: number) => void
 }
 
 export function CatalogPagination({ onPageChange }: CatalogPaginationProps) {
-  const { page, totalPages, totalItems, pageSize } = useCatalogView()
+  const { page, pageSize } = useCatalogView()
+  const filteredCount = useFilteredArtistCount()
+
+  const totalPages = Math.max(1, Math.ceil(filteredCount / pageSize))
+  const totalItems = filteredCount
 
   const startItem = (page - 1) * pageSize + 1
   const endItem = Math.min(page * pageSize, totalItems)

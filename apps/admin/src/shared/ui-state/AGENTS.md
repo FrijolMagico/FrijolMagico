@@ -83,13 +83,45 @@ O(1) for all operations regardless of collection size:
 - ❌ Nested entities in state
 - ✅ Flat structures with relations
 
+## ⚠️ CRITICAL: Zustand v5 & Infinite Loops
+
+Zustand v5 uses React's `useSyncExternalStore`, which requires **stable selector references**.
+
+### The Problem
+
+When a selector returns a new reference (like `selectAll()` which creates a new array on every call), `useShallow` will:
+
+1. Compare the new array with the old one (shallow equal).
+2. If they are equal, it returns the _old_ reference to React.
+3. **HOWEVER**, if the selector is called again and returns a _new_ reference, and React's `useSyncExternalStore` detects this inconsistency or if the logic inside the selector is complex, it can trigger infinite re-renders in Strict Mode.
+
+### ❌ NEVER DO THIS
+
+```typescript
+// Creates new array reference every render -> Infinite Loop risk
+const artists = useStore(useShallow((s) => s.selectAll()))
+```
+
+### ✅ CORRECT: Normalized State Subscription
+
+Always subscribe to the underlying normalized entities and IDs, then compute the array with `useMemo`.
+
+```typescript
+// 1. Subscribe to stable normalized data
+const { entities, ids } = useStore(useShallow((s) => s.getEffectiveData()))
+
+// 2. Compute the array only when entities or ids change
+const artists = useMemo(
+  () => ids.map((id) => entities[id]).filter(Boolean),
+  [entities, ids]
+)
+```
+
+> **Note**: While the latest factory version includes internal memoization for `selectAll()`, the **Normalized State Subscription** pattern is still recommended for maximum stability and to avoid any edge cases with React's concurrent rendering.
+
 ## Hook Facade Pattern
 
 **MANDATORY**: Always implement a "Hook Facade" layer between the store and components.
-
-### Why?
-
-The factory creates a vanilla store. It cannot enforce `useShallow` or memoization policies. The Facade ensures safety and performance by centralizing these patterns.
 
 ### Implementation Guide
 
@@ -102,18 +134,21 @@ The factory creates a vanilla store. It cannot enforce `useShallow` or memoizati
 2. **Create Facade** (`_hooks/use-feature-ui.ts`):
 
    ```typescript
-   // 1. Import store and useShallow
+   import { useMemo } from 'react'
    import { useShallow } from 'zustand/react/shallow'
    import { useFeatureStore } from '../_store/feature-store'
 
-   // 2. Export optimized hooks
    export function useFeatureData() {
-     // ✅ Apply useShallow here once
-     return useFeatureStore(useShallow((state) => state.selectAll()))
+     const { entities, ids } = useFeatureStore(
+       useShallow((s) => s.getEffectiveData())
+     )
+     return useMemo(
+       () => ids.map((id) => entities[id]).filter(Boolean),
+       [entities, ids]
+     )
    }
 
    export function useFeatureActions() {
-     // ✅ Select actions as a stable object
      return useFeatureStore(
        useShallow((state) => ({
          add: state.addOne,
@@ -146,29 +181,3 @@ The factory creates a vanilla store. It cannot enforce `useShallow` or memoizati
 - `updateOne(id, changes)` - Update fields
 - `removeOne(id)` - Hard delete (avoid for persisted)
 - `commitCurrentEdits()` - L3 → L2 + journal
-
-## Zustand v5 & useShallow
-
-**CRITICAL WARNING**: Zustand v5 changed the `useShallow` API. The old v4 syntax is deprecated and triggers infinite loops/warnings in strict mode.
-
-- **Deprecated (v4)**: `useStore(selector, useShallow)`
-- **Correct (v5)**: `useStore(useShallow(selector))`
-
-### Infinite Render Loop Prevention
-
-**NEVER** use `useShallow` with selectors that create new object/array references on every call (e.g., `.map()`, `.filter()`, `.sort()`, `Object.values()`).
-
-React's `useSyncExternalStore` (used by Zustand v5) requires stable snapshots. If your selector returns a new reference every time, `useShallow` compares it, sees it's "shallow equal", but React sees a new reference and re-renders, causing an infinite loop.
-
-```typescript
-// ❌ WRONG: Creates new array reference every render -> Infinite Loop
-const activeItems = useStore(
-  useShallow(
-    (state) => state.items.filter((i) => i.active) // New array reference every time!
-  )
-)
-
-// ✅ CORRECT: Select stable state, compute in component
-const items = useStore(useShallow((state) => state.items)) // Stable if items hasn't changed
-const activeItems = useMemo(() => items.filter((i) => i.active), [items])
-```

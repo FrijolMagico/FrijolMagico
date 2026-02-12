@@ -3,15 +3,48 @@ import { useShallow } from 'zustand/react/shallow'
 import { useArtistUIStore } from '../_store/artist-ui-store'
 import { generateKeyBetween } from 'fractional-indexing'
 import { useCatalogViewStore } from '../_store/catalog-view-store'
-import { CatalogArtist } from '../_types'
+import { CatalogArtist, CatalogFilters } from '../_types'
+
+function filterArtists(
+  artists: CatalogArtist[],
+  filters: CatalogFilters
+): CatalogArtist[] {
+  return artists.filter((artist) => {
+    if (filters.activo !== null && artist.activo !== filters.activo) {
+      return false
+    }
+
+    if (filters.destacado !== null && artist.destacado !== filters.destacado) {
+      return false
+    }
+
+    if (filters.search) {
+      const term = filters.search.toLowerCase()
+      const nombre = (artist.nombre || '').toLowerCase()
+      const pseudonimo = (artist.pseudonimo || '').toLowerCase()
+      if (!nombre.includes(term) && !pseudonimo.includes(term)) {
+        return false
+      }
+    }
+
+    return true
+  })
+}
+
+function sortByOrden(artists: CatalogArtist[]): CatalogArtist[] {
+  return [...artists].sort((a, b) => {
+    if (a.orden < b.orden) return -1
+    if (a.orden > b.orden) return 1
+    return 0
+  })
+}
 
 export function useArtistUI() {
   const startDrag = useCatalogViewStore((s) => s.startDrag)
   const endDrag = useCatalogViewStore((s) => s.endDrag)
 
-  const store = useArtistUIStore()
-
-  useArtistUIStore(
+  // ✅ Subscribe to raw state, not computed result
+  const { remoteData, appliedChanges, currentEdits } = useArtistUIStore(
     useShallow((s) => ({
       remoteData: s.remoteData,
       appliedChanges: s.appliedChanges,
@@ -19,47 +52,37 @@ export function useArtistUI() {
     }))
   )
 
+  // ✅ Compute effective data and array in component with useMemo
   const artists = useMemo(() => {
-    const effectiveData = store.getEffectiveData()
+    const effectiveData = useArtistUIStore.getState().getEffectiveData()
     return effectiveData.ids
       .map((id) => effectiveData.entities[id])
       .filter(Boolean)
-      .sort((a, b) => {
-        if (a.orden < b.orden) return -1
-        if (a.orden > b.orden) return 1
-        return 0
-      })
-  }, [store])
+  }, [remoteData, appliedChanges, currentEdits])
 
   const reorder = useCallback(
     (newOrder: CatalogArtist[], draggedArtistId: number) => {
-      // Find the dragged item in the new visual order provided by DnD
       const draggedNewIndex = newOrder.findIndex(
         (item) => item.artistaId === draggedArtistId
       )
       if (draggedNewIndex === -1) return
 
-      // Get neighbors in the new order
       const prevItem = newOrder[draggedNewIndex - 1]
       const nextItem = newOrder[draggedNewIndex + 1]
 
       const prevOrder = prevItem?.orden ?? null
       const nextOrder = nextItem?.orden ?? null
 
-      // Generate new key
       let newOrden: string
       try {
         newOrden = generateKeyBetween(prevOrder, nextOrder)
       } catch (e) {
         console.error('Error generating key', e)
-        // Fallback
         if (!prevOrder && nextOrder) newOrden = nextOrder + 'Z'
         else if (prevOrder && !nextOrder) newOrden = prevOrder + 'm'
         else newOrden = 'a0'
       }
 
-      // Only update if the order actually changed
-      // We get the current entity state directly from store to verify
       const currentEntity = useArtistUIStore
         .getState()
         .selectById(String(draggedArtistId))
@@ -84,60 +107,65 @@ export function useArtistUI() {
     endDrag()
   }, [endDrag])
 
+  // ✅ Get action methods from store (stable references via getState)
+  const { setRemoteData, addOne, updateOne, removeOne, commitCurrentEdits } =
+    useArtistUIStore.getState()
+
   return {
-    // Selectors
     artists,
     hasChanges: useArtistUIStore(useShallow((s) => s.getHasChanges())),
     hasUnsavedEdits: useArtistUIStore(
       useShallow((s) => s.getHasUnsavedEdits())
     ),
 
-    // Actions
-    setRemoteData: useArtistUIStore.getState().setRemoteData,
-    addOne: useArtistUIStore.getState().addOne,
-    updateOne: useArtistUIStore.getState().updateOne,
-    removeOne: useArtistUIStore.getState().removeOne,
-    commitCurrentEdits: useArtistUIStore.getState().commitCurrentEdits,
+    setRemoteData,
+    addOne,
+    updateOne,
+    removeOne,
+    commitCurrentEdits,
     reorder,
 
-    // UI specific
     handleDragStart,
     handleDragEnd
   }
 }
 
-export function useVisibleArtists() {
-  const page = useCatalogViewStore((s) => s.page)
-  const pageSize = useCatalogViewStore((s) => s.pageSize)
-
-  const store = useArtistUIStore()
-
-  useArtistUIStore(
+export function useFilteredArtists(): CatalogArtist[] {
+  // ✅ Subscribe to raw state, compute effective data in useMemo
+  const { remoteData, appliedChanges, currentEdits } = useArtistUIStore(
     useShallow((s) => ({
       remoteData: s.remoteData,
       appliedChanges: s.appliedChanges,
       currentEdits: s.currentEdits
     }))
   )
+  const filters = useCatalogViewStore((s) => s.filters)
+
+  const filteredArtists = useMemo(() => {
+    const { entities, ids } = useArtistUIStore.getState().getEffectiveData()
+    const allArtists = ids.map((id) => entities[id]).filter(Boolean)
+    return filterArtists(allArtists, filters)
+  }, [remoteData, appliedChanges, currentEdits, filters])
+
+  return filteredArtists
+}
+
+export function useVisibleArtists(): CatalogArtist[] {
+  const filtered = useFilteredArtists()
+  const page = useCatalogViewStore((s) => s.page)
+  const pageSize = useCatalogViewStore((s) => s.pageSize)
 
   const visibleArtists = useMemo(() => {
-    const effectiveData = store.getEffectiveData()
-
-    const sorted = effectiveData.ids
-      .map((id) => effectiveData.entities[id])
-      .filter(Boolean)
-      .sort((a, b) => {
-        if (a.orden < b.orden) return -1
-        if (a.orden > b.orden) return 1
-        return 0
-      })
-
+    const sorted = sortByOrden(filtered)
     const startIndex = (page - 1) * pageSize
-    const endIndex = startIndex + pageSize
-    return sorted.slice(startIndex, endIndex)
-  }, [page, pageSize, store])
+    return sorted.slice(startIndex, startIndex + pageSize)
+  }, [filtered, page, pageSize])
 
   return visibleArtists
+}
+
+export function useFilteredArtistCount(): number {
+  return useFilteredArtists().length
 }
 
 export function useArtistById(id: number) {

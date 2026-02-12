@@ -1,6 +1,6 @@
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
-import { eq, and, like, or, asc, count } from 'drizzle-orm'
+import { eq, and, asc, count } from 'drizzle-orm'
 import { getAvatarUrl } from '@/lib/cdn'
 import type { CatalogArtist, PaginatedResult, CatalogFilters } from '../_types'
 import { cacheTag } from 'next/cache'
@@ -10,44 +10,25 @@ import { parseRRSS } from './parse-rrss'
 const { catalogoArtista, artista, artistaImagen } = artist
 
 export async function getCatalogArtists(
-  filters: CatalogFilters = { activo: null, destacado: null, search: '' }
+  _filters: CatalogFilters = { activo: null, destacado: null, search: '' }
 ): Promise<PaginatedResult<CatalogArtist>> {
   'use cache'
   cacheTag(ARTIST_CACHE_TAG)
 
-  // Build where conditions
-  const conditions = []
+  // ✅ Load ALL artists, client handles filtering
+  // Server-side filtering breaks client edits that haven't been persisted yet
+  // E.g., toggling artist to inactive locally then filtering by "Inactivos"
+  // would return 0 results from DB since the edit isn't saved yet
 
-  // Filter by activo
-  if (filters.activo !== null) {
-    conditions.push(eq(catalogoArtista.activo, filters.activo))
-  }
-
-  // Filter by destacado
-  if (filters.destacado !== null) {
-    conditions.push(eq(catalogoArtista.destacado, filters.destacado))
-  }
-
-  // Filter by search (nombre or pseudonimo)
-  if (filters.search) {
-    const searchTerm = `%${filters.search}%`
-    conditions.push(
-      or(like(artista.nombre, searchTerm), like(artista.pseudonimo, searchTerm))
-    )
-  }
-
-  const whereClause = conditions.length > 0 ? and(...conditions) : undefined
-
-  // Get total count
+  // Get total count (ALL artists, no filter)
   const countResult = await db
     .select({ count: count() })
     .from(catalogoArtista)
     .innerJoin(artista, eq(catalogoArtista.artistaId, artista.id))
-    .where(whereClause)
 
   const total = countResult[0]?.count || 0
 
-  // Get ALL data (no pagination)
+  // Get ALL data (no server-side filtering)
   const results = await db
     .select({
       artistaId: artista.id,
@@ -75,7 +56,6 @@ export async function getCatalogArtists(
         eq(artistaImagen.tipo, 'avatar')
       )
     )
-    .where(whereClause)
     .orderBy(asc(catalogoArtista.orden))
 
   // Map results to CatalogArtist
