@@ -3,7 +3,7 @@ import { useMemo } from 'react'
 import { useOrganizationUIStore } from '../_store/organization-ui-store'
 
 export function useOrganizationEffectiveData() {
-  const { remoteData, appliedChanges, currentEdits } = useOrganizationUIStore(
+  useOrganizationUIStore(
     useShallow((state) => ({
       remoteData: state.remoteData,
       appliedChanges: state.appliedChanges,
@@ -16,7 +16,7 @@ export function useOrganizationEffectiveData() {
     const state = useOrganizationUIStore.getState().getEffectiveData()
     const id = state.ids[0]
     return id ? state.entities[id] : undefined
-  }, [remoteData, appliedChanges, currentEdits])
+  }, [])
 }
 
 export function useOrganizationHasChanges() {

@@ -1,12 +1,18 @@
 'use server'
 
+import { cacheTag } from 'next/cache'
+
 import { db } from '@frijolmagico/database/orm'
 import { core } from '@frijolmagico/database/schema'
 import { eq } from 'drizzle-orm'
 
-import { ORG_CACHE_TAG, ORG_ID, TEAM_CACHE_TAG } from '../_constants'
-import { cacheTag } from 'next/cache'
 import { RawOrganization, RawTeamMember } from '../_types'
+
+import {
+  ORGANIZATION_CACHE_TAG,
+  ORGANIZATION_ID,
+  TEAM_CACHE_TAG
+} from '../_constants'
 
 /**
  * Obtiene datos de la organización desde la base de datos.
@@ -37,14 +43,14 @@ import { RawOrganization, RawTeamMember } from '../_types'
  */
 export async function getOrganizationData(): Promise<RawOrganization | null> {
   try {
-    const organizacion = await getOrganization()
+    const organization = await getOrganization()
 
-    if (!organizacion) {
-      console.warn('⚠️ No organization found with id:', ORG_ID)
+    if (!organization) {
+      console.warn('⚠️ No organization found with id:', ORGANIZATION_ID)
       return null
     }
 
-    return organizacion
+    return organization
   } catch (error) {
     console.error('❌ Error fetching organization data:', error)
     return null
@@ -69,14 +75,17 @@ export async function getOrganizationData(): Promise<RawOrganization | null> {
  */
 export async function getTeamData(): Promise<RawTeamMember[] | null> {
   try {
-    const equipo = await getTeam()
+    const team = await getTeam()
 
-    if (!equipo || equipo.length === 0) {
-      console.warn('⚠️ No team members found for organization id:', ORG_ID)
+    if (!team) {
+      console.warn(
+        '⚠️ No team members found for organization id:',
+        ORGANIZATION_ID
+      )
       return null
     }
 
-    return equipo
+    return team
   } catch (error) {
     console.error('❌ Error fetching team data:', error)
     return null
@@ -90,10 +99,10 @@ export async function getTeamData(): Promise<RawTeamMember[] | null> {
  */
 async function getOrganization(): Promise<RawOrganization | undefined> {
   'use cache'
-  cacheTag(ORG_CACHE_TAG)
+  cacheTag(ORGANIZATION_CACHE_TAG)
 
   return await db.query.organizacion.findFirst({
-    where: eq(core.organizacion.id, ORG_ID)
+    where: eq(core.organizacion.id, ORGANIZATION_ID)
   })
 }
 
@@ -107,6 +116,6 @@ async function getTeam(): Promise<RawTeamMember[] | undefined> {
   cacheTag(TEAM_CACHE_TAG)
 
   return await db.query.organizacionEquipo.findMany({
-    where: eq(core.organizacionEquipo.organizacionId, ORG_ID)
+    where: eq(core.organizacionEquipo.organizacionId, ORGANIZATION_ID)
   })
 }

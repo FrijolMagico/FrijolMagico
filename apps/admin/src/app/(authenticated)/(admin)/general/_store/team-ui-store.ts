@@ -1,6 +1,7 @@
 import { createEntityUIStateStore } from '@/shared/ui-state'
 import type { EntityOperation } from '@/shared/ui-state'
 import { TeamMember } from '../_types'
+import { TEAM_SECTION_NAME } from '../_constants'
 
 /**
  * Función para escribir operaciones del equipo al journal.
@@ -25,7 +26,7 @@ async function writeTeamJournal(operation: EntityOperation<TeamMember>) {
  * - 3 capas: remoteData, appliedChanges, currentEdits
  */
 export const useTeamUIStore = createEntityUIStateStore<TeamMember>({
-  sectionName: 'equipo',
+  sectionName: TEAM_SECTION_NAME,
   idField: 'id',
   writeToJournal: writeTeamJournal
 })

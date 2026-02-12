@@ -1,6 +1,7 @@
 import { createEntityUIStateStore } from '@/shared/ui-state'
 import type { EntityOperation } from '@/shared/ui-state'
 import { Organization } from '../_types'
+import { ORGANIZATION_SECTION_NAME } from '../_constants'
 
 /**
  * Función placeholder para escribir al journal.
@@ -140,7 +141,7 @@ async function writeOrganizationJournal(
  * automático de las 3 capas, con Layer 3 teniendo la mayor prioridad.
  */
 export const useOrganizationUIStore = createEntityUIStateStore<Organization>({
-  sectionName: 'organizacion',
+  sectionName: ORGANIZATION_SECTION_NAME,
   idField: 'id',
   isSingleton: true,
   writeToJournal: writeOrganizationJournal
