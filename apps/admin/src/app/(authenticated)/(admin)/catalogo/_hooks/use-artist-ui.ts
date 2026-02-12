@@ -3,6 +3,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { useArtistUIStore } from '../_store/artist-ui-store'
 import { generateKeyBetween } from 'fractional-indexing'
 import { useCatalogViewStore } from '../_store/catalog-view-store'
+import { useCatalogPaginationStore } from '../_store/catalog-pagination-store'
 import { CatalogArtist, CatalogFilters } from '../_types'
 
 function filterArtists(
@@ -152,8 +153,8 @@ export function useFilteredArtists(): CatalogArtist[] {
 
 export function useVisibleArtists(): CatalogArtist[] {
   const filtered = useFilteredArtists()
-  const page = useCatalogViewStore((s) => s.page)
-  const pageSize = useCatalogViewStore((s) => s.pageSize)
+  const page = useCatalogPaginationStore((s) => s.page)
+  const pageSize = useCatalogPaginationStore((s) => s.pageSize)
 
   const visibleArtists = useMemo(() => {
     const sorted = sortByOrden(filtered)

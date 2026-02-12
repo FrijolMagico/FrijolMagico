@@ -27,8 +27,7 @@ export function CatalogArtistsContainer({
   const tableContainerRef = useRef<HTMLDivElement>(null)
 
   const { setRemoteData, hasUnsavedEdits } = useArtistUI()
-  const { setPage, setTotalPages, setTotalItems, setFilters, pageSize } =
-    useCatalogView()
+  const { setPage, setTotalItems, setFilters, pageSize } = useCatalogView()
 
   const selectedArtist = useSelectedArtist()
 
@@ -36,8 +35,6 @@ export function CatalogArtistsContainer({
   useEffect(() => {
     setRemoteData(initialData.data)
     setTotalItems(initialData.total)
-    // Calculate pages locally based on pageSize
-    setTotalPages(Math.ceil(initialData.total / pageSize))
 
     // Sync filters from URL to Store
     const activoParam = searchParams.get('activo')
@@ -58,7 +55,6 @@ export function CatalogArtistsContainer({
     initialData,
     setRemoteData,
     setTotalItems,
-    setTotalPages,
     pageSize,
     searchParams,
     setFilters,

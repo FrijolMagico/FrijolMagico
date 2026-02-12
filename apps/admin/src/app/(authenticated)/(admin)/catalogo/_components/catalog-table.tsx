@@ -54,13 +54,15 @@ export function CatalogTable({
   const {
     page,
     pageSize,
-    totalPages,
+    getTotalPages,
     setPage,
     startDrag,
     endDrag,
     draggedArtistId,
     openCatalogDialog
   } = useCatalogView()
+
+  const totalPages = getTotalPages()
 
   // Refs for auto-pagination timers
   const pageChangeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
