@@ -169,7 +169,7 @@ export function CatalogArtistsContainer({
         <>
           <CatalogPagination onPageChange={handlePageChange} />
 
-          <Card ref={tableContainerRef} className='overflow-x-hidden'>
+          <Card ref={tableContainerRef} className='overflow-x-hidden py-0'>
             <CatalogTable
               containerRef={tableContainerRef}
               onPageChange={handlePageChange}
