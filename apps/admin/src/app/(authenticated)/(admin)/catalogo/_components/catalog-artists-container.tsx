@@ -12,6 +12,7 @@ import { EmptyState } from '@/shared/components/empty-state'
 import { Card } from '@/shared/components/ui/card'
 import { useArtistUI } from '../_hooks/use-artist-ui'
 import { useCatalogView } from '../_hooks/use-catalog-view'
+import { useSelectedArtist } from '../_hooks/use-selected-artist'
 // import { useArtistaUIStore } from '../_store/artist-ui-store'
 // import { saveCatalogBatch } from '../_actions/catalog.actions'
 // import { toast } from 'sonner'
@@ -38,6 +39,7 @@ export function CatalogArtistsContainer({
     openCatalogDialog,
     pageSize
   } = useCatalogView()
+  const selectedArtist = useSelectedArtist()
 
   // Initialize data and sync state
   useEffect(() => {
@@ -197,10 +199,18 @@ export function CatalogArtistsContainer({
       )}
 
       {/* Dialog Nivel 1: Catálogo */}
-      <EditCatalogDialog open={catalogDialogOpen} />
+      <EditCatalogDialog
+        key={selectedArtist?.artistaId ?? 'closed'}
+        open={catalogDialogOpen}
+        artist={selectedArtist}
+      />
 
       {/* Dialog Nivel 2: Artista (stacked) */}
-      <EditArtistDialog open={artistDialogOpen} />
+      <EditArtistDialog
+        key={`artist-${selectedArtist?.artistaId ?? 'closed'}`}
+        open={artistDialogOpen}
+        artist={selectedArtist}
+      />
     </div>
   )
 }
