@@ -38,11 +38,9 @@ export function EditArtistDialog({ open, artist }: EditArtistDialogProps) {
   })
 
   const [isSaving, setIsSaving] = useState(false)
-  const [isDirty, setIsDirty] = useState(false)
 
   const updateField = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
-    setIsDirty(true)
   }
 
   const handleSave = useCallback(async () => {
@@ -167,7 +165,7 @@ export function EditArtistDialog({ open, artist }: EditArtistDialogProps) {
             Cancelar
           </Button>
           {/* NOTE: This button update a artist information in the remote and is not conencted witht he L3 global saving. */}
-          <Button onClick={handleSave} disabled={!isDirty || isSaving}>
+          <Button onClick={handleSave} disabled={isSaving}>
             Guardar cambios
           </Button>
         </div>
