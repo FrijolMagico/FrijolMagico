@@ -21,13 +21,13 @@ export const navigation = [
   {
     title: 'Catálogo',
     icon: Palette,
-    href: '/catalogo',
-    items: [
-      {
-        title: 'Artistas',
-        href: '/catalogo/artistas'
-      }
-    ]
+    href: '/catalogo'
+    // items: [
+    //   {
+    //     title: 'Artistas',
+    //     href: '/catalogo/artistas'
+    //   }
+    // ]
   },
   {
     title: 'Eventos',
