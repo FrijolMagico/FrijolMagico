@@ -1,8 +1,7 @@
 import { Suspense } from 'react'
-import { getCatalogArtists } from './_lib/get-catalog-data'
-import { CatalogArtistsContainer } from './_components/catalog-artists-container'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import type { CatalogFilters } from './_types'
+import { CatalogContent } from './_components/catalog-content'
 
 interface PageProps {
   searchParams: Promise<{
@@ -28,11 +27,6 @@ function CatalogLoading() {
       <Skeleton className='h-96 w-full' />
     </div>
   )
-}
-
-async function CatalogContent({ filters }: { filters: CatalogFilters }) {
-  const data = await getCatalogArtists(filters)
-  return <CatalogArtistsContainer initialData={data} />
 }
 
 export default async function CatalogArtistsPage({ searchParams }: PageProps) {
