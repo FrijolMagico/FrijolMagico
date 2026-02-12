@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { Pencil, MapPin, Mail } from 'lucide-react'
 import {
   Dialog,
@@ -18,34 +18,21 @@ import { Textarea } from '@/shared/components/ui/textarea'
 import { ArtistAvatar } from './artist-avatar'
 // import { toast } from 'sonner'
 import { useCatalogView } from '../_hooks/use-catalog-view'
-import { useArtistUI, useArtistById } from '../_hooks/use-artist-ui'
+import type { CatalogArtist } from '../_types'
 
 interface EditCatalogDialogProps {
   open: boolean
+  artist: CatalogArtist | undefined
 }
 
-export function EditCatalogDialog({ open }: EditCatalogDialogProps) {
-  const { selectedArtistId, closeAllDialogs, openArtistDialog } =
-    useCatalogView()
-  const { updateOne } = useArtistUI()
-  const selectedArtist = useArtistById(selectedArtistId || -1)
+export function EditCatalogDialog({ open, artist }: EditCatalogDialogProps) {
+  const { closeAllDialogs, openArtistDialog } = useCatalogView()
 
   const [formData, setFormData] = useState({
-    descripcion: '',
-    activo: true,
-    destacado: false
+    descripcion: artist?.descripcion || '',
+    activo: artist?.activo ?? true,
+    destacado: artist?.destacado ?? false
   })
-
-  // Keep track of previous artist to reset form when a new artist is selected
-  const [prevArtist, setPrevArtist] = useState(selectedArtist)
-  if (selectedArtist && selectedArtist !== prevArtist && open) {
-    setPrevArtist(selectedArtist)
-    setFormData({
-      descripcion: selectedArtist?.descripcion || '',
-      activo: selectedArtist.activo,
-      destacado: selectedArtist.destacado
-    })
-  }
 
   const updateField = useCallback(
     (field: keyof typeof formData, value: unknown) => {
@@ -59,17 +46,17 @@ export function EditCatalogDialog({ open }: EditCatalogDialogProps) {
 
   // TODO: This is for the send to L2 (Journal/Draft)
   // const handleSave = useCallback(async () => {
-  //   if (!selectedArtist) return
+  //   if (!artist) return
   //
   //   try {
-  //     await updateCatalogEntry(selectedArtist.artistaId, {
+  //     await updateCatalogEntry(artist.artistaId, {
   //       descripcion: formData.descripcion,
   //       activo: formData.activo,
   //       destacado: formData.destacado
   //     })
   //
   //     // Update local state
-  //     updateOne(String(selectedArtist.artistaId), {
+  //     updateOne(String(artist.artistaId), {
   //       descripcion: formData.descripcion,
   //       activo: formData.activo,
   //       destacado: formData.destacado
@@ -82,9 +69,9 @@ export function EditCatalogDialog({ open }: EditCatalogDialogProps) {
   //     console.error(error)
   //   } finally {
   //   }
-  // }, [selectedArtist, formData, updateOne, closeAllDialogs])
+  // }, [artist, formData, updateOne, closeAllDialogs])
 
-  if (!selectedArtist) return null
+  if (!artist) return null
 
   return (
     <Dialog open={open} onOpenChange={closeAllDialogs}>
@@ -99,14 +86,14 @@ export function EditCatalogDialog({ open }: EditCatalogDialogProps) {
             <CardContent className='pt-6'>
               <div className='flex gap-4'>
                 <ArtistAvatar
-                  src={selectedArtist.avatarUrl}
-                  alt={selectedArtist.pseudonimo}
+                  src={artist.avatarUrl}
+                  alt={artist.pseudonimo}
                   size='lg'
                 />
                 <div className='flex-1'>
                   <div className='flex items-center gap-2'>
                     <h3 className='font-semibold'>
-                      {selectedArtist.nombre || selectedArtist.pseudonimo}
+                      {artist.nombre || artist.pseudonimo}
                     </h3>
                     <Button
                       variant='ghost'
@@ -118,30 +105,30 @@ export function EditCatalogDialog({ open }: EditCatalogDialogProps) {
                       <Pencil className='h-4 w-4' />
                     </Button>
                   </div>
-                  {selectedArtist.nombre && (
+                  {artist.nombre && (
                     <p className='text-muted-foreground text-sm'>
-                      @{selectedArtist.pseudonimo}
+                      @{artist.pseudonimo}
                     </p>
                   )}
                   <div className='text-muted-foreground mt-2 flex items-center gap-4 text-sm'>
-                    {(selectedArtist.ciudad || selectedArtist.pais) && (
+                    {(artist.ciudad || artist.pais) && (
                       <span className='flex items-center gap-1'>
                         <MapPin className='h-3 w-3' />
-                        {[selectedArtist.ciudad, selectedArtist.pais]
+                        {[artist.ciudad, artist.pais]
                           .filter(Boolean)
                           .join(', ')}
                       </span>
                     )}
-                    {selectedArtist.correo && (
+                    {artist.correo && (
                       <span className='flex items-center gap-1'>
                         <Mail className='h-3 w-3' />
-                        {selectedArtist.correo}
+                        {artist.correo}
                       </span>
                     )}
                   </div>
                   <p className='text-muted-foreground/70 mt-2 text-xs'>
                     Orden:{' '}
-                    <span className='font-mono'>{selectedArtist.orden}</span>
+                    <span className='font-mono'>{artist.orden}</span>
                   </p>
                 </div>
               </div>

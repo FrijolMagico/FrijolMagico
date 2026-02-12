@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -14,46 +14,31 @@ import { Label } from '@/shared/components/ui/label'
 import { Textarea } from '@/shared/components/ui/textarea'
 import { toast } from 'sonner'
 import { useCatalogView } from '../_hooks/use-catalog-view'
-import { useArtistUI, useArtistById } from '../_hooks/use-artist-ui'
+import { useArtistUI } from '../_hooks/use-artist-ui'
 import { updateArtist } from '../_actions/catalog.actions'
+import type { CatalogArtist } from '../_types'
 
 interface EditArtistDialogProps {
   open: boolean
+  artist: CatalogArtist | undefined
 }
 
-export function EditArtistDialog({ open }: EditArtistDialogProps) {
-  const { selectedArtistId, closeArtistDialog } = useCatalogView()
+export function EditArtistDialog({ open, artist }: EditArtistDialogProps) {
+  const { closeArtistDialog } = useCatalogView()
   const { updateOne } = useArtistUI()
-
-  // Safe selector
-  const selectedArtist = useArtistById(selectedArtistId || -1)
 
   // Local form state
   const [formData, setFormData] = useState({
-    nombre: '',
-    pseudonimo: '',
-    correo: '',
-    rrss: '',
-    ciudad: '',
-    pais: ''
+    nombre: artist?.nombre || '',
+    pseudonimo: artist?.pseudonimo || '',
+    correo: artist?.correo || '',
+    rrss: artist?.rrss || '',
+    ciudad: artist?.ciudad || '',
+    pais: artist?.pais || ''
   })
 
   const [isSaving, setIsSaving] = useState(false)
   const [isDirty, setIsDirty] = useState(false)
-
-  const [prevArtist, setPrevArtist] = useState(selectedArtist)
-  if (selectedArtist && selectedArtist !== prevArtist && open) {
-    setPrevArtist(selectedArtist)
-    setFormData({
-      nombre: selectedArtist.nombre || '',
-      pseudonimo: selectedArtist.pseudonimo,
-      correo: selectedArtist.correo || '',
-      rrss: selectedArtist.rrss || '',
-      ciudad: selectedArtist.ciudad || '',
-      pais: selectedArtist.pais || ''
-    })
-    setIsDirty(false)
-  }
 
   const updateField = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -62,16 +47,16 @@ export function EditArtistDialog({ open }: EditArtistDialogProps) {
 
   const handleSave = useCallback(async () => {
     // TODO: We need a phase in this algorithm to validate the form data before sending it to the server, for example, we can check if the pseudonimo is not empty and if the email is valid, etc. For now, we will skip this validation for simplicity.
-    if (!selectedArtist) return
+    if (!artist) return
 
     setIsSaving(true)
 
     try {
-      const result = await updateArtist(selectedArtist.artistaId, formData)
+      const result = await updateArtist(artist.artistaId, formData)
 
       if (result.success) {
         // Update the list via ui-state
-        updateOne(String(selectedArtist.artistaId), {
+        updateOne(String(artist.artistaId), {
           nombre: formData.nombre,
           pseudonimo: formData.pseudonimo,
           correo: formData.correo,
@@ -90,9 +75,9 @@ export function EditArtistDialog({ open }: EditArtistDialogProps) {
     } finally {
       setIsSaving(false)
     }
-  }, [selectedArtist, formData, updateOne, closeArtistDialog])
+  }, [artist, formData, updateOne, closeArtistDialog])
 
-  if (!selectedArtist) return null
+  if (!artist) return null
 
   return (
     <Dialog open={open} onOpenChange={(open) => !open && closeArtistDialog()}>
