@@ -16,6 +16,7 @@ import { useCatalogView } from '../_hooks/use-catalog-view'
 import { useArtistUI } from '../_hooks/use-artist-ui'
 import { updateArtist } from '../_actions/catalog.actions'
 import type { CatalogArtist } from '../_types'
+import { ArtistRRSSManager } from './artist-rrss-manager'
 
 interface EditArtistDialogProps {
   artist: CatalogArtist | undefined
@@ -39,6 +40,10 @@ export function EditArtistDialog({ artist }: EditArtistDialogProps) {
 
   const updateField = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const updateRRSS = (value: { [key: string]: string }) => {
+    setFormData((prev) => ({ ...prev, rrss: value }))
   }
 
   const handleSave = useCallback(async () => {
@@ -121,15 +126,6 @@ export function EditArtistDialog({ artist }: EditArtistDialogProps) {
             />
           </div>
 
-          {/* TODO: we return an object with the key is the rrss web and the value the url, for example: { instagram: 'https://instagram.com/usuario', twitter: 'https://twitter.com/usuario' }, but for simplicity we will use a textarea where the admin can write the rrss separated by commas, for example: @instagram, @twitter, etc. We can improve this in the future if we want to have a better structure for the rrss data. */}
-          <div className='space-y-2'>
-            <Label htmlFor='rrss'>Redes Sociales</Label>
-            {/* TODO: add a list where we can add or delete rrss, we will have two inputs in a row, when a rrss is saved or came from db, the first input will be the rrss name and will be just a paragraph. */}
-            {/*   When the admin click on edit, just edit the url for the rrss, the admin can delete the entry */}
-            {/*   When admin add a new entry, the two inputs appear, the admin can add the rrss name and te url, when the admin save, we stringify the data and send it to the server. */}
-            {/* NOTE: Empty for now */}
-          </div>
-
           <div className='grid grid-cols-2 gap-4'>
             <div className='space-y-2'>
               <Label htmlFor='ciudad'>Ciudad</Label>
@@ -155,6 +151,8 @@ export function EditArtistDialog({ artist }: EditArtistDialogProps) {
             <span className='text-destructive'>*</span> Campo único en el
             sistema
           </p>
+
+          <ArtistRRSSManager initialValue={artist.rrss} onChange={updateRRSS} />
         </div>
 
         {/* Actions */}
