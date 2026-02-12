@@ -1,4 +1,5 @@
 'use client'
+
 import { useCallback, useRef, useEffect } from 'react'
 import { useDebouncedCallback } from 'use-debounce'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -13,9 +14,6 @@ import { Card } from '@/shared/components/ui/card'
 import { useArtistUI } from '../_hooks/use-artist-ui'
 import { useCatalogView } from '../_hooks/use-catalog-view'
 import { useSelectedArtist } from '../_hooks/use-selected-artist'
-// import { useArtistaUIStore } from '../_store/artist-ui-store'
-// import { saveCatalogBatch } from '../_actions/catalog.actions'
-// import { toast } from 'sonner'
 
 interface CatalogArtistsContainerProps {
   initialData: PaginatedResult<CatalogArtist>
@@ -29,16 +27,9 @@ export function CatalogArtistsContainer({
   const tableContainerRef = useRef<HTMLDivElement>(null)
 
   const { setRemoteData, hasUnsavedEdits } = useArtistUI()
-  const {
-    setPage,
-    setTotalPages,
-    setTotalItems,
-    setFilters,
-    catalogDialogOpen,
-    artistDialogOpen,
-    openCatalogDialog,
-    pageSize
-  } = useCatalogView()
+  const { setPage, setTotalPages, setTotalItems, setFilters, pageSize } =
+    useCatalogView()
+
   const selectedArtist = useSelectedArtist()
 
   // Initialize data and sync state
@@ -98,7 +89,6 @@ export function CatalogArtistsContainer({
         else params.set('search', newFilters.search)
       }
 
-      setPage(1)
       router.push(`?${params.toString()}`, { scroll: false })
     },
     300
@@ -146,13 +136,6 @@ export function CatalogArtistsContainer({
   //   }
   // }, [])
 
-  const handleEdit = useCallback(
-    (artista: CatalogArtist) => {
-      openCatalogDialog(artista.artistaId)
-    },
-    [openCatalogDialog]
-  )
-
   const isEmpty = initialData.data.length === 0
 
   return (
@@ -188,7 +171,6 @@ export function CatalogArtistsContainer({
 
           <Card ref={tableContainerRef} className='overflow-x-hidden'>
             <CatalogTable
-              onEdit={handleEdit}
               containerRef={tableContainerRef}
               onPageChange={handlePageChange}
             />
@@ -201,14 +183,12 @@ export function CatalogArtistsContainer({
       {/* Dialog Nivel 1: Catálogo */}
       <EditCatalogDialog
         key={selectedArtist?.artistaId ?? 'closed'}
-        open={catalogDialogOpen}
         artist={selectedArtist}
       />
 
       {/* Dialog Nivel 2: Artista (stacked) */}
       <EditArtistDialog
         key={`artist-${selectedArtist?.artistaId ?? 'closed'}`}
-        open={artistDialogOpen}
         artist={selectedArtist}
       />
     </div>

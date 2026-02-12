@@ -11,7 +11,6 @@ import { Separator } from '@/shared/components/ui/separator'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
-import { Textarea } from '@/shared/components/ui/textarea'
 import { toast } from 'sonner'
 import { useCatalogView } from '../_hooks/use-catalog-view'
 import { useArtistUI } from '../_hooks/use-artist-ui'
@@ -19,22 +18,21 @@ import { updateArtist } from '../_actions/catalog.actions'
 import type { CatalogArtist } from '../_types'
 
 interface EditArtistDialogProps {
-  open: boolean
   artist: CatalogArtist | undefined
 }
 
-export function EditArtistDialog({ open, artist }: EditArtistDialogProps) {
-  const { closeArtistDialog } = useCatalogView()
+export function EditArtistDialog({ artist }: EditArtistDialogProps) {
+  const { closeArtistDialog, artistDialogOpen } = useCatalogView()
   const { updateOne } = useArtistUI()
 
   // Local form state
   const [formData, setFormData] = useState({
-    nombre: artist?.nombre || '',
-    pseudonimo: artist?.pseudonimo || '',
-    correo: artist?.correo || '',
-    rrss: artist?.rrss || '',
-    ciudad: artist?.ciudad || '',
-    pais: artist?.pais || ''
+    nombre: artist?.nombre ?? '',
+    pseudonimo: artist?.pseudonimo ?? '',
+    correo: artist?.correo ?? '',
+    rrss: artist?.rrss ?? {},
+    ciudad: artist?.ciudad ?? '',
+    pais: artist?.pais ?? ''
   })
 
   const [isSaving, setIsSaving] = useState(false)
@@ -78,8 +76,11 @@ export function EditArtistDialog({ open, artist }: EditArtistDialogProps) {
   if (!artist) return null
 
   return (
-    <Dialog open={open} onOpenChange={(open) => !open && closeArtistDialog()}>
-      <DialogContent className='z-60 max-w-xl'>
+    <Dialog
+      open={artistDialogOpen}
+      onOpenChange={(open) => !open && closeArtistDialog()}
+    >
+      <DialogContent className='z-60 mt-6 ml-6 max-w-xl'>
         <DialogHeader>
           <DialogTitle>Editar Información del Artista</DialogTitle>
         </DialogHeader>
@@ -120,15 +121,13 @@ export function EditArtistDialog({ open, artist }: EditArtistDialogProps) {
             />
           </div>
 
+          {/* TODO: we return an object with the key is the rrss web and the value the url, for example: { instagram: 'https://instagram.com/usuario', twitter: 'https://twitter.com/usuario' }, but for simplicity we will use a textarea where the admin can write the rrss separated by commas, for example: @instagram, @twitter, etc. We can improve this in the future if we want to have a better structure for the rrss data. */}
           <div className='space-y-2'>
             <Label htmlFor='rrss'>Redes Sociales</Label>
-            <Textarea
-              id='rrss'
-              value={formData.rrss}
-              onChange={(e) => updateField('rrss', e.target.value)}
-              placeholder='@instagram, @twitter, etc.'
-              rows={2}
-            />
+            {/* TODO: add a list where we can add or delete rrss, we will have two inputs in a row, when a rrss is saved or came from db, the first input will be the rrss name and will be just a paragraph. */}
+            {/*   When the admin click on edit, just edit the url for the rrss, the admin can delete the entry */}
+            {/*   When admin add a new entry, the two inputs appear, the admin can add the rrss name and te url, when the admin save, we stringify the data and send it to the server. */}
+            {/* NOTE: Empty for now */}
           </div>
 
           <div className='grid grid-cols-2 gap-4'>
