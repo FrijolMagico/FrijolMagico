@@ -122,6 +122,7 @@ export function useVisibleArtists() {
 
   const visibleArtists = useMemo(() => {
     const effectiveData = store.getEffectiveData()
+
     const sorted = effectiveData.ids
       .map((id) => effectiveData.entities[id])
       .filter(Boolean)
