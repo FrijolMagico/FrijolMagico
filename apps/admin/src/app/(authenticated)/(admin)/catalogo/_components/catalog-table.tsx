@@ -35,7 +35,6 @@ import { useArtistUI, useVisibleArtists } from '../_hooks/use-artist-ui'
 import { useCatalogView } from '../_hooks/use-catalog-view'
 
 interface CatalogTableProps {
-  onEdit: (artista: CatalogArtist) => void
   containerRef?: React.RefObject<HTMLDivElement | null>
   onPageChange?: (page: number) => void
 }
@@ -47,7 +46,6 @@ const PAGE_CHANGE_DELAY = 600 // ms to hold before changing page
 const PAGE_CHANGE_COOLDOWN = 800 // ms between page changes
 
 export function CatalogTable({
-  onEdit,
   containerRef,
   onPageChange
 }: CatalogTableProps) {
@@ -60,7 +58,8 @@ export function CatalogTable({
     setPage,
     startDrag,
     endDrag,
-    draggedArtistId
+    draggedArtistId,
+    openCatalogDialog
   } = useCatalogView()
 
   // Refs for auto-pagination timers
@@ -215,6 +214,13 @@ export function CatalogTable({
     )
   }
 
+  const handleEdit = useCallback(
+    (artista: CatalogArtist) => {
+      openCatalogDialog(artista.artistaId)
+    },
+    [openCatalogDialog]
+  )
+
   const draggedArtista = draggedArtistId
     ? allArtists.find((a) => a.artistaId === draggedArtistId)
     : null
@@ -252,7 +258,7 @@ export function CatalogTable({
                 onToggleField={(field, value) =>
                   handleToggleField(artista, field, value)
                 }
-                onEdit={() => onEdit(artista)}
+                onEdit={() => handleEdit(artista)}
               />
             ))}
           </SortableContext>
