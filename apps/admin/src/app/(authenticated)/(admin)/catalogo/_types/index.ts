@@ -6,7 +6,9 @@ export interface CatalogArtist {
   pseudonimo: string
   slug: string
   correo: string | null
-  rrss: string | null
+  rrss: {
+    [key: string]: string
+  } | null
   ciudad: string | null
   pais: string | null
   avatarUrl: string
@@ -36,7 +38,9 @@ export interface ArtistFormData {
   nombre: string
   pseudonimo: string
   correo: string
-  rrss: string
+  rrss: {
+    [key: string]: string
+  }
   ciudad: string
   pais: string
 }
