@@ -5,6 +5,7 @@ import { getAvatarUrl } from '@/lib/cdn'
 import type { CatalogArtist, PaginatedResult, CatalogFilters } from '../_types'
 import { cacheTag } from 'next/cache'
 import { ARTIST_CACHE_TAG } from '../_constants'
+import { parseRRSS } from './parse-rrss'
 
 const { catalogoArtista, artista, artistaImagen } = artist
 
@@ -84,7 +85,8 @@ export async function getCatalogArtists(
     pseudonimo: row.pseudonimo,
     slug: row.slug,
     correo: row.correo,
-    rrss: row.rrss,
+    // TODO: pass the parseRRSS and the getAvatarURL into a a util package in the monorepo
+    rrss: parseRRSS(row.rrss),
     ciudad: row.ciudad,
     pais: row.pais,
     avatarUrl: getAvatarUrl(row.avatarPath),
