@@ -2,6 +2,6 @@
 .env*.local
 
 # Playwright
-e2e/.auth/
-playwright-report/
-test-results/
+__tests__/.auth/
+__tests__/playwright-report/
+__tests__/test-results/
