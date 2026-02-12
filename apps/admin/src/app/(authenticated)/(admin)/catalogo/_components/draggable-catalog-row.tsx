@@ -13,6 +13,7 @@ import { useCatalogView } from '../_hooks/use-catalog-view'
 import { useArtistUIStore } from '../_store/artist-ui-store'
 import type { CatalogArtist } from '../_types'
 import { useShallow } from 'zustand/react/shallow'
+import { cn } from '@/lib/utils'
 
 interface DraggableCatalogRowProps {
   artista: CatalogArtist
@@ -57,10 +58,22 @@ export function DraggableCatalogRow({
     <TableRow
       ref={setNodeRef}
       style={style}
-      className={`group ${isDragging || isDraggingGlobal ? 'bg-accent shadow-lg' : ''} ${hasPendingChanges ? 'bg-warning/10' : ''}`}
+      className={cn('group relative min-h-18.25', {
+        'bg-accent shadow-lg': isDragging || isDraggingGlobal,
+        'bg-warning/10': hasPendingChanges
+      })}
     >
       {/* Drag Handle */}
       <TableCell className='w-8'>
+        {hasPendingChanges && (
+          <Badge
+            variant='outline'
+            className='border-warning/50 text-warning bg-accent absolute -top-2 -rotate-6 text-[10px]'
+            about='Indica que este artista tiene cambios pendientes que no se han guardado'
+          >
+            Modificado
+          </Badge>
+        )}
         <div
           {...attributes}
           {...listeners}
@@ -83,12 +96,10 @@ export function DraggableCatalogRow({
       {/* Nombre y detalles */}
       <TableCell className='flex-1'>
         <div className='flex flex-col'>
-          <span className='font-medium'>
-            {artista.nombre || artista.pseudonimo}
-          </span>
+          <span className='font-medium'>{artista.pseudonimo}</span>
           {artista.nombre && (
             <span className='text-muted-foreground text-sm'>
-              @{artista.pseudonimo}
+              {artista.nombre}
             </span>
           )}
           {(artista.ciudad || artista.pais) && (
@@ -102,19 +113,9 @@ export function DraggableCatalogRow({
       {/* Orden (solo lectura) */}
       <TableCell className='w-16 text-center'>
         <div className='flex flex-col items-center'>
-          <span
-            className={`font-mono text-sm ${hasPendingChanges ? 'text-warning font-bold' : 'text-muted-foreground'}`}
-          >
+          <span className='text-muted-foreground font-mono text-sm'>
             {artista.orden}
           </span>
-          {hasPendingChanges && (
-            <Badge
-              variant='outline'
-              className='border-warning/50 text-warning mt-1 text-[10px]'
-            >
-              Cambiado
-            </Badge>
-          )}
         </div>
       </TableCell>
 
