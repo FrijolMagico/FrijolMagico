@@ -1,0 +1,4 @@
+[test]
+# Exclude Playwright E2E tests from Bun's test runner
+# Playwright tests should be run with: bun run test:e2e
+root = "./__tests__/unit"
