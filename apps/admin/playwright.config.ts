@@ -7,7 +7,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: [
-    ['html', { outputFolder: './__tests__/e2e/_report/playwright-report' }]
+    ['html', { outputFolder: './__tests__/e2e/_reports/playwright-report' }]
   ],
   outputDir: './__tests__/e2e/_reports/test-results',
   use: {
