@@ -24,8 +24,8 @@ export function useTeamEffectiveData(): TeamMember[] {
     const entities: Record<string, TeamMember> = {
       ...rawState.remoteData.entities
     }
-    const deletedIds = new Set<string>()
-    const addedIds = new Set<string>()
+    const deletedIds = new Set<number>()
+    const addedIds = new Set<number>()
 
     const allOps = [
       ...(rawState.appliedChanges?.operations ?? []),

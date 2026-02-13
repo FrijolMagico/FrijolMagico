@@ -43,8 +43,10 @@ export function TeamTable({ initialData }: TeamTableProps) {
     setRemoteData(initialData)
   }, [initialData, setRemoteData])
 
-  const handleDeleteMember = (memberId: string) => {
-    const member = equipo.find((m) => String(m.id) === memberId)
+  const handleDeleteMember = (memberId?: number) => {
+    if (!memberId) return
+
+    const member = equipo.find((m) => m.id === memberId)
 
     if (member?.isNew) {
       removeOne(memberId)
@@ -54,10 +56,11 @@ export function TeamTable({ initialData }: TeamTableProps) {
   }
 
   const handleFieldChange = (
-    memberId: string,
     field: keyof Pick<TeamMember, 'nombre' | 'cargo' | 'rrss'>,
-    value: string
+    value: string,
+    memberId?: number
   ) => {
+    if (!memberId) return
     updateOne(memberId, { [field]: value })
   }
 
@@ -78,7 +81,7 @@ export function TeamTable({ initialData }: TeamTableProps) {
               <Input
                 value={member.nombre}
                 onChange={(e) =>
-                  handleFieldChange(String(member.id), 'nombre', e.target.value)
+                  handleFieldChange('nombre', e.target.value, member.id)
                 }
                 placeholder='Nombre completo'
                 className='h-8'
@@ -89,7 +92,7 @@ export function TeamTable({ initialData }: TeamTableProps) {
               <Input
                 value={member.cargo || ''}
                 onChange={(e) =>
-                  handleFieldChange(String(member.id), 'cargo', e.target.value)
+                  handleFieldChange('cargo', e.target.value, member.id)
                 }
                 placeholder='Ej: Coordinador'
                 className='h-8'
@@ -100,7 +103,7 @@ export function TeamTable({ initialData }: TeamTableProps) {
               <Input
                 value={member.rrss || ''}
                 onChange={(e) =>
-                  handleFieldChange(String(member.id), 'rrss', e.target.value)
+                  handleFieldChange('rrss', e.target.value, member.id)
                 }
                 placeholder='@usuario'
                 className='h-8'
@@ -110,7 +113,7 @@ export function TeamTable({ initialData }: TeamTableProps) {
               <Button
                 variant='ghost'
                 size='icon'
-                onClick={() => handleDeleteMember(String(member.id))}
+                onClick={() => handleDeleteMember(member.id)}
                 className='text-destructive hover:text-destructive/80 h-8 w-8'
               >
                 <Trash2 className='h-4 w-4' />
