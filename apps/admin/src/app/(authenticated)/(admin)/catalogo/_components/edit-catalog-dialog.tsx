@@ -32,7 +32,8 @@ export function EditCatalogDialog({ artist }: EditCatalogDialogProps) {
     field: 'destacado' | 'activo' | 'descripcion',
     value: boolean | string
   ) => {
-    updateOne(String(artist?.artistaId), { [field]: value })
+    if (!artist) return
+    updateOne(artist.artistaId, { [field]: value })
   }
 
   if (!artist) return null

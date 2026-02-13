@@ -12,11 +12,11 @@ import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { toast } from 'sonner'
-import { useArtistUI } from '../_hooks/use-artist-ui'
 import { updateArtist } from '../_actions/catalog.actions'
 import type { CatalogArtist } from '../_types'
 import { ArtistRRSSManager } from './artist-rrss-manager'
 import { useCatalogViewStore } from '../_store/catalog-view-store'
+import { useArtistUIStore } from '../_store/artist-ui-store'
 
 interface EditArtistDialogProps {
   artist: CatalogArtist | undefined
@@ -25,8 +25,7 @@ interface EditArtistDialogProps {
 export function EditArtistDialog({ artist }: EditArtistDialogProps) {
   const closeArtistDialog = useCatalogViewStore((s) => s.closeArtistDialog)
   const artistDialogOpen = useCatalogViewStore((s) => s.artistDialogOpen)
-
-  const { updateOne } = useArtistUI()
+  const updateOne = useArtistUIStore((s) => s.updateOne)
 
   // Local form state
   const [formData, setFormData] = useState({
@@ -59,7 +58,7 @@ export function EditArtistDialog({ artist }: EditArtistDialogProps) {
 
       if (result.success) {
         // Update the list via ui-state
-        updateOne(String(artist.artistaId), {
+        updateOne(artist.artistaId, {
           nombre: formData.nombre,
           pseudonimo: formData.pseudonimo,
           correo: formData.correo,
