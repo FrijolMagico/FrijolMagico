@@ -30,7 +30,7 @@ export interface EntityState<T> {
   /**
    * Array de IDs preservando orden de presentación
    */
-  ids: string[]
+  ids: number[]
 }
 
 /**
@@ -47,7 +47,7 @@ export interface EntityOperation<T> {
   /**
    * ID de la entidad afectada
    */
-  id: string
+  id: number
 
   /**
    * Datos parciales para UPDATE
@@ -180,17 +180,17 @@ export interface EntityUIStateActions<T> {
   /**
    * Retorna entidad por ID
    */
-  selectById(id: string): T | undefined
+  selectById(id: number): T | undefined
 
   /**
    * Retorna array de IDs
    */
-  selectIds(): string[]
+  selectIds(): number[]
 
   /**
    * Retorna mapa de entidades
    */
-  selectEntities(): Record<string, T>
+  selectEntities(): Record<number, T>
 
   /**
    * Retorna cantidad total de entidades
@@ -210,17 +210,17 @@ export interface EntityUIStateActions<T> {
    * @param entity - Entidad a agregar
    * @param id - ID opcional (si no se provee, genera tempId)
    */
-  addOne(entity: T, id?: string): void
+  addOne(entity: T, id?: number): void
 
   /**
    * Actualiza una entidad existente
    */
-  updateOne(id: string, data: Partial<T>): void
+  updateOne(id: number, data: Partial<T>): void
 
   /**
    * Elimina una entidad
    */
-  removeOne(id: string): void
+  removeOne(id: number): void
 
   /**
    * Agrega o actualiza una entidad (upsert)
@@ -237,12 +237,12 @@ export interface EntityUIStateActions<T> {
   /**
    * Actualiza múltiples entidades
    */
-  updateMany(updates: { id: string; data: Partial<T> }[]): void
+  updateMany(updates: { id: number; data: Partial<T> }[]): void
 
   /**
    * Elimina múltiples entidades
    */
-  removeMany(ids: string[]): void
+  removeMany(ids: number[]): void
 
   /**
    * Agrega o actualiza múltiples entidades

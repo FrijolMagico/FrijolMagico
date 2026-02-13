@@ -3,13 +3,13 @@ import type {
   EntityUIStateStore,
   EntityState,
   EntityOperation,
-  RemoteEntityData
+  RemoteEntityData,
+  AppliedChanges,
+  CurrentEdits
 } from './entity-types'
-import {
-  generateTempId,
-  normalizeEntities,
-  denormalizeEntities
-} from './entity-utils'
+import { normalizeEntities } from './entity-utils'
+
+import { memoize } from 'proxy-memoize'
 
 export interface CreateEntityUIStateStoreConfig<T> {
   sectionName: string
@@ -22,40 +22,21 @@ export function createEntityUIStateStore<T>(
   config: CreateEntityUIStateStoreConfig<T>
 ) {
   // Per-store instance memoization cache
-  const memoCache = {
-    selectAll: {
-      input: null as EntityState<T> | null,
-      result: null as T[] | null
-    },
-    selectIds: {
-      input: null as EntityState<T> | null,
-      result: null as string[] | null
-    },
-    selectEntities: {
-      input: null as EntityState<T> | null,
-      result: null as Record<string, T> | null
-    }
-  }
-
-  return create<EntityUIStateStore<T>>((set, get) => ({
-    remoteData: null,
-    appliedChanges: null,
-    currentEdits: null,
-    isLoading: false,
-    error: null,
-
-    getEffectiveData(): EntityState<T> {
-      const { remoteData, appliedChanges, currentEdits } = get()
-
-      const entities: Record<string, T> = remoteData
-        ? { ...remoteData.entities }
+  const getEffectiveDataMemoized = memoize(
+    (state: {
+      remoteData: RemoteEntityData<T> | null
+      appliedChanges: AppliedChanges<T> | null
+      currentEdits: CurrentEdits<T> | null
+    }): EntityState<T> => {
+      const entities: Record<string, T> = state.remoteData
+        ? { ...state.remoteData.entities }
         : {}
-      const deletedIds = new Set<string>()
-      const addedIds = new Set<string>()
+      const deletedIds = new Set<number>()
+      const addedIds = new Set<number>()
 
       const allOps = [
-        ...(appliedChanges?.operations ?? []),
-        ...(currentEdits?.operations ?? [])
+        ...(state.appliedChanges?.operations ?? []),
+        ...(state.currentEdits?.operations ?? [])
       ].sort((a, b) => a.timestamp - b.timestamp)
 
       for (const op of allOps) {
@@ -78,12 +59,35 @@ export function createEntityUIStateStore<T>(
         }
       }
 
-      const remoteIds = remoteData?.ids ?? []
+      const remoteIds = state.remoteData?.ids ?? []
       const ids = remoteIds
         .filter((id) => !deletedIds.has(id))
         .concat([...addedIds].filter((id) => !deletedIds.has(id)))
 
       return { entities, ids }
+    }
+  )
+
+  const selectAllMemoized = memoize((effectiveData: EntityState<T>): T[] => {
+    return effectiveData.ids
+      .map((id) => effectiveData.entities[id])
+      .filter(Boolean)
+  })
+
+  return create<EntityUIStateStore<T>>((set, get) => ({
+    remoteData: null,
+    appliedChanges: null,
+    currentEdits: null,
+    isLoading: false,
+    error: null,
+
+    getEffectiveData(): EntityState<T> {
+      const { remoteData, appliedChanges, currentEdits } = get()
+      return getEffectiveDataMemoized({
+        remoteData,
+        appliedChanges,
+        currentEdits
+      })
     },
 
     getHasChanges(): boolean {
@@ -100,49 +104,19 @@ export function createEntityUIStateStore<T>(
     },
 
     selectAll(): T[] {
-      const effectiveData = get().getEffectiveData()
-      if (
-        effectiveData === memoCache.selectAll.input &&
-        memoCache.selectAll.result !== null
-      ) {
-        return memoCache.selectAll.result
-      }
-      const result = denormalizeEntities(effectiveData)
-      memoCache.selectAll.input = effectiveData
-      memoCache.selectAll.result = result
-      return result
+      return selectAllMemoized(get().getEffectiveData())
     },
 
-    selectById(id: string): T | undefined {
+    selectById(id: number): T | undefined {
       return get().getEffectiveData().entities[id]
     },
 
-    selectIds(): string[] {
-      const effectiveData = get().getEffectiveData()
-      if (
-        effectiveData === memoCache.selectIds.input &&
-        memoCache.selectIds.result !== null
-      ) {
-        return memoCache.selectIds.result
-      }
-      const result = effectiveData.ids
-      memoCache.selectIds.input = effectiveData
-      memoCache.selectIds.result = result
-      return result
+    selectIds(): number[] {
+      return get().getEffectiveData().ids
     },
 
     selectEntities(): Record<string, T> {
-      const effectiveData = get().getEffectiveData()
-      if (
-        effectiveData === memoCache.selectEntities.input &&
-        memoCache.selectEntities.result !== null
-      ) {
-        return memoCache.selectEntities.result
-      }
-      const result = effectiveData.entities
-      memoCache.selectEntities.input = effectiveData
-      memoCache.selectEntities.result = result
-      return result
+      return get().getEffectiveData().entities
     },
 
     selectTotal(): number {
@@ -156,12 +130,12 @@ export function createEntityUIStateStore<T>(
       return state.entities[ids[0]] || null
     },
 
-    addOne(entity: T, id?: string): void {
-      const entityId = entity[config.idField] as string | undefined
-      const finalId = id ?? entityId ?? generateTempId()
+    addOne(entity, id): void {
+      const entityId = entity[config.idField] as number | undefined
+      const finalId = id ?? entityId
       const operation: EntityOperation<T> = {
         type: 'ADD',
-        id: finalId,
+        id: finalId ?? -1,
         entity: { ...entity, [config.idField]: finalId } as T,
         timestamp: Date.now(),
         isOptimistic: !id && !entityId
@@ -174,13 +148,15 @@ export function createEntityUIStateStore<T>(
       }))
     },
 
-    updateOne(id: string, data: Partial<T>): void {
+    updateOne(id: number, data: Partial<T>): void {
       const operation: EntityOperation<T> = {
         type: 'UPDATE',
         id,
         data,
         timestamp: Date.now()
       }
+
+      // TODO: Add a validation to check if the update was restorative, that means if the new update restore the original value, we can remove the operation instead of add a new one. This way we can reduce the number of operations in the queue and also avoid unnecessary updates in the UI when the user is toggling values.
 
       set((state) => ({
         currentEdits: {
@@ -189,7 +165,7 @@ export function createEntityUIStateStore<T>(
       }))
     },
 
-    removeOne(id: string): void {
+    removeOne(id: number): void {
       const operation: EntityOperation<T> = {
         type: 'DELETE',
         id,
@@ -204,7 +180,7 @@ export function createEntityUIStateStore<T>(
     },
 
     upsertOne(entity: T): void {
-      const id = String(entity[config.idField])
+      const id = entity[config.idField] as number
       const exists = !!get().selectById(id)
 
       if (exists) {
@@ -216,8 +192,8 @@ export function createEntityUIStateStore<T>(
 
     addMany(entities: T[]): void {
       const operations: EntityOperation<T>[] = entities.map((entity) => {
-        const entityId = entity[config.idField] as string | undefined
-        const id = entityId ?? generateTempId()
+        const entityId = entity[config.idField] as number | undefined
+        const id = entityId ?? -1
         return {
           type: 'ADD',
           id,
@@ -234,7 +210,7 @@ export function createEntityUIStateStore<T>(
       }))
     },
 
-    updateMany(updates: { id: string; data: Partial<T> }[]): void {
+    updateMany(updates): void {
       const operations: EntityOperation<T>[] = updates.map((update) => ({
         type: 'UPDATE',
         id: update.id,
@@ -249,7 +225,7 @@ export function createEntityUIStateStore<T>(
       }))
     },
 
-    removeMany(ids: string[]): void {
+    removeMany(ids): void {
       const operations: EntityOperation<T>[] = ids.map((id) => ({
         type: 'DELETE',
         id,
@@ -283,11 +259,11 @@ export function createEntityUIStateStore<T>(
       })
     },
 
-    update(data: Partial<T>): void {
+    update(data): void {
       if (config.isSingleton) {
         const currentData = get().selectOne()
         if (currentData) {
-          const id = String(currentData[config.idField])
+          const id = currentData[config.idField] as number
           get().updateOne(id, data)
         }
       }

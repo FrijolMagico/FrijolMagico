@@ -36,10 +36,11 @@ function sanitizeNumber(value: number, fallback: number): number {
  *
  * @see {@link CreatePaginationStoreConfig} for all config options
  */
-export function createPaginationStore(config: CreatePaginationStoreConfig) {
-  const { defaultPageSize = 20, maxPageSize = 1000 } = config
-
-  return create<PaginationStore>((set, get) => {
+export function createPaginationStore({
+  defaultPageSize = 20,
+  maxPageSize = 1000
+}: CreatePaginationStoreConfig) {
+  return create<PaginationStore>()((set, get) => {
     return {
       page: 1,
       pageSize: defaultPageSize,
