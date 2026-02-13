@@ -9,11 +9,11 @@ import { Button } from '@/shared/components/ui/button'
 import { Badge } from '@/shared/components/ui/badge'
 
 import { ArtistAvatar } from './artist-avatar'
-import { useCatalogView } from '../_hooks/use-catalog-view'
 import { useArtistUIStore } from '../_store/artist-ui-store'
 import type { CatalogArtist } from '../_types'
 import { useShallow } from 'zustand/react/shallow'
 import { cn } from '@/lib/utils'
+import { useCatalogViewStore } from '../_store/catalog-view-store'
 
 interface DraggableCatalogRowProps {
   artista: CatalogArtist
@@ -26,7 +26,7 @@ export function DraggableCatalogRow({
   onToggleField,
   onEdit
 }: DraggableCatalogRowProps) {
-  const { isDragging: isDraggingGlobal } = useCatalogView()
+  const isDraggingGlobal = useCatalogViewStore((s) => s.isDragging)
 
   // Check for pending changes on this specific artist
   const hasPendingChanges = useArtistUIStore(

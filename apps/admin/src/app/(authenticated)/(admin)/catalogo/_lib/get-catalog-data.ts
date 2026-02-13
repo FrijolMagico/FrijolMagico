@@ -2,16 +2,16 @@ import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { eq, and, asc, count } from 'drizzle-orm'
 import { getAvatarUrl } from '@/lib/cdn'
-import type { CatalogArtist, PaginatedResult, CatalogFilters } from '../_types'
+import type { CatalogArtist, PaginatedResult } from '../_types'
 import { cacheTag } from 'next/cache'
 import { ARTIST_CACHE_TAG } from '../_constants'
 import { parseRRSS } from './parse-rrss'
 
 const { catalogoArtista, artista, artistaImagen } = artist
 
-export async function getCatalogArtists(
-  _filters: CatalogFilters = { activo: null, destacado: null, search: '' }
-): Promise<PaginatedResult<CatalogArtist>> {
+export async function getCatalogArtists(): Promise<
+  PaginatedResult<CatalogArtist>
+> {
   'use cache'
   cacheTag(ARTIST_CACHE_TAG)
 

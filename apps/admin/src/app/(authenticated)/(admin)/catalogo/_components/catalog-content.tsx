@@ -1,10 +1,9 @@
 import { EmptyState } from '@/shared/components/empty-state'
 import { getCatalogArtists } from '../_lib/get-catalog-data'
-import { CatalogFilters } from '../_types'
 import { CatalogArtistsContainer } from './catalog-artists-container'
 
-export async function CatalogContent({ filters }: { filters: CatalogFilters }) {
-  const data = await getCatalogArtists(filters)
+export async function CatalogContent() {
+  const data = await getCatalogArtists()
 
   if (!data) {
     return (

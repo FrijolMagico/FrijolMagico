@@ -1,5 +1,4 @@
 import { useCallback, useMemo } from 'react'
-import { useShallow } from 'zustand/react/shallow'
 import { useArtistUIStore } from '../_store/artist-ui-store'
 import { generateKeyBetween } from 'fractional-indexing'
 import { useCatalogViewStore } from '../_store/catalog-view-store'
@@ -44,35 +43,44 @@ export function useArtistUI() {
   const startDrag = useCatalogViewStore((s) => s.startDrag)
   const endDrag = useCatalogViewStore((s) => s.endDrag)
 
-  // ✅ Subscribe to raw state, not computed result
-  const { remoteData, appliedChanges, currentEdits } = useArtistUIStore(
-    useShallow((s) => ({
-      remoteData: s.remoteData,
-      appliedChanges: s.appliedChanges,
-      currentEdits: s.currentEdits
-    }))
-  )
-
-  // ✅ Compute effective data and array in component with useMemo
-  const artists = useMemo(() => {
-    const effectiveData = useArtistUIStore.getState().getEffectiveData()
-    return effectiveData.ids
-      .map((id) => effectiveData.entities[id])
-      .filter(Boolean)
-  }, [remoteData, appliedChanges, currentEdits])
+  const { selectById, updateOne } = useArtistUIStore.getState()
 
   const reorder = useCallback(
-    (newOrder: CatalogArtist[], draggedArtistId: number) => {
-      const draggedNewIndex = newOrder.findIndex(
+    (draggedArtistId: number, dropTargetId: number) => {
+      if (!dropTargetId) return
+
+      const artists = useArtistUIStore.getState().selectAll()
+      const sortedArtists = sortByOrden(artists)
+
+      const draggedNewIndex = sortedArtists.findIndex(
         (item) => item.artistaId === draggedArtistId
       )
-      if (draggedNewIndex === -1) return
+      const dropTargetIndex = sortedArtists.findIndex(
+        (item) => item.artistaId === dropTargetId
+      )
 
-      const prevItem = newOrder[draggedNewIndex - 1]
-      const nextItem = newOrder[draggedNewIndex + 1]
+      if (draggedNewIndex === -1 || dropTargetIndex === -1) return
+
+      const movingDown = draggedNewIndex < dropTargetIndex
+
+      let prevItem: CatalogArtist | undefined
+      let nextItem: CatalogArtist | undefined
+
+      if (movingDown) {
+        prevItem = sortedArtists[dropTargetIndex]
+        nextItem = sortedArtists[dropTargetIndex + 1]
+      } else {
+        prevItem = sortedArtists[dropTargetIndex - 1]
+        nextItem = sortedArtists[dropTargetIndex]
+      }
 
       const prevOrder = prevItem?.orden ?? null
       const nextOrder = nextItem?.orden ?? null
+
+      if (prevOrder && nextOrder && prevOrder >= nextOrder) {
+        console.error('Invalid neighbor orden:', prevOrder, '>=', nextOrder)
+        return
+      }
 
       let newOrden: string
       try {
@@ -84,22 +92,18 @@ export function useArtistUI() {
         else newOrden = 'a0'
       }
 
-      const currentEntity = useArtistUIStore
-        .getState()
-        .selectById(String(draggedArtistId))
-
+      const currentEntity = selectById(draggedArtistId)
       if (currentEntity && newOrden !== currentEntity.orden) {
-        useArtistUIStore
-          .getState()
-          .updateOne(String(draggedArtistId), { orden: newOrden })
+        updateOne(draggedArtistId, { orden: newOrden })
       }
     },
-    []
+    [selectById, updateOne] // ✅ OK - getState() siempre da estado fresco
   )
 
   const handleDragStart = useCallback(
-    (id: number) => {
-      startDrag(id)
+    (id: string) => {
+      // ✅ Consistente con tipos
+      startDrag(Number(id)) // Convierte aquí si startDrag necesita number
     },
     [startDrag]
   )
@@ -108,67 +112,37 @@ export function useArtistUI() {
     endDrag()
   }, [endDrag])
 
-  // ✅ Get action methods from store (stable references via getState)
-  const { setRemoteData, addOne, updateOne, removeOne, commitCurrentEdits } =
-    useArtistUIStore.getState()
-
   return {
-    artists,
-    hasChanges: useArtistUIStore(useShallow((s) => s.getHasChanges())),
-    hasUnsavedEdits: useArtistUIStore(
-      useShallow((s) => s.getHasUnsavedEdits())
-    ),
-
-    setRemoteData,
-    addOne,
-    updateOne,
-    removeOne,
-    commitCurrentEdits,
     reorder,
-
     handleDragStart,
     handleDragEnd
   }
 }
 
-export function useFilteredArtists(): CatalogArtist[] {
-  // ✅ Subscribe to raw state, compute effective data in useMemo
-  const { remoteData, appliedChanges, currentEdits } = useArtistUIStore(
-    useShallow((s) => ({
-      remoteData: s.remoteData,
-      appliedChanges: s.appliedChanges,
-      currentEdits: s.currentEdits
-    }))
-  )
+// This need to be the main source of all related to the visibility of the list items
+export function useVisibleArtists(): {
+  visibleArtists: CatalogArtist[]
+  totalCount: number
+} {
+  const allArtists = useArtistUIStore((s) => s.selectAll())
+
   const filters = useCatalogViewStore((s) => s.filters)
-
-  const filteredArtists = useMemo(() => {
-    const { entities, ids } = useArtistUIStore.getState().getEffectiveData()
-    const allArtists = ids.map((id) => entities[id]).filter(Boolean)
-    return filterArtists(allArtists, filters)
-  }, [remoteData, appliedChanges, currentEdits, filters])
-
-  return filteredArtists
-}
-
-export function useVisibleArtists(): CatalogArtist[] {
-  const filtered = useFilteredArtists()
   const page = useCatalogPaginationStore((s) => s.page)
   const pageSize = useCatalogPaginationStore((s) => s.pageSize)
 
+  const filteredArtists = useMemo(
+    () => filterArtists(allArtists, filters),
+    [allArtists, filters]
+  )
+
   const visibleArtists = useMemo(() => {
-    const sorted = sortByOrden(filtered)
+    const sorted = sortByOrden(filteredArtists)
     const startIndex = (page - 1) * pageSize
     return sorted.slice(startIndex, startIndex + pageSize)
-  }, [filtered, page, pageSize])
+  }, [filteredArtists, page, pageSize])
 
-  return visibleArtists
-}
-
-export function useFilteredArtistCount(): number {
-  return useFilteredArtists().length
-}
-
-export function useArtistById(id: number) {
-  return useArtistUIStore(useShallow((state) => state.selectById(String(id))))
+  return {
+    visibleArtists,
+    totalCount: filteredArtists.length
+  }
 }

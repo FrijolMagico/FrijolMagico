@@ -12,18 +12,20 @@ import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { toast } from 'sonner'
-import { useCatalogView } from '../_hooks/use-catalog-view'
 import { useArtistUI } from '../_hooks/use-artist-ui'
 import { updateArtist } from '../_actions/catalog.actions'
 import type { CatalogArtist } from '../_types'
 import { ArtistRRSSManager } from './artist-rrss-manager'
+import { useCatalogViewStore } from '../_store/catalog-view-store'
 
 interface EditArtistDialogProps {
   artist: CatalogArtist | undefined
 }
 
 export function EditArtistDialog({ artist }: EditArtistDialogProps) {
-  const { closeArtistDialog, artistDialogOpen } = useCatalogView()
+  const closeArtistDialog = useCatalogViewStore((s) => s.closeArtistDialog)
+  const artistDialogOpen = useCatalogViewStore((s) => s.artistDialogOpen)
+
   const { updateOne } = useArtistUI()
 
   // Local form state

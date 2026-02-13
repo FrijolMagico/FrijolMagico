@@ -13,18 +13,20 @@ import { Switch } from '@/shared/components/ui/switch'
 import { Label } from '@/shared/components/ui/label'
 import { Textarea } from '@/shared/components/ui/textarea'
 import { ArtistAvatar } from './artist-avatar'
-import { useCatalogView } from '../_hooks/use-catalog-view'
 import type { CatalogArtist } from '../_types'
-import { useArtistUI } from '../_hooks/use-artist-ui'
+import { useCatalogViewStore } from '../_store/catalog-view-store'
+import { useArtistUIStore } from '../_store/artist-ui-store'
 
 interface EditCatalogDialogProps {
   artist: CatalogArtist | undefined
 }
 
 export function EditCatalogDialog({ artist }: EditCatalogDialogProps) {
-  const { updateOne } = useArtistUI()
-  const { closeAllDialogs, openArtistDialog, catalogDialogOpen } =
-    useCatalogView()
+  const updateOne = useArtistUIStore((s) => s.updateOne)
+
+  const closeAllDialogs = useCatalogViewStore((s) => s.closeAllDialogs)
+  const openArtistDialog = useCatalogViewStore((s) => s.openArtistDialog)
+  const catalogDialogOpen = useCatalogViewStore((s) => s.catalogDialogOpen)
 
   const handleEditCatalogDetail = (
     field: 'destacado' | 'activo' | 'descripcion',

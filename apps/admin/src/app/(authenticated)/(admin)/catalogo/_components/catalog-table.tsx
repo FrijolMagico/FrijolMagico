@@ -1,12 +1,11 @@
 'use client'
 
-import { useRef, useCallback, useEffect } from 'react'
+import { useRef, useCallback, useEffect, use } from 'react'
 import {
   DndContext,
   type DragEndEvent,
   type DragStartEvent,
   type DragMoveEvent,
-  DragOverlay,
   closestCenter,
   KeyboardSensor,
   PointerSensor,
@@ -14,7 +13,6 @@ import {
   useSensors
 } from '@dnd-kit/core'
 import {
-  arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy
@@ -27,16 +25,23 @@ import {
   TableHeader,
   TableRow
 } from '@/shared/components/ui/table'
-import { Card } from '@/shared/components/ui/card'
 import { DraggableCatalogRow } from './draggable-catalog-row'
 import { toast } from 'sonner'
 import type { CatalogArtist } from '../_types'
 import { useArtistUI, useVisibleArtists } from '../_hooks/use-artist-ui'
-import { useCatalogView } from '../_hooks/use-catalog-view'
+import { useCatalogPaginationStore } from '../_store/catalog-pagination-store'
+import { useCatalogViewStore } from '../_store/catalog-view-store'
+import { useArtistUIStore } from '../_store/artist-ui-store'
+import { EmptyState } from '@/shared/components/empty-state'
 
 interface CatalogTableProps {
   containerRef?: React.RefObject<HTMLDivElement | null>
   onPageChange?: (page: number) => void
+  handleFiltersChange: (filters: {
+    activo?: boolean | null
+    destacado?: boolean | null
+    search?: string
+  }) => void
 }
 
 // TODO: Extract DnD and auto-pagination logic into a reusable hook for other catalog tables (e.g. obras)
@@ -47,22 +52,22 @@ const PAGE_CHANGE_COOLDOWN = 800 // ms between page changes
 
 export function CatalogTable({
   containerRef,
-  onPageChange
+  onPageChange,
+  handleFiltersChange
 }: CatalogTableProps) {
-  const { artists: allArtists, reorder, updateOne } = useArtistUI()
-  const visibleArtists = useVisibleArtists()
-  const {
-    page,
-    pageSize,
-    getTotalPages,
-    setPage,
-    startDrag,
-    endDrag,
-    draggedArtistId,
-    openCatalogDialog
-  } = useCatalogView()
+  const { reorder } = useArtistUI()
+  const updateOne = useArtistUIStore((s) => s.updateOne)
 
-  const totalPages = getTotalPages()
+  const { visibleArtists } = useVisibleArtists()
+
+  const page = useCatalogPaginationStore((s) => s.page)
+  const totalPages = useCatalogPaginationStore((s) => s.getTotalPages())
+  const setPage = useCatalogPaginationStore((s) => s.setPage)
+
+  const startDrag = useCatalogViewStore((s) => s.startDrag)
+  const endDrag = useCatalogViewStore((s) => s.endDrag)
+  const setFilters = useCatalogViewStore((s) => s.setFilters)
+  const openCatalogDialog = useCatalogViewStore((s) => s.openCatalogDialog)
 
   // Refs for auto-pagination timers
   const pageChangeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -171,6 +176,8 @@ export function CatalogTable({
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     const draggedId = Number(active.id)
+    const dropTargetId = over ? Number(over.id) : null
+
     endDrag()
 
     // Clear any pending page change
@@ -180,27 +187,8 @@ export function CatalogTable({
       isNearEdgeRef.current = null
     }
 
-    if (over && active.id !== over.id) {
-      // Calculate indices based on GLOBAL list
-      const globalOldIndex = allArtists.findIndex(
-        (a) => a.artistaId === draggedId
-      )
-
-      const localNewIndex = visibleArtists.findIndex(
-        (a) => a.artistaId === Number(over.id)
-      )
-
-      if (globalOldIndex !== -1 && localNewIndex !== -1) {
-        const startIndex = (page - 1) * pageSize
-        const globalNewIndex = startIndex + localNewIndex
-
-        const newGlobalOrder = arrayMove(
-          allArtists,
-          globalOldIndex,
-          globalNewIndex
-        )
-        reorder(newGlobalOrder, draggedId)
-      }
+    if (over && active.id !== over.id && dropTargetId) {
+      reorder(draggedId, dropTargetId)
     }
   }
 
@@ -210,7 +198,7 @@ export function CatalogTable({
     value: boolean
   ) => {
     // Update using ui-state (automatically handles Layer 3)
-    updateOne(String(artista.artistaId), { [field]: value })
+    updateOne(artista.artistaId, { [field]: value })
     toast.info(
       `${field === 'destacado' ? 'Destacado' : 'Activo'} cambiado. Presiona "Guardar cambios" para aplicar.`
     )
@@ -223,9 +211,29 @@ export function CatalogTable({
     [openCatalogDialog]
   )
 
-  const draggedArtista = draggedArtistId
-    ? allArtists.find((a) => a.artistaId === draggedArtistId)
-    : null
+  if (visibleArtists.length === 0) {
+    return (
+      <EmptyState
+        title='No se encontraron artistas'
+        description='No hay artistas que coincidan con los filtros seleccionados.'
+        action={{
+          label: 'Limpiar filtros',
+          onClick: () => {
+            setFilters({
+              activo: null,
+              destacado: null,
+              search: ''
+            })
+            handleFiltersChange({
+              activo: null,
+              destacado: null,
+              search: ''
+            })
+          }
+        }}
+      />
+    )
+  }
 
   return (
     <DndContext
@@ -266,28 +274,6 @@ export function CatalogTable({
           </SortableContext>
         </TableBody>
       </Table>
-
-      <DragOverlay dropAnimation={null}>
-        {draggedArtista ? (
-          <Card className='border-primary border-2 p-3 opacity-90 shadow-xl'>
-            <div className='flex items-center gap-3'>
-              <div className='bg-muted flex h-8 w-8 items-center justify-center rounded-full'>
-                <span className='text-muted-foreground text-xs'>
-                  {draggedArtista.pseudonimo.charAt(0).toUpperCase()}
-                </span>
-              </div>
-              <div>
-                <p className='text-sm font-medium'>
-                  {draggedArtista.nombre || draggedArtista.pseudonimo}
-                </p>
-                <p className='text-muted-foreground text-xs'>
-                  @{draggedArtista.pseudonimo}
-                </p>
-              </div>
-            </div>
-          </Card>
-        ) : null}
-      </DragOverlay>
     </DndContext>
   )
 }

@@ -1,16 +1,6 @@
 import { Suspense } from 'react'
 import { Skeleton } from '@/shared/components/ui/skeleton'
-import type { CatalogFilters } from './_types'
 import { CatalogContent } from './_components/catalog-content'
-
-interface PageProps {
-  searchParams: Promise<{
-    page?: string
-    activo?: string
-    destacado?: string
-    search?: string
-  }>
-}
 
 function CatalogLoading() {
   return (
@@ -29,18 +19,7 @@ function CatalogLoading() {
   )
 }
 
-export default async function CatalogArtistsPage({ searchParams }: PageProps) {
-  // Parse search params
-  const params = await searchParams
-
-  // Build filters
-  const filters: CatalogFilters = {
-    activo: params.activo === undefined ? null : params.activo === 'true',
-    destacado:
-      params.destacado === undefined ? null : params.destacado === 'true',
-    search: params.search ?? ''
-  }
-
+export default function CatalogArtistsPage() {
   return (
     <div className='space-y-6'>
       <div>
@@ -54,7 +33,7 @@ export default async function CatalogArtistsPage({ searchParams }: PageProps) {
       </div>
 
       <Suspense fallback={<CatalogLoading />}>
-        <CatalogContent filters={filters} />
+        <CatalogContent />
       </Suspense>
     </div>
   )

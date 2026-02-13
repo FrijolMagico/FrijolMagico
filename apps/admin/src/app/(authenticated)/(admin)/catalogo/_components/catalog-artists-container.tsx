@@ -1,19 +1,18 @@
 'use client'
 
-import { useCallback, useRef, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useDebouncedCallback } from 'use-debounce'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { CatalogFilters as CatalogFiltersComponent } from './catalog-filters'
-import { CatalogTable } from './catalog-table'
-import { CatalogPagination } from './catalog-pagination'
 import { EditCatalogDialog } from './edit-catalog-dialog'
 import { EditArtistDialog } from './edit-artist-dialog'
-import type { CatalogArtist, PaginatedResult } from '../_types'
-import { EmptyState } from '@/shared/components/empty-state'
-import { Card } from '@/shared/components/ui/card'
-import { useArtistUI } from '../_hooks/use-artist-ui'
-import { useCatalogView } from '../_hooks/use-catalog-view'
 import { useSelectedArtist } from '../_hooks/use-selected-artist'
+import { useCatalogViewStore } from '../_store/catalog-view-store'
+import { useCatalogPaginationStore } from '../_store/catalog-pagination-store'
+import { useArtistUIStore } from '../_store/artist-ui-store'
+import { CatalogTableContainer } from './catalog-table-container'
+
+import type { CatalogArtist, PaginatedResult } from '../_types'
 
 interface CatalogArtistsContainerProps {
   initialData: PaginatedResult<CatalogArtist>
@@ -24,10 +23,13 @@ export function CatalogArtistsContainer({
 }: CatalogArtistsContainerProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const tableContainerRef = useRef<HTMLDivElement>(null)
 
-  const { setRemoteData, hasUnsavedEdits } = useArtistUI()
-  const { setPage, setTotalItems, setFilters, pageSize } = useCatalogView()
+  const setRemoteData = useArtistUIStore((s) => s.setRemoteData)
+
+  const setFilters = useCatalogViewStore((s) => s.setFilters)
+  const setPage = useCatalogPaginationStore((s) => s.setPage)
+  const pageSize = useCatalogPaginationStore((s) => s.pageSize)
+  const setTotalItems = useCatalogPaginationStore((s) => s.setTotalItems)
 
   const selectedArtist = useSelectedArtist()
 
@@ -61,6 +63,7 @@ export function CatalogArtistsContainer({
     setPage
   ])
 
+  // TODO: We need extract this logic to clean query params and also use nuqs
   // Handle URL sync
   const handleFiltersChange = useDebouncedCallback(
     (newFilters: {
@@ -88,20 +91,6 @@ export function CatalogArtistsContainer({
       router.push(`?${params.toString()}`, { scroll: false })
     },
     300
-  )
-
-  const handlePageChange = useCallback(
-    (newPage: number) => {
-      setPage(newPage)
-      const params = new URLSearchParams(searchParams.toString())
-      if (newPage === 1) {
-        params.delete('page')
-      } else {
-        params.set('page', String(newPage))
-      }
-      router.push(`?${params.toString()}`, { scroll: false })
-    },
-    [setPage, router, searchParams]
   )
 
   // TODO: Add "Save Changes" button in the UI, enabled when hasAppliedEdits (that means changes are applied to L2 - Journal/Draft persistense) ore something is true
@@ -132,8 +121,6 @@ export function CatalogArtistsContainer({
   //   }
   // }, [])
 
-  const isEmpty = initialData.data.length === 0
-
   return (
     <div className='space-y-4'>
       <div className='flex items-center justify-between'>
@@ -141,40 +128,7 @@ export function CatalogArtistsContainer({
         {/* Here will be the "save Changes" button, disabled if there are no unsaved edits */}
       </div>
 
-      {isEmpty ? (
-        <EmptyState
-          title='No se encontraron artistas'
-          description='No hay artistas que coincidan con los filtros seleccionados.'
-          action={{
-            label: 'Limpiar filtros',
-            onClick: () => {
-              setFilters({
-                activo: null,
-                destacado: null,
-                search: ''
-              })
-              handleFiltersChange({
-                activo: null,
-                destacado: null,
-                search: ''
-              })
-            }
-          }}
-        />
-      ) : (
-        <>
-          <CatalogPagination onPageChange={handlePageChange} />
-
-          <Card ref={tableContainerRef} className='overflow-x-hidden py-0'>
-            <CatalogTable
-              containerRef={tableContainerRef}
-              onPageChange={handlePageChange}
-            />
-          </Card>
-
-          <CatalogPagination onPageChange={handlePageChange} />
-        </>
-      )}
+      <CatalogTableContainer handleFilersChange={handleFiltersChange} />
 
       {/* Dialog Nivel 1: Catálogo */}
       <EditCatalogDialog

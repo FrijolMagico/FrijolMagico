@@ -1,7 +1,5 @@
-'use client'
-
 import { useCatalogViewStore } from '../_store/catalog-view-store'
-import { useArtistById } from './use-artist-ui'
+import { useArtistUIStore } from '../_store/artist-ui-store'
 import type { CatalogArtist } from '../_types'
 
 /**
@@ -13,5 +11,5 @@ export function useSelectedArtist(): CatalogArtist | undefined {
   const selectedArtistId = useCatalogViewStore(
     (state) => state.selectedArtistId
   )
-  return useArtistById(selectedArtistId || -1)
+  return useArtistUIStore.getState().selectById(selectedArtistId || -1)
 }

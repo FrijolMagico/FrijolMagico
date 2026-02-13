@@ -10,7 +10,7 @@ import {
   SelectValue
 } from '@/shared/components/ui/select'
 import { Button } from '@/shared/components/ui/button'
-import { useCatalogFilters } from '../_hooks/use-catalog-view'
+import { useCatalogViewStore } from '../_store/catalog-view-store'
 
 interface CatalogFiltersProps {
   onFiltersChange: (filters: {
@@ -21,7 +21,8 @@ interface CatalogFiltersProps {
 }
 
 export function CatalogFilters({ onFiltersChange }: CatalogFiltersProps) {
-  const { filters, setFilters } = useCatalogFilters()
+  const filters = useCatalogViewStore((state) => state.filters)
+  const setFilters = useCatalogViewStore((state) => state.setFilters)
 
   const hasActiveFilters =
     filters.activo !== null ||
