@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test'
+import { resolve } from 'path'
 
 export default defineConfig({
   testDir: './__tests__/e2e',
@@ -10,19 +11,25 @@ export default defineConfig({
     ['html', { outputFolder: './__tests__/e2e/_reports/playwright-report' }]
   ],
   outputDir: './__tests__/e2e/_reports/test-results',
-  use: {
-    baseURL: process.env.BASE_URL || 'http://localhost:3001',
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure'
-  },
+
+  // Global setup that runs before all tests
+  globalSetup: resolve(__dirname, '__tests__/e2e/global.setup.ts'),
+
   projects: [
+    // Authenticated tests use the saved auth state from global setup
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] }
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: resolve(__dirname, '__tests__/e2e/.auth/user.json')
+      }
     },
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'] }
+      use: {
+        ...devices['Desktop Firefox'],
+        storageState: resolve(__dirname, '__tests__/e2e/.auth/user.json')
+      }
     }
   ],
 
@@ -30,6 +37,11 @@ export default defineConfig({
     command: 'bun run dev',
     url: 'http://localhost:3001',
     reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000
+    timeout: 120 * 1000,
+    env: {
+      // Use local SQLite database with absolute path
+      TURSO_DATABASE_URL: `file:${resolve(__dirname, '../../packages/database/local.db')}`,
+      TURSO_AUTH_TOKEN: ''
+    }
   }
 })
