@@ -10,8 +10,4 @@ export type {
   EntityUIStateStore
 } from './entity-types'
 export type { CreateEntityUIStateStoreConfig } from './entity-factory'
-export {
-  generateTempId,
-  normalizeEntities,
-  denormalizeEntities
-} from './entity-utils'
+export { normalizeEntities } from './entity-utils'

@@ -6,7 +6,7 @@ import { createEntityUIStateStore } from '@/shared/ui-state/entity-state'
 import { describe, expect, test, beforeEach } from 'bun:test'
 
 interface TestEntity {
-  id: string
+  id: number
   nombre: string
   cargo?: string
   rrss?: string
@@ -29,7 +29,7 @@ describe('Entity State Factory', () => {
         idField: 'id'
       })
 
-      const entity = { id: 'test-1', nombre: 'Test Member' }
+      const entity = { id: 0, nombre: 'Test Member' }
       store.getState().addOne(entity)
 
       const all = store.getState().selectAll()
@@ -43,11 +43,11 @@ describe('Entity State Factory', () => {
         idField: 'id'
       })
 
-      const entity = { id: 'test-1', nombre: 'Original Name' }
+      const entity = { id: 0, nombre: 'Original Name' }
       store.getState().addOne(entity)
-      store.getState().updateOne('test-1', { nombre: 'Updated Name' })
+      store.getState().updateOne(0, { nombre: 'Updated Name' })
 
-      const updated = store.getState().selectById('test-1')
+      const updated = store.getState().selectById(0)
       expect(updated?.nombre).toBe('Updated Name')
     })
 
@@ -57,11 +57,11 @@ describe('Entity State Factory', () => {
         idField: 'id'
       })
 
-      const entity = { id: 'test-1', nombre: 'Test Member' }
+      const entity = { id: 0, nombre: 'Test Member' }
       store.getState().addOne(entity)
       expect(store.getState().selectAll()).toHaveLength(1)
 
-      store.getState().removeOne('test-1')
+      store.getState().removeOne(0)
       expect(store.getState().selectAll()).toHaveLength(0)
     })
   })
@@ -74,9 +74,9 @@ describe('Entity State Factory', () => {
       })
 
       const entities = [
-        { id: 'test-1', nombre: 'Member 1' },
-        { id: 'test-2', nombre: 'Member 2' },
-        { id: 'test-3', nombre: 'Member 3' }
+        { id: 0, nombre: 'Member 1' },
+        { id: 1, nombre: 'Member 2' },
+        { id: 2, nombre: 'Member 3' }
       ]
 
       store.getState().addMany(entities)
@@ -91,14 +91,14 @@ describe('Entity State Factory', () => {
       })
 
       const entities = [
-        { id: 'test-1', nombre: 'Member 1' },
-        { id: 'test-2', nombre: 'Member 2' }
+        { id: 0, nombre: 'Member 1' },
+        { id: 1, nombre: 'Member 2' }
       ]
       store.getState().addMany(entities)
 
       store.getState().updateMany([
-        { id: 'test-1', data: { nombre: 'Updated 1' } },
-        { id: 'test-2', data: { nombre: 'Updated 2' } }
+        { id: 0, data: { nombre: 'Updated 1' } },
+        { id: 1, data: { nombre: 'Updated 2' } }
       ])
 
       const all = store.getState().selectAll()
@@ -113,16 +113,16 @@ describe('Entity State Factory', () => {
       })
 
       const entities = [
-        { id: 'test-1', nombre: 'Member 1' },
-        { id: 'test-2', nombre: 'Member 2' },
-        { id: 'test-3', nombre: 'Member 3' }
+        { id: 0, nombre: 'Member 1' },
+        { id: 1, nombre: 'Member 2' },
+        { id: 2, nombre: 'Member 3' }
       ]
       store.getState().addMany(entities)
 
-      store.getState().removeMany(['test-1', 'test-2'])
+      store.getState().removeMany([0, 1])
       const all = store.getState().selectAll()
       expect(all).toHaveLength(1)
-      expect(all[0].id).toBe('test-3')
+      expect(all[0].id).toBe(2)
     })
   })
 
@@ -135,28 +135,28 @@ describe('Entity State Factory', () => {
 
       // Add 10 entities
       for (let i = 0; i < 10; i++) {
-        store.getState().addOne({ id: `m${i}`, nombre: `Member ${i}` })
+        store.getState().addOne({ id: i, nombre: `Member ${i}` })
       }
 
       // Update 5
       for (let i = 0; i < 5; i++) {
-        store.getState().updateOne(`m${i}`, { cargo: 'Updated Role' })
+        store.getState().updateOne(i, { cargo: 'Updated Role' })
       }
 
       // Delete 2
-      store.getState().removeOne('m0')
-      store.getState().removeOne('m1')
+      store.getState().removeOne(1)
+      store.getState().removeOne(2)
 
       const all = store.getState().selectAll()
       expect(all).toHaveLength(8)
 
       // Verify updates persisted
-      const updated = all.find((e) => e.id === 'm2')
+      const updated = all.find((e) => e.id === 3)
       expect(updated?.cargo).toBe('Updated Role')
 
       // Verify deletes applied
-      expect(all.find((e) => e.id === 'm0')).toBeUndefined()
-      expect(all.find((e) => e.id === 'm1')).toBeUndefined()
+      expect(all.find((e) => e.id === 1)).toBeUndefined()
+      expect(all.find((e) => e.id === 2)).toBeUndefined()
     })
   })
 
@@ -168,8 +168,8 @@ describe('Entity State Factory', () => {
       })
 
       const remoteEntities = [
-        { id: '1', nombre: 'Remote 1' },
-        { id: '2', nombre: 'Remote 2' }
+        { id: 1, nombre: 'Remote 1' },
+        { id: 2, nombre: 'Remote 2' }
       ]
 
       store.getState().setRemoteData(remoteEntities)
@@ -185,28 +185,28 @@ describe('Entity State Factory', () => {
 
       // Set remote data
       store.getState().setRemoteData([
-        { id: '1', nombre: 'Remote 1' },
-        { id: '2', nombre: 'Remote 2' }
+        { id: 1, nombre: 'Remote 1' },
+        { id: 2, nombre: 'Remote 2' }
       ])
 
       // Add local changes
-      store.getState().addOne({ id: '3', nombre: 'Local 3' })
-      store.getState().updateOne('1', { nombre: 'Updated Remote 1' })
-      store.getState().removeOne('2')
+      store.getState().addOne({ id: 3, nombre: 'Local 3' })
+      store.getState().updateOne(1, { nombre: 'Updated Remote 1' })
+      store.getState().removeOne(2)
 
       const all = store.getState().selectAll()
       expect(all).toHaveLength(2)
 
       // Verify updates applied
-      const item1 = all.find((e) => e.id === '1')
+      const item1 = all.find((e) => e.id === 1)
       expect(item1?.nombre).toBe('Updated Remote 1')
 
       // Verify local additions
-      const item3 = all.find((e) => e.id === '3')
+      const item3 = all.find((e) => e.id === 3)
       expect(item3?.nombre).toBe('Local 3')
 
       // Verify deletions
-      expect(all.find((e) => e.id === '2')).toBeUndefined()
+      expect(all.find((e) => e.id === 2)).toBeUndefined()
     })
   })
 
@@ -218,8 +218,8 @@ describe('Entity State Factory', () => {
       })
 
       const entities = [
-        { id: 'test-1', nombre: 'Member 1' },
-        { id: 'test-2', nombre: 'Member 2' }
+        { id: 0, nombre: 'Member 1' },
+        { id: 1, nombre: 'Member 2' }
       ]
       store.getState().addMany(entities)
 
@@ -233,9 +233,9 @@ describe('Entity State Factory', () => {
         idField: 'id'
       })
 
-      store.getState().addOne({ id: 'test-1', nombre: 'Test' })
-      const entity = store.getState().selectById('test-1')
-      expect(entity?.id).toBe('test-1')
+      store.getState().addOne({ id: 0, nombre: 'Test' })
+      const entity = store.getState().selectById(0)
+      expect(entity?.id).toBe(0)
       expect(entity?.nombre).toBe('Test')
     })
 
@@ -245,12 +245,12 @@ describe('Entity State Factory', () => {
         idField: 'id'
       })
 
-      store.getState().addOne({ id: 'test-1', nombre: 'Test 1' })
-      store.getState().addOne({ id: 'test-2', nombre: 'Test 2' })
+      store.getState().addOne({ id: 0, nombre: 'Test 1' })
+      store.getState().addOne({ id: 1, nombre: 'Test 2' })
 
       const ids = store.getState().selectIds()
-      expect(ids).toContain('test-1')
-      expect(ids).toContain('test-2')
+      expect(ids).toContain(0)
+      expect(ids).toContain(1)
     })
 
     test('selectEntities should return normalized entities', () => {
@@ -259,10 +259,10 @@ describe('Entity State Factory', () => {
         idField: 'id'
       })
 
-      store.getState().addOne({ id: 'test-1', nombre: 'Test' })
+      store.getState().addOne({ id: 0, nombre: 'Test' })
       const entities = store.getState().selectEntities()
-      expect(entities['test-1']).toBeDefined()
-      expect(entities['test-1'].nombre).toBe('Test')
+      expect(entities[0]).toBeDefined()
+      expect(entities[0].nombre).toBe('Test')
     })
 
     test('selectTotal should return count', () => {
@@ -272,8 +272,8 @@ describe('Entity State Factory', () => {
       })
 
       store.getState().addMany([
-        { id: 'test-1', nombre: 'Test 1' },
-        { id: 'test-2', nombre: 'Test 2' }
+        { id: 0, nombre: 'Test 1' },
+        { id: 1, nombre: 'Test 2' }
       ])
 
       expect(store.getState().selectTotal()).toBe(2)
@@ -289,7 +289,7 @@ describe('Entity State Factory', () => {
 
       expect(store.getState().getHasChanges()).toBe(false)
 
-      store.getState().addOne({ id: 'test-1', nombre: 'Test' })
+      store.getState().addOne({ id: 0, nombre: 'Test' })
       expect(store.getState().getHasChanges()).toBe(true)
     })
 
@@ -301,7 +301,7 @@ describe('Entity State Factory', () => {
 
       expect(store.getState().getHasUnsavedEdits()).toBe(false)
 
-      store.getState().addOne({ id: 'test-1', nombre: 'Test' })
+      store.getState().addOne({ id: 0, nombre: 'Test' })
       expect(store.getState().getHasUnsavedEdits()).toBe(true)
     })
 
@@ -311,7 +311,7 @@ describe('Entity State Factory', () => {
         idField: 'id'
       })
 
-      store.getState().addOne({ id: 'test-1', nombre: 'Test' })
+      store.getState().addOne({ id: 0, nombre: 'Test' })
       expect(store.getState().getHasUnsavedEdits()).toBe(true)
 
       store.getState().clearCurrentEdits()
@@ -324,8 +324,8 @@ describe('Entity State Factory', () => {
         idField: 'id'
       })
 
-      store.getState().setRemoteData([{ id: '1', nombre: 'Test' }])
-      store.getState().addOne({ id: '2', nombre: 'New' })
+      store.getState().setRemoteData([{ id: 1, nombre: 'Test' }])
+      store.getState().addOne({ id: 2, nombre: 'New' })
 
       store.getState().reset()
 
@@ -343,7 +343,7 @@ describe('Entity State Factory', () => {
 
       const start = performance.now()
       for (let i = 0; i < 10; i++) {
-        store.getState().addOne({ id: `m${i}`, nombre: `Member ${i}` })
+        store.getState().addOne({ id: i, nombre: `Member ${i}` })
       }
       const end = performance.now()
 
@@ -359,7 +359,7 @@ describe('Entity State Factory', () => {
 
       const start = performance.now()
       for (let i = 0; i < 10; i++) {
-        store.getState().addOne({ id: `m${i}`, nombre: `Member ${i}` })
+        store.getState().addOne({ id: i, nombre: `Member ${i}` })
       }
       const end = performance.now()
 
@@ -375,7 +375,7 @@ describe('Entity State Factory', () => {
 
       // Setup: add 100 items
       const entities = Array.from({ length: 100 }, (_, i) => ({
-        id: `m${i}`,
+        id: i,
         nombre: `Member ${i}`
       }))
       store.getState().addMany(entities)
@@ -383,7 +383,7 @@ describe('Entity State Factory', () => {
       // Test: bulk update 50
       const start = performance.now()
       for (let i = 0; i < 50; i++) {
-        store.getState().updateOne(`m${i}`, { cargo: `Updated ${i}` })
+        store.getState().updateOne(i, { cargo: `Updated ${i}` })
       }
       const end = performance.now()
 
@@ -399,32 +399,32 @@ describe('Entity State Factory', () => {
 
       // Setup: add 1000 items
       const entities = Array.from({ length: 1000 }, (_, i) => ({
-        id: `m${i}`,
+        id: i,
         nombre: `Member ${i}`
       }))
       store.getState().addMany(entities)
 
       // Verify starting state for item #500
-      const beforeUpdate = store.getState().selectById('m500')
+      const beforeUpdate = store.getState().selectById(500)
       expect(beforeUpdate?.nombre).toBe('Member 500')
 
       // Test: update item #500
       const start = performance.now()
-      store.getState().updateOne('m500', { nombre: 'Updated Member 500' })
+      store.getState().updateOne(500, { nombre: 'Updated Member 500' })
       const end = performance.now()
 
       // Verify update time is O(1)
       expect(end - start).toBeLessThan(1)
 
       // Verify update applied
-      const updated = store.getState().selectById('m500')
+      const updated = store.getState().selectById(500)
       expect(updated?.nombre).toBe('Updated Member 500')
 
       // Verify other items unchanged
-      const before499 = store.getState().selectById('m499')
+      const before499 = store.getState().selectById(499)
       expect(before499?.nombre).toBe('Member 499')
 
-      const after501 = store.getState().selectById('m501')
+      const after501 = store.getState().selectById(501)
       expect(after501?.nombre).toBe('Member 501')
 
       // Verify total count unchanged
@@ -439,7 +439,7 @@ describe('Entity State Factory', () => {
 
       // Setup: add 1000 items
       const entities = Array.from({ length: 1000 }, (_, i) => ({
-        id: `m${i}`,
+        id: i,
         nombre: `Member ${i}`
       }))
       store.getState().addMany(entities)
@@ -448,18 +448,18 @@ describe('Entity State Factory', () => {
 
       // Test: delete item #500
       const start = performance.now()
-      store.getState().removeOne('m500')
+      store.getState().removeOne(500)
       const end = performance.now()
 
       // Verify delete time is O(1)
       expect(end - start).toBeLessThan(1)
 
       // Verify item deleted
-      expect(store.getState().selectById('m500')).toBeUndefined()
+      expect(store.getState().selectById(500)).toBeUndefined()
 
       // Verify surrounding items still exist
-      expect(store.getState().selectById('m499')).toBeDefined()
-      expect(store.getState().selectById('m501')).toBeDefined()
+      expect(store.getState().selectById(499)).toBeDefined()
+      expect(store.getState().selectById(501)).toBeDefined()
 
       // Verify total count decreased
       expect(store.getState().selectTotal()).toBe(999)
@@ -473,7 +473,7 @@ describe('Entity State Factory', () => {
 
       // Perform 1000 add+update+delete cycles
       for (let cycle = 0; cycle < 1000; cycle++) {
-        const id = `temp-${cycle}`
+        const id = cycle
         store.getState().addOne({ id, nombre: `Temp ${cycle}` })
         store.getState().updateOne(id, { cargo: `Role ${cycle}` })
         store.getState().removeOne(id)
@@ -497,7 +497,7 @@ describe('Entity State Factory', () => {
       })
 
       expect(() => {
-        store.getState().updateOne('non-existent', { nombre: 'Test' })
+        store.getState().updateOne(-1, { nombre: 'Test' })
       }).not.toThrow()
     })
 
@@ -508,7 +508,7 @@ describe('Entity State Factory', () => {
       })
 
       expect(() => {
-        store.getState().removeOne('non-existent')
+        store.getState().removeOne(-1)
       }).not.toThrow()
     })
 
@@ -518,7 +518,7 @@ describe('Entity State Factory', () => {
         idField: 'id'
       })
 
-      expect(store.getState().selectById('non-existent')).toBeUndefined()
+      expect(store.getState().selectById(-1)).toBeUndefined()
     })
 
     test('setAll should reset state', () => {
@@ -527,17 +527,17 @@ describe('Entity State Factory', () => {
         idField: 'id'
       })
 
-      store.getState().addOne({ id: 'temp-1', nombre: 'Temp' })
+      store.getState().addOne({ id: 1, nombre: 'Temp' })
       expect(store.getState().selectAll()).toHaveLength(1)
 
       store.getState().setAll([
-        { id: 'new-1', nombre: 'New 1' },
-        { id: 'new-2', nombre: 'New 2' }
+        { id: 1, nombre: 'New 1' },
+        { id: 2, nombre: 'New 2' }
       ])
 
       const all = store.getState().selectAll()
       expect(all).toHaveLength(2)
-      expect(all.every((e) => e.id.startsWith('new-'))).toBe(true)
+      expect(all.every((e) => typeof e.id === 'number')).toBe(true)
     })
   })
 })
