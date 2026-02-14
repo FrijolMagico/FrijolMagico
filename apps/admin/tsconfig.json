@@ -3,20 +3,44 @@
   "compilerOptions": {
     "baseUrl": ".",
     "skipLibCheck": true,
-    "types": ["bun"],
+    "types": [
+      "bun"
+    ],
     "paths": {
-      "@/shared/*": ["./src/shared/*"],
+      "@/shared/*": [
+        "./src/shared/*"
+      ],
       // Sections (Add more as needed)
-      "@/admin/*": ["./src/app/(authenticated)/(admin)/*"],
-      "@/dashboard/*": ["./src/app/(authenticated)/(dashboard)/*"],
-      "@/auth/*": ["./src/app/(auth)/*"],
+      "@/admin/*": [
+        "./src/app/(authenticated)/(admin)/*"
+      ],
+      "@/dashboard/*": [
+        "./src/app/(authenticated)/(dashboard)/*"
+      ],
+      "@/auth/*": [
+        "./src/app/(auth)/*"
+      ],
       // Globals
-      "@/lib/*": ["./src/lib/*"],
-      "@/hooks/*": ["./src/hooks/*"],
-      "@/types/*": ["./src/types/*"],
-      "@/styles/*": ["./src/styles/*"],
+      "@/lib/*": [
+        "./src/lib/*"
+      ],
+      "@/hooks/*": [
+        "./src/hooks/*"
+      ],
+      "@/types/*": [
+        "./src/types/*"
+      ],
+      "@/styles/*": [
+        "./src/styles/*"
+      ],
+      // Test folder
+      "@/tests/*": [
+        "./tests/*"
+      ],
       // Fallback
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     }
   },
   "include": [

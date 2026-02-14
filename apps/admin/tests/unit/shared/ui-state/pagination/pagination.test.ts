@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test'
-import { createPaginationStore } from '../pagination-factory'
+import { createPaginationStore } from '@/shared/ui-state/pagination'
 
 describe('Pagination Factory', () => {
   describe('Store Creation', () => {

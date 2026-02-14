@@ -5,23 +5,19 @@ This directory follows a strict **External Test Structure** that mirrors the sou
 ## Directory Structure
 
 ```text
+
 __tests__/
 ├── e2e/                    # Playwright E2E Tests
 │   └── (authenticated)/    # Mirrors src/app/(authenticated)
 │       └── (admin)/
 │           └── catalogo/
-│               └── artistas.spec.ts
 │
 ├── unit/                   # Vitest/Jest Unit Tests
 │   └── shared/             # Mirrors src/shared
 │       └── ui-state/
-│           └── store.test.ts
 │
-├── fixtures/               # Shared Test Fixtures (Page Objects, Auth)
-│   └── admin-test.ts       # Base test extension
-│
-└── utils/                  # Test Utilities (Seeders, Helpers)
-    └── db-seeder.ts
+└── fixtures/               # Shared Test Fixtures (Page Objects, Auth)
+
 ```
 
 ## Conventions

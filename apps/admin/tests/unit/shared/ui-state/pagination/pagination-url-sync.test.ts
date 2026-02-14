@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, mock } from 'bun:test'
-import type { PaginationUrlSyncConfig } from '../pagination-url-sync'
+import type { PaginationUrlSyncConfig } from '@/shared/ui-state/pagination'
 
 type QueryStates = Record<string, number>
 type SetUrlStateFn = (newState: QueryStates) => Promise<null>
