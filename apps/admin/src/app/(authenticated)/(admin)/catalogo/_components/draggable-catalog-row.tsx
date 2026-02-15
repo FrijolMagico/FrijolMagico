@@ -30,12 +30,10 @@ export function DraggableCatalogRow({
 
   // Check for pending changes on this specific artist
   const hasPendingChanges = useArtistUIStore(
-    useShallow(
-      (state) =>
-        state.currentEdits?.operations.some(
-          (op) => String(op.id) === String(artista.artistaId)
-        ) || false
-    )
+    (state) =>
+      state.currentEdits?.operations.some(
+        (op) => String(op.id) === String(artista.artistaId)
+      ) || false
   )
 
   const {
