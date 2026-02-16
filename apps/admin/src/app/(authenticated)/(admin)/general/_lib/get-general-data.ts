@@ -17,12 +17,6 @@ import {
 /**
  * Obtiene datos de la organización desde la base de datos.
  *
- * ## Error Handling
- *
- * - Retorna `null` si no encuentra organización
- * - Loguea warning en consola del servidor
- * - No lanza excepciones (safe error handling)
- *
  * @example
  * ```typescript
  * // Server Component
@@ -39,22 +33,18 @@ import {
  * }
  * ```
  *
- * @returns Org o null si no existe
+ * @returns Organization o null si no existe
  */
 export async function getOrganizationData(): Promise<RawOrganization | null> {
-  try {
-    const organization = await getOrganization()
+  'use cache'
+  cacheTag(ORGANIZATION_CACHE_TAG)
 
-    if (!organization) {
-      console.warn('⚠️ No organization found with id:', ORGANIZATION_ID)
-      return null
-    }
+  const organization = await db.query.organizacion.findFirst({
+    where: eq(core.organizacion.id, ORGANIZATION_ID)
+  })
 
-    return organization
-  } catch (error) {
-    console.error('❌ Error fetching organization data:', error)
-    return null
-  }
+  if (organization === undefined) return null
+  return organization
 }
 
 /**
@@ -74,48 +64,13 @@ export async function getOrganizationData(): Promise<RawOrganization | null> {
  * @returns Array de OrgEquipo o null
  */
 export async function getTeamData(): Promise<RawTeamMember[] | null> {
-  try {
-    const team = await getTeam()
-
-    if (!team) {
-      console.warn(
-        '⚠️ No team members found for organization id:',
-        ORGANIZATION_ID
-      )
-      return null
-    }
-
-    return team
-  } catch (error) {
-    console.error('❌ Error fetching team data:', error)
-    return null
-  }
-}
-
-/**
- * Query cached de organización.
- *
- * @private
- */
-async function getOrganization(): Promise<RawOrganization | undefined> {
-  'use cache'
-  cacheTag(ORGANIZATION_CACHE_TAG)
-
-  return await db.query.organizacion.findFirst({
-    where: eq(core.organizacion.id, ORGANIZATION_ID)
-  })
-}
-
-/**
- * Query cached de equipo.
- *
- * @private
- */
-async function getTeam(): Promise<RawTeamMember[] | undefined> {
   'use cache'
   cacheTag(TEAM_CACHE_TAG)
 
-  return await db.query.organizacionEquipo.findMany({
+  const team = await db.query.organizacionEquipo.findMany({
     where: eq(core.organizacionEquipo.organizacionId, ORGANIZATION_ID)
   })
+
+  if (team === undefined) return null
+  return team
 }

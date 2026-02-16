@@ -1,4 +1,3 @@
-import { Suspense } from 'react'
 import { Building2 } from 'lucide-react'
 import {
   Card,
@@ -6,11 +5,20 @@ import {
   CardHeader,
   CardTitle
 } from '@/shared/components/ui/card'
-import { OrganizationContent } from './organization-content'
-import { TextFieldSkeleton } from '@/shared/components/form/text-field.skeleton'
-import { RichTextFieldSkeleton } from '@/shared/components/form/rich-text-field.skeleton'
+import { getOrganizationData } from '../_lib/get-general-data'
+import { OrganizationForm } from './organization-form'
 
-export function OrganizationSection() {
+export async function OrganizationSection() {
+  const organization = await getOrganizationData()
+
+  if (!organization) {
+    return (
+      <p className='text-muted-foreground text-sm'>
+        No se pudo cargar la información de la organización.
+      </p>
+    )
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -21,21 +29,8 @@ export function OrganizationSection() {
       </CardHeader>
 
       <CardContent className='space-y-6'>
-        <Suspense fallback={<OrganizationLoading />}>
-          <OrganizationContent />
-        </Suspense>
+        <OrganizationForm initialData={organization} />
       </CardContent>
     </Card>
-  )
-}
-
-function OrganizationLoading() {
-  return (
-    <div className='space-y-6'>
-      <TextFieldSkeleton />
-      <RichTextFieldSkeleton />
-      <RichTextFieldSkeleton />
-      <RichTextFieldSkeleton />
-    </div>
   )
 }

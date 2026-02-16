@@ -3,20 +3,21 @@ import { useMemo } from 'react'
 import { useOrganizationUIStore } from '../_store/organization-ui-store'
 
 export function useOrganizationEffectiveData() {
-  useOrganizationUIStore(
-    useShallow((state) => ({
-      remoteData: state.remoteData,
-      appliedChanges: state.appliedChanges,
-      currentEdits: state.currentEdits
-    }))
+  const { entities, ids } = useOrganizationUIStore(
+    useShallow((state) => {
+      const effective = state.getEffectiveData()
+      return {
+        entities: effective.entities,
+        ids: effective.ids
+      }
+    })
   )
 
-  // Memoize result based on primitive state changes to prevent infinite loops
+  // Memoize result based on stable state pieces
   return useMemo(() => {
-    const state = useOrganizationUIStore.getState().getEffectiveData()
-    const id = state.ids[0]
-    return id ? state.entities[id] : undefined
-  }, [])
+    const id = ids[0]
+    return id ? entities[id] : undefined
+  }, [entities, ids])
 }
 
 export function useOrganizationHasChanges() {

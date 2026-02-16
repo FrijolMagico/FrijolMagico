@@ -15,13 +15,7 @@ export function TeamSection() {
         <TeamAddBtn />
       </CardHeader>
 
-      <Suspense
-        fallback={
-          <div className='text-muted-foreground p-4'>Cargando equipo...</div>
-        }
-      >
-        <TeamContent />
-      </Suspense>
+      <TeamContent />
     </Card>
   )
 }

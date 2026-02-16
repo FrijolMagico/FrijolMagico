@@ -4,6 +4,7 @@ import { generateKeyBetween } from 'fractional-indexing'
 import { useCatalogViewStore } from '../_store/catalog-view-store'
 import { useCatalogPaginationStore } from '../_store/catalog-pagination-store'
 import { CatalogArtist, CatalogFilters } from '../_types'
+import { useShallow } from 'zustand/react/shallow'
 
 function filterArtists(
   artists: CatalogArtist[],
@@ -124,11 +125,24 @@ export function useVisibleArtists(): {
   visibleArtists: CatalogArtist[]
   totalCount: number
 } {
-  const allArtists = useArtistUIStore((s) => s.selectAll())
+  const { entities, ids } = useArtistUIStore(
+    useShallow((s) => {
+      const effective = s.getEffectiveData()
+      return {
+        entities: effective.entities,
+        ids: effective.ids
+      }
+    })
+  )
 
   const filters = useCatalogViewStore((s) => s.filters)
   const page = useCatalogPaginationStore((s) => s.page)
   const pageSize = useCatalogPaginationStore((s) => s.pageSize)
+
+  const allArtists = useMemo(
+    () => ids.map((id) => entities[id]).filter(Boolean),
+    [entities, ids]
+  )
 
   const filteredArtists = useMemo(
     () => filterArtists(allArtists, filters),

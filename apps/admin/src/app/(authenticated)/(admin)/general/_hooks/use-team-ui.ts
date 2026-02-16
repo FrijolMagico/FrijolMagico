@@ -8,59 +8,23 @@ import { TeamMember } from '../_types'
  * Selecciona el estado normalizador y computa fuera del selector para evitar loops infinitos.
  */
 export function useTeamEffectiveData(): TeamMember[] {
-  // Select the RAW state pieces that ARE stable references
-  const rawState = useTeamUIStore(
-    useShallow((state) => ({
-      remoteData: state.remoteData,
-      appliedChanges: state.appliedChanges,
-      currentEdits: state.currentEdits
-    }))
+  const { entities, ids } = useTeamUIStore(
+    useShallow((state) => {
+      const effective = state.getEffectiveData()
+      return {
+        entities: effective.entities,
+        ids: effective.ids
+      }
+    })
   )
 
   // Compute effective data OUTSIDE the selector
   return useMemo(() => {
-    if (!rawState.remoteData) return []
-
-    const entities: Record<string, TeamMember> = {
-      ...rawState.remoteData.entities
-    }
-    const deletedIds = new Set<number>()
-    const addedIds = new Set<number>()
-
-    const allOps = [
-      ...(rawState.appliedChanges?.operations ?? []),
-      ...(rawState.currentEdits?.operations ?? [])
-    ].sort((a, b) => a.timestamp - b.timestamp)
-
-    for (const op of allOps) {
-      switch (op.type) {
-        case 'ADD':
-          entities[op.id] = op.entity as TeamMember
-          addedIds.add(op.id)
-          deletedIds.delete(op.id)
-          break
-        case 'UPDATE':
-          if (entities[op.id]) {
-            entities[op.id] = { ...entities[op.id], ...op.data } as TeamMember
-          }
-          break
-        case 'DELETE':
-          delete entities[op.id]
-          deletedIds.add(op.id)
-          addedIds.delete(op.id)
-          break
-      }
-    }
-
-    const ids = rawState.remoteData.ids
-      .filter((id) => !deletedIds.has(id))
-      .concat([...addedIds])
-
     return ids
       .map((id) => entities[id])
       .filter((e): e is TeamMember => Boolean(e))
       .filter((e) => !e.isDeleted)
-  }, [rawState.remoteData, rawState.appliedChanges, rawState.currentEdits])
+  }, [entities, ids])
 }
 
 /**
