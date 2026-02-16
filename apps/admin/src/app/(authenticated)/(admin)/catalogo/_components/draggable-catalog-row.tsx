@@ -11,7 +11,6 @@ import { Badge } from '@/shared/components/ui/badge'
 import { ArtistAvatar } from './artist-avatar'
 import { useArtistUIStore } from '../_store/artist-ui-store'
 import type { CatalogArtist } from '../_types'
-import { useShallow } from 'zustand/react/shallow'
 import { cn } from '@/lib/utils'
 import { useCatalogViewStore } from '../_store/catalog-view-store'
 

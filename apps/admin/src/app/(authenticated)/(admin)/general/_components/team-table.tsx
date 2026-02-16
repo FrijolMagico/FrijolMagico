@@ -60,6 +60,8 @@ export function TeamTable({ initialData }: TeamTableProps) {
     value: string,
     memberId?: number
   ) => {
+    console.log({ memberId })
+
     if (!memberId) return
     updateOne(memberId, { [field]: value })
   }
@@ -75,8 +77,8 @@ export function TeamTable({ initialData }: TeamTableProps) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {equipo.map((member) => (
-          <TableRow key={String(member.id) + member.nombre}>
+        {equipo.map((member, index) => (
+          <TableRow key={String(member.id) + index}>
             <TableCell>
               <Input
                 value={member.nombre}

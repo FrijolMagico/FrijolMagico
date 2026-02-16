@@ -1,7 +1,6 @@
 'use client'
 
-import { RichTextField } from '@/shared/components/form/rich-text-field'
-import { Suspense, useEffect } from 'react'
+import { useEffect } from 'react'
 import {
   useOrganizationActions,
   useOrganizationEffectiveData
@@ -9,7 +8,7 @@ import {
 import { RawOrganization } from '../_types'
 import { Label } from '@/shared/components/ui/label'
 import { Input } from '@/shared/components/ui/input'
-import { RichTextFieldSkeleton } from '@/shared/components/form/rich-text-field.skeleton'
+import { RichTextFieldContainer } from '@/shared/components/form/rich-text-field-container'
 
 interface OrganizationFormProps {
   initialData: RawOrganization
@@ -48,6 +47,7 @@ export function OrganizationForm({ initialData }: OrganizationFormProps) {
 
     if (value === initialData[field]) {
       console.log('Data is exactly the original, no changes will made.')
+      return
     }
 
     update({ [field]: value })
@@ -58,7 +58,7 @@ export function OrganizationForm({ initialData }: OrganizationFormProps) {
   return (
     <div className='space-y-6'>
       <div className='space-y-2'>
-        <Label>Nombre de la Organización</Label>
+        <Label htmlFor='nombre'>Nombre de la Organización</Label>
         <div className='border-input focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 field-sizing-content gap-0 overflow-hidden rounded-md border bg-transparent p-0 shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-3 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:ring-3'>
           <Input
             id='nombre'
@@ -70,45 +70,33 @@ export function OrganizationForm({ initialData }: OrganizationFormProps) {
         </div>
       </div>
 
-      <div className='space-y-2'>
-        <Label>Descripción</Label>
-        <div className='border-input focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 field-sizing-content gap-0 overflow-hidden rounded-md border bg-transparent p-0 shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-3 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:ring-3'>
-          <Suspense fallback={<RichTextFieldSkeleton />}>
-            <RichTextField
-              value={data.descripcion || ''}
-              onChange={(value) => handleFieldChange('descripcion', value)}
-              placeholder='Describe la organización...'
-              minHeight='120px'
-            />
-          </Suspense>
-        </div>
-      </div>
+      <RichTextFieldContainer
+        id='descripcion'
+        label='Descripción'
+        value={data.descripcion || ''}
+        onChange={(value: string) => handleFieldChange('descripcion', value)}
+        placeholder='Describe la organización...'
+        minHeight='120px'
+        priority='high'
+      />
 
-      <div className='space-y-2'>
-        <Label>Misión</Label>
-        <div className='border-input focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 field-sizing-content gap-0 overflow-hidden rounded-md border bg-transparent p-0 shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-3 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:ring-3'>
-          <Suspense fallback={<RichTextFieldSkeleton />}>
-            <RichTextField
-              value={data.mision || ''}
-              onChange={(value) => handleFieldChange('mision', value)}
-              placeholder='Nuestra misión es...'
-            />
-          </Suspense>
-        </div>
-      </div>
+      <RichTextFieldContainer
+        id='mision'
+        label='Misión'
+        value={data.mision || ''}
+        onChange={(value: string) => handleFieldChange('mision', value)}
+        placeholder='Nuestra misión es...'
+        priority='medium'
+      />
 
-      <div className='space-y-2'>
-        <Label>Visión</Label>
-        <div className='border-input focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 field-sizing-content gap-0 overflow-hidden rounded-md border bg-transparent p-0 shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-3 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:ring-3'>
-          <Suspense fallback={<RichTextFieldSkeleton />}>
-            <RichTextField
-              value={data.vision || ''}
-              onChange={(value) => handleFieldChange('vision', value)}
-              placeholder='Nuestra visión es...'
-            />
-          </Suspense>
-        </div>
-      </div>
+      <RichTextFieldContainer
+        id='vision'
+        label='Visión'
+        value={data.vision || ''}
+        onChange={(value: string) => handleFieldChange('vision', value)}
+        placeholder='Nuestra visión es...'
+        priority='low'
+      />
     </div>
   )
 }

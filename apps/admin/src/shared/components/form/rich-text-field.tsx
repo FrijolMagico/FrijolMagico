@@ -7,8 +7,10 @@ import Placeholder from '@tiptap/extension-placeholder'
 import { TiptapToolbar } from './tiptap-toolbar'
 
 import '@/styles/tiptap.css'
+import Link from '@tiptap/extension-link'
 
 interface RichTextFieldProps {
+  id: string
   value: string
   onChange: (value: string) => void
   placeholder?: string
@@ -17,6 +19,7 @@ interface RichTextFieldProps {
 }
 
 export function RichTextField({
+  id,
   value,
   onChange,
   placeholder = 'Escribe aquí...',
@@ -29,7 +32,20 @@ export function RichTextField({
   const isExternalUpdateRef = useRef(false)
 
   const editor = useEditor({
-    extensions: [StarterKit, Placeholder.configure({ placeholder })],
+    extensions: [
+      StarterKit.configure({
+        heading: false,
+        codeBlock: false,
+        horizontalRule: false,
+        hardBreak: false
+      }),
+      Link.configure({
+        openOnClick: false,
+        autolink: true,
+        defaultProtocol: 'https'
+      }),
+      Placeholder.configure({ placeholder })
+    ],
     content: value || '',
     editable: !disabled,
     onUpdate: ({ editor }) => {
@@ -80,6 +96,7 @@ export function RichTextField({
     <EditorContext.Provider value={providerValue}>
       <TiptapToolbar editor={editor} disabled={disabled} />
       <EditorContent
+        id={id}
         editor={editor}
         className='dark:bg-input/30 placeholder:text-muted-foreground bg-transparent px-2.5 py-2 text-base transition-[color] outline-none disabled:opacity-50 md:text-sm'
         style={{ minHeight }}

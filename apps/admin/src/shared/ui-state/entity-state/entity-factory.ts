@@ -131,6 +131,10 @@ export function createEntityUIStateStore<T>(
     },
 
     addOne(entity, id): void {
+      // TODO: we need to manage the autoassign of an id to a new addition
+      // currently we changed the id value from stirng to a number
+      // so we need to manage the undefined value and create a new id value
+      // This actually break all the implementation of updates or add another.
       const entityId = entity[config.idField] as number | undefined
       const finalId = id ?? entityId
       const operation: EntityOperation<T> = {
@@ -140,6 +144,7 @@ export function createEntityUIStateStore<T>(
         timestamp: Date.now(),
         isOptimistic: !id && !entityId
       }
+      console.log(operation, entityId, finalId)
 
       set((state) => ({
         currentEdits: {

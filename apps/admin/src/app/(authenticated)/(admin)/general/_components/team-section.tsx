@@ -1,4 +1,3 @@
-import { Suspense } from 'react'
 import { Card, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Users } from 'lucide-react'
 import { TeamContent } from './team-content'
