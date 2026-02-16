@@ -4,6 +4,7 @@ import { generateKeyBetween } from 'fractional-indexing'
 import { useCatalogViewStore } from '../_store/catalog-view-store'
 import { useCatalogPaginationStore } from '../_store/catalog-pagination-store'
 import { CatalogArtist, CatalogFilters } from '../_types'
+import { useShallow } from 'zustand/react/shallow'
 
 function filterArtists(
   artists: CatalogArtist[],
