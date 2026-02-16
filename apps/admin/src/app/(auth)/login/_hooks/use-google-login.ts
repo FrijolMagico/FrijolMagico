@@ -18,8 +18,8 @@ export function useGoogleLogin() {
           callbackURL: '/dashboard'
         },
         {
-          onError: (ctx) => {
-            const message = ctx.error.message || 'Error al iniciar sesión'
+          onError: (_ctx) => {
+            const message = _ctx.error.message || 'Error al iniciar sesión'
             setError(message)
             setIsLoading(false)
           }
