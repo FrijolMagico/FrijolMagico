@@ -98,7 +98,7 @@ export function OrganizationForm({ initialData }: OrganizationFormProps) {
       </div>
 
       <div className='space-y-2'>
-        <Label>Vision</Label>
+        <Label>Visión</Label>
         <div className='border-input focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 field-sizing-content gap-0 overflow-hidden rounded-md border bg-transparent p-0 shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-3 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:ring-3'>
           <Suspense fallback={<RichTextFieldSkeleton />}>
             <RichTextField
