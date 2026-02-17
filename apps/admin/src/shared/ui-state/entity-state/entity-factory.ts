@@ -42,6 +42,9 @@ export function createEntityUIStateStore<T>(
       for (const op of allOps) {
         switch (op.type) {
           case 'ADD':
+            if (process.env.NODE_ENV === 'development' && entities[op.id]) {
+              console.warn(`[EntityState] Duplicate ID detected: ${op.id}`)
+            }
             entities[op.id] = op.entity!
             addedIds.add(op.id)
             deletedIds.delete(op.id)
