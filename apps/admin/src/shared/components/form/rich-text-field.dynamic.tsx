@@ -7,6 +7,8 @@ export interface RichTextFieldProps {
   id: string
   value: string
   onChange: (value: string) => void
+  onBlur?: () => void
+  ref?: React.Ref<HTMLDivElement>
   placeholder?: string
   disabled?: boolean
   minHeight?: string

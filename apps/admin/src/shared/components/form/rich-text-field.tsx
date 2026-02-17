@@ -13,6 +13,8 @@ interface RichTextFieldProps {
   id: string
   value: string
   onChange: (value: string) => void
+  onBlur?: () => void
+  ref?: React.Ref<HTMLDivElement>
   placeholder?: string
   disabled?: boolean
   minHeight?: string
@@ -22,6 +24,8 @@ export function RichTextField({
   id,
   value,
   onChange,
+  onBlur,
+  ref,
   placeholder = 'Escribe aquí...',
   disabled = false,
   minHeight = '200px'
@@ -48,6 +52,9 @@ export function RichTextField({
     ],
     content: value || '',
     editable: !disabled,
+    onBlur: ({ editor }) => {
+      onBlur?.()
+    },
     onUpdate: ({ editor }) => {
       // Skip propagating if this update came from external value change
       if (isExternalUpdateRef.current) {
@@ -94,13 +101,15 @@ export function RichTextField({
 
   return (
     <EditorContext.Provider value={providerValue}>
-      <TiptapToolbar editor={editor} disabled={disabled} />
-      <EditorContent
-        id={id}
-        editor={editor}
-        className='dark:bg-input/30 placeholder:text-muted-foreground bg-transparent px-2.5 py-2 text-base transition-[color] outline-none disabled:opacity-50 md:text-sm'
-        style={{ minHeight }}
-      />
+      <div ref={ref}>
+        <TiptapToolbar editor={editor} disabled={disabled} />
+        <EditorContent
+          id={id}
+          editor={editor}
+          className='dark:bg-input/30 placeholder:text-muted-foreground bg-transparent px-2.5 py-2 text-base transition-[color] outline-none disabled:opacity-50 md:text-sm'
+          style={{ minHeight }}
+        />
+      </div>
     </EditorContext.Provider>
   )
 }
