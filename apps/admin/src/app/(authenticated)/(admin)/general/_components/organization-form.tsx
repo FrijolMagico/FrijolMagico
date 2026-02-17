@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
 import {
   useOrganizationActions,
   useOrganizationEffectiveData
@@ -8,7 +8,9 @@ import {
 import { RawOrganization } from '../_types'
 import { Label } from '@/shared/components/ui/label'
 import { Input } from '@/shared/components/ui/input'
-import { RichTextFieldContainer } from '@/shared/components/form/rich-text-field-container'
+import { RichTextFieldDynamic } from '@/shared/components/form/rich-text-field.dynamic'
+import { RichTextFieldSkeleton } from '@/shared/components/form/rich-text-field.skeleton'
+import { RichTextFieldErrorBoundary } from '@/shared/components/form/rich-text-field-error'
 
 interface OrganizationFormProps {
   initialData: RawOrganization
@@ -70,33 +72,48 @@ export function OrganizationForm({ initialData }: OrganizationFormProps) {
         </div>
       </div>
 
-      <RichTextFieldContainer
-        id='descripcion'
-        label='Descripción'
-        value={data.descripcion || ''}
-        onChange={(value: string) => handleFieldChange('descripcion', value)}
-        placeholder='Describe la organización...'
-        minHeight='120px'
-        priority='high'
-      />
+      <div className='space-y-2'>
+        <Label>Descripción</Label>
+        <RichTextFieldErrorBoundary>
+          <Suspense fallback={<RichTextFieldSkeleton />}>
+            <RichTextFieldDynamic
+              id='descripcion'
+              value={data.descripcion || ''}
+              onChange={(value: string) => handleFieldChange('descripcion', value)}
+              placeholder='Describe la organización...'
+              minHeight='120px'
+            />
+          </Suspense>
+        </RichTextFieldErrorBoundary>
+      </div>
 
-      <RichTextFieldContainer
-        id='mision'
-        label='Misión'
-        value={data.mision || ''}
-        onChange={(value: string) => handleFieldChange('mision', value)}
-        placeholder='Nuestra misión es...'
-        priority='medium'
-      />
+      <div className='space-y-2'>
+        <Label>Misión</Label>
+        <RichTextFieldErrorBoundary>
+          <Suspense fallback={<RichTextFieldSkeleton />}>
+            <RichTextFieldDynamic
+              id='mision'
+              value={data.mision || ''}
+              onChange={(value: string) => handleFieldChange('mision', value)}
+              placeholder='Nuestra misión es...'
+            />
+          </Suspense>
+        </RichTextFieldErrorBoundary>
+      </div>
 
-      <RichTextFieldContainer
-        id='vision'
-        label='Visión'
-        value={data.vision || ''}
-        onChange={(value: string) => handleFieldChange('vision', value)}
-        placeholder='Nuestra visión es...'
-        priority='low'
-      />
+      <div className='space-y-2'>
+        <Label>Visión</Label>
+        <RichTextFieldErrorBoundary>
+          <Suspense fallback={<RichTextFieldSkeleton />}>
+            <RichTextFieldDynamic
+              id='vision'
+              value={data.vision || ''}
+              onChange={(value: string) => handleFieldChange('vision', value)}
+              placeholder='Nuestra visión es...'
+            />
+          </Suspense>
+        </RichTextFieldErrorBoundary>
+      </div>
     </div>
   )
 }
