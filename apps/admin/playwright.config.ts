@@ -2,18 +2,18 @@ import { defineConfig, devices } from '@playwright/test'
 import { resolve } from 'path'
 
 export default defineConfig({
-  testDir: './__tests__/e2e',
+  testDir: './tests/e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: [
-    ['html', { outputFolder: './__tests__/e2e/_reports/playwright-report' }]
+    ['html', { outputFolder: './tests/e2e/_reports/playwright-report' }]
   ],
-  outputDir: './__tests__/e2e/_reports/test-results',
+  outputDir: './tests/e2e/_reports/test-results',
 
   // Global setup that runs before all tests
-  globalSetup: resolve(__dirname, '__tests__/e2e/global.setup.ts'),
+  globalSetup: resolve(__dirname, 'tests/e2e/global.setup.ts'),
 
   projects: [
     // Authenticated tests use the saved auth state from global setup
@@ -21,14 +21,7 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        storageState: resolve(__dirname, '__tests__/e2e/.auth/user.json')
-      }
-    },
-    {
-      name: 'firefox',
-      use: {
-        ...devices['Desktop Firefox'],
-        storageState: resolve(__dirname, '__tests__/e2e/.auth/user.json')
+        storageState: resolve(__dirname, 'tests/e2e/.auth/user.json')
       }
     }
   ],
