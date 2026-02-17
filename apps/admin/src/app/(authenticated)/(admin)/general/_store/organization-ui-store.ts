@@ -1,27 +1,35 @@
 import { createEntityUIStateStore } from '@/shared/ui-state/entity-state'
 import type { EntityOperation } from '@/shared/ui-state/entity-state'
+import { writeEntry } from '@/shared/change-journal/change-journal'
 import { Organization } from '../_types'
 import { ORGANIZATION_SECTION_NAME } from '../_constants'
 
 /**
- * Función placeholder para escribir al journal.
+ * Escribe cambios de Organización al change-journal.
  *
- * TODO: Implementar conectores reales cuando el sistema de journal esté listo.
- * Por ahora solo loguea los cambios a consola para debugging.
+ * Mapea EntityOperations a entradas de journal con estructura:
+ * - section: 'organizacion' (scope lógico)
+ * - scopeKey: 'organizacion:org-123'
+ * - payload: Operación transformada a journal format
  *
  * @param operation - Operación de entidad (ADD, UPDATE, DELETE)
  */
 async function writeOrganizationJournal(
   operation: EntityOperation<Organization>
 ) {
-  console.log('[organizationUIStore] Writing to journal:', operation)
+  const section = ORGANIZATION_SECTION_NAME
+  const scopeKey = `${section}:${operation.id}`
 
-  // TODO: Conectar con /shared/change-journal cuando esté implementado
-  // await writeChangeEntry({
-  //   section: 'organizacion',
-  //   action: operation.type,
-  //   payload: operation
-  // })
+  if (operation.type === 'ADD' && operation.data) {
+    await writeEntry(section, scopeKey, {
+      op: 'set',
+      value: operation.data as Organization
+    })
+  } else if (operation.type === 'UPDATE' && operation.data) {
+    await writeEntry(section, scopeKey, { op: 'patch', value: operation.data })
+  } else if (operation.type === 'DELETE') {
+    await writeEntry(section, scopeKey, { op: 'unset' })
+  }
 }
 
 /**
@@ -98,7 +106,7 @@ async function writeOrganizationJournal(
  * commitCurrentEdits()
  *    │
  *    ├──> writeOrganizationJournal(operation)
- *    │       └── Console.log (por ahora)
+ *    │       └── Escribe a change-journal
  *    │
  *    └──> LAYER 3 ──> LAYER 2 (appliedChanges)
  * ```

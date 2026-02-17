@@ -1,0 +1,214 @@
+/**
+ * @fileoverview change-journal.ts - Public API for Change Journal
+ *
+ * High-level API for writing and reading journal entries. This is the only
+ * entry point for the Change Journal system - all other modules are internal.
+ *
+ * Key responsibilities:
+ * - Write changes to the journal (writeEntry)
+ * - Read latest entries ordered by timestamp (getLatestEntries)
+ * - Read and clear entries atomically (consumeLatestEntries)
+ * - Check if sections have pending changes (hasEntries)
+ * - Clear sections after successful sync (clearSection)
+ *
+ * Architecture:
+ * - Singleton JournalStorage instance (one IndexedDB connection)
+ * - Auto-generates entryId and clientId UUIDs
+ * - Orders entries by timestamp DESC for consumption
+ *
+ * @connection storage.ts - JournalStorage class (internal)
+ * @connection types.ts - JournalEntry, JournalPayload (internal)
+ * @connection constants.ts - CURRENT_SCHEMA_VERSION (internal)
+ */
+
+import { CURRENT_SCHEMA_VERSION } from './lib/constants'
+import { JournalStorage } from './lib/storage'
+import type { JournalEntry, JournalPayload } from './lib/types'
+
+/**
+ * Singleton storage instance
+ * Created once and reused across all journal operations
+ * Ensures single IndexedDB connection per app lifecycle
+ */
+const storage = new JournalStorage()
+
+/**
+ * Write a change entry to the journal
+ *
+ * Creates a new journal entry with auto-generated IDs and persists it to IndexedDB.
+ * All changes go through this function before being applied to the UI state.
+ *
+ * @param section - Section name (e.g., 'organizacion', 'equipo', 'catalogo')
+ * @param scopeKey - Deduplication key (e.g., 'organizacion:org-123:name')
+ * @param payload - Operation payload (set, unset, or patch)
+ * @param meta - Optional metadata (sessionId)
+ * @returns Promise that resolves when entry is written
+ *
+ * @example
+ * // Write a complete entity replacement
+ * await writeEntry(
+ *   'organizacion',
+ *   'organizacion:org-123',
+ *   { op: 'set', value: { id: 'org-123', nombre: 'Nueva Org' } }
+ * )
+ *
+ * @example
+ * // Write a field update
+ * await writeEntry(
+ *   'organizacion',
+ *   'organizacion:org-123:nombre',
+ *   { op: 'set', value: 'Nombre Actualizado' }
+ * )
+ *
+ * @example
+ * // Delete an entity
+ * await writeEntry(
+ *   'organizacion',
+ *   'organizacion:org-123',
+ *   { op: 'unset' }
+ * )
+ *
+ * @example
+ * // Partial update (patch)
+ * await writeEntry(
+ *   'organizacion',
+ *   'organizacion:org-123',
+ *   { op: 'patch', value: { nombre: 'Nuevo Nombre' } }
+ * )
+ */
+export async function writeEntry(
+  section: string,
+  scopeKey: string,
+  payload: JournalPayload,
+  meta?: { sessionId?: string }
+): Promise<void> {
+  const entry: JournalEntry = {
+    entryId: crypto.randomUUID(),
+    schemaVersion: CURRENT_SCHEMA_VERSION,
+    section,
+    scopeKey,
+    payload,
+    timestampMs: Date.now(),
+    clientId: crypto.randomUUID(),
+    sessionId: meta?.sessionId
+  }
+
+  await storage.writeEntry(entry)
+}
+
+/**
+ * Get latest entries for a section, ordered by timestamp DESC (newest first)
+ *
+ * Returns all journal entries for a section without clearing them.
+ * Useful for preview/inspection before sync.
+ *
+ * @param section - Section name to query
+ * @returns Promise<JournalEntry[]> - Entries sorted newest to oldest
+ *
+ * @example
+ * const entries = await getLatestEntries('organizacion')
+ * console.log(`Found ${entries.length} pending changes`)
+ * entries.forEach(entry => {
+ *   console.log(`${entry.scopeKey}: ${entry.payload.op}`)
+ * })
+ */
+export async function getLatestEntries(
+  section: string
+): Promise<JournalEntry[]> {
+  const entries = await storage.getEntries(section)
+
+  // Storage returns ASC, reverse for DESC (newest first)
+  return entries.reverse()
+}
+
+/**
+ * Consume latest entries - read AND clear atomically
+ *
+ * Returns all entries for a section ordered newest to oldest, then clears the section.
+ * This is the primary function for syncing changes to the server - ensures entries
+ * are only processed once.
+ *
+ * CRITICAL: Use this for real persistence operations. Do NOT use getLatestEntries
+ * followed by clearSection separately - race conditions can cause duplicate syncs.
+ *
+ * @param section - Section name to consume
+ * @returns Promise<JournalEntry[]> - Entries that were cleared (newest first)
+ *
+ * @example
+ * // Typical sync flow
+ * const entries = await consumeLatestEntries('organizacion')
+ * if (entries.length > 0) {
+ *   try {
+ *     await syncToServer(entries)
+ *     console.log(`Synced ${entries.length} changes`)
+ *   } catch (error) {
+ *     // Re-write entries if sync failed
+ *     for (const entry of entries) {
+ *       await writeEntry(entry.section, entry.scopeKey, entry.payload)
+ *     }
+ *   }
+ * }
+ */
+export async function consumeLatestEntries(
+  section: string
+): Promise<JournalEntry[]> {
+  // Get entries first (ASC from storage)
+  const entries = await storage.getEntries(section)
+
+  // Clear the section
+  await storage.clearSection(section)
+
+  // Return newest first
+  return entries.reverse()
+}
+
+/**
+ * Check if a section has any pending entries
+ *
+ * Useful for showing dirty indicators in the UI or determining
+ * if a sync operation is needed.
+ *
+ * @param section - Section name to check
+ * @returns Promise<boolean> - True if section has entries
+ *
+ * @example
+ * const isDirty = await hasEntries('organizacion')
+ * if (isDirty) {
+ *   showSaveButton()
+ * }
+ *
+ * @example
+ * // Check before navigation
+ * if (await hasEntries('organizacion')) {
+ *   const confirmLeave = confirm('You have unsaved changes. Leave anyway?')
+ *   if (!confirmLeave) return
+ * }
+ */
+export async function hasEntries(section: string): Promise<boolean> {
+  return storage.hasEntries(section)
+}
+
+/**
+ * Clear all entries for a section
+ *
+ * Use after successful sync to server. Does NOT return the cleared entries -
+ * use consumeLatestEntries if you need the entries.
+ *
+ * @param section - Section name to clear
+ * @returns Promise<void>
+ *
+ * @example
+ * // After successful sync
+ * await syncToServer(entries)
+ * await clearSection('organizacion')
+ * console.log('Section cleared after successful sync')
+ *
+ * @example
+ * // Discard all pending changes (danger!)
+ * if (confirm('Discard all unsaved changes?')) {
+ *   await clearSection('organizacion')
+ * }
+ */
+export async function clearSection(section: string): Promise<void> {
+  await storage.clearSection(section)
+}

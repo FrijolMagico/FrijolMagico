@@ -1,19 +1,33 @@
 import { createEntityUIStateStore } from '@/shared/ui-state/entity-state'
 import type { EntityOperation } from '@/shared/ui-state/entity-state'
+import { writeEntry } from '@/shared/change-journal/change-journal'
 import { TeamMember } from '../_types'
 import { TEAM_SECTION_NAME } from '../_constants'
 
 /**
- * Función para escribir operaciones del equipo al journal.
+ * Escribe cambios de miembros del equipo al change-journal.
  *
- * TODO: Conectar con el sistema de change-journal cuando esté implementado.
- * Por ahora solo loguea las operaciones a consola para debugging.
+ * Mapea EntityOperations a entradas de journal con estructura:
+ * - section: 'equipo' (scope lógico)
+ * - scopeKey: 'equipo:member-123'
+ * - payload: Operación transformada a journal format
  *
  * @param operation - Operación individual sobre un TeamMember (ADD/UPDATE/DELETE)
  */
 async function writeTeamJournal(operation: EntityOperation<TeamMember>) {
-  console.log('[teamUIStore] Writing to journal:', operation)
-  // TODO: Conectar con /shared/change-journal cuando esté implementado
+  const section = TEAM_SECTION_NAME
+  const scopeKey = `${section}:${operation.id}`
+
+  if (operation.type === 'ADD' && operation.data) {
+    await writeEntry(section, scopeKey, {
+      op: 'set',
+      value: operation.data as TeamMember
+    })
+  } else if (operation.type === 'UPDATE' && operation.data) {
+    await writeEntry(section, scopeKey, { op: 'patch', value: operation.data })
+  } else if (operation.type === 'DELETE') {
+    await writeEntry(section, scopeKey, { op: 'unset' })
+  }
 }
 
 /**

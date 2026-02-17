@@ -78,7 +78,7 @@ export function TeamTable({ initialData }: TeamTableProps) {
       </TableHeader>
       <TableBody>
         {equipo.map((member, index) => (
-          <TableRow key={String(member.id) + index}>
+          <TableRow key={member.id}>
             <TableCell>
               <Input
                 value={member.nombre}
