@@ -78,6 +78,7 @@ export function createEntityUIStateStore<T>(
     remoteData: null,
     appliedChanges: null,
     currentEdits: null,
+    nextTempId: -1,
     isLoading: false,
     error: null,
 
@@ -131,25 +132,30 @@ export function createEntityUIStateStore<T>(
     },
 
     addOne(entity, id): void {
-      // TODO: we need to manage the autoassign of an id to a new addition
-      // currently we changed the id value from stirng to a number
-      // so we need to manage the undefined value and create a new id value
-      // This actually break all the implementation of updates or add another.
       const entityId = entity[config.idField] as number | undefined
       const finalId = id ?? entityId
+
+      let operationId: number
+      if (finalId === undefined) {
+        operationId = get().nextTempId
+      } else {
+        operationId = finalId
+      }
+
       const operation: EntityOperation<T> = {
         type: 'ADD',
-        id: finalId ?? -1,
-        entity: { ...entity, [config.idField]: finalId } as T,
+        id: operationId,
+        entity: { ...entity, [config.idField]: operationId } as T,
         timestamp: Date.now(),
-        isOptimistic: !id && !entityId
+        isOptimistic: id === undefined && entityId === undefined
       }
-      console.log(operation, entityId, finalId)
 
       set((state) => ({
         currentEdits: {
           operations: [...(state.currentEdits?.operations ?? []), operation]
-        }
+        },
+        nextTempId:
+          finalId === undefined ? state.nextTempId - 1 : state.nextTempId
       }))
     },
 
@@ -196,22 +202,27 @@ export function createEntityUIStateStore<T>(
     },
 
     addMany(entities: T[]): void {
+      let currentNextTempId = get().nextTempId
       const operations: EntityOperation<T>[] = entities.map((entity) => {
         const entityId = entity[config.idField] as number | undefined
-        const id = entityId ?? -1
+        const id: number = entityId ?? currentNextTempId
+        if (entityId === undefined) {
+          currentNextTempId--
+        }
         return {
           type: 'ADD',
           id,
           entity: { ...entity, [config.idField]: id } as T,
           timestamp: Date.now(),
-          isOptimistic: !entityId
+          isOptimistic: entityId === undefined
         }
       })
 
       set((state) => ({
         currentEdits: {
           operations: [...(state.currentEdits?.operations ?? []), ...operations]
-        }
+        },
+        nextTempId: currentNextTempId
       }))
     },
 
@@ -339,6 +350,7 @@ export function createEntityUIStateStore<T>(
         remoteData: null,
         appliedChanges: null,
         currentEdits: null,
+        nextTempId: -1,
         isLoading: false,
         error: null
       })
