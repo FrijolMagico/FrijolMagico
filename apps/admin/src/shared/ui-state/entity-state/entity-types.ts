@@ -141,6 +141,11 @@ export interface EntityUIState<T> {
   currentEdits: CurrentEdits<T> | null
 
   /**
+   * Counter for auto-incrementing negative temporary IDs (-1, -2, -3...)
+   */
+  nextTempId: number
+
+  /**
    * MÉTODO COMPUTED: Calcula effective data mergeando las 3 capas
    */
   getEffectiveData(): EntityState<T>
