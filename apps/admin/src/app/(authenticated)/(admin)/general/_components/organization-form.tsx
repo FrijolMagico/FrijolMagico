@@ -5,6 +5,7 @@ import {
   useOrganizationActions,
   useOrganizationEffectiveData
 } from '../_hooks/use-organization-ui'
+import { useAutoJournal } from '@/shared/ui-state/entity-state/hooks/use-auto-journal'
 import { RawOrganization } from '../_types'
 import { Label } from '@/shared/components/ui/label'
 import { Input } from '@/shared/components/ui/input'
@@ -29,31 +30,17 @@ interface OrganizationFormProps {
  * 4. **Display** → `effectiveData` desde `selectOne()`
  */
 export function OrganizationForm({ initialData }: OrganizationFormProps) {
-  const { set, update } = useOrganizationActions()
+  const { set, update, commitCurrentEdits } = useOrganizationActions()
   const effectiveData = useOrganizationEffectiveData()
+
+  const { handleChange, handleBlur } = useAutoJournal({
+    effectiveData,
+    actions: { update, commitCurrentEdits }
+  })
 
   useEffect(() => {
     set(initialData)
   }, [initialData, set])
-
-  // TODO: avoid magic strings, instead use enums or constants objects in the constans/configs file for this scope
-  const handleFieldChange = async (
-    field: 'nombre' | 'descripcion' | 'mision' | 'vision',
-    value: string
-  ) => {
-    // TODO: implement in this level the update only if actually change anything
-    console.log({
-      updating: `${field}: ${value}`,
-      prevValue: effectiveData?.[field] || initialData[field]
-    })
-
-    if (value === initialData[field]) {
-      console.log('Data is exactly the original, no changes will made.')
-      return
-    }
-
-    update({ [field]: value })
-  }
 
   const data = effectiveData || initialData
 
@@ -65,7 +52,8 @@ export function OrganizationForm({ initialData }: OrganizationFormProps) {
           <Input
             id='nombre'
             value={data.nombre || ''}
-            onChange={(e) => handleFieldChange('nombre', e.currentTarget.value)}
+            onChange={(e) => handleChange('nombre', e.currentTarget.value)}
+            onBlur={() => handleBlur('nombre', data.nombre || '')}
             placeholder='Frijol Mágico'
             className='w-full'
           />
@@ -79,7 +67,8 @@ export function OrganizationForm({ initialData }: OrganizationFormProps) {
             <RichTextFieldDynamic
               id='descripcion'
               value={data.descripcion || ''}
-              onChange={(value: string) => handleFieldChange('descripcion', value)}
+              onChange={(value: string) => handleChange('descripcion', value)}
+              onBlur={() => handleBlur('descripcion', data.descripcion || '')}
               placeholder='Describe la organización...'
               minHeight='120px'
             />
@@ -94,7 +83,8 @@ export function OrganizationForm({ initialData }: OrganizationFormProps) {
             <RichTextFieldDynamic
               id='mision'
               value={data.mision || ''}
-              onChange={(value: string) => handleFieldChange('mision', value)}
+              onChange={(value: string) => handleChange('mision', value)}
+              onBlur={() => handleBlur('mision', data.mision || '')}
               placeholder='Nuestra misión es...'
             />
           </Suspense>
@@ -108,7 +98,8 @@ export function OrganizationForm({ initialData }: OrganizationFormProps) {
             <RichTextFieldDynamic
               id='vision'
               value={data.vision || ''}
-              onChange={(value: string) => handleFieldChange('vision', value)}
+              onChange={(value: string) => handleChange('vision', value)}
+              onBlur={() => handleBlur('vision', data.vision || '')}
               placeholder='Nuestra visión es...'
             />
           </Suspense>
