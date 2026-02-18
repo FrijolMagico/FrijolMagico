@@ -9,24 +9,39 @@ import { ARTIST_SECTION_NAME } from '../_constants'
  *
  * Mapea EntityOperations a entradas de journal con estructura:
  * - section: 'artistas' (scope lógico)
- * - scopeKey: 'artistas:artist-123'
+ * - scopeKey: Para ADD/DELETE: 'artistas:artist-123'
+ * - scopeKey: Para UPDATE: 'artistas:artist-123:field'
  * - payload: Operación transformada a journal format
  *
  * @param operation - Operación de entidad (ADD/UPDATE/DELETE)
  */
-async function writeArtistJournal(operation: EntityOperation<CatalogArtist>) {
+async function writeArtistJournal(
+  operation: EntityOperation<CatalogArtist>
+): Promise<void> {
   const section = ARTIST_SECTION_NAME
-  const scopeKey = `${section}:${operation.id}`
 
-  if (operation.type === 'ADD' && operation.data) {
-    await writeEntry(section, scopeKey, {
-      op: 'set',
-      value: operation.data as CatalogArtist
-    })
-  } else if (operation.type === 'UPDATE' && operation.data) {
-    await writeEntry(section, scopeKey, { op: 'patch', value: operation.data })
-  } else if (operation.type === 'DELETE') {
-    await writeEntry(section, scopeKey, { op: 'unset' })
+  switch (operation.type) {
+    case 'ADD':
+      await writeEntry(section, `${section}:${operation.id}`, {
+        op: 'set',
+        value: operation.entity
+      })
+      break
+
+    case 'UPDATE':
+      if (operation.data) {
+        for (const [field, value] of Object.entries(operation.data)) {
+          await writeEntry(section, `${section}:${operation.id}:${field}`, {
+            op: 'set',
+            value
+          })
+        }
+      }
+      break
+
+    case 'DELETE':
+      await writeEntry(section, `${section}:${operation.id}`, { op: 'unset' })
+      break
   }
 }
 
