@@ -1,11 +1,4 @@
-import {
-  Building2,
-  Calendar,
-  Home,
-  Palette,
-  Settings,
-  Users
-} from 'lucide-react'
+import { Building2, Home, Palette, Settings } from 'lucide-react'
 
 export const navigation = [
   {
@@ -19,39 +12,27 @@ export const navigation = [
     icon: Building2
   },
   {
-    title: 'Catálogo',
+    title: 'Artistas',
     icon: Palette,
-    href: '/catalogo'
-    // items: [
-    //   {
-    //     title: 'Artistas',
-    //     href: '/catalogo/artistas'
-    //   }
-    // ]
-  },
-  {
-    title: 'Eventos',
-    icon: Calendar,
-    href: '/eventos',
+    href: '/artistas',
     items: [
       {
-        title: 'Festivales',
-        href: '/eventos/festivales'
+        title: 'Listado',
+        href: '/artistas'
       },
       {
-        title: 'Ediciones',
-        href: '/eventos/ediciones'
+        title: 'Catálogo',
+        href: '/artistas/catalogo'
+      },
+      {
+        title: 'Histórico',
+        href: '/artistas/historico'
       }
     ]
   },
   {
-    title: 'Usuarios',
-    href: '/usuarios',
-    icon: Users
-  },
-  {
     title: 'Configuración',
-    href: '/configuracion',
-    icon: Settings
+    icon: Settings,
+    href: '/config'
   }
 ]

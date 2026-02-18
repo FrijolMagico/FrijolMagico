@@ -170,3 +170,38 @@ export async function hasEntries(section: string): Promise<boolean> {
 export async function clearSection(section: string): Promise<void> {
   await storage.clearSection(section)
 }
+
+/**
+ * Get all sections that have pending entries, with entry counts
+ *
+ * Useful for showing which sections have unsaved changes — particularly
+ * for crash recovery notification on app mount.
+ *
+ * @returns Promise<Array<{ section: string; count: number }>> - Sections with pending entries
+ *
+ * @example
+ * // Show draft recovery notification
+ * const sections = await getSectionsWithChanges()
+ * if (sections.length > 0) {
+ *   showRecoveryNotification(sections)
+ * }
+ *
+ * @example
+ * // List pending sections
+ * const sections = await getSectionsWithChanges()
+ * sections.forEach(({ section, count }) => {
+ *   console.log(`${section}: ${count} pending changes`)
+ * })
+ */
+export async function getSectionsWithChanges(): Promise<
+  Array<{ section: string; count: number }>
+> {
+  const sections = await storage.getAllSections()
+  const results = await Promise.all(
+    sections.map(async (section) => {
+      const entries = await storage.getEntries(section)
+      return { section, count: entries.length }
+    })
+  )
+  return results
+}

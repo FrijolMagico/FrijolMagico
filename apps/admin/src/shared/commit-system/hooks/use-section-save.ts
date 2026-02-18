@@ -1,12 +1,13 @@
-import { useState, useTransition } from 'react'
+mport { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import type { SectionName, SaveResult } from '../lib/types'
 import type { EntityUIStateStore } from '@/shared/ui-state/entity-state'
 import { saveOrganizacion } from '../actions/save-organizacion.action'
-import { saveCatalogo } from '../actions/save-catalogo.action'
+import { saveCatalogo } from '../../../app/(authenticated)/(admin)/catalogo/_actions/save-catalogo.action'
 import { saveArtista } from '../actions/save-artista.action'
 import { saveEvento } from '../actions/save-evento.action'
+import { useState, useTransition } from 'react'
 
 /**
  * Hook to manage UI logic for saving a section.
@@ -21,7 +22,7 @@ export function useSectionSave(
   store?: EntityUIStateStore<any>
 ) {
   const [isPending, startTransition] = useTransition()
-  const [result, setResult] = useState<SaveResult | null>(null)
+  const [result, setResult] = useState()<SaveResult | null>(null)
   const router = useRouter()
 
   const save = () => {

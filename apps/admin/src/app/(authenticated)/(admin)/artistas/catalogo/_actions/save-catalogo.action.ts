@@ -5,12 +5,22 @@ import { eq } from 'drizzle-orm'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { clearSection } from '@/shared/change-journal/change-journal'
-import { getLatestEntries } from '../lib/journal-reader'
-import { sortOperations, validateOperations } from '../lib/operation-sorter'
-import { handleServerActionError, logServerError } from '../lib/error-handler'
-import { createIdMapping, isTempId } from '../lib/id-mapper'
-import { mapToCatalogoArtistaInput } from '../mappers/catalogo.mapper'
-import type { SaveResult, IdMapping, SectionName } from '../lib/types'
+import { getLatestEntries } from '@/shared/commit-system/lib/journal-reader'
+import {
+  sortOperations,
+  validateOperations
+} from '@/shared/commit-system/lib/operation-sorter'
+import {
+  handleServerActionError,
+  logServerError
+} from '@/shared/commit-system/lib/error-handler'
+import { createIdMapping, isTempId } from '@/shared/commit-system/lib/id-mapper'
+import { mapToCatalogoArtistaInput } from '@/shared/commit-system/mappers/catalogo.mapper'
+import type {
+  SaveResult,
+  IdMapping,
+  SectionName
+} from '@/shared/commit-system/lib/types'
 
 export async function saveCatalogo(section: SectionName): Promise<SaveResult> {
   if (section !== 'catalogo') {
@@ -78,8 +88,8 @@ export async function saveCatalogo(section: SectionName): Promise<SaveResult> {
 
     await clearSection(section)
 
-    revalidateTag('catalogo', 'default')
-    revalidateTag('artista', 'default')
+    revalidateTag('catalogo', 'max')
+    revalidateTag('artista', 'max')
 
     return {
       success: true,
