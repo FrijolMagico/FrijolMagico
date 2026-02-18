@@ -8,7 +8,6 @@ import type {
   CurrentEdits
 } from './entity-types'
 import { normalizeEntities } from './entity-utils'
-import { writeEntry } from '@/shared/change-journal/change-journal'
 
 import { memoize } from 'proxy-memoize'
 
@@ -16,7 +15,6 @@ export interface CreateEntityUIStateStoreConfig<T> {
   sectionName: string
   idField: keyof T
   isSingleton?: boolean
-  journalSection?: string
   writeToJournal?: (operation: EntityOperation<T>) => Promise<void>
 }
 
@@ -300,50 +298,7 @@ export function createEntityUIStateStore<T>(
       const { currentEdits } = get()
       if (!currentEdits || currentEdits.operations.length === 0) return
 
-      // Write to journal using new journalSection config
-      if (config.journalSection) {
-        for (const operation of currentEdits.operations) {
-          try {
-            switch (operation.type) {
-              case 'ADD':
-                // op: 'set' with complete entity
-                await writeEntry(
-                  config.journalSection,
-                  `${config.journalSection}:${operation.id}`,
-                  { op: 'set', value: operation.entity }
-                )
-                break
-
-              case 'UPDATE':
-                // op: 'patch' with partial data
-                if (operation.data) {
-                  for (const [field, value] of Object.entries(operation.data)) {
-                    await writeEntry(
-                      config.journalSection,
-                      `${config.journalSection}:${operation.id}:${field}`,
-                      { op: 'set', value }
-                    )
-                  }
-                }
-                break
-
-              case 'DELETE':
-                // op: 'unset' for deletion
-                await writeEntry(
-                  config.journalSection,
-                  `${config.journalSection}:${operation.id}`,
-                  { op: 'unset' }
-                )
-                break
-            }
-          } catch (error) {
-            // Graceful degradation: log error but don't block commit
-            console.error(`[EntityFactory] Failed to write to journal:`, error)
-          }
-        }
-      }
-
-      // Backwards compatibility: use legacy writeToJournal if provided
+      // Use writeToJournal callback for persistence
       if (config.writeToJournal) {
         for (const operation of currentEdits.operations) {
           await config.writeToJournal(operation)
