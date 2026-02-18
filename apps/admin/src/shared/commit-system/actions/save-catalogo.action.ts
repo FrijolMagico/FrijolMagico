@@ -1,0 +1,98 @@
+'use server'
+
+import { revalidateTag } from 'next/cache'
+import { eq } from 'drizzle-orm'
+import { db } from '@frijolmagico/database/orm'
+import { artist } from '@frijolmagico/database/schema'
+import { clearSection } from '@/shared/change-journal/change-journal'
+import { getLatestEntries } from '../lib/journal-reader'
+import { sortOperations, validateOperations } from '../lib/operation-sorter'
+import { handleServerActionError, logServerError } from '../lib/error-handler'
+import { createIdMapping, isTempId } from '../lib/id-mapper'
+import { mapToCatalogoArtistaInput } from '../mappers/catalogo.mapper'
+import type { SaveResult, IdMapping, SectionName } from '../lib/types'
+
+export async function saveCatalogo(section: SectionName): Promise<SaveResult> {
+  if (section !== 'catalogo') {
+    return {
+      success: false,
+      error: 'Invalid section. Expected "catalogo"',
+      errorCode: 'VALIDATION_ERROR'
+    }
+  }
+
+  try {
+    const entries = await getLatestEntries(section)
+
+    if (entries.length === 0) {
+      return {
+        success: true,
+        mappings: [],
+        processedCount: 0
+      }
+    }
+
+    const validation = validateOperations(entries)
+    if (!validation.valid) {
+      return {
+        success: false,
+        error: `Operation validation failed: ${validation.errors.join(', ')}`,
+        errorCode: 'VALIDATION_ERROR'
+      }
+    }
+
+    const { deletes, updates } = sortOperations(entries)
+    const mappings: IdMapping[] = []
+
+    await db.transaction(async (tx) => {
+      for (const entry of deletes) {
+        const entityId = entry.scopeKey.split(':')[1]
+        if (!entityId || isTempId(entityId)) continue
+
+        await tx
+          .delete(artist.catalogoArtista)
+          .where(eq(artist.catalogoArtista.id, Number.parseInt(entityId, 10)))
+      }
+
+      for (const entry of updates) {
+        const input = mapToCatalogoArtistaInput(entry)
+        const entityId = entry.scopeKey.split(':')[1]
+
+        if (input.id && !isTempId(entityId || '')) {
+          await tx
+            .update(artist.catalogoArtista)
+            .set(input)
+            .where(eq(artist.catalogoArtista.id, input.id))
+        } else {
+          const [inserted] = await tx
+            .insert(artist.catalogoArtista)
+            .values(input)
+            .returning({ id: artist.catalogoArtista.id })
+
+          if (inserted && entityId) {
+            mappings.push(createIdMapping(entityId, inserted.id, 'catalogo'))
+          }
+        }
+      }
+    })
+
+    await clearSection(section)
+
+    revalidateTag('catalogo', 'default')
+    revalidateTag('artista', 'default')
+
+    return {
+      success: true,
+      mappings,
+      processedCount: entries.length
+    }
+  } catch (error) {
+    logServerError(error, 'saveCatalogo')
+    const handled = handleServerActionError(error)
+    return {
+      success: false,
+      error: handled.userMessage,
+      errorCode: handled.errorCode as SaveResult['errorCode']
+    }
+  }
+}

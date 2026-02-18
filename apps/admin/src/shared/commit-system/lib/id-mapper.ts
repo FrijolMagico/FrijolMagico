@@ -1,0 +1,81 @@
+import type { IdMapping, SectionName } from './types'
+
+/**
+ * Genera un ID temporal único con formato 'temp-{uuid}'
+ * Se usa para entidades creadas localmente antes de ser guardadas en DB
+ */
+export function generateTempId(): string {
+  return `temp-${crypto.randomUUID()}`
+}
+
+/**
+ * Crea un mapping entre un ID temporal y su ID real asignado por la DB
+ */
+export function createIdMapping(
+  tempId: string,
+  realId: number,
+  section: SectionName
+): IdMapping {
+  return {
+    tempId,
+    realId,
+    section
+  }
+}
+
+/**
+ * Valida que un ID sea temporal
+ */
+export function isTempId(id: string): boolean {
+  return id.startsWith('temp-') && id.length > 5
+}
+
+/**
+ * Extrae el UUID de un ID temporal
+ * Ej: 'temp-550e8400-e29b-41d4-a716-446655440000' → '550e8400-e29b-41d4-a716-446655440000'
+ */
+export function extractUuidFromTempId(tempId: string): string | null {
+  if (!isTempId(tempId)) return null
+  return tempId.slice(5)
+}
+
+/**
+ * Valida que todos los mappings sean válidos
+ */
+export function validateIdMappings(mappings: IdMapping[]): boolean {
+  return mappings.every((mapping) => {
+    const { tempId, realId, section } = mapping
+    const validSections: SectionName[] = [
+      'organizacion',
+      'catalogo',
+      'artista',
+      'evento'
+    ]
+    return (
+      isTempId(tempId) &&
+      typeof realId === 'number' &&
+      realId > 0 &&
+      validSections.includes(section)
+    )
+  })
+}
+
+/**
+ * Agrupa mappings por sección
+ */
+export function groupMappingsBySection(
+  mappings: IdMapping[]
+): Record<SectionName, IdMapping[]> {
+  const grouped: Record<SectionName, IdMapping[]> = {
+    organizacion: [],
+    catalogo: [],
+    artista: [],
+    evento: []
+  }
+
+  mappings.forEach((mapping) => {
+    grouped[mapping.section].push(mapping)
+  })
+
+  return grouped
+}
