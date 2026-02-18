@@ -81,7 +81,7 @@ describe('saveOrganizacion', () => {
 describe('saveCatalogo', () => {
   test('rejects invalid section', async () => {
     const { saveCatalogo } =
-      await import('@/shared/commit-system/actions/save-catalogo.action')
+      await import('@/app/(authenticated)/(admin)/artistas/catalogo/_actions/save-catalogo.action')
     // @ts-expect-error Testing invalid input
     const result = await saveCatalogo('invalid')
 
@@ -95,7 +95,7 @@ describe('saveCatalogo', () => {
     }))
 
     const { saveCatalogo } =
-      await import('@/shared/commit-system/actions/save-catalogo.action')
+      await import('@/app/(authenticated)/(admin)/artistas/catalogo/_actions/save-catalogo.action')
     const result = await saveCatalogo('catalogo')
 
     expect(result.success).toBe(true)
@@ -150,7 +150,7 @@ describe('saveCatalogo', () => {
     }))
 
     const { saveCatalogo } =
-      await import('@/shared/commit-system/actions/save-catalogo.action')
+      await import('@/app/(authenticated)/(admin)/artistas/catalogo/_actions/save-catalogo.action')
     const result = await saveCatalogo('catalogo')
 
     expect(result.success).toBe(true)
@@ -350,7 +350,7 @@ describe('Error Handling', () => {
     }))
 
     const { saveCatalogo } =
-      await import('@/shared/commit-system/actions/save-catalogo.action')
+      await import('@/app/(authenticated)/(admin)/artistas/catalogo/_actions/save-catalogo.action')
     const result = await saveCatalogo('catalogo')
 
     expect(result.success).toBe(false)
