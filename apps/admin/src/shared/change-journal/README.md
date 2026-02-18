@@ -14,28 +14,34 @@ The Change Journal solves the offline-first problem: What happens when a user ma
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────┐
-│ Layer 3: Current Edits (UI State Store)             │
-│ - useMyEntityUIStore hooks                          │
-│ - In-memory form state, real-time validation        │
-└──────────────────┬──────────────────────────────────┘
-                   │ User commits changes
-                   ▼
-┌─────────────────────────────────────────────────────┐
-│ Layer 2: Applied Changes (Change Journal)           │
-│ - writeEntry() → IndexedDB persistence              │
-│ - getLatestEntries() → read without clearing        │
-│ - clearSection() → manual cleanup after sync        │
-│ - Ordered by timestamp DESC (newest first)          │
-└──────────────────┬──────────────────────────────────┘
-                   │ Sync process
-                   ▼
-┌─────────────────────────────────────────────────────┐
-│ Layer 1: Remote Data (Server/Database)              │
-│ - Authoritative source of truth                     │
-│ - API endpoints handle persistence                  │
-└─────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│ Entity-State (UI State Store)                            │
+│ SOLE RESPONSIBILITY: Rendering, UI state, change tracking│
+│ Writes to journal automatically on every edit            │
+└─────────────────────┬────────────────────────────────────┘
+                      │ Automatic write-through
+                      ▼
+┌──────────────────────────────────────────────────────────┐
+│ Layer 2: Applied Changes (Change Journal)                │
+│ SOLE RESPONSIBILITY: Local persistence / durability      │
+│ - writeEntry() → IndexedDB persistence                   │
+│ - getLatestEntries() → read without clearing             │
+│ - getSectionsWithChanges() → draft recovery              │
+│ - clearSection() → cleanup after server sync             │
+│ NO rendering responsibility                              │
+└─────────────────────┬────────────────────────────────────┘
+                      │ Commit-System reads journal
+                      ▼
+┌──────────────────────────────────────────────────────────┐
+│ Layer 1: Remote Data (Server/Database)                   │
+│ Authoritative source of truth                            │
+└──────────────────────────────────────────────────────────┘
 ```
+
+**Responsibility Boundary:**
+- **Entity-State**: Only responsible for rendering and holding the current session's edits. It writes to the journal automatically.
+- **Change-Journal**: Only responsible for local durability and persistence. It has no knowledge of how to render the data.
+- **Commit-System**: Reads from the journal to perform server sync and clears it only after the server confirms success.
 
 ## Data Model
 
@@ -126,30 +132,6 @@ await writeEntry('organizacion', 'organizacion:org-123', {
   op: 'set',
   value: { id: 'org-123', nombre: 'Nueva Org' }
 })
-```
-
-**Example: Update single field**
-
-```typescript
-await writeEntry('organizacion', 'organizacion:org-123:nombre', {
-  op: 'set',
-  value: 'Nombre Actualizado'
-})
-```
-
-**Example: Patch (merge) operation**
-
-```typescript
-await writeEntry('organizacion', 'organizacion:org-123', {
-  op: 'patch',
-  value: { nombre: 'Nuevo Nombre' }
-})
-```
-
-**Example: Delete/unset**
-
-```typescript
-await writeEntry('organizacion', 'organizacion:org-123', { op: 'unset' })
 ```
 
 ### getLatestEntries()
@@ -263,11 +245,6 @@ try {
 - Client can retry indefinitely
 - Journal is the source of truth until cleared
 
-**Key difference from consumeLatestEntries:**
-
-- consumeLatestEntries: clears IMMEDIATELY (dangerous)
-- Manual pattern: clears ONLY after server success (safe)
-
 ### hasEntries()
 
 Check if a section has any pending changes.
@@ -291,29 +268,6 @@ export async function hasEntries(section: string): Promise<boolean>
 - Fast check (doesn't retrieve all entries)
 - Does NOT modify state
 
-**Example: Show dirty indicator**
-
-```typescript
-const isDirty = await hasEntries('organizacion')
-if (isDirty) {
-  showSaveButton()
-}
-```
-
-**Example: Warn before navigation**
-
-```typescript
-const handleNavigation = async () => {
-  if (await hasEntries('organizacion')) {
-    const confirmLeave = confirm('You have unsaved changes. Leave anyway?')
-    if (!confirmLeave) return
-  }
-
-  // Safe to navigate
-  router.push('/other-page')
-}
-```
-
 ### clearSection()
 
 Clear all entries for a section without returning them.
@@ -333,101 +287,33 @@ export async function clearSection(section: string): Promise<void>
 - Removes all entries for the section from IndexedDB
 - Does NOT return entries (use getLatestEntries if you need to inspect them)
 
-**Use Cases:**
+### getSectionsWithChanges()
 
-- After successful sync (use manual clearSection after getLatestEntries + sync succeeds)
-- Discard all pending changes (with confirmation)
-
-**Example: Clear after successful sync**
-
-```typescript
-// Only use this if you already have the entries
-const entries = await getLatestEntries('organizacion')
-await syncToServer(entries)
-await clearSection('organizacion')
-```
-
-**Example: Discard changes**
-
-```typescript
-const confirmDiscard = confirm('Discard all unsaved changes?')
-if (confirmDiscard) {
-  await clearSection('organizacion')
-}
-```
-
-## UI State Integration
-
-### useChangeJournalUIStore()
-
-Zustand hook for tracking which sections have been applied to the UI state.
+Get all sections that have pending entries, with entry counts.
 
 **Signature:**
 
 ```typescript
-export const useChangeJournalUIStore: () => {
-  // State
-  appliedSections: Set<string>
-
-  // Actions
-  markSectionApplied: (section: string) => void
-  markSectionUnapplied: (section: string) => void
-  reset: () => void
-  getAppliedSections: () => string[]
-
-  // Queries
-  hasUnsavedChanges: (section: string) => Promise<boolean>
-}
+export async function getSectionsWithChanges(): Promise<Array<{ section: string; count: number }>>
 ```
 
-**Purpose:**
+**Returns:**
 
-- Track which sections have been synced to the UI layer
-- Determine if there are unsaved changes
+- Array of objects with section name and count of pending entries. Returns empty array if no sections have entries.
 
-**Usage:**
+**Use Case:**
+
+- Crash recovery — called on app mount to detect drafts from previous sessions.
+
+**Example: Draft recovery notification**
 
 ```typescript
-'use client'
-
-import { useChangeJournalUIStore } from '@/shared/change-journal/store/use-journal-ui-store'
-
-export function MyComponent() {
-  const {
-    hasUnsavedChanges,
-    markSectionApplied,
-    markSectionUnapplied
-  } = useChangeJournalUIStore()
-
-  // Show dirty indicator
-  const [isDirty, setIsDirty] = React.useState(false)
-
-  React.useEffect(() => {
-    hasUnsavedChanges('organizacion').then(setIsDirty)
-  }, [])
-
-  // Mark applied after loading from server
-  const handleLoadComplete = () => {
-    markSectionApplied('organizacion')
-  }
-
-  // Check before leaving
-  const handleDiscard = async () => {
-    const hasChanges = await hasUnsavedChanges('organizacion')
-    if (hasChanges) {
-      const confirm = window.confirm('Discard changes?')
-      if (!confirm) return
-    }
-    markSectionUnapplied('organizacion')
-  }
-
-  return (
-    <div>
-      {isDirty && <span className="text-red-500">●</span>}
-      <button onClick={handleLoadComplete}>Load</button>
-      <button onClick={handleDiscard}>Discard</button>
-    </div>
-  )
+const sections = await getSectionsWithChanges()
+if (sections.length > 0) {
+  // Show recovery UI listing affected sections
+  sections.forEach(({ section, count }) => {
+    console.log(`${section}: ${count} pending changes`)
+  })
 }
 ```
 
@@ -471,9 +357,9 @@ try {
 
 ### IndexedDB Schema (v1)
 
-- **Database:** `change-journal`
+- **Database:** `frijolmagico-journal`
 - **Object Store:** `entries`
-- **Index:** `section` (for fast filtering by section)
+- **Index:** `section`, `scopeKey`, `timestampMs`
 - **Primary Key:** `entryId` (UUID)
 
 ### Persistence
@@ -522,9 +408,6 @@ try {
   // Entries remain in journal, can retry
   console.error('Sync failed, will retry:', err)
 }
-
-// ❌ Wrong - removed, combined read+clear is dangerous
-// const entries = await consumeLatestEntries('organizacion')
 ```
 
 ### 3. Check hasEntries Before Sync
@@ -533,8 +416,9 @@ try {
 // ✅ Efficient
 const isDirty = await hasEntries('organizacion')
 if (isDirty) {
-  const entries = await consumeLatestEntries('organizacion')
+  const entries = await getLatestEntries('organizacion')
   await syncToServer(entries)
+  await clearSection('organizacion')
 }
 ```
 
@@ -581,18 +465,14 @@ try {
 ### Sync Failures
 
 ```typescript
-const entries = await consumeLatestEntries('organizacion')
+// Correct pattern: read first, clear ONLY after server confirms
+const entries = await getLatestEntries('organizacion')
 try {
   await syncToServer(entries)
+  await clearSection('organizacion') // ONLY after server success
 } catch (error) {
-  console.error('Sync failed:', error)
-
-  // Re-write entries to journal
-  for (const entry of entries) {
-    await writeEntry(entry.section, entry.scopeKey, entry.payload)
-  }
-
-  showErrorMessage('Sync failed, will retry')
+  // entries remain in journal — safe for retry, no data loss
+  console.error('Sync failed, will retry:', error)
 }
 ```
 
