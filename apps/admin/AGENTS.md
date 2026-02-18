@@ -27,7 +27,6 @@ Featured-based Architecture with clear separation of concerns.
 
 ### App Router Architecture First
 
-- ALL routes MUST use App Router - never use Pages Router for new projects
 - Leverage Server Components by default, Client Components only when necessary
 - Use proper file conventions: page.tsx, layout.tsx, loading.tsx, error.tsx, not-found.tsx
 - Implement route groups (group-name) for organization without affecting URL structure
@@ -138,10 +137,6 @@ Para más detalles, consultar [apps/admin/src/shared/ui-state/README.md](./src/s
 - **Own:** snake-case for components (e.g., `user-profile.tsx`)
 - **Shadcn/ui:** default naming conventions
 
-### Styling
-
-- Minimal custom styling (admin-focused)
-
 ### Database
 
 - Uses `@frijolmagico/database` package
@@ -155,6 +150,7 @@ Para más detalles, consultar [apps/admin/src/shared/ui-state/README.md](./src/s
 - **NEVER client-side auth checks** — all auth server-side
 - **NEVER unnecessary client components** — prefer Server Components
 - **NEVER Pages Router** — App Router only
+- **NEVER use `any` types**
 
 ## UI State Management
 
