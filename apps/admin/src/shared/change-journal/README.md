@@ -25,7 +25,7 @@ The Change Journal solves the offline-first problem: What happens when a user ma
 │ Layer 2: Applied Changes (Change Journal)           │
 │ - writeEntry() → IndexedDB persistence              │
 │ - getLatestEntries() → read without clearing        │
-│ - consumeLatestEntries() → read + clear atomic      │
+│ - clearSection() → manual cleanup after sync        │
 │ - Ordered by timestamp DESC (newest first)          │
 └──────────────────┬──────────────────────────────────┘
                    │ Sync process
@@ -186,78 +186,87 @@ entries.forEach((entry) => {
 })
 ```
 
-### consumeLatestEntries()
+### ⚠️ Why No consumeLatestEntries?
 
-Read all pending changes AND clear the section atomically. This is the primary function for syncing to the server.
-
-**Signature:**
+**consumeLatestEntries was removed** because it combines "read" and "clear" atomically, creating a dangerous pattern:
 
 ```typescript
-export async function consumeLatestEntries(
-  section: string
-): Promise<JournalEntry[]>
+// ❌ DANGER - consumeLatestEntries doesn't exist (removed)
+const entries = await consumeLatestEntries('organizacion')
+// If sync fails AFTER this, entries are permanently lost!
 ```
 
-**Parameters:**
-
-- `section` — Feature name to consume
-
-**Returns:**
-
-- Array of JournalEntry items sorted newest-to-oldest, then clears the section
-
-**Behavior:**
-
-- Reads entries from IndexedDB
-- Immediately clears the section in the same transaction
-- Atomic operation (no race conditions)
-- Returns newest entries first
-
-**Critical:** This is the safe way to sync. Do NOT do:
+The journal cannot guarantee atomicity at the _network_ level. If sync fails after entries are cleared, they're unrecoverable. Instead, use manual control:
 
 ```typescript
-// ❌ WRONG - Race condition possible
+// ✅ CORRECT - Manual control with recovery
 const entries = await getLatestEntries('organizacion')
-// ... some async work ...
-await clearSection('organizacion')
-```
 
-Instead:
-
-```typescript
-// ✅ CORRECT - Atomic
-const entries = await consumeLatestEntries('organizacion')
-// ... now safe to sync ...
-```
-
-**Example: Typical sync flow**
-
-```typescript
-const entries = await consumeLatestEntries('organizacion')
-
-if (entries.length > 0) {
-  try {
-    // Sync to server
-    const response = await fetch('/api/organizacion/sync', {
-      method: 'POST',
-      body: JSON.stringify(entries)
-    })
-
-    if (!response.ok) {
-      throw new Error('Sync failed')
-    }
-
-    console.log(`✓ Synced ${entries.length} changes`)
-  } catch (error) {
-    console.error('Sync error, re-writing entries:', error)
-
-    // Re-write entries if sync failed (will be retried)
-    for (const entry of entries) {
-      await writeEntry(entry.section, entry.scopeKey, entry.payload)
-    }
-  }
+try {
+  await syncToServer(entries)
+  // Only clear AFTER successful sync
+  await clearSection('organizacion')
+  console.log(`✓ Synced ${entries.length} changes`)
+} catch (error) {
+  // Entries still in journal - will retry next time
+  console.error('Sync failed, entries kept for retry:', error)
 }
 ```
+
+This pattern ensures **zero data loss**: entries stay in the journal until the server confirms persistence.
+
+## Persistence Flow Pattern
+
+The recommended pattern for safely persisting changes:
+
+```typescript
+// 1. Get all pending entries (non-destructive)
+const entries = await getLatestEntries('organizacion')
+
+if (entries.length === 0) {
+  console.log('No pending changes')
+  return
+}
+
+console.log(`Found ${entries.length} pending changes, syncing...`)
+
+// 2. Attempt to persist to server
+try {
+  const response = await fetch('/api/organizacion/sync', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ entries })
+  })
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+  }
+
+  console.log('✓ Server confirmed persistence')
+
+  // 3. ONLY clear journal after server succeeds
+  await clearSection('organizacion')
+  console.log('✓ Journal cleared after successful sync')
+} catch (error) {
+  // Journal entries remain untouched - safe for retry
+  console.error('✗ Sync failed, entries retained:', error)
+
+  // Optional: Implement exponential backoff and retry logic
+  scheduleRetry('organizacion')
+}
+```
+
+**Why this is safe:**
+
+- Entries remain in journal until server confirms success
+- Network failures don't cause data loss
+- Client can retry indefinitely
+- Journal is the source of truth until cleared
+
+**Key difference from consumeLatestEntries:**
+
+- consumeLatestEntries: clears IMMEDIATELY (dangerous)
+- Manual pattern: clears ONLY after server success (safe)
 
 ### hasEntries()
 
@@ -322,11 +331,11 @@ export async function clearSection(section: string): Promise<void>
 **Behavior:**
 
 - Removes all entries for the section from IndexedDB
-- Does NOT return entries (use consumeLatestEntries if you need them)
+- Does NOT return entries (use getLatestEntries if you need to inspect them)
 
 **Use Cases:**
 
-- After successful sync (preferred: use consumeLatestEntries instead)
+- After successful sync (use manual clearSection after getLatestEntries + sync succeeds)
 - Discard all pending changes (with confirmation)
 
 **Example: Clear after successful sync**
@@ -439,15 +448,23 @@ await writeEntry(
   { op: 'set', value: newName }
 )
 
-// 3. Sync process - read from journal
-const entries = await consumeLatestEntries('organizacion')
+// 3. Sync process - get entries from journal
+const entries = await getLatestEntries('organizacion')
 
 // 4. Send to server (Layer 1)
-await POST /api/organizacion/sync { entries }
+try {
+  await POST /api/organizacion/sync { entries }
 
-// 5. Server confirms - reload from remote
-const remoteData = await GET /api/organizacion
-useMyEntityUIStore.setState({ entities: remoteData })
+  // 5. Server confirms - clear journal
+  await clearSection('organizacion')
+
+  // 6. Reload from remote
+  const remoteData = await GET /api/organizacion
+  useMyEntityUIStore.setState({ entities: remoteData })
+} catch (error) {
+  // Journal entries remain - safe for retry
+  console.error('Sync failed, will retry:', error)
+}
 ```
 
 ## Storage Details
@@ -491,23 +508,23 @@ await writeEntry('organizacion', scopeKey, payload)
 const scopeKey = `${orgId}_nombre`
 ```
 
-### 2. Always Use consumeLatestEntries for Sync
+### 2. Always Use getLatestEntries + Manual clearSection for Sync
 
 ```typescript
-// ✅ Correct - atomic
-const entries = await consumeLatestEntries('organizacion')
+// ✅ Correct - Safe with recovery
+const entries = await getLatestEntries('organizacion')
+
 try {
   await syncToServer(entries)
+  // Only clear after successful sync
+  await clearSection('organizacion')
 } catch (err) {
-  // Entries already cleared - re-write if needed
-  for (const e of entries) {
-    await writeEntry(e.section, e.scopeKey, e.payload)
-  }
+  // Entries remain in journal, can retry
+  console.error('Sync failed, will retry:', err)
 }
 
-// ❌ Wrong - race condition
-const entries = await getLatestEntries('organizacion')
-await clearSection('organizacion') // ← entries might be added in between
+// ❌ Wrong - removed, combined read+clear is dangerous
+// const entries = await consumeLatestEntries('organizacion')
 ```
 
 ### 3. Check hasEntries Before Sync
@@ -630,7 +647,8 @@ export function OrganizacionForm({ orgId, onSync }: Props) {
 
 ```typescript
 import {
-  consumeLatestEntries,
+  getLatestEntries,
+  clearSection,
   hasEntries
 } from '@/shared/change-journal/change-journal'
 
@@ -642,7 +660,7 @@ export async function syncOrganizacionChanges() {
     return
   }
 
-  const entries = await consumeLatestEntries('organizacion')
+  const entries = await getLatestEntries('organizacion')
   console.log(`Syncing ${entries.length} entries...`)
 
   try {
@@ -656,14 +674,13 @@ export async function syncOrganizacionChanges() {
       throw new Error(`HTTP ${response.status}`)
     }
 
-    console.log('✓ Sync successful')
+    // Only clear after successful server response
+    await clearSection('organizacion')
+    console.log('✓ Sync successful, journal cleared')
   } catch (error) {
     console.error('✗ Sync failed:', error)
-
-    // Re-write entries
-    for (const entry of entries) {
-      await writeEntry(entry.section, entry.scopeKey, entry.payload)
-    }
+    // Entries remain in journal - will retry next time
+    // Do NOT re-write entries - they're already there
   }
 }
 ```
