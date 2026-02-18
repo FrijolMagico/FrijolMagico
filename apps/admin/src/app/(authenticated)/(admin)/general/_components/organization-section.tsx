@@ -7,15 +7,23 @@ import {
 } from '@/shared/components/ui/card'
 import { getOrganizationData } from '../_lib/get-general-data'
 import { OrganizationForm } from './organization-form'
+import { EmptyState } from '@/shared/components/empty-state'
 
 export async function OrganizationSection() {
   const organization = await getOrganizationData()
 
   if (!organization) {
     return (
-      <p className='text-muted-foreground text-sm'>
-        No se pudo cargar la información de la organización.
-      </p>
+      <EmptyState
+        title='Error 404'
+        description='No se pudo cargar la información de la organización.'
+        action={{
+          label: 'Intentar otra vez',
+          onClick: async () => {
+            // A way to retry to get data
+          }
+        }}
+      />
     )
   }
 
