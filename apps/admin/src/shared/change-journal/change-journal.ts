@@ -7,7 +7,6 @@
  * Key responsibilities:
  * - Write changes to the journal (writeEntry)
  * - Read latest entries ordered by timestamp (getLatestEntries)
- * - Read and clear entries atomically (consumeLatestEntries)
  * - Check if sections have pending changes (hasEntries)
  * - Clear sections after successful sync (clearSection)
  *
@@ -122,47 +121,6 @@ export async function getLatestEntries(
 }
 
 /**
- * Consume latest entries - read AND clear atomically
- *
- * Returns all entries for a section ordered newest to oldest, then clears the section.
- * This is the primary function for syncing changes to the server - ensures entries
- * are only processed once.
- *
- * CRITICAL: Use this for real persistence operations. Do NOT use getLatestEntries
- * followed by clearSection separately - race conditions can cause duplicate syncs.
- *
- * @param section - Section name to consume
- * @returns Promise<JournalEntry[]> - Entries that were cleared (newest first)
- *
- * @example
- * // Typical sync flow
- * const entries = await consumeLatestEntries('organizacion')
- * if (entries.length > 0) {
- *   try {
- *     await syncToServer(entries)
- *     console.log(`Synced ${entries.length} changes`)
- *   } catch (error) {
- *     // Re-write entries if sync failed
- *     for (const entry of entries) {
- *       await writeEntry(entry.section, entry.scopeKey, entry.payload)
- *     }
- *   }
- * }
- */
-export async function consumeLatestEntries(
-  section: string
-): Promise<JournalEntry[]> {
-  // Get entries first (ASC from storage)
-  const entries = await storage.getEntries(section)
-
-  // Clear the section
-  await storage.clearSection(section)
-
-  // Return newest first
-  return entries.reverse()
-}
-
-/**
  * Check if a section has any pending entries
  *
  * Useful for showing dirty indicators in the UI or determining
@@ -192,7 +150,7 @@ export async function hasEntries(section: string): Promise<boolean> {
  * Clear all entries for a section
  *
  * Use after successful sync to server. Does NOT return the cleared entries -
- * use consumeLatestEntries if you need the entries.
+ * use getLatestEntries before clearing if you need the entries.
  *
  * @param section - Section name to clear
  * @returns Promise<void>
