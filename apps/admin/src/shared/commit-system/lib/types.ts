@@ -1,4 +1,6 @@
-export type SectionName = 'organizacion' | 'catalogo' | 'artista' | 'evento'
+import type { JournalEntity } from '@/shared/lib/database-entities'
+
+export type SectionName = JournalEntity | 'evento'
 
 export interface IdMapping {
   tempId: string
