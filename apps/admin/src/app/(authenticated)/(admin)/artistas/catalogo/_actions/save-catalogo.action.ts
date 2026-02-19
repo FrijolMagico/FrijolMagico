@@ -16,21 +16,12 @@ import {
 } from '@/shared/commit-system/lib/error-handler'
 import { createIdMapping, isTempId } from '@/shared/commit-system/lib/id-mapper'
 import { mapToCatalogoArtistaInput } from '@/shared/commit-system/mappers/catalogo.mapper'
-import type {
-  SaveResult,
-  IdMapping,
-  SectionName
-} from '@/shared/commit-system/lib/types'
+import { JOURNAL_ENTITIES } from '@/shared/lib/database-entities'
+import type { SaveResult, IdMapping } from '@/shared/commit-system/lib/types'
 
-export async function saveCatalogo(section: SectionName): Promise<SaveResult> {
-  if (section !== 'catalogo') {
-    return {
-      success: false,
-      error: 'Invalid section. Expected "catalogo"',
-      errorCode: 'VALIDATION_ERROR'
-    }
-  }
-
+export async function saveCatalogo(
+  section: typeof JOURNAL_ENTITIES.CATALOGO_ARTISTA
+): Promise<SaveResult> {
   try {
     const entries = await getLatestEntries(section)
 
@@ -80,7 +71,13 @@ export async function saveCatalogo(section: SectionName): Promise<SaveResult> {
             .returning({ id: artist.catalogoArtista.id })
 
           if (inserted && entityId) {
-            mappings.push(createIdMapping(entityId, inserted.id, 'catalogo'))
+            mappings.push(
+              createIdMapping(
+                entityId,
+                inserted.id,
+                JOURNAL_ENTITIES.CATALOGO_ARTISTA
+              )
+            )
           }
         }
       }
