@@ -4,34 +4,84 @@ import { useEffect, useState } from 'react'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
 import { AlertTriangle } from 'lucide-react'
 import { Button } from './ui/button'
-import Link from 'next/link'
+import {
+  getSectionsWithChanges,
+  getLatestEntries,
+  clearSection
+} from '@/shared/change-journal/change-journal'
+import { getStoreForEntity } from '@/shared/ui-state/entity-registry'
+import { journalEntriesToOperations } from '@/shared/change-journal/journal-mappers'
+import type { JournalEntity } from '@/shared/lib/database-entities'
+import type {
+  AppliedChanges,
+  EntityUIStateStore
+} from '@/shared/ui-state/entity-state'
+
+type ZustandStoreWithSetState = EntityUIStateStore<unknown> & {
+  setState: (
+    partial:
+      | Partial<EntityUIStateStore<unknown>>
+      | ((
+          state: EntityUIStateStore<unknown>
+        ) => Partial<EntityUIStateStore<unknown>>)
+  ) => void
+}
 
 export function UnsavedChangesNotification() {
-  const [unsavedSectionsList, setUnsavedSectionList] = useState<Array<string>>(
-    []
-  )
-
+  const [unsavedSections, setUnsavedSections] = useState<JournalEntity[]>([])
   const [isVisible, setIsVisible] = useState(false)
 
-  // TODO: Evaluate if we need an effect to check for unsaved changes on focus (e.g. user comes back to tab after some time, reload, etc.)
   useEffect(() => {
-    // Get the list of sections with unsaved changes from journal
-    const unsavedSectionsList = ['organizacion'] // TODO: replace with actual journal query
-    if (unsavedSectionsList.length === 0) {
-      return
+    async function checkForUnsavedChanges() {
+      const sections = await getSectionsWithChanges()
+      const entitySections = sections
+        .filter(({ count }) => count > 0)
+        .map(({ section }) => section as JournalEntity)
+
+      if (entitySections.length > 0) {
+        setUnsavedSections(entitySections)
+        setIsVisible(true)
+      }
     }
 
-    // Save list in the state
-    setUnsavedSectionList(['organizacion']) // TODO: replace with actual journal query
-    setIsVisible(true)
-  }, []) // ONLY run on mount
+    checkForUnsavedChanges()
+  }, [])
 
-  function onRestore() {
-    setIsVisible(true)
+  async function handleDismiss() {
+    for (const section of unsavedSections) {
+      await clearSection(section)
+    }
+    setUnsavedSections([])
+    setIsVisible(false)
   }
-  function onDismiss() {}
 
-  if (!isVisible || unsavedSectionsList.length === 0) {
+  async function handleRestore() {
+    for (const entity of unsavedSections) {
+      const store = getStoreForEntity(entity) as
+        | ZustandStoreWithSetState
+        | undefined
+      if (!store) continue
+
+      const entries = await getLatestEntries(entity)
+      const operations = journalEntriesToOperations(entries)
+
+      if (operations.length > 0) {
+        store.setState((state) => ({
+          appliedChanges: {
+            operations: [
+              ...(state.appliedChanges?.operations ?? []),
+              ...operations
+            ],
+            lastApplied: new Date()
+          } satisfies AppliedChanges<unknown>
+        }))
+      }
+    }
+
+    setIsVisible(false)
+  }
+
+  if (!isVisible || unsavedSections.length === 0) {
     return null
   }
 
@@ -45,18 +95,12 @@ export function UnsavedChangesNotification() {
             Se encontró un borrador guardado de cambios anteriores
           </AlertDescription>
           <div className='py-2'>
-            <ul className=''>
-              {unsavedSectionsList.map((section) => {
-                const sectionPath = `/cambios/preview/${section}`
-
-                return (
-                  <li key={section} className='text-sm'>
-                    <Link href={sectionPath} className='no-underline'>
-                      - {section}
-                    </Link>
-                  </li>
-                )
-              })}
+            <ul>
+              {unsavedSections.map((section) => (
+                <li key={section} className='text-sm'>
+                  - {section}
+                </li>
+              ))}
             </ul>
           </div>
         </div>
@@ -64,12 +108,12 @@ export function UnsavedChangesNotification() {
           <Button
             size='sm'
             variant='destructive'
-            onClick={onDismiss}
+            onClick={handleDismiss}
             className='h-8'
           >
             Descartar
           </Button>
-          <Button size='sm' onClick={onRestore} className='h-8'>
+          <Button size='sm' onClick={handleRestore} className='h-8'>
             Restaurar
           </Button>
         </div>
