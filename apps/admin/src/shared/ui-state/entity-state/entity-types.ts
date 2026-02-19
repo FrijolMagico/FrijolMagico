@@ -28,9 +28,9 @@ export interface EntityState<T> {
   entities: Record<string, T>
 
   /**
-   * Array de IDs preservando orden de presentación
+   * Array de IDs para preservar orden y facilitar iteración (id especial de UI, no necesariamente el ID del backend)
    */
-  ids: number[]
+  entityIds: number[]
 }
 
 /**
@@ -45,9 +45,9 @@ export interface EntityOperation<T> {
   type: 'ADD' | 'UPDATE' | 'DELETE'
 
   /**
-   * ID de la entidad afectada
+   * ID de UI de la entidad afectada
    */
-  id: number
+  entityId: number
 
   /**
    * Datos parciales para UPDATE
@@ -76,16 +76,6 @@ export interface EntityOperation<T> {
  * Extiende EntityState con metadata de paginación
  */
 export interface RemoteEntityData<T> extends EntityState<T> {
-  /**
-   * Metadata de paginación
-   */
-  pagination?: {
-    total: number
-    pageSize: number
-    currentPage: number
-    pagesLoaded: Set<number>
-  }
-
   /**
    * Timestamp de última fetch
    */
@@ -156,11 +146,6 @@ export interface EntityUIState<T> {
   getHasChanges(): boolean
 
   /**
-   * MÉTODO COMPUTED: Indica si hay ediciones sin guardar
-   */
-  getHasUnsavedEdits(): boolean
-
-  /**
    * Loading state for remote fetch
    */
   isLoading: boolean
@@ -185,7 +170,7 @@ export interface EntityUIStateActions<T> {
   /**
    * Retorna entidad por ID
    */
-  selectById(id: number): T | undefined
+  selectById(uiId: number): T | undefined
 
   /**
    * Retorna array de IDs
@@ -197,17 +182,6 @@ export interface EntityUIStateActions<T> {
    */
   selectEntities(): Record<number, T>
 
-  /**
-   * Retorna cantidad total de entidades
-   */
-  selectTotal(): number
-
-  /**
-   * Retorna el único objeto en modo singleton
-   * @returns T | null - El objeto singleton o null si no existe
-   */
-  selectOne(): T | null
-
   // === ACTIONS LAYER 3 (Single Entity) ===
 
   /**
@@ -215,61 +189,18 @@ export interface EntityUIStateActions<T> {
    * @param entity - Entidad a agregar
    * @param id - ID opcional (si no se provee, genera tempId)
    */
-  addOne(entity: T, id?: number): void
-
-  /**
-   * Actualiza una entidad existente
-   */
-  updateOne(id: number, data: Partial<T>): void
+  add(entity: T, id: number | null): void
 
   /**
    * Elimina una entidad
    */
-  removeOne(id: number): void
-
-  /**
-   * Agrega o actualiza una entidad (upsert)
-   */
-  upsertOne(entity: T): void
-
-  // === ACTIONS LAYER 3 (Bulk Operations) ===
-
-  /**
-   * Agrega múltiples entidades
-   */
-  addMany(entities: T[]): void
-
-  /**
-   * Actualiza múltiples entidades
-   */
-  updateMany(updates: { id: number; data: Partial<T> }[]): void
-
-  /**
-   * Elimina múltiples entidades
-   */
-  removeMany(ids: number[]): void
-
-  /**
-   * Agrega o actualiza múltiples entidades
-   */
-  upsertMany(entities: T[]): void
-
-  /**
-   * Reemplaza todas las entidades
-   */
-  setAll(entities: T[]): void
+  remove(id: number): void
 
   /**
    * Actualiza el objeto singleton sin necesidad de ID
    * Solo disponible cuando isSingleton = true
    */
-  update(data: Partial<T>): void
-
-  /**
-   * Setea el objeto singleton completo
-   * Solo disponible cuando isSingleton = true
-   */
-  set(data: T): void
+  update(data: Partial<T>, id: number | null): void
 
   // === ACTIONS LAYER 2 ===
 
@@ -293,10 +224,7 @@ export interface EntityUIStateActions<T> {
   /**
    * Setea datos remotos del servidor
    */
-  setRemoteData(
-    data: T[],
-    options?: { page?: number; pageSize?: number; total?: number }
-  ): void
+  setRemoteData(data: T[]): void
 
   // === UTILITIES ===
 

@@ -11,16 +11,7 @@ import { normalizeEntities } from './entity-utils'
 
 import { memoize } from 'proxy-memoize'
 
-export interface CreateEntityUIStateStoreConfig<T> {
-  sectionName: string
-  idField: keyof T
-  isSingleton?: boolean
-  writeToJournal?: (operation: EntityOperation<T>) => Promise<void>
-}
-
-export function createEntityUIStateStore<T>(
-  config: CreateEntityUIStateStoreConfig<T>
-) {
+export function createEntityUIStateStore<T>() {
   // Per-store instance memoization cache
   const getEffectiveDataMemoized = memoize(
     (state: {
@@ -31,6 +22,7 @@ export function createEntityUIStateStore<T>(
       const entities: Record<string, T> = state.remoteData
         ? { ...state.remoteData.entities }
         : {}
+
       const deletedIds = new Set<number>()
       const addedIds = new Set<number>()
 
@@ -42,37 +34,43 @@ export function createEntityUIStateStore<T>(
       for (const op of allOps) {
         switch (op.type) {
           case 'ADD':
-            if (process.env.NODE_ENV === 'development' && entities[op.id]) {
-              console.warn(`[EntityState] Duplicate ID detected: ${op.id}`)
+            if (
+              process.env.NODE_ENV === 'development' &&
+              entities[op.entityId]
+            ) {
+              console.warn(
+                `[EntityState] Duplicate ID detected: ${op.entityId}`
+              )
             }
-            entities[op.id] = op.entity!
-            addedIds.add(op.id)
-            deletedIds.delete(op.id)
+
+            entities[op.entityId] = op.entity!
+            addedIds.add(op.entityId)
+            deletedIds.delete(op.entityId)
             break
           case 'UPDATE':
-            if (entities[op.id]) {
-              entities[op.id] = { ...entities[op.id], ...op.data }
+            if (entities[op.entityId]) {
+              entities[op.entityId] = { ...entities[op.entityId], ...op.data }
             }
             break
           case 'DELETE':
-            delete entities[op.id]
-            deletedIds.add(op.id)
-            addedIds.delete(op.id)
+            delete entities[op.entityId]
+            deletedIds.add(op.entityId)
+            addedIds.delete(op.entityId)
             break
         }
       }
 
-      const remoteIds = state.remoteData?.ids ?? []
-      const ids = remoteIds
+      const remoteIds = state.remoteData?.entityIds ?? []
+      const entityIds = remoteIds
         .filter((id) => !deletedIds.has(id))
         .concat([...addedIds].filter((id) => !deletedIds.has(id)))
 
-      return { entities, ids }
+      return { entities, entityIds }
     }
   )
 
   const selectAllMemoized = memoize((effectiveData: EntityState<T>): T[] => {
-    return effectiveData.ids
+    return effectiveData.entityIds
       .map((id) => effectiveData.entities[id])
       .filter(Boolean)
   })
@@ -101,12 +99,7 @@ export function createEntityUIStateStore<T>(
         (currentEdits?.operations?.length ?? 0) > 0
       )
     },
-
-    getHasUnsavedEdits(): boolean {
-      const { currentEdits } = get()
-      return (currentEdits?.operations?.length ?? 0) > 0
-    },
-
+    // NOTA: verificar si estamos métodos son realmente necesarios y hacer log de cada uno.
     selectAll(): T[] {
       return selectAllMemoized(get().getEffectiveData())
     },
@@ -116,59 +109,75 @@ export function createEntityUIStateStore<T>(
     },
 
     selectIds(): number[] {
-      return get().getEffectiveData().ids
+      return get().getEffectiveData().entityIds
     },
 
     selectEntities(): Record<string, T> {
       return get().getEffectiveData().entities
     },
 
-    selectTotal(): number {
-      return get().getEffectiveData().ids.length
-    },
-
-    selectOne(): T | null {
-      const state = get().getEffectiveData()
-      const ids = state.ids
-      if (ids.length === 0) return null
-      return state.entities[ids[0]] || null
-    },
-
-    addOne(entity, id): void {
-      const entityId = entity[config.idField] as number | undefined
-      const finalId = id ?? entityId
-
+    add(entity, id): void {
       let operationId: number
-      if (finalId === undefined) {
+      if (!id) {
         operationId = get().nextTempId
       } else {
-        operationId = finalId
+        operationId = id
       }
 
       const operation: EntityOperation<T> = {
         type: 'ADD',
-        id: operationId,
-        entity: { ...entity, [config.idField]: operationId } as T,
+        entityId: operationId,
+        entity: { ...entity, id: operationId } as T,
         timestamp: Date.now(),
-        isOptimistic: id === undefined && entityId === undefined
+        isOptimistic: !id
       }
 
       set((state) => ({
         currentEdits: {
           operations: [...(state.currentEdits?.operations ?? []), operation]
         },
-        nextTempId:
-          finalId === undefined ? state.nextTempId - 1 : state.nextTempId
+        nextTempId: !id ? state.nextTempId - 1 : state.nextTempId
       }))
     },
 
-    updateOne(id: number, data: Partial<T>): void {
+    remove(id: number): void {
+      const operation: EntityOperation<T> = {
+        type: 'DELETE',
+        entityId: id,
+        timestamp: Date.now()
+      }
+
+      set((state) => ({
+        currentEdits: {
+          operations: [...(state.currentEdits?.operations ?? []), operation]
+        }
+      }))
+    },
+
+    update(data, id): void {
+      let entityId: number
+
+      if (!id) {
+        const ids = get().selectIds()
+
+        if (ids.length === 0) {
+          console.warn('[EntityState] No entities available to update')
+          return
+        }
+
+        entityId = ids[0]
+      }
+
       const operation: EntityOperation<T> = {
         type: 'UPDATE',
-        id,
+        entityId: id ?? entityId!,
         data,
         timestamp: Date.now()
       }
+
+      console.log('[EntityStore] Update: ', {
+        operation
+      })
 
       // TODO: Add a validation to check if the update was restorative, that means if the new update restore the original value, we can remove the operation instead of add a new one. This way we can reduce the number of operations in the queue and also avoid unnecessary updates in the UI when the user is toggling values.
 
@@ -179,131 +188,14 @@ export function createEntityUIStateStore<T>(
       }))
     },
 
-    removeOne(id: number): void {
-      const operation: EntityOperation<T> = {
-        type: 'DELETE',
-        id,
-        timestamp: Date.now()
-      }
-
-      set((state) => ({
-        currentEdits: {
-          operations: [...(state.currentEdits?.operations ?? []), operation]
-        }
-      }))
-    },
-
-    upsertOne(entity: T): void {
-      const id = entity[config.idField] as number
-      const exists = !!get().selectById(id)
-
-      if (exists) {
-        get().updateOne(id, entity)
-      } else {
-        get().addOne(entity, id)
-      }
-    },
-
-    addMany(entities: T[]): void {
-      let currentNextTempId = get().nextTempId
-      const operations: EntityOperation<T>[] = entities.map((entity) => {
-        const entityId = entity[config.idField] as number | undefined
-        const id: number = entityId ?? currentNextTempId
-        if (entityId === undefined) {
-          currentNextTempId--
-        }
-        return {
-          type: 'ADD',
-          id,
-          entity: { ...entity, [config.idField]: id } as T,
-          timestamp: Date.now(),
-          isOptimistic: entityId === undefined
-        }
-      })
-
-      set((state) => ({
-        currentEdits: {
-          operations: [...(state.currentEdits?.operations ?? []), ...operations]
-        },
-        nextTempId: currentNextTempId
-      }))
-    },
-
-    updateMany(updates): void {
-      const operations: EntityOperation<T>[] = updates.map((update) => ({
-        type: 'UPDATE',
-        id: update.id,
-        data: update.data,
-        timestamp: Date.now()
-      }))
-
-      set((state) => ({
-        currentEdits: {
-          operations: [...(state.currentEdits?.operations ?? []), ...operations]
-        }
-      }))
-    },
-
-    removeMany(ids): void {
-      const operations: EntityOperation<T>[] = ids.map((id) => ({
-        type: 'DELETE',
-        id,
-        timestamp: Date.now()
-      }))
-
-      set((state) => ({
-        currentEdits: {
-          operations: [...(state.currentEdits?.operations ?? []), ...operations]
-        }
-      }))
-    },
-
-    upsertMany(entities: T[]): void {
-      for (const entity of entities) {
-        get().upsertOne(entity)
-      }
-    },
-
-    setAll(entities: T[]): void {
-      const state = normalizeEntities(entities, config.idField)
-      const remoteData: RemoteEntityData<T> = {
-        ...state,
-        lastFetched: new Date()
-      }
-
-      set({
-        remoteData,
-        appliedChanges: null,
-        currentEdits: null
-      })
-    },
-
-    update(data): void {
-      if (config.isSingleton) {
-        const currentData = get().selectOne()
-        if (currentData) {
-          const id = currentData[config.idField] as number
-          get().updateOne(id, data)
-        }
-      }
-    },
-
-    set(data: T): void {
-      if (config.isSingleton) {
-        get().setRemoteData([data])
-      }
-    },
-
     async commitCurrentEdits(): Promise<void> {
-      const { currentEdits } = get()
+      const currentEdits = get().currentEdits
       if (!currentEdits || currentEdits.operations.length === 0) return
 
-      // Use writeToJournal callback for persistence
-      if (config.writeToJournal) {
-        for (const operation of currentEdits.operations) {
-          await config.writeToJournal(operation)
-        }
-      }
+      // Esto se está llamando en cada re render o cada vez que editamos en componente
+      console.log('[EntityStore] commitCurrentEdits: ', {
+        currentEdits
+      })
 
       set((state) => ({
         appliedChanges: {
@@ -325,25 +217,11 @@ export function createEntityUIStateStore<T>(
       set({ appliedChanges: null })
     },
 
-    setRemoteData(
-      data: T[],
-      options?: { page?: number; pageSize?: number; total?: number }
-    ): void {
-      const state = normalizeEntities(data, config.idField)
+    setRemoteData(data: T[]): void {
+      const state = normalizeEntities(data)
       const remoteData: RemoteEntityData<T> = {
         ...state,
         lastFetched: new Date()
-      }
-
-      if (options?.page !== undefined && options?.pageSize !== undefined) {
-        const existingPages =
-          get().remoteData?.pagination?.pagesLoaded ?? new Set<number>()
-        remoteData.pagination = {
-          total: options.total ?? data.length,
-          pageSize: options.pageSize,
-          currentPage: options.page,
-          pagesLoaded: new Set([...existingPages, options.page])
-        }
       }
 
       set({ remoteData, isLoading: false, error: null })

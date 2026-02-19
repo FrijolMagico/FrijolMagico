@@ -43,7 +43,7 @@ export function journalEntriesToOperations(
     if (payload.op === 'unset') {
       operations.push({
         type: 'DELETE',
-        id: entityId,
+        entityId: entityId,
         timestamp: entry.timestampMs
       })
     } else if (payload.op === 'set' && field) {
@@ -60,14 +60,14 @@ export function journalEntriesToOperations(
     } else if (payload.op === 'set' && !field) {
       operations.push({
         type: 'ADD',
-        id: entityId,
+        entityId: entityId,
         entity: payload.value,
         timestamp: entry.timestampMs
       })
     } else if (payload.op === 'patch') {
       operations.push({
         type: 'UPDATE',
-        id: entityId,
+        entityId: entityId,
         data: payload.value as Record<string, unknown>,
         timestamp: entry.timestampMs
       })
@@ -77,7 +77,7 @@ export function journalEntriesToOperations(
   for (const [entityId, { data, timestamp }] of fieldUpdates) {
     operations.push({
       type: 'UPDATE',
-      id: entityId,
+      entityId,
       data,
       timestamp
     })

@@ -4,47 +4,15 @@ import { useRef, useEffect, useCallback } from 'react'
 
 interface UseAutoJournalOptions<T> {
   // Datos actuales (para dirty check)
-  data: T | undefined | null
-  // Acciones del store
+  data?: T | null
   actions: {
-    update: (data: Partial<T>) => void
-    save: () => Promise<void>
+    update: (data: Partial<T>, id: number | null) => void
+    save: (data: Partial<T>, id: number | null) => Promise<void>
   }
   // Config
   debounceMs?: number
 }
 
-/**
- * Hook para auto-commit de cambios con debounce y dirty checking.
- *
- * ## Patrón Entity State
- *
- * - L1: Remote Data (server)
- * - L2: Applied Changes (journal/committed)
- * - L3: Current Edits (drafts/memory)
- *
- * Este hook:
- * 1. Actualiza L3 en onChange (inmediato)
- * 2. Debouncea cambios para evitar commits excesivos
- * 3. Compara contra L2 (último committed) para dirty check
- * 4. Limpia timers en unmount y fuerza commit
- *
- * ## Uso
- *
- * ```tsx
- * const { handleChange, handleBlur } = useAutoJournal({
- *   data,
- *   actions: { update, save },
- *   debounceMs: 1000
- * })
- *
- * <input
- *   value={data.nombre}
- *   onChange={(e) => handleChange('nombre', e.target.value)}
- *   onBlur={() => handleBlur('nombre', data.nombre)}
- * />
- * ```
- */
 export function useAutoJournal<T extends Record<string, unknown>>({
   data,
   actions,
@@ -65,29 +33,34 @@ export function useAutoJournal<T extends Record<string, unknown>>({
   // Cleanup: Clear timers y forzar commit en unmount
   useEffect(() => {
     return () => {
+      // NOTE: Este efecto esta impidiendo que se ejecute el debounce porque limpia siempre los pendingEdits, por lo tanto nunca tenemos timeouts
+      // Ademas ejecuta el save action cada vez que el usuario escribe, rompiendo todo el propósito del debounce
       // Limpiar todos los timers pendientes
       Object.values(pendingEdits.current).forEach(clearTimeout)
 
       // Emergency commit
-      actions.save()
+      // actions.save() // Este emergency commit requiere información que no tenemos...
     }
   }, [actions])
 
   const handleChange = useCallback(
-    (field: keyof T, value: unknown) => {
+    (field: keyof T, value: unknown, entityId: number | null) => {
       // 1. Actualizar L3 inmediatamente
-      actions.update({ [field]: value } as Partial<T>)
+      actions.update({ [field]: value } as Partial<T>, entityId)
 
       // 2. Lógica de debounce
       const fieldKey = field as string
-      if (pendingEdits.current[fieldKey]) {
-        clearTimeout(pendingEdits.current[fieldKey])
-      }
+      // if (pendingEdits.current[fieldKey]) {
+      //   clearTimeout(pendingEdits.current[fieldKey])
+      // }
 
+      // Analizar por qué no estamos guardando el timeout en pendingEdits
+      // No se está ejecutando el timeout
       pendingEdits.current[fieldKey] = setTimeout(() => {
+        console.log('committing called...')
         // Dirty check contra lo último commiteado
         if (value !== lastEditsApplied.current[fieldKey]) {
-          actions.save()
+          actions.save({ [field]: value } as Partial<T>, entityId)
           lastEditsApplied.current[fieldKey] = value
         }
         delete pendingEdits.current[fieldKey]
@@ -97,7 +70,7 @@ export function useAutoJournal<T extends Record<string, unknown>>({
   )
 
   const handleBlur = useCallback(
-    (field: keyof T, currentValue: unknown) => {
+    (field: keyof T, currentValue: unknown, entityId: number | null) => {
       const fieldKey = field as string
 
       // Cancelar debounce pendiente
@@ -108,7 +81,7 @@ export function useAutoJournal<T extends Record<string, unknown>>({
 
       // Forzar commit si hay cambios no commiteados
       if (currentValue !== lastEditsApplied.current[fieldKey]) {
-        actions.save()
+        actions.save({ [field]: currentValue } as Partial<T>, entityId)
         lastEditsApplied.current[fieldKey] = currentValue
       }
     },

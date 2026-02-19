@@ -9,5 +9,4 @@ export type {
   EntityUIStateActions,
   EntityUIStateStore
 } from './entity-types'
-export type { CreateEntityUIStateStoreConfig } from './entity-factory'
 export { normalizeEntities } from './entity-utils'
