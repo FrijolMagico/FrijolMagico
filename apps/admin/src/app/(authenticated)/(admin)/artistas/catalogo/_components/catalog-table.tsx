@@ -31,7 +31,7 @@ import type { CatalogArtist } from '../_types'
 import { useArtistUI, useVisibleArtists } from '../_hooks/use-artist-ui'
 import { useCatalogPaginationStore } from '../_store/catalog-pagination-store'
 import { useCatalogViewStore } from '../_store/catalog-view-store'
-import { useArtistUIStore } from '../_store/artist-ui-store'
+import { useArtistaUIStore } from '../_store/artista-ui-store'
 import { EmptyState } from '@/shared/components/empty-state'
 
 interface CatalogTableProps {
@@ -56,7 +56,7 @@ export function CatalogTable({
   handleFiltersChange
 }: CatalogTableProps) {
   const { reorder } = useArtistUI()
-  const updateOne = useArtistUIStore((s) => s.updateOne)
+  const updateOne = useArtistaUIStore((s) => s.updateOne)
 
   const { visibleArtists } = useVisibleArtists()
 

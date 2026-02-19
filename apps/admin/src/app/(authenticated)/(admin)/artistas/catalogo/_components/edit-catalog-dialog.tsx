@@ -15,14 +15,14 @@ import { Textarea } from '@/shared/components/ui/textarea'
 import { ArtistAvatar } from './artist-avatar'
 import type { CatalogArtist } from '../_types'
 import { useCatalogViewStore } from '../_store/catalog-view-store'
-import { useArtistUIStore } from '../_store/artist-ui-store'
+import { useArtistaUIStore } from '../_store/artista-ui-store'
 
 interface EditCatalogDialogProps {
   artist: CatalogArtist | undefined
 }
 
 export function EditCatalogDialog({ artist }: EditCatalogDialogProps) {
-  const updateOne = useArtistUIStore((s) => s.updateOne)
+  const updateOne = useArtistaUIStore((s) => s.updateOne)
 
   const closeAllDialogs = useCatalogViewStore((s) => s.closeAllDialogs)
   const openArtistDialog = useCatalogViewStore((s) => s.openArtistDialog)

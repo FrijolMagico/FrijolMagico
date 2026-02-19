@@ -9,7 +9,7 @@ import { EditArtistDialog } from './edit-artist-dialog'
 import { useSelectedArtist } from '../_hooks/use-selected-artist'
 import { useCatalogViewStore } from '../_store/catalog-view-store'
 import { useCatalogPaginationStore } from '../_store/catalog-pagination-store'
-import { useArtistUIStore } from '../_store/artist-ui-store'
+import { useArtistaUIStore } from '../_store/artista-ui-store'
 import { CatalogTableContainer } from './catalog-table-container'
 
 import type { CatalogArtist, PaginatedResult } from '../_types'
@@ -24,7 +24,7 @@ export function CatalogArtistsContainer({
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const setRemoteData = useArtistUIStore((s) => s.setRemoteData)
+  const setRemoteData = useArtistaUIStore((s) => s.setRemoteData)
 
   const setFilters = useCatalogViewStore((s) => s.setFilters)
   const setPage = useCatalogPaginationStore((s) => s.setPage)

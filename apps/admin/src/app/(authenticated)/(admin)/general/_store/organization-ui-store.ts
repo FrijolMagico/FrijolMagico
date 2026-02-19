@@ -1,8 +1,8 @@
 import { createEntityUIStateStore } from '@/shared/ui-state/entity-state'
 import type { EntityOperation } from '@/shared/ui-state/entity-state'
 import { writeEntry } from '@/shared/change-journal/change-journal'
+import { JOURNAL_ENTITIES } from '@/shared/lib/database-entities'
 import { Organization } from '../_types'
-import { ORGANIZATION_SECTION_NAME } from '../_constants'
 
 /**
  * Escribe cambios de Organización al change-journal.
@@ -18,7 +18,7 @@ import { ORGANIZATION_SECTION_NAME } from '../_constants'
 async function writeOrganizationJournal(
   operation: EntityOperation<Organization>
 ): Promise<void> {
-  const section = ORGANIZATION_SECTION_NAME
+  const section = JOURNAL_ENTITIES.ORGANIZACION
 
   switch (operation.type) {
     case 'ADD':
@@ -162,7 +162,7 @@ async function writeOrganizationJournal(
  * automático de las 3 capas, con Layer 3 teniendo la mayor prioridad.
  */
 export const useOrganizationUIStore = createEntityUIStateStore<Organization>({
-  sectionName: ORGANIZATION_SECTION_NAME,
+  sectionName: JOURNAL_ENTITIES.ORGANIZACION,
   idField: 'id',
   isSingleton: true,
   writeToJournal: writeOrganizationJournal

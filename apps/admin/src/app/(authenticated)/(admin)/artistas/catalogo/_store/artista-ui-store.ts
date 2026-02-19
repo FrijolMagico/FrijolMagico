@@ -1,24 +1,24 @@
 import { createEntityUIStateStore } from '@/shared/ui-state/entity-state'
 import type { EntityOperation } from '@/shared/ui-state/entity-state'
 import { writeEntry } from '@/shared/change-journal/change-journal'
-import { CatalogArtist } from '../_types'
-import { ARTIST_SECTION_NAME } from '../_constants'
+import { JOURNAL_ENTITIES } from '@/shared/lib/database-entities'
+import type { Artista } from '../_types'
 
 /**
  * Escribe cambios de artistas al change-journal.
  *
  * Mapea EntityOperations a entradas de journal con estructura:
- * - section: 'artistas' (scope lógico)
- * - scopeKey: Para ADD/DELETE: 'artistas:artist-123'
- * - scopeKey: Para UPDATE: 'artistas:artist-123:field'
+ * - section: 'artista' (scope lógico)
+ * - scopeKey: Para ADD/DELETE: 'artista:123'
+ * - scopeKey: Para UPDATE: 'artista:123:field'
  * - payload: Operación transformada a journal format
  *
  * @param operation - Operación de entidad (ADD/UPDATE/DELETE)
  */
-async function writeArtistJournal(
-  operation: EntityOperation<CatalogArtist>
+async function writeArtistaJournal(
+  operation: EntityOperation<Artista>
 ): Promise<void> {
-  const section = ARTIST_SECTION_NAME
+  const section = JOURNAL_ENTITIES.ARTISTA
 
   switch (operation.type) {
     case 'ADD':
@@ -53,8 +53,8 @@ async function writeArtistJournal(
  * - Estado normalizado (O(1) lookups)
  * - 3 capas: remoteData, appliedChanges, currentEdits
  */
-export const useArtistUIStore = createEntityUIStateStore<CatalogArtist>({
-  sectionName: ARTIST_SECTION_NAME,
-  idField: 'artistaId',
-  writeToJournal: writeArtistJournal
+export const useArtistaUIStore = createEntityUIStateStore<Artista>({
+  sectionName: JOURNAL_ENTITIES.ARTISTA,
+  idField: 'id',
+  writeToJournal: writeArtistaJournal
 })

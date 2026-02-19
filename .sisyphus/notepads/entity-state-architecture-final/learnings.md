@@ -487,3 +487,84 @@ FASE 3 ✅ COMPLETE - Ready for FASE 4 Documentation phase
 - Updated AGENTS.md with "UI State Management - Entity State Pattern" section, providing an architectural overview and performance targets.
 - Documented migration patterns from old index-based factory to new ID-based Entity State factory.
 - Verified all documentation follows project conventions (no semicolons, single quotes, flat interfaces).
+
+
+## Entity Registry Implementation
+
+**Date**: 2026-02-11
+
+### File Created
+
+`src/shared/ui-state/entity-registry.ts` - Central registry mapping JournalEntity types to their Zustand stores.
+
+### Implementation Details
+
+1. **Registry Type**: `Map<JournalEntity, EntityUIStateStore<unknown>>`
+   - Maps string literal keys (from JOURNAL_ENTITIES) to their corresponding store hooks
+   - Uses `unknown` to handle type erasure (stores are type-generic)
+
+2. **Exported Functions**:
+   - `registerEntity<T>(entity: JournalEntity, store: EntityUIStateStore<T>): void`
+     - Registers a store with type safety
+     - Cast to unknown for storage in unified Map
+   
+   - `getStoreForEntity<T>(entity: JournalEntity): EntityUIStateStore<T> | undefined`
+     - Retrieves store by entity type
+     - Returns typed store for generic operations
+   
+   - `getRegisteredEntities(): JournalEntity[]`
+     - Returns all registered entity keys
+     - Useful for validation and debugging
+
+3. **Eager Registration Pattern**:
+   - ALL 4 entity stores imported at module load time
+   - Registration happens synchronously when module loads
+   - No lazy loading or dynamic registration (simplifies journal restore flow)
+
+### Import Strategy
+
+Uses **future import paths** (will be valid when T5, T6, T7 run):
+
+```typescript
+// Future paths used:
+- organizacion: @/app/(authenticated)/(admin)/general/_store/organization-ui-store
+- organizacion_equipo: @/app/(authenticated)/(admin)/general/_store/organizacion-equipo-ui-store
+- artista: @/app/(authenticated)/(admin)/artistas/catalogo/_store/artista-ui-store
+- catalogo_artista: @/app/(authenticated)/(admin)/artistas/catalogo/_store/catalogo-artista-ui-store
+```
+
+TypeScript errors expected until T5, T6, T7 complete store migrations.
+
+### Design Rationale
+
+1. **Eager Registration**: Ensures all stores are available before journal restore attempts to instantiate them
+2. **Map-based**: O(1) lookup by entity type during journal restore
+3. **Typed Generics**: Consumers get type safety when retrieving stores
+4. **No Circular Imports**: Registry imports stores, stores don't import registry
+
+### Integration with Journal Restore
+
+The registry enables this pattern in journal restore:
+
+```typescript
+// Pseudocode
+const entity: JournalEntity = journal.entry.entity
+const store = getStoreForEntity(entity)
+if (store) {
+  store.getState().commitCurrentEdits()
+}
+```
+
+### Next Steps
+
+Once stores are created/renamed (T5-T7), the registry becomes operational for:
+1. Journal restore on app startup
+2. Multi-entity change tracking
+3. Centralized store lifecycle management
+
+### Performance Impact
+
+- Module load: O(4) = negligible (4 imports + 4 registrations)
+- Lookup: O(1) via Map.get()
+- No runtime overhead after initialization
+

@@ -9,7 +9,7 @@ import { Button } from '@/shared/components/ui/button'
 import { Badge } from '@/shared/components/ui/badge'
 
 import { ArtistAvatar } from './artist-avatar'
-import { useArtistUIStore } from '../_store/artist-ui-store'
+import { useArtistaUIStore } from '../_store/artista-ui-store'
 import type { CatalogArtist } from '../_types'
 import { cn } from '@/lib/utils'
 import { useCatalogViewStore } from '../_store/catalog-view-store'
@@ -28,7 +28,7 @@ export function DraggableCatalogRow({
   const isDraggingGlobal = useCatalogViewStore((s) => s.isDragging)
 
   // Check for pending changes on this specific artist
-  const hasPendingChanges = useArtistUIStore(
+  const hasPendingChanges = useArtistaUIStore(
     (state) =>
       state.currentEdits?.operations.some(
         (op) => String(op.id) === String(artista.artistaId)

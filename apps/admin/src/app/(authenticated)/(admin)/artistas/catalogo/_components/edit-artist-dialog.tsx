@@ -16,7 +16,7 @@ import { updateArtist } from '../_actions/catalog.actions'
 import type { CatalogArtist } from '../_types'
 import { ArtistRRSSManager } from './artist-rrss-manager'
 import { useCatalogViewStore } from '../_store/catalog-view-store'
-import { useArtistUIStore } from '../_store/artist-ui-store'
+import { useArtistaUIStore } from '../_store/artista-ui-store'
 
 interface EditArtistDialogProps {
   artist: CatalogArtist | undefined
@@ -25,7 +25,7 @@ interface EditArtistDialogProps {
 export function EditArtistDialog({ artist }: EditArtistDialogProps) {
   const closeArtistDialog = useCatalogViewStore((s) => s.closeArtistDialog)
   const artistDialogOpen = useCatalogViewStore((s) => s.artistDialogOpen)
-  const updateOne = useArtistUIStore((s) => s.updateOne)
+  const updateOne = useArtistaUIStore((s) => s.updateOne)
 
   // Local form state
   const [formData, setFormData] = useState({

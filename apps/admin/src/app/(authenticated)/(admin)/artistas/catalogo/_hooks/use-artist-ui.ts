@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react'
-import { useArtistUIStore } from '../_store/artist-ui-store'
+import { useArtistaUIStore } from '../_store/artista-ui-store'
 import { generateKeyBetween } from 'fractional-indexing'
 import { useCatalogViewStore } from '../_store/catalog-view-store'
 import { useCatalogPaginationStore } from '../_store/catalog-pagination-store'
@@ -44,13 +44,13 @@ export function useArtistUI() {
   const startDrag = useCatalogViewStore((s) => s.startDrag)
   const endDrag = useCatalogViewStore((s) => s.endDrag)
 
-  const { selectById, updateOne } = useArtistUIStore.getState()
+  const { selectById, updateOne } = useArtistaUIStore.getState()
 
   const reorder = useCallback(
     (draggedArtistId: number, dropTargetId: number) => {
       if (!dropTargetId) return
 
-      const artists = useArtistUIStore.getState().selectAll()
+      const artists = useArtistaUIStore.getState().selectAll()
       const sortedArtists = sortByOrden(artists)
 
       const draggedNewIndex = sortedArtists.findIndex(
@@ -125,7 +125,7 @@ export function useVisibleArtists(): {
   visibleArtists: CatalogArtist[]
   totalCount: number
 } {
-  const { entities, ids } = useArtistUIStore(
+  const { entities, ids } = useArtistaUIStore(
     useShallow((s) => {
       const effective = s.getEffectiveData()
       return {
