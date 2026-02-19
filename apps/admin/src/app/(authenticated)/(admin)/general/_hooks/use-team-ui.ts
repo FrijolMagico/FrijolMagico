@@ -1,6 +1,6 @@
 import { useShallow } from 'zustand/react/shallow'
 import { useMemo } from 'react'
-import { useTeamUIStore } from '../_store/team-ui-store'
+import { useOrganizacionEquipoUIStore } from '../_store/organizacion-equipo-ui-store'
 import { TeamMember } from '../_types'
 
 /**
@@ -8,7 +8,7 @@ import { TeamMember } from '../_types'
  * Selecciona el estado normalizador y computa fuera del selector para evitar loops infinitos.
  */
 export function useTeamEffectiveData(): TeamMember[] {
-  const { entities, ids } = useTeamUIStore(
+  const { entities, ids } = useOrganizacionEquipoUIStore(
     useShallow((state) => {
       const effective = state.getEffectiveData()
       return {
@@ -32,7 +32,7 @@ export function useTeamEffectiveData(): TeamMember[] {
  * Selecciona el estado normalizado para evitar crear nuevos objetos en cada render.
  */
 export function useTeamById(id: string | number) {
-  return useTeamUIStore(
+  return useOrganizacionEquipoUIStore(
     (state) => state.getEffectiveData().entities[String(id)]
   )
 }
@@ -41,21 +41,21 @@ export function useTeamById(id: string | number) {
  * Hook para obtener el total de miembros.
  */
 export function useTeamTotal() {
-  return useTeamUIStore((state) => state.selectTotal())
+  return useOrganizacionEquipoUIStore((state) => state.selectTotal())
 }
 
 /**
  * Hook para verificar si hay cambios pendientes.
  */
 export function useTeamHasChanges() {
-  return useTeamUIStore((state) => state.getHasChanges())
+  return useOrganizacionEquipoUIStore((state) => state.getHasChanges())
 }
 
 /**
  * Hook para verificar si hay ediciones sin guardar.
  */
 export function useTeamHasUnsavedEdits() {
-  return useTeamUIStore((state) => state.getHasUnsavedEdits())
+  return useOrganizacionEquipoUIStore((state) => state.getHasUnsavedEdits())
 }
 
 /**
@@ -63,7 +63,7 @@ export function useTeamHasUnsavedEdits() {
  * Selecciona los state pieces estables; el mapeo se realiza fuera del selector.
  */
 export function useTeamRemoteData() {
-  const rawState = useTeamUIStore(
+  const rawState = useOrganizacionEquipoUIStore(
     useShallow((state) => ({
       ids: state.remoteData?.ids ?? [],
       entities: state.remoteData?.entities ?? {}
@@ -83,7 +83,7 @@ export function useTeamRemoteData() {
  * Hook selector para estado de error.
  */
 export function useTeamError() {
-  return useTeamUIStore((state) => state.error)
+  return useOrganizacionEquipoUIStore((state) => state.error)
 }
 
 /**
@@ -91,7 +91,7 @@ export function useTeamError() {
  * Adaptado para API Entity State de colección.
  */
 export function useTeamActions() {
-  return useTeamUIStore(
+  return useOrganizacionEquipoUIStore(
     useShallow((state) => ({
       // Layer 1
       setRemoteData: state.setRemoteData,

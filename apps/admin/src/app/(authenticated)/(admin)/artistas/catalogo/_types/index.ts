@@ -1,3 +1,29 @@
+// Artista base entity (for UI state)
+export interface Artista {
+  id: number
+  nombre: string | null
+  pseudonimo: string
+  slug: string
+  correo: string | null
+  rrss: {
+    [key: string]: string
+  } | null
+  ciudad: string | null
+  pais: string | null
+  avatarUrl: string
+}
+
+// Entidad catalogo_artista (sin datos de artista)
+export interface CatalogoArtista {
+  id: number // catalogoId (primary key of catalogo_artista table)
+  artistaId: number
+  orden: string
+  destacado: boolean
+  activo: boolean
+  descripcion: string | null
+  catalogoUpdatedAt: string
+}
+
 // Datos del catálogo (solo lectura + editable)
 export interface CatalogArtist {
   // From artista table (readonly)

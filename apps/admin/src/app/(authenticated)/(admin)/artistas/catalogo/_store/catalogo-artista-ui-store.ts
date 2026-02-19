@@ -1,24 +1,24 @@
 import { createEntityUIStateStore } from '@/shared/ui-state/entity-state'
 import type { EntityOperation } from '@/shared/ui-state/entity-state'
 import { writeEntry } from '@/shared/change-journal/change-journal'
-import { TeamMember } from '../_types'
-import { TEAM_SECTION_NAME } from '../_constants'
+import { JOURNAL_ENTITIES } from '@/shared/lib/database-entities'
+import type { CatalogoArtista } from '../_types'
 
 /**
- * Escribe cambios de miembros del equipo al change-journal.
+ * Escribe cambios de catalogo_artista al change-journal.
  *
  * Mapea EntityOperations a entradas de journal con estructura:
- * - section: 'equipo' (scope lógico)
- * - scopeKey: Para ADD/DELETE: 'equipo:member-123'
- * - scopeKey: Para UPDATE: 'equipo:member-123:field'
+ * - section: 'catalogo_artista' (scope lógico)
+ * - scopeKey: Para ADD/DELETE: 'catalogo_artista:123'
+ * - scopeKey: Para UPDATE: 'catalogo_artista:123:field'
  * - payload: Operación transformada a journal format
  *
- * @param operation - Operación individual sobre un TeamMember (ADD/UPDATE/DELETE)
+ * @param operation - Operación de entidad (ADD/UPDATE/DELETE)
  */
-async function writeTeamJournal(
-  operation: EntityOperation<TeamMember>
+async function writeCatalogoArtistaJournal(
+  operation: EntityOperation<CatalogoArtista>
 ): Promise<void> {
-  const section = TEAM_SECTION_NAME
+  const section = JOURNAL_ENTITIES.CATALOGO_ARTISTA
 
   switch (operation.type) {
     case 'ADD':
@@ -46,16 +46,16 @@ async function writeTeamJournal(
 }
 
 /**
- * Store de estado UI para el equipo de la organización.
+ * Store de estado UI para los registros de catalogo_artista.
  *
- * Usa Entity State Factory en modo colección (no singleton).
- * Maneja operaciones CRUD sobre miembros del equipo con:
+ * Usa Entity State Factory en modo colección.
+ * Maneja operaciones CRUD sobre catalogo_artista con:
  * - Estado normalizado (O(1) lookups)
- * - IDs temporales para miembros nuevos
  * - 3 capas: remoteData, appliedChanges, currentEdits
  */
-export const useTeamUIStore = createEntityUIStateStore<TeamMember>({
-  sectionName: TEAM_SECTION_NAME,
-  idField: 'id',
-  writeToJournal: writeTeamJournal
-})
+export const useCatalogoArtistaUIStore =
+  createEntityUIStateStore<CatalogoArtista>({
+    sectionName: JOURNAL_ENTITIES.CATALOGO_ARTISTA,
+    idField: 'id',
+    writeToJournal: writeCatalogoArtistaJournal
+  })
