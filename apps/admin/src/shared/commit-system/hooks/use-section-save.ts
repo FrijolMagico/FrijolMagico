@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import type { SectionName, SaveResult } from '../lib/types'
 import type { EntityUIStateStore } from '@/shared/ui-state/entity-state'
 import { saveOrganizacion } from '../actions/save-organizacion.action'
+import { saveOrganizacionEquipo } from '../actions/save-organizacion-equipo.action'
 import { saveCatalogo } from '../../../app/(authenticated)/(admin)/artistas/catalogo/_actions/save-catalogo.action'
 import { saveArtista } from '../actions/save-artista.action'
 import { saveEvento } from '../actions/save-evento.action'
@@ -31,7 +32,10 @@ export function useSectionSave(
         case 'organizacion':
           action = saveOrganizacion
           break
-        case 'catalogo':
+        case 'organizacion_equipo':
+          action = saveOrganizacionEquipo
+          break
+        case 'catalogo_artista':
           action = saveCatalogo
           break
         case 'artista':
