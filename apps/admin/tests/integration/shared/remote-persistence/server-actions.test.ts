@@ -96,7 +96,7 @@ describe('saveCatalogo', () => {
 
     const { saveCatalogo } =
       await import('@/app/(authenticated)/(admin)/artistas/catalogo/_actions/save-catalogo.action')
-    const result = await saveCatalogo('catalogo')
+    const result = await saveCatalogo('catalogo_artista')
 
     expect(result.success).toBe(true)
     expect(result.processedCount).toBe(0)
@@ -151,7 +151,7 @@ describe('saveCatalogo', () => {
 
     const { saveCatalogo } =
       await import('@/app/(authenticated)/(admin)/artistas/catalogo/_actions/save-catalogo.action')
-    const result = await saveCatalogo('catalogo')
+    const result = await saveCatalogo('catalogo_artista')
 
     expect(result.success).toBe(true)
     expect(result.processedCount).toBe(3)
@@ -351,7 +351,7 @@ describe('Error Handling', () => {
 
     const { saveCatalogo } =
       await import('@/app/(authenticated)/(admin)/artistas/catalogo/_actions/save-catalogo.action')
-    const result = await saveCatalogo('catalogo')
+    const result = await saveCatalogo('catalogo_artista')
 
     expect(result.success).toBe(false)
     expect(mockClearSection).not.toHaveBeenCalled()

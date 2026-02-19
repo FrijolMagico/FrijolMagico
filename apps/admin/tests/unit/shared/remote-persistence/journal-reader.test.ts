@@ -33,11 +33,12 @@ describe('Journal Reader - Type Safety', () => {
   test('SectionName type should be union of valid sections', () => {
     const validSections: SectionName[] = [
       'organizacion',
-      'catalogo',
+      'organizacion_equipo',
+      'catalogo_artista',
       'artista',
       'evento'
     ]
-    expect(validSections).toHaveLength(4)
+    expect(validSections).toHaveLength(5)
   })
 
   test('JournalEntry type should have required fields', () => {

@@ -1,4 +1,5 @@
 import type { EntityUIStateStore } from './entity-state'
+import type { UseBoundStore, StoreApi } from 'zustand'
 import {
   JOURNAL_ENTITIES,
   type JournalEntity
@@ -9,19 +10,27 @@ import { useOrganizacionEquipoUIStore } from '@/app/(authenticated)/(admin)/gene
 import { useArtistaUIStore } from '@/app/(authenticated)/(admin)/artistas/catalogo/_store/artista-ui-store'
 import { useCatalogoArtistaUIStore } from '@/app/(authenticated)/(admin)/artistas/catalogo/_store/catalogo-artista-ui-store'
 
-const entityRegistry = new Map<JournalEntity, EntityUIStateStore<unknown>>()
+/**
+ * Zustand store hook type returned by createEntityUIStateStore.
+ * This is what create<EntityUIStateStore<T>>() returns.
+ */
+type EntityStoreHook<T = unknown> = UseBoundStore<
+  StoreApi<EntityUIStateStore<T>>
+>
+
+const entityRegistry = new Map<JournalEntity, EntityStoreHook>()
 
 export function registerEntity<T>(
   entity: JournalEntity,
-  store: EntityUIStateStore<T>
+  store: EntityStoreHook<T>
 ): void {
-  entityRegistry.set(entity, store as EntityUIStateStore<unknown>)
+  entityRegistry.set(entity, store as EntityStoreHook)
 }
 
 export function getStoreForEntity<T>(
   entity: JournalEntity
-): EntityUIStateStore<T> | undefined {
-  return entityRegistry.get(entity) as EntityUIStateStore<T> | undefined
+): EntityStoreHook<T> | undefined {
+  return entityRegistry.get(entity) as EntityStoreHook<T> | undefined
 }
 
 export function getRegisteredEntities(): JournalEntity[] {

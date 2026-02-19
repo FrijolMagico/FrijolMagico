@@ -12,20 +12,7 @@ import {
 import { getStoreForEntity } from '@/shared/ui-state/entity-registry'
 import { journalEntriesToOperations } from '@/shared/change-journal/journal-mappers'
 import type { JournalEntity } from '@/shared/lib/database-entities'
-import type {
-  AppliedChanges,
-  EntityUIStateStore
-} from '@/shared/ui-state/entity-state'
-
-type ZustandStoreWithSetState = EntityUIStateStore<unknown> & {
-  setState: (
-    partial:
-      | Partial<EntityUIStateStore<unknown>>
-      | ((
-          state: EntityUIStateStore<unknown>
-        ) => Partial<EntityUIStateStore<unknown>>)
-  ) => void
-}
+import type { AppliedChanges } from '@/shared/ui-state/entity-state'
 
 export function UnsavedChangesNotification() {
   const [unsavedSections, setUnsavedSections] = useState<JournalEntity[]>([])
@@ -57,9 +44,7 @@ export function UnsavedChangesNotification() {
 
   async function handleRestore() {
     for (const entity of unsavedSections) {
-      const store = getStoreForEntity(entity) as
-        | ZustandStoreWithSetState
-        | undefined
+      const store = getStoreForEntity(entity)
       if (!store) continue
 
       const entries = await getLatestEntries(entity)

@@ -1,10 +1,44 @@
 import { useCallback, useMemo } from 'react'
 import { useArtistaUIStore } from '../_store/artista-ui-store'
+import { useCatalogoArtistaUIStore } from '../_store/catalogo-artista-ui-store'
 import { generateKeyBetween } from 'fractional-indexing'
 import { useCatalogViewStore } from '../_store/catalog-view-store'
 import { useCatalogPaginationStore } from '../_store/catalog-pagination-store'
-import { CatalogArtist, CatalogFilters } from '../_types'
+import type {
+  Artista,
+  CatalogArtist,
+  CatalogFilters,
+  CatalogoArtista
+} from '../_types'
 import { useShallow } from 'zustand/react/shallow'
+
+export function mergeToCatalogArtist(
+  catalogo: CatalogoArtista,
+  artistaEntities: Record<string, Artista>
+): CatalogArtist | null {
+  const artista = artistaEntities[catalogo.artistaId]
+  if (!artista) return null
+
+  return {
+    artistaId: catalogo.artistaId,
+    nombre: artista.nombre,
+    pseudonimo: artista.pseudonimo,
+    slug: artista.slug,
+    correo: artista.correo,
+    rrss: artista.rrss,
+    ciudad: artista.ciudad,
+    pais: artista.pais,
+    avatarUrl: artista.avatarUrl,
+    catalogoId: catalogo.id,
+    orden: catalogo.orden,
+    destacado: catalogo.destacado,
+    activo: catalogo.activo,
+    descripcion: catalogo.descripcion,
+    catalogoUpdatedAt: catalogo.catalogoUpdatedAt,
+    participacionesCount: 0,
+    ultimaEdicion: null
+  }
+}
 
 function filterArtists(
   artists: CatalogArtist[],
@@ -40,23 +74,31 @@ function sortByOrden(artists: CatalogArtist[]): CatalogArtist[] {
   })
 }
 
+function sortCatalogoByOrden(items: CatalogoArtista[]): CatalogoArtista[] {
+  return [...items].sort((a, b) => {
+    if (a.orden < b.orden) return -1
+    if (a.orden > b.orden) return 1
+    return 0
+  })
+}
+
 export function useArtistUI() {
   const startDrag = useCatalogViewStore((s) => s.startDrag)
   const endDrag = useCatalogViewStore((s) => s.endDrag)
 
-  const { selectById, updateOne } = useArtistaUIStore.getState()
+  const { updateOne: updateCatalogo } = useCatalogoArtistaUIStore.getState()
 
   const reorder = useCallback(
     (draggedArtistId: number, dropTargetId: number) => {
       if (!dropTargetId) return
 
-      const artists = useArtistaUIStore.getState().selectAll()
-      const sortedArtists = sortByOrden(artists)
+      const allCatalogo = useCatalogoArtistaUIStore.getState().selectAll()
+      const sorted = sortCatalogoByOrden(allCatalogo)
 
-      const draggedNewIndex = sortedArtists.findIndex(
+      const draggedNewIndex = sorted.findIndex(
         (item) => item.artistaId === draggedArtistId
       )
-      const dropTargetIndex = sortedArtists.findIndex(
+      const dropTargetIndex = sorted.findIndex(
         (item) => item.artistaId === dropTargetId
       )
 
@@ -64,15 +106,15 @@ export function useArtistUI() {
 
       const movingDown = draggedNewIndex < dropTargetIndex
 
-      let prevItem: CatalogArtist | undefined
-      let nextItem: CatalogArtist | undefined
+      let prevItem: CatalogoArtista | undefined
+      let nextItem: CatalogoArtista | undefined
 
       if (movingDown) {
-        prevItem = sortedArtists[dropTargetIndex]
-        nextItem = sortedArtists[dropTargetIndex + 1]
+        prevItem = sorted[dropTargetIndex]
+        nextItem = sorted[dropTargetIndex + 1]
       } else {
-        prevItem = sortedArtists[dropTargetIndex - 1]
-        nextItem = sortedArtists[dropTargetIndex]
+        prevItem = sorted[dropTargetIndex - 1]
+        nextItem = sorted[dropTargetIndex]
       }
 
       const prevOrder = prevItem?.orden ?? null
@@ -93,18 +135,17 @@ export function useArtistUI() {
         else newOrden = 'a0'
       }
 
-      const currentEntity = selectById(draggedArtistId)
-      if (currentEntity && newOrden !== currentEntity.orden) {
-        updateOne(draggedArtistId, { orden: newOrden })
+      const draggedItem = sorted[draggedNewIndex]
+      if (draggedItem && newOrden !== draggedItem.orden) {
+        updateCatalogo(draggedItem.id, { orden: newOrden })
       }
     },
-    [selectById, updateOne] // ✅ OK - getState() siempre da estado fresco
+    [updateCatalogo]
   )
 
   const handleDragStart = useCallback(
     (id: string) => {
-      // ✅ Consistente con tipos
-      startDrag(Number(id)) // Convierte aquí si startDrag necesita number
+      startDrag(Number(id))
     },
     [startDrag]
   )
@@ -120,17 +161,26 @@ export function useArtistUI() {
   }
 }
 
-// This need to be the main source of all related to the visibility of the list items
 export function useVisibleArtists(): {
   visibleArtists: CatalogArtist[]
   totalCount: number
 } {
-  const { entities, ids } = useArtistaUIStore(
+  const { entities: catalogoEntities, ids: catalogoIds } =
+    useCatalogoArtistaUIStore(
+      useShallow((s) => {
+        const effective = s.getEffectiveData()
+        return {
+          entities: effective.entities,
+          ids: effective.ids
+        }
+      })
+    )
+
+  const { entities: artistaEntities } = useArtistaUIStore(
     useShallow((s) => {
       const effective = s.getEffectiveData()
       return {
-        entities: effective.entities,
-        ids: effective.ids
+        entities: effective.entities
       }
     })
   )
@@ -140,8 +190,15 @@ export function useVisibleArtists(): {
   const pageSize = useCatalogPaginationStore((s) => s.pageSize)
 
   const allArtists = useMemo(
-    () => ids.map((id) => entities[id]).filter(Boolean),
-    [entities, ids]
+    () =>
+      catalogoIds
+        .map((id) => {
+          const catalogo = catalogoEntities[id]
+          if (!catalogo) return null
+          return mergeToCatalogArtist(catalogo, artistaEntities)
+        })
+        .filter((a): a is CatalogArtist => a !== null),
+    [catalogoEntities, catalogoIds, artistaEntities]
   )
 
   const filteredArtists = useMemo(

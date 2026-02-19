@@ -1,4 +1,5 @@
 import type { IdMapping, SectionName } from './types'
+import { JOURNAL_ENTITIES } from '@/shared/lib/database-entities'
 
 /**
  * Genera un ID temporal único con formato 'temp-{uuid}'
@@ -46,9 +47,10 @@ export function validateIdMappings(mappings: IdMapping[]): boolean {
   return mappings.every((mapping) => {
     const { tempId, realId, section } = mapping
     const validSections: SectionName[] = [
-      'organizacion',
-      'catalogo',
-      'artista',
+      JOURNAL_ENTITIES.ORGANIZACION,
+      JOURNAL_ENTITIES.ORGANIZACION_EQUIPO,
+      JOURNAL_ENTITIES.ARTISTA,
+      JOURNAL_ENTITIES.CATALOGO_ARTISTA,
       'evento'
     ]
     return (
@@ -67,9 +69,10 @@ export function groupMappingsBySection(
   mappings: IdMapping[]
 ): Record<SectionName, IdMapping[]> {
   const grouped: Record<SectionName, IdMapping[]> = {
-    organizacion: [],
-    catalogo: [],
-    artista: [],
+    [JOURNAL_ENTITIES.ORGANIZACION]: [],
+    [JOURNAL_ENTITIES.ORGANIZACION_EQUIPO]: [],
+    [JOURNAL_ENTITIES.ARTISTA]: [],
+    [JOURNAL_ENTITIES.CATALOGO_ARTISTA]: [],
     evento: []
   }
 

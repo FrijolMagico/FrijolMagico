@@ -48,7 +48,7 @@ describe('id-mapper', () => {
     test('works with different sections', () => {
       const sections = [
         'organizacion',
-        'catalogo',
+        'catalogo_artista',
         'artista',
         'evento'
       ] as const
@@ -109,7 +109,7 @@ describe('id-mapper', () => {
     test('validates correct mappings', () => {
       const mappings = [
         createIdMapping(generateTempId(), 1, 'organizacion'),
-        createIdMapping(generateTempId(), 2, 'catalogo'),
+        createIdMapping(generateTempId(), 2, 'catalogo_artista'),
         createIdMapping(generateTempId(), 3, 'artista')
       ]
 
@@ -174,14 +174,14 @@ describe('id-mapper', () => {
       const mappings = [
         createIdMapping(generateTempId(), 1, 'organizacion'),
         createIdMapping(generateTempId(), 2, 'organizacion'),
-        createIdMapping(generateTempId(), 3, 'catalogo'),
+        createIdMapping(generateTempId(), 3, 'catalogo_artista'),
         createIdMapping(generateTempId(), 4, 'artista')
       ]
 
       const grouped = groupMappingsBySection(mappings)
 
       expect(grouped.organizacion).toHaveLength(2)
-      expect(grouped.catalogo).toHaveLength(1)
+      expect(grouped.catalogo_artista).toHaveLength(1)
       expect(grouped.artista).toHaveLength(1)
       expect(grouped.evento).toHaveLength(0)
     })
@@ -190,7 +190,8 @@ describe('id-mapper', () => {
       const grouped = groupMappingsBySection([])
 
       expect(grouped).toHaveProperty('organizacion')
-      expect(grouped).toHaveProperty('catalogo')
+      expect(grouped).toHaveProperty('organizacion_equipo')
+      expect(grouped).toHaveProperty('catalogo_artista')
       expect(grouped).toHaveProperty('artista')
       expect(grouped).toHaveProperty('evento')
       expect(Object.values(grouped).every((arr) => arr.length === 0)).toBe(true)
