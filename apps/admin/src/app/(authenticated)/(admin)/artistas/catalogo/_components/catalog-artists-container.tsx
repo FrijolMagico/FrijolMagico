@@ -10,7 +10,9 @@ import { useSelectedArtist } from '../_hooks/use-selected-artist'
 import { useCatalogViewStore } from '../_store/catalog-view-store'
 import { useCatalogPaginationStore } from '../_store/catalog-pagination-store'
 import { useArtistaUIStore } from '../_store/artista-ui-store'
+import { useCatalogoArtistaUIStore } from '../_store/catalogo-artista-ui-store'
 import { CatalogTableContainer } from './catalog-table-container'
+import { splitCatalogArtist } from '@/shared/ui-state/data-split'
 
 import type { CatalogArtist, PaginatedResult } from '../_types'
 
@@ -24,7 +26,8 @@ export function CatalogArtistsContainer({
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const setRemoteData = useArtistaUIStore((s) => s.setRemoteData)
+  const setArtistaData = useArtistaUIStore((s) => s.setRemoteData)
+  const setCatalogoData = useCatalogoArtistaUIStore((s) => s.setRemoteData)
 
   const setFilters = useCatalogViewStore((s) => s.setFilters)
   const setPage = useCatalogPaginationStore((s) => s.setPage)
@@ -35,7 +38,9 @@ export function CatalogArtistsContainer({
 
   // Initialize data and sync state
   useEffect(() => {
-    setRemoteData(initialData.data)
+    const { artistas, catalogoArtistas } = splitCatalogArtist(initialData.data)
+    setArtistaData(artistas)
+    setCatalogoData(catalogoArtistas)
     setTotalItems(initialData.total)
 
     // Sync filters from URL to Store
@@ -55,7 +60,8 @@ export function CatalogArtistsContainer({
     }
   }, [
     initialData,
-    setRemoteData,
+    setArtistaData,
+    setCatalogoData,
     setTotalItems,
     pageSize,
     searchParams,
