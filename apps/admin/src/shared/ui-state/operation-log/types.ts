@@ -1,9 +1,10 @@
-export type BaseEntity<T> = T & { id: string }
+export type NewBaseEntity<T> = Omit<T, 'id'>
+export type BaseEntity<T> = NewBaseEntity<T> & { id: string }
 
 export type EntityOperation<T> =
   | {
       type: 'ADD'
-      data: BaseEntity<T>
+      data: NewBaseEntity<T>
       timestamp: number
     }
   | {
@@ -21,7 +22,7 @@ export interface OperationLogState<T> {
 }
 
 export interface OperationLogActions<T> {
-  add(data: BaseEntity<T>): void
+  add(data: NewBaseEntity<T>): void
   remove(id: string): void
   update(id: string, data: Partial<BaseEntity<T>>): void
 
