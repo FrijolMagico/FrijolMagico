@@ -1,21 +1,44 @@
-import { useShallow } from 'zustand/react/shallow'
-import { useMemo } from 'react'
-import { useOrganizationUIStore } from '../_store/organization-ui-store'
+'use client'
 
-export function useOrganizationEffectiveData() {
-  const { entities, ids } = useOrganizationUIStore(
-    useShallow((state) => {
-      const effective = state.getEffectiveData()
-      return {
-        entities: effective.entities,
-        ids: effective.entityIds
-      }
+import { useRef, useEffect } from 'react'
+import type { UseBoundStore, StoreApi } from 'zustand'
+import type { EntityOperationStore } from '@/shared/ui-state/operation-log/types'
+import type { UIProjectionState } from '@/shared/ui-state/ui-projection-engine'
+
+interface UseProjectionSyncOptions<T extends { id: string }> {
+  initialData: T[]
+  operationStore: UseBoundStore<StoreApi<EntityOperationStore<T>>>
+  projectionStore: UseBoundStore<StoreApi<UIProjectionState<T>>>
+}
+
+export function useProjectionSync<T extends { id: string }>({
+  initialData,
+  operationStore,
+  projectionStore
+}: UseProjectionSyncOptions<T>): void {
+  const initialDataRef = useRef(initialData)
+
+  // Keep ref in sync with latest initialData prop
+  useEffect(() => {
+    initialDataRef.current = initialData
+  }, [initialData])
+
+  // Seed on mount + subscribe to operation store changes
+  useEffect(() => {
+    // Seed: ensure projection store has data on mount
+    projectionStore.getState().project(initialDataRef.current, null, null)
+
+    // Subscribe: re-project whenever operations change
+    const unsubscribe = operationStore.subscribe((state) => {
+      projectionStore
+        .getState()
+        .project(
+          initialDataRef.current,
+          state.persistedOperations,
+          state.pendingOperations
+        )
     })
-  )
 
-  // Memoize result based on stable state pieces
-  return useMemo(() => {
-    const id = ids[0]
-    return id !== undefined ? entities[id] : null
-  }, [entities, ids])
+    return unsubscribe
+  }, [operationStore, projectionStore])
 }

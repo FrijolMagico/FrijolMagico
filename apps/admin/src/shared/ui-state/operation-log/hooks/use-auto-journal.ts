@@ -6,8 +6,8 @@ interface UseAutoJournalOptions<T> {
   // Datos actuales (para dirty check)
   data?: T | null
   actions: {
-    update: (data: Partial<T>, id: number | null) => void
-    save: (data: Partial<T>, id: number | null) => Promise<void>
+    update: (id: string, data: Partial<T>) => void
+    save: (data: Partial<T>, id: string) => Promise<void>
   }
   // Config
   debounceMs?: number
@@ -36,29 +36,28 @@ export function useAutoJournal<T extends Record<string, unknown>>({
       // NOTE: Este efecto esta impidiendo que se ejecute el debounce porque limpia siempre los pendingEdits, por lo tanto nunca tenemos timeouts
       // Ademas ejecuta el save action cada vez que el usuario escribe, rompiendo todo el propósito del debounce
       // Limpiar todos los timers pendientes
-      Object.values(pendingEdits.current).forEach(clearTimeout)
-
+      // Object.values(pendingEdits.current).forEach(clearTimeout)
       // Emergency commit
       // actions.save() // Este emergency commit requiere información que no tenemos...
     }
   }, [actions])
 
   const handleChange = useCallback(
-    (field: keyof T, value: unknown, entityId: number | null) => {
-      // 1. Actualizar L3 inmediatamente
-      actions.update({ [field]: value } as Partial<T>, entityId)
-
-      // 2. Lógica de debounce
+    (field: keyof T, value: unknown, entityId: string) => {
       const fieldKey = field as string
-      // if (pendingEdits.current[fieldKey]) {
-      //   clearTimeout(pendingEdits.current[fieldKey])
-      // }
 
-      // Analizar por qué no estamos guardando el timeout en pendingEdits
-      // No se está ejecutando el timeout
+      // 1. L3 update: IMMEDIATE — reflect in UI right away
+      actions.update(entityId, { [field]: value } as Partial<T>)
+
+      // 2. Debounce only the persistence (journal write)
+      if (pendingEdits.current[fieldKey]) {
+        clearTimeout(pendingEdits.current[fieldKey])
+      }
+
       pendingEdits.current[fieldKey] = setTimeout(() => {
         console.log('committing called...')
-        // Dirty check contra lo último commiteado
+
+        // Dirty check antes de persistir
         if (value !== lastEditsApplied.current[fieldKey]) {
           actions.save({ [field]: value } as Partial<T>, entityId)
           lastEditsApplied.current[fieldKey] = value
@@ -70,7 +69,7 @@ export function useAutoJournal<T extends Record<string, unknown>>({
   )
 
   const handleBlur = useCallback(
-    (field: keyof T, currentValue: unknown, entityId: number | null) => {
+    (field: keyof T, currentValue: unknown, entityId: string) => {
       const fieldKey = field as string
 
       // Cancelar debounce pendiente
