@@ -1,21 +1,3 @@
-import { Suspense } from 'react'
-import { Skeleton } from '@/shared/components/ui/skeleton'
-
-function ArtistsLoading() {
-  return (
-    <div className='space-y-6'>
-      <div className='space-y-2'>
-        <Skeleton className='h-8 w-48' /> <Skeleton className='h-4 w-96' />
-      </div>
-      <div className='flex gap-4'>
-        <Skeleton className='h-10 w-full max-w-sm' />
-        <Skeleton className='h-10 w-35' />
-        <Skeleton className='h-10 w-40' />
-      </div>
-      <Skeleton className='h-96 w-full' />
-    </div>
-  )
-}
 export default function ArtistsPage() {
   return (
     <div className='space-y-6'>
@@ -29,9 +11,7 @@ export default function ArtistsPage() {
           nombre, disciplina y estado.
         </p>
       </div>
-      <Suspense fallback={<ArtistsLoading />}>
-        <div>Artistas List</div>
-      </Suspense>
+      <div>Artistas List</div>
     </div>
   )
 }
