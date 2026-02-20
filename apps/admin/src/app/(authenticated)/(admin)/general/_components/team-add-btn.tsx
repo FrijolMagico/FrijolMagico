@@ -2,21 +2,17 @@
 
 import { Button } from '@/shared/components/ui/button'
 import { Plus } from 'lucide-react'
-import { useOrganizacionEquipoUIStore } from '../_store/organizacion-equipo-ui-store'
+import { useTeamOperationStore } from '../_store/organization-team-ui-store'
 
 export function TeamAddBtn() {
-  const add = useOrganizacionEquipoUIStore((state) => state.add)
+  const add = useTeamOperationStore((state) => state.add)
 
   const handleAddTeamMember = () => {
-    add(
-      {
-        nombre: '',
-        cargo: '',
-        rrss: '',
-        isNew: true
-      },
-      null
-    )
+    add({
+      nombre: '',
+      cargo: '',
+      rrss: ''
+    })
   }
 
   return (

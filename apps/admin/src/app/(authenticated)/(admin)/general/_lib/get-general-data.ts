@@ -6,7 +6,7 @@ import { db } from '@frijolmagico/database/orm'
 import { core } from '@frijolmagico/database/schema'
 import { eq } from 'drizzle-orm'
 
-import { RawOrganization, RawTeamMember } from '../_types'
+import { Organization, TeamMember } from '../_types'
 
 import {
   ORGANIZATION_CACHE_TAG,
@@ -14,28 +14,7 @@ import {
   TEAM_CACHE_TAG
 } from '../_constants'
 
-/**
- * Obtiene datos de la organización desde la base de datos.
- *
- * @example
- * ```typescript
- * // Server Component
- * import { getOrganizationData } from './_lib/getGeneralData'
- *
- * export default async function Page() {
- *   const data = await getOrganizationData()
- *
- *   if (!data) {
- *     return <div>Error: Organización no encontrada</div>
- *   }
- *
- *   return <OrgForm data={data} />
- * }
- * ```
- *
- * @returns Organization o null si no existe
- */
-export async function getOrganizationData(): Promise<RawOrganization | null> {
+export async function getOrganizationData(): Promise<Organization | null> {
   'use cache'
   cacheTag(ORGANIZATION_CACHE_TAG)
 
@@ -44,26 +23,14 @@ export async function getOrganizationData(): Promise<RawOrganization | null> {
   })
 
   if (organization === undefined) return null
-  return organization
+
+  return {
+    ...organization,
+    id: String(organization.id)
+  }
 }
 
-/**
- * Obtiene miembros del equipo desde la base de datos.
- *
- * @example
- * ```typescript
- * const equipo = await getEquipoData()
- *
- * if (equipo) {
- *   equipo.forEach((miembro) => {
- *     console.log(miembro.nombre, miembro.cargo)
- *   })
- * }
- * ```
- *
- * @returns Array de OrgEquipo o null
- */
-export async function getTeamData(): Promise<RawTeamMember[] | null> {
+export async function getTeamData(): Promise<TeamMember[] | null> {
   'use cache'
   cacheTag(TEAM_CACHE_TAG)
 
@@ -72,5 +39,9 @@ export async function getTeamData(): Promise<RawTeamMember[] | null> {
   })
 
   if (team === undefined) return null
-  return team
+
+  return team.map((member) => ({
+    ...member,
+    id: String(member.id)
+  }))
 }

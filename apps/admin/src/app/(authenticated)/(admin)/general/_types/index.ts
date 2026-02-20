@@ -7,7 +7,7 @@ export type Organization = Omit<RawOrganization, 'id'> & {
   id: string
 }
 
-export type TeamMember = Omit<RawTeamMember, 'id'> & {
+export type TeamMember = Pick<RawTeamMember, 'nombre' | 'cargo' | 'rrss'> & {
   id: string
 }
 

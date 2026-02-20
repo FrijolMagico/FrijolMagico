@@ -1,6 +1,6 @@
 'use client'
 
-import { RawOrganization, Organization } from '../_types'
+import { Organization } from '../_types'
 import { Label } from '@/shared/components/ui/label'
 import { Input } from '@/shared/components/ui/input'
 import { Textarea } from '@/shared/components/ui/textarea'
@@ -14,7 +14,7 @@ import { useAutoJournal } from '@/shared/ui-state/operation-log/hooks/use-auto-j
 import { useProjectionSync } from '../_hooks/use-organization-ui'
 
 interface OrganizationFormProps {
-  initialData: RawOrganization
+  initialData: Organization
 }
 
 export function OrganizationForm({ initialData }: OrganizationFormProps) {
@@ -29,7 +29,7 @@ export function OrganizationForm({ initialData }: OrganizationFormProps) {
   const source = projected ?? initialData
 
   useProjectionSync<Organization>({
-    initialData: [{ ...initialData, id: String(ORGANIZATION_ID) }],
+    initialData: [initialData],
     operationStore: useOrganizationOperationStore,
     projectionStore: useOrganizationProjectionStore
   })

@@ -15,7 +15,7 @@ export async function OrganizationSection() {
   if (!organization) {
     return (
       <EmptyState
-        title='Error 404'
+        title='Error al cargar la organización'
         description='No se pudo cargar la información de la organización.'
         action={{
           label: 'Intentar otra vez',

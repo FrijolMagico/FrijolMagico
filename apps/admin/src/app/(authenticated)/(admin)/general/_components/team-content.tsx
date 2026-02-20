@@ -1,26 +1,23 @@
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle
-} from '@/shared/components/ui/alert'
-import { AlertCircle } from 'lucide-react'
 import { CardContent } from '@/shared/components/ui/card'
 import { TeamTable } from './team-table'
 import { getTeamData } from '../_lib/get-general-data'
+import { EmptyState } from '@/shared/components/empty-state'
 
 export async function TeamContent() {
   const team = await getTeamData()
 
   if (!team) {
     return (
-      <Alert variant='default'>
-        <AlertCircle className='h-4 w-4' />
-        <AlertTitle>No se encontraron datos</AlertTitle>
-        <AlertDescription>
-          No se encontraron datos del equipo. Por favor, agrega miembros para
-          comenzar.
-        </AlertDescription>
-      </Alert>
+      <EmptyState
+        title='Error al cargar el equipo'
+        description='No se pudo cargar la información del equipo.'
+        action={{
+          label: 'Intentar otra vez',
+          onClick: async () => {
+            // A way to retry to get data
+          }
+        }}
+      />
     )
   }
 
