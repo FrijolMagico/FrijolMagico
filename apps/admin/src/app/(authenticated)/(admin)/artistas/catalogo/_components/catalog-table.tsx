@@ -28,11 +28,14 @@ import {
 import { DraggableCatalogRow } from './draggable-catalog-row'
 import { toast } from 'sonner'
 import type { CatalogArtist } from '../_types'
-import { useArtistUI, useVisibleArtists } from '../_hooks/use-artist-ui'
 import { useCatalogPaginationStore } from '../_store/catalog-pagination-store'
 import { useCatalogViewStore } from '../_store/catalog-view-store'
-import { useArtistaUIStore } from '../_store/artista-ui-store'
 import { EmptyState } from '@/shared/components/empty-state'
+import {
+  useCatalogOperationStore,
+  useCatalogProjectionStore
+} from '../_store/catalog-ui-store'
+import { useArtistUI, useVisibleArtists } from '../_hooks/use-artist-ui'
 
 interface CatalogTableProps {
   containerRef?: React.RefObject<HTMLDivElement | null>
@@ -55,9 +58,17 @@ export function CatalogTable({
   onPageChange,
   handleFiltersChange
 }: CatalogTableProps) {
-  const { reorder } = useArtistUI()
-  const updateOne = useArtistaUIStore((s) => s.updateOne)
+  // THIS IS OUR MAIN DATA SOURCE FOR ITERARIONS
+  // We pass this for the pagination logic
+  // iterate based in ids list
+  // each item get its complete data from projection store by id and merge with artist data
+  // or get the full data from a specific new store for merges (determine best approach)
+  const catalogIds = useCatalogProjectionStore((s) => s.allIds)
+  const update = useCatalogOperationStore((s) => s.update)
 
+  const { reorder } = useArtistUI()
+
+  // This need to return only the paginated and filteres list of ids, not the complete artist, this is to prevent re rerenders (investigate)
   const { visibleArtists } = useVisibleArtists()
 
   const page = useCatalogPaginationStore((s) => s.page)
@@ -96,7 +107,8 @@ export function CatalogTable({
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event
-    startDrag(Number(active.id))
+    if (!active?.data?.current) return
+    startDrag(active.data.current.id)
   }
 
   const handleDragMove = useCallback(
@@ -193,20 +205,20 @@ export function CatalogTable({
   }
 
   const handleToggleField = (
-    artista: CatalogArtist,
+    catalogArtist: CatalogArtist,
     field: 'destacado' | 'activo',
     value: boolean
   ) => {
     // Update using ui-state (automatically handles Layer 3)
-    updateOne(artista.artistaId, { [field]: value })
+    update(catalogArtist.id, { [field]: value })
     toast.info(
       `${field === 'destacado' ? 'Destacado' : 'Activo'} cambiado. Presiona "Guardar cambios" para aplicar.`
     )
   }
 
   const handleEdit = useCallback(
-    (artista: CatalogArtist) => {
-      openCatalogDialog(artista.artistaId)
+    (catalogArtist: CatalogArtist) => {
+      openCatalogDialog(catalogArtist.id)
     },
     [openCatalogDialog]
   )

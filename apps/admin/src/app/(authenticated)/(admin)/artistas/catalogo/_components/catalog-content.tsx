@@ -1,11 +1,11 @@
 import { EmptyState } from '@/shared/components/empty-state'
-import { getCatalogArtists } from '../_lib/get-catalog-data'
+import { getCatalogData } from '../_lib/get-catalog-data'
 import { CatalogArtistsContainer } from './catalog-artists-container'
 
 export async function CatalogContent() {
-  const data = await getCatalogArtists()
+  const catalog = await getCatalogData()
 
-  if (!data) {
+  if (!catalog || catalog.length === 0) {
     return (
       <div className='py-20'>
         <EmptyState
@@ -16,5 +16,5 @@ export async function CatalogContent() {
     )
   }
 
-  return <CatalogArtistsContainer initialData={data} />
+  return <CatalogArtistsContainer initialData={catalog} />
 }

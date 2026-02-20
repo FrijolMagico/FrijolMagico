@@ -1,42 +1,31 @@
 import { useCallback, useMemo } from 'react'
-import { useArtistaUIStore } from '../_store/artista-ui-store'
-import { useCatalogoArtistaUIStore } from '../_store/catalogo-artista-ui-store'
 import { generateKeyBetween } from 'fractional-indexing'
 import { useCatalogViewStore } from '../_store/catalog-view-store'
 import { useCatalogPaginationStore } from '../_store/catalog-pagination-store'
-import type {
-  Artista,
-  CatalogArtist,
-  CatalogFilters,
-  CatalogoArtista
-} from '../_types'
+import type { CatalogArtist, CatalogEntry, CatalogFilters } from '../_types'
 import { useShallow } from 'zustand/react/shallow'
+import { ArtistEntry } from '../../_types'
+import {
+  useCatalogOperationStore,
+  useCatalogProjectionStore
+} from '../_store/catalog-ui-store'
 
 export function mergeToCatalogArtist(
-  catalogo: CatalogoArtista,
-  artistaEntities: Record<string, Artista>
+  catalog: CatalogEntry,
+  artistEntities: Record<string, ArtistEntry>
 ): CatalogArtist | null {
-  const artista = artistaEntities[catalogo.artistaId]
+  const artista = artistEntities[catalog.artistaId]
   if (!artista) return null
 
   return {
-    artistaId: catalogo.artistaId,
+    ...catalog,
     nombre: artista.nombre,
     pseudonimo: artista.pseudonimo,
-    slug: artista.slug,
     correo: artista.correo,
     rrss: artista.rrss,
     ciudad: artista.ciudad,
     pais: artista.pais,
-    avatarUrl: artista.avatarUrl,
-    catalogoId: catalogo.id,
-    orden: catalogo.orden,
-    destacado: catalogo.destacado,
-    activo: catalogo.activo,
-    descripcion: catalogo.descripcion,
-    catalogoUpdatedAt: catalogo.catalogoUpdatedAt,
-    participacionesCount: 0,
-    ultimaEdicion: null
+    participacionesIds: [] // TODO: traer lista de participaciones cuando se implemente el store correspondiente
   }
 }
 
@@ -66,55 +55,54 @@ function filterArtists(
   })
 }
 
-function sortByOrden(artists: CatalogArtist[]): CatalogArtist[] {
-  return [...artists].sort((a, b) => {
-    if (a.orden < b.orden) return -1
-    if (a.orden > b.orden) return 1
+function sortIdsByOrder(ids: string[]): string[] {
+  return [...ids].sort((id, nextId) => {
+    const currentOrder = useCatalogProjectionStore((s) => s.byId[id].orden)
+    const nextOrder = useCatalogProjectionStore((s) => s.byId[nextId].orden)
+    if (currentOrder && nextOrder) {
+      if (currentOrder < nextOrder) return -1
+      if (currentOrder > nextOrder) return 1
+    }
     return 0
   })
 }
 
-function sortCatalogoByOrden(items: CatalogoArtista[]): CatalogoArtista[] {
-  return [...items].sort((a, b) => {
-    if (a.orden < b.orden) return -1
-    if (a.orden > b.orden) return 1
-    return 0
-  })
-}
+// NOTE: THIS IS AN OLD IMPLEMENTATION, DO NOT CONSIDER
 
-export function useArtistUI() {
+export function useArtistUI(allIds: string[]) {
   const startDrag = useCatalogViewStore((s) => s.startDrag)
   const endDrag = useCatalogViewStore((s) => s.endDrag)
 
-  const { updateOne: updateCatalogo } = useCatalogoArtistaUIStore.getState()
+  const update = useCatalogOperationStore((s) => s.update)
 
   const reorder = useCallback(
-    (draggedArtistId: number, dropTargetId: number) => {
+    (draggedArtistId: string, dropTargetId: string) => {
       if (!dropTargetId) return
 
-      const allCatalogo = useCatalogoArtistaUIStore.getState().selectAll()
-      const sorted = sortCatalogoByOrden(allCatalogo)
+      const sortedIds = sortIdsByOrder(allIds)
 
-      const draggedNewIndex = sorted.findIndex(
-        (item) => item.artistaId === draggedArtistId
+      const draggedNewIndex = sortedIds.findIndex(
+        (id) => id === draggedArtistId
       )
-      const dropTargetIndex = sorted.findIndex(
-        (item) => item.artistaId === dropTargetId
-      )
+
+      const dropTargetIndex = sortedIds.findIndex((id) => id === dropTargetId)
 
       if (draggedNewIndex === -1 || dropTargetIndex === -1) return
 
       const movingDown = draggedNewIndex < dropTargetIndex
 
-      let prevItem: CatalogoArtista | undefined
-      let nextItem: CatalogoArtista | undefined
+      let prevItem: string | undefined
+      let nextItem: string | undefined
 
+      // NOTE: How we get work this login if we cant call a custom hook inside a callback?
       if (movingDown) {
-        prevItem = sorted[dropTargetIndex]
-        nextItem = sorted[dropTargetIndex + 1]
+        prevItem = useCatalogProjectionStore(
+          (s) => s.byId[sortedIds[dropTargetIndex]]
+        ).orden
+        nextItem = sortedIds[dropTargetIndex + 1]
       } else {
-        prevItem = sorted[dropTargetIndex - 1]
-        nextItem = sorted[dropTargetIndex]
+        prevItem = sortedIds[dropTargetIndex - 1]
+        nextItem = sortedIds[dropTargetIndex]
       }
 
       const prevOrder = prevItem?.orden ?? null
@@ -126,6 +114,7 @@ export function useArtistUI() {
       }
 
       let newOrden: string
+
       try {
         newOrden = generateKeyBetween(prevOrder, nextOrder)
       } catch (e) {
@@ -135,7 +124,8 @@ export function useArtistUI() {
         else newOrden = 'a0'
       }
 
-      const draggedItem = sorted[draggedNewIndex]
+      const draggedItem = sortedIds[draggedNewIndex]
+
       if (draggedItem && newOrden !== draggedItem.orden) {
         updateCatalogo(draggedItem.id, { orden: newOrden })
       }

@@ -1,65 +1,22 @@
-// Artista base entity (for UI state)
-export interface Artista {
-  id: number
-  nombre: string | null
-  pseudonimo: string
-  slug: string
-  correo: string | null
-  rrss: {
-    [key: string]: string
-  } | null
-  ciudad: string | null
-  pais: string | null
-  avatarUrl: string
+import type { CatalogoArtista } from '@frijolmagico/database/orm'
+import { ArtistEntry } from '../../_types'
+
+export type RawCatalogEntry = CatalogoArtista
+
+export type CatalogEntry = Omit<RawCatalogEntry, 'id' | 'artistaId'> & {
+  id: string
+  artistaId: string
+  avatarUrl: string | null
 }
 
-// Entidad catalogo_artista (sin datos de artista)
-export interface CatalogoArtista {
-  id: number // catalogoId (primary key of catalogo_artista table)
-  artistaId: number
-  orden: string
-  destacado: boolean
-  activo: boolean
-  descripcion: string | null
-  catalogoUpdatedAt: string
-}
+export type CatalogArtist = CatalogEntry &
+  Pick<
+    ArtistEntry,
+    'nombre' | 'pseudonimo' | 'correo' | 'rrss' | 'ciudad' | 'pais'
+  > & {
+    participacionesIds: string[]
+  }
 
-// Datos del catálogo (solo lectura + editable)
-export interface CatalogArtist {
-  // From artista table (readonly)
-  artistaId: number
-  nombre: string | null
-  pseudonimo: string
-  slug: string
-  correo: string | null
-  rrss: {
-    [key: string]: string
-  } | null
-  ciudad: string | null
-  pais: string | null
-  avatarUrl: string
-
-  // From catalogo_artista table
-  catalogoId: number
-  orden: string
-  destacado: boolean
-  activo: boolean
-  descripcion: string | null
-  catalogoUpdatedAt: string
-
-  // Metadata
-  participacionesCount: number
-  ultimaEdicion: string | null
-}
-
-// Formulario Entrada Catálogo (sin orden - se maneja por DnD)
-export interface CatalogEntryFormData {
-  destacado: boolean
-  activo: boolean
-  descripcion: string
-}
-
-// Formulario Artista
 export interface ArtistFormData {
   nombre: string
   pseudonimo: string
@@ -89,16 +46,6 @@ export interface PendingChanges {
   }>
 }
 
-// Paginación
-export interface PaginatedResult<T> {
-  data: T[]
-  total: number
-  page: number
-  totalPages: number
-  hasNext: boolean
-  hasPrev: boolean
-}
-
 // Filtros
 export interface CatalogFilters {
   activo: boolean | null
@@ -108,7 +55,7 @@ export interface CatalogFilters {
 
 // Estado del formulario completo para draft
 export interface CatalogListFormData {
-  artistas: CatalogArtist[]
+  artistas: CatalogEntry[]
   pendingChanges: PendingChanges
 }
 

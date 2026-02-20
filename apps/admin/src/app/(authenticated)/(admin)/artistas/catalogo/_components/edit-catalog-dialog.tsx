@@ -15,7 +15,7 @@ import { Textarea } from '@/shared/components/ui/textarea'
 import { ArtistAvatar } from './artist-avatar'
 import type { CatalogArtist } from '../_types'
 import { useCatalogViewStore } from '../_store/catalog-view-store'
-import { useArtistaUIStore } from '../_store/artista-ui-store'
+import { useArtistaUIStore } from '../../_store/artista-ui-store'
 
 interface EditCatalogDialogProps {
   artist: CatalogArtist | undefined

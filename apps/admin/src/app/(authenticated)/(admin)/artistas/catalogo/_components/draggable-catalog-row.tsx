@@ -9,7 +9,7 @@ import { Button } from '@/shared/components/ui/button'
 import { Badge } from '@/shared/components/ui/badge'
 
 import { ArtistAvatar } from './artist-avatar'
-import { useArtistaUIStore } from '../_store/artista-ui-store'
+import { useArtistaUIStore } from '../../_store/artista-ui-store'
 import type { CatalogArtist } from '../_types'
 import { cn } from '@/lib/utils'
 import { useCatalogViewStore } from '../_store/catalog-view-store'

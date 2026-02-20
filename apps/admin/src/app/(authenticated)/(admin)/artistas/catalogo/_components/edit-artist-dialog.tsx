@@ -16,7 +16,7 @@ import { updateArtist } from '../_actions/catalog.actions'
 import type { CatalogArtist } from '../_types'
 import { ArtistRRSSManager } from './artist-rrss-manager'
 import { useCatalogViewStore } from '../_store/catalog-view-store'
-import { useArtistaUIStore } from '../_store/artista-ui-store'
+import { useArtistaUIStore } from '../../_store/artista-ui-store'
 
 interface EditArtistDialogProps {
   artist: CatalogArtist | undefined

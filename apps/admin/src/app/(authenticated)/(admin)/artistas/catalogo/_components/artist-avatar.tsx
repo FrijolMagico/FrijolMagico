@@ -6,7 +6,7 @@ import {
 } from '@/shared/components/ui/avatar'
 
 interface ArtistAvatarProps {
-  src: string
+  src: string | null | undefined
   alt: string
   size?: 'sm' | 'md' | 'lg'
   className?: string

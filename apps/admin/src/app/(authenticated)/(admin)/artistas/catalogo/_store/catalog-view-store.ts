@@ -8,20 +8,20 @@ interface CatalogViewState {
 
   // Drag & Drop UI State
   isDragging: boolean
-  draggedArtistId: number | null
+  draggedArtistId: string | null
 
   // Dialog UI State
   catalogDialogOpen: boolean
   artistDialogOpen: boolean
-  selectedArtistId: number | null
+  selectedArtistId: string | null
 
   // Actions
   setFilters: (filters: Partial<CatalogFilters>) => void
 
-  startDrag: (artistId: number) => void
+  startDrag: (catalogId: string) => void
   endDrag: () => void
 
-  openCatalogDialog: (artistId: number) => void
+  openCatalogDialog: (catalogId: string) => void
   closeCatalogDialog: () => void
 
   openArtistDialog: () => void
@@ -30,6 +30,7 @@ interface CatalogViewState {
   closeAllDialogs: () => void
 }
 
+// TODO: Consider  split into specific stores if its better, eg. FiltersStore, DragDropStire, DialogStores, etc. (Like the paginationStore one)
 export const useCatalogViewStore = create<CatalogViewState>((set) => ({
   filters: { activo: null, destacado: null, search: '' },
 
@@ -47,13 +48,14 @@ export const useCatalogViewStore = create<CatalogViewState>((set) => ({
     }))
   },
 
-  startDrag: (artistId) => set({ isDragging: true, draggedArtistId: artistId }),
+  startDrag: (catalogId) =>
+    set({ isDragging: true, draggedArtistId: catalogId }),
   endDrag: () => set({ isDragging: false, draggedArtistId: null }),
 
-  openCatalogDialog: (artistId) =>
+  openCatalogDialog: (catalogId) =>
     set({
       catalogDialogOpen: true,
-      selectedArtistId: artistId
+      selectedArtistId: catalogId
     }),
   closeCatalogDialog: () =>
     set({
