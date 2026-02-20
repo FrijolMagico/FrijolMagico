@@ -6,13 +6,9 @@ import { AlertTriangle } from 'lucide-react'
 import { Button } from './ui/button'
 import {
   getSectionsWithChanges,
-  getLatestEntries,
   clearSection
 } from '@/shared/change-journal/change-journal'
-import { getStoreForEntity } from '@/shared/ui-state/entity-registry'
-import { journalEntriesToOperations } from '@/shared/change-journal/journal-mappers'
 import type { JournalEntity } from '@/shared/lib/database-entities'
-import type { AppliedChanges } from '@/shared/ui-state/entity-state'
 
 export function UnsavedChangesNotification() {
   const [unsavedSections, setUnsavedSections] = useState<JournalEntity[]>([])
@@ -43,25 +39,25 @@ export function UnsavedChangesNotification() {
   }
 
   async function handleRestore() {
-    for (const entity of unsavedSections) {
-      const store = getStoreForEntity(entity)
-      if (!store) continue
-
-      const entries = await getLatestEntries(entity)
-      const operations = journalEntriesToOperations(entries)
-
-      if (operations.length > 0) {
-        store.setState((state) => ({
-          appliedChanges: {
-            operations: [
-              ...(state.appliedChanges?.operations ?? []),
-              ...operations
-            ],
-            lastApplied: new Date()
-          } satisfies AppliedChanges<unknown>
-        }))
-      }
-    }
+    // for (const entity of unsavedSections) {
+    //   const store = getStoreForEntity(entity)
+    //   if (!store) continue
+    //
+    //   const entries = await getLatestEntries(entity)
+    //   const operations = journalEntriesToOperations(entries)
+    //
+    //   if (operations.length > 0) {
+    //     store.setState((state) => ({
+    //       appliedChanges: {
+    //         operations: [
+    //           ...(state.appliedChanges?.operations ?? []),
+    //           ...operations
+    //         ],
+    //         lastApplied: new Date()
+    //       } satisfies AppliedChanges<unknown>
+    //     }))
+    //   }
+    // }
 
     setIsVisible(false)
   }
