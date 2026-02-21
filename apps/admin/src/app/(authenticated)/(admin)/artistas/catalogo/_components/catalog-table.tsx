@@ -240,10 +240,11 @@ export function CatalogTable({
             <TableHead className='w-8'></TableHead>
             <TableHead className='w-12'></TableHead>
             <TableHead>Nombre</TableHead>
-            <TableHead className='w-16 text-center'>Orden</TableHead>
+            <TableHead className='w-42'></TableHead>
             <TableHead className='w-24'>Destacado</TableHead>
-            <TableHead className='w-20'>Activo</TableHead>
-            <TableHead className='w-32'>Acciones</TableHead>
+            <TableHead className='w-24'>Activo</TableHead>
+            <TableHead className='w-[5%]'></TableHead>
+            <TableHead className='w-[5%]'></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -252,7 +253,7 @@ export function CatalogTable({
             strategy={verticalListSortingStrategy}
           >
             {paginatedIds.map((id) => (
-              <CatalogRow key={id} catalogId={id} />
+              <CatalogRow key={id} id={id} />
             ))}
           </SortableContext>
         </TableBody>
