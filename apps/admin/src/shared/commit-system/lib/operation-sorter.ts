@@ -20,6 +20,7 @@ export interface SortedOperations {
   deletes: JournalEntry[]
   updates: JournalEntry[]
   creates: JournalEntry[]
+  restores: JournalEntry[]
 }
 
 /**
@@ -58,54 +59,75 @@ export function sortOperations(entries: JournalEntry[]): SortedOperations {
   const deletes: JournalEntry[] = []
   const updates: JournalEntry[] = []
   const creates: JournalEntry[] = []
+  const restores: JournalEntry[] = []
 
   for (const entry of entries) {
     if (entry.payload.op === 'unset') {
       deletes.push(entry)
+    } else if (entry.payload.op === 'restore') {
+      restores.push(entry)
     } else if (entry.payload.op === 'patch') {
       updates.push(entry)
     } else if (entry.payload.op === 'set') {
-      // For 'set' operations, determine if CREATE or UPDATE based on entity context
-      // By default, treat as UPDATE. The mapper will determine final action.
       updates.push(entry)
     }
   }
 
-  return { deletes, updates, creates }
+  return { deletes, updates, creates, restores }
 }
 
+const NET_STATE = {
+  ACTIVE: 'active',
+  DELETED: 'deleted'
+} as const
+
+type NetState = (typeof NET_STATE)[keyof typeof NET_STATE]
+
 /**
- * Validate operations for contradictions
+ * Validate operations using temporal reduction.
  *
- * Detects invalid operation combinations like:
- * - DELETE entity X + UPDATE entity X in same batch
- * - Multiple deletes of same entity (idempotent warning)
- *
- * @param entries Journal entries to validate
- * @returns Validation result with errors if found
+ * Groups entries by entity ID, sorts each group by timestamp, and walks
+ * chronologically to compute a netState (active vs deleted). A contradiction
+ * is flagged only when a set/patch targets an entity whose netState is 'deleted'.
  */
 export function validateOperations(entries: JournalEntry[]): ValidationResult {
-  const deletedIds = new Set<string>()
-  const modifiedIds: Record<string, number> = {}
   const errors: string[] = []
 
-  // Collect all operations by entity ID
+  const entriesByEntity = new Map<string, JournalEntry[]>()
+
   for (const entry of entries) {
     const entityId = extractEntityId(entry.scopeKey)
-
-    if (entry.payload.op === 'unset') {
-      deletedIds.add(entityId)
+    const group = entriesByEntity.get(entityId)
+    if (group) {
+      group.push(entry)
     } else {
-      modifiedIds[entityId] = (modifiedIds[entityId] ?? 0) + 1
+      entriesByEntity.set(entityId, [entry])
     }
   }
 
-  // Detect contradictions
-  for (const entityId of Object.keys(modifiedIds)) {
-    if (deletedIds.has(entityId)) {
-      errors.push(
-        `Contradictory operations: entity "${entityId}" is deleted but also modified (${modifiedIds[entityId]} operation(s))`
-      )
+  for (const [entityId, entityEntries] of entriesByEntity) {
+    const sorted = entityEntries.toSorted(
+      (a, b) => a.timestampMs - b.timestampMs
+    )
+
+    let netState: NetState | undefined
+
+    for (const entry of sorted) {
+      const { op } = entry.payload
+
+      if (op === 'unset') {
+        netState = NET_STATE.DELETED
+      } else if (op === 'restore') {
+        netState = NET_STATE.ACTIVE
+      } else if (op === 'set' || op === 'patch') {
+        if (netState === NET_STATE.DELETED) {
+          errors.push(
+            `Contradictory operations: entity "${entityId}" is deleted but also modified`
+          )
+          break
+        }
+        netState = NET_STATE.ACTIVE
+      }
     }
   }
 
