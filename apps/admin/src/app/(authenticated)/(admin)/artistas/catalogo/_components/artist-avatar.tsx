@@ -26,7 +26,7 @@ export function ArtistAvatar({
 }: ArtistAvatarProps) {
   return (
     <Avatar className={`${sizeClasses[size]} ${className || ''}`}>
-      <AvatarImage src={src} alt={alt} />
+      <AvatarImage src={src ?? undefined} alt={alt} />
       <AvatarFallback className='bg-muted'>
         <User className='text-muted-foreground h-4 w-4' />
       </AvatarFallback>

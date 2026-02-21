@@ -20,5 +20,5 @@ export function ArtistStoreInitialization({
     projectionStore: useArtistsProjectionStore
   })
 
-  return <div></div>
+  return null
 }
