@@ -83,6 +83,19 @@ export function createUIProjectionStore<T extends { id: string }>() {
             }
           }
         }
+
+        if (op.type === 'RESTORE') {
+          const existing = nextById[op.id]
+          if (!existing) continue
+
+          nextById[op.id] = {
+            ...existing,
+            __meta: {
+              ...existing.__meta,
+              isDeleted: false
+            }
+          }
+        }
       }
 
       set({

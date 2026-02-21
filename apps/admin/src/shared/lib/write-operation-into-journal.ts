@@ -28,6 +28,12 @@ export async function writeOperationIntoJournal<T>(
       case 'DELETE':
         await writeEntry(section, `${section}:${operation.id}`, { op: 'unset' })
         break
+
+      case 'RESTORE':
+        await writeEntry(section, `${section}:${operation.id}`, {
+          op: 'restore'
+        })
+        break
     }
   }
 }

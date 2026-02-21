@@ -40,6 +40,19 @@ export function createEntityOperationStore<T>({
         ]
       })),
 
+    restore: (id) =>
+      set((state) => ({
+        pendingOperations: [
+          ...(state.pendingOperations ?? []),
+          {
+            // Restore operation
+            type: 'RESTORE',
+            id,
+            timestamp: Date.now()
+          }
+        ]
+      })),
+
     update: (id, data) =>
       set((state) => ({
         pendingOperations: [

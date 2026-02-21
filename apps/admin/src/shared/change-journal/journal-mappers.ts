@@ -43,6 +43,12 @@ export function journalEntriesToOperations<T>(
         id: entityId,
         timestamp: entry.timestampMs
       })
+    } else if (payload.op === 'restore') {
+      operations.push({
+        type: 'RESTORE',
+        id: entityId,
+        timestamp: entry.timestampMs
+      })
     } else if (payload.op === 'set' && field) {
       const existing = fieldUpdates.get(entityId)
       if (existing) {
