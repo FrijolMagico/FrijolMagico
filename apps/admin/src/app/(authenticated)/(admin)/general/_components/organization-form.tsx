@@ -10,8 +10,8 @@ import {
   useOrganizationProjectionStore
 } from '../_store/organization-ui-store'
 import { ORGANIZATION_ID } from '../_constants'
-import { useAutoJournal } from '@/shared/ui-state/operation-log/hooks/use-auto-journal'
-import { useProjectionSync } from '../_hooks/use-organization-ui'
+import { useAutoCommit } from '@/shared/ui-state/operation-log/hooks/use-auto-commit'
+import { useProjectionSync } from '@/shared/hooks/use-projection-sync'
 
 interface OrganizationFormProps {
   initialData: Organization
@@ -34,13 +34,7 @@ export function OrganizationForm({ initialData }: OrganizationFormProps) {
     projectionStore: useOrganizationProjectionStore
   })
 
-  const { handleChange, handleBlur } = useAutoJournal({
-    data: source,
-    actions: {
-      update,
-      save: commitPendingOperations
-    }
-  })
+  useAutoCommit(useOrganizationOperationStore)
 
   console.log('(UI)[OrganizationForm]: ', {
     source
@@ -54,14 +48,11 @@ export function OrganizationForm({ initialData }: OrganizationFormProps) {
           id='nombre'
           value={source.nombre || ''}
           onChange={(e) =>
-            handleChange(
-              'nombre',
-              e.currentTarget.value,
-              String(ORGANIZATION_ID)
-            )
-          }
-          onBlur={() =>
-            handleBlur('nombre', source.nombre || '', String(ORGANIZATION_ID))
+            useOrganizationOperationStore
+              .getState()
+              .update(String(ORGANIZATION_ID), {
+                nombre: e.currentTarget.value
+              })
           }
           placeholder='Frijol Mágico'
           className='w-full'
@@ -74,18 +65,11 @@ export function OrganizationForm({ initialData }: OrganizationFormProps) {
           id='descripcion'
           value={source.descripcion || ''}
           onChange={(e) =>
-            handleChange(
-              'descripcion',
-              e.currentTarget.value,
-              String(ORGANIZATION_ID)
-            )
-          }
-          onBlur={() =>
-            handleBlur(
-              'descripcion',
-              source.descripcion || '',
-              String(ORGANIZATION_ID)
-            )
+            useOrganizationOperationStore
+              .getState()
+              .update(String(ORGANIZATION_ID), {
+                descripcion: e.currentTarget.value
+              })
           }
           placeholder='Describe la organización...'
           className='field-sizing-content! min-h-42'
@@ -99,10 +83,9 @@ export function OrganizationForm({ initialData }: OrganizationFormProps) {
           id='mision'
           value={source.mision || ''}
           onChange={(value: string) =>
-            handleChange('mision', value, String(ORGANIZATION_ID))
-          }
-          onBlur={() =>
-            handleBlur('mision', source.mision || '', String(ORGANIZATION_ID))
+            useOrganizationOperationStore
+              .getState()
+              .update(String(ORGANIZATION_ID), { mision: value })
           }
           placeholder='Nuestra misión es...'
         />
@@ -114,10 +97,9 @@ export function OrganizationForm({ initialData }: OrganizationFormProps) {
           id='vision'
           value={source.vision || ''}
           onChange={(value: string) =>
-            handleChange('vision', value, String(ORGANIZATION_ID))
-          }
-          onBlur={() =>
-            handleBlur('vision', source.vision || '', String(ORGANIZATION_ID))
+            useOrganizationOperationStore
+              .getState()
+              .update(String(ORGANIZATION_ID), { vision: value })
           }
           placeholder='Nuestra visión es...'
         />

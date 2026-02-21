@@ -14,6 +14,7 @@ import {
   useTeamProjectionStore
 } from '../_store/organization-team-ui-store'
 import { TeamItem } from './team-item'
+import { useAutoCommit } from '@/shared/ui-state/operation-log/hooks/use-auto-commit'
 
 import type { TeamMember } from '../_types'
 
@@ -29,6 +30,8 @@ export function TeamTable({ initialData }: TeamTableProps) {
     operationStore: useTeamOperationStore,
     projectionStore: useTeamProjectionStore
   })
+
+  useAutoCommit(useTeamOperationStore)
 
   return (
     <Table>

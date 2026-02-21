@@ -8,7 +8,6 @@ import {
   useTeamOperationStore,
   useTeamProjectionStore
 } from '../_store/organization-team-ui-store'
-import { useAutoJournal } from '@/shared/hooks/use-auto-journal'
 
 interface TeamItemProps {
   id: string
@@ -17,26 +16,14 @@ interface TeamItemProps {
 export function TeamItem({ id }: TeamItemProps) {
   const update = useTeamOperationStore((s) => s.update)
   const remove = useTeamOperationStore((s) => s.remove)
-  const commitPendingOperations = useTeamOperationStore(
-    (s) => s.commitPendingOperations
-  )
   const member = useTeamProjectionStore((s) => s.byId[id])
-
-  const { handleChange, handleBlur } = useAutoJournal({
-    data: member,
-    actions: {
-      update,
-      save: commitPendingOperations
-    }
-  })
 
   return (
     <TableRow>
       <TableCell>
         <Input
           value={member?.nombre || ''}
-          onBlur={(e) => handleBlur('nombre', e.currentTarget.value, id)}
-          onChange={(e) => handleChange('nombre', e.target.value, id)}
+          onChange={(e) => update(id, { nombre: e.target.value })}
           placeholder='Nombre completo'
           className='h-8'
           required
@@ -45,8 +32,7 @@ export function TeamItem({ id }: TeamItemProps) {
       <TableCell>
         <Input
           value={member?.cargo || ''}
-          onBlur={(e) => handleBlur('cargo', e.currentTarget.value, id)}
-          onChange={(e) => handleChange('cargo', e.target.value, id)}
+          onChange={(e) => update(id, { cargo: e.target.value })}
           placeholder='Ej: Coordinador'
           className='h-8'
           required
@@ -55,8 +41,7 @@ export function TeamItem({ id }: TeamItemProps) {
       <TableCell>
         <Input
           value={member?.rrss || ''}
-          onBlur={(e) => handleBlur('rrss', e.currentTarget.value, id)}
-          onChange={(e) => handleChange('rrss', e.target.value, id)}
+          onChange={(e) => update(id, { rrss: e.target.value })}
           placeholder='@usuario'
           className='h-8'
         />
