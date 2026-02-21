@@ -1,5 +1,7 @@
 'use client'
 
+import { useState, useEffect, useRef } from 'react'
+import { useDebouncedCallback } from 'use-debounce'
 import { Pencil, MapPin, Mail } from 'lucide-react'
 import {
   Dialog,
@@ -13,16 +15,38 @@ import { Switch } from '@/shared/components/ui/switch'
 import { Label } from '@/shared/components/ui/label'
 import { Textarea } from '@/shared/components/ui/textarea'
 import { ArtistAvatar } from './artist-avatar'
-import type { CatalogArtist } from '../_types'
 import { useCatalogViewStore } from '../_store/catalog-view-store'
-import { useArtistaUIStore } from '../../_store/artista-ui-store'
+import {
+  useCatalogOperationStore,
+  useCatalogProjectionStore
+} from '../_store/catalog-ui-store'
+import { useArtistsProjectionStore } from '../../_store/artista-ui-store'
 
-interface EditCatalogDialogProps {
-  artist: CatalogArtist | undefined
-}
+export function EditCatalogDialog() {
+  const catalogId = useCatalogViewStore((s) => s.selectedCatalogId)
+  const catalog = useCatalogProjectionStore((s) =>
+    catalogId ? s.byId[catalogId] : null
+  )
+  const artist = useArtistsProjectionStore((s) =>
+    catalog ? s.byId[catalog.artistaId] : null
+  )
 
-export function EditCatalogDialog({ artist }: EditCatalogDialogProps) {
-  const updateOne = useArtistaUIStore((s) => s.updateOne)
+  const [desc, setDesc] = useState(catalog?.descripcion ?? '')
+  const isEditingRef = useRef(false)
+
+  useEffect(() => {
+    if (!isEditingRef.current) {
+      setDesc(catalog?.descripcion ?? '')
+    }
+  }, [catalog?.descripcion])
+
+  const update = useCatalogOperationStore((s) => s.update)
+
+  const debouncedUpdate = useDebouncedCallback((val: string) => {
+    if (!catalogId) return
+    update(catalogId, { descripcion: val })
+    isEditingRef.current = false
+  }, 500)
 
   const closeAllDialogs = useCatalogViewStore((s) => s.closeAllDialogs)
   const openArtistDialog = useCatalogViewStore((s) => s.openArtistDialog)
@@ -32,11 +56,11 @@ export function EditCatalogDialog({ artist }: EditCatalogDialogProps) {
     field: 'destacado' | 'activo' | 'descripcion',
     value: boolean | string
   ) => {
-    if (!artist) return
-    updateOne(artist.artistaId, { [field]: value })
+    if (!catalogId) return
+    update(catalogId, { [field]: value })
   }
 
-  if (!artist) return null
+  if (!catalog || !artist) return null
 
   return (
     <Dialog open={catalogDialogOpen} onOpenChange={closeAllDialogs}>
@@ -51,7 +75,7 @@ export function EditCatalogDialog({ artist }: EditCatalogDialogProps) {
             <CardContent>
               <div className='flex items-center gap-4'>
                 <ArtistAvatar
-                  src={artist.avatarUrl}
+                  src={catalog.avatarUrl}
                   alt={artist.pseudonimo}
                   size='lg'
                 />
@@ -101,10 +125,12 @@ export function EditCatalogDialog({ artist }: EditCatalogDialogProps) {
               <Label htmlFor='descripcion'>Descripción</Label>
               <Textarea
                 id='descripcion'
-                value={artist.descripcion ?? ''}
-                onChange={(e) =>
-                  handleEditCatalogDetail('descripcion', e.target.value)
-                }
+                value={desc}
+                onChange={(e) => {
+                  isEditingRef.current = true
+                  setDesc(e.target.value)
+                  debouncedUpdate(e.target.value)
+                }}
                 placeholder='Descripción del artista para el catálogo...'
                 className='min-h-50'
               />
@@ -114,7 +140,7 @@ export function EditCatalogDialog({ artist }: EditCatalogDialogProps) {
             <div className='flex items-center justify-center gap-6'>
               <div className='flex items-center gap-2'>
                 <Switch
-                  checked={artist.destacado}
+                  checked={catalog.destacado}
                   onCheckedChange={(checked) =>
                     handleEditCatalogDetail('destacado', checked)
                   }
@@ -123,7 +149,7 @@ export function EditCatalogDialog({ artist }: EditCatalogDialogProps) {
               </div>
               <div className='flex items-center gap-2'>
                 <Switch
-                  checked={artist.activo}
+                  checked={catalog.activo}
                   onCheckedChange={(checked) =>
                     handleEditCatalogDetail('activo', checked)
                   }

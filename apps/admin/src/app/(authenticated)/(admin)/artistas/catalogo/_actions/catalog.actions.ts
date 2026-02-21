@@ -5,10 +5,11 @@
 // import { artist } from '@frijolmagico/database/schema'
 // import { eq, and, asc, sql, inArray } from 'drizzle-orm'
 import type {
-  CatalogEntryFormData,
+  CatalogListFormData,
   ArtistFormData,
   OperationResult,
-  CatalogArtist
+  CatalogArtist,
+  CatalogEntry
 } from '../_types'
 // import { ARTISTA_CACHE_TAG } from '../_constants'
 // import { revalidateTag } from 'next/cache'
@@ -18,7 +19,7 @@ import type {
 // Actualizar entrada del catálogo (solo campos de catálogo)
 export async function updateCatalogEntry(
   artistaId: number,
-  data: Partial<CatalogEntryFormData>
+  data: Partial<CatalogEntry>
 ): Promise<OperationResult> {
   // TODO: Phase 3 - Change journal implementation pending
   // Stub implementation - database operations commented out
