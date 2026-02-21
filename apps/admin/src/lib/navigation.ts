@@ -18,7 +18,7 @@ export const navigation = [
     items: [
       {
         title: 'Listado',
-        href: '/artistas'
+        href: '/artistas/listado'
       },
       {
         title: 'Catálogo',
