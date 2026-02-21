@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { randomUUID } from 'node:crypto'
 
 import type { EntityOperation, EntityOperationStore } from './types'
 
@@ -22,7 +21,7 @@ export function createEntityOperationStore<T>({
           {
             // Add operation
             type: 'ADD',
-            data: { ...data, id: randomUUID() },
+            data: { ...data, id: crypto.randomUUID() },
             timestamp: Date.now()
           }
         ]
@@ -68,14 +67,20 @@ export function createEntityOperationStore<T>({
           await commitOperations(pendingOperations)
         }
 
-        set((state) => ({
-          persistedOperations: [
-            ...(state.persistedOperations ?? []),
-            ...pendingOperations
-          ],
-          pendingOperations: null,
-          lastCommitAt: Date.now()
-        }))
+        set((state) => {
+          const remaining = state.pendingOperations?.filter(
+            (op) => !pendingOperations.includes(op)
+          )
+
+          return {
+            persistedOperations: [
+              ...(state.persistedOperations ?? []),
+              ...pendingOperations
+            ],
+            pendingOperations: remaining?.length ? remaining : null,
+            lastCommitAt: Date.now()
+          }
+        })
       } catch (error) {
         // TODO: Improve error handling here, maybe add a retry
         console.error('[EntityState] Failed to commit edits:', error)

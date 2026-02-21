@@ -4,7 +4,7 @@ export type BaseEntity<T> = NewBaseEntity<T> & { id: string }
 export type EntityOperation<T> =
   | {
       type: 'ADD'
-      data: NewBaseEntity<T>
+      data: BaseEntity<T>
       timestamp: number
     }
   | {

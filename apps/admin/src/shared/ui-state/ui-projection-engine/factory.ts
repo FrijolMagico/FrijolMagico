@@ -9,9 +9,9 @@ export function createUIProjectionStore<T extends { id: string }>() {
     project: (remoteSnapshot, persistedOps, pendingOps) => {
       const operations = [...(persistedOps ?? []), ...(pendingOps ?? [])]
 
-      const current = get()
-      const nextById = { ...current.byId }
-      const nextAllIds = [...current.allIds]
+      const { byId, allIds } = get()
+      const nextById = { ...byId }
+      const nextAllIds = [...allIds]
 
       // --- 1️⃣ Sync remote snapshot base ---
       const remoteIds = new Set<string>()
@@ -19,7 +19,7 @@ export function createUIProjectionStore<T extends { id: string }>() {
       for (const entity of remoteSnapshot) {
         remoteIds.add(entity.id)
 
-        const existing = current.byId[entity.id]
+        const existing = byId[entity.id]
 
         // Si no existe, lo creamos
         if (!existing) {
