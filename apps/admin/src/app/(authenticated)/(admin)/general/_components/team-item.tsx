@@ -8,6 +8,7 @@ import {
   useTeamOperationStore,
   useTeamProjectionStore
 } from '../_store/organization-team-ui-store'
+import { cn } from '@/lib/utils'
 
 interface TeamItemProps {
   id: string
@@ -18,11 +19,13 @@ export function TeamItem({ id }: TeamItemProps) {
   const remove = useTeamOperationStore((s) => s.remove)
   const member = useTeamProjectionStore((s) => s.byId[id])
 
+  if (!member) return null
+
   return (
-    <TableRow>
+    <TableRow className={cn(member.__meta.isDeleted && 'bg-destructive/10')}>
       <TableCell>
         <Input
-          value={member?.nombre || ''}
+          value={member.nombre}
           onChange={(e) => update(id, { nombre: e.target.value })}
           placeholder='Nombre completo'
           className='h-8'
@@ -31,7 +34,7 @@ export function TeamItem({ id }: TeamItemProps) {
       </TableCell>
       <TableCell>
         <Input
-          value={member?.cargo || ''}
+          value={member.cargo || ''}
           onChange={(e) => update(id, { cargo: e.target.value })}
           placeholder='Ej: Coordinador'
           className='h-8'
@@ -40,13 +43,14 @@ export function TeamItem({ id }: TeamItemProps) {
       </TableCell>
       <TableCell>
         <Input
-          value={member?.rrss || ''}
+          value={member.rrss || ''}
           onChange={(e) => update(id, { rrss: e.target.value })}
           placeholder='@usuario'
           className='h-8'
         />
       </TableCell>
       <TableCell>
+        {/* TODO: Cuando el member está en esatdo deleted, cambiar icono a restore y quitar estado deleted */}
         <Button
           variant='ghost'
           size='icon'

@@ -24,11 +24,9 @@ import { ArtistEntry } from '../../_types'
 
 function ArtistFormContent({
   artist,
-  catalogId,
   onClose
 }: {
   artist: ArtistEntry
-  catalogId: string
   onClose: () => void
 }) {
   const [formData, setFormData] = useState({
@@ -174,7 +172,6 @@ export function EditArtistDialog() {
           <ArtistFormContent
             key={artist.id}
             artist={artist}
-            catalogId={catalogId}
             onClose={closeArtistDialog}
           />
         )}

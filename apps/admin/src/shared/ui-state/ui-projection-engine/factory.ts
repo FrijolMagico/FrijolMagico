@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { UIProjectionState } from './types'
+import { UIProjectionState, ProjectedEntity } from './types'
 
 export function createUIProjectionStore<T extends { id: string }>() {
   return create<UIProjectionState<T>>((set, get) => ({
@@ -54,7 +54,7 @@ export function createUIProjectionStore<T extends { id: string }>() {
               isUpdated: false,
               isDeleted: false
             }
-          }
+          } as unknown as ProjectedEntity<T>
         }
 
         if (op.type === 'UPDATE') {

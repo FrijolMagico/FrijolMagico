@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { useDebouncedCallback } from 'use-debounce'
 import { Pencil, MapPin, Mail } from 'lucide-react'
 import {
@@ -32,20 +32,25 @@ export function EditCatalogDialog() {
   )
 
   const [desc, setDesc] = useState(catalog?.descripcion ?? '')
-  const isEditingRef = useRef(false)
+  const [prevCatalogDesc, setPrevCatalogDesc] = useState(
+    catalog?.descripcion ?? ''
+  )
+  const [isEditing, setIsEditing] = useState(false)
 
-  useEffect(() => {
-    if (!isEditingRef.current) {
-      setDesc(catalog?.descripcion ?? '')
+  const incomingDesc = catalog?.descripcion ?? ''
+  if (incomingDesc !== prevCatalogDesc) {
+    if (!isEditing) {
+      setDesc(incomingDesc)
     }
-  }, [catalog?.descripcion])
+    setPrevCatalogDesc(incomingDesc)
+  }
 
   const update = useCatalogOperationStore((s) => s.update)
 
   const debouncedUpdate = useDebouncedCallback((val: string) => {
     if (!catalogId) return
     update(catalogId, { descripcion: val })
-    isEditingRef.current = false
+    setIsEditing(false)
   }, 500)
 
   const closeAllDialogs = useCatalogViewStore((s) => s.closeAllDialogs)
@@ -127,7 +132,7 @@ export function EditCatalogDialog() {
                 id='descripcion'
                 value={desc}
                 onChange={(e) => {
-                  isEditingRef.current = true
+                  setIsEditing(true)
                   setDesc(e.target.value)
                   debouncedUpdate(e.target.value)
                 }}

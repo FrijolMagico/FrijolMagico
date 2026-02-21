@@ -18,10 +18,6 @@ interface OrganizationFormProps {
 }
 
 export function OrganizationForm({ initialData }: OrganizationFormProps) {
-  const update = useOrganizationOperationStore((s) => s.update)
-  const commitPendingOperations = useOrganizationOperationStore(
-    (s) => s.commitPendingOperations
-  )
   const projected = useOrganizationProjectionStore(
     (s) => s.byId[String(ORGANIZATION_ID)]
   )

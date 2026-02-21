@@ -9,8 +9,8 @@
  * @connection entity-types.ts - EntityOperation<T> interface
  */
 
+import { EntityOperation, BaseEntity } from '../ui-state/operation-log'
 import type { JournalEntry } from './lib/types'
-import type { EntityOperation } from '@/shared/ui-state/entity-state'
 
 /**
  * Convert journal entries to EntityOperations for store restoration.
@@ -19,23 +19,20 @@ import type { EntityOperation } from '@/shared/ui-state/entity-state'
  * @param entries - Journal entries from getLatestEntries() (newest first)
  * @returns EntityOperation[] sorted by timestamp ASC for correct application
  */
-export function journalEntriesToOperations(
+export function journalEntriesToOperations<T>(
   entries: JournalEntry[]
-): EntityOperation<unknown>[] {
-  const operations: EntityOperation<unknown>[] = []
+): EntityOperation<T>[] {
+  const operations: EntityOperation<T>[] = []
   const fieldUpdates = new Map<
-    number,
+    string,
     { data: Record<string, unknown>; timestamp: number }
   >()
 
   for (const entry of entries) {
     const parts = entry.scopeKey.split(':')
-    const rawId = parts[1]
+    const entityId = parts[1]
 
-    if (!rawId) continue
-
-    const entityId = Number(rawId)
-    if (Number.isNaN(entityId)) continue
+    if (!entityId) continue
 
     const { payload } = entry
     const field = parts[2]
@@ -43,7 +40,7 @@ export function journalEntriesToOperations(
     if (payload.op === 'unset') {
       operations.push({
         type: 'DELETE',
-        entityId: entityId,
+        id: entityId,
         timestamp: entry.timestampMs
       })
     } else if (payload.op === 'set' && field) {
@@ -60,15 +57,14 @@ export function journalEntriesToOperations(
     } else if (payload.op === 'set' && !field) {
       operations.push({
         type: 'ADD',
-        entityId: entityId,
-        entity: payload.value,
+        data: payload.value as unknown as BaseEntity<T>,
         timestamp: entry.timestampMs
       })
     } else if (payload.op === 'patch') {
       operations.push({
         type: 'UPDATE',
-        entityId: entityId,
-        data: payload.value as Record<string, unknown>,
+        id: entityId,
+        data: payload.value as Partial<BaseEntity<T>>,
         timestamp: entry.timestampMs
       })
     }
@@ -77,8 +73,8 @@ export function journalEntriesToOperations(
   for (const [entityId, { data, timestamp }] of fieldUpdates) {
     operations.push({
       type: 'UPDATE',
-      entityId,
-      data,
+      id: entityId,
+      data: data as Partial<BaseEntity<T>>,
       timestamp
     })
   }

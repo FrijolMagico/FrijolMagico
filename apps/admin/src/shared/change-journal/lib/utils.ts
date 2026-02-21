@@ -1,4 +1,5 @@
 import { EntityOperation } from '@/shared/ui-state/operation-log'
+import { writeEntry } from '../change-journal'
 
 export async function writeOperationIntoJournal<T>(
   operations: EntityOperation<T>[],

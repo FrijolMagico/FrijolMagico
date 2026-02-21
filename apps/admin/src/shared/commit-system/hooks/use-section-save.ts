@@ -2,12 +2,12 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import type { SectionName, SaveResult } from '../lib/types'
-import type { EntityUIStateStore } from '@/shared/ui-state/entity-state'
 import { saveOrganizacion } from '../actions/save-organizacion.action'
 import { saveOrganizacionEquipo } from '../actions/save-organizacion-equipo.action'
 import { saveCatalogo } from '../../../app/(authenticated)/(admin)/artistas/catalogo/_actions/save-catalogo.action'
 import { saveArtista } from '../actions/save-artista.action'
 import { saveEvento } from '../actions/save-evento.action'
+import { EntityOperationStore } from '@/shared/ui-state/operation-log/types'
 
 /**
  * Hook to manage UI logic for saving a section.
@@ -17,9 +17,9 @@ import { saveEvento } from '../actions/save-evento.action'
  * @param section - The section to save
  * @param store - Optional store instance to update IDs and state after save
  */
-export function useSectionSave(
+export function useSectionSave<T>(
   section: SectionName,
-  store?: EntityUIStateStore<any>
+  store?: EntityOperationStore<T>
 ) {
   const [isPending, startTransition] = useTransition()
   const [result, setResult] = useState<SaveResult | null>(null)
@@ -27,22 +27,26 @@ export function useSectionSave(
 
   const save = () => {
     startTransition(async () => {
-      let action: ((section: any) => Promise<SaveResult>) | undefined
+      let action: ((section: SectionName) => Promise<SaveResult>) | undefined
       switch (section) {
         case 'organizacion':
-          action = saveOrganizacion
+          action = saveOrganizacion as (
+            section: SectionName
+          ) => Promise<SaveResult>
           break
         case 'organizacion_equipo':
-          action = saveOrganizacionEquipo
+          action = saveOrganizacionEquipo as (
+            section: SectionName
+          ) => Promise<SaveResult>
           break
         case 'catalogo_artista':
-          action = saveCatalogo
+          action = saveCatalogo as (section: SectionName) => Promise<SaveResult>
           break
         case 'artista':
-          action = saveArtista
+          action = saveArtista as (section: SectionName) => Promise<SaveResult>
           break
         case 'evento':
-          action = saveEvento
+          action = saveEvento as (section: SectionName) => Promise<SaveResult>
           break
       }
 
@@ -52,30 +56,14 @@ export function useSectionSave(
       }
 
       try {
-        const res = await action(section as any)
+        const res = await action(section)
         setResult(res)
 
         if (res.success) {
           toast.success('Guardado correctamente')
 
           if (store) {
-            const currentItems = store.selectAll()
-
-            let newItems = currentItems
-            if (res.mappings && res.mappings.length > 0) {
-              newItems = currentItems.map((item: any) => {
-                const mapping = res.mappings!.find(
-                  (m) => m.tempId === String(item.id)
-                )
-
-                if (mapping) {
-                  return { ...item, id: mapping.realId }
-                }
-                return item
-              })
-            }
-
-            store.setAll(newItems)
+            store.resetStore()
           }
 
           router.refresh()
