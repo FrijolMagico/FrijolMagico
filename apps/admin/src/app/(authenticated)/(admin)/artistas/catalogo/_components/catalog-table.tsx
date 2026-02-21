@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useCallback, useEffect, use } from 'react'
+import { useRef, useCallback, useEffect, useMemo } from 'react'
 import {
   DndContext,
   type DragEndEvent,
@@ -25,17 +25,18 @@ import {
   TableHeader,
   TableRow
 } from '@/shared/components/ui/table'
-import { DraggableCatalogRow } from './draggable-catalog-row'
 import { toast } from 'sonner'
-import type { CatalogArtist } from '../_types'
 import { useCatalogPaginationStore } from '../_store/catalog-pagination-store'
 import { useCatalogViewStore } from '../_store/catalog-view-store'
+import { useCatalogFilterStore } from '../_store/catalog-filter-store'
 import { EmptyState } from '@/shared/components/empty-state'
 import {
   useCatalogOperationStore,
   useCatalogProjectionStore
 } from '../_store/catalog-ui-store'
-import { useArtistUI, useVisibleArtists } from '../_hooks/use-artist-ui'
+import { useCatalogList } from '../_hooks/use-catalog-list'
+import { useFractionalDnD } from '@/shared/hooks/use-fractional-dnd'
+import { CatalogRow } from './catalog-row'
 
 interface CatalogTableProps {
   containerRef?: React.RefObject<HTMLDivElement | null>
@@ -47,7 +48,6 @@ interface CatalogTableProps {
   }) => void
 }
 
-// TODO: Extract DnD and auto-pagination logic into a reusable hook for other catalog tables (e.g. obras)
 // Constants for auto-pagination
 const PAGE_EDGE_THRESHOLD = 60 // px from edge to trigger page change
 const PAGE_CHANGE_DELAY = 600 // ms to hold before changing page
@@ -58,27 +58,32 @@ export function CatalogTable({
   onPageChange,
   handleFiltersChange
 }: CatalogTableProps) {
-  // THIS IS OUR MAIN DATA SOURCE FOR ITERARIONS
-  // We pass this for the pagination logic
-  // iterate based in ids list
-  // each item get its complete data from projection store by id and merge with artist data
-  // or get the full data from a specific new store for merges (determine best approach)
-  const catalogIds = useCatalogProjectionStore((s) => s.allIds)
+  const { paginatedIds } = useCatalogList()
   const update = useCatalogOperationStore((s) => s.update)
 
-  const { reorder } = useArtistUI()
-
-  // This need to return only the paginated and filteres list of ids, not the complete artist, this is to prevent re rerenders (investigate)
-  const { visibleArtists } = useVisibleArtists()
+  const catalogById = useCatalogProjectionStore((s) => s.byId)
+  const dndItems = useMemo(
+    () =>
+      paginatedIds.map((id) => ({
+        id,
+        orderKey: catalogById[id]?.orden || ''
+      })),
+    [paginatedIds, catalogById]
+  )
 
   const page = useCatalogPaginationStore((s) => s.page)
   const totalPages = useCatalogPaginationStore((s) => s.getTotalPages())
   const setPage = useCatalogPaginationStore((s) => s.setPage)
 
   const startDrag = useCatalogViewStore((s) => s.startDrag)
+  const setFiltersCatalog = useCatalogFilterStore((s) => s.setFilters)
   const endDrag = useCatalogViewStore((s) => s.endDrag)
-  const setFilters = useCatalogViewStore((s) => s.setFilters)
-  const openCatalogDialog = useCatalogViewStore((s) => s.openCatalogDialog)
+
+  const { handleDragEnd: dndHandleDragEnd } = useFractionalDnD({
+    items: dndItems,
+    onReorder: (id, newOrden) => update(String(id), { orden: newOrden }),
+    onDragEnd: endDrag
+  })
 
   // Refs for auto-pagination timers
   const pageChangeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -107,8 +112,8 @@ export function CatalogTable({
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event
-    if (!active?.data?.current) return
-    startDrag(active.data.current.id)
+    if (!active?.id) return
+    startDrag(String(active.id))
   }
 
   const handleDragMove = useCallback(
@@ -186,12 +191,6 @@ export function CatalogTable({
   )
 
   const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event
-    const draggedId = Number(active.id)
-    const dropTargetId = over ? Number(over.id) : null
-
-    endDrag()
-
     // Clear any pending page change
     if (pageChangeTimeoutRef.current) {
       clearTimeout(pageChangeTimeoutRef.current)
@@ -199,31 +198,10 @@ export function CatalogTable({
       isNearEdgeRef.current = null
     }
 
-    if (over && active.id !== over.id && dropTargetId) {
-      reorder(draggedId, dropTargetId)
-    }
+    dndHandleDragEnd(event)
   }
 
-  const handleToggleField = (
-    catalogArtist: CatalogArtist,
-    field: 'destacado' | 'activo',
-    value: boolean
-  ) => {
-    // Update using ui-state (automatically handles Layer 3)
-    update(catalogArtist.id, { [field]: value })
-    toast.info(
-      `${field === 'destacado' ? 'Destacado' : 'Activo'} cambiado. Presiona "Guardar cambios" para aplicar.`
-    )
-  }
-
-  const handleEdit = useCallback(
-    (catalogArtist: CatalogArtist) => {
-      openCatalogDialog(catalogArtist.id)
-    },
-    [openCatalogDialog]
-  )
-
-  if (visibleArtists.length === 0) {
+  if (paginatedIds.length === 0) {
     return (
       <EmptyState
         title='No se encontraron artistas'
@@ -231,7 +209,7 @@ export function CatalogTable({
         action={{
           label: 'Limpiar filtros',
           onClick: () => {
-            setFilters({
+            setFiltersCatalog({
               activo: null,
               destacado: null,
               search: ''
@@ -270,18 +248,11 @@ export function CatalogTable({
         </TableHeader>
         <TableBody>
           <SortableContext
-            items={visibleArtists.map((a) => a.artistaId)}
+            items={paginatedIds}
             strategy={verticalListSortingStrategy}
           >
-            {visibleArtists.map((artista) => (
-              <DraggableCatalogRow
-                key={artista.artistaId}
-                artista={artista}
-                onToggleField={(field, value) =>
-                  handleToggleField(artista, field, value)
-                }
-                onEdit={() => handleEdit(artista)}
-              />
+            {paginatedIds.map((id) => (
+              <CatalogRow key={id} catalogId={id} />
             ))}
           </SortableContext>
         </TableBody>
