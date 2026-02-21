@@ -67,7 +67,7 @@ export function UnsavedChangesNotification() {
   }
 
   return (
-    <Alert className='bg-accent'>
+    <Alert className='bg-accent mb-6'>
       <AlertTriangle />
       <AlertDescription className='flex flex-col gap-2'>
         <div className='flex-1'>
