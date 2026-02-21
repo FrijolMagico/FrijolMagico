@@ -10,7 +10,7 @@ import {
   SelectValue
 } from '@/shared/components/ui/select'
 import { Button } from '@/shared/components/ui/button'
-import { useCatalogViewStore } from '../_store/catalog-view-store'
+import { useCatalogFilterStore } from '../_store/catalog-filter-store'
 
 interface CatalogFiltersProps {
   onFiltersChange: (filters: {
@@ -21,8 +21,8 @@ interface CatalogFiltersProps {
 }
 
 export function CatalogFilters({ onFiltersChange }: CatalogFiltersProps) {
-  const filters = useCatalogViewStore((state) => state.filters)
-  const setFilters = useCatalogViewStore((state) => state.setFilters)
+  const filters = useCatalogFilterStore((state) => state.filters)
+  const setFilter = useCatalogFilterStore((state) => state.setFilter)
 
   const hasActiveFilters =
     filters.activo !== null ||
@@ -30,7 +30,7 @@ export function CatalogFilters({ onFiltersChange }: CatalogFiltersProps) {
     filters.search !== ''
 
   const handleSearchChange = (value: string) => {
-    setFilters({ search: value })
+    setFilter('search', value)
     onFiltersChange({
       activo: filters.activo ?? undefined,
       destacado: filters.destacado ?? undefined,
@@ -41,7 +41,7 @@ export function CatalogFilters({ onFiltersChange }: CatalogFiltersProps) {
   const handleActivoChange = (value: string | null) => {
     if (!value) return
     const activo = value === 'all' ? null : value === 'true'
-    setFilters({ activo })
+    setFilter('activo', activo)
     onFiltersChange({
       activo: activo,
       destacado: filters.destacado,
@@ -52,7 +52,7 @@ export function CatalogFilters({ onFiltersChange }: CatalogFiltersProps) {
   const handleDestacadoChange = (value: string | null) => {
     if (!value) return
     const destacado = value === 'all' ? null : value === 'true'
-    setFilters({ destacado })
+    setFilter('destacado', destacado)
     onFiltersChange({
       activo: filters.activo,
       destacado: destacado,
@@ -61,7 +61,8 @@ export function CatalogFilters({ onFiltersChange }: CatalogFiltersProps) {
   }
 
   const clearFilters = () => {
-    setFilters({ activo: null, destacado: null, search: '' })
+    const filterStore = useCatalogFilterStore.getState()
+    filterStore.setFilters({ activo: null, destacado: null, search: '' })
     // Fix: Pass explicit nulls so the parent knows to remove params
     onFiltersChange({ activo: null, destacado: null, search: '' })
   }

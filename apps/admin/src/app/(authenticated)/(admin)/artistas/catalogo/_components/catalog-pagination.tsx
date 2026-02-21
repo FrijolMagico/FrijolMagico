@@ -3,7 +3,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/shared/components/ui/button'
 import { Separator } from '@/shared/components/ui/separator'
-import { useVisibleArtists } from '../_hooks/use-artist-ui'
 import { useCatalogPaginationStore } from '../_store/catalog-pagination-store'
 
 interface CatalogPaginationProps {
@@ -13,8 +12,7 @@ interface CatalogPaginationProps {
 export function CatalogPagination({ onPageChange }: CatalogPaginationProps) {
   const page = useCatalogPaginationStore((s) => s.page)
   const pageSize = useCatalogPaginationStore((s) => s.pageSize)
-
-  const { totalCount: totalItems } = useVisibleArtists()
+  const totalItems = useCatalogPaginationStore((s) => s.totalItems)
 
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
 
