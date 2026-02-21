@@ -2,10 +2,17 @@
 
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { GripVertical, Pencil, Star, Check, X } from 'lucide-react'
+import {
+  GripVertical,
+  Pencil,
+  Star,
+  Check,
+  X,
+  RotateCcw,
+  Trash2
+} from 'lucide-react'
 import { TableCell, TableRow } from '@/shared/components/ui/table'
 import { Switch } from '@/shared/components/ui/switch'
-import { Button } from '@/shared/components/ui/button'
 import { ArtistAvatar } from './artist-avatar'
 import { cn } from '@/lib/utils'
 import { useCatalogViewStore } from '../_store/catalog-view-store'
@@ -14,18 +21,25 @@ import {
   useCatalogProjectionStore
 } from '../_store/catalog-ui-store'
 import { useArtistsProjectionStore } from '../../_store/artista-ui-store'
+import { ButtonWithTooltip } from '@/shared/components/button-with-tooltip'
+import { Badge } from '@/shared/components/ui/badge'
 
 interface CatalogRowProps {
-  catalogId: string
+  id: string
 }
 
-export function CatalogRow({ catalogId }: CatalogRowProps) {
+export function CatalogRow({ id }: CatalogRowProps) {
   const isDraggingGlobal = useCatalogViewStore((s) => s.isDragging)
-  const catalog = useCatalogProjectionStore((s) => s.byId[catalogId])
+  const openCatalogDialog = useCatalogViewStore((s) => s.openCatalogDialog)
+
+  const remove = useCatalogOperationStore((s) => s.remove)
+  const restore = useCatalogOperationStore((s) => s.restore)
+  const update = useCatalogOperationStore((s) => s.update)
+
+  const catalog = useCatalogProjectionStore((s) => s.byId[id])
   const artist = useArtistsProjectionStore((s) =>
     catalog ? s.byId[catalog.artistaId] : undefined
   )
-  const update = useCatalogOperationStore((s) => s.update)
 
   const {
     attributes,
@@ -34,7 +48,7 @@ export function CatalogRow({ catalogId }: CatalogRowProps) {
     transform,
     transition,
     isDragging
-  } = useSortable({ id: catalogId })
+  } = useSortable({ id })
 
   if (!catalog || !artist) {
     return null
@@ -48,15 +62,16 @@ export function CatalogRow({ catalogId }: CatalogRowProps) {
   }
 
   const handleToggleField = (field: 'destacado' | 'activo', value: boolean) => {
-    update(catalogId, { [field]: value })
+    update(id, { [field]: value })
   }
 
   return (
     <TableRow
       ref={setNodeRef}
       style={style}
-      className={cn('group relative min-h-18.25', {
-        'bg-accent shadow-lg': isDragging || isDraggingGlobal
+      className={cn('group relative min-h-18.25 transition-colors', {
+        'bg-accent shadow-lg': isDragging || isDraggingGlobal,
+        'bg-destructive/10 hover:bg-destructive/20': catalog.__meta.isDeleted
       })}
     >
       {/* Drag Handle */}
@@ -67,7 +82,7 @@ export function CatalogRow({ catalogId }: CatalogRowProps) {
           className='hover:bg-muted/50 cursor-grab rounded p-1 active:cursor-grabbing'
           title='Arrastrar para reordenar'
         >
-          <GripVertical className='text-muted-foreground h-4 w-4' />
+          <GripVertical className='text-muted-foreground mx-auto h-4 w-4' />
         </div>
       </TableCell>
 
@@ -97,17 +112,20 @@ export function CatalogRow({ catalogId }: CatalogRowProps) {
         </div>
       </TableCell>
 
-      {/* Orden (solo lectura) */}
-      <TableCell className='w-16 text-center'>
-        <div className='flex flex-col items-center'>
-          <span className='text-muted-foreground font-mono text-sm'>
-            {catalog.orden}
-          </span>
+      <TableCell>
+        <div className='flex flex-col items-center justify-center gap-2'>
+          {catalog.__meta.isNew && <Badge variant='default'>Nuevo</Badge>}
+          {catalog.__meta.isUpdated && (
+            <Badge variant='outline'>Modificado</Badge>
+          )}
+          {catalog.__meta.isDeleted && (
+            <Badge variant='destructive'>Eliminado</Badge>
+          )}
         </div>
       </TableCell>
 
       {/* Destacado */}
-      <TableCell className='w-24'>
+      <TableCell>
         <div className='flex items-center gap-2'>
           <Switch
             checked={catalog.destacado}
@@ -122,7 +140,7 @@ export function CatalogRow({ catalogId }: CatalogRowProps) {
       </TableCell>
 
       {/* Activo */}
-      <TableCell className='w-20'>
+      <TableCell>
         <div className='flex items-center gap-2'>
           <Switch
             checked={catalog.activo}
@@ -137,20 +155,37 @@ export function CatalogRow({ catalogId }: CatalogRowProps) {
       </TableCell>
 
       {/* Acciones */}
-      <TableCell className='w-32'>
-        <div className='flex items-center gap-1'>
-          <Button
-            variant='ghost'
-            size='sm'
-            onClick={() =>
-              useCatalogViewStore.getState().openCatalogDialog(catalogId)
+      <TableCell>
+        <ButtonWithTooltip
+          variant='ghost'
+          size='icon'
+          tooltipContent='Editar información del catálogo'
+          onClick={() => openCatalogDialog(id)}
+        >
+          <Pencil className='mr-1 h-4 w-4' />
+        </ButtonWithTooltip>
+      </TableCell>
+
+      {/* Remove */}
+      <TableCell>
+        <ButtonWithTooltip
+          size='icon'
+          variant='ghost'
+          onClick={() => {
+            if (catalog.__meta.isDeleted) {
+              restore(id)
+            } else {
+              remove(id)
             }
-            className='opacity-0 transition-opacity group-hover:opacity-100'
-          >
-            <Pencil className='mr-1 h-4 w-4' />
-            Editar
-          </Button>
-        </div>
+          }}
+          tooltipContent={catalog.__meta.isDeleted ? 'Restaurar' : 'Eliminar'}
+          className={cn(
+            'text-destructive hover:text-destructive/80 h-8 w-8',
+            catalog.__meta.isDeleted && 'text-green-500 hover:text-green-500/80'
+          )}
+        >
+          {catalog.__meta.isDeleted ? <RotateCcw /> : <Trash2 />}
+        </ButtonWithTooltip>
       </TableCell>
     </TableRow>
   )
