@@ -1,14 +1,14 @@
 'use client'
 
-import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { TableCell, TableRow } from '@/shared/components/ui/table'
-import { RotateCcw, Trash2 } from 'lucide-react'
 import {
   useTeamOperationStore,
   useTeamProjectionStore
 } from '../_store/organization-team-ui-store'
 import { cn } from '@/lib/utils'
+import { ButtonWithTooltip } from '@/shared/components/button-with-tooltip'
+import { RotateCcw, Trash2 } from 'lucide-react'
 
 interface TeamItemProps {
   id: string
@@ -23,7 +23,11 @@ export function TeamItem({ id }: TeamItemProps) {
   if (!member) return null
 
   return (
-    <TableRow className={cn(member.__meta.isDeleted && 'bg-destructive/10')}>
+    <TableRow
+      className={cn(
+        member.__meta.isDeleted && 'bg-destructive/10 hover:bg-destructive/20'
+      )}
+    >
       <TableCell>
         <Input
           value={member.nombre}
@@ -31,6 +35,7 @@ export function TeamItem({ id }: TeamItemProps) {
           placeholder='Nombre completo'
           className='h-8'
           required
+          disabled={member.__meta.isDeleted}
         />
       </TableCell>
       <TableCell>
@@ -40,6 +45,7 @@ export function TeamItem({ id }: TeamItemProps) {
           placeholder='Ej: Coordinador'
           className='h-8'
           required
+          disabled={member.__meta.isDeleted}
         />
       </TableCell>
       <TableCell>
@@ -48,13 +54,13 @@ export function TeamItem({ id }: TeamItemProps) {
           onChange={(e) => update(id, { rrss: e.target.value })}
           placeholder='@usuario'
           className='h-8'
+          disabled={member.__meta.isDeleted}
         />
       </TableCell>
       <TableCell>
-        {/* TODO: Cuando el member está en esatdo deleted, cambiar icono a restore y quitar estado deleted */}
-        <Button
-          variant='ghost'
+        <ButtonWithTooltip
           size='icon'
+          variant='ghost'
           onClick={() => {
             if (member.__meta.isDeleted) {
               restore(id)
@@ -62,17 +68,14 @@ export function TeamItem({ id }: TeamItemProps) {
               remove(id)
             }
           }}
+          tooltipContent={member.__meta.isDeleted ? 'Restaurar' : 'Eliminar'}
           className={cn(
             'text-destructive hover:text-destructive/80 h-8 w-8',
             member.__meta.isDeleted && 'text-green-500 hover:text-green-500/80'
           )}
         >
-          {member.__meta.isDeleted ? (
-            <RotateCcw />
-          ) : (
-            <Trash2 className='h-4 w-4' />
-          )}
-        </Button>
+          {member.__meta.isDeleted ? <RotateCcw /> : <Trash2 />}
+        </ButtonWithTooltip>
       </TableCell>
     </TableRow>
   )
