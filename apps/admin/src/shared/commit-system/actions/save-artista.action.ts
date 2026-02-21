@@ -84,7 +84,10 @@ export async function saveArtista(section: 'artista'): Promise<SaveResult> {
         const { payload, scopeKey } = entry
         const [, idStr] = scopeKey.split(':')
 
-        if (payload.op === 'unset') {
+        if (payload.op === 'restore') {
+          // Restores are UI-only compensating events — no DB action needed
+          continue
+        } else if (payload.op === 'unset') {
           if (idStr && !isTempId(idStr)) {
             await tx.delete(artista).where(eq(artista.id, Number(idStr)))
           }
@@ -114,7 +117,9 @@ export async function saveArtista(section: 'artista'): Promise<SaveResult> {
         const { payload, scopeKey } = entry
         const [, idStr] = scopeKey.split(':')
 
-        if (payload.op === 'unset') {
+        if (payload.op === 'restore') {
+          continue
+        } else if (payload.op === 'unset') {
           if (idStr && !isTempId(idStr)) {
             await tx
               .delete(artistaImagen)

@@ -46,9 +46,9 @@ export function mapToCatalogoArtistaInput(
   entry: JournalEntry
 ): CatalogoArtistaInput {
   // Validate that the entry has a value (not 'unset' operation)
-  if (entry.payload.op === 'unset') {
+  if (entry.payload.op === 'unset' || entry.payload.op === 'restore') {
     throw new Error(
-      'Cannot map unset operation to CatalogoArtistaInput. Use delete operations instead.'
+      `Cannot map ${entry.payload.op} operation to CatalogoArtistaInput. Use delete operations instead.`
     )
   }
 

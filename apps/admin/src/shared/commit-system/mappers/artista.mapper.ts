@@ -32,8 +32,8 @@ import {
  * @throws ZodError if payload.value doesn't match schema
  */
 export function mapToArtistaInput(entry: JournalEntry): ArtistaInput {
-  if (entry.payload.op === 'unset') {
-    throw new Error('Cannot map unset operation to ArtistaInput')
+  if (entry.payload.op === 'unset' || entry.payload.op === 'restore') {
+    throw new Error(`Cannot map ${entry.payload.op} operation to ArtistaInput`)
   }
 
   // Validate payload.value against schema
@@ -52,8 +52,10 @@ export function mapToArtistaInput(entry: JournalEntry): ArtistaInput {
 export function mapToArtistaImagenInput(
   entry: JournalEntry
 ): ArtistaImagenInput {
-  if (entry.payload.op === 'unset') {
-    throw new Error('Cannot map unset operation to ArtistaImagenInput')
+  if (entry.payload.op === 'unset' || entry.payload.op === 'restore') {
+    throw new Error(
+      `Cannot map ${entry.payload.op} operation to ArtistaImagenInput`
+    )
   }
 
   // Validate payload.value against schema
@@ -72,8 +74,10 @@ export function mapToArtistaImagenInput(
 export function mapToCatalogoArtistaInput(
   entry: JournalEntry
 ): CatalogoArtistaInput {
-  if (entry.payload.op === 'unset') {
-    throw new Error('Cannot map unset operation to CatalogoArtistaInput')
+  if (entry.payload.op === 'unset' || entry.payload.op === 'restore') {
+    throw new Error(
+      `Cannot map ${entry.payload.op} operation to CatalogoArtistaInput`
+    )
   }
 
   // Validate payload.value against schema

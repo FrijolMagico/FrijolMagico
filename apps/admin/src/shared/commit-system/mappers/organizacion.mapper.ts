@@ -30,8 +30,10 @@ import {
  * @throws ZodError if payload.value doesn't match schema
  */
 export function mapToOrganizacionInput(entry: JournalEntry): OrganizacionInput {
-  if (entry.payload.op === 'unset') {
-    throw new Error('Cannot map unset operation to OrganizacionInput')
+  if (entry.payload.op === 'unset' || entry.payload.op === 'restore') {
+    throw new Error(
+      `Cannot map ${entry.payload.op} operation to OrganizacionInput`
+    )
   }
 
   // Validate payload.value against schema
@@ -50,8 +52,10 @@ export function mapToOrganizacionInput(entry: JournalEntry): OrganizacionInput {
 export function mapToOrganizacionEquipoInput(
   entry: JournalEntry
 ): OrganizacionEquipoInput {
-  if (entry.payload.op === 'unset') {
-    throw new Error('Cannot map unset operation to OrganizacionEquipoInput')
+  if (entry.payload.op === 'unset' || entry.payload.op === 'restore') {
+    throw new Error(
+      `Cannot map ${entry.payload.op} operation to OrganizacionEquipoInput`
+    )
   }
 
   // Validate payload.value against schema

@@ -46,7 +46,7 @@ export async function saveEvento(section: SectionName): Promise<SaveResult> {
       }
     }
 
-    const { deletes, updates } = sortOperations(entries)
+    const { deletes, updates, restores: _restores } = sortOperations(entries)
 
     const eventoEntries: JournalEntry[] = []
     const edicionEntries: JournalEntry[] = []

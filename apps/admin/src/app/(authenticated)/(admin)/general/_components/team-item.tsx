@@ -3,7 +3,7 @@
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { TableCell, TableRow } from '@/shared/components/ui/table'
-import { Trash2 } from 'lucide-react'
+import { RotateCcw, Trash2 } from 'lucide-react'
 import {
   useTeamOperationStore,
   useTeamProjectionStore
@@ -17,6 +17,7 @@ interface TeamItemProps {
 export function TeamItem({ id }: TeamItemProps) {
   const update = useTeamOperationStore((s) => s.update)
   const remove = useTeamOperationStore((s) => s.remove)
+  const restore = useTeamOperationStore((s) => s.restore)
   const member = useTeamProjectionStore((s) => s.byId[id])
 
   if (!member) return null
@@ -54,10 +55,23 @@ export function TeamItem({ id }: TeamItemProps) {
         <Button
           variant='ghost'
           size='icon'
-          onClick={() => remove(id)}
-          className='text-destructive hover:text-destructive/80 h-8 w-8'
+          onClick={() => {
+            if (member.__meta.isDeleted) {
+              restore(id)
+            } else {
+              remove(id)
+            }
+          }}
+          className={cn(
+            'text-destructive hover:text-destructive/80 h-8 w-8',
+            member.__meta.isDeleted && 'text-green-500 hover:text-green-500/80'
+          )}
         >
-          <Trash2 className='h-4 w-4' />
+          {member.__meta.isDeleted ? (
+            <RotateCcw />
+          ) : (
+            <Trash2 className='h-4 w-4' />
+          )}
         </Button>
       </TableCell>
     </TableRow>

@@ -42,7 +42,7 @@ export async function saveCatalogo(
       }
     }
 
-    const { deletes, updates } = sortOperations(entries)
+    const { deletes, updates, restores: _restores } = sortOperations(entries)
     const mappings: IdMapping[] = []
 
     await db.transaction(async (tx) => {

@@ -33,8 +33,8 @@ import {
  * @throws ZodError if payload.value doesn't match schema
  */
 export function mapToEventoInput(entry: JournalEntry): EventoInput {
-  if (entry.payload.op === 'unset') {
-    throw new Error('Cannot map unset operation to EventoInput')
+  if (entry.payload.op === 'unset' || entry.payload.op === 'restore') {
+    throw new Error(`Cannot map ${entry.payload.op} operation to EventoInput`)
   }
 
   // Validate payload.value against schema
@@ -53,8 +53,10 @@ export function mapToEventoInput(entry: JournalEntry): EventoInput {
 export function mapToEventoEdicionInput(
   entry: JournalEntry
 ): EventoEdicionInput {
-  if (entry.payload.op === 'unset') {
-    throw new Error('Cannot map unset operation to EventoEdicionInput')
+  if (entry.payload.op === 'unset' || entry.payload.op === 'restore') {
+    throw new Error(
+      `Cannot map ${entry.payload.op} operation to EventoEdicionInput`
+    )
   }
 
   // Validate payload.value against schema
@@ -73,8 +75,10 @@ export function mapToEventoEdicionInput(
 export function mapToEventoEdicionDiaInput(
   entry: JournalEntry
 ): EventoEdicionDiaInput {
-  if (entry.payload.op === 'unset') {
-    throw new Error('Cannot map unset operation to EventoEdicionDiaInput')
+  if (entry.payload.op === 'unset' || entry.payload.op === 'restore') {
+    throw new Error(
+      `Cannot map ${entry.payload.op} operation to EventoEdicionDiaInput`
+    )
   }
 
   // Validate payload.value against schema

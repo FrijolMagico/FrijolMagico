@@ -84,7 +84,7 @@ export async function saveOrganizacion(
       }
     }
 
-    const { deletes, updates } = sortOperations(entries)
+    const { deletes, updates, restores: _restores } = sortOperations(entries)
 
     const allMappings: IdMapping[] = []
 
