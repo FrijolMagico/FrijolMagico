@@ -1,11 +1,6 @@
 import { create } from 'zustand'
-import { CatalogFilters } from '../_types'
-import { useCatalogPaginationStore } from './catalog-pagination-store'
 
 interface CatalogViewState {
-  // Filters
-  filters: CatalogFilters
-
   // Drag & Drop UI State
   isDragging: boolean
   draggedArtistId: string | null
@@ -13,11 +8,9 @@ interface CatalogViewState {
   // Dialog UI State
   catalogDialogOpen: boolean
   artistDialogOpen: boolean
-  selectedArtistId: string | null
+  selectedCatalogId: string | null
 
   // Actions
-  setFilters: (filters: Partial<CatalogFilters>) => void
-
   startDrag: (catalogId: string) => void
   endDrag: () => void
 
@@ -32,21 +25,12 @@ interface CatalogViewState {
 
 // TODO: Consider  split into specific stores if its better, eg. FiltersStore, DragDropStire, DialogStores, etc. (Like the paginationStore one)
 export const useCatalogViewStore = create<CatalogViewState>((set) => ({
-  filters: { activo: null, destacado: null, search: '' },
-
   isDragging: false,
   draggedArtistId: null,
 
   catalogDialogOpen: false,
   artistDialogOpen: false,
-  selectedArtistId: null,
-
-  setFilters: (filters) => {
-    useCatalogPaginationStore.getState().reset()
-    set((state) => ({
-      filters: { ...state.filters, ...filters }
-    }))
-  },
+  selectedCatalogId: null,
 
   startDrag: (catalogId) =>
     set({ isDragging: true, draggedArtistId: catalogId }),
@@ -55,12 +39,12 @@ export const useCatalogViewStore = create<CatalogViewState>((set) => ({
   openCatalogDialog: (catalogId) =>
     set({
       catalogDialogOpen: true,
-      selectedArtistId: catalogId
+      selectedCatalogId: catalogId
     }),
   closeCatalogDialog: () =>
     set({
       catalogDialogOpen: false,
-      selectedArtistId: null
+      selectedCatalogId: null
     }),
 
   openArtistDialog: () => set({ artistDialogOpen: true }),
@@ -70,6 +54,6 @@ export const useCatalogViewStore = create<CatalogViewState>((set) => ({
     set({
       catalogDialogOpen: false,
       artistDialogOpen: false,
-      selectedArtistId: null
+      selectedCatalogId: null
     })
 }))
