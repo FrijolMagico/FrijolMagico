@@ -14,6 +14,7 @@ export type EntityOperation<T> =
       timestamp: number
     }
   | { type: 'DELETE'; id: string; timestamp: number }
+  | { type: 'RESTORE'; id: string; timestamp: number }
 
 export interface OperationLogState<T> {
   persistedOperations: EntityOperation<T>[] | null
@@ -25,6 +26,7 @@ export interface OperationLogActions<T> {
   add(data: NewBaseEntity<T>): void
   remove(id: string): void
   update(id: string, data: Partial<BaseEntity<T>>): void
+  restore(id: string): void
 
   commitPendingOperations(): Promise<void>
   clearPendingOperations(): void

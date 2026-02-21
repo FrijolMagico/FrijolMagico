@@ -23,6 +23,7 @@ export type JournalPayload =
   | { op: 'set'; value: unknown }
   | { op: 'unset' }
   | { op: 'patch'; value: unknown }
+  | { op: 'restore' }
 
 /**
  * Single immutable entry in the change journal

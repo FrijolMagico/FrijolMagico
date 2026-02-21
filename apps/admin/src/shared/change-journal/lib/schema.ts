@@ -8,7 +8,8 @@ import type { JournalEntry, JournalPayload, JournalMeta } from './types'
 const journalPayloadSchema = z.discriminatedUnion('op', [
   z.object({ op: z.literal('set'), value: z.unknown() }),
   z.object({ op: z.literal('unset') }),
-  z.object({ op: z.literal('patch'), value: z.unknown() })
+  z.object({ op: z.literal('patch'), value: z.unknown() }),
+  z.object({ op: z.literal('restore') })
 ]) as z.ZodType<JournalPayload>
 
 /**
