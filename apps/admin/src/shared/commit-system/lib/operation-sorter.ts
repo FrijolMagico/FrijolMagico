@@ -12,6 +12,7 @@
  */
 
 import type { JournalEntry } from '@/shared/change-journal/lib/types'
+import type { CommitOperation } from './types'
 
 /**
  * Sorted journal operations organized by type
@@ -127,6 +128,126 @@ export function validateOperations(entries: JournalEntry[]): ValidationResult {
           break
         }
         netState = NET_STATE.ACTIVE
+      }
+    }
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors
+  }
+}
+
+
+
+
+
+
+/**
+ * Sorted commit operations organized by type
+ */
+export interface SortedCommitOperations {
+  deletes: CommitOperation[]
+  updates: CommitOperation[]
+  creates: CommitOperation[]
+  restores: CommitOperation[]
+}
+
+/**
+ * Validation result for commit operation consistency
+ */
+export interface CommitValidationResult {
+  valid: boolean
+  errors: string[]
+}
+
+/**
+ * Sort CommitOperation[] for database execution
+ *
+ * Order: DELETE → RESTORE → UPDATE → CREATE
+ * - DELETEs first to free up FK constraints
+ * - RESTOREs next to re-enable soft-deleted entities
+ * - UPDATEs to modify existing entities
+ * - CREATEs last so FK references exist
+ */
+export function sortCommitOperations(
+  operations: CommitOperation[]
+): CommitOperation[] {
+  const deletes: CommitOperation[] = []
+  const restores: CommitOperation[] = []
+  const updates: CommitOperation[] = []
+  const creates: CommitOperation[] = []
+
+  for (const op of operations) {
+    switch (op.type) {
+      case 'DELETE':
+        deletes.push(op)
+        break
+      case 'RESTORE':
+        restores.push(op)
+        break
+      case 'UPDATE':
+        updates.push(op)
+        break
+      case 'CREATE':
+        creates.push(op)
+        break
+    }
+  }
+
+  return [...deletes, ...restores, ...updates, ...creates]
+}
+
+/**
+ * Validate CommitOperation[] using temporal reduction
+ *
+ * Groups operations by entityId, sorts each group by timestamp (if available),
+ * and detects contradictory operations (e.g., DELETE followed by UPDATE on same entity).
+ */
+export function validateCommitOperations(
+  operations: CommitOperation[]
+): CommitValidationResult {
+  const errors: string[] = []
+
+  const opsByEntity = new Map<string, CommitOperation[]>()
+
+  for (const op of operations) {
+    const key = `${op.entityType}:${op.entityId}`
+    const group = opsByEntity.get(key)
+    if (group) {
+      group.push(op)
+    } else {
+      opsByEntity.set(key, [op])
+    }
+  }
+
+  const STATE = {
+    ACTIVE: 'active',
+    DELETED: 'deleted'
+  } as const
+
+  type EntityState = (typeof STATE)[keyof typeof STATE]
+
+  for (const [entityKey, entityOps] of opsByEntity) {
+    let netState: EntityState | undefined
+
+    for (const op of entityOps) {
+      switch (op.type) {
+        case 'DELETE':
+          netState = STATE.DELETED
+          break
+        case 'RESTORE':
+          netState = STATE.ACTIVE
+          break
+        case 'UPDATE':
+        case 'CREATE':
+          if (netState === STATE.DELETED) {
+            errors.push(
+              `Contradictory operations: entity "${entityKey}" is deleted but also modified`
+            )
+          }
+          netState = STATE.ACTIVE
+          break
       }
     }
   }

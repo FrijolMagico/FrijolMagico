@@ -4,9 +4,8 @@ import { useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useDebouncedCallback } from 'use-debounce'
 import { Card } from '@/shared/components/ui/card'
-import { SaveButton } from '@/shared/commit-system/components/save-button'
-import { useAutoCommit } from '@/shared/ui-state/operation-log/hooks/use-auto-commit'
-import { useArtistsOperationStore } from '../../_store/artista-ui-store'
+import { SaveButton } from '@/shared/global-save/components/save-button'
+import { useArtistaCommit } from '../../_hooks/use-artista-commit'
 import { useArtistListFilterStore } from '../_store/artist-list-filter-store'
 import { useArtistListPaginationStore } from '../_store/artist-list-pagination-store'
 import { useArtistList } from '../_hooks/use-artist-list'
@@ -23,7 +22,7 @@ export function ArtistListContainer() {
   const setFilters = useArtistListFilterStore((s) => s.setFilters)
   const setPage = useArtistListPaginationStore((s) => s.setPage)
 
-  useAutoCommit(useArtistsOperationStore)
+  const { save, isPending, isDirty } = useArtistaCommit()
 
   const { countries, cities } = useArtistList()
 
@@ -125,7 +124,7 @@ export function ArtistListContainer() {
           cities={cities}
           onFiltersChange={handleFiltersChange}
         />
-        <SaveButton section='artista' />
+        <SaveButton onSave={save} isPending={isPending} isDirty={isDirty} />
       </div>
 
       <ArtistListPagination onPageChange={handlePageChange} />

@@ -84,3 +84,46 @@ export function groupMappingsBySection(
 
   return grouped
 }
+
+
+// --- NEW: Generic versions accepting sections as parameter ---
+
+/**
+ * Generic version: validates mappings against provided valid sections
+ */
+export function validateIdMappingsGeneric(
+  mappings: IdMapping[],
+  validSections: string[]
+): boolean {
+  return mappings.every((mapping) => {
+    const { tempId, realId, section } = mapping
+    return (
+      isTempId(tempId) &&
+      typeof realId === 'number' &&
+      realId > 0 &&
+      validSections.includes(section)
+    )
+  })
+}
+
+/**
+ * Generic version: groups mappings by section, returns partial record
+ */
+export function groupMappingsBySectionGeneric(
+  mappings: IdMapping[],
+  sections: string[]
+): Record<string, IdMapping[]> {
+  const grouped: Record<string, IdMapping[]> = {}
+
+  for (const section of sections) {
+    grouped[section] = []
+  }
+
+  for (const mapping of mappings) {
+    if (grouped[mapping.section]) {
+      grouped[mapping.section].push(mapping)
+    }
+  }
+
+  return grouped
+}
