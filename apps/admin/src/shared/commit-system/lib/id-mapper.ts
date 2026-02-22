@@ -51,6 +51,7 @@ export function validateIdMappings(mappings: IdMapping[]): boolean {
       JOURNAL_ENTITIES.ORGANIZACION_EQUIPO,
       JOURNAL_ENTITIES.ARTISTA,
       JOURNAL_ENTITIES.CATALOGO_ARTISTA,
+      JOURNAL_ENTITIES.ARTISTA_HISTORIAL,
       'evento'
     ]
     return (
@@ -73,6 +74,7 @@ export function groupMappingsBySection(
     [JOURNAL_ENTITIES.ORGANIZACION_EQUIPO]: [],
     [JOURNAL_ENTITIES.ARTISTA]: [],
     [JOURNAL_ENTITIES.CATALOGO_ARTISTA]: [],
+    [JOURNAL_ENTITIES.ARTISTA_HISTORIAL]: [],
     evento: []
   }
 

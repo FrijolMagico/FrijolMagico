@@ -23,10 +23,21 @@ export const navigation = [
       {
         title: 'Catálogo',
         href: '/artistas/catalogo'
+      }
+    ]
+  },
+  {
+    title: 'Eventos',
+    icon: Palette,
+    href: '/eventos',
+    items: [
+      {
+        title: 'Listado',
+        href: '/eventos'
       },
       {
-        title: 'Histórico',
-        href: '/artistas/historico'
+        title: 'Ediciones',
+        href: '/eventos/ediciones'
       }
     ]
   },
