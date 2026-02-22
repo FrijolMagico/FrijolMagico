@@ -1,5 +1,5 @@
 /**
- * @fileoverview journal-mappers.ts - Journal Entry to EntityOperation Mappers
+ * @fileoverview journal-entries-to-operations.ts - Journal Entry to EntityOperation Mapper
  *
  * Converts persisted journal entries back into EntityOperations for store
  * restoration. UPDATE operations are stored as per-field entries
@@ -9,8 +9,8 @@
  * @connection entity-types.ts - EntityOperation<T> interface
  */
 
-import { EntityOperation, BaseEntity } from '../ui-state/operation-log'
-import type { JournalEntry } from './lib/types'
+import { EntityOperation, BaseEntity } from '@/shared/ui-state/operation-log'
+import type { JournalEntry } from '@/shared/change-journal/lib/types'
 
 /**
  * Convert journal entries to EntityOperations for store restoration.
