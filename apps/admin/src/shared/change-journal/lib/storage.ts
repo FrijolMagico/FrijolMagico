@@ -20,7 +20,7 @@
 
 import Dexie, { type EntityTable } from 'dexie'
 import { journalEntrySchema } from './schema'
-import type { JournalEntry } from './types'
+import type { JournalEntry, WriteResult } from './types'
 
 /**
  * Dexie database class for Change Journal storage
@@ -62,7 +62,7 @@ export class JournalStorage {
    * Validates with Zod before persisting
    *
    * @param entry - JournalEntry to persist
-   * @returns Promise<void>
+   * @returns Promise<WriteResult>
    *
    * @example
    * await storage.writeEntry({
@@ -75,17 +75,20 @@ export class JournalStorage {
    *   clientId: 'client-uuid'
    * })
    */
-  async writeEntry(entry: JournalEntry): Promise<void> {
+  async writeEntry(entry: JournalEntry): Promise<WriteResult> {
     try {
       // Validate entry with Zod schema
       const validatedEntry = journalEntrySchema.parse(entry)
 
       // Persist to IndexedDB
       await this.db.entries.put(validatedEntry)
+      return { success: true }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       console.error('[JournalStorage] Failed to write entry:', error)
       console.error('[JournalStorage] Entry that failed:', entry)
-      // Graceful failure - don't throw to prevent app crashes
+      // Return error result instead of throwing
+      return { success: false, error: errorMessage }
     }
   }
 

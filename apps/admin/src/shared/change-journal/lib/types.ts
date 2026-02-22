@@ -16,6 +16,12 @@
  */
 
 /**
+ * Result of writing a journal entry
+ * Indicates success or failure with optional error message
+ */
+export type WriteResult = { success: true } | { success: false; error: string }
+
+/**
  * Discriminated union for journal operations
  * Supports three types: set (complete replacement), unset (deletion), patch (partial update)
  */

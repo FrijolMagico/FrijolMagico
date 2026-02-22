@@ -22,7 +22,7 @@
 
 import { CURRENT_SCHEMA_VERSION } from './lib/constants'
 import { JournalStorage } from './lib/storage'
-import type { JournalEntry, JournalPayload } from './lib/types'
+import type { JournalEntry, JournalPayload, WriteResult } from './lib/types'
 
 /**
  * Singleton storage instance
@@ -41,19 +41,22 @@ const storage = new JournalStorage()
  * @param scopeKey - Deduplication key (e.g., 'organizacion:org-123:name')
  * @param payload - Operation payload (set, unset, or patch)
  * @param meta - Optional metadata (sessionId)
- * @returns Promise that resolves when entry is written
+ * @returns Promise<WriteResult> - Success status and optional error message
  *
  * @example
  * // Write a complete entity replacement
- * await writeEntry(
+ * const result = await writeEntry(
  *   'organizacion',
  *   'organizacion:org-123',
  *   { op: 'set', value: { id: 'org-123', nombre: 'Nueva Org' } }
  * )
+ * if (!result.success) {
+ *   console.error('Failed to write entry:', result.error)
+ * }
  *
  * @example
  * // Write a field update
- * await writeEntry(
+ * const result = await writeEntry(
  *   'organizacion',
  *   'organizacion:org-123:nombre',
  *   { op: 'set', value: 'Nombre Actualizado' }
@@ -80,7 +83,7 @@ export async function writeEntry(
   scopeKey: string,
   payload: JournalPayload,
   meta?: { sessionId?: string }
-): Promise<void> {
+): Promise<WriteResult> {
   const entry: JournalEntry = {
     entryId: crypto.randomUUID(),
     schemaVersion: CURRENT_SCHEMA_VERSION,
@@ -92,7 +95,7 @@ export async function writeEntry(
     sessionId: meta?.sessionId
   }
 
-  await storage.writeEntry(entry)
+  return storage.writeEntry(entry)
 }
 
 /**

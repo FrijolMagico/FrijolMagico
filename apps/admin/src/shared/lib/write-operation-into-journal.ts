@@ -8,31 +8,49 @@ export async function writeOperationIntoJournal<T>(
   for (const operation of operations) {
     switch (operation.type) {
       case 'ADD':
-        await writeEntry(section, `${section}:${operation.data.id}`, {
-          op: 'set',
-          value: operation
-        })
+        {
+          const result = await writeEntry(section, `${section}:${operation.data.id}`, {
+            op: 'set',
+            value: operation
+          })
+          if (!result.success) {
+            console.error(`[writeOperationIntoJournal] Failed to write ADD operation:`, result.error)
+          }
+        }
         break
 
       case 'UPDATE':
         if (operation.data) {
           for (const [field, value] of Object.entries(operation.data)) {
-            await writeEntry(section, `${section}:${operation.id}:${field}`, {
+            const result = await writeEntry(section, `${section}:${operation.id}:${field}`, {
               op: 'set',
               value
             })
+            if (!result.success) {
+              console.error(`[writeOperationIntoJournal] Failed to write UPDATE operation for field ${field}:`, result.error)
+            }
           }
         }
         break
 
       case 'DELETE':
-        await writeEntry(section, `${section}:${operation.id}`, { op: 'unset' })
+        {
+          const result = await writeEntry(section, `${section}:${operation.id}`, { op: 'unset' })
+          if (!result.success) {
+            console.error(`[writeOperationIntoJournal] Failed to write DELETE operation:`, result.error)
+          }
+        }
         break
 
       case 'RESTORE':
-        await writeEntry(section, `${section}:${operation.id}`, {
-          op: 'restore'
-        })
+        {
+          const result = await writeEntry(section, `${section}:${operation.id}`, {
+            op: 'restore'
+          })
+          if (!result.success) {
+            console.error(`[writeOperationIntoJournal] Failed to write RESTORE operation:`, result.error)
+          }
+        }
         break
     }
   }
