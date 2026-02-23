@@ -3,41 +3,23 @@
 import { useEffect } from 'react'
 import { useDebouncedCallback } from 'use-debounce'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useProjectionSync } from '@/shared/hooks/use-projection-sync'
 import { useAutoCommit } from '@/shared/ui-state/operation-log/hooks/use-auto-commit'
 import { CatalogFilters as CatalogFiltersComponent } from './catalog-filters'
 import { EditCatalogDialog } from './edit-catalog-dialog'
 import { EditArtistDialog } from './edit-artist-dialog'
 import { useCatalogFilterStore } from '../_store/catalog-filter-store'
 import { useCatalogPaginationStore } from '../_store/catalog-pagination-store'
-import {
-  useCatalogOperationStore,
-  useCatalogProjectionStore
-} from '../_store/catalog-ui-store'
+import { useCatalogOperationStore } from '../_store/catalog-ui-store'
 import { useArtistsOperationStore } from '../../_store/artista-ui-store'
 import { CatalogTableContainer } from './catalog-table-container'
 
-import type { CatalogEntry } from '../_types'
-
-interface CatalogArtistsContainerProps {
-  initialData: CatalogEntry[]
-}
-
-export function CatalogArtistsContainer({
-  initialData
-}: CatalogArtistsContainerProps) {
+export function CatalogArtistsContainer() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
   const setFilters = useCatalogFilterStore((s) => s.setFilters)
   const setPage = useCatalogPaginationStore((s) => s.setPage)
   const pageSize = useCatalogPaginationStore((s) => s.pageSize)
-
-  useProjectionSync<CatalogEntry>({
-    initialData,
-    operationStore: useCatalogOperationStore,
-    projectionStore: useCatalogProjectionStore
-  })
 
   useAutoCommit(useCatalogOperationStore)
   useAutoCommit(useArtistsOperationStore)
@@ -57,7 +39,7 @@ export function CatalogArtistsContainer({
     if (pageParam) {
       setPage(Number(pageParam))
     }
-  }, [initialData, pageSize, searchParams, setFilters, setPage])
+  }, [pageSize, searchParams, setFilters, setPage])
 
   const handleFiltersChange = useDebouncedCallback(
     (newFilters: {

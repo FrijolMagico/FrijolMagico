@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { EmptyState } from '@/shared/components/empty-state'
 import { getCatalogData } from '../_lib/get-catalog-data'
+import { CatalogStoreInitialization } from './catalog-store-initialization'
 import { CatalogArtistsContainer } from './catalog-artists-container'
 
 export async function CatalogContent() {
@@ -17,7 +18,8 @@ export async function CatalogContent() {
 
   return (
     <Suspense fallback={<div>Cargando...</div>}>
-      <CatalogArtistsContainer initialData={catalog} />
+      <CatalogStoreInitialization initialData={catalog} />
+      <CatalogArtistsContainer />
     </Suspense>
   )
 }

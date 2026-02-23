@@ -12,7 +12,6 @@ import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { toast } from 'sonner'
-import { updateArtist } from '../_actions/catalog.actions'
 import { ArtistRRSSManager } from './artist-rrss-manager'
 import { useCatalogViewStore } from '../_store/catalog-view-store'
 import {
@@ -22,13 +21,12 @@ import {
 import { useCatalogProjectionStore } from '../_store/catalog-ui-store'
 import { ArtistEntry } from '../../_types'
 
-function ArtistFormContent({
-  artist,
-  onClose
-}: {
+interface EditArtistDialogProps {
   artist: ArtistEntry
   onClose: () => void
-}) {
+}
+
+function ArtistFormContent({ artist, onClose }: EditArtistDialogProps) {
   const [formData, setFormData] = useState({
     nombre: artist.nombre ?? '',
     pseudonimo: artist.pseudonimo ?? '',
@@ -52,16 +50,11 @@ function ArtistFormContent({
     setIsSaving(true)
 
     try {
-      const result = await updateArtist(Number(artist.id), formData)
+      useArtistsOperationStore.getState().update(artist.id, formData)
 
-      if (result.success) {
-        useArtistsOperationStore.getState().update(artist.id, formData)
+      toast.success('Información del artista guardada correctamente')
 
-        toast.success('Información del artista guardada correctamente')
-        onClose()
-      } else {
-        throw new Error(result.error || 'Error al guardar')
-      }
+      onClose()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Error al guardar')
     } finally {
