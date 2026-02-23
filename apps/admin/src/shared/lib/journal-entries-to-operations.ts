@@ -52,7 +52,10 @@ export function journalEntriesToOperations<T>(
     } else if (payload.op === 'set' && field) {
       const existing = fieldUpdates.get(entityId)
       if (existing) {
-        existing.data[field] = payload.value
+        // FIX: Only set field if not already present (entries are newest-first, preserve newest value)
+        if (!(field in existing.data)) {
+          existing.data[field] = payload.value
+        }
         existing.timestamp = Math.max(existing.timestamp, entry.timestampMs)
       } else {
         fieldUpdates.set(entityId, {
@@ -61,9 +64,12 @@ export function journalEntriesToOperations<T>(
         })
       }
     } else if (payload.op === 'set' && !field) {
+      // writeOperationIntoJournal stores the full operation as value: { type: 'ADD', data: BaseEntity<T>, timestamp }
+      // We need to extract .data from the wrapped operation
+      const wrappedOp = payload.value as { data: BaseEntity<T> }
       operations.push({
         type: 'ADD',
-        data: payload.value as unknown as BaseEntity<T>,
+        data: wrappedOp.data,
         timestamp: entry.timestampMs
       })
     } else if (payload.op === 'patch') {
