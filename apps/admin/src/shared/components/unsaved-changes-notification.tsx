@@ -2,13 +2,21 @@
 
 import { useEffect, useState } from 'react'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
-import { AlertTriangle } from 'lucide-react'
-import { Button } from './ui/button'
+import { Info } from 'lucide-react'
+import { getSectionsWithChanges } from '@/shared/change-journal/change-journal'
 import {
-  getSectionsWithChanges,
-  clearSection
-} from '@/shared/change-journal/change-journal'
-import type { JournalEntity } from '@/shared/lib/database-entities'
+  JOURNAL_ENTITY_LABELS,
+  type JournalEntity
+} from '@/shared/lib/database-entities'
+import Link from 'next/link'
+
+const ENTITY_TO_ROUTE: Partial<Record<JournalEntity, string>> = {
+  organizacion: '/general',
+  organizacion_equipo: '/general',
+  artista: '/artistas',
+  catalogo_artista: '/artistas/catalogo',
+  artista_historial: '/artistas/listado'
+}
 
 export function UnsavedChangesNotification() {
   const [unsavedSections, setUnsavedSections] = useState<JournalEntity[]>([])
@@ -21,83 +29,53 @@ export function UnsavedChangesNotification() {
         .filter(({ count }) => count > 0)
         .map(({ section }) => section as JournalEntity)
 
-      if (entitySections.length > 0) {
-        setUnsavedSections(entitySections)
-        setIsVisible(true)
-      }
+      setUnsavedSections(entitySections)
+      setIsVisible(entitySections.length > 0)
     }
 
     checkForUnsavedChanges()
+
+    // Re-check when journal changes (e.g., after discard/restore)
+    window.addEventListener('journal-changed', checkForUnsavedChanges)
+    return () => window.removeEventListener('journal-changed', checkForUnsavedChanges)
   }, [])
-
-  async function handleDismiss() {
-    for (const section of unsavedSections) {
-      await clearSection(section)
-    }
-    setUnsavedSections([])
-    setIsVisible(false)
-  }
-
-  async function handleRestore() {
-    // for (const entity of unsavedSections) {
-    //   const store = getStoreForEntity(entity)
-    //   if (!store) continue
-    //
-    //   const entries = await getLatestEntries(entity)
-    //   const operations = journalEntriesToOperations(entries)
-    //
-    //   if (operations.length > 0) {
-    //     store.setState((state) => ({
-    //       appliedChanges: {
-    //         operations: [
-    //           ...(state.appliedChanges?.operations ?? []),
-    //           ...operations
-    //         ],
-    //         lastApplied: new Date()
-    //       } satisfies AppliedChanges<unknown>
-    //     }))
-    //   }
-    // }
-
-    setIsVisible(false)
-  }
 
   if (!isVisible || unsavedSections.length === 0) {
     return null
   }
 
   return (
-    <Alert className='bg-accent mb-6'>
-      <AlertTriangle />
-      <AlertDescription className='flex flex-col gap-2'>
-        <div className='flex-1'>
-          <AlertTitle>Se encontró un borrador guardado</AlertTitle>
-          <AlertDescription>
-            Se encontró un borrador guardado de cambios anteriores
-          </AlertDescription>
-          <div className='py-2'>
-            <ul>
-              {unsavedSections.map((section) => (
-                <li key={section} className='text-sm'>
-                  - {section}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-        <div className='flex gap-2'>
-          <Button
-            size='sm'
-            variant='destructive'
-            onClick={handleDismiss}
-            className='h-8'
-          >
-            Descartar
-          </Button>
-          <Button size='sm' onClick={handleRestore} className='h-8'>
-            Restaurar
-          </Button>
-        </div>
+    <Alert className='mb-6'>
+      <Info className='h-4 w-4' />
+      <AlertTitle>Cambios pendientes</AlertTitle>
+      <AlertDescription>
+        <p className='mb-2'>
+          Tienes cambios guardados en las siguientes secciones:
+        </p>
+        <ul className='list-inside list-disc space-y-1'>
+          {unsavedSections.map((section) => {
+            const label = JOURNAL_ENTITY_LABELS[section]
+            const route = ENTITY_TO_ROUTE[section]
+
+            return (
+              <li key={section} className='text-sm'>
+                {route ? (
+                  <Link
+                    href={route}
+                    className='text-primary font-medium hover:underline'
+                  >
+                    {label}
+                  </Link>
+                ) : (
+                  <span>{label}</span>
+                )}
+              </li>
+            )
+          })}
+        </ul>
+        <p className='text-muted-foreground mt-2 text-sm'>
+          Navega a cada sección para restaurar o descartar los cambios.
+        </p>
       </AlertDescription>
     </Alert>
   )
