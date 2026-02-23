@@ -33,6 +33,7 @@ export interface OperationLogActions<T> {
   clearPersistedOperations(): void
 
   resetStore(): void
+  hydratePersistedOperations(operations: EntityOperation<T>[]): void
 }
 
 export type EntityOperationStore<T> = OperationLogState<T> &

@@ -106,6 +106,13 @@ export function createEntityOperationStore<T>({
       set({
         persistedOperations: null,
         pendingOperations: null
-      })
+      }),
+    hydratePersistedOperations: (operations) =>
+      set((state) => ({
+        persistedOperations: [
+          ...(state.persistedOperations ?? []),
+          ...operations
+        ]
+      }))
   }))
 }
