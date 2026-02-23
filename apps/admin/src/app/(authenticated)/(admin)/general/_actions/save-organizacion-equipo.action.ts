@@ -4,14 +4,12 @@ import { db } from '@frijolmagico/database/orm'
 import { core } from '@frijolmagico/database/schema'
 import { eq } from 'drizzle-orm'
 
-const { organizacionEquipo } = core
+const { organizationMember } = core
 
 import { requireAuth } from '@/lib/auth/utils'
 import { revalidateTag } from 'next/cache'
 import { COMMIT_OPERATION_TYPE } from '@/shared/commit-system/lib/types'
-import {
-  validateCommitOperations
-} from '@/shared/commit-system/lib/operation-sorter'
+import { validateCommitOperations } from '@/shared/commit-system/lib/operation-sorter'
 import { processBatches } from '@/shared/commit-system/lib/batch-processor'
 import {
   handleServerActionError,
@@ -38,8 +36,19 @@ function toJournalEntry(op: CommitOperation): JournalEntry {
 
   switch (op.type) {
     case COMMIT_OPERATION_TYPE.CREATE:
-    case COMMIT_OPERATION_TYPE.UPDATE:
-      return { ...base, payload: { op: 'set' as const, value: op.data } }
+    case COMMIT_OPERATION_TYPE.UPDATE: {
+      const dataWithSerializedRrss = {
+        ...op.data,
+        rrss:
+          op.data.rrss && typeof op.data.rrss === 'object'
+            ? JSON.stringify(op.data.rrss)
+            : op.data.rrss
+      }
+      return {
+        ...base,
+        payload: { op: 'set' as const, value: dataWithSerializedRrss }
+      }
+    }
     case COMMIT_OPERATION_TYPE.DELETE:
       return { ...base, payload: { op: 'unset' as const } }
     case COMMIT_OPERATION_TYPE.RESTORE:
@@ -85,8 +94,8 @@ export async function saveOrganizacionEquipoAction(
             if (op.type === COMMIT_OPERATION_TYPE.DELETE) {
               if (!isTempId(op.entityId)) {
                 await tx
-                  .delete(organizacionEquipo)
-                  .where(eq(organizacionEquipo.id, Number(op.entityId)))
+                  .delete(organizationMember)
+                  .where(eq(organizationMember.id, Number(op.entityId)))
               }
             } else if (op.type === COMMIT_OPERATION_TYPE.RESTORE) {
               continue
@@ -96,24 +105,30 @@ export async function saveOrganizacionEquipoAction(
 
               if (!isTempId(op.entityId)) {
                 await tx
-                  .update(organizacionEquipo)
+                  .update(organizationMember)
                   .set({
-                    organizacionId: input.organizacionId,
-                    nombre: input.nombre,
-                    cargo: input.cargo,
+                    organizationId: input.organizationId,
+                    name: input.nombre,
+                    position: input.cargo,
+                    rut: input.rut,
+                    email: input.email,
+                    phone: input.phone,
                     rrss: input.rrss
                   })
-                  .where(eq(organizacionEquipo.id, Number(op.entityId)))
+                  .where(eq(organizationMember.id, Number(op.entityId)))
               } else {
                 const [inserted] = await tx
-                  .insert(organizacionEquipo)
+                  .insert(organizationMember)
                   .values({
-                    organizacionId: input.organizacionId,
-                    nombre: input.nombre,
-                    cargo: input.cargo,
+                    organizationId: input.organizationId,
+                    name: input.nombre,
+                    position: input.cargo,
+                    rut: input.rut,
+                    email: input.email,
+                    phone: input.phone,
                     rrss: input.rrss
                   })
-                  .returning({ id: organizacionEquipo.id })
+                  .returning({ id: organizationMember.id })
 
                 if (inserted) {
                   batchMappings.push(
