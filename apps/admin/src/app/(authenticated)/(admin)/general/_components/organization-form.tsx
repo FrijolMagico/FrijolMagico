@@ -1,6 +1,6 @@
 'use client'
 
-import { Organization } from '../_types'
+import type { Organization } from '../_types'
 import { Label } from '@/shared/components/ui/label'
 import { Input } from '@/shared/components/ui/input'
 import { Textarea } from '@/shared/components/ui/textarea'
@@ -11,7 +11,6 @@ import {
 } from '../_store/organization-ui-store'
 import { ORGANIZATION_ID } from '../_constants'
 import { useAutoCommit } from '@/shared/ui-state/operation-log/hooks/use-auto-commit'
-import { useProjectionSync } from '@/shared/hooks/use-projection-sync'
 
 interface OrganizationFormProps {
   initialData: Organization
@@ -24,17 +23,7 @@ export function OrganizationForm({ initialData }: OrganizationFormProps) {
 
   const source = projected ?? initialData
 
-  useProjectionSync<Organization>({
-    initialData: [initialData],
-    operationStore: useOrganizationOperationStore,
-    projectionStore: useOrganizationProjectionStore
-  })
-
   useAutoCommit(useOrganizationOperationStore)
-
-  console.log('(UI)[OrganizationForm]: ', {
-    source
-  })
 
   return (
     <div className='space-y-6'>

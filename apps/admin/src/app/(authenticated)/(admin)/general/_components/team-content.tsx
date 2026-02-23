@@ -1,4 +1,5 @@
 import { CardContent } from '@/shared/components/ui/card'
+import { TeamStoreInitialization } from './team-store-initialization'
 import { TeamTable } from './team-table'
 import { getTeamData } from '../_lib/get-general-data'
 import { EmptyState } from '@/shared/components/empty-state'
@@ -23,7 +24,8 @@ export async function TeamContent() {
 
   return (
     <CardContent className='space-y-6'>
-      <TeamTable initialData={team} />
+      <TeamStoreInitialization initialData={team} />
+      <TeamTable />
     </CardContent>
   )
 }

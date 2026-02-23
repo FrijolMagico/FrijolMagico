@@ -7,7 +7,6 @@ import {
   TableHeader,
   TableRow
 } from '@/shared/components/ui/table'
-import { useProjectionSync } from '@/shared/hooks/use-projection-sync'
 
 import {
   useTeamOperationStore,
@@ -16,21 +15,10 @@ import {
 import { TeamItem } from './team-item'
 import { useAutoCommit } from '@/shared/ui-state/operation-log/hooks/use-auto-commit'
 
-import type { TeamMember } from '../_types'
 import { Card } from '@/shared/components/ui/card'
 
-interface TeamTableProps {
-  initialData: TeamMember[]
-}
-
-export function TeamTable({ initialData }: TeamTableProps) {
+export function TeamTable() {
   const teamIds = useTeamProjectionStore((s) => s.allIds)
-
-  useProjectionSync<TeamMember>({
-    initialData,
-    operationStore: useTeamOperationStore,
-    projectionStore: useTeamProjectionStore
-  })
 
   useAutoCommit(useTeamOperationStore)
 

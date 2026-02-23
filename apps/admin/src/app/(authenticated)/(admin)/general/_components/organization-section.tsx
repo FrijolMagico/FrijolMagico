@@ -6,6 +6,7 @@ import {
   CardTitle
 } from '@/shared/components/ui/card'
 import { getOrganizationData } from '../_lib/get-general-data'
+import { OrganizationStoreInitialization } from './organization-store-initialization'
 import { OrganizationForm } from './organization-form'
 import { EmptyState } from '@/shared/components/empty-state'
 
@@ -37,6 +38,7 @@ export async function OrganizationSection() {
       </CardHeader>
 
       <CardContent className='space-y-6'>
+        <OrganizationStoreInitialization initialData={organization} />
         <OrganizationForm initialData={organization} />
       </CardContent>
     </Card>
