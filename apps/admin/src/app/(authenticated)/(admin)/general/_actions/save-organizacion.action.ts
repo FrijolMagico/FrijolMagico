@@ -8,10 +8,7 @@ import { eq } from 'drizzle-orm'
 import { requireAuth } from '@/lib/auth/utils'
 import { revalidateTag } from 'next/cache'
 import { COMMIT_OPERATION_TYPE } from '@/shared/commit-system/lib/types'
-import {
-  sortCommitOperations,
-  validateCommitOperations
-} from '@/shared/commit-system/lib/operation-sorter'
+import { validateCommitOperations } from '@/shared/commit-system/lib/operation-sorter'
 import { processBatches } from '@/shared/commit-system/lib/batch-processor'
 import {
   handleServerActionError,
@@ -45,11 +42,6 @@ function toJournalEntry(op: CommitOperation): JournalEntry {
     case COMMIT_OPERATION_TYPE.RESTORE:
       return { ...base, payload: { op: 'restore' as const } }
   }
-}
-
-function extractEntityId(scopeKey: string): string | null {
-  const parts = scopeKey.split(':')
-  return parts[1] || null
 }
 
 export async function saveOrganizacionAction(
