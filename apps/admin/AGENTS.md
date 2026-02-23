@@ -132,6 +132,98 @@ El sistema de gestión de estado UI utiliza una **arquitectura de 3 capas** basa
 
 Para más detalles, consultar [apps/admin/src/shared/ui-state/README.md](./src/shared/ui-state/README.md).
 
+### Store Initialization Pattern
+
+Cada sección que maneja estado UI con el patrón Entity State debe tener un **componente de inicialización dedicado** que se encarga de:
+
+1. **Sincronizar proyección** — `useProjectionSync` conecta el operation-log con el projection-engine
+2. **Detectar cambios pendientes** — `useJournalRestore` verifica si hay entries en IndexedDB de sesiones anteriores
+3. **Mostrar banner de restauración** — Si hay cambios pendientes, muestra el `SectionPendingBanner`
+
+#### Estructura del Componente
+
+```typescript
+// _components/[entidad]-store-initialization.tsx
+'use client'
+
+import { useProjectionSync } from '@/shared/hooks/use-projection-sync'
+import { useJournalRestore } from '@/shared/hooks/use-journal-restore'
+import { JOURNAL_ENTITIES, JOURNAL_ENTITY_LABELS } from '@/shared/lib/database-entities'
+import { use[Entity]OperationStore, use[Entity]ProjectionStore } from '../_store/[entidad]-ui-store'
+import type { [Entity]Entry } from '../_types'
+
+interface [Entity]StoreInitializationProps {
+  initialData: [Entity]Entry[]
+}
+
+export function [Entity]StoreInitialization({ initialData }: [Entity]StoreInitializationProps) {
+  useProjectionSync<[Entity]Entry>({
+    initialData,
+    operationStore: use[Entity]OperationStore,
+    projectionStore: use[Entity]ProjectionStore
+  })
+
+  const { PendingBanner } = useJournalRestore<[Entity]Entry>({
+    entity: JOURNAL_ENTITIES.[ENTITY_KEY],
+    sectionLabel: JOURNAL_ENTITY_LABELS[JOURNAL_ENTITIES.[ENTITY_KEY]],
+    operationStore: use[Entity]OperationStore
+  })
+
+  if (PendingBanner) return <PendingBanner />
+  return null
+}
+```
+
+#### Inyección en Server Components
+
+El componente de inicialización se inyecta en el **server component que hace data fetching**, NO en el page.tsx directamente:
+
+```typescript
+// _components/[entidad]-content.tsx (Server Component)
+import { [Entity]StoreInitialization } from './[entidad]-store-initialization'
+import { [Entity]Container } from './[entidad]-container'
+import { get[Entity]Data } from '../_lib/get-[entidad]-data'
+
+export async function [Entity]Content() {
+  const data = await get[Entity]Data()
+
+  return (
+    <>
+      <[Entity]StoreInitialization initialData={data} />
+      <[Entity]Container />
+    </>
+  )
+}
+```
+
+#### Beneficios
+
+- **Separación de responsabilidades**: Los componentes de UI no manejan inicialización de stores
+- **Consistencia**: Todas las secciones siguen el mismo patrón
+- **Testeabilidad**: La inicialización se puede testear independientemente
+- **Claridad**: A nivel de server component se ve qué stores se inicializan
+
+#### Hooks Involucrados
+
+| Hook | Responsabilidad | Ubicación |
+|------|-----------------|-----------|
+| `useProjectionSync` | Sincroniza operation-log ↔ projection-engine | `src/shared/hooks/use-projection-sync.ts` |
+| `useJournalRestore` | Detecta entries en journal + provee banner de restauración | `src/shared/hooks/use-journal-restore.tsx` |
+
+#### Entidades Journal
+
+Las entidades disponibles para journal están definidas en `src/shared/lib/database-entities.ts`:
+
+```typescript
+JOURNAL_ENTITIES = {
+  ORGANIZACION: 'organizacion',
+  ORGANIZACION_EQUIPO: 'organizacion_equipo',
+  ARTISTA: 'artista',
+  CATALOGO_ARTISTA: 'catalogo_artista',
+  ARTISTA_HISTORIAL: 'artista_historial'
+}
+```
+
 ### Components
 
 - **Own:** snake-case for components (e.g., `user-profile.tsx`)
