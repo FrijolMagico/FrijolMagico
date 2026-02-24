@@ -3,8 +3,7 @@
 import { useProjectionSync } from '@/shared/hooks/use-projection-sync'
 import { useJournalRestore } from '@/shared/hooks/use-journal-restore'
 import {
-  JOURNAL_ENTITIES,
-  JOURNAL_ENTITY_LABELS
+  JOURNAL_ENTITIES
 } from '@/shared/lib/database-entities'
 import {
   useOrganizationOperationStore,
@@ -25,12 +24,12 @@ export function OrganizationStoreInitialization({
     projectionStore: useOrganizationProjectionStore
   })
 
-  const { PendingBanner } = useJournalRestore<Organization>({
+  useJournalRestore<Organization>({
     entity: JOURNAL_ENTITIES.ORGANIZACION,
-    sectionLabel: JOURNAL_ENTITY_LABELS[JOURNAL_ENTITIES.ORGANIZACION],
+    sectionLabel: '',
     operationStore: useOrganizationOperationStore
   })
 
-  if (PendingBanner) return <PendingBanner />
+
   return null
 }

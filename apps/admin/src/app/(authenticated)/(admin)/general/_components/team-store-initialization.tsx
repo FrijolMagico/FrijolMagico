@@ -3,8 +3,7 @@
 import { useProjectionSync } from '@/shared/hooks/use-projection-sync'
 import { useJournalRestore } from '@/shared/hooks/use-journal-restore'
 import {
-  JOURNAL_ENTITIES,
-  JOURNAL_ENTITY_LABELS
+  JOURNAL_ENTITIES
 } from '@/shared/lib/database-entities'
 import {
   useTeamOperationStore,
@@ -25,12 +24,12 @@ export function TeamStoreInitialization({
     projectionStore: useTeamProjectionStore
   })
 
-  const { PendingBanner } = useJournalRestore<TeamMember>({
+  useJournalRestore<TeamMember>({
     entity: JOURNAL_ENTITIES.ORGANIZACION_EQUIPO,
-    sectionLabel: JOURNAL_ENTITY_LABELS[JOURNAL_ENTITIES.ORGANIZACION_EQUIPO],
+    sectionLabel: '',
     operationStore: useTeamOperationStore
   })
 
-  if (PendingBanner) return <PendingBanner />
+
   return null
 }

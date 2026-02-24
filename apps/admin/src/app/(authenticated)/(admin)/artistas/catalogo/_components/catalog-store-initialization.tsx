@@ -3,8 +3,7 @@
 import { useProjectionSync } from '@/shared/hooks/use-projection-sync'
 import { useJournalRestore } from '@/shared/hooks/use-journal-restore'
 import {
-  JOURNAL_ENTITIES,
-  JOURNAL_ENTITY_LABELS
+  JOURNAL_ENTITIES
 } from '@/shared/lib/database-entities'
 import {
   useCatalogOperationStore,
@@ -25,12 +24,12 @@ export function CatalogStoreInitialization({
     projectionStore: useCatalogProjectionStore
   })
 
-  const { PendingBanner } = useJournalRestore<CatalogEntry>({
+  useJournalRestore<CatalogEntry>({
     entity: JOURNAL_ENTITIES.CATALOGO_ARTISTA,
-    sectionLabel: JOURNAL_ENTITY_LABELS[JOURNAL_ENTITIES.CATALOGO_ARTISTA],
+    sectionLabel: '',
     operationStore: useCatalogOperationStore
   })
 
-  if (PendingBanner) return <PendingBanner />
+
   return null
 }
