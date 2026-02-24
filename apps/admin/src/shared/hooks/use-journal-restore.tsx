@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, type JSX } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import type { UseBoundStore, StoreApi } from 'zustand'
 import type { JournalEntity } from '@/shared/lib/database-entities'
 import type { EntityOperationStore } from '@/shared/ui-state/operation-log/types'
@@ -10,7 +10,6 @@ import {
   clearSection
 } from '@/shared/change-journal/change-journal'
 import { journalEntriesToOperations } from '@/shared/lib/journal-entries-to-operations'
-import { SectionPendingBanner } from '@/shared/components/section-pending-banner'
 
 interface UseJournalRestoreOptions<T> {
   entity: JournalEntity
@@ -18,53 +17,61 @@ interface UseJournalRestoreOptions<T> {
   operationStore: UseBoundStore<StoreApi<EntityOperationStore<T>>>
 }
 
+interface UseJournalRestoreResult {
+  hasRestoredEntries: boolean
+  noticeVisible: boolean
+  dismissNotice: () => void
+  discardAll: () => Promise<void>
+}
+
 export function useJournalRestore<T>({
   entity,
-  sectionLabel,
+  sectionLabel: _sectionLabel,
   operationStore
-}: UseJournalRestoreOptions<T>): {
-  PendingBanner: (() => JSX.Element | null) | null
-} {
-  const [showBanner, setShowBanner] = useState(false)
+}: UseJournalRestoreOptions<T>): UseJournalRestoreResult {
+  const [hasRestoredEntries, setHasRestoredEntries] = useState(false)
+  const [noticeVisible, setNoticeVisible] = useState(false)
   const isHydrated = useRef(false)
 
-  useEffect(() => {
-    async function checkAndHydrate() {
-      const hasPending = await hasEntries(entity)
+  const checkAndHydrate = useCallback(async () => {
+    const hasPending = await hasEntries(entity)
 
-      if (hasPending && !isHydrated.current) {
-        // Hydrate immediately so changes are visible in UI before any user action
-        const entries = await getLatestEntries(entity)
-        const operations = journalEntriesToOperations<T>(entries)
-        operationStore.getState().hydratePersistedOperations(operations)
-        isHydrated.current = true
-      }
-
-      setShowBanner(hasPending)
+    if (hasPending && !isHydrated.current) {
+      // Hydrate immediately so changes are visible in UI before any user action
+      const entries = await getLatestEntries(entity)
+      const operations = journalEntriesToOperations<T>(entries)
+      operationStore.getState().hydratePersistedOperations(operations)
+      isHydrated.current = true
+      setNoticeVisible(true)
     }
 
-    checkAndHydrate()
+    if (!hasPending && isHydrated.current) {
+      operationStore.getState().clearPersistedOperations()
+      isHydrated.current = false
+    }
+
+    setHasRestoredEntries(hasPending)
   }, [entity, operationStore])
 
-  const PendingBanner = showBanner
-    ? () => (
-        <SectionPendingBanner
-          sectionLabel={sectionLabel}
-          onRestore={async () => {
-            // We do not delete the journal on restore, just mark the entries as applied, so we can keep track of what was restored and when
-            window.dispatchEvent(new CustomEvent('journal-changed'))
-            setShowBanner(false)
-          }}
-          onDiscard={async () => {
-            // Remove the hydrated changes and clear journal
-            operationStore.getState().clearPersistedOperations()
-            await clearSection(entity)
-            window.dispatchEvent(new CustomEvent('journal-changed'))
-            setShowBanner(false)
-          }}
-        />
-      )
-    : null
+  useEffect(() => {
+    checkAndHydrate()
 
-  return { PendingBanner }
+    window.addEventListener('journal-changed', checkAndHydrate)
+    return () => window.removeEventListener('journal-changed', checkAndHydrate)
+  }, [checkAndHydrate])
+
+  const dismissNotice = useCallback(() => {
+    setNoticeVisible(false)
+  }, [])
+
+  const discardAll = useCallback(async () => {
+    operationStore.getState().clearPersistedOperations()
+    await clearSection(entity)
+    window.dispatchEvent(new CustomEvent('journal-changed'))
+    setHasRestoredEntries(false)
+    setNoticeVisible(false)
+    isHydrated.current = false
+  }, [entity, operationStore])
+
+  return { hasRestoredEntries, noticeVisible, dismissNotice, discardAll }
 }
