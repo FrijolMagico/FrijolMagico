@@ -28,9 +28,8 @@ export function useRouteChanges(routePath: string) {
   }, [entities, checkedOnce])
 
   useEffect(() => {
-    /* eslint-disable-next-line react-hooks/set-state-in-effect */
-    void checkDirty()
     window.addEventListener('journal-changed', checkDirty)
+    window.dispatchEvent(new CustomEvent('journal-changed'))
     return () => window.removeEventListener('journal-changed', checkDirty)
   }, [checkDirty])
 

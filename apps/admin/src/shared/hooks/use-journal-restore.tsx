@@ -52,9 +52,8 @@ export function useJournalRestore<T>({
   }, [entity, operationStore])
 
   useEffect(() => {
-    /* eslint-disable-next-line react-hooks/set-state-in-effect */
-    void checkAndHydrate()
     window.addEventListener('journal-changed', checkAndHydrate)
+    window.dispatchEvent(new CustomEvent('journal-changed'))
     return () => window.removeEventListener('journal-changed', checkAndHydrate)
   }, [checkAndHydrate])
   const dismissNotice = useCallback(() => {
