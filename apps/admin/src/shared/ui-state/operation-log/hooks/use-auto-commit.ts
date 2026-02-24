@@ -24,6 +24,7 @@ export function useAutoCommit<T>(
 
           try {
             operationStore.getState().commitPendingOperations()
+            window.dispatchEvent(new CustomEvent('journal-changed'))
           } finally {
             isComittingRef.current = false
           }
@@ -38,6 +39,7 @@ export function useAutoCommit<T>(
       const finalState = operationStore.getState()
       if (finalState.pendingOperations?.length) {
         finalState.commitPendingOperations()
+        window.dispatchEvent(new CustomEvent('journal-changed'))
       }
     }
   }, [operationStore, debounceMs])
