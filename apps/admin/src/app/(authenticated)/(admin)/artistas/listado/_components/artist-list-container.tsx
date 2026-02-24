@@ -4,7 +4,9 @@ import { useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useDebouncedCallback } from 'use-debounce'
 import { Card } from '@/shared/components/ui/card'
-import { SaveButton } from '@/shared/global-save/components/save-button'
+import { useRouteChanges } from '@/shared/hooks/use-route-changes'
+import { RouteSaveToolbar } from '@/shared/components/route-save-toolbar'
+import { RestoredChangesNotice } from '@/shared/components/restored-changes-notice'
 import { useArtistaCommit } from '../../_hooks/use-artista-commit'
 import { useArtistListFilterStore } from '../_store/artist-list-filter-store'
 import { useArtistListPaginationStore } from '../_store/artist-list-pagination-store'
@@ -22,7 +24,9 @@ export function ArtistListContainer() {
   const setFilters = useArtistListFilterStore((s) => s.setFilters)
   const setPage = useArtistListPaginationStore((s) => s.setPage)
 
-  const { save, isPending, isDirty } = useArtistaCommit()
+  const { save, isPending } = useArtistaCommit()
+
+  const { isDirty, noticeVisible, dismissNotice, discardAll } = useRouteChanges('/artistas/listado')
 
   const { countries, cities } = useArtistList()
 
@@ -124,7 +128,7 @@ export function ArtistListContainer() {
           cities={cities}
           onFiltersChange={handleFiltersChange}
         />
-        <SaveButton onSave={save} isPending={isPending} isDirty={isDirty} />
+        {/* SaveButton removed — replaced by RouteSaveToolbar (Task 9) */}
       </div>
 
       <ArtistListPagination onPageChange={handlePageChange} />
@@ -137,6 +141,16 @@ export function ArtistListContainer() {
 
       <EditArtistDialog />
       <ArtistHistoryDialog />
+
+      {/* RouteSaveToolbar replaces old inline SaveButton */}
+      {/* TODO: Verify sequential commit ordering and ID mapping for multi-entity routes */}
+      <RouteSaveToolbar
+        isDirty={isDirty}
+        onSave={save}
+        onDiscard={discardAll}
+        isPending={isPending}
+      />
+      <RestoredChangesNotice visible={noticeVisible} onDismiss={dismissNotice} />
     </div>
   )
 }
