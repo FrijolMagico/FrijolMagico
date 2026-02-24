@@ -2,22 +2,14 @@
 
 import { Button } from '@/shared/components/ui/button'
 import { Plus } from 'lucide-react'
-import { useTeamOperationStore } from '../_store/organization-team-ui-store'
+import { useTeamDialog } from '../_store/team-dialog-store'
 
 export function TeamAddBtn() {
-  const add = useTeamOperationStore((state) => state.add)
-
-  const handleAddTeamMember = () => {
-    add({
-      nombre: '',
-      cargo: '',
-      rrss: ''
-    })
-  }
+  const openDialog = useTeamDialog((state) => state.openDialog)
 
   return (
     <Button
-      onClick={handleAddTeamMember}
+      onClick={() => openDialog(null)}
       size='sm'
       variant='outline'
       className='gap-1'

@@ -2,6 +2,7 @@ import { Card, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Users } from 'lucide-react'
 import { TeamContent } from './team-content'
 import { TeamAddBtn } from './team-add-btn'
+import { MemberDialog } from './team-member-dialog'
 
 export function TeamSection() {
   return (
@@ -15,6 +16,7 @@ export function TeamSection() {
       </CardHeader>
 
       <TeamContent />
+      <MemberDialog />
     </Card>
   )
 }

@@ -11,7 +11,7 @@ export default function GeneralPage() {
         </p>
       </header>
 
-      <section className='grid gap-6 md:grid-cols-2'>
+      <section className='grid gap-6 md:grid-cols-[40%_60%]'>
         <OrganizationSection />
         <TeamSection />
       </section>
