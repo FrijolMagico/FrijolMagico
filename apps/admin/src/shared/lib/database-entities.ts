@@ -19,6 +19,6 @@ export const JOURNAL_ENTITY_LABELS: Record<JournalEntity, string> = {
 
 export const ROUTE_ENTITY_MAP: Partial<Record<string, JournalEntity[]>> = {
   '/general': [JOURNAL_ENTITIES.ORGANIZACION, JOURNAL_ENTITIES.ORGANIZACION_EQUIPO],
-  '/artistas/listado': [JOURNAL_ENTITIES.ARTISTA_HISTORIAL],
+  '/artistas/listado': [JOURNAL_ENTITIES.ARTISTA],
   '/artistas/catalogo': [JOURNAL_ENTITIES.CATALOGO_ARTISTA],
 }
