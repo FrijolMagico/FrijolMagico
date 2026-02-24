@@ -9,8 +9,6 @@ export function createUIProjectionStore<T extends { id: string }>() {
     project: (remoteSnapshot, persistedOps, pendingOps) => {
       const operations = [...(persistedOps ?? []), ...(pendingOps ?? [])]
 
-      // --- 0️⃣ Fast path: no operations → reset to remote snapshot only ---
-      // This removes orphaned entities created by previous operations (e.g., after Discard)
       if (operations.length === 0) {
         const byId: Record<string, ProjectedEntity<T>> = {}
         const allIds: string[] = []
@@ -35,7 +33,6 @@ export function createUIProjectionStore<T extends { id: string }>() {
       const nextById = { ...byId }
       const nextAllIds = [...allIds]
 
-      // --- 1️⃣ Sync remote snapshot base ---
       const remoteIds = new Set<string>()
 
       for (const entity of remoteSnapshot) {
@@ -43,7 +40,6 @@ export function createUIProjectionStore<T extends { id: string }>() {
 
         const existing = byId[entity.id]
 
-        // Si no existe, lo creamos
         if (!existing) {
           nextById[entity.id] = {
             ...entity,
@@ -55,9 +51,7 @@ export function createUIProjectionStore<T extends { id: string }>() {
           }
 
           nextAllIds.push(entity.id)
-        }
-        // Si existe y no cambió realmente, mantenemos referencia
-        else {
+        } else {
           nextById[entity.id] = existing
         }
       }

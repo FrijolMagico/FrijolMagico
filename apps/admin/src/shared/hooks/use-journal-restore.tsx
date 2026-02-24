@@ -51,8 +51,7 @@ export function useJournalRestore<T>({
         <SectionPendingBanner
           sectionLabel={sectionLabel}
           onRestore={async () => {
-            // Changes are already visible — just clear journal and hide banner
-            await clearSection(entity)
+            // We do not delete the journal on restore, just mark the entries as applied, so we can keep track of what was restored and when
             window.dispatchEvent(new CustomEvent('journal-changed'))
             setShowBanner(false)
           }}

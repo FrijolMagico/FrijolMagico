@@ -5,6 +5,8 @@ export async function writeOperationIntoJournal<T>(
   operations: EntityOperation<T>[],
   section: string
 ): Promise<void> {
+  console.log('[DEBUG-JOURNAL-WRITE] Writing to journal:', { section, operations: JSON.stringify(operations) })
+
   for (const operation of operations) {
     switch (operation.type) {
       case 'ADD':
