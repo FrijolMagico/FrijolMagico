@@ -28,8 +28,13 @@ export function useProjectionSync<T>({
 
   // Seed on mount + subscribe to operation store changes
   useEffect(() => {
-    // Seed: ensure projection store has data on mount
-    projectionStore.getState().project(initialDataRef.current, null, null)
+    // Read CURRENT state from operation store instead of null
+    const currentOpState = operationStore.getState()
+    projectionStore.getState().project(
+      initialDataRef.current,
+      currentOpState.persistedOperations,
+      currentOpState.pendingOperations
+    )
 
     // Subscribe: re-project whenever operations change
     const unsubscribe = operationStore.subscribe((state) => {
