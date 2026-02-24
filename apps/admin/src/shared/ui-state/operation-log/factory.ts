@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 
 import type { EntityOperation, EntityOperationStore } from './types'
+import { generateTempId } from '@/shared/lib/utils'
 
 interface CreateEntityOperationStoreOpts<T> {
   commitOperations?: (operations: EntityOperation<T>[]) => Promise<void>
@@ -19,20 +20,17 @@ export function createEntityOperationStore<T>({
         pendingOperations: [
           ...(state.pendingOperations ?? []),
           {
-            // Add operation
             type: 'ADD',
-            data: { ...data, id: crypto.randomUUID() },
+            data: { ...data, id: generateTempId() },
             timestamp: Date.now()
           }
         ]
       })),
-
     remove: (id) =>
       set((state) => ({
         pendingOperations: [
           ...(state.pendingOperations ?? []),
           {
-            // Delete operation
             type: 'DELETE',
             id,
             timestamp: Date.now()
@@ -45,7 +43,6 @@ export function createEntityOperationStore<T>({
         pendingOperations: [
           ...(state.pendingOperations ?? []),
           {
-            // Restore operation
             type: 'RESTORE',
             id,
             timestamp: Date.now()
@@ -58,7 +55,6 @@ export function createEntityOperationStore<T>({
         pendingOperations: [
           ...(state.pendingOperations ?? []),
           {
-            // Update operation
             type: 'UPDATE',
             id,
             data,
@@ -68,19 +64,24 @@ export function createEntityOperationStore<T>({
       })),
 
     commitPendingOperations: async () => {
+      console.log(
+        '[DEBUG-COMMIT] Pending operations:',
+        JSON.stringify(get().pendingOperations)
+      )
+
+      // Get all current pendingOperations from queue
       const pendingOperations = get().pendingOperations
       if (!pendingOperations || pendingOperations.length === 0) return
 
       try {
         if (commitOperations) {
-          console.log('[EntityStore] Committing operation: ', {
-            pendingOperations
-          })
-
           await commitOperations(pendingOperations)
         }
 
         set((state) => {
+          // Compares by object reference intentionally — pendingOperations snapshot
+          // is a subset of state.pendingOperations (Zustand preserves object identity).
+          // Safe as long as operations are never deep-cloned between add() and commit().
           const remaining = state.pendingOperations?.filter(
             (op) => !pendingOperations.includes(op)
           )
@@ -95,7 +96,7 @@ export function createEntityOperationStore<T>({
           }
         })
       } catch (error) {
-        // TODO: Improve error handling here, maybe add a retry
+        // TODO: Improve error handling
         console.error('[EntityState] Failed to commit edits:', error)
       }
     },

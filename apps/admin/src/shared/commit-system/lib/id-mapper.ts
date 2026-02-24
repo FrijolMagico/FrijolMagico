@@ -1,9 +1,5 @@
 import type { IdMapping, SectionName } from './types'
 
-export function generateTempId(): string {
-  return `temp-${crypto.randomUUID()}`
-}
-
 export function createIdMapping(
   tempId: string,
   realId: number,
