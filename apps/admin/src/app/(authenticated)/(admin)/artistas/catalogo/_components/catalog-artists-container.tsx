@@ -4,6 +4,9 @@ import { useEffect } from 'react'
 import { useDebouncedCallback } from 'use-debounce'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAutoCommit } from '@/shared/ui-state/operation-log/hooks/use-auto-commit'
+import { useRouteChanges } from '@/shared/hooks/use-route-changes'
+import { RouteSaveToolbar } from '@/shared/components/route-save-toolbar'
+import { RestoredChangesNotice } from '@/shared/components/restored-changes-notice'
 import { CatalogFilters as CatalogFiltersComponent } from './catalog-filters'
 import { EditCatalogDialog } from './edit-catalog-dialog'
 import { EditArtistDialog } from './edit-artist-dialog'
@@ -11,6 +14,8 @@ import { useCatalogFilterStore } from '../_store/catalog-filter-store'
 import { useCatalogPaginationStore } from '../_store/catalog-pagination-store'
 import { useCatalogOperationStore } from '../_store/catalog-ui-store'
 import { useArtistsOperationStore } from '../../_store/artista-ui-store'
+import { useCatalogoCommit } from '../_hooks/use-catalogo-commit'
+import { useArtistaCommit } from '../../_hooks/use-artista-commit'
 import { CatalogTableContainer } from './catalog-table-container'
 
 export function CatalogArtistsContainer() {
@@ -20,6 +25,10 @@ export function CatalogArtistsContainer() {
   const setFilters = useCatalogFilterStore((s) => s.setFilters)
   const setPage = useCatalogPaginationStore((s) => s.setPage)
   const pageSize = useCatalogPaginationStore((s) => s.pageSize)
+
+  const { isDirty, noticeVisible, dismissNotice, discardAll } = useRouteChanges('/artistas/catalogo')
+  const { save: saveCatalogo, isPending: isPendingCatalogo } = useCatalogoCommit()
+  const { save: saveArtista, isPending: isPendingArtista } = useArtistaCommit()
 
   useAutoCommit(useCatalogOperationStore)
   useAutoCommit(useArtistsOperationStore)
@@ -69,11 +78,16 @@ export function CatalogArtistsContainer() {
     300
   )
 
+  const handleSave = () => {
+    // TODO: Verify sequential commit ordering and ID mapping for multi-entity routes
+    saveCatalogo()
+    saveArtista()
+  }
+
   return (
     <div className='space-y-4'>
       <div className='flex items-center justify-between'>
         <CatalogFiltersComponent onFiltersChange={handleFiltersChange} />
-        {/* Here will be the "save Changes" button, disabled if there are no unsaved edits */}
       </div>
 
       <CatalogTableContainer handleFilersChange={handleFiltersChange} />
@@ -83,6 +97,15 @@ export function CatalogArtistsContainer() {
 
       {/* Dialog Nivel 2: Artista (stacked) */}
       <EditArtistDialog />
+
+      {/* TODO: Verify sequential commit ordering and ID mapping for multi-entity routes */}
+      <RouteSaveToolbar
+        isDirty={isDirty}
+        onSave={handleSave}
+        onDiscard={discardAll}
+        isPending={isPendingCatalogo || isPendingArtista}
+      />
+      <RestoredChangesNotice visible={noticeVisible} onDismiss={dismissNotice} />
     </div>
   )
 }
