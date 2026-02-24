@@ -8,7 +8,7 @@ import {
   uniqueIndex
 } from 'drizzle-orm/sqlite-core'
 
-import { disciplina, lugar, organizacion } from './core'
+import { discipline, place, organization } from './core'
 
 /**
  * Evento - Eventos organizados
@@ -18,7 +18,7 @@ export const evento = sqliteTable(
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
     organizacionId: integer('organizacion_id').references(
-      () => organizacion.id,
+      () => organization.id,
       {
         onDelete: 'set null'
       }
@@ -77,7 +77,7 @@ export const eventoEdicionDia = sqliteTable(
     eventoEdicionId: integer('evento_edicion_id')
       .notNull()
       .references(() => eventoEdicion.id, { onDelete: 'cascade' }),
-    lugarId: integer('lugar_id').references(() => lugar.id, {
+    lugarId: integer('lugar_id').references(() => place.id, {
       onDelete: 'set null'
     }),
     fecha: text('fecha').notNull(),
@@ -175,7 +175,7 @@ export const eventoEdicionPostulacion = sqliteTable(
     rrss: text('rrss'),
     disciplinaId: integer('disciplina_id')
       .notNull()
-      .references(() => disciplina.id),
+      .references(() => discipline.id),
     dossierUrl: text('dossier_url'),
     estado: text('estado', {
       enum: ['pendiente', 'seleccionado', 'rechazado', 'invitado']

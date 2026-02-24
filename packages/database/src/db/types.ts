@@ -1,10 +1,10 @@
 import { type InferSelectModel, type InferInsertModel } from 'drizzle-orm'
 
 import {
-  disciplina,
-  lugar,
-  organizacion,
-  organizacionEquipo
+  discipline,
+  place,
+  organization,
+  organizationMember
 } from './schema/core'
 
 import {
@@ -41,17 +41,17 @@ import { account, session, user, verification } from './schema/auth'
 // Core Types
 // ============================================
 
-export type Organizacion = InferSelectModel<typeof organizacion>
-export type NewOrganizacion = InferInsertModel<typeof organizacion>
+export type Organizacion = InferSelectModel<typeof organization>
+export type NewOrganizacion = InferInsertModel<typeof organization>
 
-export type OrganizacionEquipo = InferSelectModel<typeof organizacionEquipo>
-export type NewOrganizacionEquipo = InferInsertModel<typeof organizacionEquipo>
+export type OrganizacionEquipo = InferSelectModel<typeof organizationMember>
+export type NewOrganizacionEquipo = InferInsertModel<typeof organizationMember>
 
-export type Lugar = InferSelectModel<typeof lugar>
-export type NewLugar = InferInsertModel<typeof lugar>
+export type Lugar = InferSelectModel<typeof place>
+export type NewLugar = InferInsertModel<typeof place>
 
-export type Disciplina = InferSelectModel<typeof disciplina>
-export type NewDisciplina = InferInsertModel<typeof disciplina>
+export type Disciplina = InferSelectModel<typeof discipline>
+export type NewDisciplina = InferInsertModel<typeof discipline>
 
 // ============================================
 // Artista Types

@@ -9,7 +9,7 @@ import {
 
 import { eventoEdicion, eventoEdicionPostulacion } from './events'
 import { agrupacion, artista } from './artist'
-import { disciplina } from './core'
+import { discipline } from './core'
 
 /**
  * Tipo Actividad - Catálogo de tipos de actividades
@@ -98,7 +98,7 @@ export const participanteExposicion = sqliteTable(
     ),
     disciplinaId: integer('disciplina_id')
       .notNull()
-      .references(() => disciplina.id),
+      .references(() => discipline.id),
     agrupacionId: integer('agrupacion_id').references(() => agrupacion.id),
     modoIngresoId: integer('modo_ingreso_id')
       .notNull()

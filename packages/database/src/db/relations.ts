@@ -1,10 +1,10 @@
 import { relations } from 'drizzle-orm'
 
 import {
-  disciplina,
-  lugar,
-  organizacion,
-  organizacionEquipo
+  discipline,
+  place,
+  organization,
+  organizationMember
 } from './schema/core'
 
 import {
@@ -39,26 +39,26 @@ import {
 // Core Relations
 // ============================================
 
-export const organizacionRelations = relations(organizacion, ({ many }) => ({
-  equipo: many(organizacionEquipo),
+export const organizacionRelations = relations(organization, ({ many }) => ({
+  equipo: many(organizationMember),
   eventos: many(evento)
 }))
 
-export const organizacionEquipoRelations = relations(
-  organizacionEquipo,
+export const organizationMemberRelations = relations(
+  organizationMember,
   ({ one }) => ({
-    organizacion: one(organizacion, {
-      fields: [organizacionEquipo.organizacionId],
-      references: [organizacion.id]
+    organizacion: one(organization, {
+      fields: [organizationMember.organizationId],
+      references: [organization.id]
     })
   })
 )
 
-export const lugarRelations = relations(lugar, ({ many }) => ({
+export const lugarRelations = relations(place, ({ many }) => ({
   diasEvento: many(eventoEdicionDia)
 }))
 
-export const disciplinaRelations = relations(disciplina, ({ many }) => ({
+export const disciplinaRelations = relations(discipline, ({ many }) => ({
   postulaciones: many(eventoEdicionPostulacion),
   exposiciones: many(participanteExposicion)
 }))
@@ -124,9 +124,9 @@ export const agrupacionRelations = relations(agrupacion, ({ many }) => ({
 // ============================================
 
 export const eventoRelations = relations(evento, ({ one, many }) => ({
-  organizacion: one(organizacion, {
+  organizacion: one(organization, {
     fields: [evento.organizacionId],
-    references: [organizacion.id]
+    references: [organization.id]
   }),
   ediciones: many(eventoEdicion)
 }))
@@ -155,9 +155,9 @@ export const eventoEdicionDiaRelations = relations(
       fields: [eventoEdicionDia.eventoEdicionId],
       references: [eventoEdicion.id]
     }),
-    lugar: one(lugar, {
+    lugar: one(place, {
       fields: [eventoEdicionDia.lugarId],
-      references: [lugar.id]
+      references: [place.id]
     })
   })
 )
@@ -189,9 +189,9 @@ export const eventoEdicionPostulacionRelations = relations(
       fields: [eventoEdicionPostulacion.eventoEdicionId],
       references: [eventoEdicion.id]
     }),
-    disciplina: one(disciplina, {
+    disciplina: one(discipline, {
       fields: [eventoEdicionPostulacion.disciplinaId],
-      references: [disciplina.id]
+      references: [discipline.id]
     }),
     exposiciones: many(participanteExposicion),
     actividades: many(participanteActividad)
@@ -246,9 +246,9 @@ export const participanteExposicionRelations = relations(
       fields: [participanteExposicion.participanteId],
       references: [eventoEdicionParticipante.id]
     }),
-    disciplina: one(disciplina, {
+    disciplina: one(discipline, {
       fields: [participanteExposicion.disciplinaId],
-      references: [disciplina.id]
+      references: [discipline.id]
     }),
     agrupacion: one(agrupacion, {
       fields: [participanteExposicion.agrupacionId],

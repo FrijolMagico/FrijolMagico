@@ -9,7 +9,7 @@ import {
 /**
  * Organizacion - Entidad organizadora
  */
-export const organizacion = sqliteTable('organizacion', {
+export const organization = sqliteTable('organizacion', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   nombre: text('nombre').notNull(),
   descripcion: text('descripcion'),
@@ -26,13 +26,16 @@ export const organizacion = sqliteTable('organizacion', {
 /**
  * Organizacion Equipo - Miembros del equipo de la organización
  */
-export const organizacionEquipo = sqliteTable('organizacion_equipo', {
+export const organizationMember = sqliteTable('organization_member', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  organizacionId: integer('organizacion_id')
+  organizationId: integer('organization_id')
     .notNull()
-    .references(() => organizacion.id, { onDelete: 'cascade' }),
-  nombre: text('nombre').notNull(),
-  cargo: text('cargo'),
+    .references(() => organization.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  rut: text('rut').unique(),
+  email: text('email'),
+  phone: text('phone'),
+  position: text('position'),
   rrss: text('rrss'),
   createdAt: text('created_at')
     .notNull()
@@ -45,7 +48,7 @@ export const organizacionEquipo = sqliteTable('organizacion_equipo', {
 /**
  * Lugar - Ubicaciones donde se realizan eventos
  */
-export const lugar = sqliteTable(
+export const place = sqliteTable(
   'lugar',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
@@ -69,7 +72,7 @@ export const lugar = sqliteTable(
 /**
  * Disciplina - Catálogo de disciplinas artísticas
  */
-export const disciplina = sqliteTable('disciplina', {
+export const discipline = sqliteTable('disciplina', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   slug: text('slug').notNull().unique(),
   createdAt: text('created_at')

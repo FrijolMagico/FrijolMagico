@@ -71,6 +71,13 @@
       "when": 1770410924079,
       "tag": "0009_fix_auth_tables_timestamps",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1771869285017,
+      "tag": "0010_recreate_organizacion_equipo_with_better_schema",
+      "breakpoints": true
     }
   ]
 }
