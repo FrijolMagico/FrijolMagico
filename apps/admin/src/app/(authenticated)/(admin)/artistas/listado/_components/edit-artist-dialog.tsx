@@ -22,7 +22,7 @@ import {
   useArtistsOperationStore,
   useArtistsProjectionStore
 } from '../../_store/artista-ui-store'
-import { useArtistListViewStore } from '../_store/artist-list-view-store'
+import { useArtistDialog } from '../_store/artist-dialog-store'
 import { ArtistRRSSManager } from '../../catalogo/_components/artist-rrss-manager'
 import { ArtistEntry } from '../../_types'
 
@@ -183,9 +183,9 @@ function EditFormContent({
 }
 
 export function EditArtistDialog() {
-  const isOpen = useArtistListViewStore((s) => s.editDialogOpen)
-  const closeEditDialog = useArtistListViewStore((s) => s.closeEditDialog)
-  const artistId = useArtistListViewStore((s) => s.selectedArtistId)
+  const isOpen = useArtistDialog((s) => s.editDialogOpen)
+  const closeEditDialog = useArtistDialog((s) => s.closeEditDialog)
+  const artistId = useArtistDialog((s) => s.selectedArtistId)
 
   const artist = useArtistsProjectionStore((s) =>
     artistId ? s.byId[artistId] : null

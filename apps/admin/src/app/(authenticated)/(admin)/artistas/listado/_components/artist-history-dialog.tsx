@@ -9,7 +9,7 @@ import {
 } from '@/shared/components/ui/dialog'
 import { Badge } from '@/shared/components/ui/badge'
 import { Separator } from '@/shared/components/ui/separator'
-import { useArtistListViewStore } from '../_store/artist-list-view-store'
+import { useArtistDialog } from '../_store/artist-dialog-store'
 import { useHistoryByArtist } from '../_hooks/use-history-by-artist'
 import { aggregateHistory } from '../_lib/aggregate-history'
 import { useArtistsProjectionStore } from '../../_store/artista-ui-store'
@@ -75,9 +75,9 @@ function HistoryRrssConcept({ items }: { items: Record<string, string>[] }) {
 }
 
 export function ArtistHistoryDialog() {
-  const isOpen = useArtistListViewStore((s) => s.historyDialogOpen)
-  const closeHistoryDialog = useArtistListViewStore((s) => s.closeHistoryDialog)
-  const artistId = useArtistListViewStore((s) => s.selectedHistoryArtistId)
+  const isOpen = useArtistDialog((s) => s.historyDialogOpen)
+  const closeHistoryDialog = useArtistDialog((s) => s.closeHistoryDialog)
+  const artistId = useArtistDialog((s) => s.selectedHistoryArtistId)
 
   const artist = useArtistsProjectionStore((s) =>
     artistId ? s.byId[artistId] : null

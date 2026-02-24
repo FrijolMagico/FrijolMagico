@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-interface ArtistListViewState {
+interface ArtistDialogStore {
   editDialogOpen: boolean
   selectedArtistId: string | null
   historyDialogOpen: boolean
@@ -12,7 +12,7 @@ interface ArtistListViewState {
   closeHistoryDialog: () => void
 }
 
-export const useArtistListViewStore = create<ArtistListViewState>((set) => ({
+export const useArtistDialog = create<ArtistDialogStore>((set) => ({
   editDialogOpen: false,
   selectedArtistId: null,
   historyDialogOpen: false,
@@ -20,6 +20,8 @@ export const useArtistListViewStore = create<ArtistListViewState>((set) => ({
 
   openEditDialog: (id) => set({ editDialogOpen: true, selectedArtistId: id }),
   closeEditDialog: () => set({ editDialogOpen: false, selectedArtistId: null }),
-  openHistoryDialog: (id) => set({ historyDialogOpen: true, selectedHistoryArtistId: id }),
-  closeHistoryDialog: () => set({ historyDialogOpen: false, selectedHistoryArtistId: null })
+  openHistoryDialog: (id) =>
+    set({ historyDialogOpen: true, selectedHistoryArtistId: id }),
+  closeHistoryDialog: () =>
+    set({ historyDialogOpen: false, selectedHistoryArtistId: null })
 }))

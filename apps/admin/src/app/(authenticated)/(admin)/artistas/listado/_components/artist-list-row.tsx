@@ -9,7 +9,8 @@ import {
   useArtistsOperationStore,
   useArtistsProjectionStore
 } from '../../_store/artista-ui-store'
-import { useArtistListViewStore } from '../_store/artist-list-view-store'
+import { useArtistDialog } from '../_store/artist-dialog-store'
+import { StateBadge } from '@/shared/components/state-badge'
 
 interface ArtistListRowProps {
   id: string
@@ -20,8 +21,8 @@ export function ArtistListRow({ id, hasHistory }: ArtistListRowProps) {
   const remove = useArtistsOperationStore((s) => s.remove)
   const restore = useArtistsOperationStore((s) => s.restore)
   const artist = useArtistsProjectionStore((s) => s.byId[id])
-  const openEditDialog = useArtistListViewStore((s) => s.openEditDialog)
-  const openHistoryDialog = useArtistListViewStore((s) => s.openHistoryDialog)
+  const openEditDialog = useArtistDialog((s) => s.openEditDialog)
+  const openHistoryDialog = useArtistDialog((s) => s.openHistoryDialog)
 
   if (!artist) return null
 
@@ -49,15 +50,7 @@ export function ArtistListRow({ id, hasHistory }: ArtistListRowProps) {
         </Badge>
       </TableCell>
       <TableCell>
-        <div className='flex flex-col gap-1'>
-          {artist.__meta.isNew && <Badge variant='default'>Nuevo</Badge>}
-          {artist.__meta.isUpdated && (
-            <Badge variant='outline'>Modificado</Badge>
-          )}
-          {artist.__meta.isDeleted && (
-            <Badge variant='destructive'>Eliminado</Badge>
-          )}
-        </div>
+        <StateBadge {...artist.__meta} />
       </TableCell>
       <TableCell>
         {hasHistory && (
