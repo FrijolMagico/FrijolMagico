@@ -2,42 +2,6 @@
 
 Admin panel for Frijol Mágico Cultural Association. Built with Next.js 16, React 19, and TypeScript.
 
-## Overview
-
-The admin app provides a protected management interface for:
-
-- **Dashboard**: Overview and quick actions
-- **Artist Management**: View and manage artist profiles (planned)
-- **Festival Management**: Manage festival editions (planned)
-- **User Management**: Admin accounts via Better Auth
-
-## Tech Stack
-
-- **Framework**: Next.js 16 with App Router and Turbopack
-- **UI**: React 19, Tailwind CSS v4
-- **Auth**: Better Auth with Google OAuth
-- **Data**: Drizzle ORM with Turso Database via `@frijolmagico/database`
-
-## Project Structure
-
-```
-src/
-├── app/                       # Next.js App Router
-│   ├── api/auth/[...all]/     # Better Auth API routes
-│   ├── (auth)/lib/              # Auth configuration
-│   │   ├── auth.ts            # Better Auth config
-│   │   ├── auth-client.ts     # Client-side auth
-│   │   └── get-session.ts     # Server session helper
-│   ├── dashboard/             # Protected dashboard
-│   ├── login/                 # Login page
-│   ├── layout.tsx
-│   └── page.tsx               # Redirects to dashboard
-├── components/                # Shared components
-├── lib/                       # Utilities
-├── styles/                    # Global styles
-└── types/                     # TypeScript types
-```
-
 ## Available Scripts
 
 ```bash

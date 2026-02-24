@@ -103,34 +103,6 @@ src/
 - **Session:** 3-day expiration, 24-hour update age
 - **Config:** `src/app/auth/lib/auth.ts`
 
-### UI State Management - Entity State Pattern
-
-El sistema de gestión de estado UI utiliza una **arquitectura de 3 capas** basada en el patrón Entity State para garantizar consistencia y performance O(1).
-
-- **Layer 1 (Remote Data):** Datos inmutables del servidor.
-- **Layer 2 (Applied Changes):** Cambios confirmados en el journal local.
-- **Layer 3 (Current Edits):** Ediciones en memoria (drafts).
-
-#### Factory Comparison
-
-| Caso de Uso                 | Factory Recomendada        | Razón                                                    |
-| --------------------------- | -------------------------- | -------------------------------------------------------- |
-| Objetos planos              | `createUIStateStore`       | Simple, sin overhead de normalización                    |
-| Colecciones pequeñas (< 50) | `createUIStateStore`       | Suficiente para estados simples                          |
-| Colecciones grandes (200+)  | `createEntityUIStateStore` | **OBLIGATORIO**: O(1) en todas las operaciones           |
-| Modo Singleton              | `createEntityUIStateStore` | Usar `isSingleton: true` para objetos únicos con journal |
-
-#### Performance Targets
-
-| Operación       | Objetivo |
-| --------------- | -------- |
-| Lookup          | < 1ms    |
-| Update          | < 1ms    |
-| Delete          | < 1ms    |
-| Bulk (50 items) | < 16ms   |
-| Scroll FPS      | 60fps    |
-
-Para más detalles, consultar [apps/admin/src/shared/ui-state/README.md](./src/shared/ui-state/README.md).
 
 ### Store Initialization Pattern
 
@@ -139,62 +111,6 @@ Cada sección que maneja estado UI con el patrón Entity State debe tener un **c
 1. **Sincronizar proyección** — `useProjectionSync` conecta el operation-log con el projection-engine
 2. **Detectar cambios pendientes** — `useJournalRestore` verifica si hay entries en IndexedDB de sesiones anteriores
 3. **Mostrar banner de restauración** — Si hay cambios pendientes, muestra el `SectionPendingBanner`
-
-#### Estructura del Componente
-
-```typescript
-// _components/[entidad]-store-initialization.tsx
-'use client'
-
-import { useProjectionSync } from '@/shared/hooks/use-projection-sync'
-import { useJournalRestore } from '@/shared/hooks/use-journal-restore'
-import { JOURNAL_ENTITIES, JOURNAL_ENTITY_LABELS } from '@/shared/lib/database-entities'
-import { use[Entity]OperationStore, use[Entity]ProjectionStore } from '../_store/[entidad]-ui-store'
-import type { [Entity]Entry } from '../_types'
-
-interface [Entity]StoreInitializationProps {
-  initialData: [Entity]Entry[]
-}
-
-export function [Entity]StoreInitialization({ initialData }: [Entity]StoreInitializationProps) {
-  useProjectionSync<[Entity]Entry>({
-    initialData,
-    operationStore: use[Entity]OperationStore,
-    projectionStore: use[Entity]ProjectionStore
-  })
-
-  const { PendingBanner } = useJournalRestore<[Entity]Entry>({
-    entity: JOURNAL_ENTITIES.[ENTITY_KEY],
-    sectionLabel: JOURNAL_ENTITY_LABELS[JOURNAL_ENTITIES.[ENTITY_KEY]],
-    operationStore: use[Entity]OperationStore
-  })
-
-  if (PendingBanner) return <PendingBanner />
-  return null
-}
-```
-
-#### Inyección en Server Components
-
-El componente de inicialización se inyecta en el **server component que hace data fetching**, NO en el page.tsx directamente:
-
-```typescript
-// _components/[entidad]-content.tsx (Server Component)
-import { [Entity]StoreInitialization } from './[entidad]-store-initialization'
-import { [Entity]Container } from './[entidad]-container'
-import { get[Entity]Data } from '../_lib/get-[entidad]-data'
-
-export async function [Entity]Content() {
-  const data = await get[Entity]Data()
-
-  return (
-    <>
-      <[Entity]StoreInitialization initialData={data} />
-      <[Entity]Container />
-    </>
-  )
-}
-```
 
 #### Beneficios
 
@@ -243,12 +159,6 @@ JOURNAL_ENTITIES = {
 - **NEVER unnecessary client components** — prefer Server Components
 - **NEVER Pages Router** — App Router only
 - **NEVER use `any` types**
-
-## UI State Management
-
-Uses **Entity State Pattern** with 3-layer architecture.
-
-See [shared/ui-state/AGENTS.md](./src/shared/ui-state/AGENTS.md) for details.
 
 ## General Rules
 
