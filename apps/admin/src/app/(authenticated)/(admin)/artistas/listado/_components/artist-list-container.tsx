@@ -8,6 +8,9 @@ import { useRouteChanges } from '@/shared/hooks/use-route-changes'
 import { RouteSaveToolbar } from '@/shared/components/route-save-toolbar'
 import { RestoredChangesNotice } from '@/shared/components/restored-changes-notice'
 import { useArtistaCommit } from '../../_hooks/use-artista-commit'
+import { useAutoCommit } from '@/shared/ui-state/operation-log/hooks/use-auto-commit'
+import { useArtistsOperationStore } from '../../_store/artista-ui-store'
+import { useHistoryOperationStore } from '../_store/history-ui-store'
 import { useArtistListFilterStore } from '../_store/artist-list-filter-store'
 import { useArtistListPaginationStore } from '../_store/artist-list-pagination-store'
 import { useArtistList } from '../_hooks/use-artist-list'
@@ -27,6 +30,10 @@ export function ArtistListContainer() {
   const { save, isPending } = useArtistaCommit()
 
   const { isDirty, noticeVisible, dismissNotice, discardAll } = useRouteChanges('/artistas/listado')
+
+  // Initialize auto-commit for both operation stores
+  useAutoCommit(useArtistsOperationStore)
+  useAutoCommit(useHistoryOperationStore)
 
   const { countries, cities } = useArtistList()
 
