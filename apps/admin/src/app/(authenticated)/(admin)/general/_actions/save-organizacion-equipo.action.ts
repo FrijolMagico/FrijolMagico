@@ -108,8 +108,8 @@ export async function saveOrganizacionEquipoAction(
                   .update(organizationMember)
                   .set({
                     organizationId: input.organizationId,
-                    name: input.nombre,
-                    position: input.cargo,
+                    name: input.name,
+                    position: input.position,
                     rut: input.rut,
                     email: input.email,
                     phone: input.phone,
@@ -121,8 +121,8 @@ export async function saveOrganizacionEquipoAction(
                   .insert(organizationMember)
                   .values({
                     organizationId: input.organizationId,
-                    name: input.nombre,
-                    position: input.cargo,
+                    name: input.name,
+                    position: input.position,
                     rut: input.rut,
                     email: input.email,
                     phone: input.phone,

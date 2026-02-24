@@ -7,8 +7,14 @@ export type Organization = Omit<RawOrganization, 'id'> & {
   id: string
 }
 
-export type TeamMember = Pick<RawTeamMember, 'nombre' | 'cargo' | 'rrss'> & {
+export type TeamMember = {
   id: string
+  name: string
+  rut?: string
+  email?: string
+  phone?: string
+  position?: string
+  rrss: Record<string, Array<string>> | null
 }
 
 export interface UpdateOrganizationResult {

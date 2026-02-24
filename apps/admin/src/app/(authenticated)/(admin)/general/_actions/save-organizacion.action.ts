@@ -3,7 +3,7 @@
 import { db } from '@frijolmagico/database/orm'
 import { core } from '@frijolmagico/database/schema'
 
-const { organizacion } = core
+const { organization } = core
 import { eq } from 'drizzle-orm'
 import { requireAuth } from '@/lib/auth/utils'
 import { revalidateTag } from 'next/cache'
@@ -82,8 +82,8 @@ export async function saveOrganizacionAction(
             if (op.type === COMMIT_OPERATION_TYPE.DELETE) {
               if (!isTempId(op.entityId)) {
                 await tx
-                  .delete(organizacion)
-                  .where(eq(organizacion.id, Number(op.entityId)))
+                  .delete(organization)
+                  .where(eq(organization.id, Number(op.entityId)))
               }
             } else if (op.type === COMMIT_OPERATION_TYPE.RESTORE) {
               continue
@@ -93,24 +93,24 @@ export async function saveOrganizacionAction(
 
               if (!isTempId(op.entityId)) {
                 await tx
-                  .update(organizacion)
+                  .update(organization)
                   .set({
                     nombre: input.nombre,
                     descripcion: input.descripcion,
                     mision: input.mision,
                     vision: input.vision
                   })
-                  .where(eq(organizacion.id, Number(op.entityId)))
+                  .where(eq(organization.id, Number(op.entityId)))
               } else {
                 const [inserted] = await tx
-                  .insert(organizacion)
+                  .insert(organization)
                   .values({
                     nombre: input.nombre,
                     descripcion: input.descripcion,
                     mision: input.mision,
                     vision: input.vision
                   })
-                  .returning({ id: organizacion.id })
+                  .returning({ id: organization.id })
 
                 if (inserted) {
                   batchMappings.push(

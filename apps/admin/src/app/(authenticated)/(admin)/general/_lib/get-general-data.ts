@@ -41,15 +41,12 @@ export async function getTeamData(): Promise<TeamMember[] | null> {
   if (team === undefined) return null
 
   return team.map((member) => ({
-    ...member,
     id: String(member.id),
-    rrss: (() => {
-      if (!member.rrss) return null
-      try {
-        return JSON.parse(member.rrss) as Record<string, string>
-      } catch {
-        return null
-      }
-    })()
+    name: member.name,
+    rut: member.rut ?? undefined,
+    email: member.email ?? undefined,
+    phone: member.phone ?? undefined,
+    position: member.position ?? undefined,
+    rrss: member.rrss ? JSON.parse(member.rrss) : null
   }))
 }

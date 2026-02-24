@@ -14,8 +14,8 @@ export const organizacionEquipoSchema = z.object({
     .number()
     .int()
     .positive({ error: 'organizationId debe ser un entero positivo' }),
-  nombre: z.string().min(1, { error: 'El nombre es obligatorio' }),
-  cargo: z.string().optional(),
+  name: z.string().min(1, { error: 'El nombre es obligatorio' }),
+  position: z.string().optional(),
   rut: z.string().optional(),
   email: z.string().optional(),
   phone: z.string().optional(),
@@ -27,12 +27,12 @@ export const organizacionEquipoSchema = z.object({
  * Acepta rrss como Record<string, string> | null para la interfaz de usuario
  */
 export const equipoFormSchema = z.object({
-  nombre: z.string().min(1, 'El nombre es requerido'),
-  cargo: z.string().optional(),
+  name: z.string().min(1, 'El nombre es requerido'),
+  position: z.string().optional(),
   rut: z.string().optional(),
   email: z.string().optional(),
   phone: z.string().optional(),
-  rrss: z.record(z.string(), z.string()).nullable().optional()
+  rrss: z.record(z.string(), z.array(z.string())).nullable()
 })
 
 export type OrganizacionInput = z.infer<typeof organizacionSchema>

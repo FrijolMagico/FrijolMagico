@@ -150,9 +150,9 @@ describe('organizacion.mapper', () => {
           op: 'set',
           value: {
             id: 1,
-            organizacionId: 1,
-            nombre: 'Juan Pérez',
-            cargo: 'Director',
+            organizationId: 1,
+            name: 'Juan Pérez',
+            position: 'Director',
             rrss: '@juanperez'
           }
         },
@@ -164,9 +164,9 @@ describe('organizacion.mapper', () => {
 
       expect(result).toEqual({
         id: 1,
-        organizacionId: 1,
-        nombre: 'Juan Pérez',
-        cargo: 'Director',
+        organizationId: 1,
+        name: 'Juan Pérez',
+        position: 'Director',
         rrss: '@juanperez'
       })
     })
@@ -180,8 +180,8 @@ describe('organizacion.mapper', () => {
         payload: {
           op: 'set',
           value: {
-            organizacionId: 1,
-            nombre: 'María González'
+            organizationId: 1,
+            name: 'María González'
           }
         },
         timestampMs: Date.now(),
@@ -191,8 +191,8 @@ describe('organizacion.mapper', () => {
       const result = mapToOrganizacionEquipoInput(entry)
 
       expect(result).toEqual({
-        organizacionId: 1,
-        nombre: 'María González'
+        organizationId: 1,
+        name: 'María González'
       })
     })
 
@@ -223,7 +223,7 @@ describe('organizacion.mapper', () => {
         payload: {
           op: 'set',
           value: {
-            nombre: 'Pedro Sánchez'
+            name: 'Pedro Sánchez'
           }
         },
         timestampMs: Date.now(),
@@ -242,8 +242,8 @@ describe('organizacion.mapper', () => {
         payload: {
           op: 'set',
           value: {
-            organizacionId: -1,
-            nombre: 'Test'
+            organizationId: -1,
+            name: 'Test'
           }
         },
         timestampMs: Date.now(),
@@ -262,8 +262,8 @@ describe('organizacion.mapper', () => {
         payload: {
           op: 'set',
           value: {
-            organizacionId: 1,
-            nombre: ''
+            organizationId: 1,
+            name: ''
           }
         },
         timestampMs: Date.now(),
