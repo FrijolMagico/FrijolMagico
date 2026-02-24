@@ -56,6 +56,7 @@ export function useJournalRestore<T>({
     window.dispatchEvent(new CustomEvent('journal-changed'))
     return () => window.removeEventListener('journal-changed', checkAndHydrate)
   }, [checkAndHydrate])
+
   const dismissNotice = useCallback(() => {
     setNoticeVisible(false)
   }, [])

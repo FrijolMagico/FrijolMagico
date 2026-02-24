@@ -9,7 +9,7 @@ export function useAutoCommit<T>(
   debounceMs = 1000
 ) {
   const timerRef = useRef<NodeJS.Timeout | null>(null)
-  const isComittingRef = useRef(false) // Mutex-like ref to prevent concurrent commits
+  const isCommittingRef = useRef(false) // Mutex-like ref to prevent concurrent commits
 
   useEffect(() => {
     const unsubscribe = operationStore.subscribe((state, prevState) => {
@@ -20,13 +20,14 @@ export function useAutoCommit<T>(
         if (timerRef.current) clearTimeout(timerRef.current)
 
         timerRef.current = setTimeout(async () => {
-          if (isComittingRef.current) return
+          if (isCommittingRef.current) return
+          isCommittingRef.current = true
 
           try {
             operationStore.getState().commitPendingOperations()
             window.dispatchEvent(new CustomEvent('journal-changed'))
           } finally {
-            isComittingRef.current = false
+            isCommittingRef.current = false
           }
         }, debounceMs)
       }

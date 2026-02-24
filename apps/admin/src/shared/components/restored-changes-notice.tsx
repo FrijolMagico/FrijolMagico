@@ -33,6 +33,7 @@ export function RestoredChangesNotice({
         </p>
         <button
           onClick={onDismiss}
+          aria-label='Cerrar notificación'
           className='shrink-0 text-zinc-500 hover:text-zinc-300'
         >
           <X className='h-4 w-4' />
