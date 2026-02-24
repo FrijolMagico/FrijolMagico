@@ -110,7 +110,8 @@ export const PanelSidebarMenu = () => {
   }, [])
 
   useEffect(() => {
-    fetchPendingSections()
+    /* eslint-disable-next-line react-hooks/set-state-in-effect */
+    void fetchPendingSections()
     window.addEventListener('journal-changed', fetchPendingSections)
     return () => window.removeEventListener('journal-changed', fetchPendingSections)
   }, [fetchPendingSections])

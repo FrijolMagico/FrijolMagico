@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { journalCommitSource } from '@/shared/lib/journal-commit-source'
 import { ROUTE_ENTITY_MAP } from '@/shared/lib/database-entities'
 
 export function useRouteChanges(routePath: string) {
-  const entities = ROUTE_ENTITY_MAP[routePath] ?? []
+  const entities = useMemo(() => ROUTE_ENTITY_MAP[routePath] ?? [], [routePath])
   const [isDirty, setIsDirty] = useState(false)
   const [noticeVisible, setNoticeVisible] = useState(false)
   const [checkedOnce, setCheckedOnce] = useState(false)
@@ -28,7 +28,8 @@ export function useRouteChanges(routePath: string) {
   }, [entities, checkedOnce])
 
   useEffect(() => {
-    checkDirty()
+    /* eslint-disable-next-line react-hooks/set-state-in-effect */
+    void checkDirty()
     window.addEventListener('journal-changed', checkDirty)
     return () => window.removeEventListener('journal-changed', checkDirty)
   }, [checkDirty])

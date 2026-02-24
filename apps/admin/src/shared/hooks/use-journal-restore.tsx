@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, useTransition } from 'react'
 import type { UseBoundStore, StoreApi } from 'zustand'
 import type { JournalEntity } from '@/shared/lib/database-entities'
 import type { EntityOperationStore } from '@/shared/ui-state/operation-log/types'
@@ -26,40 +26,42 @@ interface UseJournalRestoreResult {
 
 export function useJournalRestore<T>({
   entity,
-  sectionLabel: _sectionLabel,
+  sectionLabel: _sectionLabel, // eslint-disable-line @typescript-eslint/no-unused-vars
   operationStore
 }: UseJournalRestoreOptions<T>): UseJournalRestoreResult {
   const [hasRestoredEntries, setHasRestoredEntries] = useState(false)
   const [noticeVisible, setNoticeVisible] = useState(false)
   const isHydrated = useRef(false)
+  const [, startTransition] = useTransition()
 
   const checkAndHydrate = useCallback(async () => {
     const hasPending = await hasEntries(entity)
 
-    if (hasPending && !isHydrated.current) {
-      // Hydrate immediately so changes are visible in UI before any user action
-      const entries = await getLatestEntries(entity)
-      const operations = journalEntriesToOperations<T>(entries)
-      operationStore.getState().hydratePersistedOperations(operations)
-      isHydrated.current = true
-      setNoticeVisible(true)
-    }
+    startTransition(() => {
+      if (hasPending && !isHydrated.current) {
+        // Hydrate immediately so changes are visible in UI before any user action
+        getLatestEntries(entity).then(entries => {
+          const operations = journalEntriesToOperations<T>(entries)
+          operationStore.getState().hydratePersistedOperations(operations)
+          isHydrated.current = true
+          setNoticeVisible(true)
+        })
+      }
 
-    if (!hasPending && isHydrated.current) {
-      operationStore.getState().clearPersistedOperations()
-      isHydrated.current = false
-    }
+      if (!hasPending && isHydrated.current) {
+        operationStore.getState().clearPersistedOperations()
+        isHydrated.current = false
+      }
 
-    setHasRestoredEntries(hasPending)
-  }, [entity, operationStore])
+      setHasRestoredEntries(hasPending)
+    })
+  }, [entity, operationStore, startTransition])
 
   useEffect(() => {
-    checkAndHydrate()
-
+    void checkAndHydrate()
     window.addEventListener('journal-changed', checkAndHydrate)
     return () => window.removeEventListener('journal-changed', checkAndHydrate)
   }, [checkAndHydrate])
-
   const dismissNotice = useCallback(() => {
     setNoticeVisible(false)
   }, [])
