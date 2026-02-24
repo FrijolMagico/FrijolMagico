@@ -26,7 +26,6 @@ export function TeamStoreInitialization({
 
   useJournalRestore<TeamMember>({
     entity: JOURNAL_ENTITIES.ORGANIZACION_EQUIPO,
-    sectionLabel: '',
     operationStore: useTeamOperationStore
   })
 

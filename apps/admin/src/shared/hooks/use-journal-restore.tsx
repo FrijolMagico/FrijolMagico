@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback, useTransition } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import type { UseBoundStore, StoreApi } from 'zustand'
 import type { JournalEntity } from '@/shared/lib/database-entities'
 import type { EntityOperationStore } from '@/shared/ui-state/operation-log/types'
@@ -13,7 +13,6 @@ import { journalEntriesToOperations } from '@/shared/lib/journal-entries-to-oper
 
 interface UseJournalRestoreOptions<T> {
   entity: JournalEntity
-  sectionLabel: string
   operationStore: UseBoundStore<StoreApi<EntityOperationStore<T>>>
 }
 
@@ -26,38 +25,34 @@ interface UseJournalRestoreResult {
 
 export function useJournalRestore<T>({
   entity,
-  sectionLabel: _sectionLabel, // eslint-disable-line @typescript-eslint/no-unused-vars
   operationStore
 }: UseJournalRestoreOptions<T>): UseJournalRestoreResult {
   const [hasRestoredEntries, setHasRestoredEntries] = useState(false)
   const [noticeVisible, setNoticeVisible] = useState(false)
   const isHydrated = useRef(false)
-  const [, startTransition] = useTransition()
 
   const checkAndHydrate = useCallback(async () => {
     const hasPending = await hasEntries(entity)
 
-    startTransition(() => {
-      if (hasPending && !isHydrated.current) {
-        // Hydrate immediately so changes are visible in UI before any user action
-        getLatestEntries(entity).then(entries => {
-          const operations = journalEntriesToOperations<T>(entries)
-          operationStore.getState().hydratePersistedOperations(operations)
-          isHydrated.current = true
-          setNoticeVisible(true)
-        })
-      }
+    if (hasPending && !isHydrated.current) {
+      // Hydrate immediately so changes are visible in UI before any user action
+      const entries = await getLatestEntries(entity)
+      const operations = journalEntriesToOperations<T>(entries)
+      operationStore.getState().hydratePersistedOperations(operations)
+      isHydrated.current = true
+      setNoticeVisible(true)
+    }
 
-      if (!hasPending && isHydrated.current) {
-        operationStore.getState().clearPersistedOperations()
-        isHydrated.current = false
-      }
+    if (!hasPending && isHydrated.current) {
+      operationStore.getState().clearPersistedOperations()
+      isHydrated.current = false
+    }
 
-      setHasRestoredEntries(hasPending)
-    })
-  }, [entity, operationStore, startTransition])
+    setHasRestoredEntries(hasPending)
+  }, [entity, operationStore])
 
   useEffect(() => {
+    /* eslint-disable-next-line react-hooks/set-state-in-effect */
     void checkAndHydrate()
     window.addEventListener('journal-changed', checkAndHydrate)
     return () => window.removeEventListener('journal-changed', checkAndHydrate)

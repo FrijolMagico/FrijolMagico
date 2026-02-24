@@ -24,7 +24,6 @@ export function HistoryStoreInitialization({
 
   useJournalRestore<HistoryEntry>({
     entity: JOURNAL_ENTITIES.ARTISTA_HISTORIAL,
-    sectionLabel: '',
     operationStore: useHistoryOperationStore
   })
 

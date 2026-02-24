@@ -26,7 +26,6 @@ export function OrganizationStoreInitialization({
 
   useJournalRestore<Organization>({
     entity: JOURNAL_ENTITIES.ORGANIZACION,
-    sectionLabel: '',
     operationStore: useOrganizationOperationStore
   })
 

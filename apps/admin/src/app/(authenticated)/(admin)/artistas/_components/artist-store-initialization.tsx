@@ -26,7 +26,6 @@ export function ArtistStoreInitialization({
 
   useJournalRestore<ArtistEntry>({
     entity: JOURNAL_ENTITIES.ARTISTA,
-    sectionLabel: '',
     operationStore: useArtistsOperationStore
   })
 

@@ -26,7 +26,6 @@ export function CatalogStoreInitialization({
 
   useJournalRestore<CatalogEntry>({
     entity: JOURNAL_ENTITIES.CATALOGO_ARTISTA,
-    sectionLabel: '',
     operationStore: useCatalogOperationStore
   })
 
