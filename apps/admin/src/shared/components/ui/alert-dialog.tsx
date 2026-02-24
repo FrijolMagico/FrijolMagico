@@ -4,7 +4,7 @@ import * as React from 'react'
 import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog'
 
 import { cn } from '@/lib/utils'
-import { Button } from '@/shared/components/ui/button'
+import { buttonVariants } from '@/shared/components/ui/button'
 
 function AlertDialog({ ...props }: AlertDialogPrimitive.AlertDialogProps) {
   return <AlertDialogPrimitive.Root data-slot='alert-dialog' {...props} />
@@ -120,22 +120,28 @@ function AlertDialogDescription({
 }
 
 function AlertDialogAction({
+  className,
   ...props
 }: AlertDialogPrimitive.AlertDialogActionProps) {
   return (
-    <AlertDialogPrimitive.Action data-slot='alert-dialog-action' asChild {...props}>
-      <Button />
-    </AlertDialogPrimitive.Action>
+    <AlertDialogPrimitive.Action
+      data-slot='alert-dialog-action'
+      className={cn(buttonVariants(), className)}
+      {...props}
+    />
   )
 }
 
 function AlertDialogCancel({
+  className,
   ...props
 }: AlertDialogPrimitive.AlertDialogCancelProps) {
   return (
-    <AlertDialogPrimitive.Cancel data-slot='alert-dialog-cancel' asChild {...props}>
-      <Button variant='outline' />
-    </AlertDialogPrimitive.Cancel>
+    <AlertDialogPrimitive.Cancel
+      data-slot='alert-dialog-cancel'
+      className={cn(buttonVariants({ variant: 'outline' }), className)}
+      {...props}
+    />
   )
 }
 
