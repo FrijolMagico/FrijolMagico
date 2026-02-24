@@ -20,9 +20,11 @@ export function useOrganizacionCommit() {
     executor: saveOrganizacionAction,
     section: 'organizacion',
     onSuccess: () => {
+      // TODO: Verify sequential commit ordering and ID mapping for multi-entity routes
       orgStore.resetStore()
       router.refresh()
       toast.success('Guardado correctamente')
+      window.dispatchEvent(new CustomEvent('journal-changed'))
     }
   })
 
@@ -47,9 +49,11 @@ export function useOrganizacionEquipoCommit() {
     executor: saveOrganizacionEquipoAction,
     section: 'organizacion_equipo',
     onSuccess: () => {
+      // TODO: Verify sequential commit ordering and ID mapping for multi-entity routes
       teamStore.resetStore()
       router.refresh()
       toast.success('Guardado correctamente')
+      window.dispatchEvent(new CustomEvent('journal-changed'))
     }
   })
 
