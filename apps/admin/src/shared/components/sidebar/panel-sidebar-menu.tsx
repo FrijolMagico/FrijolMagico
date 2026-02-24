@@ -17,9 +17,11 @@ import {
 
 import { ChevronRight } from 'lucide-react'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { navigation } from '@/lib/navigation'
+import { getSectionsWithChanges } from '@/shared/change-journal/change-journal'
+import { ROUTE_ENTITY_MAP } from '@/shared/lib/database-entities'
 
 type NavigationItem = (typeof navigation)[number]
 type CollapsibleNavigationItem = NavigationItem & {
@@ -30,14 +32,26 @@ type CollapsibleNavItemProps = {
   item: CollapsibleNavigationItem
   isActive: boolean
   pathname: string
+  pendingSections: Set<string>
+}
+
+function routeHasPending(href: string, pendingSections: Set<string>): boolean {
+  const entities = ROUTE_ENTITY_MAP[href] ?? []
+  return entities.some((e) => pendingSections.has(e))
 }
 
 const CollapsibleNavItem = ({
   item,
   isActive,
-  pathname
+  pathname,
+  pendingSections
 }: CollapsibleNavItemProps) => {
   const [open, setOpen] = useState(isActive)
+
+  // Show dot on parent if ANY sub-item has pending changes
+  const anySubItemPending = item.items.some((subItem) =>
+    routeHasPending(subItem.href, pendingSections)
+  )
 
   return (
     <Collapsible
@@ -53,20 +67,29 @@ const CollapsibleNavItem = ({
         >
           {item.icon && <item.icon />}
           <span>{item.title}</span>
-          <ChevronRight className='ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90' />
+          {anySubItemPending && (
+            <span className='ml-auto h-2 w-2 rounded-full bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.5)]' />
+          )}
+          <ChevronRight className='h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90' />
         </CollapsibleTrigger>
         <CollapsibleContent>
           <SidebarMenuSub>
-            {item.items.map((subItem) => (
-              <SidebarMenuSubItem key={subItem.title}>
-                <SidebarMenuSubButton
-                  render={<Link href={subItem.href} />}
-                  isActive={pathname === subItem.href}
-                >
-                  {subItem.title}
-                </SidebarMenuSubButton>
-              </SidebarMenuSubItem>
-            ))}
+            {item.items.map((subItem) => {
+              const subHasPending = routeHasPending(subItem.href, pendingSections)
+              return (
+                <SidebarMenuSubItem key={subItem.title}>
+                  <SidebarMenuSubButton
+                    render={<Link href={subItem.href} />}
+                    isActive={pathname === subItem.href}
+                  >
+                    {subItem.title}
+                    {subHasPending && (
+                      <span className='ml-auto h-2 w-2 rounded-full bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.5)]' />
+                    )}
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+              )
+            })}
           </SidebarMenuSub>
         </CollapsibleContent>
       </SidebarMenuItem>
@@ -76,6 +99,21 @@ const CollapsibleNavItem = ({
 
 export const PanelSidebarMenu = () => {
   const pathname = usePathname()
+  const [pendingSections, setPendingSections] = useState<Set<string>>(new Set())
+
+  const fetchPendingSections = useCallback(async () => {
+    const sections = await getSectionsWithChanges()
+    const pending = sections
+      .filter(({ count }) => count > 0)
+      .map(({ section }) => section)
+    setPendingSections(new Set(pending))
+  }, [])
+
+  useEffect(() => {
+    fetchPendingSections()
+    window.addEventListener('journal-changed', fetchPendingSections)
+    return () => window.removeEventListener('journal-changed', fetchPendingSections)
+  }, [fetchPendingSections])
 
   return (
     <SidebarMenu>
@@ -89,9 +127,12 @@ export const PanelSidebarMenu = () => {
               item={item}
               isActive={isActive}
               pathname={pathname}
+              pendingSections={pendingSections}
             />
           )
         }
+
+        const hasPending = routeHasPending(item.href, pendingSections)
 
         return (
           <SidebarMenuItem key={item.title}>
@@ -102,6 +143,9 @@ export const PanelSidebarMenu = () => {
               <Link href={item.href} className='flex w-full items-center gap-2'>
                 {item.icon && <item.icon />}
                 <span>{item.title}</span>
+                {hasPending && (
+                  <span className='ml-auto h-2 w-2 rounded-full bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.5)]' />
+                )}
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
