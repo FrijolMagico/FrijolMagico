@@ -11,4 +11,4 @@ export const useOrganizationOperationStore =
   })
 
 export const useOrganizationProjectionStore =
-  createUIProjectionStore<Organization>()
+  createUIProjectionStore<Organization>('organizacion')

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import type { CommitSource } from '../lib/types'
+import { useSectionDirtyStore } from '@/shared/lib/section-dirty-store'
 
 export interface UseCommitDirtyResult {
   isDirty: boolean
@@ -24,29 +25,28 @@ export function useCommitDirty(
   source: CommitSource,
   section: string
 ): UseCommitDirtyResult {
-  const [isDirty, setIsDirty] = useState(false)
+  // Primary: synchronous read from projection-driven dirty store
+  const dirtyFromStore = useSectionDirtyStore((s) => s.dirtyMap[section])
+
+  // Fallback: async IndexedDB check for sections without a projection store (e.g. 'evento')
+  const [dirtyFromJournal, setDirtyFromJournal] = useState(false)
 
   const checkDirty = async () => {
+    if (dirtyFromStore !== undefined) return
     const hasPending = await source.hasPending(section)
-    setIsDirty(hasPending)
+    setDirtyFromJournal(hasPending)
   }
 
   useEffect(() => {
+    if (dirtyFromStore !== undefined) return
     let mounted = true
+    source.hasPending(section).then((hasPending) => {
+      if (mounted) setDirtyFromJournal(hasPending)
+    })
+    return () => { mounted = false }
+  }, [source, section, dirtyFromStore])
 
-    const check = async () => {
-      const hasPending = await source.hasPending(section)
-      if (mounted) {
-        setIsDirty(hasPending)
-      }
-    }
-
-    check()
-
-    return () => {
-      mounted = false
-    }
-  }, [source, section])
+  const isDirty = dirtyFromStore !== undefined ? dirtyFromStore : dirtyFromJournal
 
   return { isDirty, checkDirty }
 }

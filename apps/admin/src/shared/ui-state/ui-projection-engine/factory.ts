@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import { UIProjectionState, ProjectedEntity } from './types'
+import { useSectionDirtyStore } from '@/shared/lib/section-dirty-store'
 
-export function createUIProjectionStore<T extends { id: string }>() {
+export function createUIProjectionStore<T extends { id: string }>(section: string) {
   return create<UIProjectionState<T>>((set, get) => ({
     byId: {},
     allIds: [],
@@ -25,6 +26,8 @@ export function createUIProjectionStore<T extends { id: string }>() {
           allIds.push(entity.id)
         }
 
+        // Early return: no operations — all entities clean
+        useSectionDirtyStore.getState().setDirty(section, false)
         set({ byId, allIds })
         return
       }
@@ -34,9 +37,11 @@ export function createUIProjectionStore<T extends { id: string }>() {
       const nextAllIds = [...allIds]
 
       const remoteIds = new Set<string>()
+      const remoteMap = new Map<string, T>()
 
       for (const entity of remoteSnapshot) {
         remoteIds.add(entity.id)
+        remoteMap.set(entity.id, entity)
 
         const existing = byId[entity.id]
 
@@ -114,16 +119,40 @@ export function createUIProjectionStore<T extends { id: string }>() {
         }
       }
 
+      // --- 3️⃣ Reconcile: if final projected state matches remote, clear isUpdated ---
+      // Compares remote entity fields against projected entity to detect net-zero changes.
+      for (const id of Object.keys(nextById)) {
+        const entity = nextById[id]
+        if (!entity.__meta.isUpdated) continue
+        if (entity.__meta.isNew || entity.__meta.isDeleted) continue
+
+        const remote = remoteMap.get(id)
+        if (!remote) continue
+
+        let changed = false
+        for (const key of Object.keys(remote) as (keyof T)[]) {
+          if (entity[key] !== remote[key]) { changed = true; break }
+        }
+        if (!changed) {
+          nextById[id] = { ...entity, __meta: { ...entity.__meta, isUpdated: false } }
+        }
+      }
+
+      // Emit dirty verdict to global read model
+      const hasNetChanges = Object.values(nextById).some(
+        (e) => e.__meta.isNew || e.__meta.isUpdated || e.__meta.isDeleted
+      )
+      useSectionDirtyStore.getState().setDirty(section, hasNetChanges)
+
       set({
         byId: nextById,
         allIds: nextAllIds
       })
     },
 
-    reset: () =>
-      set({
-        byId: {},
-        allIds: []
-      })
+    reset: () => {
+      useSectionDirtyStore.getState().clearSection(section)
+      set({ byId: {}, allIds: [] })
+    }
   }))
 }

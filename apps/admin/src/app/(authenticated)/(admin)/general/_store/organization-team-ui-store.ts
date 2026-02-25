@@ -9,4 +9,4 @@ export const useTeamOperationStore = createEntityOperationStore<TeamMember>({
     writeOperationIntoJournal(ops, JOURNAL_ENTITIES.ORGANIZACION_EQUIPO)
 })
 
-export const useTeamProjectionStore = createUIProjectionStore<TeamMember>()
+export const useTeamProjectionStore = createUIProjectionStore<TeamMember>('organizacion_equipo')

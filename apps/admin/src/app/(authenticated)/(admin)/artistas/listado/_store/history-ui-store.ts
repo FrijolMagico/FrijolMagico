@@ -9,4 +9,4 @@ export const useHistoryOperationStore = createEntityOperationStore<HistoryEntry>
     writeOperationIntoJournal(ops, JOURNAL_ENTITIES.ARTISTA_HISTORIAL)
 })
 
-export const useHistoryProjectionStore = createUIProjectionStore<HistoryEntry>()
+export const useHistoryProjectionStore = createUIProjectionStore<HistoryEntry>('artista_historial')

@@ -11,4 +11,4 @@ export const useArtistsOperationStore = createEntityOperationStore<ArtistEntry>(
   }
 )
 
-export const useArtistsProjectionStore = createUIProjectionStore<ArtistEntry>()
+export const useArtistsProjectionStore = createUIProjectionStore<ArtistEntry>('artista')

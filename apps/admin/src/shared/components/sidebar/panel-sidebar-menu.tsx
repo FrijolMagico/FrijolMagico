@@ -17,10 +17,11 @@ import {
 
 import { ChevronRight } from 'lucide-react'
 import { usePathname } from 'next/navigation'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { navigation } from '@/lib/navigation'
 import { getSectionsWithChanges } from '@/shared/change-journal/change-journal'
+import { useSectionDirtyStore } from '@/shared/lib/section-dirty-store'
 import { ROUTE_ENTITY_MAP } from '@/shared/lib/database-entities'
 
 type NavigationItem = (typeof navigation)[number]
@@ -99,21 +100,26 @@ const CollapsibleNavItem = ({
 
 export const PanelSidebarMenu = () => {
   const pathname = usePathname()
-  const [pendingSections, setPendingSections] = useState<Set<string>>(new Set())
 
-  const fetchPendingSections = useCallback(async () => {
-    const sections = await getSectionsWithChanges()
-    const pending = sections
-      .filter(({ count }) => count > 0)
-      .map(({ section }) => section)
-    setPendingSections(new Set(pending))
-  }, [])
+  // Live dirty state: synchronous subscription to the projection-driven read model
+  const dirtyMap = useSectionDirtyStore((s) => s.dirtyMap)
+  const pendingSections = new Set(
+    Object.entries(dirtyMap)
+      .filter(([, dirty]) => dirty)
+      .map(([section]) => section)
+  )
 
+  // Cold-start hydration: seed dirty store for sections not yet projected this session
   useEffect(() => {
-    window.addEventListener('journal-changed', fetchPendingSections)
-    window.dispatchEvent(new CustomEvent('journal-changed'))
-    return () => window.removeEventListener('journal-changed', fetchPendingSections)
-  }, [fetchPendingSections])
+    getSectionsWithChanges().then((sections) => {
+      const { dirtyMap: currentMap, setDirty } = useSectionDirtyStore.getState()
+      for (const { section, count } of sections) {
+        if (!(section in currentMap)) {
+          setDirty(section, count > 0)
+        }
+      }
+    })
+  }, [])
 
   return (
     <SidebarMenu>

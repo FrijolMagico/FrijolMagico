@@ -10,4 +10,4 @@ export const useCatalogOperationStore =
       writeOperationIntoJournal(ops, JOURNAL_ENTITIES.CATALOGO_ARTISTA)
   })
 
-export const useCatalogProjectionStore = createUIProjectionStore<CatalogEntry>()
+export const useCatalogProjectionStore = createUIProjectionStore<CatalogEntry>('catalogo_artista')
