@@ -76,7 +76,10 @@ const CollapsibleNavItem = ({
         <CollapsibleContent>
           <SidebarMenuSub>
             {item.items.map((subItem) => {
-              const subHasPending = routeHasPending(subItem.href, pendingSections)
+              const subHasPending = routeHasPending(
+                subItem.href,
+                pendingSections
+              )
               return (
                 <SidebarMenuSubItem key={subItem.title}>
                   <SidebarMenuSubButton
@@ -103,6 +106,7 @@ export const PanelSidebarMenu = () => {
 
   // Live dirty state: synchronous subscription to the projection-driven read model
   const dirtyMap = useSectionDirtyStore((s) => s.dirtyMap)
+
   const pendingSections = new Set(
     Object.entries(dirtyMap)
       .filter(([, dirty]) => dirty)
