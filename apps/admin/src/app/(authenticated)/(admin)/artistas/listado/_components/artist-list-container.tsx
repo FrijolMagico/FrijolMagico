@@ -6,7 +6,6 @@ import { useDebouncedCallback } from 'use-debounce'
 import { Card } from '@/shared/components/ui/card'
 import { useRouteChanges } from '@/shared/hooks/use-route-changes'
 import { RouteSaveToolbar } from '@/shared/components/route-save-toolbar'
-import { RestoredChangesNotice } from '@/shared/components/restored-changes-notice'
 import { useArtistaCommit } from '../../_hooks/use-artista-commit'
 import { useAutoCommit } from '@/shared/ui-state/operation-log/hooks/use-auto-commit'
 import { useArtistsOperationStore } from '../../_store/artista-ui-store'
@@ -29,8 +28,7 @@ export function ArtistListContainer() {
 
   const { save, isPending } = useArtistaCommit()
 
-  const { isDirty, noticeVisible, dismissNotice, discardAll } =
-    useRouteChanges('/artistas/listado')
+  const { isDirty, discardAll } = useRouteChanges('/artistas/listado')
 
   // Initialize auto-commit for both operation stores
   useAutoCommit(useArtistsOperationStore)
@@ -157,10 +155,6 @@ export function ArtistListContainer() {
         onSave={save}
         onDiscard={discardAll}
         isPending={isPending}
-      />
-      <RestoredChangesNotice
-        visible={noticeVisible}
-        onDismiss={dismissNotice}
       />
     </div>
   )

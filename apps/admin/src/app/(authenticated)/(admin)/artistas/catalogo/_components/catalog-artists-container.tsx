@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useAutoCommit } from '@/shared/ui-state/operation-log/hooks/use-auto-commit'
 import { useRouteChanges } from '@/shared/hooks/use-route-changes'
 import { RouteSaveToolbar } from '@/shared/components/route-save-toolbar'
-import { RestoredChangesNotice } from '@/shared/components/restored-changes-notice'
 import { CatalogFilters as CatalogFiltersComponent } from './catalog-filters'
 import { EditCatalogDialog } from './edit-catalog-dialog'
 import { EditArtistDialog } from './edit-artist-dialog'
@@ -26,8 +25,8 @@ export function CatalogArtistsContainer() {
   const setPage = useCatalogPaginationStore((s) => s.setPage)
   const pageSize = useCatalogPaginationStore((s) => s.pageSize)
 
-  const { isDirty, noticeVisible, dismissNotice, discardAll } =
-    useRouteChanges('/artistas/catalogo')
+  const { isDirty, discardAll } = useRouteChanges('/artistas/catalogo')
+
   const { save: saveCatalogo, isPending: isPendingCatalogo } =
     useCatalogoCommit()
   const { save: saveArtista, isPending: isPendingArtista } = useArtistaCommit()
@@ -106,10 +105,6 @@ export function CatalogArtistsContainer() {
         onSave={handleSave}
         onDiscard={discardAll}
         isPending={isPendingCatalogo || isPendingArtista}
-      />
-      <RestoredChangesNotice
-        visible={noticeVisible}
-        onDismiss={dismissNotice}
       />
     </div>
   )
