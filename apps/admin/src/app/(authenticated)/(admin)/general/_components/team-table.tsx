@@ -16,11 +16,20 @@ import { TeamRow } from './team-row'
 import { useAutoCommit } from '@/shared/ui-state/operation-log/hooks/use-auto-commit'
 
 import { Card } from '@/shared/components/ui/card'
+import { EmptyState } from '@/shared/components/empty-state'
 
 export function TeamTable() {
   const teamIds = useTeamProjectionStore((s) => s.allIds)
 
   useAutoCommit(useTeamOperationStore)
+
+  if (teamIds.length <= 0)
+    return (
+      <EmptyState
+        title='Aún no hay miembros en el equipo'
+        description='Agrega miembros al equipo para que aparezcan aquí.'
+      />
+    )
 
   return (
     <Card className='py-0'>
