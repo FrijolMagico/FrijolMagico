@@ -9,7 +9,9 @@ interface ArtistListPaginationProps {
   onPageChange: (page: number) => void
 }
 
-export function ArtistListPagination({ onPageChange }: ArtistListPaginationProps) {
+export function ArtistListPagination({
+  onPageChange
+}: ArtistListPaginationProps) {
   const page = useArtistListPaginationStore((s) => s.page)
   const pageSize = useArtistListPaginationStore((s) => s.pageSize)
   const totalItems = useArtistListPaginationStore((s) => s.totalItems)
@@ -56,7 +58,7 @@ export function ArtistListPagination({ onPageChange }: ArtistListPaginationProps
   return (
     <>
       <Separator />
-      <div className='flex items-center justify-between pt-4'>
+      <div className='flex flex-col items-center justify-between gap-2 pt-4 md:flex-row'>
         <p className='text-muted-foreground text-sm'>
           Mostrando {startItem}-{endItem} de {totalItems} artistas
         </p>

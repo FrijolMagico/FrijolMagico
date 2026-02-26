@@ -7,9 +7,9 @@ export default async function ArtistsListPage() {
   const historyData = await getHistoryData()
 
   return (
-    <div className='space-y-6'>
+    <article className='h-full min-h-full space-y-6'>
       <HistoryStoreInitialization initialData={historyData} />
-      <div>
+      <header>
         <h1 className='text-foreground text-2xl font-bold'>
           Lista de Artistas
         </h1>
@@ -17,10 +17,10 @@ export default async function ArtistsListPage() {
           Listado completo de artistas registrados en el sistema. Desde aquí
           puedes gestionar la información básica de cada artista.
         </p>
-      </div>
+      </header>
       <Suspense fallback={<div>Cargando...</div>}>
         <ArtistListContainer />
       </Suspense>
-    </div>
+    </article>
   )
 }

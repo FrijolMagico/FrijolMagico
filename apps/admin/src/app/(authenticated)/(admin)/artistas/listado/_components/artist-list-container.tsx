@@ -29,7 +29,8 @@ export function ArtistListContainer() {
 
   const { save, isPending } = useArtistaCommit()
 
-  const { isDirty, noticeVisible, dismissNotice, discardAll } = useRouteChanges('/artistas/listado')
+  const { isDirty, noticeVisible, dismissNotice, discardAll } =
+    useRouteChanges('/artistas/listado')
 
   // Initialize auto-commit for both operation stores
   useAutoCommit(useArtistsOperationStore)
@@ -128,7 +129,7 @@ export function ArtistListContainer() {
   }
 
   return (
-    <div className='space-y-4'>
+    <div className='grid space-y-4'>
       <div className='flex items-center justify-between gap-4'>
         <ArtistListFilters
           countries={countries}
@@ -140,7 +141,7 @@ export function ArtistListContainer() {
 
       <ArtistListPagination onPageChange={handlePageChange} />
 
-      <Card className='w-full overflow-x-auto py-0'>
+      <Card className='py-0'>
         <ArtistListTable onClearFilters={handleClearFilters} />
       </Card>
 
@@ -157,7 +158,10 @@ export function ArtistListContainer() {
         onDiscard={discardAll}
         isPending={isPending}
       />
-      <RestoredChangesNotice visible={noticeVisible} onDismiss={dismissNotice} />
+      <RestoredChangesNotice
+        visible={noticeVisible}
+        onDismiss={dismissNotice}
+      />
     </div>
   )
 }

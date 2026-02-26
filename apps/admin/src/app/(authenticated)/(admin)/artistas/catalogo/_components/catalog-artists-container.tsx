@@ -26,8 +26,10 @@ export function CatalogArtistsContainer() {
   const setPage = useCatalogPaginationStore((s) => s.setPage)
   const pageSize = useCatalogPaginationStore((s) => s.pageSize)
 
-  const { isDirty, noticeVisible, dismissNotice, discardAll } = useRouteChanges('/artistas/catalogo')
-  const { save: saveCatalogo, isPending: isPendingCatalogo } = useCatalogoCommit()
+  const { isDirty, noticeVisible, dismissNotice, discardAll } =
+    useRouteChanges('/artistas/catalogo')
+  const { save: saveCatalogo, isPending: isPendingCatalogo } =
+    useCatalogoCommit()
   const { save: saveArtista, isPending: isPendingArtista } = useArtistaCommit()
 
   useAutoCommit(useCatalogOperationStore)
@@ -85,7 +87,7 @@ export function CatalogArtistsContainer() {
   }
 
   return (
-    <div className='space-y-4'>
+    <div className='grid space-y-4'>
       <div className='flex items-center justify-between'>
         <CatalogFiltersComponent onFiltersChange={handleFiltersChange} />
       </div>
@@ -105,7 +107,10 @@ export function CatalogArtistsContainer() {
         onDiscard={discardAll}
         isPending={isPendingCatalogo || isPendingArtista}
       />
-      <RestoredChangesNotice visible={noticeVisible} onDismiss={dismissNotice} />
+      <RestoredChangesNotice
+        visible={noticeVisible}
+        onDismiss={dismissNotice}
+      />
     </div>
   )
 }

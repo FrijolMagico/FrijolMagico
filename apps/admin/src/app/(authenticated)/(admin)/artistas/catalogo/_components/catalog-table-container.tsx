@@ -41,7 +41,7 @@ export function CatalogTableContainer({
     <>
       <CatalogPagination onPageChange={handlePageChange} />
 
-      <Card ref={tableContainerRef} className='w-full overflow-x-hidden py-0'>
+      <Card ref={tableContainerRef} className='py-0'>
         <CatalogTable
           handleFiltersChange={handleFilersChange}
           containerRef={tableContainerRef}
