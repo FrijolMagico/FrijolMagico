@@ -8,8 +8,11 @@ import { ROUTE_ENTITY_MAP } from '@/shared/lib/database-entities'
 export function useRouteChanges(routePath: string) {
   // Primary: synchronous dirty state from projection-driven read model
   const dirtyMap = useSectionDirtyStore((s) => s.dirtyMap)
-  const entities = ROUTE_ENTITY_MAP[routePath] ?? []
-  const isDirty = useMemo(() => entities.some((e) => dirtyMap[e] ?? false), [entities, dirtyMap])
+  const entities = useMemo(() => ROUTE_ENTITY_MAP[routePath] ?? [], [routePath])
+  const isDirty = useMemo(
+    () => entities.some((e) => dirtyMap[e] ?? false),
+    [entities, dirtyMap]
+  )
 
   // noticeVisible mirrors isDirty — simplified from original journal-changed event pattern
   // The original "first dirty" behavior can be restored later if needed
