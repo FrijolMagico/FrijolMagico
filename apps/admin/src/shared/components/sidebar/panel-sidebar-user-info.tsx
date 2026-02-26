@@ -1,10 +1,18 @@
 import { Suspense } from 'react'
 
-import Image from 'next/image'
 import { redirect } from 'next/navigation'
 
 import { getSession } from '@/lib/auth/utils'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import { LogoutButton } from '../logout-button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger
+} from '../ui/dropdown-menu'
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
+import { Button } from '../ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
 
 export async function PanelSidebarUserInfo() {
   return (
@@ -24,29 +32,53 @@ async function UserInfo() {
   const user = session.user
 
   return (
-    <div className='flex items-center gap-3'>
-      <div className='bg-muted flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full'>
-        {!user?.image ? (
-          <span className='text-muted-foreground text-xs font-medium'>
-            {user?.name?.charAt(0).toUpperCase() || 'U'}
-          </span>
-        ) : (
-          <Image
-            src={user.image}
-            width={32}
-            height={32}
-            alt={`Imágen de ${user.name}`}
-          />
-        )}
-      </div>
+    <section>
+      <div className='flex items-center gap-3'>
+        <DropdownMenu>
+          <Tooltip>
+            <DropdownMenuTrigger
+              render={
+                <TooltipTrigger>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    className='cursor-pointer rounded-full'
+                  >
+                    <Avatar>
+                      <AvatarImage
+                        src={session.user.image ?? undefined}
+                        alt={`Imagen de ${session.user.name}`}
+                      />
+                      <AvatarFallback>{session.user.name[0]}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </TooltipTrigger>
+              }
+              className='bg-muted flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full'
+            />
 
-      <div className='min-w-0 flex-1'>
-        <p className='text-foreground truncate text-sm font-medium'>
-          {user?.name}
-        </p>
-        <p className='text-muted-foreground truncate text-xs'>{user?.email}</p>
+            <TooltipContent sideOffset={12}>Opciones</TooltipContent>
+          </Tooltip>
+          <DropdownMenuContent
+            align='start'
+            alignOffset={16}
+            side='top'
+            className='w-48'
+          >
+            <LogoutButton />
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <div className='min-w-0 flex-1'>
+          <p className='text-foreground truncate text-sm font-medium'>
+            {user?.name}
+          </p>
+          <p className='text-muted-foreground truncate text-xs'>
+            {user?.email}
+          </p>
+        </div>
       </div>
-    </div>
+    </section>
   )
 }
 

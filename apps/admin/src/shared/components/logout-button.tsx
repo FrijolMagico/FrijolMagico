@@ -1,9 +1,11 @@
 'use client'
 
-import { authClient } from '@/lib/auth/'
-import { Button } from '@/shared/components/ui/button'
+import { LogOut } from 'lucide-react'
 import { redirect } from 'next/navigation'
 import { useState } from 'react'
+
+import { authClient } from '@/lib/auth/'
+import { DropdownMenuItem } from '@/shared/components/ui/dropdown-menu'
 
 export function LogoutButton() {
   const [isLoading, setIsLoading] = useState(false)
@@ -22,13 +24,14 @@ export function LogoutButton() {
   }
 
   return (
-    <Button
+    <DropdownMenuItem
       onClick={handleLogout}
       disabled={isLoading}
-      className='cursor-pointer'
       variant='destructive'
+      className='cursor-pointer text-nowrap'
     >
+      <LogOut />
       {isLoading ? 'Cerrando sesión...' : 'Cerrar sesión'}
-    </Button>
+    </DropdownMenuItem>
   )
 }

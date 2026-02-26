@@ -1,5 +1,4 @@
 import { SidebarTrigger } from '@/shared/components/ui/sidebar'
-import { LogoutButton } from '@/shared/components/logout-button'
 import { ModeToggle } from '@/shared/components/mode-toggle'
 
 export function PanelHeader() {
@@ -8,7 +7,7 @@ export function PanelHeader() {
       <SidebarTrigger className='cursor-pointer' />
       <div className='flex w-full items-center justify-between gap-4'>
         <section>
-          <h1 className='text-foreground text-lg font-semibold'>
+          <h1 className='text-foreground font-semibold md:text-lg'>
             Panel de Administración
           </h1>
           <p className='text-muted-foreground text-sm'>
@@ -17,7 +16,6 @@ export function PanelHeader() {
         </section>
         <div className='flex items-center gap-4'>
           <ModeToggle />
-          <LogoutButton />
         </div>
       </div>
     </header>
