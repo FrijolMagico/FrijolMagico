@@ -6,7 +6,7 @@ import type { Organization } from '../_types'
 
 export const useOrganizationOperationStore =
   createEntityOperationStore<Organization>({
-    commitOperations: (ops) =>
+    commitOperations: async (ops) =>
       writeOperationIntoJournal(ops, JOURNAL_ENTITIES.ORGANIZACION)
   })
 

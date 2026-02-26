@@ -14,7 +14,6 @@ export async function writeEntry(
   payload: JournalPayload,
   meta?: { sessionId?: string }
 ): Promise<JournalMethodResult> {
-  console.log('[DEBUG-ENTRY] Writing entry:', { section, scopeKey, payload: JSON.stringify(payload) })
   const entry: JournalEntry = {
 
     entryId: crypto.randomUUID(),

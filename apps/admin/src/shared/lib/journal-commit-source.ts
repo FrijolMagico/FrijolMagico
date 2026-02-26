@@ -32,7 +32,6 @@ import type { JournalEntry } from '@/shared/change-journal/lib/types'
 function mapJournalEntryToCommitOperation(
   entry: JournalEntry
 ): CommitOperation | null {
-  console.log('[DEBUG-MAP] Mapping entry:', { scopeKey: entry.scopeKey, payload: JSON.stringify(entry.payload) })
   const [entityType, entityId] = entry.scopeKey.split(':')
 
 
