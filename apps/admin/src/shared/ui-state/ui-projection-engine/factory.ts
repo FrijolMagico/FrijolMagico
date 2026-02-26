@@ -1,8 +1,7 @@
 import { create } from 'zustand'
 import { UIProjectionState, ProjectedEntity } from './types'
-import { useSectionDirtyStore } from '@/shared/lib/section-dirty-store'
 
-export function createUIProjectionStore<T extends { id: string }>(section: string) {
+export function createProjectionStore<T extends { id: string }>() {
   return create<UIProjectionState<T>>((set, get) => ({
     byId: {},
     allIds: [],
@@ -27,7 +26,6 @@ export function createUIProjectionStore<T extends { id: string }>(section: strin
         }
 
         // Early return: no operations — all entities clean
-        useSectionDirtyStore.getState().setDirty(section, false)
         set({ byId, allIds })
         return
       }
@@ -138,11 +136,7 @@ export function createUIProjectionStore<T extends { id: string }>(section: strin
         }
       }
 
-      // Emit dirty verdict to global read model
-      const hasNetChanges = Object.values(nextById).some(
-        (e) => e.__meta.isNew || e.__meta.isUpdated || e.__meta.isDeleted
-      )
-      useSectionDirtyStore.getState().setDirty(section, hasNetChanges)
+
 
       set({
         byId: nextById,
@@ -151,8 +145,8 @@ export function createUIProjectionStore<T extends { id: string }>(section: strin
     },
 
     reset: () => {
-      useSectionDirtyStore.getState().clearSection(section)
       set({ byId: {}, allIds: [] })
+      // Callers that need to clean the dirty store should do so externally (inversion of control)
     }
   }))
 }
