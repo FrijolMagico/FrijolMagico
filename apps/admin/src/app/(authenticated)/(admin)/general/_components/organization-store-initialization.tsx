@@ -19,6 +19,7 @@ export function OrganizationStoreInitialization({
   initialData
 }: OrganizationStoreInitializationProps) {
   useProjectionSync<Organization>({
+    // Organization es una entidad singular; useProjectionSync espera T[], por eso se envuelve en array
     initialData: [initialData],
     operationStore: useOrganizationOperationStore,
     projectionStore: useOrganizationProjectionStore
