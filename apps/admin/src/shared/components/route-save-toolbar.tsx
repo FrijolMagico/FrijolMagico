@@ -46,7 +46,7 @@ export function RouteSaveToolbar({
         {/* Actions */}
         <div className='flex items-center gap-1'>
           <AlertDialog>
-            <AlertDialogTrigger asChild>
+            <AlertDialogTrigger>
               <Button
                 variant='ghost'
                 size='sm'
