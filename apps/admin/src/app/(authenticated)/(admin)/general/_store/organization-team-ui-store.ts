@@ -5,8 +5,10 @@ import { createUIProjectionStore } from '@/shared/ui-state/ui-projection-engine'
 import { writeOperationIntoJournal } from '@/shared/lib/write-operation-into-journal'
 
 export const useTeamOperationStore = createEntityOperationStore<TeamMember>({
-  commitOperations: (ops) =>
+  commitOperations: async (ops) =>
     writeOperationIntoJournal(ops, JOURNAL_ENTITIES.ORGANIZACION_EQUIPO)
 })
 
-export const useTeamProjectionStore = createUIProjectionStore<TeamMember>('organizacion_equipo')
+export const useTeamProjectionStore = createUIProjectionStore<TeamMember>(
+  'organizacion_equipo'
+)
