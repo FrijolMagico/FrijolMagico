@@ -11,13 +11,13 @@ import {
   useArtistsProjectionStore
 } from '../_store/artista-ui-store'
 
-interface InitializeArtistStoreOptions {
+interface ArtistStoreInitializationProps {
   initialData: ArtistEntry[]
 }
 
 export function ArtistStoreInitialization({
   initialData
-}: InitializeArtistStoreOptions) {
+}: ArtistStoreInitializationProps) {
   useProjectionSync<ArtistEntry>({
     initialData,
     operationStore: useArtistsOperationStore,
