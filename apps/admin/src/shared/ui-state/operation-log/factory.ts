@@ -64,10 +64,6 @@ export function createEntityOperationStore<T>({
       })),
 
     commitPendingOperations: async () => {
-      console.log(
-        '[DEBUG-COMMIT] Pending operations:',
-        JSON.stringify(get().pendingOperations)
-      )
 
       // Get all current pendingOperations from queue
       const pendingOperations = get().pendingOperations
