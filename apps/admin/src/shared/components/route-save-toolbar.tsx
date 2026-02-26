@@ -46,16 +46,18 @@ export function RouteSaveToolbar({
         {/* Actions */}
         <div className='flex items-center gap-1'>
           <AlertDialog>
-            <AlertDialogTrigger>
-              <Button
-                variant='ghost'
-                size='sm'
-                disabled={isPending}
-                className='h-8 rounded-full px-3 text-zinc-400 hover:bg-red-950/30 hover:text-red-400'
-              >
-                Descartar
-              </Button>
-            </AlertDialogTrigger>
+            <AlertDialogTrigger
+              render={
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  disabled={isPending}
+                  className='h-8 rounded-full px-3 text-zinc-400 hover:bg-red-950/30 hover:text-red-400'
+                >
+                  Descartar
+                </Button>
+              }
+            ></AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>¿Descartar cambios?</AlertDialogTitle>

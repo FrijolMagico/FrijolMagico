@@ -38,21 +38,23 @@ async function UserInfo() {
           <Tooltip>
             <DropdownMenuTrigger
               render={
-                <TooltipTrigger>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className='cursor-pointer rounded-full'
-                  >
-                    <Avatar>
-                      <AvatarImage
-                        src={session.user.image ?? undefined}
-                        alt={`Imagen de ${session.user.name}`}
-                      />
-                      <AvatarFallback>{session.user.name[0]}</AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </TooltipTrigger>
+                <TooltipTrigger
+                  render={
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className='cursor-pointer rounded-full'
+                    >
+                      <Avatar>
+                        <AvatarImage
+                          src={session.user.image ?? undefined}
+                          alt={`Imagen de ${session.user.name}`}
+                        />
+                        <AvatarFallback>{session.user.name[0]}</AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  }
+                ></TooltipTrigger>
               }
               className='bg-muted flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full'
             />
