@@ -23,11 +23,3 @@ Orquestar el flujo de guardado garantizando que las operaciones se validen, orde
 ## Estado actual
 
 El pipeline está implementado y funcional. Sin embargo, la activación desde la UI está pendiente (T6 del roadmap); actualmente el botón "Guardar" solo muestra notificaciones sin ejecutar el `commit()`.
-
-## Siguiente paso
-
-El siguiente issue pendiente en este módulo es **[P1 — Projection Engine acoplada a `useSectionDirtyStore`](../../docs/journal-issues/p1-projection-engine-acoplada-dirty-store.md)**.
-
-Ver también el roadmap general de deuda técnica: [`docs/journal-issues/README.md`](../../docs/journal-issues/README.md)
-
-> **⚠️ Antes de ejecutar**: Crear el plan oficial para P1 y validarlo con los especialistas **Metis** (gap analysis) y **Momus** (plan critic) siguiendo el mismo proceso que esta tarea.
