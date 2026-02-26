@@ -1,6 +1,7 @@
 'use client'
 
 import { useProjectionSync } from '@/shared/hooks/use-projection-sync'
+import { useDirtySync } from '@/shared/hooks/use-dirty-sync'
 import { useJournalRestore } from '@/shared/hooks/use-journal-restore'
 import {
   JOURNAL_ENTITIES
@@ -23,6 +24,8 @@ export function TeamStoreInitialization({
     operationStore: useTeamOperationStore,
     projectionStore: useTeamProjectionStore
   })
+
+  useDirtySync(useTeamProjectionStore, JOURNAL_ENTITIES.ORGANIZACION_EQUIPO)
 
   useJournalRestore<TeamMember>({
     entity: JOURNAL_ENTITIES.ORGANIZACION_EQUIPO,
