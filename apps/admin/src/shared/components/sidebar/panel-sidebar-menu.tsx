@@ -12,7 +12,8 @@ import {
   SidebarMenuItem,
   SidebarMenuSub,
   SidebarMenuSubButton,
-  SidebarMenuSubItem
+  SidebarMenuSubItem,
+  useSidebar
 } from '@/shared/components/ui/sidebar'
 
 import { ChevronRight } from 'lucide-react'
@@ -48,6 +49,7 @@ const CollapsibleNavItem = ({
   pendingSections
 }: CollapsibleNavItemProps) => {
   const [open, setOpen] = useState(isActive)
+  const { setOpenMobile } = useSidebar()
 
   // Show dot on parent if ANY sub-item has pending changes
   const anySubItemPending = item.items.some((subItem) =>
@@ -83,7 +85,12 @@ const CollapsibleNavItem = ({
               return (
                 <SidebarMenuSubItem key={subItem.title}>
                   <SidebarMenuSubButton
-                    render={<Link href={subItem.href} />}
+                    render={
+                      <Link
+                        onClick={() => setOpenMobile(false)}
+                        href={subItem.href}
+                      />
+                    }
                     isActive={pathname === subItem.href}
                   >
                     {subItem.title}
@@ -106,6 +113,7 @@ export const PanelSidebarMenu = () => {
 
   // Live dirty state: synchronous subscription to the projection-driven read model
   const dirtyMap = useSectionDirtyStore((s) => s.dirtyMap)
+  const { setOpenMobile } = useSidebar()
 
   const pendingSections = new Set(
     Object.entries(dirtyMap)
@@ -150,7 +158,11 @@ export const PanelSidebarMenu = () => {
               tooltip={item.title}
               isActive={pathname === item.href}
             >
-              <Link href={item.href} className='flex w-full items-center gap-2'>
+              <Link
+                onClick={() => setOpenMobile(false)}
+                href={item.href}
+                className='flex w-full items-center gap-2'
+              >
                 {item.icon && <item.icon />}
                 <span>{item.title}</span>
                 {hasPending && (

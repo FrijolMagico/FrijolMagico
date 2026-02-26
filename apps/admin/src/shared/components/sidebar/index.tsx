@@ -12,7 +12,7 @@ import { PanelSidebarUserInfo } from './panel-sidebar-user-info'
 
 export function PanelSidebar() {
   return (
-    <Sidebar collapsible='icon'>
+    <Sidebar collapsible='icon' className='max-w-64'>
       <SidebarHeader className='h-16'>
         <Link href='/dashboard' className='flex h-full items-center gap-2'>
           <Image
