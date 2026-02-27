@@ -1,31 +1,29 @@
-# Shared Hooks
+# Hooks compartidos
 
-Hooks de React compartidos entre módulos del panel de administración. Todos son hooks de efecto puro — no renderizan nada, solo sincronizan estado.
+Colección de hooks de utilidad global y sincronización de estado para el panel administrativo.
 
-## Hooks
+## Hooks de sincronización
 
-| Hook                | Propósito                                                                                                                                                    |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `useJournalRestore` | Hidrata el operation store desde IndexedDB al montar. Detecta entradas persistidas y carga las operaciones en memoria.                                       |
-| `useDirtySync`      | **Productor del dirty read model.** Suscribe un projection store a `useSectionDirtyStore` — cuando `byId` tiene net changes, emite `setDirty(entity, true)`. |
-| `useProjectionSync` | Suscribe el operation store al projection store — cuando `persistedOperations` o `pendingOperations` cambia, llama `project()`.                              |
-| `useRouteChanges`   | Agrega dirty state de múltiples entidades a nivel de ruta. Lee `useSectionDirtyStore` y expone `isDirty`, `discardAll`.                                      |
-| `useFractionalDnd`  | Utilitario para drag-and-drop con índices fraccionales.                                                                                                      |
+| Hook | Propósito |
+| :--- | :--- |
+| `useJournalRestore` | Recupera operaciones de IndexedDB al montar y las hidrata en el store. |
+| `useDirtySync` | **Productor** del dirty read model; escribe cambios en `useSectionDirtyStore`. |
+| `useProjectionSync` | Vincula el `operationStore` con el `projectionStore` para reactividad local. |
+| `useRouteChanges` | Monitorea estado dirty por ruta para prevenir pérdidas de datos. |
+| `useFractionalDnD` | Lógica de reordenamiento usando indexación fraccional para `dnd-kit`. |
 
-## `useJournalRestore` — detalles
+## Detalles de implementación
 
-Usa **suscripción Zustand vanilla** sobre `persistedOperations` del `operationStore` para detectar cambios:
+### `useJournalRestore`
 
-```typescript
-operationStore.subscribe((state, prevState) => {
-  if (state.persistedOperations !== prevState.persistedOperations) {
-    checkAndHydrate()
-  }
-})
-```
+Este hook gestiona la persistencia offline del diario de cambios (journal).
 
-Reemplaza el patrón anterior de `window.addEventListener('journal-changed', ...)`.
+- **Suscripción**: Utiliza una suscripción Zustand vanilla sobre `persistedOperations` del `operationStore` para detectar cambios externos.
+- **`isDiscarding`**: Flag interno que previene re-hidrataciones accidentales durante la ejecución de `discardAll` (cuando IndexedDB aún no se ha vaciado completamente).
 
-**Guard `isDiscarding`**: previene que la suscripción llame `checkAndHydrate()` mientras `discardAll()` está activo — `clearPersistedOperations()` dispara la suscripción síncronamente, pero IndexedDB aún no está limpio en ese punto.
+### `useDirtySync`
 
-No usar en entidades de solo lectura (e.g. `ARTISTA_HISTORIAL`).
+Es el responsable de mantener la integridad del "Dirty Read Model".
+
+- Evalúa recursivamente el estado de `isNew`, `isUpdated` y `isDeleted` de cada entidad en un `projectionStore`.
+- Sincroniza el resultado con el store global de secciones sucias para habilitar advertencias de navegación y botones de guardado.
