@@ -123,4 +123,5 @@ src/
 ## General Rules
 
 - Use `cn()` utility for conditional class names
-- If you want to test the site from a worktree, need to copy the .env.local file.   
+- If you are working in a worktree, do an `bun install` in the root
+- To test the site from a worktree, need to copy the .env.local file
