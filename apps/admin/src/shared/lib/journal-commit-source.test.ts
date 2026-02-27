@@ -84,10 +84,10 @@ describe('journalCommitSource.read', () => {
   })
 
   it('DELETE after UPDATE → only DELETE for that entity', async () => {
-    // Two entries: first a field update, then a delete for the same entity
+    // Two entries: newer delete, older field update (newest-first ordering)
     mockGet.mockResolvedValueOnce([
-      e('artista:99:nombre', { op: 'set', value: 'name' }),
-      e('artista:99', { op: 'unset' })
+      e('artista:99', { op: 'unset' }),
+      e('artista:99:nombre', { op: 'set', value: 'name' })
     ])
     // The journal should output a DELETE (unset wins)
     const ops = await journalCommitSource.read('artista')

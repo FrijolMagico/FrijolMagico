@@ -28,7 +28,6 @@ import {
   logServerError
 } from '@/shared/commit-system/lib/error-handler'
 
-
 /**
  * Synthesize a JournalEntry from CommitOperation for mapper compatibility
  */
@@ -116,6 +115,11 @@ export async function saveEventoAction(
           const input = mapToEventoInput(entry)
 
           if (input.id && !isTempId(op.entityId)) {
+            const { id, ...updateData } = input
+            await tx
+              .update(events.evento)
+              .set(stripUndefined(updateData))
+              .where(eq(events.evento.id, input.id))
             await tx
               .update(events.evento)
               .set(stripUndefined(input))
@@ -157,6 +161,11 @@ export async function saveEventoAction(
           }
 
           if (input.id && !isTempId(op.entityId)) {
+            const { id, ...updateData } = input
+            await tx
+              .update(events.eventoEdicion)
+              .set(stripUndefined(updateData))
+              .where(eq(events.eventoEdicion.id, input.id))
             await tx
               .update(events.eventoEdicion)
               .set(stripUndefined(input))
@@ -198,6 +207,11 @@ export async function saveEventoAction(
           }
 
           if (input.id && !isTempId(op.entityId)) {
+            const { id, ...updateData } = input
+            await tx
+              .update(events.eventoEdicionDia)
+              .set(stripUndefined(updateData))
+              .where(eq(events.eventoEdicionDia.id, input.id))
             await tx
               .update(events.eventoEdicionDia)
               .set(stripUndefined(input))
@@ -217,9 +231,9 @@ export async function saveEventoAction(
       }
     })
 
-    revalidateTag('server-action', 'evento')
-    revalidateTag('server-action', 'evento-edicion')
-    revalidateTag('server-action', 'evento-edicion-dia')
+    // TODO(cache): Añadir revalidateTag con constantes cuando se implementen
+    // fetchers cacheados para la sección de eventos. Por ahora no usan cacheTag.
+    // revalidateTag(<TAG_CONSTANT>, 'max')
 
     return {
       success: true,
@@ -239,5 +253,4 @@ export async function saveEventoAction(
       ]
     }
   }
-
 }

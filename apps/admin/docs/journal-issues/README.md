@@ -1,4 +1,4 @@
-| T7 | Robustecer el commit-system | ✅ Completado |
+
 # Journal Issues & Roadmap
 
 | Issue | Descripción | Estado |
@@ -11,3 +11,4 @@
 | T4 | Refactorizar route changes + dirty tracking | ✅ Completado |
 | T5 | Simplificación de arquitectura para historial de artistas | ✅ Completado |
 | T6 | Activar el guardado real al servidor | ✅ Completado |
+| T7 | Robustecer el commit-system | ✅ Completado |
