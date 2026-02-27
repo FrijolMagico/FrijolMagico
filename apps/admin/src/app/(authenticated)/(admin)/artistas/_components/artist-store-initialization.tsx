@@ -1,6 +1,7 @@
 'use client'
 
 import { useProjectionSync } from '@/shared/hooks/use-projection-sync'
+import { useDirtySync } from '@/shared/hooks/use-dirty-sync'
 import { useJournalRestore } from '@/shared/hooks/use-journal-restore'
 import {
   JOURNAL_ENTITIES
@@ -23,6 +24,8 @@ export function ArtistStoreInitialization({
     operationStore: useArtistsOperationStore,
     projectionStore: useArtistsProjectionStore
   })
+
+  useDirtySync(useArtistsProjectionStore, JOURNAL_ENTITIES.ARTISTA)
 
   useJournalRestore<ArtistEntry>({
     entity: JOURNAL_ENTITIES.ARTISTA,

@@ -19,7 +19,7 @@ Separar el estado del servidor del estado de la UI: las operaciones del usuario 
 
 Cada entidad proyectada incluye flags de estado:
 
-- `isNew`: creada locallocally, no existe en el servidor
+- `isNew`: creada localmente, no existe en el servidor
 - `isUpdated`: modificada respecto al snapshot remoto (con reconciliación net-zero)
 - `isDeleted`: marcada para eliminar
 
