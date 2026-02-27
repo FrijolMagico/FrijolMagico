@@ -25,6 +25,7 @@ El sistema se divide en dos stores de Zustand y un conjunto de hooks orquestador
 
 - `useProjectionSync`: conecta operationStore ↔ projectionStore — re-calcula la proyección cuando cambian operaciones o datos remotos.
 - `useDirtySync`: conecta projectionStore → `useSectionDirtyStore` (dirty read model global) — notifica si hay cambios netos pendientes.
+- **Flujo de descarte**: `RouteSaveToolbar onDiscard → useRouteChanges.discardAll() → DiscardRegistry → useJournalRestore.discardAll() por entidad → clearSection (IndexedDB) + resetStore (Zustand)`
 
 ## Archivos Clave
 
