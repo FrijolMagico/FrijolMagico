@@ -1,3 +1,4 @@
+| T7 | Robustecer el commit-system | ✅ Completado |
 # Journal Issues & Roadmap
 
 | Issue | Descripción | Estado |
