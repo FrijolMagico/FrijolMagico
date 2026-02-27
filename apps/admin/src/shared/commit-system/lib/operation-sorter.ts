@@ -30,19 +30,26 @@ export function sortCommitOperations(
   const creates: CommitOperation[] = []
 
   for (const [, ops] of grouped) {
-    const hasDelete = ops.some((op) => op.type === 'DELETE')
+    const deleteIdx = ops.findIndex((op) => op.type === 'DELETE')
+    const restoreIdx = ops.findIndex((op) => op.type === 'RESTORE')
+
+    const hasDelete = deleteIdx !== -1
+    const hasRestore = restoreIdx !== -1
+
+    // If both exist, the one with the LOWER index is newer (ops are newest-first)
+    const restoreIsNewer = hasRestore && hasDelete && restoreIdx < deleteIdx
+    const deleteIsEffective = hasDelete && !restoreIsNewer
 
     const entityId = ops[0].entityId
 
     // Edge case A+B: DELETE on tempId — discard entirely (entity never persisted)
-    if (hasDelete && isTempId(entityId)) {
+    if (deleteIsEffective && isTempId(entityId)) {
       continue // Skip — CREATE+DELETE cancellation or DELETE-on-tempId
     }
 
     // Edge case C+D: UPDATE + DELETE on real entity — DELETE wins, discard UPDATEs
-    if (hasDelete) {
-      const deleteOp = ops.find((op) => op.type === 'DELETE')!
-      deletes.push(deleteOp)
+    if (deleteIsEffective) {
+      deletes.push(ops[deleteIdx])
       continue
     }
 
@@ -50,7 +57,8 @@ export function sortCommitOperations(
     for (const op of ops) {
       switch (op.type) {
         case 'RESTORE':
-          restores.push(op)
+          // If there was a DELETE, RESTORE and DELETE cancel out — don't emit RESTORE
+          if (!hasDelete) restores.push(op)
           break
         case 'UPDATE':
           updates.push(op)

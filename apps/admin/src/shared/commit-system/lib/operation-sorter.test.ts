@@ -101,6 +101,47 @@ describe('sortCommitOperations', () => {
       { type: 'RESTORE', entityType: 'artista', entityId: '42' }
     ])
   })
+
+  it('newer RESTORE cancels older DELETE and allows UPDATEs', () => {
+    // ops are newest-first: RESTORE (index 0) is newer than DELETE (index 2)
+    const ops: CommitOperation[] = [
+      { type: 'RESTORE', entityType: 'artista', entityId: '42' },
+      {
+        type: 'UPDATE',
+        entityType: 'artista',
+        entityId: '42',
+        data: { nombre: 'Updated' }
+      },
+      { type: 'DELETE', entityType: 'artista', entityId: '42' }
+    ]
+    const result = sortCommitOperations(ops)
+    // DELETE and RESTORE cancel out, only UPDATE remains
+    expect(result).toHaveLength(1)
+    expect(result[0]).toEqual({
+      type: 'UPDATE',
+      entityType: 'artista',
+      entityId: '42',
+      data: { nombre: 'Updated' }
+    })
+  })
+
+  it('newer DELETE overrides older RESTORE', () => {
+    // ops are newest-first: DELETE (index 0) is newer than RESTORE (index 2)
+    const ops: CommitOperation[] = [
+      { type: 'DELETE', entityType: 'artista', entityId: '42' },
+      {
+        type: 'UPDATE',
+        entityType: 'artista',
+        entityId: '42',
+        data: { nombre: 'Updated' }
+      },
+      { type: 'RESTORE', entityType: 'artista', entityId: '42' }
+    ]
+    const result = sortCommitOperations(ops)
+    // DELETE is newer, so it wins — only DELETE emitted
+    expect(result).toHaveLength(1)
+    expect(result[0].type).toBe('DELETE')
+  })
 })
 
 describe('validateCommitOperations', () => {
