@@ -42,6 +42,7 @@ export async function getTeamData(): Promise<TeamMember[] | null> {
 
   return team.map((member) => ({
     id: String(member.id),
+    organizationId: member.organizationId,
     name: member.name,
     rut: member.rut ?? undefined,
     email: member.email ?? undefined,
