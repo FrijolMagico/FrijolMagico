@@ -17,6 +17,7 @@ import {
   mapToArtistaImagenInput
 } from '../_mappers/artista.mapper'
 import type { JournalEntry } from '@/shared/change-journal/lib/types'
+import { stripUndefined } from '@/shared/lib/utils'
 
 const { artista, artistaImagen } = artist
 
@@ -93,9 +94,7 @@ export async function saveArtistaAction(
           continue
         } else if (op.type === COMMIT_OPERATION_TYPE.DELETE) {
           if (!isTempId(op.entityId)) {
-            await tx
-              .delete(artista)
-              .where(eq(artista.id, Number(op.entityId)))
+            await tx.delete(artista).where(eq(artista.id, Number(op.entityId)))
           }
         } else {
           const entry = toJournalEntry(op)
@@ -114,7 +113,7 @@ export async function saveArtistaAction(
           } else {
             await tx
               .update(artista)
-              .set(input)
+              .set(stripUndefined(input))
               .where(eq(artista.id, Number(op.entityId)))
           }
         }
@@ -156,16 +155,16 @@ export async function saveArtistaAction(
               })
               .returning()
 
-            mappings.push(
-              createIdMapping(op.entityId, result.id, 'artista')
-            )
+            mappings.push(createIdMapping(op.entityId, result.id, 'artista'))
           } else {
             await tx
               .update(artistaImagen)
-              .set({
-                ...input,
-                artistaId: resolvedArtistaId
-              })
+              .set(
+                stripUndefined({
+                  ...input,
+                  artistaId: resolvedArtistaId
+                })
+              )
               .where(eq(artistaImagen.id, Number(op.entityId)))
           }
         }
@@ -196,3 +195,4 @@ export async function saveArtistaAction(
     }
   }
 }
+

@@ -9,6 +9,7 @@ export type Organization = Omit<RawOrganization, 'id'> & {
 
 export type TeamMember = {
   id: string
+  organizationId: number
   name: string
   rut?: string
   email?: string

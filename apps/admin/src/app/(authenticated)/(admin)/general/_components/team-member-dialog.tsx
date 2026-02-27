@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { ORGANIZATION_ID } from '../_constants'
 import { useTeamDialog } from '../_store/team-dialog-store'
 import {
   useTeamOperationStore,
@@ -16,7 +17,7 @@ import { ProjectedEntity } from '@/shared/ui-state/ui-projection-engine'
 import { TeamMember } from '../_types'
 
 interface AddEquipoFormContentProps {
-  onApply: (data: Omit<TeamMember, 'id'>) => void
+  onApply: (data: Omit<TeamMember, 'id' | 'organizationId'>) => void
   onCancel: () => void
   member: ProjectedEntity<TeamMember> | null
 }
@@ -165,8 +166,14 @@ export function MemberDialog() {
     phone?: string
     rrss: Record<string, string[]> | null
   }) => {
-    if (memberId) update(memberId, data)
-    if (!memberId) add(data)
+    if (memberId) {
+      update(memberId, {
+        ...data,
+        organizationId: member?.organizationId ?? ORGANIZATION_ID
+      })
+    }
+
+    if (!memberId) add({ ...data, organizationId: ORGANIZATION_ID })
 
     await commitPendingOperations()
     close()

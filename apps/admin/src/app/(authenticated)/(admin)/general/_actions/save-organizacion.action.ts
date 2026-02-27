@@ -22,6 +22,7 @@ import type {
   IdMapping
 } from '@/shared/commit-system/lib/types'
 import type { JournalEntry } from '@/shared/change-journal/lib/types'
+import { stripUndefined } from '@/shared/lib/utils'
 
 function toJournalEntry(op: CommitOperation): JournalEntry {
   const base = {
@@ -92,14 +93,16 @@ export async function saveOrganizacionAction(
               const input = mapToOrganizacionInput(entry)
 
               if (!isTempId(op.entityId)) {
+                const setData = stripUndefined({
+                  nombre: input.nombre,
+                  descripcion: input.descripcion,
+                  mision: input.mision,
+                  vision: input.vision
+                })
+
                 await tx
                   .update(organization)
-                  .set({
-                    nombre: input.nombre,
-                    descripcion: input.descripcion,
-                    mision: input.mision,
-                    vision: input.vision
-                  })
+                  .set(setData)
                   .where(eq(organization.id, Number(op.entityId)))
               } else {
                 const [inserted] = await tx

@@ -20,7 +20,6 @@ export function useOrganizacionCommit() {
     executor: saveOrganizacionAction,
     section: 'organizacion',
     onSuccess: () => {
-      // TODO: Verify sequential commit ordering and ID mapping for multi-entity routes
       orgStore.resetStore()
       router.refresh()
       toast.success('Guardado correctamente')
@@ -31,12 +30,9 @@ export function useOrganizacionCommit() {
   const { isDirty } = useCommitDirty(journalCommitSource, 'organizacion')
 
   const save = () => {
-    // TODO(journal-ux): Remote save pending UX approval
-    // Current: Saves to IndexedDB only. Uncomment below when ready:
-    // commit().catch(() => { toast.error('Error inesperado al guardar') })
-    
-    // For now: show that button works
-    toast.info('Cambios guardados localmente')
+    commit().catch(() => {
+      toast.error('Error inesperado al guardar')
+    })
   }
 
   return { save, commit, isPending, isDirty, result, progress }
@@ -51,7 +47,6 @@ export function useOrganizacionEquipoCommit() {
     executor: saveOrganizacionEquipoAction,
     section: 'organizacion_equipo',
     onSuccess: () => {
-      // TODO: Verify sequential commit ordering and ID mapping for multi-entity routes
       teamStore.resetStore()
       router.refresh()
       toast.success('Guardado correctamente')
@@ -65,12 +60,9 @@ export function useOrganizacionEquipoCommit() {
   )
 
   const save = () => {
-    // TODO(journal-ux): Remote save pending UX approval
-    // Current: Saves to IndexedDB only. Uncomment below when ready:
-    // commit().catch(() => { toast.error('Error inesperado al guardar') })
-    
-    // For now: show that button works
-    toast.info('Cambios guardados localmente')
+    commit().catch(() => {
+      toast.error('Error inesperado al guardar')
+    })
   }
 
   return { save, commit, isPending, isDirty, result, progress }

@@ -23,6 +23,7 @@ import {
 import { createIdMapping, isTempId } from '@/shared/commit-system/lib/id-mapper'
 import { mapToCatalogoArtistaInput } from '../_mappers/catalogo.mapper'
 import { JOURNAL_ENTITIES } from '@/shared/lib/database-entities'
+import { stripUndefined } from '@/shared/lib/utils'
 
 function toJournalEntry(op: CommitOperation): JournalEntry {
   const base = {
@@ -89,7 +90,7 @@ export async function saveCatalogoAction(
           if (input.id && !isTempId(op.entityId)) {
             await tx
               .update(artist.catalogoArtista)
-              .set(input)
+              .set(stripUndefined(input))
               .where(eq(artist.catalogoArtista.id, input.id))
           } else {
             const [inserted] = await tx

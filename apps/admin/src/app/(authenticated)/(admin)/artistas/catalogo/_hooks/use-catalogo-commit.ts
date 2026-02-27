@@ -28,12 +28,9 @@ export function useCatalogoCommit() {
   const { isDirty } = useCommitDirty(journalCommitSource, 'catalogo_artista')
 
   const save = () => {
-    // TODO(journal-ux): Remote save pending UX approval
-    // Current: Saves to IndexedDB only. Uncomment below when ready:
-    // commit().catch(() => { toast.error('Error inesperado al guardar') })
-    
-    // For now: show that button works
-    toast.info('Cambios guardados localmente')
+    commit().catch(() => {
+      toast.error('Error inesperado al guardar')
+    })
   }
 
   return { save, commit, isPending, isDirty, result, progress }

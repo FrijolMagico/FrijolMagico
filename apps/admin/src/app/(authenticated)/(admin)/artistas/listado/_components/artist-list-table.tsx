@@ -11,18 +11,15 @@ import { EmptyState } from '@/shared/components/empty-state'
 import { useArtistList } from '../_hooks/use-artist-list'
 import { useArtistListFilterStore } from '../_store/artist-list-filter-store'
 import { ArtistListRow } from './artist-list-row'
-import type { HistoryEntry } from '../_types'
 
 interface ArtistListTableProps {
   onClearFilters: () => void
   artistIdsWithHistory: Set<string>
-  historyByArtistId: Map<string, HistoryEntry[]>
 }
 
 export function ArtistListTable({
   onClearFilters,
-  artistIdsWithHistory,
-  historyByArtistId
+  artistIdsWithHistory
 }: ArtistListTableProps) {
   const { paginatedIds } = useArtistList()
   const setFilters = useArtistListFilterStore((s) => s.setFilters)

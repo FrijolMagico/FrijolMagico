@@ -142,7 +142,7 @@ export function ArtistListContainer({ historyData }: { historyData: HistoryEntry
       <ArtistListPagination onPageChange={handlePageChange} />
 
       <Card className='py-0'>
-        <ArtistListTable onClearFilters={handleClearFilters} artistIdsWithHistory={artistIdsWithHistory} historyByArtistId={historyByArtistId} />
+        <ArtistListTable onClearFilters={handleClearFilters} artistIdsWithHistory={artistIdsWithHistory} />
       </Card>
 
       <ArtistListPagination onPageChange={handlePageChange} />
