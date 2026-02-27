@@ -24,6 +24,13 @@ import { createIdMapping, isTempId } from '@/shared/commit-system/lib/id-mapper'
 import { mapToCatalogoArtistaInput } from '../_mappers/catalogo.mapper'
 import { JOURNAL_ENTITIES } from '@/shared/lib/database-entities'
 
+/** Strip undefined values to prevent Drizzle writing NULL on partial updates */
+function stripUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => v !== undefined)
+  ) as Partial<T>
+}
+
 function toJournalEntry(op: CommitOperation): JournalEntry {
   const base = {
     entryId: crypto.randomUUID(),
@@ -89,7 +96,7 @@ export async function saveCatalogoAction(
           if (input.id && !isTempId(op.entityId)) {
             await tx
               .update(artist.catalogoArtista)
-              .set(input)
+              .set(stripUndefined(input))
               .where(eq(artist.catalogoArtista.id, input.id))
           } else {
             const [inserted] = await tx

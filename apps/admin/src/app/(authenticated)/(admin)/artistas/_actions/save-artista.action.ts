@@ -20,6 +20,13 @@ import type { JournalEntry } from '@/shared/change-journal/lib/types'
 
 const { artista, artistaImagen } = artist
 
+/** Strip undefined values to prevent Drizzle writing NULL on partial updates */
+function stripUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => v !== undefined)
+  ) as Partial<T>
+}
+
 /**
  * Synthesize a JournalEntry from CommitOperation for mapper compatibility
  */
@@ -114,7 +121,7 @@ export async function saveArtistaAction(
           } else {
             await tx
               .update(artista)
-              .set(input)
+              .set(stripUndefined(input))
               .where(eq(artista.id, Number(op.entityId)))
           }
         }
@@ -162,10 +169,10 @@ export async function saveArtistaAction(
           } else {
             await tx
               .update(artistaImagen)
-              .set({
+              .set(stripUndefined({
                 ...input,
                 artistaId: resolvedArtistaId
-              })
+              }))
               .where(eq(artistaImagen.id, Number(op.entityId)))
           }
         }
