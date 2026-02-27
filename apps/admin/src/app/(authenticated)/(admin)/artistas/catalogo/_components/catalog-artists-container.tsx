@@ -91,7 +91,7 @@ export function CatalogArtistsContainer() {
         <CatalogFiltersComponent onFiltersChange={handleFiltersChange} />
       </div>
 
-      <CatalogTableContainer handleFilersChange={handleFiltersChange} />
+      <CatalogTableContainer handleFiltersChange={handleFiltersChange} />
 
       {/* Dialog Nivel 1: Catálogo */}
       <EditCatalogDialog />
