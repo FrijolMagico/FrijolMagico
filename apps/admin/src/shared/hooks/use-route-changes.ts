@@ -23,6 +23,12 @@ export function useRouteChanges(routePath: string) {
   const discardAll = useCallback(async () => {
     const currentEntities = ROUTE_ENTITY_MAP[routePath] ?? []
     await Promise.all(currentEntities.map((e) => journalCommitSource.clear(e)))
+    // NOTE: This dispatch is intentionally kept. useRouteChanges operates at route level
+    // and has no direct access to per-entity operation stores. The event notifies all
+    // useJournalRestore instances to re-check IndexedDB and clear their stale state.
+    // Removing this dispatch requires solving the route-level→store communication
+    // problem, which is part of T4's scope (dualidad useJournalRestore/useRouteChanges).
+    // See: docs/journal-issues/p3-dualidad-journal-restore-route-changes.md
     window.dispatchEvent(new CustomEvent('journal-changed'))
   }, [routePath])
 
