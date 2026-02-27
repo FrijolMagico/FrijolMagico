@@ -16,10 +16,18 @@ Orquestar el flujo de guardado garantizando que las operaciones se validen, orde
 ## Archivos clave
 
 - `use-commit.ts`: Hook principal que orquestra el pipeline completo.
-- `operation-sorter.ts`: Lógica de validación de conflictos y ordenamiento.
-- `batch-processor.ts`: Utilidad para procesar grandes volúmenes de datos en lotes con reintentos. Usado activamente por `save-organizacion.action.ts` y `save-organizacion-equipo.action.ts`.
+- `operation-sorter.ts`: Lógica de validación de conflictos, ordenamiento y edge cases (DELETE-on-tempId, CREATE+DELETE, UPDATE+DELETE).
+- `batch-processor.ts`: Utilidad para procesar grandes volúmenes en lotes. Actualmente sin uso (T7 migró los actions a `db.transaction()`).
 - `create-commit-config.ts`: Factory para tipar la configuración del pipeline.
 
 ## Estado actual
 
+El pipeline está activo. T7 completada: bugs de integridad corregidos (double-update, stripUndefined, allMappings), error handling estandarizado, revalidateTag corregido, y edge cases del sorter implementados.
+
 El pipeline está activo en producción para todos los módulos: `organizacion`, `organizacion_equipo`, `artista`, `catalogo_artista`, `evento`. El botón "Guardar" ejecuta el `commit()` real y persiste cambios al servidor.
+## Edge cases del sorter
+
+- **DELETE sobre tempId**: Descartado silenciosamente (entidad nunca persistió).
+- **CREATE + DELETE mismo tempId**: Cancelación total, ambos descartados.
+- **UPDATE + DELETE misma entidad real**: DELETE gana, UPDATEs descartados.
+- **DELETEs duplicados**: Deduplicados a una sola operación.

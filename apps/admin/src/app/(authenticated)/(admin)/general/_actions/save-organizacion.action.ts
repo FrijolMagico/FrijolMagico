@@ -7,9 +7,9 @@ const { organization } = core
 import { eq } from 'drizzle-orm'
 import { requireAuth } from '@/lib/auth/utils'
 import { revalidateTag } from 'next/cache'
+import { ORGANIZATION_CACHE_TAG } from '../_constants'
 import { COMMIT_OPERATION_TYPE } from '@/shared/commit-system/lib/types'
 import { validateCommitOperations } from '@/shared/commit-system/lib/operation-sorter'
-import { processBatches } from '@/shared/commit-system/lib/batch-processor'
 import {
   handleServerActionError,
   logServerError
@@ -71,85 +71,60 @@ export async function saveOrganizacionAction(
       }
     }
 
-    const allMappings: IdMapping[] = []
+    const mappings: IdMapping[] = []
 
-    const batchResult = await processBatches(
-      operations,
-      async (batch) => {
-        return await db.transaction(async (tx) => {
-          const batchMappings: IdMapping[] = []
+    await db.transaction(async (tx) => {
+      for (const op of operations) {
+        if (op.type === COMMIT_OPERATION_TYPE.DELETE) {
+          if (!isTempId(op.entityId)) {
+            await tx
+              .delete(organization)
+              .where(eq(organization.id, Number(op.entityId)))
+          }
+        } else if (op.type === COMMIT_OPERATION_TYPE.RESTORE) {
+          continue
+        } else {
+          const entry = toJournalEntry(op)
+          const input = mapToOrganizacionInput(entry)
 
-          for (const op of batch) {
-            if (op.type === COMMIT_OPERATION_TYPE.DELETE) {
-              if (!isTempId(op.entityId)) {
-                await tx
-                  .delete(organization)
-                  .where(eq(organization.id, Number(op.entityId)))
-              }
-            } else if (op.type === COMMIT_OPERATION_TYPE.RESTORE) {
-              continue
-            } else {
-              const entry = toJournalEntry(op)
-              const input = mapToOrganizacionInput(entry)
+          if (!isTempId(op.entityId)) {
+            const setData = stripUndefined({
+              nombre: input.nombre,
+              descripcion: input.descripcion,
+              mision: input.mision,
+              vision: input.vision
+            })
 
-              if (!isTempId(op.entityId)) {
-                const setData = stripUndefined({
-                  nombre: input.nombre,
-                  descripcion: input.descripcion,
-                  mision: input.mision,
-                  vision: input.vision
-                })
+            await tx
+              .update(organization)
+              .set(setData)
+              .where(eq(organization.id, Number(op.entityId)))
+          } else {
+            const [inserted] = await tx
+              .insert(organization)
+              .values({
+                nombre: input.nombre,
+                descripcion: input.descripcion,
+                mision: input.mision,
+                vision: input.vision
+              })
+              .returning({ id: organization.id })
 
-                await tx
-                  .update(organization)
-                  .set(setData)
-                  .where(eq(organization.id, Number(op.entityId)))
-              } else {
-                const [inserted] = await tx
-                  .insert(organization)
-                  .values({
-                    nombre: input.nombre,
-                    descripcion: input.descripcion,
-                    mision: input.mision,
-                    vision: input.vision
-                  })
-                  .returning({ id: organization.id })
-
-                if (inserted) {
-                  batchMappings.push(
-                    createIdMapping(op.entityId, inserted.id, 'organizacion')
-                  )
-                }
-              }
+            if (inserted) {
+              mappings.push(
+                createIdMapping(op.entityId, inserted.id, 'organizacion')
+              )
             }
           }
-
-          return batchMappings
-        })
-      },
-      { maxBatchSize: 50, maxRetries: 3, timeoutMs: 30000 }
-    )
-
-    if (!batchResult.success) {
-      const firstError = batchResult.errors[0]
-      const handled = handleServerActionError(firstError)
-      return {
-        success: false,
-        errors: [
-          {
-            entityType: 'organizacion',
-            entityId: 'unknown',
-            message: handled.userMessage
-          }
-        ]
+        }
       }
-    }
+    })
 
-    revalidateTag('server-action', 'organizacion')
+    revalidateTag(ORGANIZATION_CACHE_TAG, 'max')
 
     return {
       success: true,
-      idMappings: allMappings
+      idMappings: mappings
     }
   } catch (error) {
     logServerError(error, 'saveOrganizacionAction')

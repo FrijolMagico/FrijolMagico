@@ -74,4 +74,39 @@ describe('journalCommitSource.read', () => {
       'Newer'
     )
   })
+
+  it('RESTORE → RESTORE operation', async () => {
+    mockGet.mockResolvedValueOnce([e('artista:42', { op: 'restore' })])
+    const ops = await journalCommitSource.read('artista')
+    expect(ops).toEqual([
+      { type: OP.RESTORE, entityType: 'artista', entityId: '42' }
+    ])
+  })
+
+  it('DELETE after UPDATE → only DELETE for that entity', async () => {
+    // Two entries: newer delete, older field update (newest-first ordering)
+    mockGet.mockResolvedValueOnce([
+      e('artista:99', { op: 'unset' }),
+      e('artista:99:nombre', { op: 'set', value: 'name' })
+    ])
+    // The journal should output a DELETE (unset wins)
+    const ops = await journalCommitSource.read('artista')
+    const deleteOps = ops.filter((op) => op.type === OP.DELETE)
+    expect(deleteOps).toHaveLength(1)
+    expect(deleteOps[0]).toMatchObject({
+      type: OP.DELETE,
+      entityType: 'artista',
+      entityId: '99'
+    })
+  })
+
+  it('multiple entities → separate ops per entity', async () => {
+    mockGet.mockResolvedValueOnce([
+      e('artista:1:nombre', { op: 'set', value: 'Artista 1' }),
+      e('artista:2:nombre', { op: 'set', value: 'Artista 2' })
+    ])
+    const ops = await journalCommitSource.read('artista')
+    expect(ops).toHaveLength(2)
+    expect(ops.every((op) => op.type === OP.UPDATE)).toBe(true)
+  })
 })

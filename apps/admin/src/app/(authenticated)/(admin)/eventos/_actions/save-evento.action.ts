@@ -22,6 +22,11 @@ import {
   mapToEventoEdicionInput,
   mapToEventoEdicionDiaInput
 } from '../_mappers/evento.mapper'
+import { stripUndefined } from '@/shared/lib/utils'
+import {
+  handleServerActionError,
+  logServerError
+} from '@/shared/commit-system/lib/error-handler'
 
 /**
  * Synthesize a JournalEntry from CommitOperation for mapper compatibility
@@ -110,9 +115,14 @@ export async function saveEventoAction(
           const input = mapToEventoInput(entry)
 
           if (input.id && !isTempId(op.entityId)) {
+            const { id, ...updateData } = input
             await tx
               .update(events.evento)
-              .set(input)
+              .set(stripUndefined(updateData))
+              .where(eq(events.evento.id, input.id))
+            await tx
+              .update(events.evento)
+              .set(stripUndefined(input))
               .where(eq(events.evento.id, input.id))
           } else {
             const [inserted] = await tx
@@ -151,9 +161,14 @@ export async function saveEventoAction(
           }
 
           if (input.id && !isTempId(op.entityId)) {
+            const { id, ...updateData } = input
             await tx
               .update(events.eventoEdicion)
-              .set(input)
+              .set(stripUndefined(updateData))
+              .where(eq(events.eventoEdicion.id, input.id))
+            await tx
+              .update(events.eventoEdicion)
+              .set(stripUndefined(input))
               .where(eq(events.eventoEdicion.id, input.id))
           } else {
             const [inserted] = await tx
@@ -192,9 +207,14 @@ export async function saveEventoAction(
           }
 
           if (input.id && !isTempId(op.entityId)) {
+            const { id, ...updateData } = input
             await tx
               .update(events.eventoEdicionDia)
-              .set(input)
+              .set(stripUndefined(updateData))
+              .where(eq(events.eventoEdicionDia.id, input.id))
+            await tx
+              .update(events.eventoEdicionDia)
+              .set(stripUndefined(input))
               .where(eq(events.eventoEdicionDia.id, input.id))
           } else {
             const [inserted] = await tx
@@ -211,27 +231,24 @@ export async function saveEventoAction(
       }
     })
 
-    revalidateTag('server-action', 'evento')
-    revalidateTag('server-action', 'evento-edicion')
-    revalidateTag('server-action', 'evento-edicion-dia')
+    // TODO(cache): Añadir revalidateTag con constantes cuando se implementen
+    // fetchers cacheados para la sección de eventos. Por ahora no usan cacheTag.
+    // revalidateTag(<TAG_CONSTANT>, 'max')
 
     return {
       success: true,
       idMappings: mappings
     }
   } catch (error) {
-    console.error('[save-evento] Error:', error)
-
+    logServerError(error, 'saveEventoAction')
+    const handled = handleServerActionError(error)
     return {
       success: false,
       errors: [
         {
           entityType: 'evento',
           entityId: 'unknown',
-          message:
-            error instanceof Error
-              ? error.message
-              : 'Error desconocido al guardar evento'
+          message: handled.userMessage
         }
       ]
     }

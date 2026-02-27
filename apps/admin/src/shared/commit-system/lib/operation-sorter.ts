@@ -1,4 +1,5 @@
 import type { CommitOperation } from './types'
+import { isTempId } from './id-mapper'
 
 export interface SortedCommitOperations {
   deletes: CommitOperation[]
@@ -15,78 +16,74 @@ export interface CommitValidationResult {
 export function sortCommitOperations(
   operations: CommitOperation[]
 ): CommitOperation[] {
+  const grouped = new Map<string, CommitOperation[]>()
+  for (const op of operations) {
+    const key = `${op.entityType}:${op.entityId}`
+    const group = grouped.get(key)
+    if (group) group.push(op)
+    else grouped.set(key, [op])
+  }
+
   const deletes: CommitOperation[] = []
   const restores: CommitOperation[] = []
   const updates: CommitOperation[] = []
   const creates: CommitOperation[] = []
 
-  for (const op of operations) {
-    switch (op.type) {
-      case 'DELETE':
-        deletes.push(op)
-        break
-      case 'RESTORE':
-        restores.push(op)
-        break
-      case 'UPDATE':
-        updates.push(op)
-        break
-      case 'CREATE':
-        creates.push(op)
-        break
+  for (const [, ops] of grouped) {
+    const deleteIdx = ops.findIndex((op) => op.type === 'DELETE')
+    const restoreIdx = ops.findIndex((op) => op.type === 'RESTORE')
+
+    const hasDelete = deleteIdx !== -1
+    const hasRestore = restoreIdx !== -1
+
+    // If both exist, the one with the LOWER index is newer (ops are newest-first)
+    const restoreIsNewer = hasRestore && hasDelete && restoreIdx < deleteIdx
+    const deleteIsEffective = hasDelete && !restoreIsNewer
+
+    const entityId = ops[0].entityId
+
+    // Edge case A+B: DELETE on tempId — discard entirely (entity never persisted)
+    if (deleteIsEffective && isTempId(entityId)) {
+      continue // Skip — CREATE+DELETE cancellation or DELETE-on-tempId
+    }
+
+    // Edge case C+D: UPDATE + DELETE on real entity — DELETE wins, discard UPDATEs
+    if (deleteIsEffective) {
+      deletes.push(ops[deleteIdx])
+      continue
+    }
+
+    // Normal processing for non-deleted entities
+    for (const op of ops) {
+      switch (op.type) {
+        case 'RESTORE':
+          // If there was a DELETE, RESTORE and DELETE cancel out — don't emit RESTORE
+          if (!hasDelete) restores.push(op)
+          break
+        case 'UPDATE':
+          updates.push(op)
+          break
+        case 'CREATE':
+          creates.push(op)
+          break
+      }
     }
   }
 
   return [...deletes, ...restores, ...updates, ...creates]
 }
 
+/**
+ * NOTE: This function is intentionally kept as a validation hook for future use.
+ * Conflict resolution (DELETE+UPDATE, CREATE+DELETE, etc.) is handled silently
+ * by sortCommitOperations. This function is the right place to add hard validation
+ * rules in the future — e.g. unknown entityType, missing required fields on CREATE,
+ * permission checks — that should block the commit entirely instead of being resolved.
+ */
 export function validateCommitOperations(
-  operations: CommitOperation[]
+  _operations: CommitOperation[] // eslint-disable-line @typescript-eslint/no-unused-vars
 ): CommitValidationResult {
   const errors: string[] = []
-
-  const opsByEntity = new Map<string, CommitOperation[]>()
-
-  for (const op of operations) {
-    const key = `${op.entityType}:${op.entityId}`
-    const group = opsByEntity.get(key)
-    if (group) {
-      group.push(op)
-    } else {
-      opsByEntity.set(key, [op])
-    }
-  }
-
-  const STATE = {
-    ACTIVE: 'active',
-    DELETED: 'deleted'
-  } as const
-
-  type EntityState = (typeof STATE)[keyof typeof STATE]
-
-  for (const [entityKey, entityOps] of opsByEntity) {
-    let netState: EntityState | undefined
-
-    for (const op of entityOps) {
-      switch (op.type) {
-        case 'DELETE':
-          netState = STATE.DELETED
-          break
-        case 'RESTORE':
-          netState = STATE.ACTIVE
-          break
-        case 'UPDATE':
-        case 'CREATE':
-          if (netState === STATE.DELETED) {
-            errors.push(
-              `Contradictory operations: entity "${entityKey}" is deleted but also modified`
-            )
-          }
-          netState = STATE.ACTIVE
-          break
-      }
-    }
-  }
 
   return {
     valid: errors.length === 0,
