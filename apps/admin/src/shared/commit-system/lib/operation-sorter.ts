@@ -65,7 +65,9 @@ export function sortCommitOperations(
   return [...deletes, ...restores, ...updates, ...creates]
 }
 
-export function validateCommitOperations(): CommitValidationResult {
+export function validateCommitOperations(
+  _operations: CommitOperation[] // eslint-disable-line @typescript-eslint/no-unused-vars
+): CommitValidationResult {
   const errors: string[] = []
 
   return {
