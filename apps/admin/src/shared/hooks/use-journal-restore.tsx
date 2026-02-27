@@ -59,14 +59,27 @@ export function useJournalRestore<T>({
     checkAndHydrate()
 
     // Subscribe to operation store — fires when persistedOperations reference changes.
-    // This replaces the previous window.addEventListener('journal-changed', ...) pattern.
+    // This covers: commitPendingOperations() completing, hydratePersistedOperations(),
+    // and clearPersistedOperations() calls.
     // NOTE: checkAndHydrate is async; isHydrated.current is set synchronously before the
     // potential second subscription callback resolves. Safe against double-hydration.
-    return operationStore.subscribe((state, prevState) => {
+    const unsubscribe = operationStore.subscribe((state, prevState) => {
       if (state.persistedOperations !== prevState.persistedOperations) {
         checkAndHydrate()
       }
     })
+
+    // DOM event listener: REQUIRED for useRouteChanges.discardAll() to work.
+    // useRouteChanges operates at route level and calls journalCommitSource.clear()
+    // which only clears IndexedDB (not Zustand store). The event notifies us to re-check
+    // IndexedDB and clear our Zustand store.
+    // See T4: docs/journal-issues/p3-dualidad-journal-restore-route-changes.md
+    window.addEventListener('journal-changed', checkAndHydrate)
+
+    return () => {
+      unsubscribe()
+      window.removeEventListener('journal-changed', checkAndHydrate)
+    }
   }, [operationStore, checkAndHydrate])
 
   const dismissNotice = useCallback(() => {
