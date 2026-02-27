@@ -92,8 +92,6 @@ export function createEntityOperationStore<T>({
           }
         })
         
-        // Dispatch event so UI components (sidebar, toolbar) update immediately
-        window.dispatchEvent(new CustomEvent('journal-changed'))
       } catch (error) {
         // TODO: Improve error handling
         console.error('[EntityState] Failed to commit edits:', error)
