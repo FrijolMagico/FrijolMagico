@@ -17,8 +17,10 @@ import { ArtistListPagination } from './artist-list-pagination'
 import { ArtistListTable } from './artist-list-table'
 import { EditArtistDialog } from './edit-artist-dialog'
 import { ArtistHistoryDialog } from './artist-history-dialog'
+import { useHistoryByArtist } from '../_hooks/use-history-by-artist'
+import type { HistoryEntry } from '../_types'
 
-export function ArtistListContainer() {
+export function ArtistListContainer({ historyData }: { historyData: HistoryEntry[] }) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -33,6 +35,8 @@ export function ArtistListContainer() {
   useAutoCommit(useArtistsOperationStore)
 
   const { countries, cities } = useArtistList()
+
+  const { historyByArtistId, artistIdsWithHistory } = useHistoryByArtist(historyData)
 
   useEffect(() => {
     const searchParam = searchParams.get('search')
@@ -138,13 +142,13 @@ export function ArtistListContainer() {
       <ArtistListPagination onPageChange={handlePageChange} />
 
       <Card className='py-0'>
-        <ArtistListTable onClearFilters={handleClearFilters} />
+        <ArtistListTable onClearFilters={handleClearFilters} artistIdsWithHistory={artistIdsWithHistory} historyByArtistId={historyByArtistId} />
       </Card>
 
       <ArtistListPagination onPageChange={handlePageChange} />
 
       <EditArtistDialog />
-      <ArtistHistoryDialog />
+      <ArtistHistoryDialog historyByArtistId={historyByArtistId} />
 
       {/* RouteSaveToolbar replaces old inline SaveButton */}
       {/* TODO: Verify sequential commit ordering and ID mapping for multi-entity routes */}
