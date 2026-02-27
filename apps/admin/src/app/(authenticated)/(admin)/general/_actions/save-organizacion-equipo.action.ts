@@ -10,7 +10,6 @@ import { requireAuth } from '@/lib/auth/utils'
 import { revalidateTag } from 'next/cache'
 import { COMMIT_OPERATION_TYPE } from '@/shared/commit-system/lib/types'
 import { validateCommitOperations } from '@/shared/commit-system/lib/operation-sorter'
-import { processBatches } from '@/shared/commit-system/lib/batch-processor'
 import {
   handleServerActionError,
   logServerError
@@ -83,107 +82,66 @@ export async function saveOrganizacionEquipoAction(
       }
     }
 
-    const allMappings: IdMapping[] = []
+    const mappings: IdMapping[] = []
 
-    const batchResult = await processBatches(
-      operations,
-      async (batch) => {
-        return await db.transaction(async (tx) => {
-          const batchMappings: IdMapping[] = []
+    await db.transaction(async (tx) => {
+      for (const op of operations) {
+        if (op.type === COMMIT_OPERATION_TYPE.DELETE) {
+          if (!isTempId(op.entityId)) {
+            await tx
+              .delete(organizationMember)
+              .where(eq(organizationMember.id, Number(op.entityId)))
+          }
+        } else if (op.type === COMMIT_OPERATION_TYPE.RESTORE) {
+          continue
+        } else {
+          const entry = toJournalEntry(op)
+          const input = mapToOrganizacionEquipoInput(entry)
 
-          for (const op of batch) {
-            if (op.type === COMMIT_OPERATION_TYPE.DELETE) {
-              if (!isTempId(op.entityId)) {
-                await tx
-                  .delete(organizationMember)
-                  .where(eq(organizationMember.id, Number(op.entityId)))
-              }
-            } else if (op.type === COMMIT_OPERATION_TYPE.RESTORE) {
-              continue
-            } else {
-              const entry = toJournalEntry(op)
-              const input = mapToOrganizacionEquipoInput(entry)
+          if (!isTempId(op.entityId)) {
+            await tx
+              .update(organizationMember)
+              .set(
+                stripUndefined({
+                  organizationId: input.organizationId,
+                  name: input.name,
+                  position: input.position,
+                  rut: input.rut,
+                  email: input.email,
+                  phone: input.phone,
+                  rrss: input.rrss
+                })
+              )
+              .where(eq(organizationMember.id, Number(op.entityId)))
+          } else {
+            const [inserted] = await tx
+              .insert(organizationMember)
+              .values({
+                organizationId: input.organizationId,
+                name: input.name,
+                position: input.position,
+                rut: input.rut,
+                email: input.email,
+                phone: input.phone,
+                rrss: input.rrss
+              })
+              .returning({ id: organizationMember.id })
 
-              if (!isTempId(op.entityId)) {
-                await tx
-                  .update(organizationMember)
-                  .set(
-                    stripUndefined({
-                      organizationId: input.organizationId,
-                      name: input.name,
-                      position: input.position,
-                      rut: input.rut,
-                      email: input.email,
-                      phone: input.phone,
-                      rrss: input.rrss
-                    })
-                  )
-                  .where(eq(organizationMember.id, Number(op.entityId)))
-                await tx
-                  .update(organizationMember)
-                  .set({
-                    organizationId: input.organizationId,
-                    name: input.name,
-                    position: input.position,
-                    rut: input.rut,
-                    email: input.email,
-                    phone: input.phone,
-                    rrss: input.rrss
-                  })
-                  .where(eq(organizationMember.id, Number(op.entityId)))
-              } else {
-                const [inserted] = await tx
-                  .insert(organizationMember)
-                  .values({
-                    organizationId: input.organizationId,
-                    name: input.name,
-                    position: input.position,
-                    rut: input.rut,
-                    email: input.email,
-                    phone: input.phone,
-                    rrss: input.rrss
-                  })
-                  .returning({ id: organizationMember.id })
-
-                if (inserted) {
-                  batchMappings.push(
-                    createIdMapping(
-                      op.entityId,
-                      inserted.id,
-                      'organizacion_equipo'
-                    )
-                  )
-                }
-              }
+            if (inserted) {
+              mappings.push(
+                createIdMapping(op.entityId, inserted.id, 'organizacion_equipo')
+              )
             }
           }
-
-          return batchMappings
-        })
-      },
-      { maxBatchSize: 50, maxRetries: 3, timeoutMs: 30000 }
-    )
-
-    if (!batchResult.success) {
-      const firstError = batchResult.errors[0]
-      const handled = handleServerActionError(firstError)
-      return {
-        success: false,
-        errors: [
-          {
-            entityType: 'organizacion_equipo',
-            entityId: 'unknown',
-            message: handled.userMessage
-          }
-        ]
+        }
       }
-    }
+    })
 
     revalidateTag('default', 'organizacion-equipo')
 
     return {
       success: true,
-      idMappings: allMappings
+      idMappings: mappings
     }
   } catch (error) {
     logServerError(error, 'saveOrganizacionEquipoAction')

@@ -22,6 +22,7 @@ import {
   mapToEventoEdicionInput,
   mapToEventoEdicionDiaInput
 } from '../_mappers/evento.mapper'
+import { stripUndefined } from '@/shared/lib/utils'
 
 /**
  * Synthesize a JournalEntry from CommitOperation for mapper compatibility
@@ -112,7 +113,7 @@ export async function saveEventoAction(
           if (input.id && !isTempId(op.entityId)) {
             await tx
               .update(events.evento)
-              .set(input)
+              .set(stripUndefined(input))
               .where(eq(events.evento.id, input.id))
           } else {
             const [inserted] = await tx
@@ -153,7 +154,7 @@ export async function saveEventoAction(
           if (input.id && !isTempId(op.entityId)) {
             await tx
               .update(events.eventoEdicion)
-              .set(input)
+              .set(stripUndefined(input))
               .where(eq(events.eventoEdicion.id, input.id))
           } else {
             const [inserted] = await tx
@@ -194,7 +195,7 @@ export async function saveEventoAction(
           if (input.id && !isTempId(op.entityId)) {
             await tx
               .update(events.eventoEdicionDia)
-              .set(input)
+              .set(stripUndefined(input))
               .where(eq(events.eventoEdicionDia.id, input.id))
           } else {
             const [inserted] = await tx
