@@ -22,4 +22,6 @@ Orquestar el flujo de guardado garantizando que las operaciones se validen, orde
 
 ## Estado actual
 
-El pipeline está implementado y funcional. Sin embargo, la activación desde la UI está pendiente (T6 del roadmap); actualmente el botón "Guardar" solo muestra notificaciones sin ejecutar el `commit()`.
+El pipeline está activo en producción para todos los módulos: `organizacion`, `organizacion_equipo`, `artista`, `catalogo_artista`, `evento`. El botón "Guardar" ejecuta el `commit()` real y persiste cambios al servidor.
+
+El pipeline está activo en producción para todos los módulos (organizacion, organizacion_equipo, artista, catalogo_artista, evento).
