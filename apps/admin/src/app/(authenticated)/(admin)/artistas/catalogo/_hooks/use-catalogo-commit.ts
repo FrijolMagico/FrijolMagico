@@ -21,7 +21,6 @@ export function useCatalogoCommit() {
       store.resetStore()
       router.refresh()
       toast.success('Guardado correctamente')
-      window.dispatchEvent(new CustomEvent('journal-changed'))
     }
   })
 

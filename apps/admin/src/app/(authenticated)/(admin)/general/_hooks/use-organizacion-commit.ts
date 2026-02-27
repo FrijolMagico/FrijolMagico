@@ -24,7 +24,6 @@ export function useOrganizacionCommit() {
       orgStore.resetStore()
       router.refresh()
       toast.success('Guardado correctamente')
-      window.dispatchEvent(new CustomEvent('journal-changed'))
     }
   })
 
@@ -56,7 +55,6 @@ export function useOrganizacionEquipoCommit() {
       teamStore.resetStore()
       router.refresh()
       toast.success('Guardado correctamente')
-      window.dispatchEvent(new CustomEvent('journal-changed'))
     }
   })
 
