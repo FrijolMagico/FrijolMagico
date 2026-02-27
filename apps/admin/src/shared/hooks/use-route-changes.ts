@@ -2,11 +2,10 @@
 
 import { useCallback, useMemo } from 'react'
 import { useSectionDirtyStore } from '@/shared/lib/section-dirty-store'
-import { journalCommitSource } from '@/shared/lib/journal-commit-source'
 import { ROUTE_ENTITY_MAP } from '@/shared/lib/database-entities'
+import { useDiscardRegistry } from '@/shared/lib/discard-registry'
 
 export function useRouteChanges(routePath: string) {
-  // Primary: synchronous dirty state from projection-driven read model
   const dirtyMap = useSectionDirtyStore((s) => s.dirtyMap)
   const entities = useMemo(() => ROUTE_ENTITY_MAP[routePath] ?? [], [routePath])
   const isDirty = useMemo(
@@ -14,23 +13,9 @@ export function useRouteChanges(routePath: string) {
     [entities, dirtyMap]
   )
 
-  // noticeVisible mirrors isDirty — simplified from original journal-changed event pattern
-  // The original "first dirty" behavior can be restored later if needed
-  const noticeVisible = isDirty
-
-  const dismissNotice = useCallback(() => {}, [])
-
   const discardAll = useCallback(async () => {
-    const currentEntities = ROUTE_ENTITY_MAP[routePath] ?? []
-    await Promise.all(currentEntities.map((e) => journalCommitSource.clear(e)))
-    // NOTE: This dispatch is intentionally kept. useRouteChanges operates at route level
-    // and has no direct access to per-entity operation stores. The event notifies all
-    // useJournalRestore instances to re-check IndexedDB and clear their stale state.
-    // Removing this dispatch requires solving the route-level→store communication
-    // problem, which is part of T4's scope (dualidad useJournalRestore/useRouteChanges).
-    // See: docs/journal-issues/p3-dualidad-journal-restore-route-changes.md
-    window.dispatchEvent(new CustomEvent('journal-changed'))
-  }, [routePath])
+    await useDiscardRegistry.getState().discardEntities(entities)
+  }, [entities])
 
-  return { isDirty, noticeVisible, dismissNotice, discardAll }
+  return { isDirty, discardAll }
 }

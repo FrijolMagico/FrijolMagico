@@ -8,7 +8,7 @@ import { useCatalogPaginationStore } from '../_store/catalog-pagination-store'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 interface CatalogTableContainerProps {
-  handleFilersChange: (filters: {
+  handleFiltersChange: (filters: {
     activo?: boolean | null
     destacado?: boolean | null
     search?: string
@@ -16,7 +16,7 @@ interface CatalogTableContainerProps {
 }
 
 export function CatalogTableContainer({
-  handleFilersChange
+  handleFiltersChange
 }: CatalogTableContainerProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -43,7 +43,7 @@ export function CatalogTableContainer({
 
       <Card ref={tableContainerRef} className='py-0'>
         <CatalogTable
-          handleFiltersChange={handleFilersChange}
+          handleFiltersChange={handleFiltersChange}
           containerRef={tableContainerRef}
           onPageChange={handlePageChange}
         />

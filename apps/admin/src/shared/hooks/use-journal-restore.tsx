@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import type { UseBoundStore, StoreApi } from 'zustand'
 import type { JournalEntity } from '@/shared/lib/database-entities'
 import type { EntityOperationStore } from '@/shared/ui-state/operation-log/types'
@@ -10,25 +10,18 @@ import {
   clearSection
 } from '@/shared/change-journal/change-journal'
 import { journalEntriesToOperations } from '@/shared/lib/journal-entries-to-operations'
+import { useDiscardRegistry } from '@/shared/lib/discard-registry'
 
 interface UseJournalRestoreOptions<T> {
   entity: JournalEntity
   operationStore: UseBoundStore<StoreApi<EntityOperationStore<T>>>
 }
 
-interface UseJournalRestoreResult {
-  hasRestoredEntries: boolean
-  noticeVisible: boolean
-  dismissNotice: () => void
-  discardAll: () => Promise<void>
-}
 
 export function useJournalRestore<T>({
   entity,
   operationStore
-}: UseJournalRestoreOptions<T>): UseJournalRestoreResult {
-  const [hasRestoredEntries, setHasRestoredEntries] = useState(false)
-  const [noticeVisible, setNoticeVisible] = useState(false)
+}: UseJournalRestoreOptions<T>): void {
   const isHydrated = useRef(false)
   const isDiscarding = useRef(false)
 
@@ -43,7 +36,6 @@ export function useJournalRestore<T>({
       const operations = journalEntriesToOperations<T>(entries)
       operationStore.getState().hydratePersistedOperations(operations)
       isHydrated.current = true
-      setNoticeVisible(true)
     }
 
     if (!hasPending && isHydrated.current) {
@@ -51,16 +43,30 @@ export function useJournalRestore<T>({
       isHydrated.current = false
     }
 
-    setHasRestoredEntries(hasPending)
+  }, [entity, operationStore])
+
+  const discardAll = useCallback(async () => {
+    isDiscarding.current = true
+    // IndexedDB first: prevents data resurrection via Zustand subscription
+    await clearSection(entity)
+    // Then Zustand: resetStore clears both persistedOperations and pendingOperations atomically,
+    // preventing useAutoCommit cleanup from re-writing pending ops on unmount.
+    operationStore.getState().resetStore()
+    isHydrated.current = false
+    isDiscarding.current = false
   }, [entity, operationStore])
 
   useEffect(() => {
+    // Register this entity's discard function in the global registry.
+    // useRouteChanges.discardAll() calls all registered functions for the current route's entities.
+    const { register, unregister } = useDiscardRegistry.getState()
+    register(entity, discardAll)
+
     // Initial check on mount
     checkAndHydrate()
 
     // Subscribe to operation store — fires when persistedOperations reference changes.
-    // This covers: commitPendingOperations() completing, hydratePersistedOperations(),
-    // and clearPersistedOperations() calls.
+    // Covers: commitPendingOperations(), hydratePersistedOperations(), resetStore() calls.
     // NOTE: checkAndHydrate is async; isHydrated.current is set synchronously before the
     // potential second subscription callback resolves. Safe against double-hydration.
     const unsubscribe = operationStore.subscribe((state, prevState) => {
@@ -69,34 +75,13 @@ export function useJournalRestore<T>({
       }
     })
 
-    // DOM event listener: REQUIRED for useRouteChanges.discardAll() to work.
-    // useRouteChanges operates at route level and calls journalCommitSource.clear()
-    // which only clears IndexedDB (not Zustand store). The event notifies us to re-check
-    // IndexedDB and clear our Zustand store.
-    // See T4: docs/journal-issues/p3-dualidad-journal-restore-route-changes.md
-    window.addEventListener('journal-changed', checkAndHydrate)
-
     return () => {
+      unregister(entity)
       unsubscribe()
-      window.removeEventListener('journal-changed', checkAndHydrate)
     }
-  }, [operationStore, checkAndHydrate])
+  }, [operationStore, entity, checkAndHydrate, discardAll])
 
-  const dismissNotice = useCallback(() => {
-    setNoticeVisible(false)
-  }, [])
 
-  const discardAll = useCallback(async () => {
-    isDiscarding.current = true
-    operationStore.getState().clearPersistedOperations()
-    await clearSection(entity)
-    setHasRestoredEntries(false)
-    setNoticeVisible(false)
-    isHydrated.current = false
-    isDiscarding.current = false
-    // No dispatch needed here — clearPersistedOperations() triggers the Zustand subscription,
-    // but isDiscarding guard prevents checkAndHydrate from running during cleanup.
-  }, [entity, operationStore])
 
-  return { hasRestoredEntries, noticeVisible, dismissNotice, discardAll }
+  return
 }
