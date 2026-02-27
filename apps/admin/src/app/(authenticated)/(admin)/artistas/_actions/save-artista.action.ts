@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidateTag } from 'next/cache'
+import { ARTISTA_CACHE_TAG } from '../_constants'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { eq } from 'drizzle-orm'
@@ -18,6 +19,10 @@ import {
 } from '../_mappers/artista.mapper'
 import type { JournalEntry } from '@/shared/change-journal/lib/types'
 import { stripUndefined } from '@/shared/lib/utils'
+import {
+  handleServerActionError,
+  logServerError
+} from '@/shared/commit-system/lib/error-handler'
 
 const { artista, artistaImagen } = artist
 
@@ -171,28 +176,26 @@ export async function saveArtistaAction(
       }
     })
 
-    revalidateTag('server-action', 'artista')
+    revalidateTag(ARTISTA_CACHE_TAG, 'max')
 
     return {
       success: true,
       idMappings: mappings
     }
   } catch (error) {
-    console.error('Error saving artista section:', error)
-
+    logServerError(error, 'saveArtistaAction')
+    const handled = handleServerActionError(error)
     return {
       success: false,
       errors: [
         {
           entityType: 'artista',
           entityId: 'unknown',
-          message:
-            error instanceof Error
-              ? error.message
-              : 'Unknown error saving artista section'
+          message: handled.userMessage
         }
       ]
     }
   }
+
 }
 

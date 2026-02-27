@@ -8,6 +8,7 @@ const { organizationMember } = core
 
 import { requireAuth } from '@/lib/auth/utils'
 import { revalidateTag } from 'next/cache'
+import { TEAM_CACHE_TAG } from '../_constants'
 import { COMMIT_OPERATION_TYPE } from '@/shared/commit-system/lib/types'
 import { validateCommitOperations } from '@/shared/commit-system/lib/operation-sorter'
 import {
@@ -137,7 +138,7 @@ export async function saveOrganizacionEquipoAction(
       }
     })
 
-    revalidateTag('default', 'organizacion-equipo')
+    revalidateTag(TEAM_CACHE_TAG, 'max')
 
     return {
       success: true,

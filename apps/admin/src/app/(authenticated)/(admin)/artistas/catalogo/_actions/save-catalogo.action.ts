@@ -1,6 +1,8 @@
 'use server'
 
 import { revalidateTag } from 'next/cache'
+import { CATALOG_CACHE_TAG } from '../_constants'
+import { ARTISTA_CACHE_TAG } from '../../_constants'
 import { eq } from 'drizzle-orm'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
@@ -112,8 +114,8 @@ export async function saveCatalogoAction(
       }
     })
 
-    revalidateTag('catalogo', 'max')
-    revalidateTag('artista', 'max')
+    revalidateTag(CATALOG_CACHE_TAG, 'max')
+    revalidateTag(ARTISTA_CACHE_TAG, 'max')
 
     return {
       success: true,

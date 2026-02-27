@@ -23,6 +23,11 @@ import {
   mapToEventoEdicionDiaInput
 } from '../_mappers/evento.mapper'
 import { stripUndefined } from '@/shared/lib/utils'
+import {
+  handleServerActionError,
+  logServerError
+} from '@/shared/commit-system/lib/error-handler'
+
 
 /**
  * Synthesize a JournalEntry from CommitOperation for mapper compatibility
@@ -221,20 +226,18 @@ export async function saveEventoAction(
       idMappings: mappings
     }
   } catch (error) {
-    console.error('[save-evento] Error:', error)
-
+    logServerError(error, 'saveEventoAction')
+    const handled = handleServerActionError(error)
     return {
       success: false,
       errors: [
         {
           entityType: 'evento',
           entityId: 'unknown',
-          message:
-            error instanceof Error
-              ? error.message
-              : 'Error desconocido al guardar evento'
+          message: handled.userMessage
         }
       ]
     }
   }
+
 }

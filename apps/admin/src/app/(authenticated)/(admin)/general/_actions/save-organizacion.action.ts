@@ -7,6 +7,7 @@ const { organization } = core
 import { eq } from 'drizzle-orm'
 import { requireAuth } from '@/lib/auth/utils'
 import { revalidateTag } from 'next/cache'
+import { ORGANIZATION_CACHE_TAG } from '../_constants'
 import { COMMIT_OPERATION_TYPE } from '@/shared/commit-system/lib/types'
 import { validateCommitOperations } from '@/shared/commit-system/lib/operation-sorter'
 import {
@@ -119,7 +120,7 @@ export async function saveOrganizacionAction(
       }
     })
 
-    revalidateTag('server-action', 'organizacion')
+    revalidateTag(ORGANIZATION_CACHE_TAG, 'max')
 
     return {
       success: true,
