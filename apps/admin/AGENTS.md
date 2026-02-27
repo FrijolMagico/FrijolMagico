@@ -1,12 +1,3 @@
-# AGENTS.md - Admin App
-
-Admin panel - Port 3001
-
-**Generated**: 2026-02-11
-**Mode**: Update
-
-## Tech Stack
-
 - **Framework:** Next.js 16+ (App Router) with Turbopack
 - **UI:** React 19, TypeScript (strict), Tailwind CSS v4
 - **Auth:** Better Auth with Google OAuth
@@ -94,8 +85,7 @@ src/
     shared/                         # ONLY for 2+/global route group usage
     ├── components/
     │   └── ui/                     # Reusable UI components (shadcn/ui)
-    ├── draft/                      # Specific feature named "draft" with its own structure (can have components, lib, etc. scoped to it)
-    ├── global-save/                # Specific feature named "global-save" with its own structure (can have components, lib, etc. scoped to it)
+    ├── <module>/                   # Specific feature named with its own structure
     └── ...                         # Other global features with same principles as draft and global-save
 
     lib/                            # Utilities and configurations (auth, db, etc.)
@@ -113,14 +103,13 @@ src/
 - **Session:** 3-day expiration, 24-hour update age
 - **Config:** `src/app/auth/lib/auth.ts`
 
-- **Own:** snake-case for components (e.g., `user-profile.tsx`)
-- **Shadcn/ui:** default naming conventions
+### Naming Conventions  
+- **Components:** snake-case (e.g., `user-profile.tsx`)
 
 ### Database
 
 - Uses `@frijolmagico/database` package
 - Better Auth Drizzle adapter for user/session tables
-- SQLite provider (Turso/libSQL)
 
 ## Forbidden Patterns
 
@@ -133,10 +122,5 @@ src/
 
 ## General Rules
 
-- Dashboard and future admin pages should verify session server-side using `get-session.ts` helper
-- No client-side auth checks (except for UI adjustments), all auth logic must be server-side
-- Follow feature-based organization and clear separation of concerns
 - Use `cn()` utility for conditional class names
-- Avoid client components if not necessary — prefer Server Components
-- Split interactive sections into separate client components, keep rest as server
-- A feature is finished when: no linter/format errors, no runtime errors, Playwright tests pass
+- If you want to test the site from a worktree, need to copy the .env.local file.   
