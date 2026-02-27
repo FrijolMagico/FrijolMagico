@@ -5,11 +5,11 @@
  * Lives in shared/lib/ as glue code between decoupled modules.
  *
  * Mapping Rules:
- *   Journal op:'set' + no field + isTempId(entityId) → CREATE (unwrap EntityOperation wrapper)
+ *   Journal op:'set' + no field + isTempId(entityId) → CREATE (merge with any per-field updates)
  *   Journal op:'set' + no field + !isTempId(entityId) → UPDATE (unwrap EntityOperation wrapper)
- *   Journal op:'set' + field → group per entity → single UPDATE
+ *   Journal op:'set' + field → group per entity → single UPDATE (skip if entity deleted)
  *   Journal op:'patch' → UPDATE (value is already a partial object)
- *   Journal op:'unset' → DELETE
+ *   Journal op:'unset' → DELETE (filters out older updates for same entity)
  *   Journal op:'restore' → RESTORE
  *
  *   entityType = scopeKey.split(':')[0]
@@ -39,16 +39,32 @@ import type { JournalEntry } from '@/shared/change-journal/lib/types'
  * - PATCH ops store a partial object directly
  * - DELETE/RESTORE have no value
  *
- * Entries from getLatestEntries are newest-first, so for per-field grouping
- * we keep only the first (newest) value per field.
+ * Key behaviors:
+ * - Entries from getLatestEntries are newest-first
+ * - DELETE filters out older per-field updates for the same entity
+ * - For temp IDs with ADD + per-field updates: merge into single CREATE
+ * - For deleted entities: skip any UPDATE operations
  */
 function processEntries(entries: JournalEntry[]): CommitOperation[] {
   const operations: CommitOperation[] = []
+
+  // Track entities that have DELETE to filter out older updates
+  const deletedEntities = new Set<string>()
+
+  // Track pending ADD operations by entity to merge with subsequent per-field updates
+  // Key: entityType:entityId, Value: { entityType, entityId, data }
+  const pendingAdds = new Map<
+    string,
+    { entityType: string; entityId: string; data: Record<string, unknown> }
+  >()
+
+  // Collect all per-field updates (to filter by DELETE or merge with ADD)
   const fieldUpdates = new Map<
     string,
     { entityType: string; entityId: string; data: Record<string, unknown> }
   >()
 
+  // First pass: track DELETE and build pending structures
   for (const entry of entries) {
     const parts = entry.scopeKey.split(':')
     const entityType = parts[0]
@@ -60,56 +76,102 @@ function processEntries(entries: JournalEntry[]): CommitOperation[] {
       continue
     }
 
+    const entityKey = `${entityType}:${entityId}`
     const { op } = entry.payload
 
+    // Track DELETE operations - will filter out later updates
     if (op === 'unset') {
-      // DELETE: no value, scopeKey = section:entityId
+      deletedEntities.add(entityKey)
       operations.push({
         type: COMMIT_OPERATION_TYPE.DELETE,
         entityType,
         entityId
       })
-    } else if (op === 'restore') {
-      // RESTORE: no value, scopeKey = section:entityId
+      continue
+    }
+
+    // Track RESTORE operations
+    if (op === 'restore') {
       operations.push({
         type: COMMIT_OPERATION_TYPE.RESTORE,
         entityType,
         entityId
       })
-    } else if (op === 'set' && field) {
-      // UPDATE per-field: scopeKey = section:entityId:field, value is plain scalar
-      // Group all fields for the same entity into a single UPDATE
-      const key = `${entityType}:${entityId}`
-      const existing = fieldUpdates.get(key)
+      continue
+    }
+
+    // Handle ADD (op='set' without field = 2-part scopeKey)
+    if (op === 'set' && !field) {
+      const wrappedOp = entry.payload.value as {
+        data: Record<string, unknown>
+      }
+
+      if (isTempId(entityId)) {
+        // Store ADD data for merging with later per-field updates
+        pendingAdds.set(entityKey, {
+          entityType,
+          entityId,
+          data: wrappedOp.data
+        })
+      } else {
+        // Non-temp ID with full set = UPDATE
+        operations.push({
+          type: COMMIT_OPERATION_TYPE.UPDATE,
+          entityType,
+          entityId,
+          data: wrappedOp.data
+        })
+      }
+      continue
+    }
+
+    // Handle per-field UPDATE (op='set' with field = 3-part scopeKey)
+    if (op === 'set' && field) {
+      // Skip if this entity was deleted
+      if (deletedEntities.has(entityKey)) {
+        continue
+      }
+
+      // If there's a pending ADD for this temp entity, merge into it
+      if (isTempId(entityId) && pendingAdds.has(entityKey)) {
+        pendingAdds.get(entityKey)!.data[field] = entry.payload.value
+        continue
+      }
+
+      // Otherwise, accumulate per-field updates
+      const existing = fieldUpdates.get(entityKey)
       if (existing) {
         // Entries are newest-first: only set field if not already present
         if (!(field in existing.data)) {
           existing.data[field] = entry.payload.value
         }
       } else {
-        fieldUpdates.set(key, {
+        fieldUpdates.set(entityKey, {
           entityType,
           entityId,
           data: { [field]: entry.payload.value }
         })
       }
-    } else if (op === 'set' && !field) {
-      // ADD: scopeKey = section:entityId, value is EntityOperation wrapper { type, data, timestamp }
-      // Unwrap to get the actual entity data
-      const wrappedOp = entry.payload.value as {
-        data: Record<string, unknown>
+      continue
+    }
+
+    // Handle PATCH (op='patch')
+    if (op === 'patch') {
+      // Skip if deleted
+      if (deletedEntities.has(entityKey)) {
+        continue
       }
-      const operationType = isTempId(entityId)
-        ? COMMIT_OPERATION_TYPE.CREATE
-        : COMMIT_OPERATION_TYPE.UPDATE
-      operations.push({
-        type: operationType,
-        entityType,
-        entityId,
-        data: wrappedOp.data
-      })
-    } else if (op === 'patch') {
-      // PATCH: value is already a partial object, map as UPDATE
+
+      // For temp IDs with pending ADD, merge patch into ADD data
+      if (isTempId(entityId) && pendingAdds.has(entityKey)) {
+        Object.assign(
+          pendingAdds.get(entityKey)!.data,
+          entry.payload.value as Record<string, unknown>
+        )
+        continue
+      }
+
+      // Otherwise emit as UPDATE (or CREATE if temp ID)
       const operationType = isTempId(entityId)
         ? COMMIT_OPERATION_TYPE.CREATE
         : COMMIT_OPERATION_TYPE.UPDATE
@@ -122,8 +184,29 @@ function processEntries(entries: JournalEntry[]): CommitOperation[] {
     }
   }
 
-  // Emit grouped UPDATE operations from field-level entries
-  for (const [, { entityType, entityId, data }] of fieldUpdates) {
+  // Emit merged ADD operations (with per-field updates already merged in)
+  for (const [entityKey, { entityType, entityId, data }] of pendingAdds) {
+    // Skip if deleted
+    if (deletedEntities.has(entityKey)) {
+      continue
+    }
+    // Only emit if we have data
+    if (Object.keys(data).length > 0) {
+      operations.push({
+        type: COMMIT_OPERATION_TYPE.CREATE,
+        entityType,
+        entityId,
+        data
+      })
+    }
+  }
+
+  // Emit grouped UPDATE operations from field-level entries (filtering deleted entities)
+  for (const [entityKey, { entityType, entityId, data }] of fieldUpdates) {
+    // Skip if deleted
+    if (deletedEntities.has(entityKey)) {
+      continue
+    }
     operations.push({
       type: COMMIT_OPERATION_TYPE.UPDATE,
       entityType,

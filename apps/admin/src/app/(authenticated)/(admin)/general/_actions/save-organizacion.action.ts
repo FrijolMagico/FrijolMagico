@@ -22,13 +22,7 @@ import type {
   IdMapping
 } from '@/shared/commit-system/lib/types'
 import type { JournalEntry } from '@/shared/change-journal/lib/types'
-
-/** Strip undefined values to prevent Drizzle writing NULL on partial updates */
-function stripUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
-  return Object.fromEntries(
-    Object.entries(obj).filter(([, v]) => v !== undefined)
-  ) as Partial<T>
-}
+import { stripUndefined } from '@/shared/lib/utils'
 
 function toJournalEntry(op: CommitOperation): JournalEntry {
   const base = {

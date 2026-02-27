@@ -166,7 +166,13 @@ export function MemberDialog() {
     phone?: string
     rrss: Record<string, string[]> | null
   }) => {
-    if (memberId) update(memberId, data)
+    if (memberId) {
+      update(memberId, {
+        ...data,
+        organizationId: member?.organizationId ?? ORGANIZATION_ID
+      })
+    }
+
     if (!memberId) add({ ...data, organizationId: ORGANIZATION_ID })
 
     await commitPendingOperations()
