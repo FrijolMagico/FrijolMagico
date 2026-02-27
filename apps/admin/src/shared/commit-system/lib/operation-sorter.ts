@@ -65,9 +65,7 @@ export function sortCommitOperations(
   return [...deletes, ...restores, ...updates, ...creates]
 }
 
-export function validateCommitOperations(
-  _operations: CommitOperation[]
-): CommitValidationResult {
+export function validateCommitOperations(): CommitValidationResult {
   const errors: string[] = []
 
   return {
