@@ -19,6 +19,16 @@ Admin panel - Port 3001
 bun run build                  # Production build
 bun run lint                   # ESLint
 bun run type-check             # tsc --noEmit
+
+# To run the development server with Turbopack (fast refresh, optimized for development)
+# 1. Verify if dev servers are running: 3001 admin and 8080 database
+# 2. To run only admin without database (not recommended, may cause errors):
+turbo dev --filter=@frijolmagico/admin
+# 3. To run only database (if admin dev is already running)
+turbo dev --filter=@frijolmagico/database
+# 4. To run both admin and database (recommended for development):
+turbo dev --filter=@frijolmagico/database --filter=@frijolmagico/admin
+# DO NOT RUN ANY DEV SERVER IF ALREADY RUNNING
 ```
 
 ## Architecture
@@ -103,45 +113,6 @@ src/
 - **Session:** 3-day expiration, 24-hour update age
 - **Config:** `src/app/auth/lib/auth.ts`
 
-
-### Store Initialization Pattern
-
-Cada sección que maneja estado UI con el patrón Entity State debe tener un **componente de inicialización dedicado** que se encarga de:
-
-1. **Sincronizar proyección** — `useProjectionSync` conecta el operation-log con el projection-engine
-2. **Detectar cambios pendientes** — `useJournalRestore` verifica si hay entries en IndexedDB de sesiones anteriores
-3. **Mostrar banner de restauración** — Si hay cambios pendientes, muestra el `SectionPendingBanner`
-
-#### Beneficios
-
-- **Separación de responsabilidades**: Los componentes de UI no manejan inicialización de stores
-- **Consistencia**: Todas las secciones siguen el mismo patrón
-- **Testeabilidad**: La inicialización se puede testear independientemente
-- **Claridad**: A nivel de server component se ve qué stores se inicializan
-
-#### Hooks Involucrados
-
-| Hook | Responsabilidad | Ubicación |
-|------|-----------------|-----------|
-| `useProjectionSync` | Sincroniza operation-log ↔ projection-engine | `src/shared/hooks/use-projection-sync.ts` |
-| `useJournalRestore` | Detecta entries en journal + provee banner de restauración | `src/shared/hooks/use-journal-restore.tsx` |
-
-#### Entidades Journal
-
-Las entidades disponibles para journal están definidas en `src/shared/lib/database-entities.ts`:
-
-```typescript
-JOURNAL_ENTITIES = {
-  ORGANIZACION: 'organizacion',
-  ORGANIZACION_EQUIPO: 'organizacion_equipo',
-  ARTISTA: 'artista',
-  CATALOGO_ARTISTA: 'catalogo_artista',
-  ARTISTA_HISTORIAL: 'artista_historial'
-}
-```
-
-### Components
-
 - **Own:** snake-case for components (e.g., `user-profile.tsx`)
 - **Shadcn/ui:** default naming conventions
 
@@ -153,7 +124,7 @@ JOURNAL_ENTITIES = {
 
 ## Forbidden Patterns
 
-- **NEVER barrel files** — import directly from source
+- **NEVER barrel files** — import directly from source unless its a complex module
 - **NEVER default exports** — named exports only
 - **NEVER client-side auth checks** — all auth server-side
 - **NEVER unnecessary client components** — prefer Server Components
