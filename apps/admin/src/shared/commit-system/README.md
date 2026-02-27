@@ -23,5 +23,3 @@ Orquestar el flujo de guardado garantizando que las operaciones se validen, orde
 ## Estado actual
 
 El pipeline está activo en producción para todos los módulos: `organizacion`, `organizacion_equipo`, `artista`, `catalogo_artista`, `evento`. El botón "Guardar" ejecuta el `commit()` real y persiste cambios al servidor.
-
-El pipeline está activo en producción para todos los módulos (organizacion, organizacion_equipo, artista, catalogo_artista, evento).
