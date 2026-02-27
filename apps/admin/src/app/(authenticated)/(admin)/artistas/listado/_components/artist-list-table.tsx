@@ -21,9 +21,9 @@ interface ArtistListTableProps {
 
 export function ArtistListTable({
   onClearFilters,
-  artistIdsWithHistory,
-  historyByArtistId
+  artistIdsWithHistory
 }: ArtistListTableProps) {
+
   const { paginatedIds } = useArtistList()
   const setFilters = useArtistListFilterStore((s) => s.setFilters)
 
