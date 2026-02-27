@@ -4,13 +4,13 @@ Colección de hooks de utilidad global y sincronización de estado para el panel
 
 ## Hooks de sincronización
 
-| Hook                | Propósito                                                                                                               |
-| :------------------ | :---------------------------------------------------------------------------------------------------------------------- |
+| Hook | Propósito |
+| :--- | :--- |
 | `useJournalRestore` | Recupera operaciones de IndexedDB al montar, hidrata el store, y registra el callback de descarte en `DiscardRegistry`. |
-| `useDirtySync`      | **Productor** del dirty read model; escribe cambios en `useSectionDirtyStore`.                                          |
-| `useProjectionSync` | Vincula el `operationStore` con el `projectionStore` para reactividad local.                                            |
-| `useRouteChanges`   | Monitorea estado dirty por ruta y delega el descarte al `DiscardRegistry`. Devuelve solo `{ isDirty, discardAll }`.     |
-| `useFractionalDnD`  | Lógica de reordenamiento usando indexación fraccional para `dnd-kit`.                                                   |
+| `useDirtySync` | **Productor** del dirty read model; escribe cambios en `useSectionDirtyStore`. |
+| `useProjectionSync` | Vincula el `operationStore` con el `projectionStore` para reactividad local. |
+| `useRouteChanges` | Monitorea estado dirty por ruta y delega el descarte al `DiscardRegistry`. Devuelve solo `{ isDirty, discardAll }`. |
+| `useFractionalDnD` | Lógica de reordenamiento usando indexación fraccional para `dnd-kit`. |
 
 ## Detalles de implementación
 
@@ -18,8 +18,8 @@ Colección de hooks de utilidad global y sincronización de estado para el panel
 
 Hook de hidratación per-entidad. Gestiona la restauración de operaciones desde IndexedDB.
 
-- **Suscripción**: Suscripción Zustand vanilla sobre `persistedOperations` del `operationStore` para detectar cambios externos.
-- **`isDiscarding`**: Flag interno que previene re-hidrataciones durante `discardAll` (la suscripción Zustand se dispara al limpiar el store, pero IndexedDB puede no estar vacío aún).
+- **Suscripción**: Utiliza una suscripción Zustand vanilla sobre `persistedOperations` del `operationStore` para detectar cambios externos.
+- **`isDiscarding`**: Flag interno que previene re-hidrataciones durante la ejecución de `discardAll` (la suscripción Zustand se dispara al limpiar el store, pero IndexedDB puede no estar vacío aún).
 - **DiscardRegistry**: Al montar, registra su función `discardAll` en `useDiscardRegistry`. Al desmontar, se desregistra automáticamente.
 - **Retorna**: `void` — los callers (store-initializers) no necesitan el resultado.
 
