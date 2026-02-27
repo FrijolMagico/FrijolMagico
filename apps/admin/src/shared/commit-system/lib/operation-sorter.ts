@@ -65,6 +65,13 @@ export function sortCommitOperations(
   return [...deletes, ...restores, ...updates, ...creates]
 }
 
+/**
+ * NOTE: This function is intentionally kept as a validation hook for future use.
+ * Conflict resolution (DELETE+UPDATE, CREATE+DELETE, etc.) is handled silently
+ * by sortCommitOperations. This function is the right place to add hard validation
+ * rules in the future — e.g. unknown entityType, missing required fields on CREATE,
+ * permission checks — that should block the commit entirely instead of being resolved.
+ */
 export function validateCommitOperations(
   _operations: CommitOperation[] // eslint-disable-line @typescript-eslint/no-unused-vars
 ): CommitValidationResult {
