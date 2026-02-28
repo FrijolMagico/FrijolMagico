@@ -160,7 +160,7 @@ describe('createEntityOperationStore', () => {
 
   describe('commitPendingOperations()', () => {
     it('does nothing when there are no pending operations', async () => {
-      const commitFn = mock(() => Promise.resolve())
+      const commitFn = mock((ops: any) => Promise.resolve())
       store = createEntityOperationStore<TestEntity>({
         commitOperations: commitFn
       })
@@ -170,7 +170,7 @@ describe('createEntityOperationStore', () => {
     })
 
     it('does nothing when pendingOperations is empty array', async () => {
-      const commitFn = mock(() => Promise.resolve())
+      const commitFn = mock((ops: any) => Promise.resolve())
       store = createEntityOperationStore<TestEntity>({
         commitOperations: commitFn
       })
@@ -181,7 +181,7 @@ describe('createEntityOperationStore', () => {
     })
 
     it('calls commitOperations with pending ops', async () => {
-      const commitFn = mock(() => Promise.resolve())
+      const commitFn = mock((ops: any) => Promise.resolve())
       store = createEntityOperationStore<TestEntity>({
         commitOperations: commitFn
       })
@@ -190,7 +190,7 @@ describe('createEntityOperationStore', () => {
       await store.getState().commitPendingOperations()
 
       expect(commitFn).toHaveBeenCalledTimes(1)
-      const calledWith = commitFn.mock.calls[0][0]
+      const calledWith = commitFn.mock.calls[0][0] as EntityOperation<TestEntity>[]
       expect(calledWith).toHaveLength(1)
       expect(calledWith[0].type).toBe('ADD')
     })

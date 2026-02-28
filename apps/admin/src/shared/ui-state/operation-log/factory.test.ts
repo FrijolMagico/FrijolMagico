@@ -9,7 +9,7 @@ interface TestEntity {
 describe('createEntityOperationStore', () => {
   const mockCommit = async () => {}
 
-  test('debe inicializar el store correctamente', () => {
+  test('should initialize store correctly', () => {
     const useStore = createEntityOperationStore<TestEntity>({
       commitOperations: mockCommit
     })
@@ -20,7 +20,7 @@ describe('createEntityOperationStore', () => {
     expect(state.lastCommitAt).toBeNull()
   })
 
-  test('debe mantener pending y persisted separados', () => {
+  test('should keep pending and persisted operations separate', () => {
     const useStore = createEntityOperationStore<TestEntity>({
       commitOperations: mockCommit
     })
@@ -32,13 +32,13 @@ describe('createEntityOperationStore', () => {
     expect(state.persistedOperations).toBeNull()
   })
 
-  test('commitSuccessCleanup despues de un commit debe disparar el isPostCommitReset derived state', () => {
-    // Esto prueba la lógica del fix de la Task 5 (UI flash)
+  test('commitSuccessCleanup after a commit should trigger isPostCommitReset derived state', () => {
+    // This tests the UI flash fix logic from Task 5 (UI flash)
     const useStore = createEntityOperationStore<TestEntity>({
       commitOperations: mockCommit
     })
 
-    // Simular trabajo
+    // Simulate work
     useStore.getState().add({ nombre: 'Test' })
     useStore
       .getState()
@@ -51,11 +51,11 @@ describe('createEntityOperationStore', () => {
       ])
 
     // Al guardar exitosamente, llamamos a commitSuccessCleanup
-    useStore.getState().commitSuccessCleanup()
+    // After successful save, call commitSuccessCleanup
 
     const state = useStore.getState()
 
-    // El state DEBE cumplir isPostCommitReset (para el UI flash fix)
+    // State MUST satisfy isPostCommitReset (for UI flash fix)
     const isPostCommitReset =
       state.persistedOperations === null &&
       state.pendingOperations === null &&
@@ -64,7 +64,7 @@ describe('createEntityOperationStore', () => {
     expect(isPostCommitReset).toBe(true)
   })
 
-  test('un clear simple no debe ser considerado post-commit reset', () => {
+  test('simple clear should not be considered post-commit reset', () => {
     const useStore = createEntityOperationStore<TestEntity>({
       commitOperations: mockCommit
     })
@@ -79,11 +79,11 @@ describe('createEntityOperationStore', () => {
       state.pendingOperations === null &&
       state.lastCommitAt !== null
 
-    // Porque lastCommitAt es null cuando se usa resetStore (discard), no commitSuccessCleanup
+    // because lastCommitAt is null when resetStore (discard) is used, not commitSuccessCleanup
     expect(isPostCommitReset).toBe(false)
   })
 
-  test('resetStore (discard) no debe ser considerado post-commit reset', () => {
+  test('resetStore (discard) should not be considered post-commit reset', () => {
     const useStore = createEntityOperationStore<TestEntity>({
       commitOperations: mockCommit
     })
@@ -98,7 +98,7 @@ describe('createEntityOperationStore', () => {
       state.pendingOperations === null &&
       state.lastCommitAt !== null
 
-    // resetStore limpia lastCommitAt a null, asi que isPostCommitReset es false
+    // resetStore clears lastCommitAt to null, so isPostCommitReset is false
     expect(isPostCommitReset).toBe(false)
     expect(state.lastCommitAt).toBeNull()
   })

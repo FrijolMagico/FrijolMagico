@@ -236,8 +236,8 @@ export async function saveEventoAction(
       }
     })
 
-    // TODO(cache): Añadir revalidateTag con constantes cuando se implementen
-    // fetchers cacheados para la sección de eventos. Por ahora no usan cacheTag.
+    // TODO(cache): Add revalidateTag with constants when cached fetchers 
+    // for the events section are implemented. For now they don't use cacheTag.
     // revalidateTag(<TAG_CONSTANT>, 'max')
 
     return {
