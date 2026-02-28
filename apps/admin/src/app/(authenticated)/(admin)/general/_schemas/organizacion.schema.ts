@@ -19,7 +19,10 @@ export const organizacionEquipoSchema = z.object({
   rut: z.string().optional(),
   email: z.string().optional(),
   phone: z.string().optional(),
-  rrss: z.string().optional()
+  rrss: z.preprocess((val) => {
+    if (val && typeof val === 'object') return JSON.stringify(val)
+    return val
+  }, z.string().optional())
 })
 
 /**

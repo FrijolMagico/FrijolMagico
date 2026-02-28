@@ -14,6 +14,7 @@
  */
 
 import type { JournalEntry } from '@/shared/change-journal/lib/types'
+import { nullsToUndefined } from '@/shared/lib/utils'
 import {
   organizacionEquipoSchema,
   organizacionSchema,
@@ -29,16 +30,20 @@ import {
  * @throws Error if entry.payload.op is 'unset'
  * @throws ZodError if payload.value doesn't match schema
  */
-export function mapToOrganizacionInput(entry: JournalEntry): OrganizacionInput {
+export function mapToOrganizacionInput(
+  entry: JournalEntry
+): Partial<OrganizacionInput> {
   if (entry.payload.op === 'unset' || entry.payload.op === 'restore') {
     throw new Error(
       `Cannot map ${entry.payload.op} operation to OrganizacionInput`
     )
   }
 
-  // Validate payload.value against schema
-  // This will throw ZodError if validation fails
-  return organizacionSchema.parse(entry.payload.value)
+  const cleanData = nullsToUndefined(entry.payload.value as Record<string, unknown>)
+  if (entry.payload.op === 'patch') {
+    return organizacionSchema.partial().parse(cleanData)
+  }
+  return organizacionSchema.parse(cleanData)
 }
 
 /**
@@ -51,14 +56,16 @@ export function mapToOrganizacionInput(entry: JournalEntry): OrganizacionInput {
  */
 export function mapToOrganizacionEquipoInput(
   entry: JournalEntry
-): OrganizacionEquipoInput {
+): Partial<OrganizacionEquipoInput> {
   if (entry.payload.op === 'unset' || entry.payload.op === 'restore') {
     throw new Error(
       `Cannot map ${entry.payload.op} operation to OrganizacionEquipoInput`
     )
   }
 
-  // Validate payload.value against schema
-  // This will throw ZodError if validation fails
-  return organizacionEquipoSchema.parse(entry.payload.value)
+  const cleanData = nullsToUndefined(entry.payload.value as Record<string, unknown>)
+  if (entry.payload.op === 'patch') {
+    return organizacionEquipoSchema.partial().parse(cleanData)
+  }
+  return organizacionEquipoSchema.parse(cleanData)
 }

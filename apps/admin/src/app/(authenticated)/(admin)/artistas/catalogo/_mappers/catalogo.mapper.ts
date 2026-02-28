@@ -9,6 +9,7 @@
  */
 
 import type { JournalEntry } from '@/shared/change-journal/lib/types'
+import { nullsToUndefined } from '@/shared/lib/utils'
 import {
   catalogoArtistaSchema,
   type CatalogoArtistaInput
@@ -44,7 +45,7 @@ import {
  */
 export function mapToCatalogoArtistaInput(
   entry: JournalEntry
-): CatalogoArtistaInput {
+): Partial<CatalogoArtistaInput> {
   // Validate that the entry has a value (not 'unset' operation)
   if (entry.payload.op === 'unset' || entry.payload.op === 'restore') {
     throw new Error(
@@ -52,7 +53,9 @@ export function mapToCatalogoArtistaInput(
     )
   }
 
-  // Parse and validate the payload value with Zod schema
-  // This will throw ZodError if validation fails (fail fast)
-  return catalogoArtistaSchema.parse(entry.payload.value)
+  const cleanData = nullsToUndefined(entry.payload.value as Record<string, unknown>)
+  if (entry.payload.op === 'patch') {
+    return catalogoArtistaSchema.partial().parse(cleanData)
+  }
+  return catalogoArtistaSchema.parse(cleanData)
 }

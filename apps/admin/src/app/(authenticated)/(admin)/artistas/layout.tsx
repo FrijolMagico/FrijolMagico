@@ -1,4 +1,4 @@
-import { ArtistContent } from './_components/artist-content'
+import { ArtistStoreLoader } from './_components/artist-store-loader'
 
 export default function ArtistasLayout({
   children
@@ -7,7 +7,7 @@ export default function ArtistasLayout({
 }) {
   return (
     <>
-      <ArtistContent />
+      <ArtistStoreLoader />
       {children}
     </>
   )

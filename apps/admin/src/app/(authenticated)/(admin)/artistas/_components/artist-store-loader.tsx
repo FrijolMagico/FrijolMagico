@@ -1,7 +1,7 @@
 import { getArtists } from '../_lib/get-artists-data'
 import { ArtistStoreInitialization } from './artist-store-initialization'
 
-export async function ArtistContent() {
+export async function ArtistStoreLoader() {
   const artist = await getArtists()
   if (!artist) return null
 

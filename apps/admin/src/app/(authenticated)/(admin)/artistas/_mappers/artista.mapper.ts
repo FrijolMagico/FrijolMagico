@@ -14,6 +14,7 @@
  */
 
 import type { JournalEntry } from '@/shared/change-journal/lib/types'
+import { nullsToUndefined } from '@/shared/lib/utils'
 import {
   artistaImagenSchema,
   artistaSchema,
@@ -29,14 +30,18 @@ import {
  * @throws Error if entry.payload.op is 'unset'
  * @throws ZodError if payload.value doesn't match schema
  */
-export function mapToArtistaInput(entry: JournalEntry): ArtistaInput {
+export function mapToArtistaInput(
+  entry: JournalEntry
+): Partial<ArtistaInput> {
   if (entry.payload.op === 'unset' || entry.payload.op === 'restore') {
     throw new Error(`Cannot map ${entry.payload.op} operation to ArtistaInput`)
   }
 
-  // Validate payload.value against schema
-  // This will throw ZodError if validation fails
-  return artistaSchema.parse(entry.payload.value)
+  const cleanData = nullsToUndefined(entry.payload.value as Record<string, unknown>)
+  if (entry.payload.op === 'patch') {
+    return artistaSchema.partial().parse(cleanData)
+  }
+  return artistaSchema.parse(cleanData)
 }
 
 /**
@@ -49,14 +54,16 @@ export function mapToArtistaInput(entry: JournalEntry): ArtistaInput {
  */
 export function mapToArtistaImagenInput(
   entry: JournalEntry
-): ArtistaImagenInput {
+): Partial<ArtistaImagenInput> {
   if (entry.payload.op === 'unset' || entry.payload.op === 'restore') {
     throw new Error(
       `Cannot map ${entry.payload.op} operation to ArtistaImagenInput`
     )
   }
 
-  // Validate payload.value against schema
-  // This will throw ZodError if validation fails
-  return artistaImagenSchema.parse(entry.payload.value)
+  const cleanData = nullsToUndefined(entry.payload.value as Record<string, unknown>)
+  if (entry.payload.op === 'patch') {
+    return artistaImagenSchema.partial().parse(cleanData)
+  }
+  return artistaImagenSchema.parse(cleanData)
 }

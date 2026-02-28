@@ -147,7 +147,7 @@ export function CatalogTable({
             if (onPageChange) onPageChange(nextPage)
 
             lastPageChangeRef.current = Date.now()
-            toast.info(`Cambiando a página ${nextPage}`)
+            toast.info(`Changing to page ${nextPage}`)
             isNearEdgeRef.current = null
             pageChangeTimeoutRef.current = null
           }, PAGE_CHANGE_DELAY)
@@ -172,7 +172,7 @@ export function CatalogTable({
             if (onPageChange) onPageChange(prevPage)
 
             lastPageChangeRef.current = Date.now()
-            toast.info(`Cambiando a página ${prevPage}`)
+            toast.info(`Changing to page ${prevPage}`)
             isNearEdgeRef.current = null
             pageChangeTimeoutRef.current = null
           }, PAGE_CHANGE_DELAY)
@@ -204,10 +204,10 @@ export function CatalogTable({
   if (paginatedIds.length === 0) {
     return (
       <EmptyState
-        title='No se encontraron artistas'
-        description='No hay artistas que coincidan con los filtros seleccionados.'
+        title='No artists found'
+        description='There are no artists matching the selected filters.'
         action={{
-          label: 'Limpiar filtros',
+          label: 'Clear filters',
           onClick: () => {
             setFiltersCatalog({
               activo: null,
@@ -239,10 +239,10 @@ export function CatalogTable({
           <TableRow>
             <TableHead className='w-8'></TableHead>
             <TableHead className='w-12'></TableHead>
-            <TableHead>Nombre</TableHead>
+            <TableHead>Name</TableHead>
             <TableHead className='w-42'></TableHead>
-            <TableHead className='w-24'>Destacado</TableHead>
-            <TableHead className='w-24'>Activo</TableHead>
+            <TableHead className='w-24'>Featured</TableHead>
+            <TableHead className='w-24'>Active</TableHead>
             <TableHead className='w-[5%]'></TableHead>
             <TableHead className='w-[5%]'></TableHead>
           </TableRow>

@@ -6,7 +6,7 @@ import { core } from '@frijolmagico/database/schema'
 const { organization } = core
 import { eq } from 'drizzle-orm'
 import { requireAuth } from '@/lib/auth/utils'
-import { revalidateTag } from 'next/cache'
+import { updateTag } from 'next/cache'
 import { ORGANIZATION_CACHE_TAG } from '../_constants'
 import { COMMIT_OPERATION_TYPE } from '@/shared/commit-system/lib/types'
 import { validateCommitOperations } from '@/shared/commit-system/lib/operation-sorter'
@@ -16,6 +16,7 @@ import {
 } from '@/shared/commit-system/lib/error-handler'
 import { createIdMapping, isTempId } from '@/shared/commit-system/lib/id-mapper'
 import { mapToOrganizacionInput } from '../_mappers/organizacion.mapper'
+import type { OrganizacionInput } from '../_schemas/organizacion.schema'
 import type {
   CommitOperation,
   CommitResult,
@@ -36,8 +37,10 @@ function toJournalEntry(op: CommitOperation): JournalEntry {
 
   switch (op.type) {
     case COMMIT_OPERATION_TYPE.CREATE:
-    case COMMIT_OPERATION_TYPE.UPDATE:
-      return { ...base, payload: { op: 'set' as const, value: op.data } }
+    case COMMIT_OPERATION_TYPE.UPDATE: {
+      const { id: _tempId, ...cleanData } = op.data
+      return { ...base, payload: { op: 'set' as const, value: cleanData } }
+    }
     case COMMIT_OPERATION_TYPE.DELETE:
       return { ...base, payload: { op: 'unset' as const } }
     case COMMIT_OPERATION_TYPE.RESTORE:
@@ -107,7 +110,7 @@ export async function saveOrganizacionAction(
                 descripcion: input.descripcion,
                 mision: input.mision,
                 vision: input.vision
-              })
+              } as OrganizacionInput)
               .returning({ id: organization.id })
 
             if (inserted) {
@@ -120,7 +123,7 @@ export async function saveOrganizacionAction(
       }
     })
 
-    revalidateTag(ORGANIZATION_CACHE_TAG, 'max')
+    updateTag(ORGANIZATION_CACHE_TAG)
 
     return {
       success: true,

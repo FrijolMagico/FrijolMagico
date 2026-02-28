@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidateTag } from 'next/cache'
+import { updateTag } from 'next/cache'
 import { ARTISTA_CACHE_TAG } from '../_constants'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
@@ -17,6 +17,10 @@ import {
   mapToArtistaInput,
   mapToArtistaImagenInput
 } from '../_mappers/artista.mapper'
+import type {
+  ArtistaInput,
+  ArtistaImagenInput
+} from '../_schemas/artista.schema'
 import type { JournalEntry } from '@/shared/change-journal/lib/types'
 import { stripUndefined } from '@/shared/lib/utils'
 import {
@@ -41,8 +45,10 @@ function toJournalEntry(op: CommitOperation): JournalEntry {
 
   switch (op.type) {
     case COMMIT_OPERATION_TYPE.CREATE:
-    case COMMIT_OPERATION_TYPE.UPDATE:
-      return { ...base, payload: { op: 'set' as const, value: op.data } }
+    case COMMIT_OPERATION_TYPE.UPDATE: {
+      const { id: _tempId, ...cleanData } = op.data
+      return { ...base, payload: { op: 'set' as const, value: cleanData } }
+    }
     case COMMIT_OPERATION_TYPE.DELETE:
       return { ...base, payload: { op: 'unset' as const } }
     case COMMIT_OPERATION_TYPE.RESTORE:
@@ -111,7 +117,7 @@ export async function saveArtistaAction(
               .values({
                 ...input,
                 id: undefined
-              })
+              } as ArtistaInput)
               .returning()
 
             mappings.push(createIdMapping(op.entityId, result.id, 'artista'))
@@ -157,7 +163,7 @@ export async function saveArtistaAction(
                 ...input,
                 artistaId: resolvedArtistaId,
                 id: undefined
-              })
+              } as ArtistaImagenInput)
               .returning()
 
             mappings.push(createIdMapping(op.entityId, result.id, 'artista'))
@@ -176,7 +182,7 @@ export async function saveArtistaAction(
       }
     })
 
-    revalidateTag(ARTISTA_CACHE_TAG, 'max')
+    updateTag(ARTISTA_CACHE_TAG)
 
     return {
       success: true,

@@ -2,7 +2,7 @@ import { describe, test, expect } from 'bun:test'
 import { catalogoArtistaSchema } from './catalogo.schema'
 
 describe('catalogoArtistaSchema', () => {
-  test('valida datos válidos con defaults', () => {
+  test('validates valid data with defaults', () => {
     const validData = {
       artistaId: 1,
       orden: '001'
@@ -18,7 +18,7 @@ describe('catalogoArtistaSchema', () => {
     })
   })
 
-  test('valida datos completos', () => {
+  test('validates complete data', () => {
     const validData = {
       id: 1,
       artistaId: 5,
@@ -33,7 +33,7 @@ describe('catalogoArtistaSchema', () => {
     expect(result).toEqual(validData)
   })
 
-  test('rechaza artistaId inválido', () => {
+  test('rejects invalid artistaId', () => {
     const invalidData = {
       artistaId: 0,
       orden: '001'
@@ -42,7 +42,7 @@ describe('catalogoArtistaSchema', () => {
     expect(() => catalogoArtistaSchema.parse(invalidData)).toThrow()
   })
 
-  test('rechaza orden vacío', () => {
+  test('rejects empty order', () => {
     const invalidData = {
       artistaId: 1,
       orden: ''
@@ -51,7 +51,7 @@ describe('catalogoArtistaSchema', () => {
     expect(() => catalogoArtistaSchema.parse(invalidData)).toThrow()
   })
 
-  test('rechaza destacado no booleano', () => {
+  test('rejects non-boolean featured', () => {
     const invalidData = {
       artistaId: 1,
       orden: '001',
@@ -61,7 +61,7 @@ describe('catalogoArtistaSchema', () => {
     expect(() => catalogoArtistaSchema.parse(invalidData)).toThrow()
   })
 
-  test('rechaza activo no booleano', () => {
+  test('rejects non-boolean active', () => {
     const invalidData = {
       artistaId: 1,
       orden: '001',
@@ -71,7 +71,7 @@ describe('catalogoArtistaSchema', () => {
     expect(() => catalogoArtistaSchema.parse(invalidData)).toThrow()
   })
 
-  test('permite descripcion opcional', () => {
+  test('allows optional description', () => {
     const validData = {
       artistaId: 1,
       orden: '001',

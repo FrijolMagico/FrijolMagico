@@ -7,7 +7,7 @@ import { eq } from 'drizzle-orm'
 const { organizationMember } = core
 
 import { requireAuth } from '@/lib/auth/utils'
-import { revalidateTag } from 'next/cache'
+import { updateTag } from 'next/cache'
 import { TEAM_CACHE_TAG } from '../_constants'
 import { COMMIT_OPERATION_TYPE } from '@/shared/commit-system/lib/types'
 import { validateCommitOperations } from '@/shared/commit-system/lib/operation-sorter'
@@ -17,6 +17,7 @@ import {
 } from '@/shared/commit-system/lib/error-handler'
 import { createIdMapping, isTempId } from '@/shared/commit-system/lib/id-mapper'
 import { mapToOrganizacionEquipoInput } from '../_mappers/organizacion.mapper'
+import type { OrganizacionEquipoInput } from '../_schemas/organizacion.schema'
 import type {
   CommitOperation,
   CommitResult,
@@ -38,16 +39,10 @@ function toJournalEntry(op: CommitOperation): JournalEntry {
   switch (op.type) {
     case COMMIT_OPERATION_TYPE.CREATE:
     case COMMIT_OPERATION_TYPE.UPDATE: {
-      const dataWithSerializedRrss = {
-        ...op.data,
-        rrss:
-          op.data.rrss && typeof op.data.rrss === 'object'
-            ? JSON.stringify(op.data.rrss)
-            : op.data.rrss
-      }
+      const { id: _tempId, ...dataSinId } = op.data
       return {
         ...base,
-        payload: { op: 'set' as const, value: dataWithSerializedRrss }
+        payload: { op: 'set' as const, value: dataSinId }
       }
     }
     case COMMIT_OPERATION_TYPE.DELETE:
@@ -125,7 +120,7 @@ export async function saveOrganizacionEquipoAction(
                 email: input.email,
                 phone: input.phone,
                 rrss: input.rrss
-              })
+              } as OrganizacionEquipoInput)
               .returning({ id: organizationMember.id })
 
             if (inserted) {
@@ -138,7 +133,7 @@ export async function saveOrganizacionEquipoAction(
       }
     })
 
-    revalidateTag(TEAM_CACHE_TAG, 'max')
+    updateTag(TEAM_CACHE_TAG)
 
     return {
       success: true,
