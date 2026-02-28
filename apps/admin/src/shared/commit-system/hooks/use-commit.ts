@@ -1,15 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import type {
-  CommitConfig,
-  CommitResult,
-  CommitProgress
-} from '../lib/types'
-
-
-
-
+import type { CommitConfig, CommitResult, CommitProgress } from '../lib/types'
 
 import {
   sortCommitOperations,
@@ -76,7 +68,6 @@ export function useCommit(config: CommitConfig): UseCommitResult {
           return
         }
 
-
         setProgress({
           phase: 'validating',
           current: operations.length,
@@ -100,7 +91,6 @@ export function useCommit(config: CommitConfig): UseCommitResult {
 
         if (execResult.success) {
           config.onSuccess?.()
-
 
           setProgress({ phase: 'clearing' })
 

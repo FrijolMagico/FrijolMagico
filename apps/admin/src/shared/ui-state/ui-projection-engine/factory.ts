@@ -59,7 +59,7 @@ export function createProjectionStore<T extends { id: string }>() {
         }
       }
 
-      // --- 2️⃣ Apply operations ---
+      // Apply operations
       for (const op of operations) {
         if (op.type === 'ADD') {
           if (!nextById[op.data.id]) {
@@ -117,7 +117,7 @@ export function createProjectionStore<T extends { id: string }>() {
         }
       }
 
-      // --- 3️⃣ Reconcile: if final projected state matches remote, clear isUpdated ---
+      // Reconcile: if final projected state matches remote, clear isUpdated ---
       // Compares remote entity fields against projected entity to detect net-zero changes.
       for (const id of Object.keys(nextById)) {
         const entity = nextById[id]
@@ -129,14 +129,18 @@ export function createProjectionStore<T extends { id: string }>() {
 
         let changed = false
         for (const key of Object.keys(remote) as (keyof T)[]) {
-          if (entity[key] !== remote[key]) { changed = true; break }
+          if (entity[key] !== remote[key]) {
+            changed = true
+            break
+          }
         }
         if (!changed) {
-          nextById[id] = { ...entity, __meta: { ...entity.__meta, isUpdated: false } }
+          nextById[id] = {
+            ...entity,
+            __meta: { ...entity.__meta, isUpdated: false }
+          }
         }
       }
-
-
 
       set({
         byId: nextById,

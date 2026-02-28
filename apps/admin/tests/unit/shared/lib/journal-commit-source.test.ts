@@ -9,7 +9,7 @@ mock.module('@/shared/change-journal/change-journal', () => ({
   clearSection: mock(() => Promise.resolve())
 }))
 const { journalCommitSource } =
-await import('@/shared/lib/journal-commit-source')
+  await import('@/shared/lib/journal-commit-source')
 
 const e = (
   scopeKey: string,
@@ -33,10 +33,14 @@ describe('journalCommitSource.read', () => {
       e('artista:temp-uuid', { op: 'set', value: wrapper })
     ])
     const ops = await journalCommitSource.read('artista')
-    expect(ops).toEqual([{
-      type: OP.CREATE, entityType: 'artista',
-      entityId: 'temp-uuid', data: { nombre: 'Test', alias: 'T' },
-    }])
+    expect(ops).toEqual([
+      {
+        type: OP.CREATE,
+        entityType: 'artista',
+        entityId: 'temp-uuid',
+        data: { nombre: 'Test', alias: 'T' }
+      }
+    ])
   })
 
   it('UPDATE per-field → single merged UPDATE', async () => {

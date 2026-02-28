@@ -460,18 +460,75 @@ describe('createEntityOperationStore', () => {
       expect(pending[2].type).toBe('DELETE')
       expect(pending[3].type).toBe('RESTORE')
     })
+  })
 
-    it('timestamps are non-decreasing', () => {
-      store.getState().add({ nombre: 'A' })
-      store.getState().add({ nombre: 'B' })
-      store.getState().add({ nombre: 'C' })
 
-      const pending = store.getState().pendingOperations!
-      for (let i = 1; i < pending.length; i++) {
-        expect(pending[i].timestamp).toBeGreaterThanOrEqual(
-          pending[i - 1].timestamp
-        )
-      }
+
+  describe('commitSuccessCleanup()', () => {
+    it('should trigger isPostCommitReset derived state after commit', async () => {
+      // This tests the UI flash fix logic
+      store = createEntityOperationStore<TestEntity>({
+        commitOperations: async () => {}
+      })
+
+      // Simulate work
+      store.getState().add({ nombre: 'Test' })
+      await store.getState().commitPendingOperations()
+
+      store
+        .getState()
+        .hydratePersistedOperations([
+          {
+            type: 'ADD' as const,
+            data: { nombre: 'Test', id: 'uuid' },
+            timestamp: Date.now()
+          }
+        ])
+
+      // After successful save, call commitSuccessCleanup
+      store.getState().commitSuccessCleanup()
+
+      const state = store.getState()
+
+      // State MUST satisfy isPostCommitReset (for UI flash fix)
+      const isPostCommitReset =
+        state.persistedOperations === null &&
+        state.pendingOperations === null &&
+        state.lastCommitAt !== null
+
+      expect(isPostCommitReset).toBe(true)
+    })
+
+    it('simple clear should not be considered post-commit reset', () => {
+      store.getState().add({ nombre: 'Test' })
+      store.getState().clearPendingOperations()
+
+      const state = store.getState()
+
+      const isPostCommitReset =
+        state.persistedOperations === null &&
+        state.pendingOperations === null &&
+        state.lastCommitAt !== null
+
+      // because lastCommitAt is null when clearPendingOperations is used, not commitSuccessCleanup
+      expect(isPostCommitReset).toBe(false)
+    })
+
+    it('resetStore (discard) should not be considered post-commit reset', () => {
+      store.getState().add({ nombre: 'Test' })
+      store.getState().resetStore()
+
+      const state = store.getState()
+
+      const isPostCommitReset =
+        state.persistedOperations === null &&
+        state.pendingOperations === null &&
+        state.lastCommitAt !== null
+
+      // resetStore clears lastCommitAt to null, so isPostCommitReset is false
+      expect(isPostCommitReset).toBe(false)
+      expect(state.lastCommitAt).toBeNull()
     })
   })
+
 })

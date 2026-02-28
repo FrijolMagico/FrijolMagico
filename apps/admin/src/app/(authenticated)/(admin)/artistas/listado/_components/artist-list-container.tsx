@@ -20,7 +20,11 @@ import { ArtistHistoryDialog } from './artist-history-dialog'
 import { useHistoryByArtist } from '../_hooks/use-history-by-artist'
 import type { HistoryEntry } from '../_types'
 
-export function ArtistListContainer({ historyData }: { historyData: HistoryEntry[] }) {
+export function ArtistListContainer({
+  historyData
+}: {
+  historyData: HistoryEntry[]
+}) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -36,7 +40,8 @@ export function ArtistListContainer({ historyData }: { historyData: HistoryEntry
 
   const { countries, cities } = useArtistList()
 
-  const { historyByArtistId, artistIdsWithHistory } = useHistoryByArtist(historyData)
+  const { historyByArtistId, artistIdsWithHistory } =
+    useHistoryByArtist(historyData)
 
   useEffect(() => {
     const searchParam = searchParams.get('search')
@@ -136,13 +141,15 @@ export function ArtistListContainer({ historyData }: { historyData: HistoryEntry
           cities={cities}
           onFiltersChange={handleFiltersChange}
         />
-        {/* SaveButton removed — replaced by RouteSaveToolbar (Task 9) */}
       </div>
 
       <ArtistListPagination onPageChange={handlePageChange} />
 
       <Card className='py-0'>
-        <ArtistListTable onClearFilters={handleClearFilters} artistIdsWithHistory={artistIdsWithHistory} />
+        <ArtistListTable
+          onClearFilters={handleClearFilters}
+          artistIdsWithHistory={artistIdsWithHistory}
+        />
       </Card>
 
       <ArtistListPagination onPageChange={handlePageChange} />
@@ -150,7 +157,6 @@ export function ArtistListContainer({ historyData }: { historyData: HistoryEntry
       <EditArtistDialog />
       <ArtistHistoryDialog historyByArtistId={historyByArtistId} />
 
-      {/* RouteSaveToolbar replaces old inline SaveButton */}
       {/* TODO: Verify sequential commit ordering and ID mapping for multi-entity routes */}
       <RouteSaveToolbar
         isDirty={isDirty}

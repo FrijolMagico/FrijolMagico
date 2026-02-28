@@ -3,7 +3,7 @@ import type {
   PaginationStore,
   CreatePaginationStoreConfig,
   PaginationSlice
-} from './pagination-types'
+} from './types'
 
 /**
  * Ensures a value is a finite number, otherwise returns the fallback.

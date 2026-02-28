@@ -2,8 +2,8 @@ import { describe, expect, it } from 'bun:test'
 import {
   sortCommitOperations,
   validateCommitOperations
-} from './operation-sorter'
-import type { CommitOperation } from './types'
+} from '@/shared/commit-system/lib/operation-sorter'
+import type { CommitOperation } from '@/shared/commit-system/lib/types'
 
 describe('sortCommitOperations', () => {
   it('discards DELETE on tempId (never persisted)', () => {
