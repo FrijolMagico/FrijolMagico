@@ -18,7 +18,7 @@ Orquestar el flujo de guardado garantizando que las operaciones se validen, orde
 - `use-commit.ts`: Hook principal que orquestra el pipeline completo.
 - `operation-sorter.ts`: Lógica de validación de conflictos, ordenamiento y edge cases (DELETE-on-tempId, CREATE+DELETE, UPDATE+DELETE).
 - `batch-processor.ts`: Utilidad para procesar grandes volúmenes en lotes. Actualmente sin uso (T7 migró los actions a `db.transaction()`).
-- `create-commit-config.ts`: Factory para tipar la configuración del pipeline.
+
 
 ## Estado actual
 
