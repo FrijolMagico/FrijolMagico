@@ -16,7 +16,10 @@ export const artistaSchema = z.object({
   slug: z.string().min(1, { error: 'El slug es obligatorio' }),
   rut: z.string().optional(),
   correo: z.string().optional(),
-  rrss: z.string().optional(),
+  rrss: z.preprocess((val) => {
+    if (val && typeof val === 'object') return JSON.stringify(val)
+    return val
+  }, z.string().optional()),
   ciudad: z.string().optional(),
   pais: z.string().optional()
 })
@@ -40,7 +43,10 @@ export const artistaImagenSchema = z.object({
     .int()
     .positive({ error: 'orden debe ser un entero positivo' })
     .default(1),
-  metadata: z.string().optional()
+  metadata: z.preprocess((val) => {
+    if (val && typeof val === 'object') return JSON.stringify(val)
+    return val
+  }, z.string().optional())
 })
 
 /**

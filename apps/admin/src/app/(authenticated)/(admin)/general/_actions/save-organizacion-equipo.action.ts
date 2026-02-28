@@ -40,18 +40,9 @@ function toJournalEntry(op: CommitOperation): JournalEntry {
     case COMMIT_OPERATION_TYPE.CREATE:
     case COMMIT_OPERATION_TYPE.UPDATE: {
       const { id: _tempId, ...dataSinId } = op.data
-      const dataWithSerializedRrss = {
-        ...dataSinId,
-        rrss:
-          op.data.rrss === null
-            ? undefined
-            : op.data.rrss && typeof op.data.rrss === 'object'
-              ? JSON.stringify(op.data.rrss)
-              : op.data.rrss
-      }
       return {
         ...base,
-        payload: { op: 'set' as const, value: dataWithSerializedRrss }
+        payload: { op: 'set' as const, value: dataSinId }
       }
     }
     case COMMIT_OPERATION_TYPE.DELETE:
