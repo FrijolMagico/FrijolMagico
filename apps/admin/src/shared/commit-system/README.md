@@ -9,20 +9,20 @@ Orquestar el flujo de guardado garantizando que las operaciones se validen, orde
 ## Pipeline de 4 fases
 
 1. **Read**: Recupera las operaciones pendientes desde el `journalCommitSource`.
-2. **Validate & Sort**: Verifica la integridad de las operaciones y las ordena secuencialmente (DELETE → RESTORE → UPDATE → CREATE) vía `operation-sorter.ts`.
-3. **Execute**: Ejecuta el Server Action correspondiente (executor) procesando los cambios en el servidor.
+2. **Validate & Sort**: Verifica la integridad y las ordena (DELETE → RESTORE → UPDATE → CREATE) vía `operation-sorter.ts`. Realiza **no-op cancellation** (limpieza silenciosa si las operaciones se cancelan mutuamente).
+3. **Execute**: Ejecuta el Server Action procesando los cambios en servidor y hace invalidación inmediata con `updateTag` ("read-your-own-writes").
 4. **Clear**: Tras un éxito confirmado, limpia las entradas procesadas en IndexedDB.
 
 ## Archivos clave
 
 - `use-commit.ts`: Hook principal que orquestra el pipeline completo.
 - `operation-sorter.ts`: Lógica de validación de conflictos, ordenamiento y edge cases (DELETE-on-tempId, CREATE+DELETE, UPDATE+DELETE).
-- `batch-processor.ts`: Utilidad para procesar grandes volúmenes en lotes. Actualmente sin uso (T7 migró los actions a `db.transaction()`).
+
 
 
 ## Estado actual
 
-El pipeline está activo. T7 completada: bugs de integridad corregidos (double-update, stripUndefined, allMappings), error handling estandarizado, revalidateTag corregido, y edge cases del sorter implementados.
+El pipeline está activo. P8 completada: limpieza de dead code, corrección de cache stale (`updateTag`), eliminación del UI flash post-save reteniendo la proyección, y no-op cancellation integrado.
 
 El pipeline está activo en producción para todos los módulos: `organizacion`, `organizacion_equipo`, `artista`, `catalogo_artista`, `evento`. El botón "Guardar" ejecuta el `commit()` real y persiste cambios al servidor.
 ## Edge cases del sorter

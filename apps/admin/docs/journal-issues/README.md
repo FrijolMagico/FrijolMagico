@@ -12,3 +12,4 @@
 | T5 | Simplificación de arquitectura para historial de artistas | ✅ Completado |
 | T6 | Activar el guardado real al servidor | ✅ Completado |
 | T7 | Robustecer el commit-system | ✅ Completado |
+| P8 | Cleanup y correcciones finales del journal system | ✅ Completado |
