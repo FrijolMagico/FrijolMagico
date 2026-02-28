@@ -119,6 +119,7 @@ src/
 - **NEVER unnecessary client components** — prefer Server Components
 - **NEVER Pages Router** — App Router only
 - **NEVER use `any` types**
+- **NEVER** write comments, text descriptions in spanish, always use english for code and documentation unless its a specific case for spanish content
 
 ## General Rules
 
