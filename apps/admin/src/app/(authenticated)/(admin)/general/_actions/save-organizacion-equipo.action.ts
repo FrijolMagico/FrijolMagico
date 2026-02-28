@@ -17,6 +17,7 @@ import {
 } from '@/shared/commit-system/lib/error-handler'
 import { createIdMapping, isTempId } from '@/shared/commit-system/lib/id-mapper'
 import { mapToOrganizacionEquipoInput } from '../_mappers/organizacion.mapper'
+import type { OrganizacionEquipoInput } from '../_schemas/organizacion.schema'
 import type {
   CommitOperation,
   CommitResult,
@@ -38,12 +39,15 @@ function toJournalEntry(op: CommitOperation): JournalEntry {
   switch (op.type) {
     case COMMIT_OPERATION_TYPE.CREATE:
     case COMMIT_OPERATION_TYPE.UPDATE: {
+      const { id: _tempId, ...dataSinId } = op.data
       const dataWithSerializedRrss = {
-        ...op.data,
+        ...dataSinId,
         rrss:
-          op.data.rrss && typeof op.data.rrss === 'object'
-            ? JSON.stringify(op.data.rrss)
-            : op.data.rrss
+          op.data.rrss === null
+            ? undefined
+            : op.data.rrss && typeof op.data.rrss === 'object'
+              ? JSON.stringify(op.data.rrss)
+              : op.data.rrss
       }
       return {
         ...base,
@@ -125,7 +129,7 @@ export async function saveOrganizacionEquipoAction(
                 email: input.email,
                 phone: input.phone,
                 rrss: input.rrss
-              })
+              } as OrganizacionEquipoInput)
               .returning({ id: organizationMember.id })
 
             if (inserted) {

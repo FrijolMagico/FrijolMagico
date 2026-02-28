@@ -17,3 +17,20 @@ export function stripUndefined<T extends Record<string, unknown>>(
   }
   return result
 }
+
+/**
+ * Converts all null values in a flat object to undefined.
+ * Use before Zod validation to handle UI payloads that send null
+ * instead of undefined for optional fields.
+ */
+export function nullsToUndefined<T extends Record<string, unknown>>(
+  obj: T
+): { [K in keyof T]: Exclude<T[K], null> | (null extends T[K] ? undefined : never) } {
+  const result = { ...obj }
+  for (const key of Object.keys(result)) {
+    if (result[key] === null) {
+      ;(result as Record<string, unknown>)[key] = undefined
+    }
+  }
+  return result as { [K in keyof T]: Exclude<T[K], null> | (null extends T[K] ? undefined : never) }
+}

@@ -24,6 +24,7 @@ import {
 } from '@/shared/commit-system/lib/error-handler'
 import { createIdMapping, isTempId } from '@/shared/commit-system/lib/id-mapper'
 import { mapToCatalogoArtistaInput } from '../_mappers/catalogo.mapper'
+import type { CatalogoArtistaInput } from '../_schemas/catalogo.schema'
 import { JOURNAL_ENTITIES } from '@/shared/lib/database-entities'
 import { stripUndefined } from '@/shared/lib/utils'
 
@@ -39,8 +40,10 @@ function toJournalEntry(op: CommitOperation): JournalEntry {
 
   switch (op.type) {
     case COMMIT_OPERATION_TYPE.CREATE:
-    case COMMIT_OPERATION_TYPE.UPDATE:
-      return { ...base, payload: { op: 'set' as const, value: op.data } }
+    case COMMIT_OPERATION_TYPE.UPDATE: {
+      const { id: _tempId, ...cleanData } = op.data
+      return { ...base, payload: { op: 'set' as const, value: cleanData } }
+    }
     case COMMIT_OPERATION_TYPE.DELETE:
       return { ...base, payload: { op: 'unset' as const } }
     case COMMIT_OPERATION_TYPE.RESTORE:
@@ -89,15 +92,15 @@ export async function saveCatalogoAction(
           const entry = toJournalEntry(op)
           const input = mapToCatalogoArtistaInput(entry)
 
-          if (input.id && !isTempId(op.entityId)) {
+          if (!isTempId(op.entityId)) {
             await tx
               .update(artist.catalogoArtista)
               .set(stripUndefined(input))
-              .where(eq(artist.catalogoArtista.id, input.id))
+              .where(eq(artist.catalogoArtista.id, Number.parseInt(op.entityId, 10)))
           } else {
             const [inserted] = await tx
               .insert(artist.catalogoArtista)
-              .values(input)
+              .values(input as CatalogoArtistaInput)
               .returning({ id: artist.catalogoArtista.id })
 
             if (inserted) {
