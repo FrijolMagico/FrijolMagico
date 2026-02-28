@@ -102,7 +102,8 @@ export function createEntityOperationStore<T>({
     resetStore: () =>
       set({
         persistedOperations: null,
-        pendingOperations: null
+        pendingOperations: null,
+        lastCommitAt: Date.now()
       }),
     hydratePersistedOperations: (operations) =>
       set((state) => ({
