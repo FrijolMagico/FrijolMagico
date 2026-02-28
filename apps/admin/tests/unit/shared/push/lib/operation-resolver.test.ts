@@ -1,20 +1,20 @@
 import { describe, expect, it } from 'bun:test'
 import {
-  sortCommitOperations,
-  validateCommitOperations
-} from '@/shared/commit-system/lib/operation-sorter'
-import type { CommitOperation } from '@/shared/commit-system/lib/types'
+  sortPushOperations,
+  validatePushOperations
+} from '@/shared/push/lib/operation-resolver'
+import type { PushOperation } from '@/shared/push/lib/types'
 
-describe('sortCommitOperations', () => {
+describe('sortPushOperations', () => {
   it('discards DELETE on tempId (never persisted)', () => {
-    const ops: CommitOperation[] = [
+    const ops: PushOperation[] = [
       { type: 'DELETE', entityType: 'artista', entityId: 'temp-abc' }
     ]
-    expect(sortCommitOperations(ops)).toEqual([])
+    expect(sortPushOperations(ops)).toEqual([])
   })
 
   it('cancels CREATE + DELETE on same tempId (total cancellation)', () => {
-    const ops: CommitOperation[] = [
+    const ops: PushOperation[] = [
       {
         type: 'CREATE',
         entityType: 'artista',
@@ -23,11 +23,11 @@ describe('sortCommitOperations', () => {
       },
       { type: 'DELETE', entityType: 'artista', entityId: 'temp-abc' }
     ]
-    expect(sortCommitOperations(ops)).toEqual([])
+    expect(sortPushOperations(ops)).toEqual([])
   })
 
   it('keeps only DELETE when UPDATE + DELETE on real entity', () => {
-    const ops: CommitOperation[] = [
+    const ops: PushOperation[] = [
       {
         type: 'UPDATE',
         entityType: 'artista',
@@ -36,24 +36,24 @@ describe('sortCommitOperations', () => {
       },
       { type: 'DELETE', entityType: 'artista', entityId: '42' }
     ]
-    const result = sortCommitOperations(ops)
+    const result = sortPushOperations(ops)
     expect(result).toEqual([
       { type: 'DELETE', entityType: 'artista', entityId: '42' }
     ])
   })
 
   it('deduplicates multiple DELETEs on same entity to one', () => {
-    const ops: CommitOperation[] = [
+    const ops: PushOperation[] = [
       { type: 'DELETE', entityType: 'artista', entityId: '42' },
       { type: 'DELETE', entityType: 'artista', entityId: '42' }
     ]
-    const result = sortCommitOperations(ops)
+    const result = sortPushOperations(ops)
     expect(result).toHaveLength(1)
     expect(result[0].type).toBe('DELETE')
   })
 
   it('outputs in order: DELETE, RESTORE, UPDATE, CREATE', () => {
-    const ops: CommitOperation[] = [
+    const ops: PushOperation[] = [
       {
         type: 'CREATE',
         entityType: 'artista',
@@ -69,7 +69,7 @@ describe('sortCommitOperations', () => {
       { type: 'RESTORE', entityType: 'disco', entityId: '20' },
       { type: 'DELETE', entityType: 'genero', entityId: '30' }
     ]
-    const result = sortCommitOperations(ops)
+    const result = sortPushOperations(ops)
     expect(result.map((op) => op.type)).toEqual([
       'DELETE',
       'RESTORE',
@@ -79,7 +79,7 @@ describe('sortCommitOperations', () => {
   })
 
   it('passes through a clean CREATE', () => {
-    const ops: CommitOperation[] = [
+    const ops: PushOperation[] = [
       {
         type: 'CREATE',
         entityType: 'artista',
@@ -87,24 +87,24 @@ describe('sortCommitOperations', () => {
         data: { nombre: 'x' }
       }
     ]
-    const result = sortCommitOperations(ops)
+    const result = sortPushOperations(ops)
     expect(result).toHaveLength(1)
     expect(result[0].type).toBe('CREATE')
     expect(result[0].entityId).toBe('temp-xyz')
   })
 
   it('passes through a RESTORE', () => {
-    const ops: CommitOperation[] = [
+    const ops: PushOperation[] = [
       { type: 'RESTORE', entityType: 'artista', entityId: '42' }
     ]
-    expect(sortCommitOperations(ops)).toEqual([
+    expect(sortPushOperations(ops)).toEqual([
       { type: 'RESTORE', entityType: 'artista', entityId: '42' }
     ])
   })
 
   it('newer RESTORE cancels older DELETE and allows UPDATEs', () => {
     // ops are newest-first: RESTORE (index 0) is newer than DELETE (index 2)
-    const ops: CommitOperation[] = [
+    const ops: PushOperation[] = [
       { type: 'RESTORE', entityType: 'artista', entityId: '42' },
       {
         type: 'UPDATE',
@@ -114,7 +114,7 @@ describe('sortCommitOperations', () => {
       },
       { type: 'DELETE', entityType: 'artista', entityId: '42' }
     ]
-    const result = sortCommitOperations(ops)
+    const result = sortPushOperations(ops)
     // DELETE and RESTORE cancel out, only UPDATE remains
     expect(result).toHaveLength(1)
     expect(result[0]).toEqual({
@@ -127,7 +127,7 @@ describe('sortCommitOperations', () => {
 
   it('newer DELETE overrides older RESTORE', () => {
     // ops are newest-first: DELETE (index 0) is newer than RESTORE (index 2)
-    const ops: CommitOperation[] = [
+    const ops: PushOperation[] = [
       { type: 'DELETE', entityType: 'artista', entityId: '42' },
       {
         type: 'UPDATE',
@@ -137,16 +137,16 @@ describe('sortCommitOperations', () => {
       },
       { type: 'RESTORE', entityType: 'artista', entityId: '42' }
     ]
-    const result = sortCommitOperations(ops)
+    const result = sortPushOperations(ops)
     // DELETE is newer, so it wins — only DELETE emitted
     expect(result).toHaveLength(1)
     expect(result[0].type).toBe('DELETE')
   })
 })
 
-describe('validateCommitOperations', () => {
+describe('validatePushOperations', () => {
   it('returns valid for any operations including UPDATE+DELETE', () => {
-    const ops: CommitOperation[] = [
+    const ops: PushOperation[] = [
       {
         type: 'UPDATE',
         entityType: 'artista',
@@ -155,6 +155,6 @@ describe('validateCommitOperations', () => {
       },
       { type: 'DELETE', entityType: 'artista', entityId: '42' }
     ]
-    expect(validateCommitOperations(ops)).toEqual({ valid: true, errors: [] })
+    expect(validatePushOperations(ops)).toEqual({ valid: true, errors: [] })
   })
 })

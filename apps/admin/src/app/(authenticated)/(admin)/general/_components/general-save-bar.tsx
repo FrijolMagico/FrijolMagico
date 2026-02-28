@@ -3,16 +3,16 @@
 import { useRouteChanges } from '@/shared/hooks/use-route-changes'
 import { RouteSaveToolbar } from '@/shared/components/route-save-toolbar'
 import {
-  useOrganizacionCommit,
-  useOrganizacionEquipoCommit
-} from '../_hooks/use-organizacion-commit'
+  useOrganizacionPush,
+  useOrganizacionEquipoPush
+} from '../_hooks/use-organizacion-push'
 
 export function GeneralSaveBar() {
   const { isDirty, discardAll } = useRouteChanges('/general')
 
-  const { save: saveOrg, isPending: isPendingOrg } = useOrganizacionCommit()
+  const { save: saveOrg, isPending: isPendingOrg } = useOrganizacionPush()
   const { save: saveTeam, isPending: isPendingTeam } =
-    useOrganizacionEquipoCommit()
+    useOrganizacionEquipoPush()
 
   const handleSave = () => {
     // Parallel saves are safe: ORGANIZATION_ID is a singleton (always ID=1, never created from UI).

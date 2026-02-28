@@ -5,17 +5,17 @@ import { eq } from 'drizzle-orm'
 import { db } from '@frijolmagico/database/orm'
 import { events } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/lib/auth/utils'
-import { isTempId, createIdMapping } from '@/shared/commit-system/lib/id-mapper'
+import { isTempId, createIdMapping } from '@/shared/push/lib/id-mapper'
 import {
-  sortCommitOperations,
-  validateCommitOperations
-} from '@/shared/commit-system/lib/operation-sorter'
-import { COMMIT_OPERATION_TYPE } from '@/shared/commit-system/lib/types'
+  sortPushOperations,
+  validatePushOperations
+} from '@/shared/push/lib/operation-resolver'
+import { PUSH_OPERATION_TYPE } from '@/shared/push/lib/types'
 import type {
-  CommitOperation,
-  CommitResult,
+  PushOperation,
+  PushResult,
   IdMapping
-} from '@/shared/commit-system/lib/types'
+} from '@/shared/push/lib/types'
 import type { JournalEntry } from '@/shared/change-journal/lib/types'
 import {
   mapToEventoInput,
@@ -31,12 +31,12 @@ import { stripUndefined } from '@/shared/lib/utils'
 import {
   handleServerActionError,
   logServerError
-} from '@/shared/commit-system/lib/error-handler'
+} from '@/shared/push/lib/error-handler'
 
 /**
- * Synthesize a JournalEntry from CommitOperation for mapper compatibility
+ * Synthesize a JournalEntry from PushOperation for mapper compatibility
  */
-function toJournalEntry(op: CommitOperation): JournalEntry {
+function toJournalEntry(op: PushOperation): JournalEntry {
   const base = {
     entryId: crypto.randomUUID(),
     schemaVersion: 1,
@@ -47,12 +47,12 @@ function toJournalEntry(op: CommitOperation): JournalEntry {
   }
 
   switch (op.type) {
-    case COMMIT_OPERATION_TYPE.CREATE:
-    case COMMIT_OPERATION_TYPE.UPDATE:
+    case PUSH_OPERATION_TYPE.CREATE:
+    case PUSH_OPERATION_TYPE.UPDATE:
       return { ...base, payload: { op: 'set' as const, value: op.data } }
-    case COMMIT_OPERATION_TYPE.DELETE:
+    case PUSH_OPERATION_TYPE.DELETE:
       return { ...base, payload: { op: 'unset' as const } }
-    case COMMIT_OPERATION_TYPE.RESTORE:
+    case PUSH_OPERATION_TYPE.RESTORE:
       return { ...base, payload: { op: 'restore' as const } }
   }
 }
@@ -60,13 +60,13 @@ function toJournalEntry(op: CommitOperation): JournalEntry {
 /**
  * Save evento section changes to database
  *
- * Receives CommitOperation[] and persists them to DB.
+ * Receives PushOperation[] and persists them to DB.
  * Handles evento, eventoEdicion, and eventoEdicionDia tables in a single transaction.
  * Validates data via Zod schemas internally.
  */
 export async function saveEventoAction(
-  operations: CommitOperation[]
-): Promise<CommitResult> {
+  operations: PushOperation[]
+): Promise<PushResult> {
   try {
     await requireAuth()
 
@@ -74,7 +74,7 @@ export async function saveEventoAction(
       return { success: true, idMappings: [] }
     }
 
-    const validation = validateCommitOperations(operations)
+    const validation = validatePushOperations(operations)
     if (!validation.valid) {
       return {
         success: false,
@@ -86,11 +86,11 @@ export async function saveEventoAction(
       }
     }
 
-    const sorted = sortCommitOperations(operations)
+    const sorted = sortPushOperations(operations)
 
-    const eventoOps: CommitOperation[] = []
-    const edicionOps: CommitOperation[] = []
-    const diaOps: CommitOperation[] = []
+    const eventoOps: PushOperation[] = []
+    const edicionOps: PushOperation[] = []
+    const diaOps: PushOperation[] = []
 
     for (const op of sorted) {
       if (op.entityType.includes('evento-edicion-dia')) {
@@ -107,13 +107,13 @@ export async function saveEventoAction(
 
     await db.transaction(async (tx) => {
       for (const op of eventoOps) {
-        if (op.type === COMMIT_OPERATION_TYPE.DELETE) {
+        if (op.type === PUSH_OPERATION_TYPE.DELETE) {
           if (!isTempId(op.entityId)) {
             await tx
               .delete(events.evento)
               .where(eq(events.evento.id, Number.parseInt(op.entityId, 10)))
           }
-        } else if (op.type === COMMIT_OPERATION_TYPE.RESTORE) {
+        } else if (op.type === PUSH_OPERATION_TYPE.RESTORE) {
           continue
         } else {
           const entry = toJournalEntry(op)
@@ -144,7 +144,7 @@ export async function saveEventoAction(
       }
 
       for (const op of edicionOps) {
-        if (op.type === COMMIT_OPERATION_TYPE.DELETE) {
+        if (op.type === PUSH_OPERATION_TYPE.DELETE) {
           if (!isTempId(op.entityId)) {
             await tx
               .delete(events.eventoEdicion)
@@ -152,7 +152,7 @@ export async function saveEventoAction(
                 eq(events.eventoEdicion.id, Number.parseInt(op.entityId, 10))
               )
           }
-        } else if (op.type === COMMIT_OPERATION_TYPE.RESTORE) {
+        } else if (op.type === PUSH_OPERATION_TYPE.RESTORE) {
           continue
         } else {
           const entry = toJournalEntry(op)
@@ -190,7 +190,7 @@ export async function saveEventoAction(
       }
 
       for (const op of diaOps) {
-        if (op.type === COMMIT_OPERATION_TYPE.DELETE) {
+        if (op.type === PUSH_OPERATION_TYPE.DELETE) {
           if (!isTempId(op.entityId)) {
             await tx
               .delete(events.eventoEdicionDia)
@@ -198,7 +198,7 @@ export async function saveEventoAction(
                 eq(events.eventoEdicionDia.id, Number.parseInt(op.entityId, 10))
               )
           }
-        } else if (op.type === COMMIT_OPERATION_TYPE.RESTORE) {
+        } else if (op.type === PUSH_OPERATION_TYPE.RESTORE) {
           continue
         } else {
           const entry = toJournalEntry(op)

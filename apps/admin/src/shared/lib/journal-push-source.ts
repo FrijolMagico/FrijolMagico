@@ -1,7 +1,7 @@
 /**
- * journal-commit-source.ts - Connector: Change Journal → CommitSource contract
+ * journal-push-source.ts - Connector: Change Journal → PushSource contract
  *
- * Adapts the change-journal module to the CommitSource interface.
+ * Adapts the change-journal module to the PushSource interface.
  * Lives in shared/lib/ as glue code between decoupled modules.
  *
  * Mapping Rules:
@@ -22,16 +22,16 @@ import {
   hasEntries,
   clearSection
 } from '@/shared/change-journal/change-journal'
-import { isTempId } from '@/shared/commit-system/lib/id-mapper'
+import { isTempId } from '@/shared/push/lib/id-mapper'
 import {
-  COMMIT_OPERATION_TYPE,
-  type CommitOperation,
-  type CommitSource
-} from '@/shared/commit-system/lib/types'
+  PUSH_OPERATION_TYPE,
+  type PushOperation,
+  type PushSource
+} from '@/shared/push/lib/types'
 import type { JournalEntry } from '@/shared/change-journal/lib/types'
 
 /**
- * Process journal entries into CommitOperations.
+ * Process journal entries into PushOperations.
  *
  * Handles the format asymmetry from writeOperationIntoJournal:
  * - ADD ops store the full EntityOperation wrapper as value
@@ -45,8 +45,8 @@ import type { JournalEntry } from '@/shared/change-journal/lib/types'
  * - For temp IDs with ADD + per-field updates: merge into single CREATE
  * - For deleted entities: skip any UPDATE operations
  */
-function processEntries(entries: JournalEntry[]): CommitOperation[] {
-  const operations: CommitOperation[] = []
+function processEntries(entries: JournalEntry[]): PushOperation[] {
+  const operations: PushOperation[] = []
 
   // Track entities that have DELETE to filter out older updates
   const deletedEntities = new Set<string>()
@@ -83,7 +83,7 @@ function processEntries(entries: JournalEntry[]): CommitOperation[] {
     if (op === 'unset') {
       deletedEntities.add(entityKey)
       operations.push({
-        type: COMMIT_OPERATION_TYPE.DELETE,
+        type: PUSH_OPERATION_TYPE.DELETE,
         entityType,
         entityId
       })
@@ -93,7 +93,7 @@ function processEntries(entries: JournalEntry[]): CommitOperation[] {
     // Track RESTORE operations
     if (op === 'restore') {
       operations.push({
-        type: COMMIT_OPERATION_TYPE.RESTORE,
+        type: PUSH_OPERATION_TYPE.RESTORE,
         entityType,
         entityId
       })
@@ -116,7 +116,7 @@ function processEntries(entries: JournalEntry[]): CommitOperation[] {
       } else {
         // Non-temp ID with full set = UPDATE
         operations.push({
-          type: COMMIT_OPERATION_TYPE.UPDATE,
+          type: PUSH_OPERATION_TYPE.UPDATE,
           entityType,
           entityId,
           data: wrappedOp.data
@@ -173,8 +173,8 @@ function processEntries(entries: JournalEntry[]): CommitOperation[] {
 
       // Otherwise emit as UPDATE (or CREATE if temp ID)
       const operationType = isTempId(entityId)
-        ? COMMIT_OPERATION_TYPE.CREATE
-        : COMMIT_OPERATION_TYPE.UPDATE
+        ? PUSH_OPERATION_TYPE.CREATE
+        : PUSH_OPERATION_TYPE.UPDATE
       operations.push({
         type: operationType,
         entityType,
@@ -193,7 +193,7 @@ function processEntries(entries: JournalEntry[]): CommitOperation[] {
     // Only emit if we have data
     if (Object.keys(data).length > 0) {
       operations.push({
-        type: COMMIT_OPERATION_TYPE.CREATE,
+        type: PUSH_OPERATION_TYPE.CREATE,
         entityType,
         entityId,
         data
@@ -208,7 +208,7 @@ function processEntries(entries: JournalEntry[]): CommitOperation[] {
       continue
     }
     operations.push({
-      type: COMMIT_OPERATION_TYPE.UPDATE,
+      type: PUSH_OPERATION_TYPE.UPDATE,
       entityType,
       entityId,
       data
@@ -218,8 +218,8 @@ function processEntries(entries: JournalEntry[]): CommitOperation[] {
   return operations
 }
 
-export const journalCommitSource: CommitSource = {
-  async read(section: string): Promise<CommitOperation[]> {
+export const journalPushSource: PushSource = {
+  async read(section: string): Promise<PushOperation[]> {
     const entries = await getLatestEntries(section)
     return processEntries(entries)
   },

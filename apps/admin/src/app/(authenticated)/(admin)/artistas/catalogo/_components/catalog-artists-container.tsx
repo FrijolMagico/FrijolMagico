@@ -13,8 +13,8 @@ import { useCatalogFilterStore } from '../_store/catalog-filter-store'
 import { useCatalogPaginationStore } from '../_store/catalog-pagination-store'
 import { useCatalogOperationStore } from '../_store/catalog-ui-store'
 import { useArtistsOperationStore } from '../../_store/artista-ui-store'
-import { useCatalogoCommit } from '../_hooks/use-catalogo-commit'
-import { useArtistaCommit } from '../../_hooks/use-artista-commit'
+import { useCatalogoPush } from '../_hooks/use-catalogo-push'
+import { useArtistaPush } from '../../_hooks/use-artista-push'
 import { CatalogTableContainer } from './catalog-table-container'
 
 export function CatalogArtistsContainer() {
@@ -28,8 +28,8 @@ export function CatalogArtistsContainer() {
   const { isDirty, discardAll } = useRouteChanges('/artistas/catalogo')
 
   const { save: saveCatalogo, isPending: isPendingCatalogo } =
-    useCatalogoCommit()
-  const { save: saveArtista, isPending: isPendingArtista } = useArtistaCommit()
+    useCatalogoPush()
+  const { save: saveArtista, isPending: isPendingArtista } = useArtistaPush()
 
   useAutoCommit(useCatalogOperationStore)
   useAutoCommit(useArtistsOperationStore)

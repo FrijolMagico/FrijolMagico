@@ -6,7 +6,7 @@ import { useDebouncedCallback } from 'use-debounce'
 import { Card } from '@/shared/components/ui/card'
 import { useRouteChanges } from '@/shared/hooks/use-route-changes'
 import { RouteSaveToolbar } from '@/shared/components/route-save-toolbar'
-import { useArtistaCommit } from '../../_hooks/use-artista-commit'
+import { useArtistaPush } from '../../_hooks/use-artista-push'
 import { useAutoCommit } from '@/shared/ui-state/operation-log/hooks/use-auto-commit'
 import { useArtistsOperationStore } from '../../_store/artista-ui-store'
 import { useArtistListFilterStore } from '../_store/artist-list-filter-store'
@@ -31,7 +31,7 @@ export function ArtistListContainer({
   const setFilters = useArtistListFilterStore((s) => s.setFilters)
   const setPage = useArtistListPaginationStore((s) => s.setPage)
 
-  const { save, isPending } = useArtistaCommit()
+  const { save, isPending } = useArtistaPush()
 
   const { isDirty, discardAll } = useRouteChanges('/artistas/listado')
 

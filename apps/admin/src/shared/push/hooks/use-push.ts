@@ -1,31 +1,31 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import type { CommitConfig, CommitResult, CommitProgress } from '../lib/types'
+import type { PushConfig, PushResult, PushProgress } from '../lib/types'
 
 import {
-  sortCommitOperations,
-  validateCommitOperations
-} from '../lib/operation-sorter'
+  sortPushOperations,
+  validatePushOperations
+} from '../lib/operation-resolver'
 
-export interface UseCommitResult {
-  commit: () => Promise<void>
+export interface UsePushResult {
+  push: () => Promise<void>
   isPending: boolean
-  result: CommitResult | null
-  progress: CommitProgress | null
+  result: PushResult | null
+  progress: PushProgress | null
 }
 
 /**
- * Generic commit orchestrator hook
+ * Generic push orchestrator hook
  *
  * Pipeline: read → validate → sort → execute → onSuccess → clear
  *
- * @param config - CommitConfig with source, executor, section, and optional onSuccess
- * @returns UseCommitResult with commit function, isPending, result, and progress
+ * @param config - PushConfig with source, executor, section, and optional onSuccess
+ * @returns UsePushResult with push function, isPending, result, and progress
  *
  * @example
- * const { commit, isPending, result } = useCommit({
- *   source: journalCommitSource,
+ * const { push, isPending, result } = usePush({
+ *   source: journalPushSource,
  *   executor: saveArtistaAction,
  *   section: 'artista',
  *   onSuccess: () => {
@@ -34,12 +34,12 @@ export interface UseCommitResult {
  *   }
  * })
  */
-export function useCommit(config: CommitConfig): UseCommitResult {
+export function usePush(config: PushConfig): UsePushResult {
   const [isPending, startTransition] = useTransition()
-  const [result, setResult] = useState<CommitResult | null>(null)
-  const [progress, setProgress] = useState<CommitProgress | null>(null)
+  const [result, setResult] = useState<PushResult | null>(null)
+  const [progress, setProgress] = useState<PushProgress | null>(null)
 
-  const commit = async () => {
+  const push = async () => {
     startTransition(async () => {
       try {
         setProgress({ phase: 'reading' })
@@ -54,7 +54,7 @@ export function useCommit(config: CommitConfig): UseCommitResult {
 
         setProgress({ phase: 'validating', total: operations.length })
 
-        const validationResult = validateCommitOperations(operations)
+        const validationResult = validatePushOperations(operations)
         if (!validationResult.valid) {
           setResult({
             success: false,
@@ -73,7 +73,7 @@ export function useCommit(config: CommitConfig): UseCommitResult {
           current: operations.length,
           total: operations.length
         })
-        const sortedOps = sortCommitOperations(operations)
+        const sortedOps = sortPushOperations(operations)
 
         // No-op cancellation: if all ops cancelled each other out, skip executor
         if (sortedOps.length === 0) {
@@ -100,7 +100,7 @@ export function useCommit(config: CommitConfig): UseCommitResult {
         setProgress(null)
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : 'Unknown error during commit'
+          error instanceof Error ? error.message : 'Unknown error during push'
         setResult({
           success: false,
           errors: [
@@ -116,5 +116,5 @@ export function useCommit(config: CommitConfig): UseCommitResult {
     })
   }
 
-  return { commit, isPending, result, progress }
+  return { push, isPending, result, progress }
 }

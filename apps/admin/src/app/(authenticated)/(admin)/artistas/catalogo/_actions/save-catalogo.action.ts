@@ -8,27 +8,27 @@ import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/lib/auth/utils'
 import {
-  COMMIT_OPERATION_TYPE,
-  type CommitOperation,
-  type CommitResult,
+  PUSH_OPERATION_TYPE,
+  type PushOperation,
+  type PushResult,
   type IdMapping
-} from '@/shared/commit-system/lib/types'
+} from '@/shared/push/lib/types'
 import type { JournalEntry } from '@/shared/change-journal/lib/types'
 import {
-  sortCommitOperations,
-  validateCommitOperations
-} from '@/shared/commit-system/lib/operation-sorter'
+  sortPushOperations,
+  validatePushOperations
+} from '@/shared/push/lib/operation-resolver'
 import {
   handleServerActionError,
   logServerError
-} from '@/shared/commit-system/lib/error-handler'
-import { createIdMapping, isTempId } from '@/shared/commit-system/lib/id-mapper'
+} from '@/shared/push/lib/error-handler'
+import { createIdMapping, isTempId } from '@/shared/push/lib/id-mapper'
 import { mapToCatalogoArtistaInput } from '../_mappers/catalogo.mapper'
 import type { CatalogoArtistaInput } from '../_schemas/catalogo.schema'
 import { JOURNAL_ENTITIES } from '@/shared/lib/database-entities'
 import { stripUndefined } from '@/shared/lib/utils'
 
-function toJournalEntry(op: CommitOperation): JournalEntry {
+function toJournalEntry(op: PushOperation): JournalEntry {
   const base = {
     entryId: crypto.randomUUID(),
     schemaVersion: 1,
@@ -39,21 +39,21 @@ function toJournalEntry(op: CommitOperation): JournalEntry {
   }
 
   switch (op.type) {
-    case COMMIT_OPERATION_TYPE.CREATE:
-    case COMMIT_OPERATION_TYPE.UPDATE: {
+    case PUSH_OPERATION_TYPE.CREATE:
+    case PUSH_OPERATION_TYPE.UPDATE: {
       const { id: _tempId, ...cleanData } = op.data
       return { ...base, payload: { op: 'set' as const, value: cleanData } }
     }
-    case COMMIT_OPERATION_TYPE.DELETE:
+    case PUSH_OPERATION_TYPE.DELETE:
       return { ...base, payload: { op: 'unset' as const } }
-    case COMMIT_OPERATION_TYPE.RESTORE:
+    case PUSH_OPERATION_TYPE.RESTORE:
       return { ...base, payload: { op: 'restore' as const } }
   }
 }
 
 export async function saveCatalogoAction(
-  operations: CommitOperation[]
-): Promise<CommitResult> {
+  operations: PushOperation[]
+): Promise<PushResult> {
   try {
     await requireAuth()
 
@@ -61,7 +61,7 @@ export async function saveCatalogoAction(
       return { success: true, idMappings: [] }
     }
 
-    const validation = validateCommitOperations(operations)
+    const validation = validatePushOperations(operations)
     if (!validation.valid) {
       return {
         success: false,
@@ -73,12 +73,12 @@ export async function saveCatalogoAction(
       }
     }
 
-    const sorted = sortCommitOperations(operations)
+    const sorted = sortPushOperations(operations)
     const mappings: IdMapping[] = []
 
     await db.transaction(async (tx) => {
       for (const op of sorted) {
-        if (op.type === COMMIT_OPERATION_TYPE.DELETE) {
+        if (op.type === PUSH_OPERATION_TYPE.DELETE) {
           if (!isTempId(op.entityId)) {
             await tx
               .delete(artist.catalogoArtista)
@@ -86,7 +86,7 @@ export async function saveCatalogoAction(
                 eq(artist.catalogoArtista.id, Number.parseInt(op.entityId, 10))
               )
           }
-        } else if (op.type === COMMIT_OPERATION_TYPE.RESTORE) {
+        } else if (op.type === PUSH_OPERATION_TYPE.RESTORE) {
           continue
         } else {
           const entry = toJournalEntry(op)

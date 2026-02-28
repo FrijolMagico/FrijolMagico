@@ -1,22 +1,22 @@
-import type { CommitOperation } from './types'
+import type { PushOperation } from './types'
 import { isTempId } from './id-mapper'
 
-export interface SortedCommitOperations {
-  deletes: CommitOperation[]
-  updates: CommitOperation[]
-  creates: CommitOperation[]
-  restores: CommitOperation[]
+export interface SortedPushOperations {
+  deletes: PushOperation[]
+  updates: PushOperation[]
+  creates: PushOperation[]
+  restores: PushOperation[]
 }
 
-export interface CommitValidationResult {
+export interface PushValidationResult {
   valid: boolean
   errors: string[]
 }
 
-export function sortCommitOperations(
-  operations: CommitOperation[]
-): CommitOperation[] {
-  const grouped = new Map<string, CommitOperation[]>()
+export function sortPushOperations(
+  operations: PushOperation[]
+): PushOperation[] {
+  const grouped = new Map<string, PushOperation[]>()
   for (const op of operations) {
     const key = `${op.entityType}:${op.entityId}`
     const group = grouped.get(key)
@@ -24,10 +24,10 @@ export function sortCommitOperations(
     else grouped.set(key, [op])
   }
 
-  const deletes: CommitOperation[] = []
-  const restores: CommitOperation[] = []
-  const updates: CommitOperation[] = []
-  const creates: CommitOperation[] = []
+  const deletes: PushOperation[] = []
+  const restores: PushOperation[] = []
+  const updates: PushOperation[] = []
+  const creates: PushOperation[] = []
 
   for (const [, ops] of grouped) {
     const deleteIdx = ops.findIndex((op) => op.type === 'DELETE')
@@ -76,13 +76,13 @@ export function sortCommitOperations(
 /**
  * NOTE: This function is intentionally kept as a validation hook for future use.
  * Conflict resolution (DELETE+UPDATE, CREATE+DELETE, etc.) is handled silently
- * by sortCommitOperations. This function is the right place to add hard validation
+ * by sortPushOperations. This function is the right place to add hard validation
  * rules in the future — e.g. unknown entityType, missing required fields on CREATE,
  * permission checks — that should block the commit entirely instead of being resolved.
  */
-export function validateCommitOperations(
-  _operations: CommitOperation[] // eslint-disable-line @typescript-eslint/no-unused-vars
-): CommitValidationResult {
+export function validatePushOperations(
+  _operations: PushOperation[] // eslint-disable-line @typescript-eslint/no-unused-vars
+): PushValidationResult {
   const errors: string[] = []
 
   return {
