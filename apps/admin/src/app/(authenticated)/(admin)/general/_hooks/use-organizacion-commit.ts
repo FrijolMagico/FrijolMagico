@@ -20,7 +20,7 @@ export function useOrganizacionCommit() {
     executor: saveOrganizacionAction,
     section: 'organizacion',
     onSuccess: () => {
-      orgStore.resetStore()
+      orgStore.commitSuccessCleanup()
       router.refresh()
       toast.success('Guardado correctamente')
     }
@@ -47,7 +47,7 @@ export function useOrganizacionEquipoCommit() {
     executor: saveOrganizacionEquipoAction,
     section: 'organizacion_equipo',
     onSuccess: () => {
-      teamStore.resetStore()
+      teamStore.commitSuccessCleanup()
       router.refresh()
       toast.success('Guardado correctamente')
     }

@@ -18,7 +18,7 @@ export function useCatalogoCommit() {
     executor: saveCatalogoAction,
     section: 'catalogo_artista',
     onSuccess: () => {
-      store.resetStore()
+      store.commitSuccessCleanup()
       router.refresh()
       toast.success('Guardado correctamente')
     }

@@ -33,6 +33,7 @@ export interface OperationLogActions<T> {
   clearPersistedOperations(): void
 
   resetStore(): void
+  commitSuccessCleanup(): void
   hydratePersistedOperations(operations: EntityOperation<T>[]): void
 }
 

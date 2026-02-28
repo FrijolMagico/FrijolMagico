@@ -22,6 +22,11 @@ import {
   mapToEventoEdicionInput,
   mapToEventoEdicionDiaInput
 } from '../_mappers/evento.mapper'
+import type {
+  EventoInput,
+  EventoEdicionInput,
+  EventoEdicionDiaInput
+} from '../_schemas/evento.schema'
 import { stripUndefined } from '@/shared/lib/utils'
 import {
   handleServerActionError,
@@ -127,7 +132,7 @@ export async function saveEventoAction(
           } else {
             const [inserted] = await tx
               .insert(events.evento)
-              .values(input)
+              .values(input as EventoInput)
               .returning({ id: events.evento.id })
 
             if (inserted) {
@@ -173,7 +178,7 @@ export async function saveEventoAction(
           } else {
             const [inserted] = await tx
               .insert(events.eventoEdicion)
-              .values(input)
+              .values(input as EventoEdicionInput)
               .returning({ id: events.eventoEdicion.id })
 
             if (inserted) {
@@ -219,7 +224,7 @@ export async function saveEventoAction(
           } else {
             const [inserted] = await tx
               .insert(events.eventoEdicionDia)
-              .values(input)
+              .values(input as EventoEdicionDiaInput)
               .returning({ id: events.eventoEdicionDia.id })
 
             if (inserted) {

@@ -15,6 +15,7 @@
  */
 
 import type { JournalEntry } from '@/shared/change-journal/lib/types'
+import { nullsToUndefined } from '@/shared/lib/utils'
 import {
   eventoEdicionDiaSchema,
   eventoEdicionSchema,
@@ -32,14 +33,16 @@ import {
  * @throws Error if entry.payload.op is 'unset'
  * @throws ZodError if payload.value doesn't match schema
  */
-export function mapToEventoInput(entry: JournalEntry): EventoInput {
+export function mapToEventoInput(
+  entry: JournalEntry
+): Partial<EventoInput> {
   if (entry.payload.op === 'unset' || entry.payload.op === 'restore') {
     throw new Error(`Cannot map ${entry.payload.op} operation to EventoInput`)
   }
 
-  // Validate payload.value against schema
+  // Validate payload.value against schema (partial for UPDATE support)
   // This will throw ZodError if validation fails
-  return eventoSchema.parse(entry.payload.value)
+  return eventoSchema.partial().parse(nullsToUndefined(entry.payload.value as Record<string, unknown>))
 }
 
 /**
@@ -52,16 +55,16 @@ export function mapToEventoInput(entry: JournalEntry): EventoInput {
  */
 export function mapToEventoEdicionInput(
   entry: JournalEntry
-): EventoEdicionInput {
+): Partial<EventoEdicionInput> {
   if (entry.payload.op === 'unset' || entry.payload.op === 'restore') {
     throw new Error(
       `Cannot map ${entry.payload.op} operation to EventoEdicionInput`
     )
   }
 
-  // Validate payload.value against schema
+  // Validate payload.value against schema (partial for UPDATE support)
   // This will throw ZodError if validation fails
-  return eventoEdicionSchema.parse(entry.payload.value)
+  return eventoEdicionSchema.partial().parse(nullsToUndefined(entry.payload.value as Record<string, unknown>))
 }
 
 /**
@@ -74,14 +77,14 @@ export function mapToEventoEdicionInput(
  */
 export function mapToEventoEdicionDiaInput(
   entry: JournalEntry
-): EventoEdicionDiaInput {
+): Partial<EventoEdicionDiaInput> {
   if (entry.payload.op === 'unset' || entry.payload.op === 'restore') {
     throw new Error(
       `Cannot map ${entry.payload.op} operation to EventoEdicionDiaInput`
     )
   }
 
-  // Validate payload.value against schema
+  // Validate payload.value against schema (partial for UPDATE support)
   // This will throw ZodError if validation fails
-  return eventoEdicionDiaSchema.parse(entry.payload.value)
+  return eventoEdicionDiaSchema.partial().parse(nullsToUndefined(entry.payload.value as Record<string, unknown>))
 }

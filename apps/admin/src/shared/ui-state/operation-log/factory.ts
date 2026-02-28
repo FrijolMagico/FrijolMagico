@@ -103,6 +103,12 @@ export function createEntityOperationStore<T>({
       set({
         persistedOperations: null,
         pendingOperations: null,
+        lastCommitAt: null
+      }),
+    commitSuccessCleanup: () =>
+      set({
+        persistedOperations: null,
+        pendingOperations: null,
         lastCommitAt: Date.now()
       }),
     hydratePersistedOperations: (operations) =>

@@ -18,7 +18,7 @@ export function useArtistaCommit() {
     executor: saveArtistaAction,
     section: 'artista',
     onSuccess: () => {
-      store.resetStore()
+      store.commitSuccessCleanup()
       router.refresh()
       toast.success('Guardado correctamente')
     }
