@@ -6,7 +6,7 @@ import { core } from '@frijolmagico/database/schema'
 const { organization } = core
 import { eq } from 'drizzle-orm'
 import { requireAuth } from '@/lib/auth/utils'
-import { revalidateTag } from 'next/cache'
+import { updateTag } from 'next/cache'
 import { ORGANIZATION_CACHE_TAG } from '../_constants'
 import { COMMIT_OPERATION_TYPE } from '@/shared/commit-system/lib/types'
 import { validateCommitOperations } from '@/shared/commit-system/lib/operation-sorter'
@@ -120,7 +120,7 @@ export async function saveOrganizacionAction(
       }
     })
 
-    revalidateTag(ORGANIZATION_CACHE_TAG, 'max')
+    updateTag(ORGANIZATION_CACHE_TAG)
 
     return {
       success: true,

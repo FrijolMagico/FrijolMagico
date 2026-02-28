@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidateTag } from 'next/cache'
+import { updateTag } from 'next/cache'
 import { ARTISTA_CACHE_TAG } from '../_constants'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
@@ -176,7 +176,7 @@ export async function saveArtistaAction(
       }
     })
 
-    revalidateTag(ARTISTA_CACHE_TAG, 'max')
+    updateTag(ARTISTA_CACHE_TAG)
 
     return {
       success: true,

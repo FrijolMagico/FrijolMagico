@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidateTag } from 'next/cache'
+import { updateTag } from 'next/cache'
 import { CATALOG_CACHE_TAG } from '../_constants'
 import { ARTISTA_CACHE_TAG } from '../../_constants'
 import { eq } from 'drizzle-orm'
@@ -114,8 +114,9 @@ export async function saveCatalogoAction(
       }
     })
 
-    revalidateTag(CATALOG_CACHE_TAG, 'max')
-    revalidateTag(ARTISTA_CACHE_TAG, 'max')
+    updateTag(CATALOG_CACHE_TAG)
+    updateTag(ARTISTA_CACHE_TAG)
+
 
     return {
       success: true,

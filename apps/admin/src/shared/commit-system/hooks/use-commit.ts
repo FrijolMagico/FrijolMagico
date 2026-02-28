@@ -84,6 +84,14 @@ export function useCommit(config: CommitConfig): UseCommitResult {
         })
         const sortedOps = sortCommitOperations(operations)
 
+        // No-op cancellation: if all ops cancelled each other out, skip executor
+        if (sortedOps.length === 0) {
+          await config.source.clear(config.section)
+          config.onSuccess?.()
+          setProgress(null)
+          return
+        }
+
         setProgress({ phase: 'executing', total: sortedOps.length })
 
         const execResult = await config.executor(sortedOps)

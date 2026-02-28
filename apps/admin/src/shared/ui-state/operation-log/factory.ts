@@ -14,7 +14,6 @@ export function createEntityOperationStore<T>({
     persistedOperations: null,
     pendingOperations: null,
     lastCommitAt: null,
-
     add: (data) =>
       set((state) => ({
         pendingOperations: [

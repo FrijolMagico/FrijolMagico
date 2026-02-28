@@ -21,10 +21,20 @@ export function useProjectionSync<T>({
 }: UseProjectionSyncOptions<BaseEntity<T>>): void {
   const initialDataRef = useRef(initialData)
 
-  // Keep ref in sync with latest initialData prop
+  // When initialData changes (fresh server data after router.refresh()),
+  // re-project with the new data.
   useEffect(() => {
     initialDataRef.current = initialData
-  }, [initialData])
+
+    const opState = operationStore.getState()
+
+    // Force re-projection with fresh server data + any concurrent ops
+    projectionStore.getState().project(
+      initialData,
+      opState.persistedOperations,
+      opState.pendingOperations
+    )
+  }, [initialData, operationStore, projectionStore])
 
   // Seed on mount + subscribe to operation store changes
   useEffect(() => {
@@ -36,15 +46,24 @@ export function useProjectionSync<T>({
       currentOpState.pendingOperations
     )
 
-    // Subscribe: re-project whenever operations change
+    // Subscribe: re-project whenever operations change.
+    // Skip re-projection when the store was just reset after a commit
+    // (both ops null but lastCommitAt present) — fresh server data is
+    // incoming via router.refresh() and the initialData effect will
+    // handle re-projection with the correct data.
     const unsubscribe = operationStore.subscribe((state) => {
-      projectionStore
-        .getState()
-        .project(
-          initialDataRef.current,
-          state.persistedOperations,
-          state.pendingOperations
-        )
+      const isPostCommitReset =
+        state.persistedOperations === null &&
+        state.pendingOperations === null &&
+        state.lastCommitAt !== null
+
+      if (isPostCommitReset) return
+
+      projectionStore.getState().project(
+        initialDataRef.current,
+        state.persistedOperations,
+        state.pendingOperations
+      )
     })
 
     return unsubscribe
