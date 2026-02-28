@@ -73,27 +73,18 @@ export async function clearSection(section: string): Promise<void> {
 export async function getSectionsWithChanges(): Promise<
   Array<{ section: string; count: number }>
 > {
-  const sections = await storage.getAllSections()
+  const grouped = await storage.getAllEntriesGroupedBySection()
 
-  if (!sections.success) {
-    console.error('[ChangeJournal] Failed to get sections:', sections.error)
+  if (!grouped.success) {
+    console.error(
+      '[ChangeJournal] Failed to get sections with changes:',
+      grouped.error
+    )
     return []
   }
 
-  const results = await Promise.all(
-    sections.result.map(async (section) => {
-      const entries = await storage.getEntries(section)
-      if (!entries.success) {
-        console.error(
-          `[ChangeJournal] Failed to get entries for section "${section}":`,
-          entries.error
-        )
-        return { section, count: 0 }
-      }
-
-      return { section, count: entries.result.length }
-    })
-  )
-
-  return results
+  return Object.entries(grouped.result).map(([section, count]) => ({
+    section,
+    count
+  }))
 }

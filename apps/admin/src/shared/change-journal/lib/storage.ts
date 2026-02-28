@@ -109,4 +109,33 @@ export class JournalStorage {
       }
     }
   }
+
+  async getAllEntriesGroupedBySection(): Promise<
+    JournalMethodResult<Record<string, number>>
+  > {
+    try {
+      // Single query: fetch all entries once
+      const entries = await this.db.entries.toArray()
+      
+      // Group by section and count
+      const grouped = entries.reduce(
+        (acc, entry) => {
+          if (!acc[entry.section]) {
+            acc[entry.section] = 0
+          }
+          acc[entry.section]++
+          return acc
+        },
+        {} as Record<string, number>
+      )
+      
+      return { success: true, result: grouped }
+    } catch (error) {
+      console.error(
+        '[JournalStorage] Failed to get entries grouped by section:',
+        error
+      )
+      return { success: false, error: 'Failed to retrieve grouped entries' }
+    }
+  }
 }

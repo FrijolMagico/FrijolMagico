@@ -122,14 +122,17 @@ export const PanelSidebarMenu = () => {
   )
 
   // Cold-start hydration: seed dirty store for sections not yet projected this session
+  // Defer to ensure projection stores have subscribed first via useDirtySync
   useEffect(() => {
-    getSectionsWithChanges().then((sections) => {
-      const { dirtyMap: currentMap, setDirty } = useSectionDirtyStore.getState()
-      for (const { section, count } of sections) {
-        if (!(section in currentMap)) {
-          setDirty(section, count > 0)
+    Promise.resolve().then(() => {
+      getSectionsWithChanges().then((sections) => {
+        const { dirtyMap: currentMap, setDirty } = useSectionDirtyStore.getState()
+        for (const { section, count } of sections) {
+          if (!(section in currentMap)) {
+            setDirty(section, count > 0)
+          }
         }
-      }
+      })
     })
   }, [])
 
