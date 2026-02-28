@@ -52,6 +52,7 @@ describe('createEntityOperationStore', () => {
 
     // Al guardar exitosamente, llamamos a commitSuccessCleanup
     // After successful save, call commitSuccessCleanup
+    useStore.getState().commitSuccessCleanup()
 
     const state = useStore.getState()
 
