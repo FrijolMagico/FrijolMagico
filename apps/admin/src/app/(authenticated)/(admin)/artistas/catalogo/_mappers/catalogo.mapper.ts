@@ -53,7 +53,9 @@ export function mapToCatalogoArtistaInput(
     )
   }
 
-  // Parse and validate the payload value with Zod schema (partial for UPDATE support)
-  // This will throw ZodError if validation fails (fail fast)
-  return catalogoArtistaSchema.partial().parse(nullsToUndefined(entry.payload.value as Record<string, unknown>))
+  const cleanData = nullsToUndefined(entry.payload.value as Record<string, unknown>)
+  if (entry.payload.op === 'patch') {
+    return catalogoArtistaSchema.partial().parse(cleanData)
+  }
+  return catalogoArtistaSchema.parse(cleanData)
 }

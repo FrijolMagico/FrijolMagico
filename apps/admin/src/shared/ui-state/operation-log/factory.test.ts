@@ -1,11 +1,16 @@
 import { describe, test, expect } from 'bun:test'
 import { createEntityOperationStore } from './factory'
 
+interface TestEntity {
+  id: string
+  nombre: string
+}
+
 describe('createEntityOperationStore', () => {
-  const mockCommit = async () => ({ success: true })
+  const mockCommit = async () => {}
 
   test('debe inicializar el store correctamente', () => {
-    const useStore = createEntityOperationStore({
+    const useStore = createEntityOperationStore<TestEntity>({
       commitOperations: mockCommit
     })
     const state = useStore.getState()
@@ -16,11 +21,11 @@ describe('createEntityOperationStore', () => {
   })
 
   test('debe mantener pending y persisted separados', () => {
-    const useStore = createEntityOperationStore({
+    const useStore = createEntityOperationStore<TestEntity>({
       commitOperations: mockCommit
     })
 
-    useStore.getState().add({ type: 'UPDATE', payload: { id: 1 } })
+    useStore.getState().add({ nombre: 'Test' })
 
     const state = useStore.getState()
     expect(state.pendingOperations).toHaveLength(1)
@@ -29,16 +34,20 @@ describe('createEntityOperationStore', () => {
 
   test('commitSuccessCleanup despues de un commit debe disparar el isPostCommitReset derived state', () => {
     // Esto prueba la lógica del fix de la Task 5 (UI flash)
-    const useStore = createEntityOperationStore({
+    const useStore = createEntityOperationStore<TestEntity>({
       commitOperations: mockCommit
     })
 
     // Simular trabajo
-    useStore.getState().add({ type: 'UPDATE', payload: { id: 1 } })
+    useStore.getState().add({ nombre: 'Test' })
     useStore
       .getState()
       .hydratePersistedOperations([
-        { type: 'CREATE', payload: { id: 2 }, id: 'uuid' }
+        {
+          type: 'ADD',
+          data: { nombre: 'Test', id: 'uuid' },
+          timestamp: Date.now()
+        }
       ])
 
     // Al guardar exitosamente, llamamos a commitSuccessCleanup
@@ -56,11 +65,11 @@ describe('createEntityOperationStore', () => {
   })
 
   test('un clear simple no debe ser considerado post-commit reset', () => {
-    const useStore = createEntityOperationStore({
+    const useStore = createEntityOperationStore<TestEntity>({
       commitOperations: mockCommit
     })
 
-    useStore.getState().add({ type: 'UPDATE', payload: { id: 1 } })
+    useStore.getState().add({ nombre: 'Test' })
     useStore.getState().clearPendingOperations()
 
     const state = useStore.getState()
@@ -75,11 +84,11 @@ describe('createEntityOperationStore', () => {
   })
 
   test('resetStore (discard) no debe ser considerado post-commit reset', () => {
-    const useStore = createEntityOperationStore({
+    const useStore = createEntityOperationStore<TestEntity>({
       commitOperations: mockCommit
     })
 
-    useStore.getState().add({ type: 'UPDATE', payload: { id: 1 } })
+    useStore.getState().add({ nombre: 'Test' })
     useStore.getState().resetStore()
 
     const state = useStore.getState()

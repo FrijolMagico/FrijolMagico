@@ -37,9 +37,11 @@ export function mapToArtistaInput(
     throw new Error(`Cannot map ${entry.payload.op} operation to ArtistaInput`)
   }
 
-  // Validate payload.value against schema (partial for UPDATE support)
-  // This will throw ZodError if validation fails
-  return artistaSchema.partial().parse(nullsToUndefined(entry.payload.value as Record<string, unknown>))
+  const cleanData = nullsToUndefined(entry.payload.value as Record<string, unknown>)
+  if (entry.payload.op === 'patch') {
+    return artistaSchema.partial().parse(cleanData)
+  }
+  return artistaSchema.parse(cleanData)
 }
 
 /**
@@ -59,7 +61,9 @@ export function mapToArtistaImagenInput(
     )
   }
 
-  // Validate payload.value against schema (partial for UPDATE support)
-  // This will throw ZodError if validation fails
-  return artistaImagenSchema.partial().parse(nullsToUndefined(entry.payload.value as Record<string, unknown>))
+  const cleanData = nullsToUndefined(entry.payload.value as Record<string, unknown>)
+  if (entry.payload.op === 'patch') {
+    return artistaImagenSchema.partial().parse(cleanData)
+  }
+  return artistaImagenSchema.parse(cleanData)
 }

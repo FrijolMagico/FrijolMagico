@@ -40,9 +40,11 @@ export function mapToEventoInput(
     throw new Error(`Cannot map ${entry.payload.op} operation to EventoInput`)
   }
 
-  // Validate payload.value against schema (partial for UPDATE support)
-  // This will throw ZodError if validation fails
-  return eventoSchema.partial().parse(nullsToUndefined(entry.payload.value as Record<string, unknown>))
+  const cleanData = nullsToUndefined(entry.payload.value as Record<string, unknown>)
+  if (entry.payload.op === 'patch') {
+    return eventoSchema.partial().parse(cleanData)
+  }
+  return eventoSchema.parse(cleanData)
 }
 
 /**
@@ -62,9 +64,11 @@ export function mapToEventoEdicionInput(
     )
   }
 
-  // Validate payload.value against schema (partial for UPDATE support)
-  // This will throw ZodError if validation fails
-  return eventoEdicionSchema.partial().parse(nullsToUndefined(entry.payload.value as Record<string, unknown>))
+  const cleanData = nullsToUndefined(entry.payload.value as Record<string, unknown>)
+  if (entry.payload.op === 'patch') {
+    return eventoEdicionSchema.partial().parse(cleanData)
+  }
+  return eventoEdicionSchema.parse(cleanData)
 }
 
 /**
@@ -84,7 +88,9 @@ export function mapToEventoEdicionDiaInput(
     )
   }
 
-  // Validate payload.value against schema (partial for UPDATE support)
-  // This will throw ZodError if validation fails
-  return eventoEdicionDiaSchema.partial().parse(nullsToUndefined(entry.payload.value as Record<string, unknown>))
+  const cleanData = nullsToUndefined(entry.payload.value as Record<string, unknown>)
+  if (entry.payload.op === 'patch') {
+    return eventoEdicionDiaSchema.partial().parse(cleanData)
+  }
+  return eventoEdicionDiaSchema.parse(cleanData)
 }

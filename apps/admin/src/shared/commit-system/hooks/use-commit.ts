@@ -88,6 +88,7 @@ export function useCommit(config: CommitConfig): UseCommitResult {
         if (sortedOps.length === 0) {
           await config.source.clear(config.section)
           config.onSuccess?.()
+          setResult({ success: true, idMappings: [] })
           setProgress(null)
           return
         }

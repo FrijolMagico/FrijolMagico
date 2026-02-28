@@ -39,9 +39,11 @@ export function mapToOrganizacionInput(
     )
   }
 
-  // Validate payload.value against schema (partial for UPDATE support)
-  // This will throw ZodError if validation fails
-  return organizacionSchema.partial().parse(nullsToUndefined(entry.payload.value as Record<string, unknown>))
+  const cleanData = nullsToUndefined(entry.payload.value as Record<string, unknown>)
+  if (entry.payload.op === 'patch') {
+    return organizacionSchema.partial().parse(cleanData)
+  }
+  return organizacionSchema.parse(cleanData)
 }
 
 /**
@@ -61,7 +63,9 @@ export function mapToOrganizacionEquipoInput(
     )
   }
 
-  // Validate payload.value against schema (partial for UPDATE support)
-  // This will throw ZodError if validation fails
-  return organizacionEquipoSchema.partial().parse(nullsToUndefined(entry.payload.value as Record<string, unknown>))
+  const cleanData = nullsToUndefined(entry.payload.value as Record<string, unknown>)
+  if (entry.payload.op === 'patch') {
+    return organizacionEquipoSchema.partial().parse(cleanData)
+  }
+  return organizacionEquipoSchema.parse(cleanData)
 }
