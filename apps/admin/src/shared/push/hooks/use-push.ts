@@ -42,6 +42,7 @@ export function usePush(config: PushConfig): UsePushResult {
   const push = async () => {
     startTransition(async () => {
       try {
+        setResult(null)
         setProgress({ phase: 'reading' })
 
         const operations = await config.source.read(config.section)
