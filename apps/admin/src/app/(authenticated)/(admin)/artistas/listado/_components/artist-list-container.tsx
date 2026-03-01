@@ -39,6 +39,17 @@ export function ArtistListContainer({
   const isSettling = !isPending && !!result?.success && isDirty
   const lastToastRef = useRef<number>(0)
 
+  // Toast after save
+  useEffect(() => {
+    if (result?.success && !isPending) {
+      const now = Date.now()
+      if (now - lastToastRef.current > 500) {
+        lastToastRef.current = now
+        toast.success('Guardado correctamente')
+      }
+    }
+  }, [result, isPending])
+
   // Initialize auto-commit for both operation stores
   useAutoCommit(useArtistsOperationStore)
 
