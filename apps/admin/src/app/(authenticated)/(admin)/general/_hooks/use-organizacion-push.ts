@@ -21,13 +21,13 @@ export function useOrganizacionPush() {
     onSuccess: () => {
       orgStore.commitSuccessCleanup()
       router.refresh()
-      toast.success('Guardado correctamente')
     }
   }
 
   const { push, isPending, result, progress } = usePush(config)
 
-  const save = () => {
+  const save = async () => {
+    await orgStore.commitPendingOperations()
     push().catch(() => {
       toast.error('Error inesperado al guardar')
     })
@@ -47,13 +47,13 @@ export function useOrganizacionEquipoPush() {
     onSuccess: () => {
       teamStore.commitSuccessCleanup()
       router.refresh()
-      toast.success('Guardado correctamente')
     }
   }
 
   const { push, isPending, result, progress } = usePush(config)
 
-  const save = () => {
+  const save = async () => {
+    await teamStore.commitPendingOperations()
     push().catch(() => {
       toast.error('Error inesperado al guardar')
     })

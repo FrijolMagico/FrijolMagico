@@ -19,13 +19,13 @@ export function useArtistaPush() {
     onSuccess: () => {
       store.commitSuccessCleanup()
       router.refresh()
-      toast.success('Guardado correctamente')
     }
   }
 
   const { push, isPending, result, progress } = usePush(config)
 
-  const save = () => {
+  const save = async () => {
+    await store.commitPendingOperations()
     push().catch(() => {
       toast.error('Error inesperado al guardar')
     })
