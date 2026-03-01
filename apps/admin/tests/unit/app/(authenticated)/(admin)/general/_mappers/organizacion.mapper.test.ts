@@ -4,7 +4,7 @@ import type { JournalEntry } from '@/shared/change-journal/lib/types'
 import {
   mapToOrganizacionEquipoInput,
   mapToOrganizacionInput
-} from './organizacion.mapper'
+} from '@/app/(authenticated)/(admin)/general/_mappers/organizacion.mapper'
 
 describe('organizacion.mapper', () => {
   describe('mapToOrganizacionInput', () => {

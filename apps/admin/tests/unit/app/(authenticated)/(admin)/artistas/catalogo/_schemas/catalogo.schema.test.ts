@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test'
-import { catalogoArtistaSchema } from './catalogo.schema'
+import { catalogoArtistaSchema } from '@/app/(authenticated)/(admin)/artistas/catalogo/_schemas/catalogo.schema'
 
 describe('catalogoArtistaSchema', () => {
   test('validates valid data with defaults', () => {

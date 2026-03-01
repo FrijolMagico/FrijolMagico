@@ -3,8 +3,8 @@ import type { JournalEntry } from '@/shared/change-journal/lib/types'
 import {
   mapToArtistaImagenInput,
   mapToArtistaInput
-} from './artista.mapper'
-import { mapToCatalogoArtistaInput } from '../catalogo/_mappers/catalogo.mapper'
+} from '@/app/(authenticated)/(admin)/artistas/_mappers/artista.mapper'
+import { mapToCatalogoArtistaInput } from '@/app/(authenticated)/(admin)/artistas/catalogo/_mappers/catalogo.mapper'
 
 const createBaseEntry = (section: string, value: unknown): JournalEntry => ({
   entryId: 'test-entry-id',

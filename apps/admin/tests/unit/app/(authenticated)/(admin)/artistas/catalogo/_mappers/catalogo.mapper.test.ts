@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test'
-import { mapToCatalogoArtistaInput } from './catalogo.mapper'
+import { mapToCatalogoArtistaInput } from '@/app/(authenticated)/(admin)/artistas/catalogo/_mappers/catalogo.mapper'
 import type { JournalEntry } from '@/shared/change-journal/lib/types'
 
 describe('mapToCatalogoArtistaInput', () => {
