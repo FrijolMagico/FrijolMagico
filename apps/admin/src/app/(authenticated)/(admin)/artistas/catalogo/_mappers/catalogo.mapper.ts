@@ -1,13 +1,3 @@
-/**
- * @fileoverview catalogo.mapper.ts - Mappers for Catalogo Journal Entries
- *
- * Transforms JournalEntry payloads into validated inputs for catalogo operations.
- * All mappers use Zod schemas to ensure type safety and fail fast on invalid data.
- *
- * @connection schemas/catalogo.schema.ts - Zod validation schemas
- * @connection @/shared/change-journal/lib/types - JournalEntry type
- */
-
 import type { JournalEntry } from '@/shared/change-journal/lib/types'
 import { nullsToUndefined } from '@/shared/lib/utils'
 import {
@@ -53,7 +43,9 @@ export function mapToCatalogoArtistaInput(
     )
   }
 
-  const cleanData = nullsToUndefined(entry.payload.value as Record<string, unknown>)
+  const cleanData = nullsToUndefined(
+    entry.payload.value as Record<string, unknown>
+  )
   if (entry.payload.op === 'patch') {
     return catalogoArtistaSchema.partial().parse(cleanData)
   }

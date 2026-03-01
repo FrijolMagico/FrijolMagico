@@ -8,7 +8,7 @@ import {
   hasEntries,
   getLatestEntries,
   clearSection
-} from '@/shared/change-journal/change-journal'
+} from '@/shared/change-journal'
 import { journalEntriesToOperations } from '@/shared/lib/journal-entries-to-operations'
 import { useDiscardRegistry } from '@/shared/lib/discard-registry'
 
@@ -16,7 +16,6 @@ interface UseJournalRestoreOptions<T> {
   entity: JournalEntity
   operationStore: UseBoundStore<StoreApi<EntityOperationStore<T>>>
 }
-
 
 export function useJournalRestore<T>({
   entity,
@@ -42,7 +41,6 @@ export function useJournalRestore<T>({
       operationStore.getState().clearPersistedOperations()
       isHydrated.current = false
     }
-
   }, [entity, operationStore])
 
   const discardAll = useCallback(async () => {
@@ -80,8 +78,6 @@ export function useJournalRestore<T>({
       unsubscribe()
     }
   }, [operationStore, entity, checkAndHydrate, discardAll])
-
-
 
   return
 }

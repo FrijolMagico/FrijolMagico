@@ -45,6 +45,7 @@ function toJournalEntry(op: PushOperation): JournalEntry {
 
   switch (op.type) {
     case PUSH_OPERATION_TYPE.CREATE:
+    // For CREATE, we want to preserve the full data object for mapping
     case PUSH_OPERATION_TYPE.UPDATE: {
       const { id: _tempId, ...cleanData } = op.data
       return { ...base, payload: { op: 'set' as const, value: cleanData } }
@@ -202,6 +203,4 @@ export async function saveArtistaAction(
       ]
     }
   }
-
 }
-

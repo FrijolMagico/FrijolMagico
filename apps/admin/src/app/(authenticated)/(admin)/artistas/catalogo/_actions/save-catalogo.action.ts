@@ -15,10 +15,6 @@ import {
 } from '@/shared/push/lib/types'
 import type { JournalEntry } from '@/shared/change-journal/lib/types'
 import {
-  sortPushOperations,
-  validatePushOperations
-} from '@/shared/push/lib/operation-resolver'
-import {
   handleServerActionError,
   logServerError
 } from '@/shared/push/lib/error-handler'
@@ -61,65 +57,58 @@ export async function saveCatalogoAction(
       return { success: true, idMappings: [] }
     }
 
-    const validation = validatePushOperations(operations)
-    if (!validation.valid) {
-      return {
-        success: false,
-        errors: validation.errors.map((msg, idx) => ({
-          entityType: 'catalogo_artista',
-          entityId: `error-${idx}`,
-          message: msg
-        }))
-      }
-    }
-
-    const sorted = sortPushOperations(operations)
     const mappings: IdMapping[] = []
 
     await db.transaction(async (tx) => {
-      for (const op of sorted) {
-        if (op.type === PUSH_OPERATION_TYPE.DELETE) {
-          if (!isTempId(op.entityId)) {
-            await tx
-              .delete(artist.catalogoArtista)
-              .where(
-                eq(artist.catalogoArtista.id, Number.parseInt(op.entityId, 10))
+      for (const op of operations) {
+        // NOTE: We can filter restore on the usePush?
+        if (op.type === PUSH_OPERATION_TYPE.RESTORE) continue
+
+        console.log(
+          `Processing operation: ${op.type} on ${op.entityType} with ID ${op.entityId}`
+        )
+        const entry = toJournalEntry(op)
+        console.log('Mapped journal entry:', entry)
+        const input = mapToCatalogoArtistaInput(entry)
+        console.log('Mapped input for DB operation:', input)
+
+        if (isTempId(op.entityId)) {
+          const [inserted] = await tx
+            .insert(artist.catalogoArtista)
+            .values(input as CatalogoArtistaInput)
+            .returning({ id: artist.catalogoArtista.id })
+
+          if (inserted) {
+            mappings.push(
+              createIdMapping(
+                op.entityId,
+                inserted.id,
+                JOURNAL_ENTITIES.CATALOGO_ARTISTA
               )
+            )
           }
-        } else if (op.type === PUSH_OPERATION_TYPE.RESTORE) {
           continue
+        }
+
+        if (op.type === PUSH_OPERATION_TYPE.DELETE) {
+          await tx
+            .delete(artist.catalogoArtista)
+            .where(
+              eq(artist.catalogoArtista.id, Number.parseInt(op.entityId, 10))
+            )
         } else {
-          const entry = toJournalEntry(op)
-          const input = mapToCatalogoArtistaInput(entry)
-
-          if (!isTempId(op.entityId)) {
-            await tx
-              .update(artist.catalogoArtista)
-              .set(stripUndefined(input))
-              .where(eq(artist.catalogoArtista.id, Number.parseInt(op.entityId, 10)))
-          } else {
-            const [inserted] = await tx
-              .insert(artist.catalogoArtista)
-              .values(input as CatalogoArtistaInput)
-              .returning({ id: artist.catalogoArtista.id })
-
-            if (inserted) {
-              mappings.push(
-                createIdMapping(
-                  op.entityId,
-                  inserted.id,
-                  JOURNAL_ENTITIES.CATALOGO_ARTISTA
-                )
-              )
-            }
-          }
+          await tx
+            .update(artist.catalogoArtista)
+            .set(stripUndefined(input))
+            .where(
+              eq(artist.catalogoArtista.id, Number.parseInt(op.entityId, 10))
+            )
         }
       }
     })
 
     updateTag(CATALOG_CACHE_TAG)
     updateTag(ARTISTA_CACHE_TAG)
-
 
     return {
       success: true,

@@ -10,7 +10,6 @@ import { requireAuth } from '@/lib/auth/utils'
 import { updateTag } from 'next/cache'
 import { TEAM_CACHE_TAG } from '../_constants'
 import { PUSH_OPERATION_TYPE } from '@/shared/push/lib/types'
-import { validatePushOperations } from '@/shared/push/lib/operation-resolver'
 import {
   handleServerActionError,
   logServerError
@@ -60,22 +59,6 @@ export async function saveOrganizacionEquipoAction(
 
     if (operations.length === 0) {
       return { success: true, idMappings: [] }
-    }
-
-    const validation = validatePushOperations(operations)
-    if (!validation.valid) {
-      logServerError(
-        new Error(`Invalid operations: ${validation.errors.join(', ')}`),
-        'saveOrganizacionEquipoAction'
-      )
-      return {
-        success: false,
-        errors: validation.errors.map((msg, idx) => ({
-          entityType: 'organizacion_equipo',
-          entityId: `error-${idx}`,
-          message: msg
-        }))
-      }
     }
 
     const mappings: IdMapping[] = []

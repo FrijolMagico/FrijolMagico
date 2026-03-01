@@ -21,7 +21,7 @@ import {
   getLatestEntries,
   hasEntries,
   clearSection
-} from '@/shared/change-journal/change-journal'
+} from '@/shared/change-journal/'
 import { isTempId } from '@/shared/push/lib/id-mapper'
 import {
   PUSH_OPERATION_TYPE,

@@ -21,7 +21,7 @@ import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { navigation } from '@/lib/navigation'
-import { getSectionsWithChanges } from '@/shared/change-journal/change-journal'
+import { getSectionsWithChanges } from '@/shared/change-journal'
 import { useSectionDirtyStore } from '@/shared/lib/section-dirty-store'
 import { ROUTE_ENTITY_MAP } from '@/shared/lib/database-entities'
 
@@ -126,7 +126,8 @@ export const PanelSidebarMenu = () => {
   useEffect(() => {
     Promise.resolve().then(() => {
       getSectionsWithChanges().then((sections) => {
-        const { dirtyMap: currentMap, setDirty } = useSectionDirtyStore.getState()
+        const { dirtyMap: currentMap, setDirty } =
+          useSectionDirtyStore.getState()
         for (const { section, count } of sections) {
           if (!(section in currentMap)) {
             setDirty(section, count > 0)

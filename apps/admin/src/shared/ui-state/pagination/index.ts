@@ -30,9 +30,9 @@ export type {
   PaginationState,
   PaginationActions,
   PaginationSlice
-} from './pagination-types'
+} from './types'
 
-export { createPaginationStore } from './pagination-factory'
+export { createPaginationStore } from './factory'
 
 export type { PaginationUrlSyncConfig } from './pagination-url-sync'
 export { usePaginationUrlSync } from './pagination-url-sync'

@@ -73,6 +73,7 @@ export function usePush(config: PushConfig): UsePushResult {
           current: operations.length,
           total: operations.length
         })
+
         const sortedOps = sortPushOperations(operations)
 
         // No-op cancellation: if all ops cancelled each other out, skip executor

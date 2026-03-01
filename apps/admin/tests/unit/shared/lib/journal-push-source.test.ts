@@ -3,13 +3,12 @@ import type { JournalEntry } from '@/shared/change-journal/lib/types'
 import { PUSH_OPERATION_TYPE as OP } from '@/shared/push/lib/types'
 
 const mockGet = mock(() => Promise.resolve([] as JournalEntry[]))
-mock.module('@/shared/change-journal/change-journal', () => ({
+mock.module('@/shared/change-journal', () => ({
   getLatestEntries: mockGet,
   hasEntries: mock(() => Promise.resolve(false)),
   clearSection: mock(() => Promise.resolve())
 }))
-const { journalPushSource } =
-  await import('@/shared/lib/journal-push-source')
+const { journalPushSource } = await import('@/shared/lib/journal-push-source')
 
 const e = (
   scopeKey: string,
@@ -29,10 +28,13 @@ describe('journalPushSource.read', () => {
 
   it('ADD temp id → CREATE with unwrapped data', async () => {
     const wrapper = { type: 'ADD', data: { nombre: 'Test', alias: 'T' }, ts: 1 }
+
     mockGet.mockResolvedValueOnce([
       e('artista:temp-uuid', { op: 'set', value: wrapper })
     ])
+
     const ops = await journalPushSource.read('artista')
+
     expect(ops).toEqual([
       {
         type: OP.CREATE,

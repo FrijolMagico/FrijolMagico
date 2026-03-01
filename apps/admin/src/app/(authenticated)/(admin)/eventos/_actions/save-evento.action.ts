@@ -1,6 +1,5 @@
 'use server'
 
-import { revalidateTag } from 'next/cache'
 import { eq } from 'drizzle-orm'
 import { db } from '@frijolmagico/database/orm'
 import { events } from '@frijolmagico/database/schema'
@@ -236,7 +235,7 @@ export async function saveEventoAction(
       }
     })
 
-    // TODO(cache): Add revalidateTag with constants when cached fetchers 
+    // TODO(cache): Add revalidateTag with constants when cached fetchers
     // for the events section are implemented. For now they don't use cacheTag.
     // revalidateTag(<TAG_CONSTANT>, 'max')
 
