@@ -1,12 +1,13 @@
 'use client'
 
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useDebouncedCallback } from 'use-debounce'
 import { Card } from '@/shared/components/ui/card'
 import { useRouteChanges } from '@/shared/hooks/use-route-changes'
 import { RouteSaveToolbar } from '@/shared/components/route-save-toolbar'
 import { useArtistaPush } from '../../_hooks/use-artista-push'
+import { toast } from 'sonner'
 import { useAutoCommit } from '@/shared/ui-state/operation-log/hooks/use-auto-commit'
 import { useArtistsOperationStore } from '../../_store/artista-ui-store'
 import { useArtistListFilterStore } from '../_store/artist-list-filter-store'
@@ -31,9 +32,12 @@ export function ArtistListContainer({
   const setFilters = useArtistListFilterStore((s) => s.setFilters)
   const setPage = useArtistListPaginationStore((s) => s.setPage)
 
-  const { save, isPending } = useArtistaPush()
+  const { save, isPending, result } = useArtistaPush()
 
   const { isDirty, discardAll } = useRouteChanges('/artistas/listado')
+
+  const isSettling = !isPending && !!result?.success && isDirty
+  const lastToastRef = useRef<number>(0)
 
   // Initialize auto-commit for both operation stores
   useAutoCommit(useArtistsOperationStore)
@@ -162,7 +166,7 @@ export function ArtistListContainer({
         isDirty={isDirty}
         onSave={save}
         onDiscard={discardAll}
-        isPending={isPending}
+        isPending={isPending || isSettling}
       />
     </div>
   )

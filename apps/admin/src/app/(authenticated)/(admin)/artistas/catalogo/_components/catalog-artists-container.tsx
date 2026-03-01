@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useDebouncedCallback } from 'use-debounce'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAutoCommit } from '@/shared/ui-state/operation-log/hooks/use-auto-commit'
@@ -15,6 +15,7 @@ import { useCatalogOperationStore } from '../_store/catalog-ui-store'
 import { useArtistsOperationStore } from '../../_store/artista-ui-store'
 import { useCatalogoPush } from '../_hooks/use-catalogo-push'
 import { useArtistaPush } from '../../_hooks/use-artista-push'
+import { toast } from 'sonner'
 import { CatalogTableContainer } from './catalog-table-container'
 
 export function CatalogArtistsContainer() {
@@ -27,9 +28,14 @@ export function CatalogArtistsContainer() {
 
   const { isDirty, discardAll } = useRouteChanges('/artistas/catalogo')
 
-  const { save: saveCatalogo, isPending: isPendingCatalogo } =
+
+  const { save: saveCatalogo, isPending: isPendingCatalogo, result: resultCatalogo } =
     useCatalogoPush()
-  const { save: saveArtista, isPending: isPendingArtista } = useArtistaPush()
+  const { save: saveArtista, isPending: isPendingArtista, result: resultArtista } =
+    useArtistaPush()
+
+  const isSettling = !isPendingCatalogo && !isPendingArtista && (!!resultCatalogo?.success || !!resultArtista?.success) && isDirty
+  const lastToastRef = useRef<number>(0)
 
   useAutoCommit(useCatalogOperationStore)
   useAutoCommit(useArtistsOperationStore)
@@ -50,6 +56,22 @@ export function CatalogArtistsContainer() {
       setPage(Number(pageParam))
     }
   }, [pageSize, searchParams, setFilters, setPage])
+
+
+  useEffect(() => {
+    if (
+      resultCatalogo?.success &&
+      resultArtista?.success &&
+      !isPendingCatalogo &&
+      !isPendingArtista
+    ) {
+      const now = Date.now()
+      if (now - lastToastRef.current > 500) {
+        lastToastRef.current = now
+        toast.success('Guardado correctamente')
+      }
+    }
+  }, [resultCatalogo, resultArtista, isPendingCatalogo, isPendingArtista])
 
   const handleFiltersChange = useDebouncedCallback(
     (newFilters: {
@@ -104,7 +126,7 @@ export function CatalogArtistsContainer() {
         isDirty={isDirty}
         onSave={handleSave}
         onDiscard={discardAll}
-        isPending={isPendingCatalogo || isPendingArtista}
+        isPending={isPendingCatalogo || isPendingArtista || isSettling}
       />
     </div>
   )
