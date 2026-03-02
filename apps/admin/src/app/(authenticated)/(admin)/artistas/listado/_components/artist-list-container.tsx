@@ -52,6 +52,10 @@ export function ArtistListContainer({
   const { historyByArtistId, artistIdsWithHistory } =
     useHistoryByArtist(historyData)
 
+  // Hydrate store from URL only on mount.
+  // After mount, the store is the source of truth — URL follows the store via
+  // handleFiltersChange. Re-running on every searchParams change causes a
+  // race condition that overwrites keystrokes typed during the debounce window.
   useEffect(() => {
     const searchParam = searchParams.get('search')
     const countryParam = searchParams.get('country')
@@ -69,67 +73,74 @@ export function ArtistListContainer({
     if (pageParam) {
       setPage(Number(pageParam))
     }
-  }, [searchParams, setFilters, setPage])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional mount-only hydration
+  }, [])
+
 
   const handlePageChange = useCallback(
     (newPage: number) => {
       setPage(newPage)
-      const params = new URLSearchParams(searchParams.toString())
+      // Read current search params at call time to avoid a reactive subscription
+      // that would cause this component to re-render on every URL change.
+      const params = new URLSearchParams(window.location.search)
       if (newPage === 1) {
         params.delete('page')
       } else {
         params.set('page', String(newPage))
       }
-      router.push(`?${params.toString()}`, { scroll: false })
+      router.replace(`?${params.toString()}`, { scroll: false })
     },
-    [setPage, router, searchParams]
+    [setPage, router]
   )
 
   const handleFiltersChange = useDebouncedCallback(
-    (newFilters: {
-      search?: string
-      country?: string | null
-      city?: string | null
-      statusId?: number | null
-    }) => {
-      const params = new URLSearchParams(searchParams.toString())
+    useCallback(
+      (newFilters: {
+        search?: string
+        country?: string | null
+        city?: string | null
+        statusId?: number | null
+      }) => {
+        const params = new URLSearchParams(window.location.search)
 
-      if (newFilters.search !== undefined) {
-        if (!newFilters.search) {
-          params.delete('search')
-        } else {
-          params.set('search', newFilters.search)
+        if (newFilters.search !== undefined) {
+          if (!newFilters.search) {
+            params.delete('search')
+          } else {
+            params.set('search', newFilters.search)
+          }
         }
-      }
 
-      if (newFilters.country !== undefined) {
-        if (newFilters.country === null) {
-          params.delete('country')
-        } else {
-          params.set('country', newFilters.country)
+        if (newFilters.country !== undefined) {
+          if (newFilters.country === null) {
+            params.delete('country')
+          } else {
+            params.set('country', newFilters.country)
+          }
         }
-      }
 
-      if (newFilters.city !== undefined) {
-        if (newFilters.city === null) {
-          params.delete('city')
-        } else {
-          params.set('city', newFilters.city)
+        if (newFilters.city !== undefined) {
+          if (newFilters.city === null) {
+            params.delete('city')
+          } else {
+            params.set('city', newFilters.city)
+          }
         }
-      }
 
-      if (newFilters.statusId !== undefined) {
-        if (newFilters.statusId === null) {
-          params.delete('statusId')
-        } else {
-          params.set('statusId', String(newFilters.statusId))
+        if (newFilters.statusId !== undefined) {
+          if (newFilters.statusId === null) {
+            params.delete('statusId')
+          } else {
+            params.set('statusId', String(newFilters.statusId))
+          }
         }
-      }
 
-      params.delete('page')
+        params.delete('page')
 
-      router.push(`?${params.toString()}`, { scroll: false })
-    },
+        router.replace(`?${params.toString()}`, { scroll: false })
+      },
+      [router]
+    ),
     300
   )
 

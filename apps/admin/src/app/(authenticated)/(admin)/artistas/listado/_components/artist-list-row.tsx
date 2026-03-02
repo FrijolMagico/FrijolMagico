@@ -1,5 +1,6 @@
 'use client'
 
+import { memo, useCallback } from 'react'
 import { RotateCcw, Trash2, Pencil, History } from 'lucide-react'
 import { TableCell, TableRow } from '@/shared/components/ui/table'
 import { Badge } from '@/shared/components/ui/badge'
@@ -17,16 +18,25 @@ interface ArtistListRowProps {
   hasHistory: boolean
 }
 
-export function ArtistListRow({ id, hasHistory }: ArtistListRowProps) {
+export const ArtistListRow = memo(function ArtistListRow({ id, hasHistory }: ArtistListRowProps) {
   const remove = useArtistsOperationStore((s) => s.remove)
   const restore = useArtistsOperationStore((s) => s.restore)
   const artist = useArtistsProjectionStore((s) => s.byId[id])
   const openEditDialog = useArtistDialog((s) => s.openEditDialog)
   const openHistoryDialog = useArtistDialog((s) => s.openHistoryDialog)
+  const isDeleted = artist?.__meta?.isDeleted ?? false
+
+  const handleOpenHistory = useCallback(() => openHistoryDialog(id), [id, openHistoryDialog])
+  const handleOpenEdit = useCallback(() => openEditDialog(id), [id, openEditDialog])
+  const handleRemoveOrRestore = useCallback(() => {
+    if (artist?.__meta?.isDeleted) {
+      restore(id)
+    } else {
+      remove(id)
+    }
+  }, [id, artist, restore, remove])
 
   if (!artist) return null
-
-  const isDeleted = artist.__meta?.isDeleted
 
   return (
     <TableRow
@@ -57,7 +67,7 @@ export function ArtistListRow({ id, hasHistory }: ArtistListRowProps) {
           <ButtonWithTooltip
             size='icon'
             variant='ghost'
-            onClick={() => openHistoryDialog(id)}
+            onClick={handleOpenHistory}
             tooltipContent='Ver historial'
             className='text-muted-foreground hover:text-foreground h-8 w-8'
           >
@@ -69,7 +79,7 @@ export function ArtistListRow({ id, hasHistory }: ArtistListRowProps) {
         <ButtonWithTooltip
           size='icon'
           variant='ghost'
-          onClick={() => openEditDialog(id)}
+          onClick={handleOpenEdit}
           tooltipContent='Editar artista'
           className='h-8 w-8'
           disabled={isDeleted}
@@ -83,13 +93,7 @@ export function ArtistListRow({ id, hasHistory }: ArtistListRowProps) {
           <ButtonWithTooltip
             size='icon'
             variant='ghost'
-            onClick={() => {
-              if (isDeleted) {
-                restore(id)
-              } else {
-                remove(id)
-              }
-            }}
+            onClick={handleRemoveOrRestore}
             tooltipContent={isDeleted ? 'Restaurar' : 'Eliminar'}
             className={cn(
               'text-destructive hover:text-destructive/80 h-8 w-8',
@@ -106,4 +110,4 @@ export function ArtistListRow({ id, hasHistory }: ArtistListRowProps) {
       </TableCell>
     </TableRow>
   )
-}
+  })

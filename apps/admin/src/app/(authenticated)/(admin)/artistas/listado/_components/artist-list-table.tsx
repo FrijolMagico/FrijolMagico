@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import {
   Table,
   TableBody,
@@ -17,7 +18,7 @@ interface ArtistListTableProps {
   artistIdsWithHistory: Set<string>
 }
 
-export function ArtistListTable({
+export const ArtistListTable = memo(function ArtistListTable({
   onClearFilters,
   artistIdsWithHistory
 }: ArtistListTableProps) {
@@ -71,4 +72,4 @@ export function ArtistListTable({
       </TableBody>
     </Table>
   )
-}
+  })
