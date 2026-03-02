@@ -62,6 +62,8 @@ export function createEntityOperationStore<T>() {
         lastCommitAt: Date.now()
       }),
 
+    discardCleanup: () => set({ operations: null }),
+
     hydrate: (operations) =>
       set((state) => ({
         operations: [...(state.operations ?? []), ...operations]

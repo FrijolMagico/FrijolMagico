@@ -12,6 +12,7 @@ export interface OperationLogActions<T> {
   restore(id: string): void
 
   cleanup(): void
+  discardCleanup(): void
   hydrate(operations: EntityOperation<T>[]): void
 }
 
