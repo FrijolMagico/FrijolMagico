@@ -46,10 +46,11 @@ export function useJournalRestore<T>({
 
   const discardAll = useCallback(async () => {
     isDiscarding.current = true
-    // Cleanup first: sets operations=null + lastCommitAt=now, which triggers
-    // the isPostCommitReset guard in useJournalSync — prevents any in-flight
-    // debounce from writing ops to a journal that is about to be cleared.
-    operationStore.getState().cleanup()
+    // discardCleanup sets operations=null WITHOUT touching lastCommitAt, so the
+    // isPostCommitReset guard in useProjectionSync does NOT fire — allowing
+    // project(snapshot, null) to run and force a full rebuild from remote data.
+    // cleanup() (which sets lastCommitAt) is reserved for the post-commit flow.
+    operationStore.getState().discardCleanup()
     await clearSection(entity)
     isHydrated.current = false
     isDiscarding.current = false
