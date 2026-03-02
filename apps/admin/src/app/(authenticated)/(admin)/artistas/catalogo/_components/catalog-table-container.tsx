@@ -5,7 +5,7 @@ import { CatalogPagination } from './catalog-pagination'
 import { CatalogTable } from './catalog-table'
 import { memo, useRef, useCallback } from 'react'
 import { useCatalogPaginationStore } from '../_store/catalog-pagination-store'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 
 interface CatalogTableContainerProps {
   handleFiltersChange: (filters: {
@@ -19,24 +19,24 @@ export const CatalogTableContainer = memo(function CatalogTableContainer({
   handleFiltersChange
 }: CatalogTableContainerProps) {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const setPage = useCatalogPaginationStore((s) => s.setPage)
   const tableContainerRef = useRef<HTMLDivElement>(null)
 
   const handlePageChange = useCallback(
     (newPage: number) => {
       setPage(newPage)
-      const params = new URLSearchParams(searchParams.toString())
+      // Read current search params at call time to avoid a reactive subscription
+      // that would cause this component to re-render on every URL change.
+      const params = new URLSearchParams(window.location.search)
       if (newPage === 1) {
         params.delete('page')
       } else {
         params.set('page', String(newPage))
       }
-      router.push(`?${params.toString()}`, { scroll: false })
+      router.replace(`?${params.toString()}`, { scroll: false })
     },
-    [setPage, router, searchParams]
+    [setPage, router]
   )
-
 
   return (
     <>

@@ -28,8 +28,7 @@ interface CatalogRowProps {
   id: string
 }
 
-export function CatalogRow({ id }: CatalogRowProps) {
-  const isDraggingGlobal = useCatalogViewStore((s) => s.isDragging)
+export const CatalogRow = function CatalogRow({ id }: CatalogRowProps) {
   const update = useCatalogOperationStore((s) => s.update)
 
   const openCatalogDialog = useCatalogViewStore((s) => s.openCatalogDialog)
@@ -51,10 +50,6 @@ export function CatalogRow({ id }: CatalogRowProps) {
     isDragging
   } = useSortable({ id })
 
-  if (!catalog || !artist) {
-    return null
-  }
-
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -62,18 +57,16 @@ export function CatalogRow({ id }: CatalogRowProps) {
     zIndex: isDragging ? 50 : 'auto'
   }
 
-  const handleToggleField = (field: 'destacado' | 'activo', value: boolean) => {
-    update(id, { [field]: value })
+  if (!catalog || !artist) {
+    return null
   }
-
-  console.log('[CatalogRow] render', id)
 
   return (
     <TableRow
       ref={setNodeRef}
       style={style}
       className={cn('group relative min-h-18.25 transition-colors', {
-        'bg-accent shadow-lg': isDragging || isDraggingGlobal,
+        'bg-accent shadow-lg': isDragging,
         'bg-destructive/10 hover:bg-destructive/20': catalog.__meta?.isDeleted
       })}
     >
@@ -128,9 +121,7 @@ export function CatalogRow({ id }: CatalogRowProps) {
         <div className='flex items-center gap-2'>
           <Switch
             checked={catalog.destacado}
-            onCheckedChange={(checked) =>
-              handleToggleField('destacado', checked)
-            }
+            onCheckedChange={(checked) => update(id, { destacado: checked })}
           />
           {catalog.destacado && (
             <Star className='fill-warning text-warning h-4 w-4' />
@@ -143,7 +134,7 @@ export function CatalogRow({ id }: CatalogRowProps) {
         <div className='flex items-center gap-2'>
           <Switch
             checked={catalog.activo}
-            onCheckedChange={(checked) => handleToggleField('activo', checked)}
+            onCheckedChange={(checked) => update(id, { activo: checked })}
           />
           {catalog.activo ? (
             <Check className='h-4 w-4 text-green-600 dark:text-green-500' />
@@ -170,13 +161,9 @@ export function CatalogRow({ id }: CatalogRowProps) {
         <ButtonWithTooltip
           size='icon'
           variant='ghost'
-          onClick={() => {
-            if (catalog.__meta?.isDeleted) {
-              restore(id)
-            } else {
-              remove(id)
-            }
-          }}
+          onClick={() =>
+            catalog?.__meta?.isDeleted ? restore(id) : remove(id)
+          }
           tooltipContent={catalog.__meta?.isDeleted ? 'Restaurar' : 'Eliminar'}
           className={cn(
             'text-destructive hover:text-destructive/80 h-8 w-8',

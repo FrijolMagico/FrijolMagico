@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import { useDebouncedCallback } from 'use-debounce'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useRouteChanges } from '@/shared/hooks/use-route-changes'
@@ -21,7 +21,7 @@ export function CatalogArtistsContainer() {
 
   const setFilters = useCatalogFilterStore((s) => s.setFilters)
   const setPage = useCatalogPaginationStore((s) => s.setPage)
-  const pageSize = useCatalogPaginationStore((s) => s.pageSize)
+
 
   const { isDirty, discardAll } = useRouteChanges('/artistas/catalogo')
 
@@ -39,6 +39,10 @@ export function CatalogArtistsContainer() {
   const lastToastRef = useRef<number>(0)
 
 
+  // Hydrate store from URL only on mount.
+  // After mount, the store is the source of truth — URL follows the store via
+  // handleFiltersChange. Re-running on every searchParams change causes a
+  // race condition that overwrites keystrokes typed during the debounce window.
   useEffect(() => {
     const activoParam = searchParams.get('activo')
     const destacadoParam = searchParams.get('destacado')
@@ -54,7 +58,8 @@ export function CatalogArtistsContainer() {
     if (pageParam) {
       setPage(Number(pageParam))
     }
-  }, [pageSize, searchParams, setFilters, setPage])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional mount-only hydration
+  }, [])
 
   useEffect(() => {
     if (
@@ -71,31 +76,35 @@ export function CatalogArtistsContainer() {
     }
   }, [resultCatalogo, resultArtista, isPendingCatalogo, isPendingArtista])
 
+
   const handleFiltersChange = useDebouncedCallback(
-    (newFilters: {
-      activo?: boolean | null
-      destacado?: boolean | null
-      search?: string
-    }) => {
-      const params = new URLSearchParams(searchParams.toString())
+    useCallback(
+      (newFilters: {
+        activo?: boolean | null
+        destacado?: boolean | null
+        search?: string
+      }) => {
+        const params = new URLSearchParams(window.location.search)
 
-      if (newFilters.activo !== undefined) {
-        if (newFilters.activo === null) params.delete('activo')
-        else params.set('activo', String(newFilters.activo))
-      }
+        if (newFilters.activo !== undefined) {
+          if (newFilters.activo === null) params.delete('activo')
+          else params.set('activo', String(newFilters.activo))
+        }
 
-      if (newFilters.destacado !== undefined) {
-        if (newFilters.destacado === null) params.delete('destacado')
-        else params.set('destacado', String(newFilters.destacado))
-      }
+        if (newFilters.destacado !== undefined) {
+          if (newFilters.destacado === null) params.delete('destacado')
+          else params.set('destacado', String(newFilters.destacado))
+        }
 
-      if (newFilters.search !== undefined) {
-        if (!newFilters.search) params.delete('search')
-        else params.set('search', newFilters.search)
-      }
+        if (newFilters.search !== undefined) {
+          if (!newFilters.search) params.delete('search')
+          else params.set('search', newFilters.search)
+        }
 
-      router.push(`?${params.toString()}`, { scroll: false })
-    },
+        router.replace(`?${params.toString()}`, { scroll: false })
+      },
+      [router]
+    ),
     300
   )
 

@@ -1,5 +1,7 @@
 'use client'
 
+import { useState } from 'react'
+import { useDebouncedCallback } from 'use-debounce'
 import { Search, X } from 'lucide-react'
 import { Input } from '@/shared/components/ui/input'
 import {
@@ -24,18 +26,26 @@ export function CatalogFilters({ onFiltersChange }: CatalogFiltersProps) {
   const filters = useCatalogFilterStore((state) => state.filters)
   const setFilter = useCatalogFilterStore((state) => state.setFilter)
 
-  const hasActiveFilters =
-    filters.activo !== null ||
-    filters.destacado !== null ||
-    filters.search !== ''
-
-  const handleSearchChange = (value: string) => {
+  // Local state for the search input — decoupled from the global store
+  // to prevent the URL→store sync race condition from overwriting keystrokes
+  const [localSearch, setLocalSearch] = useState(filters.search)
+  const debouncedSearchUpdate = useDebouncedCallback((value: string) => {
     setFilter('search', value)
     onFiltersChange({
       activo: filters.activo ?? undefined,
       destacado: filters.destacado ?? undefined,
       search: value
     })
+  }, 300)
+
+  const hasActiveFilters =
+    filters.activo !== null ||
+    filters.destacado !== null ||
+    filters.search !== ''
+
+  const handleSearchChange = (value: string) => {
+    setLocalSearch(value)
+    debouncedSearchUpdate(value)
   }
 
   const handleActivoChange = (value: string | null) => {
@@ -45,7 +55,9 @@ export function CatalogFilters({ onFiltersChange }: CatalogFiltersProps) {
     onFiltersChange({
       activo: activo,
       destacado: filters.destacado,
-      search: filters.search
+      // Use localSearch to avoid passing a stale store value when the user
+      // has typed ahead of the debounce window
+      search: localSearch
     })
   }
 
@@ -56,14 +68,18 @@ export function CatalogFilters({ onFiltersChange }: CatalogFiltersProps) {
     onFiltersChange({
       activo: filters.activo,
       destacado: destacado,
-      search: filters.search
+      // Use localSearch to avoid passing a stale store value when the user
+      // has typed ahead of the debounce window
+      search: localSearch
     })
   }
 
   const clearFilters = () => {
+    setLocalSearch('')
+    debouncedSearchUpdate.cancel()
     const filterStore = useCatalogFilterStore.getState()
     filterStore.setFilters({ activo: null, destacado: null, search: '' })
-    // Fix: Pass explicit nulls so the parent knows to remove params
+    // Pass explicit nulls so the parent knows to remove params
     onFiltersChange({ activo: null, destacado: null, search: '' })
   }
 
@@ -74,7 +90,7 @@ export function CatalogFilters({ onFiltersChange }: CatalogFiltersProps) {
           <Search className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
           <Input
             placeholder='Buscar artista...'
-            value={filters.search}
+            value={localSearch}
             onChange={(e) => handleSearchChange(e.target.value)}
             className='pl-9'
           />
