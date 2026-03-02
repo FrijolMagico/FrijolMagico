@@ -13,13 +13,15 @@ export function createProjectionStore<
     lastRemoteSnapshotHash: null,
 
     project: (remoteSnapshot, operations) => {
+      // null is an explicit discard signal — force full rebuild from remote snapshot
+      const forceRebuild = operations === null
       operations = operations ?? []
 
       const state = get()
       const currentHash = hashRemoteSnapshot(remoteSnapshot)
 
-      // Determine if we need a full rebuild (hash changed or first run)
-      const needsFullRebuild = state.lastRemoteSnapshotHash !== currentHash
+      // Determine if we need a full rebuild (hash changed, first run, or explicit discard signal)
+      const needsFullRebuild = forceRebuild || state.lastRemoteSnapshotHash !== currentHash
 
       let nextById: Record<string, ProjectedEntity<T>>
       let nextAllIds: string[]
