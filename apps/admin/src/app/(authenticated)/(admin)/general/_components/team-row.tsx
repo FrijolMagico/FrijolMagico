@@ -17,12 +17,13 @@ import {
 } from '@/shared/components/ui/dropdown-menu'
 import Link from 'next/link'
 import { StateBadge } from '@/shared/components/state-badge'
+import { memo } from 'react'
 
 interface TeamRowProps {
   id: string
 }
 
-export function TeamRow({ id }: TeamRowProps) {
+export const TeamRow = memo(function TeamRow({ id }: TeamRowProps) {
   const openDialog = useTeamDialog((state) => state.openDialog)
   const remove = useTeamOperationStore((s) => s.remove)
   const restore = useTeamOperationStore((s) => s.restore)
@@ -34,10 +35,12 @@ export function TeamRow({ id }: TeamRowProps) {
 
   if (!member) return null
 
+  console.log('[TeamRow] Rendering row for member:', id)
+
   return (
     <TableRow
       className={cn(
-        member.__meta.isDeleted && 'bg-destructive/10 hover:bg-destructive/20'
+        member.__meta?.isDeleted && 'bg-destructive/10 hover:bg-destructive/20'
       )}
     >
       <TableCell>
@@ -59,7 +62,7 @@ export function TeamRow({ id }: TeamRowProps) {
                   size='xs'
                   variant='outline'
                   tooltipContent='Ver RRSS'
-                  disabled={member.__meta.isDeleted}
+                  disabled={member.__meta?.isDeleted}
                 >
                   Ver
                 </ButtonWithTooltip>
@@ -94,7 +97,7 @@ export function TeamRow({ id }: TeamRowProps) {
           onClick={() => openDialog(id)}
           tooltipContent='Editar artista'
           className='h-8 w-8'
-          disabled={member.__meta.isDeleted}
+          disabled={member.__meta?.isDeleted}
         >
           <Pencil className='h-4 w-4' />
         </ButtonWithTooltip>
@@ -104,21 +107,21 @@ export function TeamRow({ id }: TeamRowProps) {
           size='icon'
           variant='ghost'
           onClick={() => {
-            if (member.__meta.isDeleted) {
+            if (member.__meta?.isDeleted) {
               restore(id)
             } else {
               remove(id)
             }
           }}
-          tooltipContent={member.__meta.isDeleted ? 'Restaurar' : 'Eliminar'}
+          tooltipContent={member.__meta?.isDeleted ? 'Restaurar' : 'Eliminar'}
           className={cn(
             'text-destructive hover:text-destructive/80 h-8 w-8',
-            member.__meta.isDeleted && 'text-green-500 hover:text-green-500/80'
+            member.__meta?.isDeleted && 'text-green-500 hover:text-green-500/80'
           )}
         >
-          {member.__meta.isDeleted ? <RotateCcw /> : <Trash2 />}
+          {member.__meta?.isDeleted ? <RotateCcw /> : <Trash2 />}
         </ButtonWithTooltip>
       </TableCell>
     </TableRow>
   )
-}
+})

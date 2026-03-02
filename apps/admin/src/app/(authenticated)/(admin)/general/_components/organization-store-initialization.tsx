@@ -3,7 +3,8 @@
 import { useProjectionSync } from '@/shared/hooks/use-projection-sync'
 import { useDirtySync } from '@/shared/hooks/use-dirty-sync'
 import { useJournalRestore } from '@/shared/hooks/use-journal-restore'
-import { JOURNAL_ENTITIES } from '@/shared/lib/database-entities'
+import { useJournalSync } from '@/shared/hooks/use-journal-sync'
+import { ENTITIES } from '@/shared/lib/database-entities'
 import {
   useOrganizationOperationStore,
   useOrganizationProjectionStore
@@ -24,10 +25,19 @@ export function OrganizationStoreInitialization({
     projectionStore: useOrganizationProjectionStore
   })
 
-  useDirtySync(useOrganizationProjectionStore, JOURNAL_ENTITIES.ORGANIZACION)
+  useDirtySync(
+    useOrganizationProjectionStore,
+    useOrganizationOperationStore,
+    ENTITIES.ORGANIZACION
+  )
 
   useJournalRestore<Organization>({
-    entity: JOURNAL_ENTITIES.ORGANIZACION,
+    entity: ENTITIES.ORGANIZACION,
+    operationStore: useOrganizationOperationStore
+  })
+
+  useJournalSync<Organization>({
+    entity: ENTITIES.ORGANIZACION,
     operationStore: useOrganizationOperationStore
   })
 

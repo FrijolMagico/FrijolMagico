@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useCallback, useEffect, useMemo } from 'react'
+import { useRef, useCallback, useEffect, useMemo, memo } from 'react'
 import {
   DndContext,
   type DragEndEvent,
@@ -35,8 +35,11 @@ import {
   useCatalogProjectionStore
 } from '../_store/catalog-ui-store'
 import { useCatalogList } from '../_hooks/use-catalog-list'
+
+import { useStableArray } from '@/shared/hooks/use-stable-array'
 import { useFractionalDnD } from '@/shared/hooks/use-fractional-dnd'
 import { CatalogRow } from './catalog-row'
+import { useShallow } from 'zustand/react/shallow'
 
 interface CatalogTableProps {
   containerRef?: React.RefObject<HTMLDivElement | null>
@@ -53,23 +56,19 @@ const PAGE_EDGE_THRESHOLD = 60 // px from edge to trigger page change
 const PAGE_CHANGE_DELAY = 600 // ms to hold before changing page
 const PAGE_CHANGE_COOLDOWN = 800 // ms between page changes
 
-export function CatalogTable({
+interface CatalogTableMemoizedProps extends CatalogTableProps {
+  paginatedIds: string[]
+  dndItems: { id: string; orderKey: string }[]
+}
+
+const CatalogTableMemoized = memo(function CatalogTableMemoized({
   containerRef,
   onPageChange,
-  handleFiltersChange
-}: CatalogTableProps) {
-  const { paginatedIds } = useCatalogList()
+  handleFiltersChange,
+  paginatedIds,
+  dndItems
+}: CatalogTableMemoizedProps) {
   const update = useCatalogOperationStore((s) => s.update)
-
-  const catalogById = useCatalogProjectionStore((s) => s.byId)
-  const dndItems = useMemo(
-    () =>
-      paginatedIds.map((id) => ({
-        id,
-        orderKey: catalogById[id]?.orden || ''
-      })),
-    [paginatedIds, catalogById]
-  )
 
   const page = useCatalogPaginationStore((s) => s.page)
   const totalPages = useCatalogPaginationStore((s) => s.getTotalPages())
@@ -259,5 +258,36 @@ export function CatalogTable({
         </TableBody>
       </Table>
     </DndContext>
+  )
+})
+
+export function CatalogTable(props: CatalogTableProps) {
+  const { paginatedIds: rawPaginatedIds } = useCatalogList()
+  const paginatedIds = useStableArray(rawPaginatedIds)
+
+  // Derive orden values specifically for the visible items
+  // useShallow ensures the object reference only changes if an orden value actually changes
+  const paginatedOrden = useCatalogProjectionStore(
+    useShallow((s) => {
+      const result: Record<string, string> = {}
+      for (const id of paginatedIds) {
+        result[id] = s.byId[id]?.orden ?? ''
+      }
+      return result
+    })
+  )
+
+  const dndItems = useMemo(
+    () =>
+      paginatedIds.map((id) => ({ id, orderKey: paginatedOrden[id] ?? '' })),
+    [paginatedIds, paginatedOrden]
+  )
+
+  return (
+    <CatalogTableMemoized
+      {...props}
+      paginatedIds={paginatedIds}
+      dndItems={dndItems}
+    />
   )
 }

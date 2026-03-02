@@ -1,4 +1,4 @@
-import { createFilterStore } from '@/shared/ui-state/filters/filter-factory'
+import { createFilterStore } from '@/shared/ui-state/filters/factory'
 import type { CatalogFilters } from '../_types'
 import { useCatalogPaginationStore } from './catalog-pagination-store'
 

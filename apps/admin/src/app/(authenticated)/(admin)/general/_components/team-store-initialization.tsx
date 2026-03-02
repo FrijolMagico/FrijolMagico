@@ -3,9 +3,8 @@
 import { useProjectionSync } from '@/shared/hooks/use-projection-sync'
 import { useDirtySync } from '@/shared/hooks/use-dirty-sync'
 import { useJournalRestore } from '@/shared/hooks/use-journal-restore'
-import {
-  JOURNAL_ENTITIES
-} from '@/shared/lib/database-entities'
+import { useJournalSync } from '@/shared/hooks/use-journal-sync'
+import { ENTITIES } from '@/shared/lib/database-entities'
 import {
   useTeamOperationStore,
   useTeamProjectionStore
@@ -25,13 +24,21 @@ export function TeamStoreInitialization({
     projectionStore: useTeamProjectionStore
   })
 
-  useDirtySync(useTeamProjectionStore, JOURNAL_ENTITIES.ORGANIZACION_EQUIPO)
+  useDirtySync(
+    useTeamProjectionStore,
+    useTeamOperationStore,
+    ENTITIES.ORGANIZACION_EQUIPO
+  )
 
   useJournalRestore<TeamMember>({
-    entity: JOURNAL_ENTITIES.ORGANIZACION_EQUIPO,
+    entity: ENTITIES.ORGANIZACION_EQUIPO,
     operationStore: useTeamOperationStore
   })
 
+  useJournalSync<TeamMember>({
+    entity: ENTITIES.ORGANIZACION_EQUIPO,
+    operationStore: useTeamOperationStore
+  })
 
   return null
 }

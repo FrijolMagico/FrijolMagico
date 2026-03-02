@@ -9,52 +9,27 @@ const { organizationMember } = core
 import { requireAuth } from '@/lib/auth/utils'
 import { updateTag } from 'next/cache'
 import { TEAM_CACHE_TAG } from '../_constants'
-import { COMMIT_OPERATION_TYPE } from '@/shared/commit-system/lib/types'
-import { validateCommitOperations } from '@/shared/commit-system/lib/operation-sorter'
+import { PUSH_OPERATION_TYPE } from '@/shared/push/lib/types'
 import {
   handleServerActionError,
   logServerError
-} from '@/shared/commit-system/lib/error-handler'
-import { createIdMapping, isTempId } from '@/shared/commit-system/lib/id-mapper'
-import { mapToOrganizacionEquipoInput } from '../_mappers/organizacion.mapper'
-import type { OrganizacionEquipoInput } from '../_schemas/organizacion.schema'
+} from '@/shared/push/lib/error-handler'
+import { createIdMapping, isTempId } from '@/shared/push/lib/id-mapper'
+import { validateOperationData } from '@/shared/push/lib/validators'
+import {
+  organizacionEquipoSchema,
+  type OrganizacionEquipoInput
+} from '../_schemas/organizacion.schema'
 import type {
-  CommitOperation,
-  CommitResult,
+  PushOperation,
+  PushResult,
   IdMapping
-} from '@/shared/commit-system/lib/types'
+} from '@/shared/push/lib/types'
 import { stripUndefined } from '@/shared/lib/utils'
-import type { JournalEntry } from '@/shared/change-journal/lib/types'
-
-function toJournalEntry(op: CommitOperation): JournalEntry {
-  const base = {
-    entryId: crypto.randomUUID(),
-    schemaVersion: 1,
-    section: 'organizacion_equipo',
-    scopeKey: `${op.entityType}:${op.entityId}`,
-    timestampMs: Date.now(),
-    clientId: 'commit-system'
-  }
-
-  switch (op.type) {
-    case COMMIT_OPERATION_TYPE.CREATE:
-    case COMMIT_OPERATION_TYPE.UPDATE: {
-      const { id: _tempId, ...dataSinId } = op.data
-      return {
-        ...base,
-        payload: { op: 'set' as const, value: dataSinId }
-      }
-    }
-    case COMMIT_OPERATION_TYPE.DELETE:
-      return { ...base, payload: { op: 'unset' as const } }
-    case COMMIT_OPERATION_TYPE.RESTORE:
-      return { ...base, payload: { op: 'restore' as const } }
-  }
-}
 
 export async function saveOrganizacionEquipoAction(
-  operations: CommitOperation[]
-): Promise<CommitResult> {
+  operations: PushOperation[]
+): Promise<PushResult> {
   try {
     await requireAuth()
 
@@ -62,37 +37,30 @@ export async function saveOrganizacionEquipoAction(
       return { success: true, idMappings: [] }
     }
 
-    const validation = validateCommitOperations(operations)
-    if (!validation.valid) {
-      logServerError(
-        new Error(`Invalid operations: ${validation.errors.join(', ')}`),
-        'saveOrganizacionEquipoAction'
-      )
-      return {
-        success: false,
-        errors: validation.errors.map((msg, idx) => ({
-          entityType: 'organizacion_equipo',
-          entityId: `error-${idx}`,
-          message: msg
-        }))
-      }
-    }
-
     const mappings: IdMapping[] = []
 
     await db.transaction(async (tx) => {
       for (const op of operations) {
-        if (op.type === COMMIT_OPERATION_TYPE.DELETE) {
+        if (op.type === PUSH_OPERATION_TYPE.DELETE) {
           if (!isTempId(op.entityId)) {
             await tx
               .delete(organizationMember)
               .where(eq(organizationMember.id, Number(op.entityId)))
           }
-        } else if (op.type === COMMIT_OPERATION_TYPE.RESTORE) {
+        } else if (op.type === PUSH_OPERATION_TYPE.RESTORE) {
           continue
         } else {
-          const entry = toJournalEntry(op)
-          const input = mapToOrganizacionEquipoInput(entry)
+          const validated = validateOperationData(
+            op.data,
+            organizacionEquipoSchema,
+            op.type === PUSH_OPERATION_TYPE.UPDATE
+          )
+          if (!validated.valid || !validated.data) {
+            throw new Error(
+              validated.errors?.[0]?.message ?? 'Validation failed'
+            )
+          }
+          const input = validated.data
 
           if (!isTempId(op.entityId)) {
             await tx

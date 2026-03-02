@@ -6,66 +6,38 @@ import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { eq } from 'drizzle-orm'
 import { requireAuth } from '@/lib/auth/utils'
-import { createIdMapping, isTempId } from '@/shared/commit-system/lib/id-mapper'
+import { createIdMapping, isTempId } from '@/shared/push/lib/id-mapper'
 import type {
-  CommitOperation,
-  CommitResult,
+  PushOperation,
+  PushResult,
   IdMapping
-} from '@/shared/commit-system/lib/types'
-import { COMMIT_OPERATION_TYPE } from '@/shared/commit-system/lib/types'
+} from '@/shared/push/lib/types'
+import { PUSH_OPERATION_TYPE } from '@/shared/push/lib/types'
 import {
-  mapToArtistaInput,
-  mapToArtistaImagenInput
-} from '../_mappers/artista.mapper'
-import type {
-  ArtistaInput,
-  ArtistaImagenInput
+  artistaSchema,
+  artistaImagenSchema,
+  type ArtistaInput,
+  type ArtistaImagenInput
 } from '../_schemas/artista.schema'
-import type { JournalEntry } from '@/shared/change-journal/lib/types'
+import { validateOperationData } from '@/shared/push/lib/validators'
 import { stripUndefined } from '@/shared/lib/utils'
 import {
   handleServerActionError,
   logServerError
-} from '@/shared/commit-system/lib/error-handler'
+} from '@/shared/push/lib/error-handler'
 
 const { artista, artistaImagen } = artist
 
 /**
- * Synthesize a JournalEntry from CommitOperation for mapper compatibility
- */
-function toJournalEntry(op: CommitOperation): JournalEntry {
-  const base = {
-    entryId: crypto.randomUUID(),
-    schemaVersion: 1,
-    section: 'artista',
-    scopeKey: `${op.entityType}:${op.entityId}`,
-    timestampMs: Date.now(),
-    clientId: 'commit-system'
-  }
-
-  switch (op.type) {
-    case COMMIT_OPERATION_TYPE.CREATE:
-    case COMMIT_OPERATION_TYPE.UPDATE: {
-      const { id: _tempId, ...cleanData } = op.data
-      return { ...base, payload: { op: 'set' as const, value: cleanData } }
-    }
-    case COMMIT_OPERATION_TYPE.DELETE:
-      return { ...base, payload: { op: 'unset' as const } }
-    case COMMIT_OPERATION_TYPE.RESTORE:
-      return { ...base, payload: { op: 'restore' as const } }
-  }
-}
-
-/**
  * Save artista section changes to database
  *
- * Receives CommitOperation[] and persists them to DB.
+ * Receives PushOperation[] and persists them to DB.
  * Handles both artista and artistaImagen tables in a single transaction.
  * Validates data via Zod schemas internally.
  */
 export async function saveArtistaAction(
-  operations: CommitOperation[]
-): Promise<CommitResult> {
+  operations: PushOperation[]
+): Promise<PushResult> {
   try {
     await requireAuth()
 
@@ -86,8 +58,8 @@ export async function saveArtistaAction(
       }
     }
 
-    const artistaOps: CommitOperation[] = []
-    const artistaImagenOps: CommitOperation[] = []
+    const artistaOps: PushOperation[] = []
+    const artistaImagenOps: PushOperation[] = []
 
     for (const op of operations) {
       if (op.entityType === 'artista') {
@@ -101,15 +73,24 @@ export async function saveArtistaAction(
 
     await db.transaction(async (tx) => {
       for (const op of artistaOps) {
-        if (op.type === COMMIT_OPERATION_TYPE.RESTORE) {
+        if (op.type === PUSH_OPERATION_TYPE.RESTORE) {
           continue
-        } else if (op.type === COMMIT_OPERATION_TYPE.DELETE) {
+        } else if (op.type === PUSH_OPERATION_TYPE.DELETE) {
           if (!isTempId(op.entityId)) {
             await tx.delete(artista).where(eq(artista.id, Number(op.entityId)))
           }
         } else {
-          const entry = toJournalEntry(op)
-          const input = mapToArtistaInput(entry)
+          const validated = validateOperationData(
+            op.data,
+            artistaSchema,
+            op.type === PUSH_OPERATION_TYPE.UPDATE
+          )
+          if (!validated.valid || !validated.data) {
+            throw new Error(
+              validated.errors?.[0]?.message ?? 'Validation failed'
+            )
+          }
+          const input = validated.data
 
           if (isTempId(op.entityId)) {
             const [result] = await tx
@@ -131,17 +112,26 @@ export async function saveArtistaAction(
       }
 
       for (const op of artistaImagenOps) {
-        if (op.type === COMMIT_OPERATION_TYPE.RESTORE) {
+        if (op.type === PUSH_OPERATION_TYPE.RESTORE) {
           continue
-        } else if (op.type === COMMIT_OPERATION_TYPE.DELETE) {
+        } else if (op.type === PUSH_OPERATION_TYPE.DELETE) {
           if (!isTempId(op.entityId)) {
             await tx
               .delete(artistaImagen)
               .where(eq(artistaImagen.id, Number(op.entityId)))
           }
         } else {
-          const entry = toJournalEntry(op)
-          const input = mapToArtistaImagenInput(entry)
+          const validated = validateOperationData(
+            op.data,
+            artistaImagenSchema,
+            op.type === PUSH_OPERATION_TYPE.UPDATE
+          )
+          if (!validated.valid || !validated.data) {
+            throw new Error(
+              validated.errors?.[0]?.message ?? 'Validation failed'
+            )
+          }
+          const input = validated.data
 
           let resolvedArtistaId = input.artistaId
           const artistaIdStr = String(input.artistaId)
@@ -202,6 +192,4 @@ export async function saveArtistaAction(
       ]
     }
   }
-
 }
-

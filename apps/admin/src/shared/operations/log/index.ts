@@ -1,0 +1,1 @@
+export { createEntityOperationStore } from './factory'

@@ -5,9 +5,9 @@
     "": {
       "name": "frijolmagico",
       "devDependencies": {
-        "prettier": "latest",
-        "prettier-plugin-tailwindcss": "latest",
-        "turbo": "latest",
+        "prettier": "^3.8.1",
+        "prettier-plugin-tailwindcss": "^0.7.2",
+        "turbo": "^2.8.12",
       },
     },
     "apps/admin": {

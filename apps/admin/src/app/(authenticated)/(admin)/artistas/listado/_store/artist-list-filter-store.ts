@@ -1,4 +1,4 @@
-import { createFilterStore } from '@/shared/ui-state/filters/filter-factory'
+import { createFilterStore } from '@/shared/ui-state/filters/factory'
 import type { ArtistListFilters } from '../_types'
 import { useArtistListPaginationStore } from './artist-list-pagination-store'
 

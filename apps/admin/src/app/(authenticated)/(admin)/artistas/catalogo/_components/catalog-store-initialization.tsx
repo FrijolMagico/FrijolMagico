@@ -3,9 +3,8 @@
 import { useProjectionSync } from '@/shared/hooks/use-projection-sync'
 import { useDirtySync } from '@/shared/hooks/use-dirty-sync'
 import { useJournalRestore } from '@/shared/hooks/use-journal-restore'
-import {
-  JOURNAL_ENTITIES
-} from '@/shared/lib/database-entities'
+import { useJournalSync } from '@/shared/hooks/use-journal-sync'
+import { ENTITIES } from '@/shared/lib/database-entities'
 import {
   useCatalogOperationStore,
   useCatalogProjectionStore
@@ -25,13 +24,21 @@ export function CatalogStoreInitialization({
     projectionStore: useCatalogProjectionStore
   })
 
-  useDirtySync(useCatalogProjectionStore, JOURNAL_ENTITIES.CATALOGO_ARTISTA)
+  useDirtySync(
+    useCatalogProjectionStore,
+    useCatalogOperationStore,
+    ENTITIES.CATALOGO_ARTISTA
+  )
 
   useJournalRestore<CatalogEntry>({
-    entity: JOURNAL_ENTITIES.CATALOGO_ARTISTA,
+    entity: ENTITIES.CATALOGO_ARTISTA,
     operationStore: useCatalogOperationStore
   })
 
+  useJournalSync<CatalogEntry>({
+    entity: ENTITIES.CATALOGO_ARTISTA,
+    operationStore: useCatalogOperationStore
+  })
 
   return null
 }

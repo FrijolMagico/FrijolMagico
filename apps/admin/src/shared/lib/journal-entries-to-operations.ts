@@ -9,8 +9,8 @@
  * @connection entity-types.ts - EntityOperation<T> interface
  */
 
-import { EntityOperation, BaseEntity } from '@/shared/ui-state/operation-log'
-import type { JournalEntry } from '@/shared/change-journal/lib/types'
+import { JournalEntry } from '../operations/journal/lib/types'
+import { BaseEntity, EntityOperation } from '../operations/types'
 
 /**
  * Convert journal entries to EntityOperations for store restoration.
@@ -69,6 +69,7 @@ export function journalEntriesToOperations<T>(
       const wrappedOp = payload.value as { data: BaseEntity<T> }
       operations.push({
         type: 'ADD',
+        id: entityId,
         data: wrappedOp.data,
         timestamp: entry.timestampMs
       })

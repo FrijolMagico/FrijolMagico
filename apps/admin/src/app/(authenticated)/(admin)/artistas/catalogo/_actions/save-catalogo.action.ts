@@ -8,52 +8,33 @@ import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/lib/auth/utils'
 import {
-  COMMIT_OPERATION_TYPE,
-  type CommitOperation,
-  type CommitResult,
+  PUSH_OPERATION_TYPE,
+  type PushOperation,
+  type PushResult,
   type IdMapping
-} from '@/shared/commit-system/lib/types'
-import type { JournalEntry } from '@/shared/change-journal/lib/types'
-import {
-  sortCommitOperations,
-  validateCommitOperations
-} from '@/shared/commit-system/lib/operation-sorter'
+} from '@/shared/push/lib/types'
 import {
   handleServerActionError,
   logServerError
-} from '@/shared/commit-system/lib/error-handler'
-import { createIdMapping, isTempId } from '@/shared/commit-system/lib/id-mapper'
-import { mapToCatalogoArtistaInput } from '../_mappers/catalogo.mapper'
-import type { CatalogoArtistaInput } from '../_schemas/catalogo.schema'
-import { JOURNAL_ENTITIES } from '@/shared/lib/database-entities'
+} from '@/shared/push/lib/error-handler'
+import { createIdMapping, isTempId } from '@/shared/push/lib/id-mapper'
+import { validateOperationData } from '@/shared/push/lib/validators'
+import {
+  catalogoArtistaSchema,
+  type CatalogoArtistaInput
+} from '../_schemas/catalogo.schema'
 import { stripUndefined } from '@/shared/lib/utils'
 
-function toJournalEntry(op: CommitOperation): JournalEntry {
-  const base = {
-    entryId: crypto.randomUUID(),
-    schemaVersion: 1,
-    section: 'catalogo_artista',
-    scopeKey: `${op.entityType}:${op.entityId}`,
-    timestampMs: Date.now(),
-    clientId: 'commit-system'
-  }
-
-  switch (op.type) {
-    case COMMIT_OPERATION_TYPE.CREATE:
-    case COMMIT_OPERATION_TYPE.UPDATE: {
-      const { id: _tempId, ...cleanData } = op.data
-      return { ...base, payload: { op: 'set' as const, value: cleanData } }
-    }
-    case COMMIT_OPERATION_TYPE.DELETE:
-      return { ...base, payload: { op: 'unset' as const } }
-    case COMMIT_OPERATION_TYPE.RESTORE:
-      return { ...base, payload: { op: 'restore' as const } }
-  }
-}
-
+/**
+ * Save catalogo section changes to database
+ *
+ * Receives PushOperation[] and persists them to DB.
+ * Handles catalogo_artista table operations.
+ * Validates data via Zod schemas internally.
+ */
 export async function saveCatalogoAction(
-  operations: CommitOperation[]
-): Promise<CommitResult> {
+  operations: PushOperation[]
+): Promise<PushResult> {
   try {
     await requireAuth()
 
@@ -61,24 +42,13 @@ export async function saveCatalogoAction(
       return { success: true, idMappings: [] }
     }
 
-    const validation = validateCommitOperations(operations)
-    if (!validation.valid) {
-      return {
-        success: false,
-        errors: validation.errors.map((msg, idx) => ({
-          entityType: 'catalogo_artista',
-          entityId: `error-${idx}`,
-          message: msg
-        }))
-      }
-    }
-
-    const sorted = sortCommitOperations(operations)
     const mappings: IdMapping[] = []
 
     await db.transaction(async (tx) => {
-      for (const op of sorted) {
-        if (op.type === COMMIT_OPERATION_TYPE.DELETE) {
+      for (const op of operations) {
+        if (op.type === PUSH_OPERATION_TYPE.RESTORE) {
+          continue
+        } else if (op.type === PUSH_OPERATION_TYPE.DELETE) {
           if (!isTempId(op.entityId)) {
             await tx
               .delete(artist.catalogoArtista)
@@ -86,18 +56,20 @@ export async function saveCatalogoAction(
                 eq(artist.catalogoArtista.id, Number.parseInt(op.entityId, 10))
               )
           }
-        } else if (op.type === COMMIT_OPERATION_TYPE.RESTORE) {
-          continue
         } else {
-          const entry = toJournalEntry(op)
-          const input = mapToCatalogoArtistaInput(entry)
+          const validated = validateOperationData(
+            op.data,
+            catalogoArtistaSchema,
+            op.type === PUSH_OPERATION_TYPE.UPDATE
+          )
+          if (!validated.valid || !validated.data) {
+            throw new Error(
+              validated.errors?.[0]?.message ?? 'Validation failed'
+            )
+          }
+          const input = validated.data
 
-          if (!isTempId(op.entityId)) {
-            await tx
-              .update(artist.catalogoArtista)
-              .set(stripUndefined(input))
-              .where(eq(artist.catalogoArtista.id, Number.parseInt(op.entityId, 10)))
-          } else {
+          if (isTempId(op.entityId)) {
             const [inserted] = await tx
               .insert(artist.catalogoArtista)
               .values(input as CatalogoArtistaInput)
@@ -105,13 +77,16 @@ export async function saveCatalogoAction(
 
             if (inserted) {
               mappings.push(
-                createIdMapping(
-                  op.entityId,
-                  inserted.id,
-                  JOURNAL_ENTITIES.CATALOGO_ARTISTA
-                )
+                createIdMapping(op.entityId, inserted.id, 'catalogo_artista')
               )
             }
+          } else {
+            await tx
+              .update(artist.catalogoArtista)
+              .set(stripUndefined(input))
+              .where(
+                eq(artist.catalogoArtista.id, Number.parseInt(op.entityId, 10))
+              )
           }
         }
       }
@@ -119,7 +94,6 @@ export async function saveCatalogoAction(
 
     updateTag(CATALOG_CACHE_TAG)
     updateTag(ARTISTA_CACHE_TAG)
-
 
     return {
       success: true,
