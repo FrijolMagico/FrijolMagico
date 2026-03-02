@@ -1,6 +1,7 @@
-import type { JournalEntity } from '@/shared/lib/database-entities'
+import type { Entity } from '@/shared/lib/database-entities'
+import type { ZodSchema } from 'zod'
 
-export type SectionName = JournalEntity | 'evento'
+export type SectionName = Entity | 'evento'
 
 export interface IdMapping {
   tempId: string
@@ -102,6 +103,7 @@ export interface PushConfig {
   source: PushSource
   executor: PushExecutorFn
   section: string
+  validators?: Record<string, ZodSchema>
   onSuccess?: () => void
 }
 

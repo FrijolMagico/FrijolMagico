@@ -1,4 +1,4 @@
-import { EntityOperation } from '../operation-log'
+import { EntityOperation } from '../types'
 
 export interface ProjectedMeta {
   isNew: boolean
@@ -7,17 +7,18 @@ export interface ProjectedMeta {
 }
 
 export type ProjectedEntity<T> = T & {
-  __meta: ProjectedMeta
+  __meta?: ProjectedMeta
 }
 
-export interface UIProjectionState<T extends { id: string }> {
+export interface ProjectionStore<T extends { id: string }> {
   byId: Record<string, ProjectedEntity<T>>
   allIds: string[]
+  lastAppliedTimestamp: number | null
+  lastRemoteSnapshotHash: string | null
 
   project: (
     remoteSnapshot: T[],
-    persistedOps: EntityOperation<T>[] | null,
-    pendingOps: EntityOperation<T>[] | null
+    operations: EntityOperation<T>[] | null
   ) => void
 
   reset: () => void

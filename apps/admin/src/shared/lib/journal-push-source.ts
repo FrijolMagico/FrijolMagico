@@ -21,14 +21,14 @@ import {
   getLatestEntries,
   hasEntries,
   clearSection
-} from '@/shared/change-journal/'
+} from '@/shared/operations/journal/'
 import { isTempId } from '@/shared/push/lib/id-mapper'
 import {
   PUSH_OPERATION_TYPE,
   type PushOperation,
   type PushSource
 } from '@/shared/push/lib/types'
-import type { JournalEntry } from '@/shared/change-journal/lib/types'
+import type { JournalEntry } from '@/shared/operations/journal/lib/types'
 
 /**
  * Process journal entries into PushOperations.

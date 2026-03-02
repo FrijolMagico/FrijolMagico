@@ -22,7 +22,7 @@ import {
 } from '../_store/catalog-ui-store'
 import { useArtistsProjectionStore } from '../../_store/artista-ui-store'
 import { ButtonWithTooltip } from '@/shared/components/button-with-tooltip'
-import { Badge } from '@/shared/components/ui/badge'
+import { StateBadge } from '@/shared/components/state-badge'
 
 interface CatalogRowProps {
   id: string
@@ -30,11 +30,12 @@ interface CatalogRowProps {
 
 export function CatalogRow({ id }: CatalogRowProps) {
   const isDraggingGlobal = useCatalogViewStore((s) => s.isDragging)
+  const update = useCatalogOperationStore((s) => s.update)
+
   const openCatalogDialog = useCatalogViewStore((s) => s.openCatalogDialog)
 
   const remove = useCatalogOperationStore((s) => s.remove)
   const restore = useCatalogOperationStore((s) => s.restore)
-  const update = useCatalogOperationStore((s) => s.update)
 
   const catalog = useCatalogProjectionStore((s) => s.byId[id])
   const artist = useArtistsProjectionStore((s) =>
@@ -65,13 +66,15 @@ export function CatalogRow({ id }: CatalogRowProps) {
     update(id, { [field]: value })
   }
 
+  console.log('[CatalogRow] render', id)
+
   return (
     <TableRow
       ref={setNodeRef}
       style={style}
       className={cn('group relative min-h-18.25 transition-colors', {
         'bg-accent shadow-lg': isDragging || isDraggingGlobal,
-        'bg-destructive/10 hover:bg-destructive/20': catalog.__meta.isDeleted
+        'bg-destructive/10 hover:bg-destructive/20': catalog.__meta?.isDeleted
       })}
     >
       {/* Drag Handle */}
@@ -113,15 +116,11 @@ export function CatalogRow({ id }: CatalogRowProps) {
       </TableCell>
 
       <TableCell>
-        <div className='flex flex-col items-center justify-center gap-2'>
-          {catalog.__meta.isNew && <Badge variant='default'>Nuevo</Badge>}
-          {catalog.__meta.isUpdated && (
-            <Badge variant='outline'>Modificado</Badge>
-          )}
-          {catalog.__meta.isDeleted && (
-            <Badge variant='destructive'>Eliminado</Badge>
-          )}
-        </div>
+        <StateBadge
+          isNew={artist.__meta?.isNew}
+          isDeleted={artist.__meta?.isDeleted}
+          isUpdated={artist.__meta?.isUpdated}
+        />
       </TableCell>
 
       {/* Destacado */}
@@ -172,19 +171,20 @@ export function CatalogRow({ id }: CatalogRowProps) {
           size='icon'
           variant='ghost'
           onClick={() => {
-            if (catalog.__meta.isDeleted) {
+            if (catalog.__meta?.isDeleted) {
               restore(id)
             } else {
               remove(id)
             }
           }}
-          tooltipContent={catalog.__meta.isDeleted ? 'Restaurar' : 'Eliminar'}
+          tooltipContent={catalog.__meta?.isDeleted ? 'Restaurar' : 'Eliminar'}
           className={cn(
             'text-destructive hover:text-destructive/80 h-8 w-8',
-            catalog.__meta.isDeleted && 'text-green-500 hover:text-green-500/80'
+            catalog.__meta?.isDeleted &&
+              'text-green-500 hover:text-green-500/80'
           )}
         >
-          {catalog.__meta.isDeleted ? <RotateCcw /> : <Trash2 />}
+          {catalog.__meta?.isDeleted ? <RotateCcw /> : <Trash2 />}
         </ButtonWithTooltip>
       </TableCell>
     </TableRow>

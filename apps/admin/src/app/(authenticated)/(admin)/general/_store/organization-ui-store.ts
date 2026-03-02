@@ -1,14 +1,9 @@
-import { JOURNAL_ENTITIES } from '@/shared/lib/database-entities'
-import { createEntityOperationStore } from '@/shared/ui-state/operation-log'
-import { createProjectionStore } from '@/shared/ui-state/ui-projection-engine'
-import { writeOperationIntoJournal } from '@/shared/lib/write-operation-into-journal'
 import type { Organization } from '../_types'
+import { createEntityOperationStore } from '@/shared/operations/log'
+import { createProjectionStore } from '@/shared/operations/projection'
 
 export const useOrganizationOperationStore =
-  createEntityOperationStore<Organization>({
-    commitOperations: async (ops) =>
-      writeOperationIntoJournal(ops, JOURNAL_ENTITIES.ORGANIZACION)
-  })
+  createEntityOperationStore<Organization>()
 
 export const useOrganizationProjectionStore =
   createProjectionStore<Organization>()

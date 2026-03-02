@@ -1,5 +1,10 @@
 import type { PushOperation } from './types'
+import type { ZodSchema } from 'zod'
 import { isTempId } from './id-mapper'
+import {
+  validateOperationData,
+  shouldSkipValidation
+} from './validators'
 
 export interface SortedPushOperations {
   deletes: PushOperation[]
@@ -74,16 +79,50 @@ export function sortPushOperations(
 }
 
 /**
- * NOTE: This function is intentionally kept as a validation hook for future use.
- * Conflict resolution (DELETE+UPDATE, CREATE+DELETE, etc.) is handled silently
- * by sortPushOperations. This function is the right place to add hard validation
- * rules in the future — e.g. unknown entityType, missing required fields on CREATE,
- * permission checks — that should block the commit entirely instead of being resolved.
+ * Validates push operations against Zod schemas.
+ *
+ * When validators are provided, validates operation data:
+ * - Skips DELETE/RESTORE operations
+ * - Uses partial validation for UPDATE operations
+ * - Returns structural errors from schema validation
+ *
+ * @param operations - Array of push operations
+ * @param validators - Optional map of entityType → ZodSchema
+ * @returns PushValidationResult with any validation errors
  */
 export function validatePushOperations(
-  _operations: PushOperation[] // eslint-disable-line @typescript-eslint/no-unused-vars
+  operations: PushOperation[],
+  validators?: Record<string, ZodSchema>
 ): PushValidationResult {
   const errors: string[] = []
+
+  if (!validators || Object.keys(validators).length === 0) {
+    return { valid: true, errors }
+  }
+
+  for (const op of operations) {
+    // Skip validation for DELETE/RESTORE (they don't have data to validate)
+    if (shouldSkipValidation(op)) continue
+
+    // After shouldSkipValidation, we know op has 'data' (CREATE or UPDATE)
+    const schema = validators[op.entityType]
+    if (!schema) continue // No validator for this entity type
+
+    const isPartial = op.type === 'UPDATE'
+    const validationResult = validateOperationData(
+      (op as { data: Record<string, unknown> }).data,
+      schema,
+      isPartial
+    )
+
+    if (!validationResult.valid && validationResult.errors) {
+      for (const error of validationResult.errors) {
+        errors.push(
+          `[${op.entityType}:${op.entityId}] ${error.field}: ${error.message}`
+        )
+      }
+    }
+  }
 
   return {
     valid: errors.length === 0,

@@ -15,41 +15,17 @@ import {
   logServerError
 } from '@/shared/push/lib/error-handler'
 import { createIdMapping, isTempId } from '@/shared/push/lib/id-mapper'
-import { mapToOrganizacionEquipoInput } from '../_mappers/organizacion.mapper'
-import type { OrganizacionEquipoInput } from '../_schemas/organizacion.schema'
+import { validateOperationData } from '@/shared/push/lib/validators'
+import {
+  organizacionEquipoSchema,
+  type OrganizacionEquipoInput
+} from '../_schemas/organizacion.schema'
 import type {
   PushOperation,
   PushResult,
   IdMapping
 } from '@/shared/push/lib/types'
 import { stripUndefined } from '@/shared/lib/utils'
-import type { JournalEntry } from '@/shared/change-journal/lib/types'
-
-function toJournalEntry(op: PushOperation): JournalEntry {
-  const base = {
-    entryId: crypto.randomUUID(),
-    schemaVersion: 1,
-    section: 'organizacion_equipo',
-    scopeKey: `${op.entityType}:${op.entityId}`,
-    timestampMs: Date.now(),
-    clientId: 'commit-system'
-  }
-
-  switch (op.type) {
-    case PUSH_OPERATION_TYPE.CREATE:
-    case PUSH_OPERATION_TYPE.UPDATE: {
-      const { id: _tempId, ...dataSinId } = op.data
-      return {
-        ...base,
-        payload: { op: 'set' as const, value: dataSinId }
-      }
-    }
-    case PUSH_OPERATION_TYPE.DELETE:
-      return { ...base, payload: { op: 'unset' as const } }
-    case PUSH_OPERATION_TYPE.RESTORE:
-      return { ...base, payload: { op: 'restore' as const } }
-  }
-}
 
 export async function saveOrganizacionEquipoAction(
   operations: PushOperation[]
@@ -74,8 +50,17 @@ export async function saveOrganizacionEquipoAction(
         } else if (op.type === PUSH_OPERATION_TYPE.RESTORE) {
           continue
         } else {
-          const entry = toJournalEntry(op)
-          const input = mapToOrganizacionEquipoInput(entry)
+          const validated = validateOperationData(
+            op.data,
+            organizacionEquipoSchema,
+            op.type === PUSH_OPERATION_TYPE.UPDATE
+          )
+          if (!validated.valid || !validated.data) {
+            throw new Error(
+              validated.errors?.[0]?.message ?? 'Validation failed'
+            )
+          }
+          const input = validated.data
 
           if (!isTempId(op.entityId)) {
             await tx

@@ -17,7 +17,6 @@ export function GeneralSaveBar() {
   const { save: saveTeam, isPending: isPendingTeam, result: resultTeam } =
     useOrganizacionEquipoPush()
 
-  const isSettling = !isPendingOrg && !isPendingTeam && (!!resultOrg?.success || !!resultTeam?.success) && isDirty
   const lastToastRef = useRef<number>(0)
 
   // Single consolidated toast — fires once when both saves complete successfully
@@ -48,7 +47,7 @@ export function GeneralSaveBar() {
         isDirty={isDirty}
         onSave={handleSave}
         onDiscard={discardAll}
-        isPending={isPendingOrg || isPendingTeam || isSettling}
+        isPending={isPendingOrg || isPendingTeam}
       />
     </>
   )

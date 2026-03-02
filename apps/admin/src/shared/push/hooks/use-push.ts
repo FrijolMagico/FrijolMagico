@@ -18,21 +18,19 @@ export interface UsePushResult {
 /**
  * Generic push orchestrator hook
  *
- * Pipeline: read → validate → sort → execute → onSuccess → clear
+ * Pipeline: read → validate → sort → execute → clear → onSuccess
+ *
+ * Order matters:
+ * - source.clear() (journal) fires BEFORE onSuccess() (store.cleanup()).
+ *   This ensures no in-flight debounce from useJournalSync can write ops to
+ *   a journal that is about to be cleared.
+ * - onSuccess() calls store.cleanup() which sets operations=null + lastCommitAt=now.
+ *   useDirtySync's operationStore channel fires setDirty(false) synchronously —
+ *   still inside the React transition — so isDirty is false by the time
+ *   isPending becomes false. Prevents the save bar from flashing back.
  *
  * @param config - PushConfig with source, executor, section, and optional onSuccess
  * @returns UsePushResult with push function, isPending, result, and progress
- *
- * @example
- * const { push, isPending, result } = usePush({
- *   source: journalPushSource,
- *   executor: saveArtistaAction,
- *   section: 'artista',
- *   onSuccess: () => {
- *     store.resetStore()
- *     router.refresh()
- *   }
- * })
  */
 export function usePush(config: PushConfig): UsePushResult {
   const [isPending, startTransition] = useTransition()
@@ -42,7 +40,6 @@ export function usePush(config: PushConfig): UsePushResult {
   const push = async () => {
     startTransition(async () => {
       try {
-        setResult(null)
         setProgress({ phase: 'reading' })
 
         const operations = await config.source.read(config.section)
@@ -53,9 +50,10 @@ export function usePush(config: PushConfig): UsePushResult {
           return
         }
 
-        setProgress({ phase: 'validating', total: operations.length })
-
-        const validationResult = validatePushOperations(operations)
+        const validationResult = validatePushOperations(
+          operations,
+          config.validators
+        )
         if (!validationResult.valid) {
           setResult({
             success: false,
@@ -92,11 +90,16 @@ export function usePush(config: PushConfig): UsePushResult {
         setResult(execResult)
 
         if (execResult.success) {
-          config.onSuccess?.()
-
+          // 1. Clear journal before clearing operations.
+          //    Prevents the useJournalSync cursor-reset from losing ops written
+          //    between cleanup() and clearSection().
           setProgress({ phase: 'clearing' })
-
           await config.source.clear(config.section)
+
+          // 2. Clear operations + trigger router.refresh().
+          //    useDirtySync operationStore channel fires setDirty(false) here,
+          //    synchronously, before the transition ends and isPending=false.
+          config.onSuccess?.()
         }
 
         setProgress(null)

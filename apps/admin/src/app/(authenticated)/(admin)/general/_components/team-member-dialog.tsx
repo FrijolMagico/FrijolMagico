@@ -13,8 +13,8 @@ import { equipoFormSchema } from '../_schemas/organizacion.schema'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
-import { ProjectedEntity } from '@/shared/ui-state/ui-projection-engine'
 import { TeamMember } from '../_types'
+import { ProjectedEntity } from '@/shared/operations/projection'
 
 interface AddEquipoFormContentProps {
   onApply: (data: Omit<TeamMember, 'id' | 'organizationId'>) => void
@@ -154,11 +154,8 @@ export function MemberDialog() {
   const close = useTeamDialog((s) => s.closeDialog)
   const add = useTeamOperationStore((s) => s.add)
   const update = useTeamOperationStore((s) => s.update)
-  const commitPendingOperations = useTeamOperationStore(
-    (s) => s.commitPendingOperations
-  )
 
-  const handleApply = async (data: {
+  const handleApply = (data: {
     name: string
     position?: string
     rut?: string
@@ -175,7 +172,6 @@ export function MemberDialog() {
 
     if (!memberId) add({ ...data, organizationId: ORGANIZATION_ID })
 
-    await commitPendingOperations()
     close()
   }
 

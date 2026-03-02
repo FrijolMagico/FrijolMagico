@@ -1,5 +1,5 @@
-import { EntityOperation } from '@/shared/ui-state/operation-log'
-import { writeEntry } from '@/shared/change-journal/'
+import { writeEntry } from '../operations/journal'
+import { EntityOperation } from '../operations/types'
 
 export async function writeOperationIntoJournal<T>(
   operations: EntityOperation<T>[],
@@ -11,7 +11,7 @@ export async function writeOperationIntoJournal<T>(
         {
           const result = await writeEntry(
             section,
-            `${section}:${operation.data.id}`,
+            `${section}:${operation.id}`,
             {
               op: 'set',
               value: operation

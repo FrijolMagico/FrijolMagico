@@ -21,7 +21,7 @@ import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { navigation } from '@/lib/navigation'
-import { getSectionsWithChanges } from '@/shared/change-journal'
+import { getSectionsWithChanges } from '@/shared/operations/journal'
 import { useSectionDirtyStore } from '@/shared/lib/section-dirty-store'
 import { ROUTE_ENTITY_MAP } from '@/shared/lib/database-entities'
 

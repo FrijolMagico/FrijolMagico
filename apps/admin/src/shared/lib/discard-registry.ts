@@ -1,11 +1,11 @@
 import { create } from 'zustand'
-import type { JournalEntity } from './database-entities'
+import type { Entity } from './database-entities'
 
 interface DiscardRegistryState {
-  callbacks: Map<JournalEntity, () => Promise<void>>
-  register: (entity: JournalEntity, fn: () => Promise<void>) => void
-  unregister: (entity: JournalEntity) => void
-  discardEntities: (entities: JournalEntity[]) => Promise<void>
+  callbacks: Map<Entity, () => Promise<void>>
+  register: (entity: Entity, fn: () => Promise<void>) => void
+  unregister: (entity: Entity) => void
+  discardEntities: (entities: Entity[]) => Promise<void>
 }
 
 export const useDiscardRegistry = create<DiscardRegistryState>((set, get) => ({

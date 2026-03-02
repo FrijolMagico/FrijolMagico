@@ -1,4 +1,5 @@
 'use client'
+import { memo } from 'react'
 
 import {
   Table,
@@ -8,20 +9,14 @@ import {
   TableRow
 } from '@/shared/components/ui/table'
 
-import {
-  useTeamOperationStore,
-  useTeamProjectionStore
-} from '../_store/organization-team-ui-store'
+import { useTeamProjectionStore } from '../_store/organization-team-ui-store'
 import { TeamRow } from './team-row'
-import { useAutoCommit } from '@/shared/ui-state/operation-log/hooks/use-auto-commit'
 
 import { Card } from '@/shared/components/ui/card'
 import { EmptyState } from '@/shared/components/empty-state'
 
-export function TeamTable() {
+export const TeamTable = memo(function TeamTable() {
   const teamIds = useTeamProjectionStore((s) => s.allIds)
-
-  useAutoCommit(useTeamOperationStore)
 
   if (teamIds.length <= 0)
     return (
@@ -54,4 +49,4 @@ export function TeamTable() {
       </Table>
     </Card>
   )
-}
+})

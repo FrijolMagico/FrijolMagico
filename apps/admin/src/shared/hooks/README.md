@@ -18,7 +18,7 @@ Colección de hooks de utilidad global y sincronización de estado para el panel
 
 Hook de hidratación per-entidad. Gestiona la restauración de operaciones desde IndexedDB.
 
-- **Suscripción**: Utiliza una suscripción Zustand vanilla sobre `persistedOperations` del `operationStore` para detectar cambios externos.
+- **Suscripción**: Utiliza una suscripción Zustand vanilla sobre `appliedOperations` del `operationStore` para detectar cambios externos.
 - **`isDiscarding`**: Flag interno que previene re-hidrataciones durante la ejecución de `discardAll` (la suscripción Zustand se dispara al limpiar el store, pero IndexedDB puede no estar vacío aún).
 - **DiscardRegistry**: Al montar, registra su función `discardAll` en `useDiscardRegistry`. Al desmontar, se desregistra automáticamente.
 - **Retorna**: `void` — los callers (store-initializers) no necesitan el resultado.

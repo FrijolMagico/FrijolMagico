@@ -1,4 +1,4 @@
-export const JOURNAL_ENTITIES = {
+export const ENTITIES = {
   ORGANIZACION: 'organizacion',
   ORGANIZACION_EQUIPO: 'organizacion_equipo',
   ARTISTA: 'artista',
@@ -6,19 +6,18 @@ export const JOURNAL_ENTITIES = {
   ARTISTA_HISTORIAL: 'artista_historial'
 } as const
 
-export type JournalEntity =
-  (typeof JOURNAL_ENTITIES)[keyof typeof JOURNAL_ENTITIES]
+export type Entity = (typeof ENTITIES)[keyof typeof ENTITIES]
 
-export const JOURNAL_ENTITY_LABELS: Record<JournalEntity, string> = {
-  [JOURNAL_ENTITIES.ORGANIZACION]: 'Organización',
-  [JOURNAL_ENTITIES.ORGANIZACION_EQUIPO]: 'Organización Equipo',
-  [JOURNAL_ENTITIES.ARTISTA]: 'Artista',
-  [JOURNAL_ENTITIES.CATALOGO_ARTISTA]: 'Catálogo Artista',
-  [JOURNAL_ENTITIES.ARTISTA_HISTORIAL]: 'Historial Artista'
+export const ENTITY_LABELS: Record<Entity, string> = {
+  [ENTITIES.ORGANIZACION]: 'Organización',
+  [ENTITIES.ORGANIZACION_EQUIPO]: 'Organización Equipo',
+  [ENTITIES.ARTISTA]: 'Artista',
+  [ENTITIES.CATALOGO_ARTISTA]: 'Catálogo Artista',
+  [ENTITIES.ARTISTA_HISTORIAL]: 'Historial Artista'
 }
 
-export const ROUTE_ENTITY_MAP: Partial<Record<string, JournalEntity[]>> = {
-  '/general': [JOURNAL_ENTITIES.ORGANIZACION, JOURNAL_ENTITIES.ORGANIZACION_EQUIPO],
-  '/artistas/listado': [JOURNAL_ENTITIES.ARTISTA],
-  '/artistas/catalogo': [JOURNAL_ENTITIES.CATALOGO_ARTISTA],
+export const ROUTE_ENTITY_MAP: Partial<Record<string, Entity[]>> = {
+  '/general': [ENTITIES.ORGANIZACION, ENTITIES.ORGANIZACION_EQUIPO],
+  '/artistas/listado': [ENTITIES.ARTISTA],
+  '/artistas/catalogo': [ENTITIES.CATALOGO_ARTISTA]
 }

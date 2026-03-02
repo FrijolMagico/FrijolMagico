@@ -2,16 +2,14 @@
 
 import { useRef, useEffect } from 'react'
 import type { UseBoundStore, StoreApi } from 'zustand'
-import type {
-  BaseEntity,
-  EntityOperationStore
-} from '@/shared/ui-state/operation-log/types'
-import type { UIProjectionState } from '@/shared/ui-state/ui-projection-engine'
+import { EntityOperationStore } from '../operations/log/types'
+import { ProjectionStore } from '../operations/projection'
+import { BaseEntity } from '../operations/types'
 
 interface UseProjectionSyncOptions<T> {
   initialData: T[]
   operationStore: UseBoundStore<StoreApi<EntityOperationStore<BaseEntity<T>>>>
-  projectionStore: UseBoundStore<StoreApi<UIProjectionState<BaseEntity<T>>>>
+  projectionStore: UseBoundStore<StoreApi<ProjectionStore<BaseEntity<T>>>>
 }
 
 export function useProjectionSync<T>({
@@ -28,23 +26,25 @@ export function useProjectionSync<T>({
 
     const opState = operationStore.getState()
 
-    // Force re-projection with fresh server data + any concurrent ops
-    projectionStore.getState().project(
-      initialData,
-      opState.persistedOperations,
-      opState.pendingOperations
+    console.log(
+      '[useProjectionSync] initialData changed, re-projecting with ops:',
+      {
+        initialData,
+        operations: opState.operations
+      }
     )
+
+    // Force re-projection with fresh server data + any concurrent ops
+    projectionStore.getState().project(initialData, opState.operations)
   }, [initialData, operationStore, projectionStore])
 
   // Seed on mount + subscribe to operation store changes
   useEffect(() => {
     // Read CURRENT state from operation store instead of null
     const currentOpState = operationStore.getState()
-    projectionStore.getState().project(
-      initialDataRef.current,
-      currentOpState.persistedOperations,
-      currentOpState.pendingOperations
-    )
+    projectionStore
+      .getState()
+      .project(initialDataRef.current, currentOpState.operations)
 
     // Subscribe: re-project whenever operations change.
     // Skip re-projection when the store was just reset after a commit
@@ -53,17 +53,13 @@ export function useProjectionSync<T>({
     // handle re-projection with the correct data.
     const unsubscribe = operationStore.subscribe((state) => {
       const isPostCommitReset =
-        state.persistedOperations === null &&
-        state.pendingOperations === null &&
-        state.lastCommitAt !== null
+        state.operations === null && state.lastCommitAt !== null
 
       if (isPostCommitReset) return
 
-      projectionStore.getState().project(
-        initialDataRef.current,
-        state.persistedOperations,
-        state.pendingOperations
-      )
+      projectionStore
+        .getState()
+        .project(initialDataRef.current, state.operations)
     })
 
     return unsubscribe

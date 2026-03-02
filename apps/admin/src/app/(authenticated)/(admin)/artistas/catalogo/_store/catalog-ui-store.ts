@@ -1,13 +1,8 @@
-import { JOURNAL_ENTITIES } from '@/shared/lib/database-entities'
-import { createEntityOperationStore } from '@/shared/ui-state/operation-log'
-import { writeOperationIntoJournal } from '@/shared/lib/write-operation-into-journal'
-import { createProjectionStore } from '@/shared/ui-state/ui-projection-engine'
+import { createProjectionStore } from '@/shared/operations/projection'
 import { CatalogEntry } from '../_types'
+import { createEntityOperationStore } from '@/shared/operations/log'
 
 export const useCatalogOperationStore =
-  createEntityOperationStore<CatalogEntry>({
-    commitOperations: async (ops) =>
-      writeOperationIntoJournal(ops, JOURNAL_ENTITIES.CATALOGO_ARTISTA)
-  })
+  createEntityOperationStore<CatalogEntry>()
 
 export const useCatalogProjectionStore = createProjectionStore<CatalogEntry>()

@@ -3,7 +3,7 @@
 import { Card } from '@/shared/components/ui/card'
 import { CatalogPagination } from './catalog-pagination'
 import { CatalogTable } from './catalog-table'
-import { useRef, useCallback } from 'react'
+import { memo, useRef, useCallback } from 'react'
 import { useCatalogPaginationStore } from '../_store/catalog-pagination-store'
 import { useRouter, useSearchParams } from 'next/navigation'
 
@@ -15,7 +15,7 @@ interface CatalogTableContainerProps {
   }) => void
 }
 
-export function CatalogTableContainer({
+export const CatalogTableContainer = memo(function CatalogTableContainer({
   handleFiltersChange
 }: CatalogTableContainerProps) {
   const router = useRouter()
@@ -37,6 +37,7 @@ export function CatalogTableContainer({
     [setPage, router, searchParams]
   )
 
+
   return (
     <>
       <CatalogPagination onPageChange={handlePageChange} />
@@ -52,4 +53,4 @@ export function CatalogTableContainer({
       <CatalogPagination onPageChange={handlePageChange} />
     </>
   )
-}
+})

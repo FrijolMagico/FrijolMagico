@@ -1,14 +1,19 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
 import { usePush } from '@/shared/push/hooks/use-push'
 import type { PushConfig } from '@/shared/push/lib/types'
 import { journalPushSource } from '@/shared/lib/journal-push-source'
+import { useJournalFlushRegistry } from '@/shared/lib/journal-flush-registry'
 import { saveOrganizacionAction } from '../_actions/save-organizacion.action'
 import { saveOrganizacionEquipoAction } from '../_actions/save-organizacion-equipo.action'
 import { useOrganizationOperationStore } from '../_store/organization-ui-store'
 import { useTeamOperationStore } from '../_store/organization-team-ui-store'
+import {
+  organizacionSchema,
+  organizacionEquipoSchema
+} from '../_schemas/organizacion.schema'
+import { ENTITIES } from '@/shared/lib/database-entities'
 
 export function useOrganizacionPush() {
   const router = useRouter()
@@ -17,9 +22,12 @@ export function useOrganizacionPush() {
   const config: PushConfig = {
     source: journalPushSource,
     executor: saveOrganizacionAction,
-    section: 'organizacion',
+    section: ENTITIES.ORGANIZACION,
+    validators: {
+      organizacion: organizacionSchema
+    },
     onSuccess: () => {
-      orgStore.commitSuccessCleanup()
+      orgStore.cleanup()
       router.refresh()
     }
   }
@@ -27,10 +35,9 @@ export function useOrganizacionPush() {
   const { push, isPending, result, progress } = usePush(config)
 
   const save = async () => {
-    await orgStore.commitPendingOperations()
-    push().catch(() => {
-      toast.error('Error inesperado al guardar')
-    })
+    // Flush any ops not yet written to journal (e.g. debounce window still open)
+    await useJournalFlushRegistry.getState().flush(ENTITIES.ORGANIZACION)
+    push().catch(() => {})
   }
 
   return { save, push, isPending, result, progress }
@@ -43,9 +50,12 @@ export function useOrganizacionEquipoPush() {
   const config: PushConfig = {
     source: journalPushSource,
     executor: saveOrganizacionEquipoAction,
-    section: 'organizacion_equipo',
+    section: ENTITIES.ORGANIZACION_EQUIPO,
+    validators: {
+      organizacion_equipo: organizacionEquipoSchema
+    },
     onSuccess: () => {
-      teamStore.commitSuccessCleanup()
+      teamStore.cleanup()
       router.refresh()
     }
   }
@@ -53,10 +63,9 @@ export function useOrganizacionEquipoPush() {
   const { push, isPending, result, progress } = usePush(config)
 
   const save = async () => {
-    await teamStore.commitPendingOperations()
-    push().catch(() => {
-      toast.error('Error inesperado al guardar')
-    })
+    // Flush any ops not yet written to journal (e.g. debounce window still open)
+    await useJournalFlushRegistry.getState().flush(ENTITIES.ORGANIZACION_EQUIPO)
+    push().catch(() => {})
   }
 
   return { save, push, isPending, result, progress }

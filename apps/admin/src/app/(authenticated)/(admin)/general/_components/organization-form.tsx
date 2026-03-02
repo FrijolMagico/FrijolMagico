@@ -10,7 +10,6 @@ import {
   useOrganizationProjectionStore
 } from '../_store/organization-ui-store'
 import { ORGANIZATION_ID } from '../_constants'
-import { useAutoCommit } from '@/shared/ui-state/operation-log/hooks/use-auto-commit'
 
 interface OrganizationFormProps {
   initialData: Organization
@@ -22,8 +21,6 @@ export function OrganizationForm({ initialData }: OrganizationFormProps) {
   )
 
   const source = projected ?? initialData
-
-  useAutoCommit(useOrganizationOperationStore)
 
   return (
     <div className='space-y-6'>

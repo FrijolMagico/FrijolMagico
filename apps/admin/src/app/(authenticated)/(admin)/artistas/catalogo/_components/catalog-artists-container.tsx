@@ -3,7 +3,6 @@
 import { useEffect, useRef } from 'react'
 import { useDebouncedCallback } from 'use-debounce'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useAutoCommit } from '@/shared/ui-state/operation-log/hooks/use-auto-commit'
 import { useRouteChanges } from '@/shared/hooks/use-route-changes'
 import { RouteSaveToolbar } from '@/shared/components/route-save-toolbar'
 import { CatalogFilters as CatalogFiltersComponent } from './catalog-filters'
@@ -11,8 +10,6 @@ import { EditCatalogDialog } from './edit-catalog-dialog'
 import { EditArtistDialog } from './edit-artist-dialog'
 import { useCatalogFilterStore } from '../_store/catalog-filter-store'
 import { useCatalogPaginationStore } from '../_store/catalog-pagination-store'
-import { useCatalogOperationStore } from '../_store/catalog-ui-store'
-import { useArtistsOperationStore } from '../../_store/artista-ui-store'
 import { useCatalogoPush } from '../_hooks/use-catalogo-push'
 import { useArtistaPush } from '../../_hooks/use-artista-push'
 import { toast } from 'sonner'
@@ -28,17 +25,19 @@ export function CatalogArtistsContainer() {
 
   const { isDirty, discardAll } = useRouteChanges('/artistas/catalogo')
 
+  const {
+    save: saveCatalogo,
+    isPending: isPendingCatalogo,
+    result: resultCatalogo
+  } = useCatalogoPush()
+  const {
+    save: saveArtista,
+    isPending: isPendingArtista,
+    result: resultArtista
+  } = useArtistaPush()
 
-  const { save: saveCatalogo, isPending: isPendingCatalogo, result: resultCatalogo } =
-    useCatalogoPush()
-  const { save: saveArtista, isPending: isPendingArtista, result: resultArtista } =
-    useArtistaPush()
-
-  const isSettling = !isPendingCatalogo && !isPendingArtista && (!!resultCatalogo?.success || !!resultArtista?.success) && isDirty
   const lastToastRef = useRef<number>(0)
 
-  useAutoCommit(useCatalogOperationStore)
-  useAutoCommit(useArtistsOperationStore)
 
   useEffect(() => {
     const activoParam = searchParams.get('activo')
@@ -56,7 +55,6 @@ export function CatalogArtistsContainer() {
       setPage(Number(pageParam))
     }
   }, [pageSize, searchParams, setFilters, setPage])
-
 
   useEffect(() => {
     if (
@@ -126,7 +124,7 @@ export function CatalogArtistsContainer() {
         isDirty={isDirty}
         onSave={handleSave}
         onDiscard={discardAll}
-        isPending={isPendingCatalogo || isPendingArtista || isSettling}
+        isPending={isPendingCatalogo || isPendingArtista}
       />
     </div>
   )

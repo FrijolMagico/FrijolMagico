@@ -26,7 +26,7 @@ export function ArtistListRow({ id, hasHistory }: ArtistListRowProps) {
 
   if (!artist) return null
 
-  const isDeleted = artist.__meta.isDeleted
+  const isDeleted = artist.__meta?.isDeleted
 
   return (
     <TableRow

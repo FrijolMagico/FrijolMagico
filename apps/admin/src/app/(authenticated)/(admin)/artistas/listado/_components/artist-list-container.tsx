@@ -8,8 +8,6 @@ import { useRouteChanges } from '@/shared/hooks/use-route-changes'
 import { RouteSaveToolbar } from '@/shared/components/route-save-toolbar'
 import { useArtistaPush } from '../../_hooks/use-artista-push'
 import { toast } from 'sonner'
-import { useAutoCommit } from '@/shared/ui-state/operation-log/hooks/use-auto-commit'
-import { useArtistsOperationStore } from '../../_store/artista-ui-store'
 import { useArtistListFilterStore } from '../_store/artist-list-filter-store'
 import { useArtistListPaginationStore } from '../_store/artist-list-pagination-store'
 import { useArtistList } from '../_hooks/use-artist-list'
@@ -36,7 +34,6 @@ export function ArtistListContainer({
 
   const { isDirty, discardAll } = useRouteChanges('/artistas/listado')
 
-  const isSettling = !isPending && !!result?.success && isDirty
   const lastToastRef = useRef<number>(0)
 
   // Toast after save
@@ -49,9 +46,6 @@ export function ArtistListContainer({
       }
     }
   }, [result, isPending])
-
-  // Initialize auto-commit for both operation stores
-  useAutoCommit(useArtistsOperationStore)
 
   const { countries, cities } = useArtistList()
 
@@ -177,7 +171,7 @@ export function ArtistListContainer({
         isDirty={isDirty}
         onSave={save}
         onDiscard={discardAll}
-        isPending={isPending || isSettling}
+        isPending={isPending}
       />
     </div>
   )
