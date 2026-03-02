@@ -26,14 +26,6 @@ export function useProjectionSync<T>({
 
     const opState = operationStore.getState()
 
-    console.log(
-      '[useProjectionSync] initialData changed, re-projecting with ops:',
-      {
-        initialData,
-        operations: opState.operations
-      }
-    )
-
     // Force re-projection with fresh server data + any concurrent ops
     projectionStore.getState().project(initialData, opState.operations)
   }, [initialData, operationStore, projectionStore])
