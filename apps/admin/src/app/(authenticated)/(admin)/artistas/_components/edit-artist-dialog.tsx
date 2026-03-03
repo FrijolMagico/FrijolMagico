@@ -21,10 +21,10 @@ import {
 import {
   useArtistsOperationStore,
   useArtistsProjectionStore
-} from '../../_store/artista-ui-store'
+} from '../_store/artista-ui-store'
 import { useArtistDialog } from '../_store/artist-dialog-store'
-import { ArtistRRSSManager } from '../../catalogo/_components/artist-rrss-manager'
-import { ArtistEntry } from '../../_types'
+import { ArtistRRSSManager } from '../catalogo/_components/artist-rrss-manager'
+import { ArtistEntry } from '../_types'
 
 function EditFormContent({
   artist,

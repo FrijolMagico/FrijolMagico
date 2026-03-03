@@ -6,7 +6,7 @@ import { useDebouncedCallback } from 'use-debounce'
 import { Card } from '@/shared/components/ui/card'
 import { useRouteChanges } from '@/shared/hooks/use-route-changes'
 import { RouteSaveToolbar } from '@/shared/components/route-save-toolbar'
-import { useArtistaPush } from '../../_hooks/use-artista-push'
+import { useArtistaPush } from '../_hooks/use-artista-push'
 import { toast } from 'sonner'
 import { useArtistListFilterStore } from '../_store/artist-list-filter-store'
 import { useArtistListPaginationStore } from '../_store/artist-list-pagination-store'
@@ -75,7 +75,6 @@ export function ArtistListContainer({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional mount-only hydration
   }, [])
-
 
   const handlePageChange = useCallback(
     (newPage: number) => {

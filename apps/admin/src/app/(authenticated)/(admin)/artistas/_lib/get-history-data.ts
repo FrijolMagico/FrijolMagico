@@ -6,7 +6,7 @@ import { artist } from '@frijolmagico/database/schema'
 import { asc } from 'drizzle-orm'
 
 import type { HistoryEntry } from '../_types'
-import { ARTISTA_HISTORIAL_CACHE_TAG } from '../../_constants'
+import { ARTISTA_HISTORIAL_CACHE_TAG } from '../_constants'
 
 export async function getHistoryData(): Promise<HistoryEntry[]> {
   'use cache'

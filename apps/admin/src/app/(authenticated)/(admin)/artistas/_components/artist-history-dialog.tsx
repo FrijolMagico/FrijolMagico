@@ -11,7 +11,7 @@ import { Badge } from '@/shared/components/ui/badge'
 import { Separator } from '@/shared/components/ui/separator'
 import { useArtistDialog } from '../_store/artist-dialog-store'
 import { aggregateHistory } from '../_lib/aggregate-history'
-import { useArtistsProjectionStore } from '../../_store/artista-ui-store'
+import { useArtistsProjectionStore } from '../_store/artista-ui-store'
 import type { HistoryEntry } from '../_types'
 
 interface ArtistHistoryDialogProps {
@@ -78,7 +78,9 @@ function HistoryRrssConcept({ items }: { items: Record<string, string>[] }) {
   )
 }
 
-export function ArtistHistoryDialog({ historyByArtistId }: ArtistHistoryDialogProps) {
+export function ArtistHistoryDialog({
+  historyByArtistId
+}: ArtistHistoryDialogProps) {
   const isOpen = useArtistDialog((s) => s.historyDialogOpen)
   const closeHistoryDialog = useArtistDialog((s) => s.closeHistoryDialog)
   const artistId = useArtistDialog((s) => s.selectedHistoryArtistId)

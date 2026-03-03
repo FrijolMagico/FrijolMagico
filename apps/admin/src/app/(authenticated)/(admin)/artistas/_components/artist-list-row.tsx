@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 import {
   useArtistsOperationStore,
   useArtistsProjectionStore
-} from '../../_store/artista-ui-store'
+} from '../_store/artista-ui-store'
 import { useArtistDialog } from '../_store/artist-dialog-store'
 import { StateBadge } from '@/shared/components/state-badge'
 
@@ -18,7 +18,10 @@ interface ArtistListRowProps {
   hasHistory: boolean
 }
 
-export const ArtistListRow = memo(function ArtistListRow({ id, hasHistory }: ArtistListRowProps) {
+export const ArtistListRow = memo(function ArtistListRow({
+  id,
+  hasHistory
+}: ArtistListRowProps) {
   const remove = useArtistsOperationStore((s) => s.remove)
   const restore = useArtistsOperationStore((s) => s.restore)
   const artist = useArtistsProjectionStore((s) => s.byId[id])
@@ -26,8 +29,14 @@ export const ArtistListRow = memo(function ArtistListRow({ id, hasHistory }: Art
   const openHistoryDialog = useArtistDialog((s) => s.openHistoryDialog)
   const isDeleted = artist?.__meta?.isDeleted ?? false
 
-  const handleOpenHistory = useCallback(() => openHistoryDialog(id), [id, openHistoryDialog])
-  const handleOpenEdit = useCallback(() => openEditDialog(id), [id, openEditDialog])
+  const handleOpenHistory = useCallback(
+    () => openHistoryDialog(id),
+    [id, openHistoryDialog]
+  )
+  const handleOpenEdit = useCallback(
+    () => openEditDialog(id),
+    [id, openEditDialog]
+  )
   const handleRemoveOrRestore = useCallback(() => {
     if (artist?.__meta?.isDeleted) {
       restore(id)
@@ -110,4 +119,4 @@ export const ArtistListRow = memo(function ArtistListRow({ id, hasHistory }: Art
       </TableCell>
     </TableRow>
   )
-  })
+})

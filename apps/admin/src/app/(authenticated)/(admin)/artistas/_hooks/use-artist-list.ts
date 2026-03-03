@@ -2,7 +2,7 @@
 
 import { useMemo, useEffect } from 'react'
 import { useShallow } from 'zustand/react/shallow'
-import { useArtistsProjectionStore } from '../../_store/artista-ui-store'
+import { useArtistsProjectionStore } from '../_store/artista-ui-store'
 import { useArtistListFilterStore } from '../_store/artist-list-filter-store'
 import { useArtistListPaginationStore } from '../_store/artist-list-pagination-store'
 
