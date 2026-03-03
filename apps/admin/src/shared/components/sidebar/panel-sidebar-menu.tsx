@@ -32,7 +32,6 @@ type CollapsibleNavigationItem = NavigationItem & {
 
 type CollapsibleNavItemProps = {
   item: CollapsibleNavigationItem
-  isActive: boolean
   pathname: string
   pendingSections: Set<string>
 }
@@ -44,11 +43,11 @@ function routeHasPending(href: string, pendingSections: Set<string>): boolean {
 
 const CollapsibleNavItem = ({
   item,
-  isActive,
   pathname,
   pendingSections
 }: CollapsibleNavItemProps) => {
-  const [open, setOpen] = useState(isActive)
+  // TECH DEBT: This open state logic is a bit brittle - it assumes the first sub-item's href is a prefix for all sub-items, which is true for our current routes but could break if we add more complex nesting or non-prefix routes. A more robust solution would be to check if any sub-item's href matches the pathname on initial render, but that would require iterating over all sub-items every time. For now, this is a reasonable trade-off given our current route structure and the fact that it only affects the initial open state on page load.
+  const [open, setOpen] = useState(pathname.startsWith(item.items[0].href))
   const { setOpenMobile } = useSidebar()
 
   // Show dot on parent if ANY sub-item has pending changes
@@ -63,11 +62,7 @@ const CollapsibleNavItem = ({
       className='group/collapsible'
     >
       <SidebarMenuItem>
-        <CollapsibleTrigger
-          render={
-            <SidebarMenuButton tooltip={item.title} isActive={isActive} />
-          }
-        >
+        <CollapsibleTrigger render={<SidebarMenuButton tooltip={item.title} />}>
           {item.icon && <item.icon />}
           <span>{item.title}</span>
           {anySubItemPending && (
@@ -140,14 +135,11 @@ export const PanelSidebarMenu = () => {
   return (
     <SidebarMenu>
       {navigation.map((item) => {
-        const isActive = pathname.startsWith(item.href)
-
         if (item.items) {
           return (
             <CollapsibleNavItem
               key={item.title}
               item={item}
-              isActive={isActive}
               pathname={pathname}
               pendingSections={pendingSections}
             />
