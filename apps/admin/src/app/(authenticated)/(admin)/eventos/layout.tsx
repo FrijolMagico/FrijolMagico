@@ -1,3 +1,5 @@
+import { EventoStoreLoader } from './_components/evento-store-loader'
+
 export default function EventosLayout({
   children
 }: {
@@ -5,7 +7,7 @@ export default function EventosLayout({
 }) {
   return (
     <>
-      {/* EventoStoreLoader will be imported here after Task 13 */}
+      <EventoStoreLoader />
       {children}
     </>
   )
