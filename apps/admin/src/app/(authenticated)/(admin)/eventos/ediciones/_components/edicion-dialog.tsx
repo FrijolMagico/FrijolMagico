@@ -109,10 +109,13 @@ export function EdicionDialog() {
   const updateDia = useEdicionDiaOperationStore((s) => s.update)
   const removeDia = useEdicionDiaOperationStore((s) => s.remove)
 
-  const [formState, setFormState] = useState<EdicionFormState>(INITIAL_FORM_STATE)
+  const [formState, setFormState] =
+    useState<EdicionFormState>(INITIAL_FORM_STATE)
   const [errors, setErrors] = useState<FormErrors>(INITIAL_ERRORS)
 
-  const selectedEdicion = selectedEdicionId ? edicionById[selectedEdicionId] : null
+  const selectedEdicion = selectedEdicionId
+    ? edicionById[selectedEdicionId]
+    : null
 
   useEffect(() => {
     if (!isOpen) return
@@ -123,8 +126,11 @@ export function EdicionDialog() {
           (day) =>
             day.eventoEdicionId === selectedEdicionId && !day.__meta?.isDeleted
         )
-        .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
+        .sort(
+          (a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime()
+        )
 
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormState({
         eventoId: selectedEdicion.eventoId,
         numeroEdicion: selectedEdicion.numeroEdicion,
@@ -278,7 +284,8 @@ export function EdicionDialog() {
     }
 
     if (!selectedEdicionId) {
-      const previousOperations = useEdicionOperationStore.getState().operations ?? []
+      const previousOperations =
+        useEdicionOperationStore.getState().operations ?? []
 
       addEdicion({
         ...payload,
@@ -288,7 +295,8 @@ export function EdicionDialog() {
         updatedAt: now
       })
 
-      const nextOperations = useEdicionOperationStore.getState().operations ?? []
+      const nextOperations =
+        useEdicionOperationStore.getState().operations ?? []
       const latestOperation = nextOperations[nextOperations.length - 1]
 
       const createdEdicionId =
@@ -421,7 +429,9 @@ export function EdicionDialog() {
                 placeholder='Ej. 5 o V'
               />
               {errors.numeroEdicion && (
-                <p className='text-destructive text-xs'>{errors.numeroEdicion}</p>
+                <p className='text-destructive text-xs'>
+                  {errors.numeroEdicion}
+                </p>
               )}
             </div>
 
@@ -449,7 +459,12 @@ export function EdicionDialog() {
           <section className='space-y-3'>
             <div className='flex items-center justify-between'>
               <Label>Días</Label>
-              <Button type='button' variant='outline' size='sm' onClick={addDay}>
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                onClick={addDay}
+              >
                 <Plus className='mr-2 h-4 w-4' />
                 Agregar día
               </Button>
@@ -485,7 +500,9 @@ export function EdicionDialog() {
 
                       <div className='grid gap-3 sm:grid-cols-2'>
                         <div className='space-y-1'>
-                          <Label htmlFor={`dia-fecha-${day.tempId}`}>Fecha</Label>
+                          <Label htmlFor={`dia-fecha-${day.tempId}`}>
+                            Fecha
+                          </Label>
                           <Input
                             id={`dia-fecha-${day.tempId}`}
                             type='date'
@@ -546,7 +563,11 @@ export function EdicionDialog() {
                             type='time'
                             value={day.horaInicio}
                             onChange={(e) =>
-                              setDayField(day.tempId, 'horaInicio', e.target.value)
+                              setDayField(
+                                day.tempId,
+                                'horaInicio',
+                                e.target.value
+                              )
                             }
                           />
                           {dayErrors.horaInicio && (
