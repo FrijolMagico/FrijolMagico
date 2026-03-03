@@ -47,21 +47,10 @@ export interface PaginationActions {
  * Configuration options for creating a pagination store.
  */
 export interface CreatePaginationStoreConfig {
-  /** Unique store identifier for debugging and internal tracking */
-  storeName: string
   /** Default page size (default: 20) */
   defaultPageSize?: number
   /** Maximum allowed page size to prevent over-fetching (default: 1000) */
   maxPageSize?: number
-  /** Enable automatic URL synchronization (default: true) */
-  urlSync?: boolean
-  /** Custom URL query parameter names for mapping */
-  urlParams?: {
-    /** URL param name for page number (default: 'page') */
-    page?: string
-    /** URL param name for page size (default: 'pageSize') */
-    pageSize?: string
-  }
 }
 
 /**
