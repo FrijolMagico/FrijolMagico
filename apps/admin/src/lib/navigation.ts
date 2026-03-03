@@ -1,4 +1,4 @@
-import { Building2, Home, Palette, Settings } from 'lucide-react'
+import { Bean, Home, Palette, Ticket } from 'lucide-react'
 
 export const navigation = [
   {
@@ -9,16 +9,15 @@ export const navigation = [
   {
     title: 'General',
     href: '/general',
-    icon: Building2
+    icon: Bean
   },
   {
     title: 'Artistas',
     icon: Palette,
-    href: '/artistas',
     items: [
       {
-        title: 'Listado',
-        href: '/artistas/listado'
+        title: 'General',
+        href: '/artistas'
       },
       {
         title: 'Catálogo',
@@ -28,11 +27,10 @@ export const navigation = [
   },
   {
     title: 'Eventos',
-    icon: Palette,
-    href: '/eventos',
+    icon: Ticket,
     items: [
       {
-        title: 'Listado',
+        title: 'General',
         href: '/eventos'
       },
       {
@@ -40,10 +38,5 @@ export const navigation = [
         href: '/eventos/ediciones'
       }
     ]
-  },
-  {
-    title: 'Configuración',
-    icon: Settings,
-    href: '/config'
   }
 ]
