@@ -42,9 +42,9 @@ function EventoFormContent({
     const result = eventoFormSchema.safeParse(formData)
 
     if (!result.success) {
-      const fieldErrors = result.error
+      const formatted = result.error.format()
       setErrors({
-        nombre: fieldErrors.message?.[0]
+        nombre: formatted.nombre?._errors[0]
       })
       return
     }

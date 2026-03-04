@@ -64,14 +64,14 @@ export function useEdicionList(): {
       })
     }
 
-    filtered.sort((a, b) => {
+    const sorted = [...filtered].sort((a, b) => {
       if (!a.firstDate && !b.firstDate) return 0
       if (!a.firstDate) return -1
       if (!b.firstDate) return 1
       return b.firstDate.localeCompare(a.firstDate)
     })
 
-    return filtered.map((i) => i.id)
+    return sorted.map((i) => i.id)
   }, [listData, filters])
 
   useEffect(() => {

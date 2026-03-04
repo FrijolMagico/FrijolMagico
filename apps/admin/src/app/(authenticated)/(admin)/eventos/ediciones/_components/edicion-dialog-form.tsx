@@ -154,7 +154,11 @@ export function EdicionFormContent({
       nombre: trimmedNombre
     })
 
-    const nextErrors: FormErrors = INITIAL_ERRORS
+    const nextErrors: FormErrors = {
+      eventoId: null,
+      numeroEdicion: null,
+      days: {}
+    }
 
     if (!formState.eventoId.trim()) {
       nextErrors.eventoId = 'El evento es obligatorio'

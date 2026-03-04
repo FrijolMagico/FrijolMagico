@@ -10,6 +10,16 @@ interface PosterThumbnailProps {
   onClick?: () => void
 }
 
+const handleKeyDown =
+  (onClick?: () => void) =>
+  (e: React.KeyboardEvent<HTMLDivElement | HTMLImageElement>) => {
+    if (!onClick) return
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      onClick()
+    }
+  }
+
 export function PosterThumbnail({
   posterUrl,
   alt,
@@ -23,8 +33,10 @@ export function PosterThumbnail({
           onClick && 'hover:bg-muted/80 cursor-pointer'
         )}
         onClick={onClick}
+        onKeyDown={handleKeyDown(onClick)}
         role={onClick ? 'button' : undefined}
         tabIndex={onClick ? 0 : undefined}
+        aria-label={onClick ? `Ver ${alt}` : undefined}
       >
         <ImageOff className='text-muted-foreground h-5 w-5' />
       </div>
@@ -42,8 +54,10 @@ export function PosterThumbnail({
       width={40}
       height={40}
       onClick={onClick}
+      onKeyDown={handleKeyDown(onClick)}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
+      aria-label={onClick ? `Ver ${alt}` : undefined}
     />
   )
 }

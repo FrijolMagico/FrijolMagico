@@ -10,6 +10,16 @@ interface PosterSectionProps {
   onClick?: () => void
 }
 
+const handleKeyDown =
+  (onClick?: () => void) =>
+  (e: React.KeyboardEvent<HTMLDivElement | HTMLImageElement>) => {
+    if (!onClick) return
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      onClick()
+    }
+  }
+
 export function PosterSection({
   posterUrl,
   alt = 'Poster',
@@ -28,8 +38,10 @@ export function PosterSection({
           width={96}
           height={96}
           onClick={onClick}
+          onKeyDown={handleKeyDown(onClick)}
           role={onClick ? 'button' : undefined}
           tabIndex={onClick ? 0 : undefined}
+          aria-label={onClick ? `Ver ${alt}` : undefined}
         />
       ) : (
         <div
@@ -38,8 +50,10 @@ export function PosterSection({
             onClick && 'cursor-pointer hover:opacity-80'
           )}
           onClick={onClick}
+          onKeyDown={handleKeyDown(onClick)}
           role={onClick ? 'button' : undefined}
           tabIndex={onClick ? 0 : undefined}
+          aria-label={onClick ? `Ver ${alt}` : undefined}
         >
           <ImageOff className='h-6 w-6' />
           <span className='text-xs'>Sin poster</span>

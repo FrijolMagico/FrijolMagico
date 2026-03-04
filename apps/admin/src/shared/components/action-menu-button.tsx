@@ -36,6 +36,7 @@ export const ActionMenuButton = ({
         variant='ghost'
         onClick={onRestore}
         className='text-green-500 hover:text-green-500/80'
+        aria-label='Restaurar'
       >
         <RotateCcw />
       </Button>
@@ -46,7 +47,11 @@ export const ActionMenuButton = ({
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button size='icon' variant='ghost'>
+          <Button
+            size='icon'
+            variant='ghost'
+            aria-label='Abrir menú de acciones'
+          >
             <EllipsisVertical />
           </Button>
         }
