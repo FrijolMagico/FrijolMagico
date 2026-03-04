@@ -29,7 +29,7 @@ export function EntityFormDialog({
 }: EntityFormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn('max-w-xl', className)}>
+      <DialogContent className={cn(className)}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}

@@ -7,10 +7,8 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/shared/components/ui/dialog'
-import { Separator } from '@/shared/components/ui/separator'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
-import { Label } from '@/shared/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -25,8 +23,9 @@ import {
 import { useArtistDialog } from '../_store/artist-dialog-store'
 import { ArtistRRSSManager } from '../catalogo/_components/artist-rrss-manager'
 import { ArtistEntry } from '../_types'
+import { Field, FieldGroup, FieldLabel } from '@/shared/components/ui/field'
 
-function EditFormContent({
+export function EditFormContent({
   artist,
   onClose
 }: {
@@ -81,34 +80,32 @@ function EditFormContent({
 
   return (
     <>
-      <div className='space-y-4'>
-        <div className='grid grid-cols-2 gap-4'>
-          <div className='space-y-2'>
-            <Label htmlFor='nombre'>Nombre</Label>
-            <Input
-              id='nombre'
-              value={formData.nombre}
-              onChange={(e) => updateField('nombre', e.target.value)}
-              placeholder='Nombre completo'
-            />
-          </div>
-          <div className='space-y-2'>
-            <Label htmlFor='pseudonimo'>
-              Pseudónimo <span className='text-destructive'>*</span>
-            </Label>
-            <Input
-              id='pseudonimo'
-              value={formData.pseudonimo}
-              onChange={(e) => updateField('pseudonimo', e.target.value)}
-              placeholder='@usuario'
-              required
-            />
-          </div>
-        </div>
+      <FieldGroup>
+        <Field>
+          <FieldLabel htmlFor='nombre'>Nombre</FieldLabel>
+          <Input
+            id='nombre'
+            value={formData.nombre}
+            onChange={(e) => updateField('nombre', e.target.value)}
+            placeholder='Nombre completo'
+          />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor='pseudonimo'>
+            Pseudónimo <span className='text-destructive'>*</span>
+          </FieldLabel>
+          <Input
+            id='pseudonimo'
+            value={formData.pseudonimo}
+            onChange={(e) => updateField('pseudonimo', e.target.value)}
+            placeholder='@usuario'
+            required
+          />
+        </Field>
 
         <div className='grid grid-cols-2 gap-4'>
-          <div className='space-y-2'>
-            <Label htmlFor='correo'>Correo electrónico</Label>
+          <Field>
+            <FieldLabel htmlFor='correo'>Correo electrónico</FieldLabel>
             <Input
               id='correo'
               type='email'
@@ -116,9 +113,9 @@ function EditFormContent({
               onChange={(e) => updateField('correo', e.target.value)}
               placeholder='artista@ejemplo.com'
             />
-          </div>
-          <div className='space-y-2'>
-            <Label htmlFor='estadoId'>Estado</Label>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor='estadoId'>Estado</FieldLabel>
             <Select
               value={String(formData.statusId)}
               onValueChange={(v) => updateField('statusId', Number(v))}
@@ -144,34 +141,33 @@ function EditFormContent({
                 <SelectItem value='1'>Desconocido</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </Field>
         </div>
 
         <div className='grid grid-cols-2 gap-4'>
-          <div className='space-y-2'>
-            <Label htmlFor='ciudad'>Ciudad</Label>
+          <Field>
+            <FieldLabel htmlFor='ciudad'>Ciudad</FieldLabel>
             <Input
               id='ciudad'
               value={formData.city}
               onChange={(e) => updateField('city', e.target.value)}
               placeholder='Santiago'
             />
-          </div>
-          <div className='space-y-2'>
-            <Label htmlFor='pais'>País</Label>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor='pais'>País</FieldLabel>
             <Input
               id='pais'
               value={formData.country}
               onChange={(e) => updateField('country', e.target.value)}
               placeholder='Chile'
             />
-          </div>
+          </Field>
         </div>
 
         <ArtistRRSSManager initialValue={artist.rrss} onChange={updateRRSS} />
-      </div>
+      </FieldGroup>
 
-      <Separator />
       <div className='flex justify-end gap-2 pt-4'>
         <Button variant='outline' onClick={onClose}>
           Cancelar

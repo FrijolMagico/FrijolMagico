@@ -8,14 +8,16 @@ import {
 interface ArtistAvatarProps {
   src: string | null | undefined
   alt: string
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl'
   className?: string
 }
 
 const sizeClasses = {
   sm: 'h-8 w-8',
   md: 'h-10 w-10',
-  lg: 'h-12 w-12'
+  lg: 'h-12 w-12',
+  xl: 'h-16 w-16',
+  '2xl': 'h-24 w-24'
 }
 
 export function ArtistAvatar({

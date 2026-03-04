@@ -218,17 +218,25 @@ function processEntries(entries: JournalEntry[]): PushOperation[] {
   return operations
 }
 
+function normalizeSections(section: string | string[]): string[] {
+  return Array.isArray(section) ? section : [section]
+}
+
 export const journalPushSource: PushSource = {
-  async read(section: string): Promise<PushOperation[]> {
-    const entries = await getLatestEntries(section)
-    return processEntries(entries)
+  async read(section: string | string[]): Promise<PushOperation[]> {
+    const sections = normalizeSections(section)
+    const entryArrays = await Promise.all(sections.map(getLatestEntries))
+    return processEntries(entryArrays.flat())
   },
 
-  async hasPending(section: string): Promise<boolean> {
-    return hasEntries(section)
+  async hasPending(section: string | string[]): Promise<boolean> {
+    const sections = normalizeSections(section)
+    const results = await Promise.all(sections.map(hasEntries))
+    return results.some(Boolean)
   },
 
-  async clear(section: string): Promise<void> {
-    await clearSection(section)
+  async clear(section: string | string[]): Promise<void> {
+    const sections = normalizeSections(section)
+    await Promise.all(sections.map(clearSection))
   }
 }

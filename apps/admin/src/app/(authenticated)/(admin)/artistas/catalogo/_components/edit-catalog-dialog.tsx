@@ -9,7 +9,6 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/shared/components/ui/dialog'
-import { Card, CardContent } from '@/shared/components/ui/card'
 import { Button } from '@/shared/components/ui/button'
 import { Switch } from '@/shared/components/ui/switch'
 import { Label } from '@/shared/components/ui/label'
@@ -21,6 +20,7 @@ import {
   useCatalogProjectionStore
 } from '../_store/catalog-ui-store'
 import { useArtistsProjectionStore } from '../../_store/artista-ui-store'
+import { Field, FieldLabel } from '@/shared/components/ui/field'
 
 export function EditCatalogDialog() {
   const catalogId = useCatalogViewStore((s) => s.selectedCatalogId)
@@ -76,58 +76,50 @@ export function EditCatalogDialog() {
 
         <div className='space-y-6'>
           {/* Artist Info Card */}
-          <Card className='bg-muted/30'>
-            <CardContent>
-              <div className='flex items-center gap-4'>
-                <ArtistAvatar
-                  src={catalog.avatarUrl}
-                  alt={artist.pseudonimo}
-                  size='lg'
-                />
-                <div className='flex-1'>
-                  <div className='flex items-center gap-2'>
-                    <h3 className='text-lg font-semibold'>
-                      {artist.pseudonimo}
-                    </h3>
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      className='h-8 w-8'
-                      onClick={openArtistDialog}
-                      title='Editar información del artista'
-                    >
-                      <Pencil className='h-4 w-4' />
-                    </Button>
-                  </div>
-                  {artist.nombre && (
-                    <p className='text-muted-foreground font-semibold'>
-                      {artist.nombre}
-                    </p>
-                  )}
-                  <div className='text-muted-foreground mt-2 flex flex-col gap-1 text-xs'>
-                    {(artist.ciudad || artist.pais) && (
-                      <span className='flex items-center gap-1'>
-                        <MapPin className='h-3 w-3' />
-                        {[artist.ciudad, artist.pais]
-                          .filter(Boolean)
-                          .join(', ')}
-                      </span>
-                    )}
-                    {artist.correo && (
-                      <span className='flex items-center gap-1'>
-                        <Mail className='h-3 w-3' />
-                        {artist.correo}
-                      </span>
-                    )}
-                  </div>
-                </div>
+          <div className='flex items-center gap-6'>
+            <ArtistAvatar
+              src={catalog.avatarUrl}
+              alt={artist.pseudonimo}
+              size='2xl'
+            />
+            <div className='flex-1'>
+              <div className='flex items-center gap-2'>
+                <h3 className='text-lg font-semibold'>{artist.pseudonimo}</h3>
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  className='h-8 w-8'
+                  onClick={openArtistDialog}
+                  title='Editar información del artista'
+                >
+                  <Pencil className='h-4 w-4' />
+                </Button>
               </div>
-            </CardContent>
-          </Card>
+              {artist.nombre && (
+                <p className='text-muted-foreground font-semibold'>
+                  {artist.nombre}
+                </p>
+              )}
+              <div className='text-muted-foreground mt-2 flex flex-col gap-1 text-xs'>
+                {(artist.ciudad || artist.pais) && (
+                  <span className='flex items-center gap-1'>
+                    <MapPin className='h-3 w-3' />
+                    {[artist.ciudad, artist.pais].filter(Boolean).join(', ')}
+                  </span>
+                )}
+                {artist.correo && (
+                  <span className='flex items-center gap-1'>
+                    <Mail className='h-3 w-3' />
+                    {artist.correo}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
 
           <div className='space-y-6'>
-            <div className='space-y-2'>
-              <Label htmlFor='descripcion'>Descripción</Label>
+            <Field className='space-y-2'>
+              <FieldLabel htmlFor='descripcion'>Descripción</FieldLabel>
               <Textarea
                 id='descripcion'
                 value={desc}
@@ -139,7 +131,7 @@ export function EditCatalogDialog() {
                 placeholder='Descripción del artista para el catálogo...'
                 className='min-h-50'
               />
-            </div>
+            </Field>
 
             {/* Catalog Fields */}
             <div className='flex items-center justify-center gap-6'>

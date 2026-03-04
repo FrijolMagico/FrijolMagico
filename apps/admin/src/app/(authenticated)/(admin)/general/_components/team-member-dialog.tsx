@@ -12,9 +12,15 @@ import { RRSSManager } from '@/shared/components/rrss-manager/rrss-manager'
 import { equipoFormSchema } from '../_schemas/organizacion.schema'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
-import { Label } from '@/shared/components/ui/label'
 import { TeamMember } from '../_types'
 import { ProjectedEntity } from '@/shared/operations/projection'
+import { FieldGroup } from '@/shared/components/ui/field'
+import { Field, FieldLabel, FieldError } from '@/shared/components/ui/field'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput
+} from '@/shared/components/ui/input-group'
 
 interface AddEquipoFormContentProps {
   onApply: (data: Omit<TeamMember, 'id' | 'organizationId'>) => void
@@ -54,11 +60,11 @@ function MemberFormContent({
   }
 
   return (
-    <div className='space-y-4 py-2'>
-      <div className='grid gap-2'>
-        <Label htmlFor='name'>
+    <FieldGroup>
+      <Field>
+        <FieldLabel htmlFor='name'>
           Nombre <span className='text-destructive'>*</span>
-        </Label>
+        </FieldLabel>
         <Input
           id='name'
           value={formData.name}
@@ -68,13 +74,11 @@ function MemberFormContent({
           placeholder='Nombre completo'
           aria-invalid={!!errors.name}
         />
-        {errors.name && (
-          <p className='text-destructive text-xs'>{errors.name}</p>
-        )}
-      </div>
+        {errors.name && <FieldError>{errors.name}</FieldError>}
+      </Field>
 
-      <div className='grid gap-2'>
-        <Label htmlFor='position'>Cargo</Label>
+      <Field>
+        <FieldLabel htmlFor='position'>Cargo</FieldLabel>
         <Input
           id='position'
           value={formData.position}
@@ -83,11 +87,11 @@ function MemberFormContent({
           }
           placeholder='Ej. Director'
         />
-      </div>
+      </Field>
 
       <div className='grid grid-cols-2 gap-4'>
-        <div className='grid gap-2'>
-          <Label htmlFor='rut'>RUT</Label>
+        <Field>
+          <FieldLabel htmlFor='rut'>RUT</FieldLabel>
           <Input
             id='rut'
             value={formData.rut}
@@ -96,22 +100,25 @@ function MemberFormContent({
             }
             placeholder='12.345.678-9'
           />
-        </div>
-        <div className='grid gap-2'>
-          <Label htmlFor='phone'>Teléfono</Label>
-          <Input
-            id='phone'
-            value={formData.phone}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, phone: e.target.value }))
-            }
-            placeholder='+56 9 ...'
-          />
-        </div>
+        </Field>
+        <Field>
+          <FieldLabel htmlFor='phone'>Teléfono</FieldLabel>
+          <InputGroup>
+            <InputGroupInput
+              id='phone'
+              value={formData.phone}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, phone: e.target.value }))
+              }
+              placeholder='912345678'
+            />
+            <InputGroupAddon>+56</InputGroupAddon>
+          </InputGroup>
+        </Field>
       </div>
 
-      <div className='grid gap-2'>
-        <Label htmlFor='email'>Email</Label>
+      <Field>
+        <FieldLabel htmlFor='email'>Email</FieldLabel>
         <Input
           id='email'
           type='email'
@@ -121,7 +128,7 @@ function MemberFormContent({
           }
           placeholder='correo@ejemplo.com'
         />
-      </div>
+      </Field>
 
       <RRSSManager
         values={formData.rrss || {}}
@@ -140,7 +147,7 @@ function MemberFormContent({
           {member ? 'Guardar cambios' : 'Agregar miembro'}
         </Button>
       </div>
-    </div>
+    </FieldGroup>
   )
 }
 

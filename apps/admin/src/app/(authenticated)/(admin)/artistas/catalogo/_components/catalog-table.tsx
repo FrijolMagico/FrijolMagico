@@ -243,7 +243,6 @@ const CatalogTableMemoized = memo(function CatalogTableMemoized({
             <TableHead className='w-24'>Destacado</TableHead>
             <TableHead className='w-24'>Activo</TableHead>
             <TableHead className='w-[5%]'></TableHead>
-            <TableHead className='w-[5%]'></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

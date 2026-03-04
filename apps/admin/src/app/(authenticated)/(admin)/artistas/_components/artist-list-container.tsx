@@ -3,7 +3,6 @@
 import { useEffect, useCallback, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useDebouncedCallback } from 'use-debounce'
-import { Card } from '@/shared/components/ui/card'
 import { useRouteChanges } from '@/shared/hooks/use-route-changes'
 import { RouteSaveToolbar } from '@/shared/components/route-save-toolbar'
 import { useArtistaPush } from '../_hooks/use-artista-push'
@@ -164,12 +163,10 @@ export function ArtistListContainer({
 
       <ArtistListPagination onPageChange={handlePageChange} />
 
-      <Card className='py-0'>
-        <ArtistListTable
-          onClearFilters={handleClearFilters}
-          artistIdsWithHistory={artistIdsWithHistory}
-        />
-      </Card>
+      <ArtistListTable
+        onClearFilters={handleClearFilters}
+        artistIdsWithHistory={artistIdsWithHistory}
+      />
 
       <ArtistListPagination onPageChange={handlePageChange} />
 

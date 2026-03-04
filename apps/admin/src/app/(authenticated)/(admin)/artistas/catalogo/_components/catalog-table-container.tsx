@@ -1,6 +1,5 @@
 'use client'
 
-import { Card } from '@/shared/components/ui/card'
 import { CatalogPagination } from './catalog-pagination'
 import { CatalogTable } from './catalog-table'
 import { memo, useRef, useCallback } from 'react'
@@ -42,13 +41,13 @@ export const CatalogTableContainer = memo(function CatalogTableContainer({
     <>
       <CatalogPagination onPageChange={handlePageChange} />
 
-      <Card ref={tableContainerRef} className='py-0'>
+      <div ref={tableContainerRef} className='rounded-lg border'>
         <CatalogTable
           handleFiltersChange={handleFiltersChange}
           containerRef={tableContainerRef}
           onPageChange={handlePageChange}
         />
-      </Card>
+      </div>
 
       <CatalogPagination onPageChange={handlePageChange} />
     </>
