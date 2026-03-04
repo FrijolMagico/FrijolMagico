@@ -54,6 +54,7 @@ export function usePush(config: PushConfig): UsePushResult {
           operations,
           config.validators
         )
+
         if (!validationResult.valid) {
           setResult({
             success: false,

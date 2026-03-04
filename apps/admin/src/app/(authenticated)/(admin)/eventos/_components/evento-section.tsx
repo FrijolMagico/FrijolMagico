@@ -14,8 +14,8 @@ export function EventoSection() {
 
   return (
     <div className='space-y-6'>
-      <div className='flex justify-end'>
-        <Button onClick={() => openDialog(null)} className='gap-2'>
+      <div className='flex'>
+        <Button onClick={() => openDialog(null)} size='sm' variant='outline'>
           <Plus className='h-4 w-4' />
           Agregar Evento
         </Button>
@@ -28,7 +28,7 @@ export function EventoSection() {
           </p>
         </div>
       ) : (
-        <div className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'>
+        <div className='grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4'>
           {allIds.map((id) => (
             <EventoCard key={id} id={id} />
           ))}

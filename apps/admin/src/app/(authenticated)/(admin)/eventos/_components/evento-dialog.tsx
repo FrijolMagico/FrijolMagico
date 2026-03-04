@@ -42,9 +42,9 @@ function EventoFormContent({
     const result = eventoFormSchema.safeParse(formData)
 
     if (!result.success) {
-      const fieldErrors = result.error.flatten().fieldErrors
+      const fieldErrors = result.error
       setErrors({
-        nombre: fieldErrors.nombre?.[0]
+        nombre: fieldErrors.message?.[0]
       })
       return
     }
@@ -74,13 +74,6 @@ function EventoFormContent({
         {errors.nombre && (
           <p className='text-destructive text-xs'>{errors.nombre}</p>
         )}
-      </div>
-
-      <div className='grid gap-2'>
-        <Label>Slug (generado automáticamente)</Label>
-        <div className='bg-muted text-muted-foreground rounded-md px-3 py-2 font-mono text-sm'>
-          {generateSlug(formData.nombre) || 'slug-del-evento'}
-        </div>
       </div>
 
       <div className='grid gap-2'>

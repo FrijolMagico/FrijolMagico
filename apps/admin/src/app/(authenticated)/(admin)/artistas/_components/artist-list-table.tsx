@@ -47,29 +47,30 @@ export const ArtistListTable = memo(function ArtistListTable({
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Pseudónimo</TableHead>
-          <TableHead>Nombre</TableHead>
-          <TableHead>Correo</TableHead>
-          <TableHead>Ubicación</TableHead>
-          <TableHead>RUT</TableHead>
-          <TableHead>Estado</TableHead>
-          <TableHead className='w-24'></TableHead>
-          <TableHead></TableHead>
-          <TableHead></TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {paginatedIds.map((id) => (
-          <ArtistListRow
-            key={id}
-            id={id}
-            hasHistory={artistIdsWithHistory.has(id)}
-          />
-        ))}
-      </TableBody>
-    </Table>
+    <div className='rounded-lg border'>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className='w-26'></TableHead>
+            <TableHead>Pseudónimo</TableHead>
+            <TableHead>Nombre</TableHead>
+            <TableHead>Correo</TableHead>
+            <TableHead>Ubicación</TableHead>
+            <TableHead>RUT</TableHead>
+            <TableHead>Estado</TableHead>
+            <TableHead>Acciones</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {paginatedIds.map((id) => (
+            <ArtistListRow
+              key={id}
+              id={id}
+              hasHistory={artistIdsWithHistory.has(id)}
+            />
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
-  })
+})

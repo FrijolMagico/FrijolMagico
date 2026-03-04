@@ -241,10 +241,17 @@ export async function saveEdicionAction(
 
         const input = validated.data
 
+        const diaInsertData: EdicionDiaInput = {
+          ...input,
+          eventoEdicionId: Number(input.eventoEdicionId),
+          lugarId:
+            input.lugarId !== undefined ? Number(input.lugarId) : undefined
+        }
+
         if (isTempId(op.entityId)) {
           const [inserted] = await tx
             .insert(eventoEdicionDia)
-            .values(input as EdicionDiaInput)
+            .values(diaInsertData)
             .returning({ id: eventoEdicionDia.id })
 
           if (inserted) {
@@ -257,7 +264,7 @@ export async function saveEdicionAction(
 
         await tx
           .update(eventoEdicionDia)
-          .set(stripUndefined(input))
+          .set(stripUndefined(diaInsertData))
           .where(eq(eventoEdicionDia.id, Number.parseInt(op.entityId, 10)))
       }
     })

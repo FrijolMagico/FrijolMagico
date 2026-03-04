@@ -7,7 +7,6 @@ import {
 } from '../_store/organization-team-ui-store'
 import { cn } from '@/lib/utils'
 import { ButtonWithTooltip } from '@/shared/components/button-with-tooltip'
-import { Pencil, RotateCcw, Trash2 } from 'lucide-react'
 import { useTeamDialog } from '../_store/team-dialog-store'
 import {
   DropdownMenu,
@@ -18,6 +17,7 @@ import {
 import Link from 'next/link'
 import { StateBadge } from '@/shared/components/state-badge'
 import { memo } from 'react'
+import { ActionMenuButton } from '@/shared/components/action-menu-button'
 
 interface TeamRowProps {
   id: string
@@ -90,37 +90,19 @@ export const TeamRow = memo(function TeamRow({ id }: TeamRowProps) {
           '-'
         )}
       </TableCell>
+
       <TableCell>
-        <ButtonWithTooltip
-          size='icon'
-          variant='ghost'
-          onClick={() => openDialog(id)}
-          tooltipContent='Editar artista'
-          className='h-8 w-8'
-          disabled={member.__meta?.isDeleted}
-        >
-          <Pencil className='h-4 w-4' />
-        </ButtonWithTooltip>
-      </TableCell>
-      <TableCell>
-        <ButtonWithTooltip
-          size='icon'
-          variant='ghost'
-          onClick={() => {
-            if (member.__meta?.isDeleted) {
-              restore(id)
-            } else {
-              remove(id)
+        <ActionMenuButton
+          actions={[
+            {
+              label: 'Editar',
+              onClick: () => openDialog(id)
             }
-          }}
-          tooltipContent={member.__meta?.isDeleted ? 'Restaurar' : 'Eliminar'}
-          className={cn(
-            'text-destructive hover:text-destructive/80 h-8 w-8',
-            member.__meta?.isDeleted && 'text-green-500 hover:text-green-500/80'
-          )}
-        >
-          {member.__meta?.isDeleted ? <RotateCcw /> : <Trash2 />}
-        </ButtonWithTooltip>
+          ]}
+          isDeleted={member.__meta?.isDeleted}
+          onDelete={() => remove(id)}
+          onRestore={() => restore(id)}
+        />
       </TableCell>
     </TableRow>
   )

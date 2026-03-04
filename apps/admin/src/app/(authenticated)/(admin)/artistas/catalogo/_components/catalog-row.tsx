@@ -2,15 +2,7 @@
 
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import {
-  GripVertical,
-  Pencil,
-  Star,
-  Check,
-  X,
-  RotateCcw,
-  Trash2
-} from 'lucide-react'
+import { GripVertical, Star, Check, X } from 'lucide-react'
 import { TableCell, TableRow } from '@/shared/components/ui/table'
 import { Switch } from '@/shared/components/ui/switch'
 import { ArtistAvatar } from './artist-avatar'
@@ -21,8 +13,8 @@ import {
   useCatalogProjectionStore
 } from '../_store/catalog-ui-store'
 import { useArtistsProjectionStore } from '../../_store/artista-ui-store'
-import { ButtonWithTooltip } from '@/shared/components/button-with-tooltip'
 import { StateBadge } from '@/shared/components/state-badge'
+import { ActionMenuButton } from '@/shared/components/action-menu-button'
 
 interface CatalogRowProps {
   id: string
@@ -146,33 +138,17 @@ export const CatalogRow = function CatalogRow({ id }: CatalogRowProps) {
 
       {/* Acciones */}
       <TableCell>
-        <ButtonWithTooltip
-          variant='ghost'
-          size='icon'
-          tooltipContent='Editar información del catálogo'
-          onClick={() => openCatalogDialog(id)}
-        >
-          <Pencil className='mr-1 h-4 w-4' />
-        </ButtonWithTooltip>
-      </TableCell>
-
-      {/* Remove */}
-      <TableCell>
-        <ButtonWithTooltip
-          size='icon'
-          variant='ghost'
-          onClick={() =>
-            catalog?.__meta?.isDeleted ? restore(id) : remove(id)
-          }
-          tooltipContent={catalog.__meta?.isDeleted ? 'Restaurar' : 'Eliminar'}
-          className={cn(
-            'text-destructive hover:text-destructive/80 h-8 w-8',
-            catalog.__meta?.isDeleted &&
-              'text-green-500 hover:text-green-500/80'
-          )}
-        >
-          {catalog.__meta?.isDeleted ? <RotateCcw /> : <Trash2 />}
-        </ButtonWithTooltip>
+        <ActionMenuButton
+          actions={[
+            {
+              label: 'Editar',
+              onClick: () => openCatalogDialog(id)
+            }
+          ]}
+          isDeleted={catalog.__meta?.isDeleted}
+          onRestore={() => restore(id)}
+          onDelete={() => remove(id)}
+        />
       </TableCell>
     </TableRow>
   )

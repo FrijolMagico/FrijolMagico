@@ -1,7 +1,6 @@
 'use client'
 
 import type { Organization } from '../_types'
-import { Label } from '@/shared/components/ui/label'
 import { Input } from '@/shared/components/ui/input'
 import { Textarea } from '@/shared/components/ui/textarea'
 import { RichTextarea } from '@/shared/components/rich-textarea'
@@ -10,6 +9,7 @@ import {
   useOrganizationProjectionStore
 } from '../_store/organization-ui-store'
 import { ORGANIZATION_ID } from '../_constants'
+import { Field, FieldGroup, FieldLabel } from '@/shared/components/ui/field'
 
 interface OrganizationFormProps {
   initialData: Organization
@@ -23,9 +23,9 @@ export function OrganizationForm({ initialData }: OrganizationFormProps) {
   const source = projected ?? initialData
 
   return (
-    <div className='space-y-6'>
-      <div className='space-y-2'>
-        <Label htmlFor='nombre'>Nombre de la Organización</Label>
+    <FieldGroup>
+      <Field>
+        <FieldLabel htmlFor='nombre'>Nombre de la Organización</FieldLabel>
         <Input
           id='nombre'
           value={source.nombre || ''}
@@ -39,10 +39,10 @@ export function OrganizationForm({ initialData }: OrganizationFormProps) {
           placeholder='Frijol Mágico'
           className='w-full'
         />
-      </div>
+      </Field>
 
-      <div className='space-y-2'>
-        <Label htmlFor='descripcion'>Descripción</Label>
+      <Field>
+        <FieldLabel htmlFor='descripcion'>Descripción</FieldLabel>
         <Textarea
           id='descripcion'
           value={source.descripcion || ''}
@@ -57,10 +57,10 @@ export function OrganizationForm({ initialData }: OrganizationFormProps) {
           className='field-sizing-content! min-h-42'
           rows={2}
         />
-      </div>
+      </Field>
 
-      <div className='space-y-2'>
-        <Label htmlFor='mision'>Misión</Label>
+      <Field>
+        <FieldLabel htmlFor='mision'>Misión</FieldLabel>
         <RichTextarea
           id='mision'
           value={source.mision || ''}
@@ -71,10 +71,10 @@ export function OrganizationForm({ initialData }: OrganizationFormProps) {
           }
           placeholder='Nuestra misión es...'
         />
-      </div>
+      </Field>
 
-      <div className='space-y-2'>
-        <Label htmlFor='vision'>Visión</Label>
+      <Field>
+        <FieldLabel htmlFor='vision'>Visión</FieldLabel>
         <RichTextarea
           id='vision'
           value={source.vision || ''}
@@ -85,7 +85,7 @@ export function OrganizationForm({ initialData }: OrganizationFormProps) {
           }
           placeholder='Nuestra visión es...'
         />
-      </div>
-    </div>
+      </Field>
+    </FieldGroup>
   )
 }

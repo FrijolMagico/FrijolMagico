@@ -6,7 +6,7 @@ import { z } from 'zod'
  */
 export const edicionSchema = z.object({
   id: z.number().int().positive().optional(), // Optional for inserts (auto-increment)
-  eventoId: z
+  eventoId: z.coerce
     .number()
     .int()
     .positive({ error: 'eventoId debe ser un entero positivo' }),
@@ -23,7 +23,7 @@ export const edicionSchema = z.object({
  * Versión simplificada para UI forms
  */
 export const edicionFormSchema = z.object({
-  eventoId: z.number().int().positive({ error: 'El evento es obligatorio' }),
+  eventoId: z.string().min(1, { error: 'El evento es obligatorio' }),
   nombre: z.string().optional(),
   numeroEdicion: z
     .string()
@@ -36,15 +36,22 @@ export const edicionFormSchema = z.object({
  * Mapea desde Drizzle schema (packages/database/src/db/schema/events.ts)
  */
 export const edicionDiaSchema = z.object({
-  id: z.number().int().positive().optional(), // Optional for inserts (auto-increment)
-  eventoEdicionId: z
-    .number()
-    .int()
-    .positive({ error: 'eventoEdicionId debe ser un entero positivo' }),
+  id: z.number().int().positive().optional(),
+  eventoEdicionId: z.union([
+    z
+      .number()
+      .int()
+      .positive({ error: 'eventoEdicionId debe ser un entero positivo' }),
+    z.string().min(1)
+  ]),
   lugarId: z
-    .number()
-    .int()
-    .positive({ error: 'lugarId debe ser un entero positivo' })
+    .union([
+      z
+        .number()
+        .int()
+        .positive({ error: 'lugarId debe ser un entero positivo' }),
+      z.string().min(1)
+    ])
     .optional(),
   fecha: z.string({ error: 'La fecha es obligatoria' }),
   horaInicio: z.string({ error: 'La hora de inicio es obligatoria' }),
@@ -82,7 +89,7 @@ export const lugarSchema = z.object({
   direccion: z.string().optional(),
   ciudad: z.string().optional(),
   coordenadas: z.string().optional(),
-  url: z.string().url({ message: 'La URL debe ser válida' }).optional()
+  url: z.url({ message: 'La URL debe ser válida' }).optional()
 })
 
 /**
@@ -94,7 +101,7 @@ export const lugarFormSchema = z.object({
   direccion: z.string().optional(),
   ciudad: z.string().optional(),
   coordenadas: z.string().optional(),
-  url: z.string().url({ message: 'La URL debe ser válida' }).optional()
+  url: z.url({ message: 'La URL debe ser válida' }).optional()
 })
 
 /**
@@ -102,7 +109,13 @@ export const lugarFormSchema = z.object({
  */
 export type EdicionInput = z.infer<typeof edicionSchema>
 export type EdicionFormInput = z.infer<typeof edicionFormSchema>
-export type EdicionDiaInput = z.infer<typeof edicionDiaSchema>
+export type EdicionDiaInput = Omit<
+  z.infer<typeof edicionDiaSchema>,
+  'eventoEdicionId' | 'lugarId'
+> & {
+  eventoEdicionId: number
+  lugarId?: number
+}
 export type EdicionDiaFormInput = z.infer<typeof edicionDiaFormSchema>
 export type LugarInput = z.infer<typeof lugarSchema>
 export type LugarFormInput = z.infer<typeof lugarFormSchema>

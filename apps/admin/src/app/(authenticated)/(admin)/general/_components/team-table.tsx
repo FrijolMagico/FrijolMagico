@@ -12,7 +12,6 @@ import {
 import { useTeamProjectionStore } from '../_store/organization-team-ui-store'
 import { TeamRow } from './team-row'
 
-import { Card } from '@/shared/components/ui/card'
 import { EmptyState } from '@/shared/components/empty-state'
 
 export const TeamTable = memo(function TeamTable() {
@@ -27,7 +26,7 @@ export const TeamTable = memo(function TeamTable() {
     )
 
   return (
-    <Card className='py-0'>
+    <div className='rounded-lg border'>
       <Table>
         <TableHeader>
           <TableRow>
@@ -37,8 +36,7 @@ export const TeamTable = memo(function TeamTable() {
             <TableHead className='w-[20%]'>Correo</TableHead>
             <TableHead className='w-[15%]'>Teléfono</TableHead>
             <TableHead className='w-[5%]'>RRSS</TableHead>
-            <TableHead className='w-[5%]'></TableHead>
-            <TableHead className='w-[5%]'></TableHead>
+            <TableHead className='w-[5%]'>Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -47,6 +45,6 @@ export const TeamTable = memo(function TeamTable() {
           ))}
         </TableBody>
       </Table>
-    </Card>
+    </div>
   )
 })

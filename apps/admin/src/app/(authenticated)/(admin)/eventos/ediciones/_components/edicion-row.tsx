@@ -1,9 +1,7 @@
 'use client'
 
-import { ImageOff, Pencil, Trash2, RotateCcw } from 'lucide-react'
 import { TableCell, TableRow } from '@/shared/components/ui/table'
 import { Badge } from '@/shared/components/ui/badge'
-import { Button } from '@/shared/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
   useEdicionOperationStore,
@@ -13,6 +11,17 @@ import { useEdicionDiaProjectionStore } from '../_store/edicion-dia-ui-store'
 import { useLugarProjectionStore } from '../_store/lugar-ui-store'
 import { useEventoProjectionStore } from '../../_store/evento-ui-store'
 import { useEdicionDialog } from '../_store/edicion-dialog-store'
+import { ActionMenuButton } from '@/shared/components/action-menu-button'
+import { StateBadge } from '@/shared/components/state-badge'
+import { formatEdicionFechas } from '../_lib/format-edicion-fechas'
+import { useState } from 'react'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/shared/components/ui/tooltip'
+import { PosterThumbnail } from './poster-thumbnail'
+import { PosterPreview } from './poster-preview'
 
 interface EdicionRowProps {
   id: string
@@ -28,12 +37,14 @@ const MODALIDAD_VARIANTS: Record<
   string,
   'default' | 'secondary' | 'outline' | 'destructive'
 > = {
-  presencial: 'default',
-  online: 'secondary',
+  presencial: 'outline',
+  online: 'outline',
   hibrido: 'outline'
 }
 
 export function EdicionRow({ id }: EdicionRowProps) {
+  const [isPosterPreviewOpen, setIsPosterPreviewOpen] = useState(false)
+
   const edicion = useEdicionProjectionStore((s) => s.byId[id])
   const evento = useEventoProjectionStore((s) =>
     edicion ? s.byId[edicion.eventoId] : undefined
@@ -45,30 +56,25 @@ export function EdicionRow({ id }: EdicionRowProps) {
   const restore = useEdicionOperationStore((s) => s.restore)
   const openDialog = useEdicionDialog((s) => s.openDialog)
 
+  const handlePosterUpload = () => {
+    console.warn('[EdicionRow] TODO: CDN poster upload not implemented', {
+      id: edicion?.id
+    })
+  }
+
+  const handlePosterDelete = () => {
+    console.warn('[EdicionRow] TODO: CDN poster delete not implemented', {
+      id: edicion?.id
+    })
+  }
+
   if (!edicion) return null
 
   const dias = Object.values(diasById)
     .filter((dia) => dia.eventoEdicionId === id)
     .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
 
-  let fechasDisplay = 'Sin fechas'
-  if (dias.length === 1) {
-    fechasDisplay = new Date(dias[0].fecha).toLocaleDateString('es-CL', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    })
-  } else if (dias.length > 1) {
-    const first = new Date(dias[0].fecha).toLocaleDateString('es-CL', {
-      day: '2-digit',
-      month: 'short'
-    })
-    const last = new Date(dias[dias.length - 1].fecha).toLocaleDateString(
-      'es-CL',
-      { day: '2-digit', month: 'short', year: 'numeric' }
-    )
-    fechasDisplay = `${first} – ${last}`
-  }
+  const fechasDisplay = formatEdicionFechas(dias)
 
   const firstDia = dias[0]
   const lugar = firstDia?.lugarId ? lugarById[firstDia.lugarId] : undefined
@@ -82,40 +88,50 @@ export function EdicionRow({ id }: EdicionRowProps) {
         : null
 
   const isDeleted = edicion.__meta?.isDeleted
-  const isNew = edicion.__meta?.isNew
-  const isUpdated = edicion.__meta?.isUpdated
 
   return (
     <TableRow
       className={cn('transition-colors', {
-        'line-through opacity-50': isDeleted,
-        'bg-green-50 dark:bg-green-950/20': isNew,
-        'bg-amber-50 dark:bg-amber-950/20': isUpdated && !isNew
+        'bg-destructive/10 border-destructive/20': isDeleted
       })}
     >
       {/* Poster */}
-      <TableCell className='w-12'>
-        {edicion.posterUrl ? (
-          <img
-            src={edicion.posterUrl}
-            alt={edicion.nombre ?? edicion.numeroEdicion}
-            className='h-10 w-10 rounded object-cover object-center'
+      <TableCell className='flex size-14'>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <PosterThumbnail
+                posterUrl={edicion.posterUrl}
+                alt={edicion.nombre + edicion.numeroEdicion}
+                onClick={() => setIsPosterPreviewOpen(true)}
+              />
+            }
           />
-        ) : (
-          <div className='bg-muted flex h-10 w-10 items-center justify-center rounded'>
-            <ImageOff className='text-muted-foreground h-4 w-4' />
-          </div>
-        )}
+          <TooltipContent>
+            {edicion.posterUrl ? 'Ver imagen' : 'Agregar imagen'}
+          </TooltipContent>
+        </Tooltip>
+        <PosterPreview
+          isOpen={isPosterPreviewOpen}
+          posterUrl={edicion.posterUrl}
+          alt={edicion.nombre + edicion.numeroEdicion}
+          onClose={() => setIsPosterPreviewOpen(false)}
+          onUpload={handlePosterUpload}
+          onDelete={handlePosterDelete}
+        />
       </TableCell>
 
       {/* Evento */}
-      <TableCell className='font-medium'>{evento?.nombre ?? '—'}</TableCell>
-
-      {/* Número */}
-      <TableCell className='w-24'>{edicion.numeroEdicion}</TableCell>
-
-      {/* Nombre */}
-      <TableCell>{edicion.nombre ?? '—'}</TableCell>
+      <TableCell>
+        <p>
+          {evento?.nombre ?? '—'} {edicion.numeroEdicion}
+        </p>
+        {edicion.nombre && (
+          <span className='text-muted-foreground text-sm'>
+            {edicion.nombre}
+          </span>
+        )}
+      </TableCell>
 
       {/* Fechas */}
       <TableCell className='text-muted-foreground text-sm'>
@@ -136,42 +152,23 @@ export function EdicionRow({ id }: EdicionRowProps) {
         )}
       </TableCell>
 
+      <TableCell>
+        <StateBadge {...edicion.__meta} />
+      </TableCell>
+
       {/* Acciones */}
       <TableCell className='w-24'>
-        <div className='flex items-center gap-1'>
-          {isDeleted ? (
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={() => restore(id)}
-              title='Restaurar'
-            >
-              <RotateCcw className='h-4 w-4' />
-            </Button>
-          ) : (
-            <>
-              <Button
-                variant='ghost'
-                size='icon'
-                className='h-8 w-8'
-                onClick={() => openDialog(id)}
-                title='Editar'
-              >
-                <Pencil className='h-4 w-4' />
-              </Button>
-              <Button
-                variant='ghost'
-                size='icon'
-                className='text-destructive hover:text-destructive h-8 w-8'
-                onClick={() => remove(id)}
-                title='Eliminar'
-              >
-                <Trash2 className='h-4 w-4' />
-              </Button>
-            </>
-          )}
-        </div>
+        <ActionMenuButton
+          actions={[
+            {
+              label: 'Editar',
+              onClick: () => openDialog(id)
+            }
+          ]}
+          isDeleted={isDeleted}
+          onDelete={() => remove(id)}
+          onRestore={() => restore(id)}
+        />
       </TableCell>
     </TableRow>
   )

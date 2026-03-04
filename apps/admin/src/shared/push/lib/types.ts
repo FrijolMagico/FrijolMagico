@@ -77,9 +77,9 @@ export { PUSH_OPERATION_TYPE }
 export type { PushOperationType }
 
 export interface PushSource {
-  read(section: string): Promise<PushOperation[]>
-  hasPending(section: string): Promise<boolean>
-  clear(section: string): Promise<void>
+  read(section: string | string[]): Promise<PushOperation[]>
+  hasPending(section: string | string[]): Promise<boolean>
+  clear(section: string | string[]): Promise<void>
 }
 
 export type PushExecutorFn = (
@@ -102,7 +102,7 @@ export interface PushError {
 export interface PushConfig {
   source: PushSource
   executor: PushExecutorFn
-  section: string
+  section: string | string[]
   validators?: Record<string, ZodSchema>
   onSuccess?: () => void
 }

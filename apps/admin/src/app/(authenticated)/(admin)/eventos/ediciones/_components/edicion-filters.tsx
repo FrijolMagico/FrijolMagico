@@ -23,6 +23,17 @@ export function EdicionFilters() {
   const eventoIds = useEventoProjectionStore((s) => s.allIds)
   const eventoById = useEventoProjectionStore((s) => s.byId)
 
+  const EDITION_FILTERS_OPTIONS: Record<string, string> = {
+    all: 'Todos los eventos',
+    ...eventoIds.reduce(
+      (acc, id) => {
+        acc[id] = eventoById[id]?.nombre ?? id
+        return acc
+      },
+      {} as Record<string, string>
+    )
+  }
+
   const [localSearch, setLocalSearch] = useState(filters.search)
 
   const debouncedSearch = useDebouncedCallback((value: string) => {
@@ -48,7 +59,7 @@ export function EdicionFilters() {
   }
 
   return (
-    <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
+    <div className='flex flex-col gap-4 sm:flex-row sm:items-center'>
       <div className='relative max-w-sm flex-1'>
         <Search className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
         <Input
@@ -65,7 +76,9 @@ export function EdicionFilters() {
           onValueChange={handleEventoChange}
         >
           <SelectTrigger className='w-48'>
-            <SelectValue placeholder='Todos los eventos' />
+            <SelectValue placeholder='Todos los eventos'>
+              {EDITION_FILTERS_OPTIONS[filters.eventoId ?? 'all']}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value='all'>Todos los eventos</SelectItem>

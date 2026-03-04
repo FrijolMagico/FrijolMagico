@@ -25,7 +25,11 @@ export function useEdicionPush() {
   const config: PushConfig = {
     source: journalPushSource,
     executor: saveEdicionAction,
-    section: ENTITIES.EVENTO_EDICION,
+    section: [
+      ENTITIES.EVENTO_EDICION,
+      ENTITIES.EVENTO_EDICION_DIA,
+      ENTITIES.LUGAR
+    ],
     validators: {
       evento_edicion: edicionSchema,
       evento_edicion_dia: edicionDiaSchema,
@@ -43,10 +47,11 @@ export function useEdicionPush() {
 
   const save = async () => {
     // Flush ALL 3 entity journals before push
-    const registry = useJournalFlushRegistry.getState()
-    await registry.flush(ENTITIES.EVENTO_EDICION)
-    await registry.flush(ENTITIES.EVENTO_EDICION_DIA)
-    await registry.flush(ENTITIES.LUGAR)
+    const flush = useJournalFlushRegistry.getState().flush
+    await flush(ENTITIES.EVENTO_EDICION)
+    await flush(ENTITIES.EVENTO_EDICION_DIA)
+    await flush(ENTITIES.LUGAR)
+
     push().catch(() => {})
   }
 

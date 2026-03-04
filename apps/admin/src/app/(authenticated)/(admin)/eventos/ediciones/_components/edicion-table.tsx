@@ -35,24 +35,25 @@ export function EdicionTable() {
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className='w-12'></TableHead>
-          <TableHead>Evento</TableHead>
-          <TableHead className='w-24'>Número</TableHead>
-          <TableHead>Nombre</TableHead>
-          <TableHead>Fechas</TableHead>
-          <TableHead>Lugar</TableHead>
-          <TableHead className='w-32'>Modalidad</TableHead>
-          <TableHead className='w-24'></TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {paginatedIds.map((id) => (
-          <EdicionRow key={id} id={id} />
-        ))}
-      </TableBody>
-    </Table>
+    <div className='overflow-hidden rounded-lg border'>
+      <Table>
+        <TableHeader>
+          <TableRow className='bg-muted/50'>
+            <TableHead className='w-14'></TableHead>
+            <TableHead>Evento</TableHead>
+            <TableHead>Fecha</TableHead>
+            <TableHead>Lugar</TableHead>
+            <TableHead>Modalidad</TableHead>
+            <TableHead className='w-26' />
+            <TableHead>Acciones</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {paginatedIds.map((id) => (
+            <EdicionRow key={id} id={id} />
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }

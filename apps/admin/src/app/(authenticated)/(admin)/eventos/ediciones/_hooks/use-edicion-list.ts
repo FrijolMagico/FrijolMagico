@@ -5,6 +5,7 @@ import { useEdicionDiaProjectionStore } from '../_store/edicion-dia-ui-store'
 import { useEventoProjectionStore } from '../../_store/evento-ui-store'
 import { useEdicionFilterStore } from '../_store/edicion-filter-store'
 import { useEdicionPaginationStore } from '../_store/edicion-pagination-store'
+import { formatEdicionFechas } from '../_lib/format-edicion-fechas'
 
 export function useEdicionList(): {
   paginatedIds: string[]
@@ -26,35 +27,23 @@ export function useEdicionList(): {
       const evento = eventoById[edicion.eventoId]
 
       const dias = Object.values(diasById).filter(
-        (dia) => dia.eventoEdicionId === edicion.id
+        (dia) => dia.eventoEdicionId === id
       )
       const sortedDias = dias.sort(
         (a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime()
       )
 
-      let dateRange = ''
-      if (sortedDias.length > 0) {
-        const firstDate = new Date(sortedDias[0].fecha)
-        const lastDate = new Date(sortedDias[sortedDias.length - 1].fecha)
-        const firstFormatted = firstDate.toLocaleDateString('es-CL', {
-          day: '2-digit',
-          month: 'short'
-        })
-        const lastFormatted = lastDate.toLocaleDateString('es-CL', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric'
-        })
-        dateRange = `${firstFormatted} - ${lastFormatted}`
-      }
+      const dateRange = formatEdicionFechas(sortedDias)
+      const firstDate = sortedDias[0]?.fecha ?? ''
 
       return {
-        id: edicion.id,
+        id,
         eventoId: edicion.eventoId,
         numeroEdicion: edicion.numeroEdicion,
         nombre: edicion.nombre ?? '',
         eventoNombre: evento?.nombre ?? '',
-        dateRange
+        dateRange,
+        firstDate
       }
     })
   }, [allIds, edicionById, eventoById, diasById])
@@ -76,9 +65,10 @@ export function useEdicionList(): {
     }
 
     filtered.sort((a, b) => {
-      const eventoCompare = a.eventoNombre.localeCompare(b.eventoNombre)
-      if (eventoCompare !== 0) return eventoCompare
-      return a.numeroEdicion.localeCompare(b.numeroEdicion)
+      if (!a.firstDate && !b.firstDate) return 0
+      if (!a.firstDate) return -1
+      if (!b.firstDate) return 1
+      return b.firstDate.localeCompare(a.firstDate)
     })
 
     return filtered.map((i) => i.id)

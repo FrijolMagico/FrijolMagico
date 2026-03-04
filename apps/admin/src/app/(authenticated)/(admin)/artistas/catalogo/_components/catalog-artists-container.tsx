@@ -7,13 +7,13 @@ import { useRouteChanges } from '@/shared/hooks/use-route-changes'
 import { RouteSaveToolbar } from '@/shared/components/route-save-toolbar'
 import { CatalogFilters as CatalogFiltersComponent } from './catalog-filters'
 import { EditCatalogDialog } from './edit-catalog-dialog'
-import { EditArtistDialog } from './edit-artist-dialog'
 import { useCatalogFilterStore } from '../_store/catalog-filter-store'
 import { useCatalogPaginationStore } from '../_store/catalog-pagination-store'
 import { useCatalogoPush } from '../_hooks/use-catalogo-push'
 import { useArtistaPush } from '../../_hooks/use-artista-push'
 import { toast } from 'sonner'
 import { CatalogTableContainer } from './catalog-table-container'
+import { EditArtistDialog } from './edit-artist-dialog'
 
 export function CatalogArtistsContainer() {
   const router = useRouter()
@@ -21,7 +21,6 @@ export function CatalogArtistsContainer() {
 
   const setFilters = useCatalogFilterStore((s) => s.setFilters)
   const setPage = useCatalogPaginationStore((s) => s.setPage)
-
 
   const { isDirty, discardAll } = useRouteChanges('/artistas/catalogo')
 
@@ -37,7 +36,6 @@ export function CatalogArtistsContainer() {
   } = useArtistaPush()
 
   const lastToastRef = useRef<number>(0)
-
 
   // Hydrate store from URL only on mount.
   // After mount, the store is the source of truth — URL follows the store via
@@ -75,7 +73,6 @@ export function CatalogArtistsContainer() {
       }
     }
   }, [resultCatalogo, resultArtista, isPendingCatalogo, isPendingArtista])
-
 
   const handleFiltersChange = useDebouncedCallback(
     useCallback(

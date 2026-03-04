@@ -1,10 +1,8 @@
 'use client'
 
 import { memo, useCallback } from 'react'
-import { RotateCcw, Trash2, Pencil, History } from 'lucide-react'
 import { TableCell, TableRow } from '@/shared/components/ui/table'
 import { Badge } from '@/shared/components/ui/badge'
-import { ButtonWithTooltip } from '@/shared/components/button-with-tooltip'
 import { cn } from '@/lib/utils'
 import {
   useArtistsOperationStore,
@@ -12,6 +10,7 @@ import {
 } from '../_store/artista-ui-store'
 import { useArtistDialog } from '../_store/artist-dialog-store'
 import { StateBadge } from '@/shared/components/state-badge'
+import { ActionMenuButton } from '@/shared/components/action-menu-button'
 
 interface ArtistListRowProps {
   id: string
@@ -54,6 +53,9 @@ export const ArtistListRow = memo(function ArtistListRow({
         isDeleted && 'bg-destructive/10 hover:bg-destructive/20'
       )}
     >
+      <TableCell>
+        <StateBadge {...artist.__meta} />
+      </TableCell>
       <TableCell className='font-medium'>{artist.pseudonimo}</TableCell>
       <TableCell>{artist.nombre || '-'}</TableCell>
       <TableCell>{artist.correo || '-'}</TableCell>
@@ -69,53 +71,22 @@ export const ArtistListRow = memo(function ArtistListRow({
         </Badge>
       </TableCell>
       <TableCell>
-        <StateBadge {...artist.__meta} />
-      </TableCell>
-      <TableCell>
-        {hasHistory && (
-          <ButtonWithTooltip
-            size='icon'
-            variant='ghost'
-            onClick={handleOpenHistory}
-            tooltipContent='Ver historial'
-            className='text-muted-foreground hover:text-foreground h-8 w-8'
-          >
-            <History className='h-4 w-4' />
-          </ButtonWithTooltip>
-        )}
-      </TableCell>
-      <TableCell>
-        <ButtonWithTooltip
-          size='icon'
-          variant='ghost'
-          onClick={handleOpenEdit}
-          tooltipContent='Editar artista'
-          className='h-8 w-8'
-          disabled={isDeleted}
-        >
-          <Pencil className='h-4 w-4' />
-        </ButtonWithTooltip>
-      </TableCell>
-
-      <TableCell>
-        <div className='flex items-center gap-1'>
-          <ButtonWithTooltip
-            size='icon'
-            variant='ghost'
-            onClick={handleRemoveOrRestore}
-            tooltipContent={isDeleted ? 'Restaurar' : 'Eliminar'}
-            className={cn(
-              'text-destructive hover:text-destructive/80 h-8 w-8',
-              isDeleted && 'text-green-500 hover:text-green-500/80'
-            )}
-          >
-            {isDeleted ? (
-              <RotateCcw className='h-4 w-4' />
-            ) : (
-              <Trash2 className='h-4 w-4' />
-            )}
-          </ButtonWithTooltip>
-        </div>
+        <ActionMenuButton
+          actions={[
+            {
+              label: 'Editar',
+              onClick: handleOpenEdit
+            },
+            {
+              label: 'Historial',
+              onClick: handleOpenHistory,
+              hidden: !hasHistory
+            }
+          ]}
+          isDeleted={isDeleted}
+          onDelete={handleRemoveOrRestore}
+          onRestore={handleRemoveOrRestore}
+        />
       </TableCell>
     </TableRow>
   )

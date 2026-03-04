@@ -11,10 +11,9 @@ import {
   CardHeader,
   CardTitle
 } from '@/shared/components/ui/card'
-import { ButtonWithTooltip } from '@/shared/components/button-with-tooltip'
-import { Badge } from '@/shared/components/ui/badge'
-import { Pencil, Trash2, RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { StateBadge } from '@/shared/components/state-badge'
+import { ActionMenuButton } from '@/shared/components/action-menu-button'
 
 interface EventoCardProps {
   id: string
@@ -41,86 +40,43 @@ export function EventoCard({ id }: EventoCardProps) {
         isUpdated && !isDeleted && 'border-amber-500/50'
       )}
     >
-      <CardHeader className='pb-3'>
+      <CardHeader>
         <div className='flex items-start justify-between gap-4'>
-          <div className='space-y-1.5'>
+          <div>
             <CardTitle
               className={cn(
-                'line-clamp-1 text-lg',
+                'text-lg',
                 isDeleted && 'text-muted-foreground line-through'
               )}
             >
               {evento.nombre}
             </CardTitle>
             <div className='flex items-center gap-2'>
-              <Badge
-                variant='secondary'
-                className='font-mono text-xs font-normal'
-              >
-                {evento.slug}
-              </Badge>
-              {isUpdated && !isDeleted && (
-                <Badge
-                  variant='outline'
-                  className='border-amber-500 text-amber-500'
-                >
-                  Modificado
-                </Badge>
-              )}
-              {isNew && !isDeleted && (
-                <Badge
-                  variant='outline'
-                  className='border-green-500 text-green-500'
-                >
-                  Nuevo
-                </Badge>
-              )}
+              <StateBadge {...evento.__meta} />
             </div>
           </div>
+          <ActionMenuButton
+            actions={[
+              {
+                label: 'Editar',
+                onClick: () => openDialog(id)
+              }
+            ]}
+            isDeleted={isDeleted}
+            onDelete={() => remove(id)}
+            onRestore={() => restore(id)}
+          />
         </div>
       </CardHeader>
       <CardContent>
         <p
           className={cn(
-            'text-muted-foreground line-clamp-2 text-sm',
+            'text-muted-foreground text-sm',
             isDeleted && 'opacity-50'
           )}
         >
           {evento.descripcion || 'Sin descripción'}
         </p>
-        <div className='mt-4 flex justify-end gap-2'>
-          <ButtonWithTooltip
-            size='icon'
-            variant='ghost'
-            onClick={() => openDialog(id)}
-            tooltipContent='Editar evento'
-            disabled={isDeleted}
-          >
-            <Pencil className='h-4 w-4' />
-          </ButtonWithTooltip>
-          <ButtonWithTooltip
-            size='icon'
-            variant='ghost'
-            onClick={() => {
-              if (isDeleted) {
-                restore(id)
-              } else {
-                remove(id)
-              }
-            }}
-            tooltipContent={isDeleted ? 'Restaurar' : 'Eliminar'}
-            className={cn(
-              'text-destructive hover:text-destructive/80',
-              isDeleted && 'text-green-500 hover:text-green-500/80'
-            )}
-          >
-            {isDeleted ? (
-              <RotateCcw className='h-4 w-4' />
-            ) : (
-              <Trash2 className='h-4 w-4' />
-            )}
-          </ButtonWithTooltip>
-        </div>
       </CardContent>
     </Card>
   )
