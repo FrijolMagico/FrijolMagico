@@ -66,3 +66,4 @@ packages/database/data/*.sql
 # Turborepo
 .turbo
 .sisyphus
+db-workspace/
