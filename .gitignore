@@ -67,3 +67,7 @@ packages/database/data/*.sql
 .turbo
 .sisyphus
 db-workspace/
+
+# OpenCode
+.agents/
+skills-lock.json
