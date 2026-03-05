@@ -78,6 +78,20 @@
       "when": 1771869285017,
       "tag": "0010_recreate_organizacion_equipo_with_better_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1772661340532,
+      "tag": "0011_add_telefono_to_artist",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1772723036014,
+      "tag": "0012_add_deleted_at_to_artista_historial_and_catalogo",
+      "breakpoints": true
     }
   ]
 }
