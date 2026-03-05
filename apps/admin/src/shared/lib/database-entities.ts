@@ -26,7 +26,7 @@ export const ENTITY_LABELS: Record<Entity, string> = {
 
 export const ROUTE_ENTITY_MAP: Partial<Record<string, Entity[]>> = {
   '/general': [ENTITIES.ORGANIZACION, ENTITIES.ORGANIZACION_EQUIPO],
-  '/artistas/listado': [ENTITIES.ARTISTA],
+  '/artistas': [ENTITIES.ARTISTA],
   '/artistas/catalogo': [ENTITIES.CATALOGO_ARTISTA],
   '/eventos': [ENTITIES.EVENTO],
   '/eventos/ediciones': [

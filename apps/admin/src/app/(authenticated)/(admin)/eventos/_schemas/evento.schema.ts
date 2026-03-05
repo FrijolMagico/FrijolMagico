@@ -1,32 +1,24 @@
 import { z } from 'zod'
+import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
+import { events } from '@frijolmagico/database/schema'
 
-/**
- * Schema Zod para la tabla evento (server validation)
- * Mapea desde Drizzle schema (packages/database/src/db/schema/events.ts)
- */
-export const eventoSchema = z.object({
-  id: z.number().int().positive().optional(), // Optional for inserts (auto-increment)
-  organizacionId: z
-    .number()
-    .int()
-    .positive({ error: 'organizacionId debe ser un entero positivo' })
-    .default(1),
-  nombre: z.string().min(1, { error: 'El nombre es obligatorio' }),
-  slug: z.string().min(1, { error: 'El slug es obligatorio' }),
-  descripcion: z.string().optional()
+const { event } = events
+
+export const eventoInsertSchema = createInsertSchema(event, {
+  nombre: (s) => s.min(1, { message: 'El nombre es obligatorio' }),
+  slug: (s) => s.min(1, { message: 'El slug es obligatorio' }),
+  organizacionId: (s) => s.default(1)
 })
 
-/**
- * Schema Zod para el formulario de evento (client validation)
- * Versión simplificada para UI forms
- */
-export const eventoFormSchema = z.object({
-  nombre: z.string().min(1, { error: 'El nombre es obligatorio' }),
-  descripcion: z.string().optional()
+export const eventoUpdateSchema = createUpdateSchema(event)
+
+export const eventoSchema = eventoInsertSchema
+
+export const eventoFormSchema = eventoInsertSchema.pick({
+  nombre: true,
+  descripcion: true
 })
 
-/**
- * Tipos TypeScript inferidos desde schemas Zod
- */
-export type EventoInput = z.infer<typeof eventoSchema>
+export type EventoInsertInput = z.infer<typeof eventoInsertSchema>
 export type EventoFormInput = z.infer<typeof eventoFormSchema>
+export type EventoInput = EventoInsertInput

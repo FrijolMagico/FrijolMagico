@@ -1,16 +1,16 @@
 import type {
-  EventoEdicion,
-  EventoEdicionDia,
-  Lugar
+  EventEdition,
+  EventEditionDay,
+  Place
 } from '@frijolmagico/database/orm'
 
-export type EdicionEntry = Omit<EventoEdicion, 'id' | 'eventoId'> & {
+export type EdicionEntry = Omit<EventEdition, 'id' | 'eventoId'> & {
   id: string
   eventoId: string
 }
 
 export type EdicionDiaEntry = Omit<
-  EventoEdicionDia,
+  EventEditionDay,
   'id' | 'eventoEdicionId' | 'lugarId'
 > & {
   id: string
@@ -18,7 +18,7 @@ export type EdicionDiaEntry = Omit<
   lugarId: string | null
 }
 
-export type LugarEntry = Omit<Lugar, 'id'> & {
+export type LugarEntry = Omit<Place, 'id'> & {
   id: string
 }
 

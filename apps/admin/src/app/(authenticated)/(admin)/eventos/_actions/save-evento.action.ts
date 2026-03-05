@@ -17,13 +17,14 @@ import {
   handleServerActionError,
   logServerError
 } from '@/shared/push/lib/error-handler'
+import type { ZodSchema } from 'zod'
 import { createIdMapping, isTempId } from '@/shared/push/lib/id-mapper'
 import { validateOperationData } from '@/shared/push/lib/validators'
-import { eventoSchema, type EventoInput } from '../_schemas/evento.schema'
+import { eventoSchema, type EventoInsertInput } from '../_schemas/evento.schema'
 import { stripUndefined } from '@/shared/lib/utils'
 import { generateSlug } from '../_lib/slug-utils'
 
-const { evento } = events
+const { event: eventTable } = events
 
 /**
  * Save evento changes to database
@@ -52,13 +53,13 @@ export async function saveEventoAction(
         } else if (op.type === PUSH_OPERATION_TYPE.DELETE) {
           if (!isTempId(op.entityId)) {
             await tx
-              .delete(evento)
-              .where(eq(evento.id, Number.parseInt(op.entityId, 10)))
+              .delete(eventTable)
+              .where(eq(eventTable.id, Number.parseInt(op.entityId, 10)))
           }
         } else {
-          const validated = validateOperationData(
+          const validated = validateOperationData<EventoInsertInput>(
             op.data,
-            eventoSchema,
+            eventoSchema as unknown as ZodSchema<EventoInsertInput>,
             op.type === PUSH_OPERATION_TYPE.UPDATE
           )
           if (!validated.valid || !validated.data) {
@@ -72,9 +73,9 @@ export async function saveEventoAction(
             // CREATE: Generate slug from nombre
             const slug = generateSlug(input.nombre as string)
             const [inserted] = await tx
-              .insert(evento)
-              .values({ ...input, slug } as EventoInput)
-              .returning({ id: evento.id })
+              .insert(eventTable)
+              .values({ ...input, slug })
+              .returning({ id: eventTable.id })
 
             if (inserted) {
               mappings.push(createIdMapping(op.entityId, inserted.id, 'evento'))
@@ -86,9 +87,9 @@ export async function saveEventoAction(
               updateData.slug = generateSlug(updateData.nombre as string)
             }
             await tx
-              .update(evento)
+              .update(eventTable)
               .set(updateData)
-              .where(eq(evento.id, Number.parseInt(op.entityId, 10)))
+              .where(eq(eventTable.id, Number.parseInt(op.entityId, 10)))
           }
         }
       }

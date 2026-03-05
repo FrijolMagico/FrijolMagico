@@ -7,7 +7,10 @@ import { journalPushSource } from '@/shared/lib/journal-push-source'
 import { useJournalFlushRegistry } from '@/shared/lib/journal-flush-registry'
 import { saveArtistaAction } from '../_actions/save-artista.action'
 import { useArtistsOperationStore } from '../_store/artista-ui-store'
-import { artistaImagenSchema, artistaSchema } from '../_schemas/artista.schema'
+import {
+  artistaImagenInsertSchema,
+  artistaInsertSchema
+} from '../_schemas/artista.schema'
 import { ENTITIES } from '@/shared/lib/database-entities'
 
 export function useArtistaPush() {
@@ -19,8 +22,8 @@ export function useArtistaPush() {
     executor: saveArtistaAction,
     section: ENTITIES.ARTISTA,
     validators: {
-      artista: artistaSchema,
-      artistaImagen: artistaImagenSchema
+      artista: artistaInsertSchema,
+      artistaImagen: artistaImagenInsertSchema
     },
     onSuccess: () => {
       store.cleanup()

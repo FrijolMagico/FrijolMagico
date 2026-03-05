@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm'
 import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core'
 
 /**
- * User - Usuarios autenticados (Better Auth)
+ * User - Authenticated users (Better Auth)
  */
 export const user = sqliteTable(
   'user',
@@ -25,7 +25,7 @@ export const user = sqliteTable(
 )
 
 /**
- * Session - Sesiones de usuario (Better Auth)
+ * Session - User sessions (Better Auth)
  */
 export const session = sqliteTable(
   'session',
@@ -49,7 +49,7 @@ export const session = sqliteTable(
 )
 
 /**
- * Account - Cuentas OAuth vinculadas (Better Auth)
+ * Account - Linked OAuth accounts (Better Auth)
  */
 export const account = sqliteTable(
   'account',
@@ -81,7 +81,7 @@ export const account = sqliteTable(
 )
 
 /**
- * Verification - Tokens de verificación (Better Auth)
+ * Verification - Verification tokens (Better Auth)
  */
 export const verification = sqliteTable(
   'verification',

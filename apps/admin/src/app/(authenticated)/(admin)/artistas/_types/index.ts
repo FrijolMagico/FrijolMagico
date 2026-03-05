@@ -1,6 +1,6 @@
-import type { Artista } from '@frijolmagico/database/orm'
+import type { Artist } from '@frijolmagico/database/orm'
 
-export type RawArtist = Artista
+export type RawArtist = Artist
 
 export type ArtistEntry = Omit<RawArtist, 'id' | 'rrss'> & {
   id: string
@@ -14,9 +14,9 @@ export interface ArtistListFilters {
   city: string | null
   statusId: number | null
 }
-import type { ArtistaHistorial } from '@frijolmagico/database/orm'
+import type { ArtistHistory } from '@frijolmagico/database/orm'
 
-export type RawHistoryEntry = ArtistaHistorial
+export type RawHistoryEntry = ArtistHistory
 
 export type HistoryEntry = Omit<
   RawHistoryEntry,

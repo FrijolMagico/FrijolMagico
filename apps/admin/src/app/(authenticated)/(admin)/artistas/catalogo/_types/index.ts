@@ -1,7 +1,7 @@
-import type { CatalogoArtista } from '@frijolmagico/database/orm'
+import type { CatalogArtist as RawCatalogArtist } from '@frijolmagico/database/orm'
 import { ArtistEntry } from '../../_types'
 
-export type RawCatalogEntry = CatalogoArtista
+export type RawCatalogEntry = RawCatalogArtist
 
 export type CatalogEntry = Omit<RawCatalogEntry, 'id' | 'artistaId'> & {
   id: string

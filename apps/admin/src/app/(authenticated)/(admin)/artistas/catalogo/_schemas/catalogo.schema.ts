@@ -1,28 +1,34 @@
 import { z } from 'zod'
+import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
+import { artist } from '@frijolmagico/database/schema'
 
-/**
- * Schema Zod para la tabla catalogo_artista
- * Mapea desde Drizzle schema (packages/database/src/db/schema/artist.ts)
- *
- * Nota: catalogoArtista está en artist.ts en Drizzle, pero conceptualmente
- * pertenece a la sección catalogo-entry.
- */
-export const catalogoArtistaSchema = z.object({
-  id: z.number().int().positive().optional(), // Optional for inserts (auto-increment)
-  artistaId: z
-    .number()
-    .int()
-    .positive()
-    .min(1, { error: 'El artista es obligatorio' }),
-  orden: z.string().min(1, { error: 'El orden es obligatorio' }),
-  destacado: z
-    .boolean({ error: 'destacado debe ser un booleano' })
-    .default(false),
-  activo: z.boolean({ error: 'activo debe ser un booleano' }).default(true),
-  descripcion: z.string().optional()
-})
+export const catalogoArtistaInsertSchema = createInsertSchema(
+  artist.catalogArtist,
+  {
+    artistaId: (s) =>
+      s.int().positive().min(1, { error: 'El artista es obligatorio' }),
+    orden: (s) => s.min(1, { error: 'El orden es obligatorio' })
+  }
+)
 
-/**
- * Tipos TypeScript inferidos desde schema Zod
- */
-export type CatalogoArtistaInput = z.infer<typeof catalogoArtistaSchema>
+export const catalogoArtistaUpdateSchema = createUpdateSchema(
+  artist.catalogArtist
+)
+
+export type CatalogoArtistaInsertInput = z.infer<
+  typeof catalogoArtistaInsertSchema
+>
+
+export const catalogoArtistaFormSchema = catalogoArtistaInsertSchema
+  .pick({
+    artistaId: true,
+    orden: true,
+    descripcion: true
+  })
+  .extend({
+    artistaId: z.string().min(1, { message: 'El artista es obligatorio' }),
+    destacado: z.boolean().default(false),
+    activo: z.boolean().default(true)
+  })
+
+export type CatalogoArtistaFormInput = z.infer<typeof catalogoArtistaFormSchema>

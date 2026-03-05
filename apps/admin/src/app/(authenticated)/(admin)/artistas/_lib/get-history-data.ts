@@ -14,8 +14,8 @@ export async function getHistoryData(): Promise<HistoryEntry[]> {
 
   const results = await db
     .select()
-    .from(artist.artistaHistorial)
-    .orderBy(asc(artist.artistaHistorial.createdAt))
+    .from(artist.artistHistory)
+    .orderBy(asc(artist.artistHistory.createdAt))
 
   if (results === undefined || results.length === 0) return []
 

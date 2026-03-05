@@ -19,9 +19,8 @@ src/
 │   ├── (authenticated)/                # Protected: sidebar layout
 │   │   ├── (dashboard)/dashboard/      # Overview page
 │   │   └── (admin)/                    # Admin features
-│   │       ├── artistas/               # Artist management (largest feature)
+│   │       ├── artistas/               # Artist management and base route (largest feature)
 │   │       │   ├── catalogo/           # Catalog sub-feature (25 files)
-│   │       │   └── listado/            # List sub-feature (16 files)
 │   │       ├── general/                # Organization + team management
 │   │       ├── eventos/                # Events (stub)
 │   │       └── config/                 # Configuration (stub)
@@ -140,6 +139,7 @@ Key hooks in `src/shared/hooks/`:
 - **Shadcn/ui** components at `@/shared/components/ui/` (Base UI primitives, not Radix)
 - **Zustand 5** stores created via factories (`createEntityOperationStore`, `createProjectionStore`, `createPaginationStore`, `createFilterStore`)
 - **Zod 4** for validation (double validation: client in `usePush`, server in Server Actions)
+- **Drizzle-Zod** for schema derivation (see Schema Guide below)
 - **Server Actions** accept `PushOperation[]`, use `validateOperationData()`, return `PushResult`
 - **DAL pattern:** `'use cache'` + `cacheTag()` in feature `_lib/` files
 - **UI text in Spanish** (user-facing labels), **code/comments in English**
@@ -178,3 +178,61 @@ Key hooks in `src/shared/hooks/`:
 - `eventos` and `config` routes are stubs — follow artistas pattern when implementing
 - Entity definitions in `src/shared/lib/database-entities.ts` must be updated when adding new entities
 - `ROUTE_ENTITY_MAP` in same file connects routes to entities for dirty-state tracking
+
+## Schema Guide (Drizzle-Zod)
+
+All Zod schemas in the admin app should derive from Drizzle table definitions. This ensures a single source of truth.
+
+### Pattern
+
+```typescript
+import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
+import { artist } from '@frijolmagico/database/schema'
+
+// Server INSERT - exact DB schema, number IDs
+export const artistaInsertSchema = createInsertSchema(artist, {
+  pseudonimo: (s) => s.min(1, { message: 'El pseudónimo es obligatorio' }),
+  slug: (s) => s.min(1, { message: 'El slug es obligatorio' })
+})
+
+// Server UPDATE - all fields optional
+export const artistaUpdateSchema = createUpdateSchema(artist)
+
+// Client form - string IDs, simplified fields
+export const artistaFormSchema = artistaInsertSchema
+  .pick({
+    nombre: true,
+    pseudonimo: true
+  })
+  .extend({
+    pseudonimo: z.string().min(1)
+  })
+
+// Export types
+export type ArtistaInsertInput = typeof artistaInsertSchema._type
+export type ArtistaFormInput = typeof artistaFormSchema._type
+```
+
+### Client vs Server Validation
+
+| Layer                     | IDs      | Example                                        |
+| ------------------------- | -------- | ---------------------------------------------- |
+| **Server** (InsertSchema) | `number` | `eventoId: z.coerce.number().int().positive()` |
+| **Client** (FormSchema)   | `string` | `eventoId: z.string().min(1)`                  |
+
+### Imports
+
+```typescript
+// Drizzle tables
+import { artist, event, organization } from '@frijolmagico/database/schema'
+
+// Drizzle-Zod
+import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
+```
+
+### Key Points
+
+- Use `.pipe(z.coerce.number())` for FK fields in insert schemas (client sends strings)
+- Preserve Spanish error messages in refinements
+- Use `.pick()`, `.omit()`, `.extend()` for form schemas
+- Export backward-compat aliases if needed: `export const artistaSchema = artistaInsertSchema`

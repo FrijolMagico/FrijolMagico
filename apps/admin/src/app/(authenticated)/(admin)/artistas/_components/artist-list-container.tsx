@@ -31,7 +31,7 @@ export function ArtistListContainer({
 
   const { save, isPending, result } = useArtistaPush()
 
-  const { isDirty, discardAll } = useRouteChanges('/artistas/listado')
+  const { isDirty, discardAll } = useRouteChanges('/artistas')
 
   const lastToastRef = useRef<number>(0)
 

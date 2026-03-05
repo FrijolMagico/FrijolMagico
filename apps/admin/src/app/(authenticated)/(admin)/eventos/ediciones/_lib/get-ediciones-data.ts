@@ -9,7 +9,7 @@ import { asc } from 'drizzle-orm'
 import type { EdicionEntry, EdicionDiaEntry, LugarEntry } from '../_types'
 import { EVENTO_EDICION_CACHE_TAG, LUGAR_CACHE_TAG } from '../../_constants'
 
-const { eventoEdicion, eventoEdicionDia } = events
+const { eventEdition, eventEditionDay } = events
 const { place } = core
 
 export async function getEdiciones(): Promise<{
@@ -21,13 +21,13 @@ export async function getEdiciones(): Promise<{
 
   const edicionesResults = await db
     .select()
-    .from(eventoEdicion)
-    .orderBy(asc(eventoEdicion.createdAt))
+    .from(eventEdition)
+    .orderBy(asc(eventEdition.createdAt))
 
   const diasResults = await db
     .select()
-    .from(eventoEdicionDia)
-    .orderBy(asc(eventoEdicionDia.fecha))
+    .from(eventEditionDay)
+    .orderBy(asc(eventEditionDay.fecha))
 
   if (edicionesResults === undefined || diasResults === undefined) return null
 

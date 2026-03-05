@@ -8,9 +8,9 @@ import {
 } from 'drizzle-orm/sqlite-core'
 
 /**
- * Artista Estado - Catálogo de estados de artistas
+ * Artist Status - Catalog of artist statuses
  */
-export const artistaEstado = sqliteTable('artista_estado', {
+export const artistStatus = sqliteTable('artista_estado', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   slug: text('slug').notNull().unique(),
   createdAt: text('created_at')
@@ -22,16 +22,16 @@ export const artistaEstado = sqliteTable('artista_estado', {
 })
 
 /**
- * Artista - Artistas registrados en el sistema
+ * Artist - Artists registered in the system
  */
-export const artista = sqliteTable(
+export const artist = sqliteTable(
   'artista',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
     estadoId: integer('estado_id')
       .notNull()
       .default(1)
-      .references(() => artistaEstado.id),
+      .references(() => artistStatus.id),
     nombre: text('nombre'),
     pseudonimo: text('pseudonimo').notNull().unique(),
     slug: text('slug').notNull().unique(),
@@ -40,6 +40,8 @@ export const artista = sqliteTable(
     rrss: text('rrss'),
     ciudad: text('ciudad'),
     pais: text('pais'),
+    telefono: text('telefono'),
+    deletedAt: text('deleted_at'),
     createdAt: text('created_at')
       .notNull()
       .default(sql`CURRENT_TIMESTAMP`),
@@ -48,28 +50,30 @@ export const artista = sqliteTable(
       .default(sql`CURRENT_TIMESTAMP`)
   },
   (table) => [
-    uniqueIndex('idx_artista_slug').on(table.slug),
-    uniqueIndex('idx_artista_correo_pseudonimo')
+    uniqueIndex('idx_artist_slug').on(table.slug),
+    uniqueIndex('idx_artist_correo_pseudonimo')
       .on(table.correo, table.pseudonimo)
       .where(sql`${table.correo} IS NOT NULL`),
-    index('idx_artista_estado').on(table.estadoId)
+    index('idx_artist_estado').on(table.estadoId),
+    index('idx_artist_deleted_at').on(table.deletedAt)
   ]
 )
 
 /**
- * Artista Imagen - Imágenes asociadas a artistas
+ * Artist Image - Images associated to artists
  */
-export const artistaImagen = sqliteTable(
+export const artistImage = sqliteTable(
   'artista_imagen',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
     artistaId: integer('artista_id')
       .notNull()
-      .references(() => artista.id),
+      .references(() => artist.id),
     imagenUrl: text('imagen_url').notNull(),
     tipo: text('tipo', { enum: ['avatar', 'galeria'] }).notNull(),
     orden: integer('orden').notNull().default(1),
     metadata: text('metadata'),
+    deletedAt: text('deleted_at'),
     createdAt: text('created_at')
       .notNull()
       .default(sql`CURRENT_TIMESTAMP`),
@@ -78,21 +82,22 @@ export const artistaImagen = sqliteTable(
       .default(sql`CURRENT_TIMESTAMP`)
   },
   (table) => [
-    index('idx_artista_imagen_artista').on(table.artistaId),
-    index('idx_artista_imagen_artista_tipo').on(table.artistaId, table.tipo)
+    index('idx_artist_image_artista').on(table.artistaId),
+    index('idx_artist_image_artista_tipo').on(table.artistaId, table.tipo),
+    index('idx_artist_image_deleted_at').on(table.deletedAt)
   ]
 )
 
 /**
- * Artista Historial - Historial de cambios de artistas
+ * Artist History - Change history of artists
  */
-export const artistaHistorial = sqliteTable(
+export const artistHistory = sqliteTable(
   'artista_historial',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
     artistaId: integer('artista_id')
       .notNull()
-      .references(() => artista.id),
+      .references(() => artist.id),
     pseudonimo: text('pseudonimo'),
     correo: text('correo'),
     rrss: text('rrss'),
@@ -105,30 +110,31 @@ export const artistaHistorial = sqliteTable(
     notas: text('notas')
   },
   (table) => [
-    uniqueIndex('uq_artista_historial_orden').on(table.artistaId, table.orden),
-    index('idx_artista_historial_artista').on(table.artistaId),
-    index('idx_artista_historial_pseudonimo').on(table.pseudonimo),
-    index('idx_artista_historial_orden').on(table.artistaId, table.orden)
+    uniqueIndex('uq_artist_history_orden').on(table.artistaId, table.orden),
+    index('idx_artist_history_artista').on(table.artistaId),
+    index('idx_artist_history_pseudonimo').on(table.pseudonimo),
+    index('idx_artist_history_orden').on(table.artistaId, table.orden)
   ]
 )
 
 /**
- * Catalogo Artista - Artistas en el catálogo público
+ * Catalog Artist - Artists in the public catalog
  */
-export const catalogoArtista = sqliteTable(
+export const catalogArtist = sqliteTable(
   'catalogo_artista',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
     artistaId: integer('artista_id')
       .notNull()
       .unique()
-      .references(() => artista.id),
+      .references(() => artist.id),
     orden: text('orden').notNull(),
     destacado: integer('destacado', { mode: 'boolean' })
       .notNull()
       .default(false),
     activo: integer('activo', { mode: 'boolean' }).notNull().default(true),
     descripcion: text('descripcion'),
+    deletedAt: text('deleted_at'),
     createdAt: text('created_at')
       .notNull()
       .default(sql`CURRENT_TIMESTAMP`),
@@ -137,16 +143,17 @@ export const catalogoArtista = sqliteTable(
       .default(sql`CURRENT_TIMESTAMP`)
   },
   (table) => [
-    index('idx_catalogo_artista_orden').on(table.orden),
-    index('idx_catalogo_artista_activo').on(table.activo),
-    index('idx_catalogo_artista_destacado').on(table.destacado)
+    index('idx_catalog_artist_orden').on(table.orden),
+    index('idx_catalog_artist_activo').on(table.activo),
+    index('idx_catalog_artist_destacado').on(table.destacado),
+    index('idx_catalog_artist_deleted_at').on(table.deletedAt)
   ]
 )
 
 /**
- * Agrupacion - Agrupaciones de artistas
+ * Collective - Artist groupings
  */
-export const agrupacion = sqliteTable('agrupacion', {
+export const collective = sqliteTable('agrupacion', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   nombre: text('nombre').unique().notNull(),
   descripcion: text('descripcion'),

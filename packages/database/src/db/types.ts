@@ -8,31 +8,30 @@ import {
 } from './schema/core'
 
 import {
-  evento,
-  eventoEdicion,
-  eventoEdicionMetrica,
-  eventoEdicionPostulacion,
-  eventoEdicionSnapshot
+  event,
+  eventEdition,
+  eventEditionMetric,
+  eventEditionApplication,
+  eventEditionSnapshot,
+  eventEditionDay
 } from './schema/events'
 
-import { eventoEdicionDia } from './schema/events'
-
 import {
-  actividad,
-  eventoEdicionParticipante,
-  modoIngreso,
-  participanteActividad,
-  participanteExposicion,
-  tipoActividad
+  activity,
+  eventEditionParticipant,
+  admissionMode,
+  participantActivity,
+  participantExhibition,
+  activityType
 } from './schema/participations'
 
 import {
-  agrupacion,
-  artista,
-  artistaEstado,
-  artistaHistorial,
-  artistaImagen,
-  catalogoArtista
+  collective,
+  artist,
+  artistStatus,
+  artistHistory,
+  artistImage,
+  catalogArtist
 } from './schema/artist'
 
 import { account, session, user, verification } from './schema/auth'
@@ -41,105 +40,105 @@ import { account, session, user, verification } from './schema/auth'
 // Core Types
 // ============================================
 
-export type Organizacion = InferSelectModel<typeof organization>
-export type NewOrganizacion = InferInsertModel<typeof organization>
+export type Organization = InferSelectModel<typeof organization>
+export type NewOrganization = InferInsertModel<typeof organization>
 
-export type OrganizacionEquipo = InferSelectModel<typeof organizationMember>
-export type NewOrganizacionEquipo = InferInsertModel<typeof organizationMember>
+export type OrganizationMember = InferSelectModel<typeof organizationMember>
+export type NewOrganizationMember = InferInsertModel<typeof organizationMember>
 
-export type Lugar = InferSelectModel<typeof place>
-export type NewLugar = InferInsertModel<typeof place>
+export type Place = InferSelectModel<typeof place>
+export type NewPlace = InferInsertModel<typeof place>
 
-export type Disciplina = InferSelectModel<typeof discipline>
-export type NewDisciplina = InferInsertModel<typeof discipline>
-
-// ============================================
-// Artista Types
-// ============================================
-
-export type ArtistaEstado = InferSelectModel<typeof artistaEstado>
-export type NewArtistaEstado = InferInsertModel<typeof artistaEstado>
-
-export type Artista = InferSelectModel<typeof artista>
-export type NewArtista = InferInsertModel<typeof artista>
-
-export type ArtistaImagen = InferSelectModel<typeof artistaImagen>
-export type NewArtistaImagen = InferInsertModel<typeof artistaImagen>
-
-export type ArtistaHistorial = InferSelectModel<typeof artistaHistorial>
-export type NewArtistaHistorial = InferInsertModel<typeof artistaHistorial>
-
-export type CatalogoArtista = InferSelectModel<typeof catalogoArtista>
-export type NewCatalogoArtista = InferInsertModel<typeof catalogoArtista>
-
-export type Agrupacion = InferSelectModel<typeof agrupacion>
-export type NewAgrupacion = InferInsertModel<typeof agrupacion>
+export type Discipline = InferSelectModel<typeof discipline>
+export type NewDiscipline = InferInsertModel<typeof discipline>
 
 // ============================================
-// Evento Types
+// Artist Types
 // ============================================
 
-export type Evento = InferSelectModel<typeof evento>
-export type NewEvento = InferInsertModel<typeof evento>
+export type ArtistStatus = InferSelectModel<typeof artistStatus>
+export type NewArtistStatus = InferInsertModel<typeof artistStatus>
 
-export type EventoEdicion = InferSelectModel<typeof eventoEdicion>
-export type NewEventoEdicion = InferInsertModel<typeof eventoEdicion>
+export type Artist = InferSelectModel<typeof artist>
+export type NewArtist = InferInsertModel<typeof artist>
 
-export type EventoEdicionDia = InferSelectModel<typeof eventoEdicionDia>
-export type NewEventoEdicionDia = InferInsertModel<typeof eventoEdicionDia>
+export type ArtistImage = InferSelectModel<typeof artistImage>
+export type NewArtistImage = InferInsertModel<typeof artistImage>
 
-export type EventoEdicionMetrica = InferSelectModel<typeof eventoEdicionMetrica>
-export type NewEventoEdicionMetrica = InferInsertModel<
-  typeof eventoEdicionMetrica
+export type ArtistHistory = InferSelectModel<typeof artistHistory>
+export type NewArtistHistory = InferInsertModel<typeof artistHistory>
+
+export type CatalogArtist = InferSelectModel<typeof catalogArtist>
+export type NewCatalogArtist = InferInsertModel<typeof catalogArtist>
+
+export type Collective = InferSelectModel<typeof collective>
+export type NewCollective = InferInsertModel<typeof collective>
+
+// ============================================
+// Event Types
+// ============================================
+
+export type Event = InferSelectModel<typeof event>
+export type NewEvent = InferInsertModel<typeof event>
+
+export type EventEdition = InferSelectModel<typeof eventEdition>
+export type NewEventEdition = InferInsertModel<typeof eventEdition>
+
+export type EventEditionDay = InferSelectModel<typeof eventEditionDay>
+export type NewEventEditionDay = InferInsertModel<typeof eventEditionDay>
+
+export type EventEditionMetric = InferSelectModel<typeof eventEditionMetric>
+export type NewEventEditionMetric = InferInsertModel<
+  typeof eventEditionMetric
 >
 
-export type EventoEdicionSnapshot = InferSelectModel<
-  typeof eventoEdicionSnapshot
+export type EventEditionSnapshot = InferSelectModel<
+  typeof eventEditionSnapshot
 >
-export type NewEventoEdicionSnapshot = InferInsertModel<
-  typeof eventoEdicionSnapshot
+export type NewEventEditionSnapshot = InferInsertModel<
+  typeof eventEditionSnapshot
 >
 
-export type EventoEdicionPostulacion = InferSelectModel<
-  typeof eventoEdicionPostulacion
+export type EventEditionApplication = InferSelectModel<
+  typeof eventEditionApplication
 >
-export type NewEventoEdicionPostulacion = InferInsertModel<
-  typeof eventoEdicionPostulacion
+export type NewEventEditionApplication = InferInsertModel<
+  typeof eventEditionApplication
 >
 
 // ============================================
-// Participante Types
+// Participant Types
 // ============================================
 
-export type TipoActividad = InferSelectModel<typeof tipoActividad>
-export type NewTipoActividad = InferInsertModel<typeof tipoActividad>
+export type ActivityType = InferSelectModel<typeof activityType>
+export type NewActivityType = InferInsertModel<typeof activityType>
 
-export type ModoIngreso = InferSelectModel<typeof modoIngreso>
-export type NewModoIngreso = InferInsertModel<typeof modoIngreso>
+export type AdmissionMode = InferSelectModel<typeof admissionMode>
+export type NewAdmissionMode = InferInsertModel<typeof admissionMode>
 
-export type EventoEdicionParticipante = InferSelectModel<
-  typeof eventoEdicionParticipante
+export type EventEditionParticipant = InferSelectModel<
+  typeof eventEditionParticipant
 >
-export type NewEventoEdicionParticipante = InferInsertModel<
-  typeof eventoEdicionParticipante
->
-
-export type ParticipanteExposicion = InferSelectModel<
-  typeof participanteExposicion
->
-export type NewParticipanteExposicion = InferInsertModel<
-  typeof participanteExposicion
+export type NewEventEditionParticipant = InferInsertModel<
+  typeof eventEditionParticipant
 >
 
-export type ParticipanteActividad = InferSelectModel<
-  typeof participanteActividad
+export type ParticipantExhibition = InferSelectModel<
+  typeof participantExhibition
 >
-export type NewParticipanteActividad = InferInsertModel<
-  typeof participanteActividad
+export type NewParticipantExhibition = InferInsertModel<
+  typeof participantExhibition
 >
 
-export type Actividad = InferSelectModel<typeof actividad>
-export type NewActividad = InferInsertModel<typeof actividad>
+export type ParticipantActivity = InferSelectModel<
+  typeof participantActivity
+>
+export type NewParticipantActivity = InferInsertModel<
+  typeof participantActivity
+>
+
+export type Activity = InferSelectModel<typeof activity>
+export type NewActivity = InferInsertModel<typeof activity>
 
 // ============================================
 // Auth Types

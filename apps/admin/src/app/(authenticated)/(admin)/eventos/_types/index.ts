@@ -1,6 +1,6 @@
-import type { Evento } from '@frijolmagico/database/orm'
+import type { Event } from '@frijolmagico/database/orm'
 
-export type EventoEntry = Omit<Evento, 'id' | 'organizacionId'> & {
+export type EventoEntry = Omit<Event, 'id' | 'organizacionId'> & {
   id: string
   organizacionId: number
 }

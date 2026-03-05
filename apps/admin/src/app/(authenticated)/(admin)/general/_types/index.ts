@@ -1,7 +1,10 @@
-import { Organizacion, OrganizacionEquipo } from '@frijolmagico/database/orm'
+import type {
+  Organization as RawOrg,
+  OrganizationMember
+} from '@frijolmagico/database/orm'
 
-export type RawOrganization = Organizacion
-export type RawTeamMember = OrganizacionEquipo
+export type RawOrganization = RawOrg
+export type RawTeamMember = OrganizationMember
 
 export type Organization = Omit<RawOrganization, 'id'> & {
   id: string
@@ -21,5 +24,5 @@ export type TeamMember = {
 export interface UpdateOrganizationResult {
   success: boolean
   error?: string
-  data?: Organizacion
+  data?: RawOrg
 }
