@@ -1,121 +1,77 @@
 import { z } from 'zod'
+import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
+import { core, events } from '@frijolmagico/database/schema'
 
-/**
- * Schema Zod para la tabla evento_edicion (server validation)
- * Mapea desde Drizzle schema (packages/database/src/db/schema/events.ts)
- */
-export const edicionSchema = z.object({
-  id: z.number().int().positive().optional(), // Optional for inserts (auto-increment)
-  eventoId: z.coerce
-    .number()
-    .int()
-    .positive({ error: 'eventoId debe ser un entero positivo' }),
-  nombre: z.string().optional(),
-  numeroEdicion: z
-    .string()
-    .min(1, { error: 'El número de edición es obligatorio' }),
-  slug: z.string().min(1, { error: 'El slug es obligatorio' }),
-  posterUrl: z.string().optional()
+const { eventEdition, eventEditionDay } = events
+const { place } = core
+
+export const edicionInsertSchema = createInsertSchema(eventEdition, {
+  eventoId: () => z.coerce.number().int().positive(),
+  numeroEdicion: (s) =>
+    s.min(1, { message: 'El número de edición es obligatorio' }),
+  slug: (s) => s.min(1, { message: 'El slug es obligatorio' })
 })
 
-/**
- * Schema Zod para el formulario de edición (client validation)
- * Versión simplificada para UI forms
- */
-export const edicionFormSchema = z.object({
-  eventoId: z.string().min(1, { error: 'El evento es obligatorio' }),
-  nombre: z.string().optional(),
-  numeroEdicion: z
-    .string()
-    .min(1, { error: 'El número de edición es obligatorio' }),
-  posterUrl: z.string().optional()
-})
+export const edicionUpdateSchema = createUpdateSchema(eventEdition)
 
-/**
- * Schema Zod para la tabla evento_edicion_dia (server validation)
- * Mapea desde Drizzle schema (packages/database/src/db/schema/events.ts)
- */
-export const edicionDiaSchema = z.object({
-  id: z.number().int().positive().optional(),
-  eventoEdicionId: z.union([
-    z
-      .number()
-      .int()
-      .positive({ error: 'eventoEdicionId debe ser un entero positivo' }),
-    z.string().min(1)
-  ]),
-  lugarId: z
-    .union([
-      z
-        .number()
-        .int()
-        .positive({ error: 'lugarId debe ser un entero positivo' }),
-      z.string().min(1)
-    ])
-    .optional(),
-  fecha: z.string({ error: 'La fecha es obligatoria' }),
-  horaInicio: z.string({ error: 'La hora de inicio es obligatoria' }),
-  horaFin: z.string({ error: 'La hora de fin es obligatoria' }),
-  modalidad: z.enum(['presencial', 'online', 'hibrido'], {
-    error: "La modalidad debe ser 'presencial', 'online' o 'hibrido'"
+export const edicionSchema = edicionInsertSchema
+
+export const edicionFormSchema = edicionInsertSchema
+  .pick({
+    eventoId: true,
+    nombre: true,
+    numeroEdicion: true,
+    posterUrl: true
   })
+  .extend({
+    eventoId: z.string().min(1, { error: 'El evento es obligatorio' })
+  })
+
+export const edicionDiaInsertSchema = createInsertSchema(eventEditionDay, {
+  eventoEdicionId: () => z.coerce.number().int().positive(),
+  lugarId: (s) => s.optional(),
+  fecha: (s) => s.min(1, { message: 'La fecha es obligatoria' }),
+  horaInicio: (s) => s.min(1, { message: 'La hora de inicio es obligatoria' }),
+  horaFin: (s) => s.min(1, { message: 'La hora de fin es obligatoria' })
 })
 
-/**
- * Schema Zod para el formulario de día de edición (client validation)
- * Versión simplificada para UI forms
- */
-export const edicionDiaFormSchema = z.object({
-  fecha: z.string({ error: 'La fecha es obligatoria' }),
-  horaInicio: z.string({ error: 'La hora de inicio es obligatoria' }),
-  horaFin: z.string({ error: 'La hora de fin es obligatoria' }),
-  modalidad: z.enum(['presencial', 'online', 'hibrido'], {
-    error: "La modalidad debe ser 'presencial', 'online' o 'hibrido'"
-  }),
-  lugarId: z
-    .number()
-    .int()
-    .positive({ error: 'lugarId debe ser un entero positivo' })
-    .optional()
-})
+export const edicionDiaUpdateSchema = createUpdateSchema(eventEditionDay)
 
-/**
- * Schema Zod para la tabla lugar (server validation)
- * Mapea desde Drizzle schema (packages/database/src/db/schema/core.ts)
- */
-export const lugarSchema = z.object({
-  id: z.number().int().positive().optional(), // Optional for inserts (auto-increment)
-  nombre: z.string().min(1, { error: 'El nombre es obligatorio' }),
-  direccion: z.string().optional(),
-  ciudad: z.string().optional(),
-  coordenadas: z.string().optional(),
+export const edicionDiaSchema = edicionDiaInsertSchema
+
+export const edicionDiaFormSchema = edicionDiaInsertSchema
+  .omit({ eventoEdicionId: true })
+  .extend({
+    eventoEdicionId: z.string().min(1),
+    lugarId: z.string().optional()
+  })
+
+export const lugarInsertSchema = createInsertSchema(place, {
+  nombre: (s) => s.min(1, { message: 'El nombre es obligatorio' }),
   url: z.url({ message: 'La URL debe ser válida' }).optional()
 })
 
-/**
- * Schema Zod para el formulario de lugar (client validation)
- * Versión simplificada para UI forms
- */
-export const lugarFormSchema = z.object({
-  nombre: z.string().min(1, { error: 'El nombre es obligatorio' }),
-  direccion: z.string().optional(),
-  ciudad: z.string().optional(),
-  coordenadas: z.string().optional(),
-  url: z.url({ message: 'La URL debe ser válida' }).optional()
+export const lugarUpdateSchema = createUpdateSchema(place)
+
+export const lugarSchema = lugarInsertSchema
+
+export const lugarFormSchema = lugarInsertSchema.pick({
+  nombre: true,
+  direccion: true,
+  ciudad: true,
+  coordenadas: true,
+  url: true
 })
 
-/**
- * Tipos TypeScript inferidos desde schemas Zod
- */
-export type EdicionInput = z.infer<typeof edicionSchema>
+export type EdicionInput = z.infer<typeof edicionInsertSchema>
 export type EdicionFormInput = z.infer<typeof edicionFormSchema>
 export type EdicionDiaInput = Omit<
-  z.infer<typeof edicionDiaSchema>,
+  z.infer<typeof edicionDiaInsertSchema>,
   'eventoEdicionId' | 'lugarId'
 > & {
   eventoEdicionId: number
   lugarId?: number
 }
 export type EdicionDiaFormInput = z.infer<typeof edicionDiaFormSchema>
-export type LugarInput = z.infer<typeof lugarSchema>
+export type LugarInput = z.infer<typeof lugarInsertSchema>
 export type LugarFormInput = z.infer<typeof lugarFormSchema>

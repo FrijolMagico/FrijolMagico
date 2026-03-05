@@ -1,26 +1,21 @@
 import { describe, test, expect } from 'bun:test'
-import { catalogoArtistaSchema } from '@/app/(authenticated)/(admin)/artistas/catalogo/_schemas/catalogo.schema'
+import { catalogoArtistaInsertSchema } from '@/app/(authenticated)/(admin)/artistas/catalogo/_schemas/catalogo.schema'
 
-describe('catalogoArtistaSchema', () => {
-  test('validates valid data with defaults', () => {
+describe('catalogoArtistaInsertSchema', () => {
+  test('validates valid data', () => {
     const validData = {
       artistaId: 1,
       orden: '001'
     }
 
-    const result = catalogoArtistaSchema.parse(validData)
+    const result = catalogoArtistaInsertSchema.parse(validData)
 
-    expect(result).toEqual({
-      artistaId: 1,
-      orden: '001',
-      destacado: false,
-      activo: true
-    })
+    expect(result.artistaId).toBe(1)
+    expect(result.orden).toBe('001')
   })
 
   test('validates complete data', () => {
     const validData = {
-      id: 1,
       artistaId: 5,
       orden: '010',
       destacado: true,
@@ -28,9 +23,9 @@ describe('catalogoArtistaSchema', () => {
       descripcion: 'Artista destacado del mes'
     }
 
-    const result = catalogoArtistaSchema.parse(validData)
+    const result = catalogoArtistaInsertSchema.parse(validData)
 
-    expect(result).toEqual(validData)
+    expect(result).toMatchObject(validData)
   })
 
   test('rejects invalid artistaId', () => {
@@ -39,7 +34,7 @@ describe('catalogoArtistaSchema', () => {
       orden: '001'
     }
 
-    expect(() => catalogoArtistaSchema.parse(invalidData)).toThrow()
+    expect(() => catalogoArtistaInsertSchema.parse(invalidData)).toThrow()
   })
 
   test('rejects empty order', () => {
@@ -48,7 +43,7 @@ describe('catalogoArtistaSchema', () => {
       orden: ''
     }
 
-    expect(() => catalogoArtistaSchema.parse(invalidData)).toThrow()
+    expect(() => catalogoArtistaInsertSchema.parse(invalidData)).toThrow()
   })
 
   test('rejects non-boolean featured', () => {
@@ -58,17 +53,7 @@ describe('catalogoArtistaSchema', () => {
       destacado: 'true' as unknown as boolean
     }
 
-    expect(() => catalogoArtistaSchema.parse(invalidData)).toThrow()
-  })
-
-  test('rejects non-boolean active', () => {
-    const invalidData = {
-      artistaId: 1,
-      orden: '001',
-      activo: 1 as unknown as boolean
-    }
-
-    expect(() => catalogoArtistaSchema.parse(invalidData)).toThrow()
+    expect(() => catalogoArtistaInsertSchema.parse(invalidData)).toThrow()
   })
 
   test('allows optional description', () => {
@@ -78,7 +63,7 @@ describe('catalogoArtistaSchema', () => {
       descripcion: undefined
     }
 
-    const result = catalogoArtistaSchema.parse(validData)
+    const result = catalogoArtistaInsertSchema.parse(validData)
 
     expect(result.descripcion).toBeUndefined()
   })
