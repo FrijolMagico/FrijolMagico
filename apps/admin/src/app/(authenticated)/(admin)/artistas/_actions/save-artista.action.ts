@@ -13,11 +13,19 @@ import type {
   IdMapping
 } from '@/shared/push/lib/types'
 import { PUSH_OPERATION_TYPE } from '@/shared/push/lib/types'
+import type {
+  ArtistaInsertInput,
+  ArtistaUpdateInput,
+  ArtistaImagenInsertInput,
+  ArtistaImagenUpdateInput,
+  ArtistaInput,
+  ArtistaImagenInput
+} from '../_schemas/artista.schema'
 import {
-  artistaSchema,
-  artistaImagenSchema,
-  type ArtistaInput,
-  type ArtistaImagenInput
+  artistaInsertSchema,
+  artistaUpdateSchema,
+  artistaImagenInsertSchema,
+  artistaImagenUpdateSchema
 } from '../_schemas/artista.schema'
 import { validateOperationData } from '@/shared/push/lib/validators'
 import { stripUndefined } from '@/shared/lib/utils'
@@ -26,7 +34,8 @@ import {
   logServerError
 } from '@/shared/push/lib/error-handler'
 
-const { artista, artistaImagen } = artist
+const artistTable = artist.artist
+const artistImageTable = artist.artistImage
 
 /**
  * Save artista section changes to database
@@ -77,24 +86,29 @@ export async function saveArtistaAction(
           continue
         } else if (op.type === PUSH_OPERATION_TYPE.DELETE) {
           if (!isTempId(op.entityId)) {
-            await tx.delete(artista).where(eq(artista.id, Number(op.entityId)))
+            await tx
+              .delete(artistTable)
+              .where(eq(artistTable.id, Number(op.entityId)))
           }
         } else {
+          const isUpdate = op.type === PUSH_OPERATION_TYPE.UPDATE
+          const schema = isUpdate ? artistaUpdateSchema : artistaInsertSchema
           const validated = validateOperationData(
             op.data,
-            artistaSchema,
-            op.type === PUSH_OPERATION_TYPE.UPDATE
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            schema as any,
+            isUpdate
           )
           if (!validated.valid || !validated.data) {
             throw new Error(
               validated.errors?.[0]?.message ?? 'Validation failed'
             )
           }
-          const input = validated.data
+          const input = validated.data as Record<string, unknown>
 
           if (isTempId(op.entityId)) {
             const [result] = await tx
-              .insert(artista)
+              .insert(artistTable)
               .values({
                 ...input,
                 id: undefined
@@ -104,9 +118,9 @@ export async function saveArtistaAction(
             mappings.push(createIdMapping(op.entityId, result.id, 'artista'))
           } else {
             await tx
-              .update(artista)
+              .update(artistTable)
               .set(stripUndefined(input))
-              .where(eq(artista.id, Number(op.entityId)))
+              .where(eq(artistTable.id, Number(op.entityId)))
           }
         }
       }
@@ -117,14 +131,19 @@ export async function saveArtistaAction(
         } else if (op.type === PUSH_OPERATION_TYPE.DELETE) {
           if (!isTempId(op.entityId)) {
             await tx
-              .delete(artistaImagen)
-              .where(eq(artistaImagen.id, Number(op.entityId)))
+              .delete(artistImageTable)
+              .where(eq(artistImageTable.id, Number(op.entityId)))
           }
         } else {
-          const validated = validateOperationData(
+          const isImagenUpdate = op.type === PUSH_OPERATION_TYPE.UPDATE
+          const imagenSchema = isImagenUpdate
+            ? artistaImagenUpdateSchema
+            : artistaImagenInsertSchema
+          const validated = validateOperationData<ArtistaImagenInput>(
             op.data,
-            artistaImagenSchema,
-            op.type === PUSH_OPERATION_TYPE.UPDATE
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            imagenSchema as any,
+            isImagenUpdate
           )
           if (!validated.valid || !validated.data) {
             throw new Error(
@@ -148,7 +167,7 @@ export async function saveArtistaAction(
 
           if (isTempId(op.entityId)) {
             const [result] = await tx
-              .insert(artistaImagen)
+              .insert(artistImageTable)
               .values({
                 ...input,
                 artistaId: resolvedArtistaId,
@@ -159,14 +178,14 @@ export async function saveArtistaAction(
             mappings.push(createIdMapping(op.entityId, result.id, 'artista'))
           } else {
             await tx
-              .update(artistaImagen)
+              .update(artistImageTable)
               .set(
                 stripUndefined({
                   ...input,
                   artistaId: resolvedArtistaId
                 })
               )
-              .where(eq(artistaImagen.id, Number(op.entityId)))
+              .where(eq(artistImageTable.id, Number(op.entityId)))
           }
         }
       }

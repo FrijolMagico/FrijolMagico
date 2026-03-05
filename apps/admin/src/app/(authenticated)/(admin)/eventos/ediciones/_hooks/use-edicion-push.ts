@@ -10,9 +10,9 @@ import { useEdicionOperationStore } from '../_store/edicion-ui-store'
 import { useEdicionDiaOperationStore } from '../_store/edicion-dia-ui-store'
 import { useLugarOperationStore } from '../_store/lugar-ui-store'
 import {
-  edicionSchema,
-  edicionDiaSchema,
-  lugarSchema
+  edicionInsertSchema,
+  edicionDiaInsertSchema,
+  lugarInsertSchema
 } from '../_schemas/edicion.schema'
 import { ENTITIES } from '@/shared/lib/database-entities'
 
@@ -31,9 +31,9 @@ export function useEdicionPush() {
       ENTITIES.LUGAR
     ],
     validators: {
-      evento_edicion: edicionSchema,
-      evento_edicion_dia: edicionDiaSchema,
-      lugar: lugarSchema
+      evento_edicion: edicionInsertSchema,
+      evento_edicion_dia: edicionDiaInsertSchema,
+      lugar: lugarInsertSchema
     },
     onSuccess: () => {
       edicionStore.cleanup()

@@ -22,16 +22,16 @@ import {
   logServerError
 } from '@/shared/push/lib/error-handler'
 import {
-  edicionSchema,
-  edicionDiaSchema,
-  lugarSchema,
+  edicionInsertSchema,
+  edicionDiaInsertSchema,
+  lugarInsertSchema,
   type EdicionInput,
   type EdicionDiaInput,
   type LugarInput
 } from '../_schemas/edicion.schema'
 
 const { place } = core
-const { eventoEdicion, eventoEdicionDia } = events
+const { eventEdition, eventEditionDay } = events
 
 function resolveNumberFk(
   value: unknown,
@@ -103,7 +103,7 @@ export async function saveEdicionAction(
 
         const validated = validateOperationData(
           op.data,
-          lugarSchema,
+          lugarInsertSchema,
           op.type === PUSH_OPERATION_TYPE.UPDATE
         )
 
@@ -139,8 +139,8 @@ export async function saveEdicionAction(
         if (op.type === PUSH_OPERATION_TYPE.DELETE) {
           if (!isTempId(op.entityId)) {
             await tx
-              .delete(eventoEdicion)
-              .where(eq(eventoEdicion.id, Number.parseInt(op.entityId, 10)))
+              .delete(eventEdition)
+              .where(eq(eventEdition.id, Number.parseInt(op.entityId, 10)))
           }
           continue
         }
@@ -157,7 +157,7 @@ export async function saveEdicionAction(
 
         const validated = validateOperationData(
           dataWithResolvedEventoId,
-          edicionSchema,
+          edicionInsertSchema,
           op.type === PUSH_OPERATION_TYPE.UPDATE
         )
 
@@ -170,9 +170,9 @@ export async function saveEdicionAction(
         if (isTempId(op.entityId)) {
           const slug = generateEdicionSlug(input.numeroEdicion)
           const [inserted] = await tx
-            .insert(eventoEdicion)
+            .insert(eventEdition)
             .values({ ...input, slug } as EdicionInput)
-            .returning({ id: eventoEdicion.id })
+            .returning({ id: eventEdition.id })
 
           if (inserted) {
             mappings.push(
@@ -188,9 +188,9 @@ export async function saveEdicionAction(
         }
 
         await tx
-          .update(eventoEdicion)
+          .update(eventEdition)
           .set(updateData)
-          .where(eq(eventoEdicion.id, Number.parseInt(op.entityId, 10)))
+          .where(eq(eventEdition.id, Number.parseInt(op.entityId, 10)))
       }
 
       for (const op of diaOps) {
@@ -201,8 +201,8 @@ export async function saveEdicionAction(
         if (op.type === PUSH_OPERATION_TYPE.DELETE) {
           if (!isTempId(op.entityId)) {
             await tx
-              .delete(eventoEdicionDia)
-              .where(eq(eventoEdicionDia.id, Number.parseInt(op.entityId, 10)))
+              .delete(eventEditionDay)
+              .where(eq(eventEditionDay.id, Number.parseInt(op.entityId, 10)))
           }
           continue
         }
@@ -231,7 +231,7 @@ export async function saveEdicionAction(
 
         const validated = validateOperationData(
           dataWithResolvedFks,
-          edicionDiaSchema,
+          edicionDiaInsertSchema,
           op.type === PUSH_OPERATION_TYPE.UPDATE
         )
 
@@ -250,9 +250,9 @@ export async function saveEdicionAction(
 
         if (isTempId(op.entityId)) {
           const [inserted] = await tx
-            .insert(eventoEdicionDia)
+            .insert(eventEditionDay)
             .values(diaInsertData)
-            .returning({ id: eventoEdicionDia.id })
+            .returning({ id: eventEditionDay.id })
 
           if (inserted) {
             mappings.push(
@@ -263,9 +263,9 @@ export async function saveEdicionAction(
         }
 
         await tx
-          .update(eventoEdicionDia)
+          .update(eventEditionDay)
           .set(stripUndefined(diaInsertData))
-          .where(eq(eventoEdicionDia.id, Number.parseInt(op.entityId, 10)))
+          .where(eq(eventEditionDay.id, Number.parseInt(op.entityId, 10)))
       }
     })
 

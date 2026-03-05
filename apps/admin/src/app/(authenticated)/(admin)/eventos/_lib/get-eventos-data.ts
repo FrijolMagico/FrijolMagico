@@ -7,7 +7,7 @@ import { cacheTag } from 'next/cache'
 import type { EventoEntry } from '../_types'
 import { EVENTO_CACHE_TAG } from '../_constants'
 
-const { evento } = events
+const { event: eventTable } = events
 
 export async function getEventos(): Promise<EventoEntry[] | null> {
   'use cache'
@@ -15,9 +15,9 @@ export async function getEventos(): Promise<EventoEntry[] | null> {
 
   const results = await db
     .select()
-    .from(evento)
-    .where(eq(evento.organizacionId, 1))
-    .orderBy(asc(evento.nombre))
+    .from(eventTable)
+    .where(eq(eventTable.organizacionId, 1))
+    .orderBy(asc(eventTable.nombre))
 
   if (results === undefined) return null
 

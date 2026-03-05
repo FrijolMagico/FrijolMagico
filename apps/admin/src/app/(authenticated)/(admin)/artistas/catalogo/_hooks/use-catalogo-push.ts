@@ -7,7 +7,7 @@ import { journalPushSource } from '@/shared/lib/journal-push-source'
 import { useJournalFlushRegistry } from '@/shared/lib/journal-flush-registry'
 import { saveCatalogoAction } from '../_actions/save-catalogo.action'
 import { useCatalogOperationStore } from '../_store/catalog-ui-store'
-import { catalogoArtistaSchema } from '../_schemas/catalogo.schema'
+import { catalogoArtistaInsertSchema } from '../_schemas/catalogo.schema'
 import { ENTITIES } from '@/shared/lib/database-entities'
 
 export function useCatalogoPush() {
@@ -19,7 +19,7 @@ export function useCatalogoPush() {
     executor: saveCatalogoAction,
     section: ENTITIES.CATALOGO_ARTISTA,
     validators: {
-      catalogo_artista: catalogoArtistaSchema
+      catalogo_artista: catalogoArtistaInsertSchema
     },
     onSuccess: () => {
       store.cleanup()

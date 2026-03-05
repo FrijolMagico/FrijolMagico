@@ -9,7 +9,7 @@ import { asc, eq } from 'drizzle-orm'
 import type { ArtistEntry } from '../_types'
 import { ARTISTA_CACHE_TAG } from '../_constants'
 
-const { artista, artistaEstado } = artist
+const { artist: artistTable, artistStatus } = artist
 
 export async function getArtists(): Promise<ArtistEntry[] | null> {
   'use cache'
@@ -17,12 +17,12 @@ export async function getArtists(): Promise<ArtistEntry[] | null> {
 
   const results = await db
     .select({
-      artista: artista,
-      estadoSlug: artistaEstado.slug
+      artista: artistTable,
+      estadoSlug: artistStatus.slug
     })
-    .from(artista)
-    .leftJoin(artistaEstado, eq(artista.estadoId, artistaEstado.id))
-    .orderBy(asc(artista.pseudonimo))
+    .from(artistTable)
+    .leftJoin(artistStatus, eq(artistTable.estadoId, artistStatus.id))
+    .orderBy(asc(artistTable.pseudonimo))
 
   if (results === undefined || results.length === 0) return null
 

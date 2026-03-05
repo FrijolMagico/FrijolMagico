@@ -20,8 +20,8 @@ import {
 import { createIdMapping, isTempId } from '@/shared/push/lib/id-mapper'
 import { validateOperationData } from '@/shared/push/lib/validators'
 import {
-  catalogoArtistaSchema,
-  type CatalogoArtistaInput
+  catalogoArtistaInsertSchema,
+  type CatalogoArtistaInsertInput
 } from '../_schemas/catalogo.schema'
 import { stripUndefined } from '@/shared/lib/utils'
 
@@ -51,15 +51,15 @@ export async function saveCatalogoAction(
         } else if (op.type === PUSH_OPERATION_TYPE.DELETE) {
           if (!isTempId(op.entityId)) {
             await tx
-              .delete(artist.catalogoArtista)
+              .delete(artist.catalogArtist)
               .where(
-                eq(artist.catalogoArtista.id, Number.parseInt(op.entityId, 10))
+                eq(artist.catalogArtist.id, Number.parseInt(op.entityId, 10))
               )
           }
         } else {
           const validated = validateOperationData(
             op.data,
-            catalogoArtistaSchema,
+            catalogoArtistaInsertSchema,
             op.type === PUSH_OPERATION_TYPE.UPDATE
           )
           if (!validated.valid || !validated.data) {
@@ -71,9 +71,9 @@ export async function saveCatalogoAction(
 
           if (isTempId(op.entityId)) {
             const [inserted] = await tx
-              .insert(artist.catalogoArtista)
-              .values(input as CatalogoArtistaInput)
-              .returning({ id: artist.catalogoArtista.id })
+              .insert(artist.catalogArtist)
+              .values(input as CatalogoArtistaInsertInput)
+              .returning({ id: artist.catalogArtist.id })
 
             if (inserted) {
               mappings.push(
@@ -82,10 +82,10 @@ export async function saveCatalogoAction(
             }
           } else {
             await tx
-              .update(artist.catalogoArtista)
+              .update(artist.catalogArtist)
               .set(stripUndefined(input))
               .where(
-                eq(artist.catalogoArtista.id, Number.parseInt(op.entityId, 10))
+                eq(artist.catalogArtist.id, Number.parseInt(op.entityId, 10))
               )
           }
         }
