@@ -3,7 +3,7 @@
 import { updateTag } from 'next/cache'
 import { CATALOG_CACHE_TAG } from '../_constants'
 import { ARTISTA_CACHE_TAG } from '../../_constants'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { isNotDeleted } from '@frijolmagico/database/filters'
@@ -53,7 +53,7 @@ export async function saveCatalogoAction(
           if (!isTempId(op.entityId)) {
             await tx
               .update(artist.catalogArtist)
-              .set({ deletedAt: new Date().toISOString() })
+              .set({ deletedAt: sql`CURRENT_TIMESTAMP` })
               .where(
                 and(
                   eq(artist.catalogArtist.id, Number.parseInt(op.entityId, 10)),

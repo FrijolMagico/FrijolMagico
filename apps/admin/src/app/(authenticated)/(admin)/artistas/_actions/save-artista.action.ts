@@ -4,7 +4,7 @@ import { updateTag } from 'next/cache'
 import { ARTISTA_CACHE_TAG } from '../_constants'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 import { isNotDeleted } from '@frijolmagico/database/filters'
 import { requireAuth } from '@/lib/auth/utils'
 import { createIdMapping, isTempId } from '@/shared/push/lib/id-mapper'
@@ -89,7 +89,7 @@ export async function saveArtistaAction(
           if (!isTempId(op.entityId)) {
             await tx
               .update(artistTable)
-              .set({ deletedAt: new Date().toISOString() })
+              .set({ deletedAt: sql`CURRENT_TIMESTAMP` })
               .where(
                 and(
                   eq(artistTable.id, Number(op.entityId)),
@@ -139,7 +139,7 @@ export async function saveArtistaAction(
           if (!isTempId(op.entityId)) {
             await tx
               .update(artistImageTable)
-              .set({ deletedAt: new Date().toISOString() })
+              .set({ deletedAt: sql`CURRENT_TIMESTAMP` })
               .where(
                 and(
                   eq(artistImageTable.id, Number(op.entityId)),
