@@ -7,7 +7,7 @@ import {
 } from 'drizzle-orm/sqlite-core'
 
 /**
- * Organizacion - Entidad organizadora
+ * Organization - Organizing entity
  */
 export const organization = sqliteTable('organizacion', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -24,7 +24,7 @@ export const organization = sqliteTable('organizacion', {
 })
 
 /**
- * Organizacion Equipo - Miembros del equipo de la organización
+ * Organization Member - Team members of the organization
  */
 export const organizationMember = sqliteTable('organization_member', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -46,7 +46,7 @@ export const organizationMember = sqliteTable('organization_member', {
 })
 
 /**
- * Lugar - Ubicaciones donde se realizan eventos
+ * Place - Locations where events take place
  */
 export const place = sqliteTable(
   'lugar',
@@ -70,7 +70,7 @@ export const place = sqliteTable(
 )
 
 /**
- * Disciplina - Catálogo de disciplinas artísticas
+ * Discipline - Catalog of artistic disciplines
  */
 export const discipline = sqliteTable('disciplina', {
   id: integer('id').primaryKey({ autoIncrement: true }),

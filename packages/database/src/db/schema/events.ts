@@ -11,9 +11,9 @@ import {
 import { discipline, place, organization } from './core'
 
 /**
- * Evento - Eventos organizados
+ * Event - Organized events
  */
-export const evento = sqliteTable(
+export const event = sqliteTable(
   'evento',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
@@ -33,17 +33,17 @@ export const evento = sqliteTable(
       .notNull()
       .default(sql`CURRENT_TIMESTAMP`)
   },
-  (table) => [uniqueIndex('idx_evento_slug').on(table.slug)]
+  (table) => [uniqueIndex('idx_event_slug').on(table.slug)]
 )
 
 /**
- * Evento Edicion - Ediciones de un evento
+ * Event Edition - Editions of an event
  */
-export const eventoEdicion = sqliteTable(
+export const eventEdition = sqliteTable(
   'evento_edicion',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
-    eventoId: integer('evento_id').references(() => evento.id, {
+    eventoId: integer('evento_id').references(() => event.id, {
       onDelete: 'set null'
     }),
     nombre: text('nombre'),
@@ -58,25 +58,25 @@ export const eventoEdicion = sqliteTable(
       .default(sql`CURRENT_TIMESTAMP`)
   },
   (table) => [
-    uniqueIndex('idx_evento_edicion_numero').on(
+    uniqueIndex('idx_event_edition_numero').on(
       table.eventoId,
       table.numeroEdicion
     ),
-    uniqueIndex('idx_evento_edicion_slug').on(table.eventoId, table.slug),
-    index('idx_evento_edicion_evento').on(table.eventoId)
+    uniqueIndex('idx_event_edition_slug').on(table.eventoId, table.slug),
+    index('idx_event_edition_evento').on(table.eventoId)
   ]
 )
 
 /**
- * Evento Edicion Dia - Días de una edición de evento
+ * Event Edition Day - Days of an event edition
  */
-export const eventoEdicionDia = sqliteTable(
+export const eventEditionDay = sqliteTable(
   'evento_edicion_dia',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
     eventoEdicionId: integer('evento_edicion_id')
       .notNull()
-      .references(() => eventoEdicion.id, { onDelete: 'cascade' }),
+      .references(() => eventEdition.id, { onDelete: 'cascade' }),
     lugarId: integer('lugar_id').references(() => place.id, {
       onDelete: 'set null'
     }),
@@ -94,22 +94,22 @@ export const eventoEdicionDia = sqliteTable(
       .default(sql`CURRENT_TIMESTAMP`)
   },
   (table) => [
-    uniqueIndex('uq_evento_edicion_dia').on(table.eventoEdicionId, table.fecha),
-    index('idx_evento_edicion_dia_edicion').on(table.eventoEdicionId),
-    index('idx_evento_edicion_dia_fecha').on(table.fecha),
-    index('idx_evento_edicion_dia_lugar').on(table.lugarId)
+    uniqueIndex('uq_event_edition_day').on(table.eventoEdicionId, table.fecha),
+    index('idx_event_edition_day_edicion').on(table.eventoEdicionId),
+    index('idx_event_edition_day_fecha').on(table.fecha),
+    index('idx_event_edition_day_lugar').on(table.lugarId)
   ]
 )
 
 /**
- * Evento Edicion Metrica - Métricas de ediciones de eventos
+ * Event Edition Metric - Metrics of event editions
  */
-export const eventoEdicionMetrica = sqliteTable(
+export const eventEditionMetric = sqliteTable(
   'evento_edicion_metrica',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
     eventoEdicionId: integer('evento_edicion_id').references(
-      () => eventoEdicion.id,
+      () => eventEdition.id,
       {
         onDelete: 'set null'
       }
@@ -124,22 +124,20 @@ export const eventoEdicionMetrica = sqliteTable(
     notas: text('notas')
   },
   (table) => [
-    index('idx_evento_edicion_metrica_evento_edicion').on(
-      table.eventoEdicionId
-    ),
-    index('idx_evento_edicion_metrica_fecha').on(table.fechaRegistro)
+    index('idx_event_edition_metric_evento_edicion').on(table.eventoEdicionId),
+    index('idx_event_edition_metric_fecha').on(table.fechaRegistro)
   ]
 )
 
 /**
- * Evento Edicion Snapshot - Snapshots de ediciones de eventos
+ * Event Edition Snapshot - Snapshots of event editions
  */
-export const eventoEdicionSnapshot = sqliteTable(
+export const eventEditionSnapshot = sqliteTable(
   'evento_edicion_snapshot',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
     eventoEdicionId: integer('evento_edicion_id').references(
-      () => eventoEdicion.id,
+      () => eventEdition.id,
       {
         onDelete: 'set null'
       }
@@ -153,22 +151,20 @@ export const eventoEdicionSnapshot = sqliteTable(
   },
   (table) => [
     uniqueIndex('uq_snapshot').on(table.eventoEdicionId, table.tipo),
-    index('idx_evento_edicion_snapshot_evento_edicion').on(
-      table.eventoEdicionId
-    )
+    index('idx_event_edition_snapshot_evento_edicion').on(table.eventoEdicionId)
   ]
 )
 
 /**
- * Evento Edicion Postulacion - Postulaciones a ediciones de eventos
+ * Event Edition Application - Applications to event editions
  */
-export const eventoEdicionPostulacion = sqliteTable(
+export const eventEditionApplication = sqliteTable(
   'evento_edicion_postulacion',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
     eventoEdicionId: integer('evento_edicion_id')
       .notNull()
-      .references(() => eventoEdicion.id, { onDelete: 'cascade' }),
+      .references(() => eventEdition.id, { onDelete: 'cascade' }),
     nombre: text('nombre').notNull(),
     pseudonimo: text('pseudonimo'),
     correo: text('correo'),
@@ -190,7 +186,7 @@ export const eventoEdicionPostulacion = sqliteTable(
       .default(sql`CURRENT_TIMESTAMP`)
   },
   (table) => [
-    index('idx_postulacion_evento_edicion').on(table.eventoEdicionId),
-    index('idx_postulacion_disciplina').on(table.disciplinaId)
+    index('idx_application_evento_edicion').on(table.eventoEdicionId),
+    index('idx_application_disciplina').on(table.disciplinaId)
   ]
 )

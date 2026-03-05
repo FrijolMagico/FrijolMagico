@@ -8,301 +8,300 @@ import {
 } from './schema/core'
 
 import {
-  evento,
-  eventoEdicion,
-  eventoEdicionMetrica,
-  eventoEdicionPostulacion,
-  eventoEdicionSnapshot
+  event,
+  eventEdition,
+  eventEditionMetric,
+  eventEditionApplication,
+  eventEditionSnapshot,
+  eventEditionDay
 } from './schema/events'
 
-import { eventoEdicionDia } from './schema/events'
-
 import {
-  actividad,
-  eventoEdicionParticipante,
-  modoIngreso,
-  participanteActividad,
-  participanteExposicion,
-  tipoActividad
+  activity,
+  eventEditionParticipant,
+  admissionMode,
+  participantActivity,
+  participantExhibition,
+  activityType
 } from './schema/participations'
 
 import {
-  agrupacion,
-  artista,
-  artistaEstado,
-  artistaHistorial,
-  artistaImagen,
-  catalogoArtista
+  collective,
+  artist,
+  artistStatus,
+  artistHistory,
+  artistImage,
+  catalogArtist
 } from './schema/artist'
 
 // ============================================
 // Core Relations
 // ============================================
 
-export const organizacionRelations = relations(organization, ({ many }) => ({
+export const organizationRelations = relations(organization, ({ many }) => ({
   equipo: many(organizationMember),
-  eventos: many(evento)
+  eventos: many(event)
 }))
 
 export const organizationMemberRelations = relations(
   organizationMember,
   ({ one }) => ({
-    organizacion: one(organization, {
+    organization: one(organization, {
       fields: [organizationMember.organizationId],
       references: [organization.id]
     })
   })
 )
 
-export const lugarRelations = relations(place, ({ many }) => ({
-  diasEvento: many(eventoEdicionDia)
+export const placeRelations = relations(place, ({ many }) => ({
+  diasEvento: many(eventEditionDay)
 }))
 
-export const disciplinaRelations = relations(discipline, ({ many }) => ({
-  postulaciones: many(eventoEdicionPostulacion),
-  exposiciones: many(participanteExposicion)
+export const disciplineRelations = relations(discipline, ({ many }) => ({
+  postulaciones: many(eventEditionApplication),
+  exposiciones: many(participantExhibition)
 }))
 
 // ============================================
-// Artista Relations
+// Artist Relations
 // ============================================
 
-export const artistaEstadoRelations = relations(artistaEstado, ({ many }) => ({
-  artistas: many(artista)
+export const artistStatusRelations = relations(artistStatus, ({ many }) => ({
+  artists: many(artist)
 }))
 
-export const artistaRelations = relations(artista, ({ one, many }) => ({
-  estado: one(artistaEstado, {
-    fields: [artista.estadoId],
-    references: [artistaEstado.id]
+export const artistRelations = relations(artist, ({ one, many }) => ({
+  estado: one(artistStatus, {
+    fields: [artist.estadoId],
+    references: [artistStatus.id]
   }),
-  imagenes: many(artistaImagen),
-  historial: many(artistaHistorial),
-  catalogoArtista: one(catalogoArtista, {
-    fields: [artista.id],
-    references: [catalogoArtista.artistaId]
+  imagenes: many(artistImage),
+  historial: many(artistHistory),
+  catalogoArtista: one(catalogArtist, {
+    fields: [artist.id],
+    references: [catalogArtist.artistaId]
   }),
-  participaciones: many(eventoEdicionParticipante),
-  exposiciones: many(participanteExposicion),
-  actividades: many(participanteActividad)
+  participaciones: many(eventEditionParticipant),
+  exposiciones: many(participantExhibition),
+  actividades: many(participantActivity)
 }))
 
-export const artistaImagenRelations = relations(artistaImagen, ({ one }) => ({
-  artista: one(artista, {
-    fields: [artistaImagen.artistaId],
-    references: [artista.id]
+export const artistImageRelations = relations(artistImage, ({ one }) => ({
+  artist: one(artist, {
+    fields: [artistImage.artistaId],
+    references: [artist.id]
   })
 }))
 
-export const artistaHistorialRelations = relations(
-  artistaHistorial,
+export const artistHistoryRelations = relations(
+  artistHistory,
   ({ one }) => ({
-    artista: one(artista, {
-      fields: [artistaHistorial.artistaId],
-      references: [artista.id]
+    artist: one(artist, {
+      fields: [artistHistory.artistaId],
+      references: [artist.id]
     })
   })
 )
 
-export const catalogoArtistaRelations = relations(
-  catalogoArtista,
+export const catalogArtistRelations = relations(
+  catalogArtist,
   ({ one }) => ({
-    artista: one(artista, {
-      fields: [catalogoArtista.artistaId],
-      references: [artista.id]
+    artist: one(artist, {
+      fields: [catalogArtist.artistaId],
+      references: [artist.id]
     })
   })
 )
 
-export const agrupacionRelations = relations(agrupacion, ({ many }) => ({
-  exposiciones: many(participanteExposicion),
-  actividades: many(participanteActividad)
+export const collectiveRelations = relations(collective, ({ many }) => ({
+  exposiciones: many(participantExhibition),
+  actividades: many(participantActivity)
 }))
 
 // ============================================
-// Evento Relations
+// Event Relations
 // ============================================
 
-export const eventoRelations = relations(evento, ({ one, many }) => ({
+export const eventRelations = relations(event, ({ one, many }) => ({
   organizacion: one(organization, {
-    fields: [evento.organizacionId],
+    fields: [event.organizacionId],
     references: [organization.id]
   }),
-  ediciones: many(eventoEdicion)
+  ediciones: many(eventEdition)
 }))
 
-export const eventoEdicionRelations = relations(
-  eventoEdicion,
+export const eventEditionRelations = relations(
+  eventEdition,
   ({ one, many }) => ({
-    evento: one(evento, {
-      fields: [eventoEdicion.eventoId],
-      references: [evento.id]
+    evento: one(event, {
+      fields: [eventEdition.eventoId],
+      references: [event.id]
     }),
-    dias: many(eventoEdicionDia),
-    metricas: many(eventoEdicionMetrica),
-    snapshots: many(eventoEdicionSnapshot),
-    postulaciones: many(eventoEdicionPostulacion),
-    participantes: many(eventoEdicionParticipante),
-    exposiciones: many(participanteExposicion),
-    actividades: many(participanteActividad)
+    dias: many(eventEditionDay),
+    metricas: many(eventEditionMetric),
+    snapshots: many(eventEditionSnapshot),
+    postulaciones: many(eventEditionApplication),
+    participantes: many(eventEditionParticipant),
+    exposiciones: many(participantExhibition),
+    actividades: many(participantActivity)
   })
 )
 
-export const eventoEdicionDiaRelations = relations(
-  eventoEdicionDia,
+export const eventEditionDayRelations = relations(
+  eventEditionDay,
   ({ one }) => ({
-    eventoEdicion: one(eventoEdicion, {
-      fields: [eventoEdicionDia.eventoEdicionId],
-      references: [eventoEdicion.id]
+    eventoEdicion: one(eventEdition, {
+      fields: [eventEditionDay.eventoEdicionId],
+      references: [eventEdition.id]
     }),
     lugar: one(place, {
-      fields: [eventoEdicionDia.lugarId],
+      fields: [eventEditionDay.lugarId],
       references: [place.id]
     })
   })
 )
 
-export const eventoEdicionMetricaRelations = relations(
-  eventoEdicionMetrica,
+export const eventEditionMetricRelations = relations(
+  eventEditionMetric,
   ({ one }) => ({
-    eventoEdicion: one(eventoEdicion, {
-      fields: [eventoEdicionMetrica.eventoEdicionId],
-      references: [eventoEdicion.id]
+    eventoEdicion: one(eventEdition, {
+      fields: [eventEditionMetric.eventoEdicionId],
+      references: [eventEdition.id]
     })
   })
 )
 
-export const eventoEdicionSnapshotRelations = relations(
-  eventoEdicionSnapshot,
+export const eventEditionSnapshotRelations = relations(
+  eventEditionSnapshot,
   ({ one }) => ({
-    eventoEdicion: one(eventoEdicion, {
-      fields: [eventoEdicionSnapshot.eventoEdicionId],
-      references: [eventoEdicion.id]
+    eventoEdicion: one(eventEdition, {
+      fields: [eventEditionSnapshot.eventoEdicionId],
+      references: [eventEdition.id]
     })
   })
 )
 
-export const eventoEdicionPostulacionRelations = relations(
-  eventoEdicionPostulacion,
+export const eventEditionApplicationRelations = relations(
+  eventEditionApplication,
   ({ one, many }) => ({
-    eventoEdicion: one(eventoEdicion, {
-      fields: [eventoEdicionPostulacion.eventoEdicionId],
-      references: [eventoEdicion.id]
+    eventoEdicion: one(eventEdition, {
+      fields: [eventEditionApplication.eventoEdicionId],
+      references: [eventEdition.id]
     }),
-    disciplina: one(discipline, {
-      fields: [eventoEdicionPostulacion.disciplinaId],
+    discipline: one(discipline, {
+      fields: [eventEditionApplication.disciplinaId],
       references: [discipline.id]
     }),
-    exposiciones: many(participanteExposicion),
-    actividades: many(participanteActividad)
+    exposiciones: many(participantExhibition),
+    actividades: many(participantActivity)
   })
 )
 
 // ============================================
-// Participante Relations
+// Participant Relations
 // ============================================
 
-export const tipoActividadRelations = relations(tipoActividad, ({ many }) => ({
-  actividades: many(participanteActividad)
+export const activityTypeRelations = relations(activityType, ({ many }) => ({
+  actividades: many(participantActivity)
 }))
 
-export const modoIngresoRelations = relations(modoIngreso, ({ many }) => ({
-  exposiciones: many(participanteExposicion),
-  actividades: many(participanteActividad)
+export const admissionModeRelations = relations(admissionMode, ({ many }) => ({
+  exposiciones: many(participantExhibition),
+  actividades: many(participantActivity)
 }))
 
-export const eventoEdicionParticipanteRelations = relations(
-  eventoEdicionParticipante,
+export const eventEditionParticipantRelations = relations(
+  eventEditionParticipant,
   ({ one, many }) => ({
-    eventoEdicion: one(eventoEdicion, {
-      fields: [eventoEdicionParticipante.eventoEdicionId],
-      references: [eventoEdicion.id]
+    eventoEdicion: one(eventEdition, {
+      fields: [eventEditionParticipant.eventoEdicionId],
+      references: [eventEdition.id]
     }),
-    artista: one(artista, {
-      fields: [eventoEdicionParticipante.artistaId],
-      references: [artista.id]
+    artist: one(artist, {
+      fields: [eventEditionParticipant.artistaId],
+      references: [artist.id]
     }),
-    exposiciones: many(participanteExposicion),
-    actividades: many(participanteActividad)
+    exposiciones: many(participantExhibition),
+    actividades: many(participantActivity)
   })
 )
 
-export const participanteExposicionRelations = relations(
-  participanteExposicion,
+export const participantExhibitionRelations = relations(
+  participantExhibition,
   ({ one }) => ({
-    artista: one(artista, {
-      fields: [participanteExposicion.artistaId],
-      references: [artista.id]
+    artist: one(artist, {
+      fields: [participantExhibition.artistaId],
+      references: [artist.id]
     }),
-    eventoEdicion: one(eventoEdicion, {
-      fields: [participanteExposicion.eventoEdicionId],
-      references: [eventoEdicion.id]
+    eventoEdicion: one(eventEdition, {
+      fields: [participantExhibition.eventoEdicionId],
+      references: [eventEdition.id]
     }),
-    postulacion: one(eventoEdicionPostulacion, {
-      fields: [participanteExposicion.postulacionId],
-      references: [eventoEdicionPostulacion.id]
+    postulacion: one(eventEditionApplication, {
+      fields: [participantExhibition.postulacionId],
+      references: [eventEditionApplication.id]
     }),
-    participante: one(eventoEdicionParticipante, {
-      fields: [participanteExposicion.participanteId],
-      references: [eventoEdicionParticipante.id]
+    participant: one(eventEditionParticipant, {
+      fields: [participantExhibition.participanteId],
+      references: [eventEditionParticipant.id]
     }),
-    disciplina: one(discipline, {
-      fields: [participanteExposicion.disciplinaId],
+    discipline: one(discipline, {
+      fields: [participantExhibition.disciplinaId],
       references: [discipline.id]
     }),
-    agrupacion: one(agrupacion, {
-      fields: [participanteExposicion.agrupacionId],
-      references: [agrupacion.id]
+    agrupacion: one(collective, {
+      fields: [participantExhibition.agrupacionId],
+      references: [collective.id]
     }),
-    modoIngreso: one(modoIngreso, {
-      fields: [participanteExposicion.modoIngresoId],
-      references: [modoIngreso.id]
+    modoIngreso: one(admissionMode, {
+      fields: [participantExhibition.modoIngresoId],
+      references: [admissionMode.id]
     })
   })
 )
 
-export const participanteActividadRelations = relations(
-  participanteActividad,
+export const participantActivityRelations = relations(
+  participantActivity,
   ({ one }) => ({
-    artista: one(artista, {
-      fields: [participanteActividad.artistaId],
-      references: [artista.id]
+    artist: one(artist, {
+      fields: [participantActivity.artistaId],
+      references: [artist.id]
     }),
-    eventoEdicion: one(eventoEdicion, {
-      fields: [participanteActividad.eventoEdicionId],
-      references: [eventoEdicion.id]
+    eventoEdicion: one(eventEdition, {
+      fields: [participantActivity.eventoEdicionId],
+      references: [eventEdition.id]
     }),
-    postulacion: one(eventoEdicionPostulacion, {
-      fields: [participanteActividad.postulacionId],
-      references: [eventoEdicionPostulacion.id]
+    postulacion: one(eventEditionApplication, {
+      fields: [participantActivity.postulacionId],
+      references: [eventEditionApplication.id]
     }),
-    participante: one(eventoEdicionParticipante, {
-      fields: [participanteActividad.participanteId],
-      references: [eventoEdicionParticipante.id]
+    participant: one(eventEditionParticipant, {
+      fields: [participantActivity.participanteId],
+      references: [eventEditionParticipant.id]
     }),
-    tipoActividad: one(tipoActividad, {
-      fields: [participanteActividad.tipoActividadId],
-      references: [tipoActividad.id]
+    tipoActividad: one(activityType, {
+      fields: [participantActivity.tipoActividadId],
+      references: [activityType.id]
     }),
-    agrupacion: one(agrupacion, {
-      fields: [participanteActividad.agrupacionId],
-      references: [agrupacion.id]
+    agrupacion: one(collective, {
+      fields: [participantActivity.agrupacionId],
+      references: [collective.id]
     }),
-    modoIngreso: one(modoIngreso, {
-      fields: [participanteActividad.modoIngresoId],
-      references: [modoIngreso.id]
+    modoIngreso: one(admissionMode, {
+      fields: [participantActivity.modoIngresoId],
+      references: [admissionMode.id]
     }),
-    actividad: one(actividad, {
-      fields: [participanteActividad.id],
-      references: [actividad.participanteActividadId]
+    actividad: one(activity, {
+      fields: [participantActivity.id],
+      references: [activity.participanteActividadId]
     })
   })
 )
 
-export const actividadRelations = relations(actividad, ({ one }) => ({
-  participanteActividad: one(participanteActividad, {
-    fields: [actividad.participanteActividadId],
-    references: [participanteActividad.id]
+export const activityRelations = relations(activity, ({ one }) => ({
+  participantActivity: one(participantActivity, {
+    fields: [activity.participanteActividadId],
+    references: [participantActivity.id]
   })
 }))
 

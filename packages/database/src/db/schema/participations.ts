@@ -7,14 +7,14 @@ import {
   uniqueIndex
 } from 'drizzle-orm/sqlite-core'
 
-import { eventoEdicion, eventoEdicionPostulacion } from './events'
-import { agrupacion, artista } from './artist'
+import { eventEdition, eventEditionApplication } from './events'
+import { collective, artist } from './artist'
 import { discipline } from './core'
 
 /**
- * Tipo Actividad - Catálogo de tipos de actividades
+ * Activity Type - Catalog of activity types
  */
-export const tipoActividad = sqliteTable('tipo_actividad', {
+export const activityType = sqliteTable('tipo_actividad', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   slug: text('slug').notNull().unique(),
   descripcion: text('descripcion'),
@@ -27,9 +27,9 @@ export const tipoActividad = sqliteTable('tipo_actividad', {
 })
 
 /**
- * Modo Ingreso - Catálogo de modos de ingreso de participantes
+ * Admission Mode - Catalog of admission modes for participants
  */
-export const modoIngreso = sqliteTable('modo_ingreso', {
+export const admissionMode = sqliteTable('modo_ingreso', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   slug: text('slug').notNull().unique(),
   descripcion: text('descripcion'),
@@ -42,18 +42,18 @@ export const modoIngreso = sqliteTable('modo_ingreso', {
 })
 
 /**
- * Evento Edicion Participante - Participantes en ediciones de eventos (tabla maestra)
+ * Event Edition Participant - Participants in event editions (master table)
  */
-export const eventoEdicionParticipante = sqliteTable(
+export const eventEditionParticipant = sqliteTable(
   'evento_edicion_participante',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
     eventoEdicionId: integer('evento_edicion_id')
       .notNull()
-      .references(() => eventoEdicion.id, { onDelete: 'cascade' }),
+      .references(() => eventEdition.id, { onDelete: 'cascade' }),
     artistaId: integer('artista_id')
       .notNull()
-      .references(() => artista.id, { onDelete: 'cascade' }),
+      .references(() => artist.id, { onDelete: 'cascade' }),
     estado: text('estado', {
       enum: ['renuncia', 'expulsado', 'cancelado', 'activo', 'completado']
     })
@@ -68,42 +68,42 @@ export const eventoEdicionParticipante = sqliteTable(
       .default(sql`CURRENT_TIMESTAMP`)
   },
   (table) => [
-    uniqueIndex('uq_participante').on(table.artistaId, table.eventoEdicionId),
-    index('idx_participante_evento_edicion').on(table.eventoEdicionId),
-    index('idx_participante_artista').on(table.artistaId),
-    index('idx_participante_estado').on(table.estado)
+    uniqueIndex('uq_participant').on(table.artistaId, table.eventoEdicionId),
+    index('idx_participant_evento_edicion').on(table.eventoEdicionId),
+    index('idx_participant_artista').on(table.artistaId),
+    index('idx_participant_estado').on(table.estado)
   ]
 )
 
 /**
- * Participante Exposicion - Participantes en sección de exposición
+ * Participant Exhibition - Participants in exhibition section
  */
-export const participanteExposicion = sqliteTable(
+export const participantExhibition = sqliteTable(
   'participante_exposicion',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
     artistaId: integer('artista_id')
       .notNull()
-      .references(() => artista.id, { onDelete: 'restrict' }),
+      .references(() => artist.id, { onDelete: 'restrict' }),
     eventoEdicionId: integer('evento_edicion_id')
       .notNull()
-      .references(() => eventoEdicion.id, { onDelete: 'restrict' }),
+      .references(() => eventEdition.id, { onDelete: 'restrict' }),
     postulacionId: integer('postulacion_id').references(
-      () => eventoEdicionPostulacion.id,
+      () => eventEditionApplication.id,
       { onDelete: 'restrict' }
     ),
     participanteId: integer('participante_id').references(
-      () => eventoEdicionParticipante.id,
+      () => eventEditionParticipant.id,
       { onDelete: 'restrict' }
     ),
     disciplinaId: integer('disciplina_id')
       .notNull()
       .references(() => discipline.id),
-    agrupacionId: integer('agrupacion_id').references(() => agrupacion.id),
+    agrupacionId: integer('agrupacion_id').references(() => collective.id),
     modoIngresoId: integer('modo_ingreso_id')
       .notNull()
       .default(1)
-      .references(() => modoIngreso.id),
+      .references(() => admissionMode.id),
     puntaje: integer('puntaje'),
     estado: text('estado', {
       enum: [
@@ -126,53 +126,53 @@ export const participanteExposicion = sqliteTable(
       .default(sql`CURRENT_TIMESTAMP`)
   },
   (table) => [
-    uniqueIndex('uq_exposicion_artista_evento').on(
+    uniqueIndex('uq_exhibition_artista_evento').on(
       table.artistaId,
       table.eventoEdicionId
     ),
-    index('idx_exposicion_artista').on(table.artistaId),
-    index('idx_exposicion_evento_edicion').on(table.eventoEdicionId),
-    index('idx_exposicion_postulacion').on(table.postulacionId),
-    index('idx_exposicion_participante').on(table.participanteId),
-    index('idx_exposicion_estado').on(table.estado),
-    index('idx_exposicion_disciplina').on(table.disciplinaId),
-    index('idx_exposicion_agrupacion').on(table.agrupacionId),
-    index('idx_exposicion_modo_ingreso').on(table.modoIngresoId),
-    index('idx_exposicion_puntaje')
+    index('idx_exhibition_artista').on(table.artistaId),
+    index('idx_exhibition_evento_edicion').on(table.eventoEdicionId),
+    index('idx_exhibition_postulacion').on(table.postulacionId),
+    index('idx_exhibition_participante').on(table.participanteId),
+    index('idx_exhibition_estado').on(table.estado),
+    index('idx_exhibition_disciplina').on(table.disciplinaId),
+    index('idx_exhibition_agrupacion').on(table.agrupacionId),
+    index('idx_exhibition_modo_ingreso').on(table.modoIngresoId),
+    index('idx_exhibition_puntaje')
       .on(table.puntaje)
       .where(sql`${table.puntaje} IS NOT NULL`)
   ]
 )
 
 /**
- * Participante Actividad - Participantes en actividades
+ * Participant Activity - Participants in activities
  */
-export const participanteActividad = sqliteTable(
+export const participantActivity = sqliteTable(
   'participante_actividad',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
     artistaId: integer('artista_id')
       .notNull()
-      .references(() => artista.id, { onDelete: 'restrict' }),
+      .references(() => artist.id, { onDelete: 'restrict' }),
     eventoEdicionId: integer('evento_edicion_id')
       .notNull()
-      .references(() => eventoEdicion.id, { onDelete: 'restrict' }),
+      .references(() => eventEdition.id, { onDelete: 'restrict' }),
     postulacionId: integer('postulacion_id').references(
-      () => eventoEdicionPostulacion.id,
+      () => eventEditionApplication.id,
       { onDelete: 'restrict' }
     ),
     participanteId: integer('participante_id').references(
-      () => eventoEdicionParticipante.id,
+      () => eventEditionParticipant.id,
       { onDelete: 'restrict' }
     ),
     tipoActividadId: integer('tipo_actividad_id')
       .notNull()
-      .references(() => tipoActividad.id),
-    agrupacionId: integer('agrupacion_id').references(() => agrupacion.id),
+      .references(() => activityType.id),
+    agrupacionId: integer('agrupacion_id').references(() => collective.id),
     modoIngresoId: integer('modo_ingreso_id')
       .notNull()
       .default(2)
-      .references(() => modoIngreso.id),
+      .references(() => admissionMode.id),
     puntaje: integer('puntaje'),
     estado: text('estado', {
       enum: [
@@ -195,31 +195,31 @@ export const participanteActividad = sqliteTable(
       .default(sql`CURRENT_TIMESTAMP`)
   },
   (table) => [
-    index('idx_actividad_artista').on(table.artistaId),
-    index('idx_actividad_evento_edicion').on(table.eventoEdicionId),
-    index('idx_actividad_postulacion').on(table.postulacionId),
-    index('idx_actividad_participante').on(table.participanteId),
-    index('idx_actividad_estado').on(table.estado),
-    index('idx_actividad_tipo_actividad').on(table.tipoActividadId),
-    index('idx_actividad_agrupacion').on(table.agrupacionId),
-    index('idx_actividad_modo_ingreso').on(table.modoIngresoId),
-    index('idx_actividad_puntaje')
+    index('idx_activity_artista').on(table.artistaId),
+    index('idx_activity_evento_edicion').on(table.eventoEdicionId),
+    index('idx_activity_postulacion').on(table.postulacionId),
+    index('idx_activity_participante').on(table.participanteId),
+    index('idx_activity_estado').on(table.estado),
+    index('idx_activity_tipo_actividad').on(table.tipoActividadId),
+    index('idx_activity_agrupacion').on(table.agrupacionId),
+    index('idx_activity_modo_ingreso').on(table.modoIngresoId),
+    index('idx_activity_puntaje')
       .on(table.puntaje)
       .where(sql`${table.puntaje} IS NOT NULL`)
   ]
 )
 
 /**
- * Actividad - Detalles de actividades programadas
+ * Activity - Details of scheduled activities
  */
-export const actividad = sqliteTable(
+export const activity = sqliteTable(
   'actividad',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
     participanteActividadId: integer('participante_actividad_id')
       .unique()
       .notNull()
-      .references(() => participanteActividad.id, { onDelete: 'cascade' }),
+      .references(() => participantActivity.id, { onDelete: 'cascade' }),
     titulo: text('titulo'),
     descripcion: text('descripcion'),
     duracionMinutos: integer('duracion_minutos'),
@@ -234,8 +234,6 @@ export const actividad = sqliteTable(
       .default(sql`CURRENT_TIMESTAMP`)
   },
   (table) => [
-    index('idx_actividad_participante_actividad').on(
-      table.participanteActividadId
-    )
+    index('idx_activity_participante_actividad').on(table.participanteActividadId)
   ]
 )
