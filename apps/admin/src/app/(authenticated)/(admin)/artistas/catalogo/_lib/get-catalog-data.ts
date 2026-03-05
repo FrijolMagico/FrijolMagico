@@ -2,6 +2,7 @@
 
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
+import { isNotDeleted } from '@frijolmagico/database/filters'
 import { eq, and, asc } from 'drizzle-orm'
 import { getAvatarUrl } from '@/lib/cdn'
 import type { CatalogEntry } from '../_types'
@@ -32,9 +33,11 @@ export async function getCatalogData(): Promise<CatalogEntry[] | null> {
       artistImage,
       and(
         eq(artistImage.artistaId, catalogArtist.artistaId),
-        eq(artistImage.tipo, 'avatar')
+        eq(artistImage.tipo, 'avatar'),
+        isNotDeleted(artistImage.deletedAt)
       )
     )
+    .where(isNotDeleted(catalogArtist.deletedAt))
     .orderBy(asc(catalogArtist.orden))
 
   if (results === undefined) return null

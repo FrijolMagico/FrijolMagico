@@ -4,7 +4,8 @@ import { updateTag } from 'next/cache'
 import { ARTISTA_CACHE_TAG } from '../_constants'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
+import { isNotDeleted } from '@frijolmagico/database/filters'
 import { requireAuth } from '@/lib/auth/utils'
 import { createIdMapping, isTempId } from '@/shared/push/lib/id-mapper'
 import type {
@@ -87,8 +88,14 @@ export async function saveArtistaAction(
         } else if (op.type === PUSH_OPERATION_TYPE.DELETE) {
           if (!isTempId(op.entityId)) {
             await tx
-              .delete(artistTable)
-              .where(eq(artistTable.id, Number(op.entityId)))
+              .update(artistTable)
+              .set({ deletedAt: new Date().toISOString() })
+              .where(
+                and(
+                  eq(artistTable.id, Number(op.entityId)),
+                  isNotDeleted(artistTable.deletedAt)
+                )
+              )
           }
         } else {
           const isUpdate = op.type === PUSH_OPERATION_TYPE.UPDATE
@@ -131,8 +138,14 @@ export async function saveArtistaAction(
         } else if (op.type === PUSH_OPERATION_TYPE.DELETE) {
           if (!isTempId(op.entityId)) {
             await tx
-              .delete(artistImageTable)
-              .where(eq(artistImageTable.id, Number(op.entityId)))
+              .update(artistImageTable)
+              .set({ deletedAt: new Date().toISOString() })
+              .where(
+                and(
+                  eq(artistImageTable.id, Number(op.entityId)),
+                  isNotDeleted(artistImageTable.deletedAt)
+                )
+              )
           }
         } else {
           const isImagenUpdate = op.type === PUSH_OPERATION_TYPE.UPDATE

@@ -4,6 +4,7 @@ import { cacheTag } from 'next/cache'
 
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
+import { isNotDeleted } from '@frijolmagico/database/filters'
 import { asc, eq } from 'drizzle-orm'
 
 import type { ArtistEntry } from '../_types'
@@ -22,6 +23,7 @@ export async function getArtists(): Promise<ArtistEntry[] | null> {
     })
     .from(artistTable)
     .leftJoin(artistStatus, eq(artistTable.estadoId, artistStatus.id))
+    .where(isNotDeleted(artistTable.deletedAt))
     .orderBy(asc(artistTable.pseudonimo))
 
   if (results === undefined || results.length === 0) return null

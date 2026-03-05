@@ -3,9 +3,10 @@
 import { updateTag } from 'next/cache'
 import { CATALOG_CACHE_TAG } from '../_constants'
 import { ARTISTA_CACHE_TAG } from '../../_constants'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
+import { isNotDeleted } from '@frijolmagico/database/filters'
 import { requireAuth } from '@/lib/auth/utils'
 import {
   PUSH_OPERATION_TYPE,
@@ -51,9 +52,13 @@ export async function saveCatalogoAction(
         } else if (op.type === PUSH_OPERATION_TYPE.DELETE) {
           if (!isTempId(op.entityId)) {
             await tx
-              .delete(artist.catalogArtist)
+              .update(artist.catalogArtist)
+              .set({ deletedAt: new Date().toISOString() })
               .where(
-                eq(artist.catalogArtist.id, Number.parseInt(op.entityId, 10))
+                and(
+                  eq(artist.catalogArtist.id, Number.parseInt(op.entityId, 10)),
+                  isNotDeleted(artist.catalogArtist.deletedAt)
+                )
               )
           }
         } else {
