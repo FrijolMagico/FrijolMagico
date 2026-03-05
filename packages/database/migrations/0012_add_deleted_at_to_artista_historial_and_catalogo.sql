@@ -8,18 +8,24 @@
 -- ============================================
 
 ALTER TABLE artista_imagen ADD COLUMN deleted_at TEXT;
+--> statement-breakpoint
 
 CREATE INDEX IF NOT EXISTS idx_artista_imagen_deleted_at ON artista_imagen (deleted_at);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_artista_imagen_artista_deleted ON artista_imagen (artista_id, deleted_at);
+--> statement-breakpoint
 
 -- ============================================
 -- 2. Add deleted_at column to catalogo_artista
 -- ============================================
 
 ALTER TABLE catalogo_artista ADD COLUMN deleted_at TEXT;
+--> statement-breakpoint
 
 CREATE INDEX IF NOT EXISTS idx_catalogo_artista_deleted_at ON catalogo_artista (deleted_at);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_catalogo_artista_artista_deleted ON catalogo_artista (artista_id, deleted_at);
+--> statement-breakpoint
 
 -- ============================================
 -- 3. Triggers for automatic soft delete
@@ -36,6 +42,7 @@ BEGIN
   WHERE artista_id = NEW.id
   AND deleted_at IS NULL;
 END;
+--> statement-breakpoint
 
 -- Trigger: mark catalogo_artista as deleted when artista is marked as deleted
 CREATE TRIGGER trigger_artista_soft_delete_catalogo
@@ -48,6 +55,7 @@ BEGIN
   WHERE artista_id = NEW.id
   AND deleted_at IS NULL;
 END;
+--> statement-breakpoint
 
 -- ============================================
 -- 4. Triggers for automatic restoration
@@ -63,6 +71,7 @@ BEGIN
   SET deleted_at = NULL
   WHERE artista_id = NEW.id;
 END;
+--> statement-breakpoint
 
 -- Trigger: restore catalogo_artista when artista is restored
 CREATE TRIGGER trigger_artista_restore_catalogo
