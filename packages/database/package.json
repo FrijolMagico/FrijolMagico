@@ -14,6 +14,10 @@
     "./schema": {
       "types": "./src/db/schema/index.ts",
       "default": "./src/db/schema/index.ts"
+    },
+    "./filters": {
+      "types": "./src/filters.ts",
+      "default": "./src/filters.ts"
     }
   },
   "scripts": {
