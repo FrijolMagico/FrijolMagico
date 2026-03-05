@@ -26,7 +26,11 @@ export const auth = betterAuth({
   },
   session: {
     expiresIn: SESSION_EXPIRATION_TIME,
-    updateAge: SESSION_UPDATE_AGE
+    updateAge: SESSION_UPDATE_AGE,
+    cookieCache: {
+      enabled: true,
+      maxAge: SESSION_EXPIRATION_TIME
+    }
   },
   hooks: {
     after: createAuthMiddleware(async (ctx) => {
