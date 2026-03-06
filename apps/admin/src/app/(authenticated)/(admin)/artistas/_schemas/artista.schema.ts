@@ -86,7 +86,11 @@ export const artistaHistorialInsertSchema = createInsertSchema(
   artistHistoryTable,
   {
     artistaId: () => z.coerce.number().int().positive(),
-    rrss: () => z.string().optional()
+    rrss: () =>
+      z.preprocess((val) => {
+        if (val && typeof val === 'object') return JSON.stringify(val)
+        return val
+      }, z.string().nullable().optional()) as z.ZodType<string | null | undefined>
   }
 )
 
