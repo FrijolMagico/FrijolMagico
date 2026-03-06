@@ -5,8 +5,12 @@ import { artist } from '@frijolmagico/database/schema'
 export const catalogoArtistaInsertSchema = createInsertSchema(
   artist.catalogArtist,
   {
-    artistaId: (s) =>
-      s.int().positive().min(1, { error: 'El artista es obligatorio' }),
+    artistaId: () =>
+      z.coerce
+        .number()
+        .int()
+        .positive()
+        .min(1, { error: 'El artista es obligatorio' }),
     orden: (s) => s.min(1, { error: 'El orden es obligatorio' })
   }
 )
