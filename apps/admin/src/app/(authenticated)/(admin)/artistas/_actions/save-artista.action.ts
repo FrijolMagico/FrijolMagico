@@ -150,9 +150,12 @@ export async function saveArtistaAction(
                 pseudonimo:
                   (historialPayload.pseudonimo as string | undefined) ?? null,
                 correo: (historialPayload.correo as string | undefined) ?? null,
-                rrss: historialPayload.rrss
-                  ? JSON.stringify(historialPayload.rrss)
-                  : null,
+                rrss:
+                  historialPayload.rrss == null
+                    ? null
+                    : typeof historialPayload.rrss === 'string'
+                      ? historialPayload.rrss
+                      : JSON.stringify(historialPayload.rrss),
                 ciudad: (historialPayload.ciudad as string | undefined) ?? null,
                 pais: (historialPayload.pais as string | undefined) ?? null,
                 notas: null
