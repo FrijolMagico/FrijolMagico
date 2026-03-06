@@ -21,6 +21,8 @@ import { useArtistDialog } from '../_store/artist-dialog-store'
 import { useArtistsOperationStore } from '../_store/artista-ui-store'
 import { artistaFormSchema } from '../_schemas/artista.schema'
 
+import { ArtistFormLayout } from '@/shared/components/artist-form/artist-form'
+
 function toSlug(str: string): string {
   return str
     .normalize('NFD')
@@ -43,6 +45,8 @@ const STATUS_SLUG_MAP: Record<number, string> = {
 type AddArtistFormData = {
   pseudonimo: string
   nombre: string
+  rut: string
+  telefono: string
   correo: string
   estadoId: string
   ciudad: string
@@ -59,6 +63,8 @@ function AddArtistFormContent({
   const [formData, setFormData] = useState({
     pseudonimo: '',
     nombre: '',
+    rut: '',
+    telefono: '',
     correo: '',
     estadoId: '2',
     ciudad: '',
@@ -73,16 +79,21 @@ function AddArtistFormContent({
     setFormData((prev) => ({ ...prev, pseudonimo: val }))
   }
 
+  const handleFieldChange = (field: string, val: string) => {
+    setFormData((prev) => ({ ...prev, [field]: val }))
+  }
+
   const handleApply = () => {
     setErrors({})
     const result = artistaFormSchema.safeParse({
-      pseudonimo: formData.pseudonimo,
-      slug: toSlug(formData.pseudonimo), // auto-generate slug
+      ...formData,
+      slug: toSlug(formData.pseudonimo),
       nombre: formData.nombre || undefined,
+      rut: formData.rut || undefined,
+      telefono: formData.telefono || undefined,
       correo: formData.correo || undefined,
       ciudad: formData.ciudad || undefined,
-      pais: formData.pais || undefined,
-      estadoId: formData.estadoId
+      pais: formData.pais || undefined
     })
 
     if (!result.success) {
@@ -103,101 +114,20 @@ function AddArtistFormContent({
   }
 
   return (
-    <FieldGroup>
-      <Field>
-        <FieldLabel htmlFor='pseudonimo'>
-          Pseudónimo <span className='text-destructive'>*</span>
-        </FieldLabel>
-        <Input
-          id='pseudonimo'
-          value={formData.pseudonimo}
-          onChange={(e) => handlePseudonimoChange(e.target.value)}
-          placeholder='@usuario'
-          aria-invalid={!!errors.pseudonimo}
-        />
-        {errors.pseudonimo && <FieldError>{errors.pseudonimo}</FieldError>}
-      </Field>
-
-      <Field>
-        <FieldLabel htmlFor='nombre'>Nombre</FieldLabel>
-        <Input
-          id='nombre'
-          value={formData.nombre}
-          onChange={(e) =>
-            setFormData((prev) => ({ ...prev, nombre: e.target.value }))
-          }
-          placeholder='Nombre completo'
-        />
-      </Field>
-
-      <div className='grid grid-cols-2 gap-4'>
-        <Field>
-          <FieldLabel htmlFor='correo'>Correo electrónico</FieldLabel>
-          <Input
-            id='correo'
-            type='email'
-            value={formData.correo}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, correo: e.target.value }))
-            }
-            placeholder='artista@ejemplo.com'
-          />
-        </Field>
-        <Field>
-          <FieldLabel htmlFor='estadoId'>Estado</FieldLabel>
-          <Select
-            value={formData.estadoId}
-            onValueChange={(val) =>
-              setFormData((prev) => ({ ...prev, estadoId: val as string }))
-            }
-          >
-            <SelectTrigger id='estadoId'>
-              <SelectValue placeholder='Estado' />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value='2'>Activo</SelectItem>
-              <SelectItem value='3'>Inactivo</SelectItem>
-              <SelectItem value='4'>Vetado</SelectItem>
-              <SelectItem value='5'>Cancelado</SelectItem>
-              <SelectItem value='1'>Desconocido</SelectItem>
-            </SelectContent>
-          </Select>
-          {errors.estadoId && <FieldError>{errors.estadoId}</FieldError>}
-        </Field>
-      </div>
-
-      <div className='grid grid-cols-2 gap-4'>
-        <Field>
-          <FieldLabel htmlFor='ciudad'>Ciudad</FieldLabel>
-          <Input
-            id='ciudad'
-            value={formData.ciudad}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, ciudad: e.target.value }))
-            }
-            placeholder='Santiago'
-          />
-        </Field>
-        <Field>
-          <FieldLabel htmlFor='pais'>País</FieldLabel>
-          <Input
-            id='pais'
-            value={formData.pais}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, pais: e.target.value }))
-            }
-            placeholder='Chile'
-          />
-        </Field>
-      </div>
-
-      <div className='flex justify-end gap-2 pt-4'>
-        <Button variant='outline' onClick={onCancel}>
-          Cancelar
-        </Button>
-        <Button onClick={handleApply}>Agregar artista</Button>
-      </div>
-    </FieldGroup>
+    <ArtistFormLayout
+      formData={formData}
+      errors={errors}
+      onFieldChange={handleFieldChange}
+      customFields={null}
+      actions={
+        <div className='flex justify-end gap-2 pt-4'>
+          <Button variant='outline' onClick={onCancel}>
+            Cancelar
+          </Button>
+          <Button onClick={handleApply}>Agregar artista</Button>
+        </div>
+      }
+    />
   )
 }
 
@@ -213,9 +143,9 @@ export function AddArtistDialog() {
       nombre: formData.nombre.trim() || null,
       pseudonimo: formData.pseudonimo.trim(),
       slug: generatedSlug,
-      rut: null,
+      rut: formData.rut.trim() || null,
       correo: formData.correo.trim() || null,
-      telefono: null,
+      telefono: formData.telefono.trim() || null,
       ciudad: formData.ciudad.trim() || null,
       pais: formData.pais.trim() || null,
       rrss: null,

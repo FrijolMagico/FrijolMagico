@@ -18,6 +18,7 @@ import {
   FieldGroup,
   FieldLabel
 } from '@/shared/components/ui/field'
+import { Input } from '@/shared/components/ui/input'
 import { Switch } from '@/shared/components/ui/switch'
 import { Textarea } from '@/shared/components/ui/textarea'
 import { Label } from '@/shared/components/ui/label'
@@ -47,6 +48,7 @@ function AddCatalogFormContent({
   onCancel
 }: AddCatalogFormContentProps) {
   const [selectedArtist, setSelectedArtist] = useState<ArtistItem | null>(null)
+  const [inputValue, setInputValue] = useState('')
   const [descripcion, setDescripcion] = useState('')
   const [destacado, setDestacado] = useState(false)
   const [activo, setActivo] = useState(true)
@@ -70,6 +72,9 @@ function AddCatalogFormContent({
       value: id,
       label: artistById[id]?.pseudonimo ?? id
     }))
+    .filter((item) =>
+      item.label.toLowerCase().includes(inputValue.toLowerCase())
+    )
 
   const handleApply = () => {
     if (!selectedArtist) {
@@ -107,6 +112,8 @@ function AddCatalogFormContent({
         <Combobox
           items={availableItems}
           value={selectedArtist}
+          inputValue={inputValue}
+          onInputValueChange={setInputValue}
           onValueChange={(item) => {
             setSelectedArtist(item)
             setErrors((prev) => ({ ...prev, artistaId: undefined }))

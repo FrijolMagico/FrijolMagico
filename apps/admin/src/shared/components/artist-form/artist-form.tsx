@@ -19,6 +19,8 @@ interface ArtistFormLayoutProps {
   formData: {
     nombre: string
     pseudonimo: string
+    rut: string
+    telefono: string
     correo: string
     estadoId: string | number
     ciudad: string
@@ -40,6 +42,16 @@ export function ArtistFormLayout({
   return (
     <FieldGroup>
       <Field>
+        <FieldLabel htmlFor='nombre'>Nombre</FieldLabel>
+        <Input
+          id='nombre'
+          value={formData.nombre}
+          onChange={(e) => onFieldChange('nombre', e.target.value)}
+          placeholder='Nombre completo'
+        />
+      </Field>
+
+      <Field>
         <FieldLabel htmlFor='pseudonimo'>
           Pseudónimo <span className='text-destructive'>*</span>
         </FieldLabel>
@@ -57,15 +69,26 @@ export function ArtistFormLayout({
 
       {customFields}
 
-      <Field>
-        <FieldLabel htmlFor='nombre'>Nombre</FieldLabel>
-        <Input
-          id='nombre'
-          value={formData.nombre}
-          onChange={(e) => onFieldChange('nombre', e.target.value)}
-          placeholder='Nombre completo'
-        />
-      </Field>
+      <div className='grid grid-cols-2 gap-4'>
+        <Field>
+          <FieldLabel htmlFor='rut'>RUT</FieldLabel>
+          <Input
+            id='rut'
+            value={formData.rut || ''}
+            onChange={(e) => onFieldChange('rut', e.target.value)}
+            placeholder='12.345.678-9'
+          />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor='telefono'>Teléfono</FieldLabel>
+          <Input
+            id='telefono'
+            value={formData.telefono || ''}
+            onChange={(e) => onFieldChange('telefono', e.target.value)}
+            placeholder='+56912345678'
+          />
+        </Field>
+      </div>
 
       <div className='grid grid-cols-2 gap-4'>
         <Field>
