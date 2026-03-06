@@ -8,6 +8,7 @@ interface CatalogViewState {
   // Dialog UI State
   catalogDialogOpen: boolean
   artistDialogOpen: boolean
+  addCatalogDialogOpen: boolean
   selectedCatalogId: string | null
 
   // Actions
@@ -20,6 +21,9 @@ interface CatalogViewState {
   openArtistDialog: () => void
   closeArtistDialog: () => void
 
+  openAddCatalogDialog: () => void
+  closeAddCatalogDialog: () => void
+
   closeAllDialogs: () => void
 }
 
@@ -30,6 +34,7 @@ export const useCatalogViewStore = create<CatalogViewState>((set) => ({
 
   catalogDialogOpen: false,
   artistDialogOpen: false,
+  addCatalogDialogOpen: false,
   selectedCatalogId: null,
 
   startDrag: (catalogId) =>
@@ -50,10 +55,14 @@ export const useCatalogViewStore = create<CatalogViewState>((set) => ({
   openArtistDialog: () => set({ artistDialogOpen: true }),
   closeArtistDialog: () => set({ artistDialogOpen: false }),
 
+  openAddCatalogDialog: () => set({ addCatalogDialogOpen: true }),
+  closeAddCatalogDialog: () => set({ addCatalogDialogOpen: false }),
+
   closeAllDialogs: () =>
     set({
       catalogDialogOpen: false,
       artistDialogOpen: false,
+      addCatalogDialogOpen: false,
       selectedCatalogId: null
     })
 }))
