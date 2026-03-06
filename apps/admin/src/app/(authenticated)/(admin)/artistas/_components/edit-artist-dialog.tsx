@@ -22,8 +22,10 @@ import {
 } from '../_store/artista-ui-store'
 import { useArtistDialog } from '../_store/artist-dialog-store'
 import { ArtistRRSSManager } from '../catalogo/_components/artist-rrss-manager'
-import { ArtistEntry } from '../_types'
+import type { ArtistEntry } from '../_types'
 import { Field, FieldGroup, FieldLabel } from '@/shared/components/ui/field'
+import { Switch } from '@/shared/components/ui/switch'
+import { Label } from '@/shared/components/ui/label'
 
 export function EditFormContent({
   artist,
@@ -43,6 +45,26 @@ export function EditFormContent({
     country: artist.pais ?? '',
     statusId: artist.estadoId
   })
+
+  const [historialChecks, setHistorialChecks] = useState({
+    pseudonimo: false,
+    correo: false,
+    rrss: false,
+    ciudad: false,
+    pais: false
+  })
+
+  const hasChanged = {
+    pseudonimo:
+      formData.pseudonimo !== (artist.pseudonimo ?? '') &&
+      Boolean(artist.pseudonimo),
+    correo: formData.correo !== (artist.correo ?? '') && Boolean(artist.correo),
+    rrss:
+      JSON.stringify(formData.rrss) !== JSON.stringify(artist.rrss ?? {}) &&
+      Object.keys(artist.rrss ?? {}).length > 0,
+    ciudad: formData.city !== (artist.ciudad ?? '') && Boolean(artist.ciudad),
+    pais: formData.country !== (artist.pais ?? '') && Boolean(artist.pais)
+  }
 
   const updateField = (
     field: keyof typeof formData,
@@ -64,6 +86,28 @@ export function EditFormContent({
       5: 'cancelado'
     }
 
+    const _historialData: ArtistEntry['_historialData'] = {}
+
+    if (
+      historialChecks.pseudonimo &&
+      hasChanged.pseudonimo &&
+      artist.pseudonimo
+    ) {
+      _historialData.pseudonimo = artist.pseudonimo
+    }
+    if (historialChecks.correo && hasChanged.correo && artist.correo) {
+      _historialData.correo = artist.correo
+    }
+    if (historialChecks.rrss && hasChanged.rrss && artist.rrss) {
+      _historialData.rrss = artist.rrss
+    }
+    if (historialChecks.ciudad && hasChanged.ciudad && artist.ciudad) {
+      _historialData.ciudad = artist.ciudad
+    }
+    if (historialChecks.pais && hasChanged.pais && artist.pais) {
+      _historialData.pais = artist.pais
+    }
+
     update(artist.id, {
       nombre: formData.nombre,
       pseudonimo: formData.pseudonimo,
@@ -72,7 +116,8 @@ export function EditFormContent({
       ciudad: formData.city,
       pais: formData.country,
       estadoId: formData.statusId,
-      estadoSlug: estadoIdToSlug[formData.statusId] || 'desconocido'
+      estadoSlug: estadoIdToSlug[formData.statusId] || 'desconocido',
+      ...(Object.keys(_historialData).length > 0 && { _historialData })
     })
 
     onClose()
@@ -101,6 +146,26 @@ export function EditFormContent({
             placeholder='@usuario'
             required
           />
+          {hasChanged.pseudonimo && (
+            <div className='mt-1 flex items-center gap-2'>
+              <Switch
+                id='historial-pseudonimo'
+                checked={historialChecks.pseudonimo}
+                onCheckedChange={(checked) =>
+                  setHistorialChecks((prev) => ({
+                    ...prev,
+                    pseudonimo: checked
+                  }))
+                }
+              />
+              <Label
+                htmlFor='historial-pseudonimo'
+                className='text-muted-foreground cursor-pointer text-xs font-normal'
+              >
+                Guardar valor anterior en historial
+              </Label>
+            </div>
+          )}
         </Field>
 
         <div className='grid grid-cols-2 gap-4'>
@@ -113,6 +178,23 @@ export function EditFormContent({
               onChange={(e) => updateField('correo', e.target.value)}
               placeholder='artista@ejemplo.com'
             />
+            {hasChanged.correo && (
+              <div className='mt-1 flex items-center gap-2'>
+                <Switch
+                  id='historial-correo'
+                  checked={historialChecks.correo}
+                  onCheckedChange={(checked) =>
+                    setHistorialChecks((prev) => ({ ...prev, correo: checked }))
+                  }
+                />
+                <Label
+                  htmlFor='historial-correo'
+                  className='text-muted-foreground cursor-pointer text-xs font-normal'
+                >
+                  Guardar valor anterior en historial
+                </Label>
+              </div>
+            )}
           </Field>
           <Field>
             <FieldLabel htmlFor='estadoId'>Estado</FieldLabel>
@@ -153,6 +235,23 @@ export function EditFormContent({
               onChange={(e) => updateField('city', e.target.value)}
               placeholder='Santiago'
             />
+            {hasChanged.ciudad && (
+              <div className='mt-1 flex items-center gap-2'>
+                <Switch
+                  id='historial-ciudad'
+                  checked={historialChecks.ciudad}
+                  onCheckedChange={(checked) =>
+                    setHistorialChecks((prev) => ({ ...prev, ciudad: checked }))
+                  }
+                />
+                <Label
+                  htmlFor='historial-ciudad'
+                  className='text-muted-foreground cursor-pointer text-xs font-normal'
+                >
+                  Guardar valor anterior en historial
+                </Label>
+              </div>
+            )}
           </Field>
           <Field>
             <FieldLabel htmlFor='pais'>País</FieldLabel>
@@ -162,10 +261,44 @@ export function EditFormContent({
               onChange={(e) => updateField('country', e.target.value)}
               placeholder='Chile'
             />
+            {hasChanged.pais && (
+              <div className='mt-1 flex items-center gap-2'>
+                <Switch
+                  id='historial-pais'
+                  checked={historialChecks.pais}
+                  onCheckedChange={(checked) =>
+                    setHistorialChecks((prev) => ({ ...prev, pais: checked }))
+                  }
+                />
+                <Label
+                  htmlFor='historial-pais'
+                  className='text-muted-foreground cursor-pointer text-xs font-normal'
+                >
+                  Guardar valor anterior en historial
+                </Label>
+              </div>
+            )}
           </Field>
         </div>
 
         <ArtistRRSSManager initialValue={artist.rrss} onChange={updateRRSS} />
+        {hasChanged.rrss && (
+          <div className='mt-1 flex items-center gap-2'>
+            <Switch
+              id='historial-rrss'
+              checked={historialChecks.rrss}
+              onCheckedChange={(checked) =>
+                setHistorialChecks((prev) => ({ ...prev, rrss: checked }))
+              }
+            />
+            <Label
+              htmlFor='historial-rrss'
+              className='text-muted-foreground cursor-pointer text-xs font-normal'
+            >
+              Guardar valor anterior en historial
+            </Label>
+          </div>
+        )}
       </FieldGroup>
 
       <div className='flex justify-end gap-2 pt-4'>

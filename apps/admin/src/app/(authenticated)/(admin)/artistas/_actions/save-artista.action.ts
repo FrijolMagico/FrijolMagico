@@ -1,7 +1,7 @@
 'use server'
 
 import { updateTag } from 'next/cache'
-import { ARTISTA_CACHE_TAG } from '../_constants'
+import { ARTISTA_CACHE_TAG, ARTISTA_HISTORIAL_CACHE_TAG } from '../_constants'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { and, eq, sql } from 'drizzle-orm'
@@ -37,6 +37,7 @@ import {
 
 const artistTable = artist.artist
 const artistImageTable = artist.artistImage
+const artistHistoryTable = artist.artistHistory
 
 /**
  * Save artista section changes to database
@@ -100,8 +101,9 @@ export async function saveArtistaAction(
         } else {
           const isUpdate = op.type === PUSH_OPERATION_TYPE.UPDATE
           const schema = isUpdate ? artistaUpdateSchema : artistaInsertSchema
+          const { _historialData, ...operationData } = op.data
           const validated = validateOperationData(
-            op.data,
+            operationData,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             schema as any,
             isUpdate
@@ -128,6 +130,34 @@ export async function saveArtistaAction(
               .update(artistTable)
               .set(stripUndefined(input))
               .where(eq(artistTable.id, Number(op.entityId)))
+
+            if (
+              _historialData &&
+              typeof _historialData === 'object' &&
+              Object.keys(_historialData as object).length > 0
+            ) {
+              const historialPayload = _historialData as Record<string, unknown>
+              const [maxResult] = await tx
+                .select({
+                  maxOrden: sql<number>`COALESCE(MAX(${artistHistoryTable.orden}), 0)`
+                })
+                .from(artistHistoryTable)
+                .where(eq(artistHistoryTable.artistaId, Number(op.entityId)))
+
+              await tx.insert(artistHistoryTable).values({
+                artistaId: Number(op.entityId),
+                orden: (maxResult?.maxOrden ?? 0) + 1,
+                pseudonimo:
+                  (historialPayload.pseudonimo as string | undefined) ?? null,
+                correo: (historialPayload.correo as string | undefined) ?? null,
+                rrss: historialPayload.rrss
+                  ? JSON.stringify(historialPayload.rrss)
+                  : null,
+                ciudad: (historialPayload.ciudad as string | undefined) ?? null,
+                pais: (historialPayload.pais as string | undefined) ?? null,
+                notas: null
+              })
+            }
           }
         }
       }
@@ -205,6 +235,7 @@ export async function saveArtistaAction(
     })
 
     updateTag(ARTISTA_CACHE_TAG)
+    updateTag(ARTISTA_HISTORIAL_CACHE_TAG)
 
     return {
       success: true,
