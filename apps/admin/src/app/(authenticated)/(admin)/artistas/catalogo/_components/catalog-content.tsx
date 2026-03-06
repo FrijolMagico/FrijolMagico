@@ -1,5 +1,4 @@
 import { Suspense } from 'react'
-import { EmptyState } from '@/shared/components/empty-state'
 import { getCatalogData } from '../_lib/get-catalog-data'
 import { CatalogStoreInitialization } from './catalog-store-initialization'
 import { CatalogArtistsContainer } from './catalog-artists-container'
@@ -8,18 +7,9 @@ import { Skeleton } from '@/shared/components/ui/skeleton'
 export async function CatalogContent() {
   const catalog = await getCatalogData()
 
-  if (!catalog || catalog.length === 0) {
-    return (
-      <EmptyState
-        title='No se encontraron artistas'
-        description='No hay artistas que coincidan con los filtros aplicados.'
-      />
-    )
-  }
-
   return (
     <Suspense fallback={<CatalogContentSkeleton />}>
-      <CatalogStoreInitialization initialData={catalog} />
+      <CatalogStoreInitialization initialData={catalog ?? []} />
       <CatalogArtistsContainer />
     </Suspense>
   )

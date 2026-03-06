@@ -8,14 +8,6 @@ import {
   DialogTitle
 } from '@/shared/components/ui/dialog'
 import { Button } from '@/shared/components/ui/button'
-import { Input } from '@/shared/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/shared/components/ui/select'
 import {
   useArtistsOperationStore,
   useArtistsProjectionStore
@@ -23,7 +15,7 @@ import {
 import { useArtistDialog } from '../_store/artist-dialog-store'
 import { ArtistRRSSManager } from '../catalogo/_components/artist-rrss-manager'
 import type { ArtistEntry } from '../_types'
-import { Field, FieldGroup, FieldLabel } from '@/shared/components/ui/field'
+import { ArtistFormLayout } from '@/shared/components/artist-form/artist-form'
 import { Switch } from '@/shared/components/ui/switch'
 import { Label } from '@/shared/components/ui/label'
 
@@ -39,6 +31,8 @@ export function EditFormContent({
   const [formData, setFormData] = useState({
     nombre: artist.nombre ?? '',
     pseudonimo: artist.pseudonimo ?? '',
+    rut: artist.rut ?? '',
+    telefono: artist.telefono ?? '',
     correo: artist.correo ?? '',
     rrss: artist.rrss ?? {},
     city: artist.ciudad ?? '',
@@ -111,6 +105,8 @@ export function EditFormContent({
     update(artist.id, {
       nombre: formData.nombre,
       pseudonimo: formData.pseudonimo,
+      rut: formData.rut,
+      telefono: formData.telefono,
       correo: formData.correo,
       rrss: formData.rrss,
       ciudad: formData.city,
@@ -123,29 +119,30 @@ export function EditFormContent({
     onClose()
   }
 
+  const layoutFormData = {
+    nombre: formData.nombre,
+    pseudonimo: formData.pseudonimo,
+    rut: formData.rut,
+    telefono: formData.telefono,
+    correo: formData.correo,
+    estadoId: formData.statusId,
+    ciudad: formData.city,
+    pais: formData.country
+  }
+
+  const handleFieldChange = (field: string, value: string) => {
+    if (field === 'ciudad') updateField('city', value)
+    else if (field === 'pais') updateField('country', value)
+    else if (field === 'estadoId') updateField('statusId', Number(value))
+    else updateField(field as keyof typeof formData, value)
+  }
+
   return (
-    <>
-      <FieldGroup>
-        <Field>
-          <FieldLabel htmlFor='nombre'>Nombre</FieldLabel>
-          <Input
-            id='nombre'
-            value={formData.nombre}
-            onChange={(e) => updateField('nombre', e.target.value)}
-            placeholder='Nombre completo'
-          />
-        </Field>
-        <Field>
-          <FieldLabel htmlFor='pseudonimo'>
-            Pseudónimo <span className='text-destructive'>*</span>
-          </FieldLabel>
-          <Input
-            id='pseudonimo'
-            value={formData.pseudonimo}
-            onChange={(e) => updateField('pseudonimo', e.target.value)}
-            placeholder='@usuario'
-            required
-          />
+    <ArtistFormLayout
+      formData={layoutFormData}
+      onFieldChange={handleFieldChange}
+      customFields={
+        <>
           {hasChanged.pseudonimo && (
             <div className='mt-1 flex items-center gap-2'>
               <Switch
@@ -166,148 +163,38 @@ export function EditFormContent({
               </Label>
             </div>
           )}
-        </Field>
+        </>
+      }
+      actions={
+        <>
+          <ArtistRRSSManager initialValue={artist.rrss} onChange={updateRRSS} />
+          {hasChanged.rrss && (
+            <div className='mt-1 flex items-center gap-2'>
+              <Switch
+                id='historial-rrss'
+                checked={historialChecks.rrss}
+                onCheckedChange={(checked) =>
+                  setHistorialChecks((prev) => ({ ...prev, rrss: checked }))
+                }
+              />
+              <Label
+                htmlFor='historial-rrss'
+                className='text-muted-foreground cursor-pointer text-xs font-normal'
+              >
+                Guardar valor anterior en historial
+              </Label>
+            </div>
+          )}
 
-        <div className='grid grid-cols-2 gap-4'>
-          <Field>
-            <FieldLabel htmlFor='correo'>Correo electrónico</FieldLabel>
-            <Input
-              id='correo'
-              type='email'
-              value={formData.correo}
-              onChange={(e) => updateField('correo', e.target.value)}
-              placeholder='artista@ejemplo.com'
-            />
-            {hasChanged.correo && (
-              <div className='mt-1 flex items-center gap-2'>
-                <Switch
-                  id='historial-correo'
-                  checked={historialChecks.correo}
-                  onCheckedChange={(checked) =>
-                    setHistorialChecks((prev) => ({ ...prev, correo: checked }))
-                  }
-                />
-                <Label
-                  htmlFor='historial-correo'
-                  className='text-muted-foreground cursor-pointer text-xs font-normal'
-                >
-                  Guardar valor anterior en historial
-                </Label>
-              </div>
-            )}
-          </Field>
-          <Field>
-            <FieldLabel htmlFor='estadoId'>Estado</FieldLabel>
-            <Select
-              value={String(formData.statusId)}
-              onValueChange={(v) => updateField('statusId', Number(v))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder='Estado'>
-                  {formData.statusId === 2
-                    ? 'Activo'
-                    : formData.statusId === 3
-                      ? 'Inactivo'
-                      : formData.statusId === 4
-                        ? 'Vetado'
-                        : formData.statusId === 5
-                          ? 'Cancelado'
-                          : 'Desconocido'}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='2'>Activo</SelectItem>
-                <SelectItem value='3'>Inactivo</SelectItem>
-                <SelectItem value='4'>Vetado</SelectItem>
-                <SelectItem value='5'>Cancelado</SelectItem>
-                <SelectItem value='1'>Desconocido</SelectItem>
-              </SelectContent>
-            </Select>
-          </Field>
-        </div>
-
-        <div className='grid grid-cols-2 gap-4'>
-          <Field>
-            <FieldLabel htmlFor='ciudad'>Ciudad</FieldLabel>
-            <Input
-              id='ciudad'
-              value={formData.city}
-              onChange={(e) => updateField('city', e.target.value)}
-              placeholder='Santiago'
-            />
-            {hasChanged.ciudad && (
-              <div className='mt-1 flex items-center gap-2'>
-                <Switch
-                  id='historial-ciudad'
-                  checked={historialChecks.ciudad}
-                  onCheckedChange={(checked) =>
-                    setHistorialChecks((prev) => ({ ...prev, ciudad: checked }))
-                  }
-                />
-                <Label
-                  htmlFor='historial-ciudad'
-                  className='text-muted-foreground cursor-pointer text-xs font-normal'
-                >
-                  Guardar valor anterior en historial
-                </Label>
-              </div>
-            )}
-          </Field>
-          <Field>
-            <FieldLabel htmlFor='pais'>País</FieldLabel>
-            <Input
-              id='pais'
-              value={formData.country}
-              onChange={(e) => updateField('country', e.target.value)}
-              placeholder='Chile'
-            />
-            {hasChanged.pais && (
-              <div className='mt-1 flex items-center gap-2'>
-                <Switch
-                  id='historial-pais'
-                  checked={historialChecks.pais}
-                  onCheckedChange={(checked) =>
-                    setHistorialChecks((prev) => ({ ...prev, pais: checked }))
-                  }
-                />
-                <Label
-                  htmlFor='historial-pais'
-                  className='text-muted-foreground cursor-pointer text-xs font-normal'
-                >
-                  Guardar valor anterior en historial
-                </Label>
-              </div>
-            )}
-          </Field>
-        </div>
-
-        <ArtistRRSSManager initialValue={artist.rrss} onChange={updateRRSS} />
-        {hasChanged.rrss && (
-          <div className='mt-1 flex items-center gap-2'>
-            <Switch
-              id='historial-rrss'
-              checked={historialChecks.rrss}
-              onCheckedChange={(checked) =>
-                setHistorialChecks((prev) => ({ ...prev, rrss: checked }))
-              }
-            />
-            <Label
-              htmlFor='historial-rrss'
-              className='text-muted-foreground cursor-pointer text-xs font-normal'
-            >
-              Guardar valor anterior en historial
-            </Label>
+          <div className='flex justify-end gap-2 pt-4'>
+            <Button variant='outline' onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSave}>Confirmar Edición</Button>
           </div>
-        )}
-      </FieldGroup>
-
-      <div className='flex justify-end gap-2 pt-4'>
-        <Button variant='outline' onClick={onClose}>
-          Cancelar
-        </Button>
-        <Button onClick={handleSave}>Confirmar Edición</Button>
-      </div>
-    </>
+        </>
+      }
+    />
   )
 }
 

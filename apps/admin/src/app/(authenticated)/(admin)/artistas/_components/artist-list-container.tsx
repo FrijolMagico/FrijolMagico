@@ -14,9 +14,13 @@ import { ArtistListFilters } from './artist-list-filters'
 import { ArtistListPagination } from './artist-list-pagination'
 import { ArtistListTable } from './artist-list-table'
 import { EditArtistDialog } from './edit-artist-dialog'
+import { AddArtistDialog } from './add-artist-dialog'
 import { ArtistHistoryDialog } from './artist-history-dialog'
 import { useHistoryByArtist } from '../_hooks/use-history-by-artist'
+import { useArtistDialog } from '../_store/artist-dialog-store'
 import type { HistoryEntry } from '../_types'
+import { Button } from '@/shared/components/ui/button'
+import { Plus } from 'lucide-react'
 
 export function ArtistListContainer({
   historyData
@@ -151,6 +155,8 @@ export function ArtistListContainer({
     })
   }
 
+  const openAddDialog = useArtistDialog((s) => s.openAddDialog)
+
   return (
     <div className='grid space-y-4'>
       <div className='flex items-center justify-between gap-4'>
@@ -159,6 +165,10 @@ export function ArtistListContainer({
           cities={cities}
           onFiltersChange={handleFiltersChange}
         />
+        <Button size='sm' variant='outline' onClick={openAddDialog} className='gap-1'>
+          <Plus className='h-4 w-4' />
+          Agregar artista
+        </Button>
       </div>
 
       <ArtistListPagination onPageChange={handlePageChange} />
@@ -171,6 +181,7 @@ export function ArtistListContainer({
       <ArtistListPagination onPageChange={handlePageChange} />
 
       <EditArtistDialog />
+      <AddArtistDialog />
       <ArtistHistoryDialog historyByArtistId={historyByArtistId} />
 
       {/* TODO: Verify sequential commit ordering and ID mapping for multi-entity routes */}

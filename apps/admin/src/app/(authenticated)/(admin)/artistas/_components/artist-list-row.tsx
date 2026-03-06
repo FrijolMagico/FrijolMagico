@@ -11,6 +11,7 @@ import {
 import { useArtistDialog } from '../_store/artist-dialog-store'
 import { StateBadge } from '@/shared/components/state-badge'
 import { ActionMenuButton } from '@/shared/components/action-menu-button'
+import { RRSSViewer } from '@/shared/components/rrss-viewer/rrss-viewer'
 
 interface ArtistListRowProps {
   id: string
@@ -61,6 +62,9 @@ export const ArtistListRow = memo(function ArtistListRow({
       <TableCell>{artist.correo || '-'}</TableCell>
       <TableCell>
         {[artist.ciudad, artist.pais].filter(Boolean).join(', ') || '-'}
+      </TableCell>
+      <TableCell>
+        <RRSSViewer rrss={artist.rrss} disabled={isDeleted} />
       </TableCell>
       <TableCell className='text-muted-foreground'>
         {artist.rut || '-'}

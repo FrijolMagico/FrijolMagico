@@ -56,6 +56,7 @@ export const ArtistListTable = memo(function ArtistListTable({
             <TableHead>Nombre</TableHead>
             <TableHead>Correo</TableHead>
             <TableHead>Ubicación</TableHead>
+            <TableHead>RRSS</TableHead>
             <TableHead>RUT</TableHead>
             <TableHead>Estado</TableHead>
             <TableHead>Acciones</TableHead>
