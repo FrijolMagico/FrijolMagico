@@ -8,14 +8,6 @@ import {
   DialogTitle
 } from '@/shared/components/ui/dialog'
 import { Button } from '@/shared/components/ui/button'
-import { Input } from '@/shared/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/shared/components/ui/select'
 import {
   useArtistsOperationStore,
   useArtistsProjectionStore
@@ -173,7 +165,6 @@ export function EditFormContent({
           )}
         </>
       }
-
       actions={
         <>
           <ArtistRRSSManager initialValue={artist.rrss} onChange={updateRRSS} />

@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +11,26 @@ import { ButtonWithTooltip } from '@/shared/components/button-with-tooltip'
 interface RRSSViewerProps {
   rrss: Record<string, string | string[]> | null
   disabled?: boolean
+}
+
+function extractHandle(url: string): string {
+  try {
+    const parsed = new URL(url)
+    const segments = parsed.pathname.split('/').filter(Boolean)
+    return segments[segments.length - 1] || url
+  } catch {
+    return url
+  }
+}
+
+function isValidUrl(url: string): boolean {
+  if (!url) return false
+  try {
+    const parsed = new URL(url)
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+  } catch {
+    return false
+  }
 }
 
 export function RRSSViewer({ rrss, disabled }: RRSSViewerProps) {
@@ -27,7 +46,9 @@ export function RRSSViewer({ rrss, disabled }: RRSSViewerProps) {
       : [{ platform, url: value }]
   )
 
-  if (flat.length === 0) {
+  const validEntries = flat.filter(({ url }) => isValidUrl(url))
+
+  if (validEntries.length === 0) {
     return <span className='text-muted-foreground'>-</span>
   }
 
@@ -47,17 +68,18 @@ export function RRSSViewer({ rrss, disabled }: RRSSViewerProps) {
       />
 
       <DropdownMenuContent className='w-full min-w-40'>
-        {flat.map(({ platform, url }) => (
+        {validEntries.map(({ platform, url }, index) => (
           <DropdownMenuItem
-            key={url + platform}
+            key={`${platform}-${url}-${index}`}
             render={
-              <Link
+              <a
                 href={url}
                 target='_blank'
+                rel='noopener noreferrer'
                 className='w-full text-nowrap'
               >
-                {platform}: @{url.split('/')[3]}
-              </Link>
+                {platform}: @{extractHandle(url)}
+              </a>
             }
           />
         ))}

@@ -75,10 +75,6 @@ function AddArtistFormContent({
     estadoId?: string
   }>({})
 
-  const handlePseudonimoChange = (val: string) => {
-    setFormData((prev) => ({ ...prev, pseudonimo: val }))
-  }
-
   const handleFieldChange = (field: string, val: string) => {
     setFormData((prev) => ({ ...prev, [field]: val }))
   }
