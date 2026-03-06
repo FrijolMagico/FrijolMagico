@@ -6,18 +6,11 @@ import {
   useTeamProjectionStore
 } from '../_store/organization-team-ui-store'
 import { cn } from '@/lib/utils'
-import { ButtonWithTooltip } from '@/shared/components/button-with-tooltip'
 import { useTeamDialog } from '../_store/team-dialog-store'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/shared/components/ui/dropdown-menu'
-import Link from 'next/link'
 import { StateBadge } from '@/shared/components/state-badge'
 import { memo } from 'react'
 import { ActionMenuButton } from '@/shared/components/action-menu-button'
+import { RRSSViewer } from '@/shared/components/rrss-viewer/rrss-viewer'
 
 interface TeamRowProps {
   id: string
@@ -28,10 +21,6 @@ export const TeamRow = memo(function TeamRow({ id }: TeamRowProps) {
   const remove = useTeamOperationStore((s) => s.remove)
   const restore = useTeamOperationStore((s) => s.restore)
   const member = useTeamProjectionStore((s) => s.byId[id])
-
-  const socials = Object.entries(member?.rrss || {}).flatMap(
-    ([platform, urls]) => urls.map((url) => ({ platform, url }))
-  )
 
   if (!member) return null
 
@@ -54,41 +43,7 @@ export const TeamRow = memo(function TeamRow({ id }: TeamRowProps) {
       </TableCell>
       <TableCell>{member.phone || '-'}</TableCell>
       <TableCell>
-        {member.rrss ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <ButtonWithTooltip
-                  size='xs'
-                  variant='outline'
-                  tooltipContent='Ver RRSS'
-                  disabled={member.__meta?.isDeleted}
-                >
-                  Ver
-                </ButtonWithTooltip>
-              }
-            />
-
-            <DropdownMenuContent className='w-full min-w-40'>
-              {socials.map(({ platform, url }) => (
-                <DropdownMenuItem
-                  key={url + platform}
-                  render={
-                    <Link
-                      href={url}
-                      target='_blank'
-                      className='w-full text-nowrap'
-                    >
-                      {platform}: @{url.split('/')[3]}
-                    </Link>
-                  }
-                />
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          '-'
-        )}
+        <RRSSViewer rrss={member.rrss} disabled={member.__meta?.isDeleted} />
       </TableCell>
 
       <TableCell>
