@@ -7,13 +7,17 @@ import { useRouteChanges } from '@/shared/hooks/use-route-changes'
 import { RouteSaveToolbar } from '@/shared/components/route-save-toolbar'
 import { CatalogFilters as CatalogFiltersComponent } from './catalog-filters'
 import { EditCatalogDialog } from './edit-catalog-dialog'
+import { AddCatalogDialog } from './add-catalog-dialog'
 import { useCatalogFilterStore } from '../_store/catalog-filter-store'
+import { useCatalogViewStore } from '../_store/catalog-view-store'
 import { useCatalogPaginationStore } from '../_store/catalog-pagination-store'
 import { useCatalogoPush } from '../_hooks/use-catalogo-push'
 import { useArtistaPush } from '../../_hooks/use-artista-push'
 import { toast } from 'sonner'
 import { CatalogTableContainer } from './catalog-table-container'
 import { EditArtistDialog } from './edit-artist-dialog'
+import { Button } from '@/shared/components/ui/button'
+import { Plus } from 'lucide-react'
 
 export function CatalogArtistsContainer() {
   const router = useRouter()
@@ -111,16 +115,23 @@ export function CatalogArtistsContainer() {
     saveArtista()
   }
 
+  const openAddCatalogDialog = useCatalogViewStore((s) => s.openAddCatalogDialog)
+
   return (
     <div className='grid space-y-4'>
       <div className='flex items-center justify-between'>
         <CatalogFiltersComponent onFiltersChange={handleFiltersChange} />
+        <Button size='sm' variant='outline' onClick={openAddCatalogDialog} className='gap-1'>
+          <Plus className='h-4 w-4' />
+          Agregar al catálogo
+        </Button>
       </div>
 
       <CatalogTableContainer handleFiltersChange={handleFiltersChange} />
 
       {/* Dialog Nivel 1: Catálogo */}
       <EditCatalogDialog />
+      <AddCatalogDialog />
 
       {/* Dialog Nivel 2: Artista (stacked) */}
       <EditArtistDialog />
