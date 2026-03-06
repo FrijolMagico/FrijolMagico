@@ -79,3 +79,21 @@ export const artistaImagenFormSchema = artistaImagenInsertSchema
 
 export type ArtistaFormInput = z.infer<typeof artistaFormSchema>
 export type ArtistaImagenFormInput = z.infer<typeof artistaImagenFormSchema>
+
+const artistHistoryTable = artistSchema.artistHistory
+
+export const artistaHistorialInsertSchema = createInsertSchema(
+  artistHistoryTable,
+  {
+    artistaId: () => z.coerce.number().int().positive(),
+    rrss: () =>
+      z.preprocess((val) => {
+        if (val && typeof val === 'object') return JSON.stringify(val)
+        return val
+      }, z.string().nullable().optional()) as z.ZodType<string | null | undefined>
+  }
+)
+
+export type ArtistaHistorialInsertInput = z.infer<
+  typeof artistaHistorialInsertSchema
+>

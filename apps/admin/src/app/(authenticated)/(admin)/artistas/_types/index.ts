@@ -6,6 +6,13 @@ export type ArtistEntry = Omit<RawArtist, 'id' | 'rrss'> & {
   id: string
   rrss: Record<string, string> | null
   estadoSlug?: string
+  _historialData?: Partial<{
+    pseudonimo: string
+    correo: string
+    rrss: Record<string, string>
+    ciudad: string
+    pais: string
+  }>
 }
 
 export interface ArtistListFilters {
