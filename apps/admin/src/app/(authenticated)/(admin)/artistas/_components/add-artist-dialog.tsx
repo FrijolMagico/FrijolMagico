@@ -3,20 +3,6 @@
 import { useState } from 'react'
 import { EntityFormDialog } from '@/shared/components/entity-form-dialog/entity-form-dialog'
 import { Button } from '@/shared/components/ui/button'
-import { Input } from '@/shared/components/ui/input'
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-  FieldError
-} from '@/shared/components/ui/field'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/shared/components/ui/select'
 import { useArtistDialog } from '../_store/artist-dialog-store'
 import { useArtistsOperationStore } from '../_store/artista-ui-store'
 import { artistaFormSchema } from '../_schemas/artista.schema'
