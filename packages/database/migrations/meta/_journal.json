@@ -106,6 +106,13 @@
       "when": 1773073413405,
       "tag": "0014_add-participacion-edicion",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "6",
+      "when": 1773073580852,
+      "tag": "0015_redesign-participaciones",
+      "breakpoints": true
     }
   ]
 }
