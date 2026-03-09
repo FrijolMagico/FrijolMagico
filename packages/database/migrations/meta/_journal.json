@@ -99,6 +99,13 @@
       "when": 1773073018626,
       "tag": "0013_add-banda-agrupacion-artista",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1773073413405,
+      "tag": "0014_add-participacion-edicion",
+      "breakpoints": true
     }
   ]
 }
