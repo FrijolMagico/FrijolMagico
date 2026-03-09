@@ -8,7 +8,7 @@ import {
 } from 'drizzle-orm/sqlite-core'
 
 import { eventEdition, eventEditionApplication } from './events'
-import { collective, artist } from './artist'
+import { collective, artist, banda } from './artist'
 import { discipline } from './core'
 
 /**
@@ -42,23 +42,24 @@ export const admissionMode = sqliteTable('modo_ingreso', {
 })
 
 /**
- * Event Edition Participant - Participants in event editions (master table)
+ * Event Edition Participation - Participants in event editions (master table)
  */
-export const eventEditionParticipant = sqliteTable(
-  'evento_edicion_participante',
+export const editionParticipation = sqliteTable(
+  'participacion_edicion',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
-    eventoEdicionId: integer('evento_edicion_id')
+    edicionId: integer('edicion_id')
       .notNull()
-      .references(() => eventEdition.id, { onDelete: 'cascade' }),
-    artistaId: integer('artista_id')
-      .notNull()
-      .references(() => artist.id, { onDelete: 'cascade' }),
-    estado: text('estado', {
-      enum: ['renuncia', 'expulsado', 'cancelado', 'activo', 'completado']
-    })
-      .notNull()
-      .default('activo'),
+      .references(() => eventEdition.id, { onDelete: 'restrict' }),
+    artistaId: integer('artista_id').references(() => artist.id, {
+      onDelete: 'restrict'
+    }),
+    agrupacionId: integer('agrupacion_id').references(() => collective.id, {
+      onDelete: 'restrict'
+    }),
+    bandaId: integer('banda_id').references(() => banda.id, {
+      onDelete: 'restrict'
+    }),
     notas: text('notas'),
     createdAt: text('created_at')
       .notNull()
@@ -68,42 +69,44 @@ export const eventEditionParticipant = sqliteTable(
       .default(sql`CURRENT_TIMESTAMP`)
   },
   (table) => [
-    uniqueIndex('uq_participant').on(table.artistaId, table.eventoEdicionId),
-    index('idx_participant_evento_edicion').on(table.eventoEdicionId),
-    index('idx_participant_artista').on(table.artistaId),
-    index('idx_participant_estado').on(table.estado)
+    uniqueIndex('uq_participacion_artista')
+      .on(table.edicionId, table.artistaId)
+      .where(sql`${table.artistaId} IS NOT NULL`),
+    uniqueIndex('uq_participacion_agrupacion')
+      .on(table.edicionId, table.agrupacionId)
+      .where(sql`${table.agrupacionId} IS NOT NULL`),
+    uniqueIndex('uq_participacion_banda')
+      .on(table.edicionId, table.bandaId)
+      .where(sql`${table.bandaId} IS NOT NULL`),
+    index('idx_participacion_edicion').on(table.edicionId),
+    index('idx_participacion_artista').on(table.artistaId),
+    index('idx_participacion_agrupacion').on(table.agrupacionId),
+    index('idx_participacion_banda').on(table.bandaId)
   ]
 )
 
 /**
- * Participant Exhibition - Participants in exhibition section
+ * Participation Exhibition - Exhibition section participation
  */
-export const participantExhibition = sqliteTable(
-  'participante_exposicion',
+export const participationExhibition = sqliteTable(
+  'participacion_exposicion',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
-    artistaId: integer('artista_id')
+    participacionId: integer('participacion_id')
       .notNull()
-      .references(() => artist.id, { onDelete: 'restrict' }),
-    eventoEdicionId: integer('evento_edicion_id')
+      .unique()
+      .references(() => editionParticipation.id, { onDelete: 'cascade' }),
+    disciplinaId: integer('disciplina_id')
       .notNull()
-      .references(() => eventEdition.id, { onDelete: 'restrict' }),
+      .references(() => discipline.id, { onDelete: 'restrict' }),
     postulacionId: integer('postulacion_id').references(
       () => eventEditionApplication.id,
       { onDelete: 'restrict' }
     ),
-    participanteId: integer('participante_id').references(
-      () => eventEditionParticipant.id,
-      { onDelete: 'restrict' }
-    ),
-    disciplinaId: integer('disciplina_id')
-      .notNull()
-      .references(() => discipline.id),
-    agrupacionId: integer('agrupacion_id').references(() => collective.id),
     modoIngresoId: integer('modo_ingreso_id')
       .notNull()
       .default(1)
-      .references(() => admissionMode.id),
+      .references(() => admissionMode.id, { onDelete: 'restrict' }),
     puntaje: integer('puntaje'),
     estado: text('estado', {
       enum: [
@@ -126,53 +129,33 @@ export const participantExhibition = sqliteTable(
       .default(sql`CURRENT_TIMESTAMP`)
   },
   (table) => [
-    uniqueIndex('uq_exhibition_artista_evento').on(
-      table.artistaId,
-      table.eventoEdicionId
-    ),
-    index('idx_exhibition_artista').on(table.artistaId),
-    index('idx_exhibition_evento_edicion').on(table.eventoEdicionId),
-    index('idx_exhibition_postulacion').on(table.postulacionId),
-    index('idx_exhibition_participante').on(table.participanteId),
-    index('idx_exhibition_estado').on(table.estado),
-    index('idx_exhibition_disciplina').on(table.disciplinaId),
-    index('idx_exhibition_agrupacion').on(table.agrupacionId),
-    index('idx_exhibition_modo_ingreso').on(table.modoIngresoId),
-    index('idx_exhibition_puntaje')
-      .on(table.puntaje)
-      .where(sql`${table.puntaje} IS NOT NULL`)
+    index('idx_pexp_participacion').on(table.participacionId),
+    index('idx_pexp_disciplina').on(table.disciplinaId),
+    index('idx_pexp_estado').on(table.estado)
   ]
 )
 
 /**
- * Participant Activity - Participants in activities
+ * Participation Activity - Activity section participation
  */
-export const participantActivity = sqliteTable(
-  'participante_actividad',
+export const participationActivity = sqliteTable(
+  'participacion_actividad',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
-    artistaId: integer('artista_id')
+    participacionId: integer('participacion_id')
       .notNull()
-      .references(() => artist.id, { onDelete: 'restrict' }),
-    eventoEdicionId: integer('evento_edicion_id')
+      .references(() => editionParticipation.id, { onDelete: 'cascade' }),
+    tipoActividadId: integer('tipo_actividad_id')
       .notNull()
-      .references(() => eventEdition.id, { onDelete: 'restrict' }),
+      .references(() => activityType.id, { onDelete: 'restrict' }),
     postulacionId: integer('postulacion_id').references(
       () => eventEditionApplication.id,
       { onDelete: 'restrict' }
     ),
-    participanteId: integer('participante_id').references(
-      () => eventEditionParticipant.id,
-      { onDelete: 'restrict' }
-    ),
-    tipoActividadId: integer('tipo_actividad_id')
-      .notNull()
-      .references(() => activityType.id),
-    agrupacionId: integer('agrupacion_id').references(() => collective.id),
     modoIngresoId: integer('modo_ingreso_id')
       .notNull()
       .default(2)
-      .references(() => admissionMode.id),
+      .references(() => admissionMode.id, { onDelete: 'restrict' }),
     puntaje: integer('puntaje'),
     estado: text('estado', {
       enum: [
@@ -195,17 +178,9 @@ export const participantActivity = sqliteTable(
       .default(sql`CURRENT_TIMESTAMP`)
   },
   (table) => [
-    index('idx_activity_artista').on(table.artistaId),
-    index('idx_activity_evento_edicion').on(table.eventoEdicionId),
-    index('idx_activity_postulacion').on(table.postulacionId),
-    index('idx_activity_participante').on(table.participanteId),
-    index('idx_activity_estado').on(table.estado),
-    index('idx_activity_tipo_actividad').on(table.tipoActividadId),
-    index('idx_activity_agrupacion').on(table.agrupacionId),
-    index('idx_activity_modo_ingreso').on(table.modoIngresoId),
-    index('idx_activity_puntaje')
-      .on(table.puntaje)
-      .where(sql`${table.puntaje} IS NOT NULL`)
+    index('idx_pact_participacion').on(table.participacionId),
+    index('idx_pact_tipo_actividad').on(table.tipoActividadId),
+    index('idx_pact_estado').on(table.estado)
   ]
 )
 
@@ -216,10 +191,10 @@ export const activity = sqliteTable(
   'actividad',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
-    participanteActividadId: integer('participante_actividad_id')
+    participacionActividadId: integer('participacion_actividad_id')
       .unique()
       .notNull()
-      .references(() => participantActivity.id, { onDelete: 'cascade' }),
+      .references(() => participationActivity.id, { onDelete: 'cascade' }),
     titulo: text('titulo'),
     descripcion: text('descripcion'),
     duracionMinutos: integer('duracion_minutos'),
@@ -234,6 +209,8 @@ export const activity = sqliteTable(
       .default(sql`CURRENT_TIMESTAMP`)
   },
   (table) => [
-    index('idx_activity_participante_actividad').on(table.participanteActividadId)
+    index('idx_actividad_participacion_actividad').on(
+      table.participacionActividadId
+    )
   ]
 )

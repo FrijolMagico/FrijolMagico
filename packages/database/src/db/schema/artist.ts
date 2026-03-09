@@ -158,6 +158,7 @@ export const collective = sqliteTable('agrupacion', {
   nombre: text('nombre').unique().notNull(),
   descripcion: text('descripcion'),
   correo: text('correo'),
+  activo: integer('activo', { mode: 'boolean' }).notNull().default(true),
   createdAt: text('created_at')
     .notNull()
     .default(sql`CURRENT_TIMESTAMP`),
@@ -165,3 +166,46 @@ export const collective = sqliteTable('agrupacion', {
     .notNull()
     .default(sql`CURRENT_TIMESTAMP`)
 })
+
+/**
+ * Banda - Music bands
+ */
+export const banda = sqliteTable('banda', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  nombre: text('nombre').unique().notNull(),
+  descripcion: text('descripcion'),
+  correo: text('correo'),
+  activo: integer('activo', { mode: 'boolean' }).notNull().default(true),
+  createdAt: text('created_at')
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at')
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`)
+})
+
+/**
+ * Collective Artist - Artists in collectives
+ */
+export const collectiveArtist = sqliteTable(
+  'agrupacion_artista',
+  {
+    agrupacionId: integer('agrupacion_id')
+      .notNull()
+      .references(() => collective.id, { onDelete: 'cascade' }),
+    artistaId: integer('artista_id')
+      .notNull()
+      .references(() => artist.id, { onDelete: 'cascade' }),
+    rol: text('rol'),
+    activo: integer('activo', { mode: 'boolean' }).notNull().default(true),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`)
+  },
+  (table) => [
+    index('idx_agrupacion_artista_artista').on(table.artistaId),
+    index('idx_agrupacion_artista_activo')
+      .on(table.agrupacionId)
+      .where(sql`${table.activo} = 1`)
+  ]
+)
