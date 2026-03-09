@@ -32,7 +32,7 @@ import { FESTIVAL_EVENT_ID } from '../_constants'
 const { artist: artistTable, artistStatus, catalogArtist } = artist
 const { eventEdition } = events
 const { discipline } = core
-const { eventEditionParticipant, participantExhibition } = participations
+const { editionParticipation, participationExhibition } = participations
 
 export async function getDashboardArtistStats(): Promise<DashboardArtistStats | null> {
   'use cache'
@@ -88,19 +88,19 @@ export async function getDashboardEventStats(): Promise<DashboardEventStats | nu
   cacheTag(EVENTO_CACHE_TAG, EVENTO_EDICION_CACHE_TAG)
 
   const [participationRow, editionCountRow, latestRows] = await Promise.all([
-    db.select({ count: count() }).from(eventEditionParticipant),
+    db.select({ count: count() }).from(editionParticipation),
     db.select({ count: count() }).from(eventEdition),
     db
       .select({
         id: eventEdition.id,
         nombre: eventEdition.nombre,
         numeroEdicion: eventEdition.numeroEdicion,
-        participantCount: count(eventEditionParticipant.id)
+        participantCount: count(editionParticipation.id)
       })
       .from(eventEdition)
       .leftJoin(
-        eventEditionParticipant,
-        eq(eventEdition.id, eventEditionParticipant.eventoEdicionId)
+        editionParticipation,
+        eq(eventEdition.id, editionParticipation.edicionId)
       )
       .where(eq(eventEdition.eventoId, FESTIVAL_EVENT_ID))
       .groupBy(eventEdition.id)
@@ -133,12 +133,12 @@ export async function getDashboardGrowthData(): Promise<EditionGrowthPoint[]> {
       edicionId: eventEdition.id,
       numero: eventEdition.numeroEdicion,
       nombre: eventEdition.nombre,
-      participantes: count(eventEditionParticipant.id)
+      participantes: count(editionParticipation.id)
     })
     .from(eventEdition)
     .leftJoin(
-      eventEditionParticipant,
-      eq(eventEdition.id, eventEditionParticipant.eventoEdicionId)
+      editionParticipation,
+      eq(eventEdition.id, editionParticipation.edicionId)
     )
     .where(eq(eventEdition.eventoId, FESTIVAL_EVENT_ID))
     .groupBy(eventEdition.id)
@@ -161,10 +161,10 @@ export async function getDashboardDisciplineData(): Promise<DisciplinePoint[]> {
       disciplina: discipline.slug,
       count: count()
     })
-    .from(participantExhibition)
+    .from(participationExhibition)
     .innerJoin(
       discipline,
-      eq(participantExhibition.disciplinaId, discipline.id)
+      eq(participationExhibition.disciplinaId, discipline.id)
     )
     .groupBy(discipline.slug)
     .orderBy(desc(count()))
@@ -183,15 +183,12 @@ export async function getDashboardTopArtists(): Promise<TopArtistEntry[]> {
     .select({
       id: artistTable.id,
       pseudonimo: artistTable.pseudonimo,
-      ediciones: count(eventEditionParticipant.id)
+      ediciones: count(editionParticipation.id)
     })
-    .from(eventEditionParticipant)
-    .innerJoin(
-      artistTable,
-      eq(eventEditionParticipant.artistaId, artistTable.id)
-    )
+    .from(editionParticipation)
+    .innerJoin(artistTable, eq(editionParticipation.artistaId, artistTable.id))
     .groupBy(artistTable.id)
-    .orderBy(desc(count(eventEditionParticipant.id)))
+    .orderBy(desc(count(editionParticipation.id)))
     .limit(5)
 
   return rows.map((r) => ({
