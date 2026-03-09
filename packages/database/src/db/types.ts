@@ -18,10 +18,10 @@ import {
 
 import {
   activity,
-  eventEditionParticipant,
+  editionParticipation,
   admissionMode,
-  participantActivity,
-  participantExhibition,
+  participationActivity,
+  participationExhibition,
   activityType
 } from './schema/participations'
 
@@ -88,13 +88,9 @@ export type EventEditionDay = InferSelectModel<typeof eventEditionDay>
 export type NewEventEditionDay = InferInsertModel<typeof eventEditionDay>
 
 export type EventEditionMetric = InferSelectModel<typeof eventEditionMetric>
-export type NewEventEditionMetric = InferInsertModel<
-  typeof eventEditionMetric
->
+export type NewEventEditionMetric = InferInsertModel<typeof eventEditionMetric>
 
-export type EventEditionSnapshot = InferSelectModel<
-  typeof eventEditionSnapshot
->
+export type EventEditionSnapshot = InferSelectModel<typeof eventEditionSnapshot>
 export type NewEventEditionSnapshot = InferInsertModel<
   typeof eventEditionSnapshot
 >
@@ -116,25 +112,25 @@ export type NewActivityType = InferInsertModel<typeof activityType>
 export type AdmissionMode = InferSelectModel<typeof admissionMode>
 export type NewAdmissionMode = InferInsertModel<typeof admissionMode>
 
-export type EventEditionParticipant = InferSelectModel<
-  typeof eventEditionParticipant
+export type EventEditionParticipation = InferSelectModel<
+  typeof editionParticipation
 >
-export type NewEventEditionParticipant = InferInsertModel<
-  typeof eventEditionParticipant
->
-
-export type ParticipantExhibition = InferSelectModel<
-  typeof participantExhibition
->
-export type NewParticipantExhibition = InferInsertModel<
-  typeof participantExhibition
+export type NewEventEditionParticipation = InferInsertModel<
+  typeof editionParticipation
 >
 
-export type ParticipantActivity = InferSelectModel<
-  typeof participantActivity
+export type ParticipationExhibition = InferSelectModel<
+  typeof participationExhibition
 >
-export type NewParticipantActivity = InferInsertModel<
-  typeof participantActivity
+export type NewParticipationExhibition = InferInsertModel<
+  typeof participationExhibition
+>
+
+export type ParticipationActivity = InferSelectModel<
+  typeof participationActivity
+>
+export type NewParticipationActivity = InferInsertModel<
+  typeof participationActivity
 >
 
 export type Activity = InferSelectModel<typeof activity>

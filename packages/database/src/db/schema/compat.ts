@@ -29,7 +29,7 @@ export const discipline = core.discipline
 // Participations exports (keep English as they were)
 export const tipoActividad = participations.activityType
 export const modoIngreso = participations.admissionMode
-export const eventoEdicionParticipante = participations.eventEditionParticipant
-export const participanteExposicion = participations.participantExhibition
-export const participanteActividad = participations.participantActivity
+export const participacionEdicion = participations.editionParticipation
+export const participacionExposicion = participations.participationExhibition
+export const participacionActividad = participations.participationActivity
 export const actividad = participations.activity
