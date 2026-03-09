@@ -92,6 +92,13 @@
       "when": 1772723036014,
       "tag": "0012_add_deleted_at_to_artista_historial_and_catalogo",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1773073018626,
+      "tag": "0013_add-banda-agrupacion-artista",
+      "breakpoints": true
     }
   ]
 }
