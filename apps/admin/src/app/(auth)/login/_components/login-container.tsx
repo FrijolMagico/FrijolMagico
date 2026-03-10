@@ -1,28 +1,33 @@
 import Image from 'next/image'
-import { Card, CardContent, CardHeader } from '@/shared/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/shared/components/ui/card'
 
 export function LoginContainer({ children }: { children: React.ReactNode }) {
   return (
     <div className='bg-background relative flex min-h-screen items-center justify-center overflow-hidden bg-linear-to-br'>
-      <Card className='relative z-10 w-full max-w-md'>
-        <CardHeader className='items-center'>
-          <Image
-            src='/logotipo_mono.png'
-            alt='Frijol Mágico'
-            width={64}
-            height={64}
-            className='mx-auto'
-            priority
-          />
-          <div className='text-center'>
-            <span>Asociación Cultural</span>
-            <h1 className='text-4xl font-black'>Frijol Mágico</h1>
-            <p className='text-muted-foreground pt-2 text-sm'>
-              Panel de Administración
-            </p>
-          </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <Image
+              src='/logotipo_asoc_2026_color.png'
+              alt='Frijol Mágico'
+              width={400}
+              height={228}
+              className='mx-auto w-52'
+              priority
+            />
+            <p className='sr-only'>Asociación Cultural Frijol Mágico</p>
+          </CardTitle>
+          <CardDescription className='text-center'>
+            Inicia sesión para acceder al panel de administración
+          </CardDescription>
         </CardHeader>
-        <CardContent className='space-y-4'>{children}</CardContent>
+        <CardContent>{children}</CardContent>
       </Card>
     </div>
   )
