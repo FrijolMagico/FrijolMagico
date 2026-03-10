@@ -7,6 +7,8 @@ import {
 } from '@/shared/components/ui/collapsible'
 
 import {
+  SidebarGroup,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -16,159 +18,83 @@ import {
   useSidebar
 } from '@/shared/components/ui/sidebar'
 
-import { ChevronRight } from 'lucide-react'
-import { usePathname } from 'next/navigation'
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { navigation } from '@/lib/navigation'
-import { getSectionsWithChanges } from '@/shared/operations/journal'
-import { useSectionDirtyStore } from '@/shared/lib/section-dirty-store'
-import { ROUTE_ENTITY_MAP } from '@/shared/lib/database-entities'
+import { IconChevronsRight, TablerIcon } from '@tabler/icons-react'
 
-type NavigationItem = (typeof navigation)[number]
-type CollapsibleNavigationItem = NavigationItem & {
-  items: NonNullable<NavigationItem['items']>
+interface PanelSidebarMenuProps {
+  label?: string
+  items: {
+    title: string
+    url: string
+    icon?: TablerIcon
+    isActive?: boolean
+    items?: {
+      title: string
+      url: string
+    }[]
+  }[]
 }
 
-type CollapsibleNavItemProps = {
-  item: CollapsibleNavigationItem
-  pathname: string
-  pendingSections: Set<string>
-}
-
-function routeHasPending(href: string, pendingSections: Set<string>): boolean {
-  const entities = ROUTE_ENTITY_MAP[href] ?? []
-  return entities.some((e) => pendingSections.has(e))
-}
-
-const CollapsibleNavItem = ({
-  item,
-  pathname,
-  pendingSections
-}: CollapsibleNavItemProps) => {
-  // TECH DEBT: This open state logic is a bit brittle - it assumes the first sub-item's href is a prefix for all sub-items, which is true for our current routes but could break if we add more complex nesting or non-prefix routes. A more robust solution would be to check if any sub-item's href matches the pathname on initial render, but that would require iterating over all sub-items every time. For now, this is a reasonable trade-off given our current route structure and the fact that it only affects the initial open state on page load.
-  const [open, setOpen] = useState(pathname.startsWith(item.items[0].href))
+export const PanelSidebarMenu = ({ items, label }: PanelSidebarMenuProps) => {
   const { setOpenMobile } = useSidebar()
 
-  // Show dot on parent if ANY sub-item has pending changes
-  const anySubItemPending = item.items.some((subItem) =>
-    routeHasPending(subItem.href, pendingSections)
-  )
-
   return (
-    <Collapsible
-      open={open}
-      onOpenChange={setOpen}
-      className='group/collapsible'
-    >
-      <SidebarMenuItem>
-        <CollapsibleTrigger render={<SidebarMenuButton tooltip={item.title} />}>
-          {item.icon && <item.icon />}
-          <span>{item.title}</span>
-          {anySubItemPending && (
-            <span className='ml-auto h-2 w-2 rounded-full bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.5)]' />
-          )}
-          <ChevronRight className='h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90' />
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <SidebarMenuSub>
-            {item.items.map((subItem) => {
-              const subHasPending = routeHasPending(
-                subItem.href,
-                pendingSections
-              )
-              return (
-                <SidebarMenuSubItem key={subItem.title}>
-                  <SidebarMenuSubButton
-                    render={
-                      <Link
-                        onClick={() => setOpenMobile(false)}
-                        href={subItem.href}
-                      />
-                    }
-                    isActive={pathname === subItem.href}
-                  >
-                    {subItem.title}
-                    {subHasPending && (
-                      <span className='ml-auto h-2 w-2 rounded-full bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.5)]' />
-                    )}
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-              )
-            })}
-          </SidebarMenuSub>
-        </CollapsibleContent>
-      </SidebarMenuItem>
-    </Collapsible>
-  )
-}
-
-export const PanelSidebarMenu = () => {
-  const pathname = usePathname()
-
-  // Live dirty state: synchronous subscription to the projection-driven read model
-  const dirtyMap = useSectionDirtyStore((s) => s.dirtyMap)
-  const { setOpenMobile } = useSidebar()
-
-  const pendingSections = new Set(
-    Object.entries(dirtyMap)
-      .filter(([, dirty]) => dirty)
-      .map(([section]) => section)
-  )
-
-  // Cold-start hydration: seed dirty store for sections not yet projected this session
-  // Defer to ensure projection stores have subscribed first via useDirtySync
-  useEffect(() => {
-    Promise.resolve().then(() => {
-      getSectionsWithChanges().then((sections) => {
-        const { dirtyMap: currentMap, setDirty } =
-          useSectionDirtyStore.getState()
-        for (const { section, count } of sections) {
-          if (!(section in currentMap)) {
-            setDirty(section, count > 0)
-          }
-        }
-      })
-    })
-  }, [])
-
-  return (
-    <SidebarMenu>
-      {navigation.map((item) => {
-        if (item.items) {
-          return (
-            <CollapsibleNavItem
-              key={item.title}
-              item={item}
-              pathname={pathname}
-              pendingSections={pendingSections}
-            />
-          )
-        }
-
-        const hasPending = routeHasPending(item.href, pendingSections)
-
-        return (
-          <SidebarMenuItem key={item.title}>
-            <SidebarMenuButton
-              tooltip={item.title}
-              isActive={pathname === item.href}
-            >
-              <Link
-                onClick={() => setOpenMobile(false)}
-                href={item.href}
-                className='flex w-full items-center gap-2'
+    <SidebarGroup>
+      {label && <SidebarGroupLabel>{label}</SidebarGroupLabel>}
+      <SidebarMenu>
+        {items.map((item) => {
+          if (item.items) {
+            return (
+              <Collapsible
+                key={item.title}
+                defaultOpen={item.isActive}
+                className='group/collapsible'
               >
-                {item.icon && <item.icon />}
-                <span>{item.title}</span>
-                {hasPending && (
-                  <span className='ml-auto h-2 w-2 rounded-full bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.5)]' />
-                )}
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        )
-      })}
-    </SidebarMenu>
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton tooltip={item.title}>
+                      {item.icon && <item.icon />}
+                      <span>{item.title}</span>
+                    </SidebarMenuButton>
+                    <IconChevronsRight className='ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      {item.items.map((subItem) => (
+                        <SidebarMenuSubItem key={subItem.title}>
+                          <SidebarMenuSubButton asChild>
+                            <Link
+                              onClick={() => setOpenMobile(false)}
+                              href={subItem.url}
+                            >
+                              {subItem.title}
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      ))}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
+            )
+          }
+
+          return (
+            <SidebarMenuItem key={item.title}>
+              <SidebarMenuButton tooltip={item.title}>
+                <Link
+                  onClick={() => setOpenMobile(false)}
+                  href={item.url}
+                  className='flex w-full items-center gap-2'
+                >
+                  {item.icon && <item.icon />}
+                  {item.title}
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )
+        })}
+      </SidebarMenu>
+    </SidebarGroup>
   )
 }

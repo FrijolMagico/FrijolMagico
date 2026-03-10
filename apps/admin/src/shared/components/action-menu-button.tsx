@@ -1,4 +1,4 @@
-import { EllipsisVertical, RotateCcw } from 'lucide-react'
+import { IconDotsVertical, IconRotateClockwise } from '@tabler/icons-react'
 import { Button } from './ui/button'
 import {
   DropdownMenu,
@@ -7,14 +7,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from './ui/dropdown-menu'
+import { isValidElement } from 'react'
 
-type ActionsProps = {
-  label: string
-  onClick: () => void
-  hidden?: boolean
-  variant?: 'default' | 'destructive'
-  className?: string
-}
+type ActionsProps =
+  | {
+      label: string
+      onClick: () => void
+      hidden?: boolean
+      variant?: 'default' | 'destructive'
+      className?: string
+    }
+  | React.ReactNode
 
 interface ActionMenuButtonProps {
   actions: ActionsProps[]
@@ -38,32 +41,43 @@ export const ActionMenuButton = ({
         className='text-green-500 hover:text-green-500/80'
         aria-label='Restaurar'
       >
-        <RotateCcw />
+        <IconRotateClockwise />
       </Button>
     )
   }
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button
-            size='icon'
-            variant='ghost'
-            aria-label='Abrir menú de acciones'
-          >
-            <EllipsisVertical />
-          </Button>
-        }
-      />
+      <DropdownMenuTrigger asChild>
+        <Button size='icon' variant='ghost' aria-label='Abrir menú de acciones'>
+          <IconDotsVertical />
+        </Button>
+      </DropdownMenuTrigger>
       <DropdownMenuContent>
-        {actions.map(({ label, hidden, ...props }) => {
-          if (hidden) return null
-          return (
-            <DropdownMenuItem key={label} {...props}>
-              {label}
-            </DropdownMenuItem>
-          )
+        {actions.map((action) => {
+          if (!action) return null
+
+          if (isValidElement(action)) {
+            return action
+          }
+
+          if (
+            typeof action === 'object' &&
+            'label' in action &&
+            'onClick' in action
+          ) {
+            return (
+              <DropdownMenuItem
+                key={action.label}
+                onClick={action.onClick}
+                className={action.className}
+                hidden={action.hidden}
+                variant={action.variant}
+              >
+                {action.label}
+              </DropdownMenuItem>
+            )
+          }
         })}
         <DropdownMenuSeparator />
         <DropdownMenuItem variant='destructive' onClick={onDelete}>
