@@ -65,8 +65,8 @@ export function DisciplineDonutChart({ data, labels }: Props) {
       <CardHeader>
         <CardTitle>Disciplinas</CardTitle>
       </CardHeader>
-      <CardContent>
-        <ChartContainer config={chartConfig} className='mx-auto h-[250px]'>
+      <CardContent className='my-auto'>
+        <ChartContainer config={chartConfig}>
           <PieChart accessibilityLayer>
             <ChartTooltip
               content={<ChartTooltipContent nameKey='disciplina' />}
@@ -75,8 +75,8 @@ export function DisciplineDonutChart({ data, labels }: Props) {
               data={data}
               dataKey='count'
               nameKey='disciplina'
-              innerRadius={60}
-              outerRadius={90}
+              innerRadius={40}
+              outerRadius={80}
               strokeWidth={2}
             >
               {data.map((entry, index) => (

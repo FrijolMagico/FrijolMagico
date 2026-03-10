@@ -5,6 +5,7 @@ export type ArtistStatusStat = {
 
 export type DataCompleteness = {
   total: number
+  withName: number
   withEmail: number
   withPhone: number
   withRut: number

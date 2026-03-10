@@ -57,6 +57,7 @@ export async function getDashboardArtistStats(): Promise<DashboardArtistStats | 
     db
       .select({
         total: count(),
+        withName: sql<number>`COUNT(CASE WHEN ${artistTable.nombre} IS NOT NULL THEN 1 END)`,
         withEmail: sql<number>`COUNT(CASE WHEN ${artistTable.correo} IS NOT NULL THEN 1 END)`,
         withPhone: sql<number>`COUNT(CASE WHEN ${artistTable.telefono} IS NOT NULL THEN 1 END)`,
         withRut: sql<number>`COUNT(CASE WHEN ${artistTable.rut} IS NOT NULL THEN 1 END)`
@@ -76,6 +77,7 @@ export async function getDashboardArtistStats(): Promise<DashboardArtistStats | 
     catalogActive: catalogRow[0]?.count ?? 0,
     completeness: {
       total: completenessRow[0].total,
+      withName: completenessRow[0].withName,
       withEmail: completenessRow[0].withEmail,
       withPhone: completenessRow[0].withPhone,
       withRut: completenessRow[0].withRut
@@ -189,7 +191,7 @@ export async function getDashboardTopArtists(): Promise<TopArtistEntry[]> {
     .innerJoin(artistTable, eq(editionParticipation.artistaId, artistTable.id))
     .groupBy(artistTable.id)
     .orderBy(desc(count(editionParticipation.id)))
-    .limit(5)
+    .limit(10)
 
   return rows.map((r) => ({
     id: String(r.id),

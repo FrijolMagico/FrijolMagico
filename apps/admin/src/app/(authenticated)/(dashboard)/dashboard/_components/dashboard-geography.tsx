@@ -5,6 +5,8 @@ import {
   CardTitle
 } from '@/shared/components/ui/card'
 import type { CityPoint } from '../_types'
+import { Field, FieldLabel } from '@/shared/components/ui/field'
+import { Progress } from '@/shared/components/ui/progress'
 
 type Props = {
   data: CityPoint[]
@@ -34,24 +36,17 @@ export function DashboardGeography({ data }: Props) {
         <CardTitle>Origen Geográfico</CardTitle>
       </CardHeader>
       <CardContent className='space-y-3'>
-        {data.map((city) => {
-          const widthPct = maxCount > 0 ? (city.count / maxCount) * 100 : 0
-
-          return (
-            <div key={city.ciudad} className='space-y-1'>
-              <div className='flex items-center justify-between text-sm'>
-                <span>{city.ciudad}</span>
-                <span className='text-muted-foreground'>{city.count}</span>
-              </div>
-              <div className='bg-secondary h-2 w-full overflow-hidden rounded-full'>
-                <div
-                  className='bg-primary h-full rounded-full transition-all'
-                  style={{ width: `${widthPct}%` }}
-                />
-              </div>
-            </div>
-          )
-        })}
+        {data.map((city) => (
+          <Field key={city.ciudad}>
+            <FieldLabel className='flex items-center justify-between'>
+              <span>{city.ciudad}</span>
+              <span className='text-muted-foreground'>{city.count}</span>
+            </FieldLabel>
+            <Progress
+              value={maxCount > 0 ? (city.count / maxCount) * 100 : 0}
+            />
+          </Field>
+        ))}
       </CardContent>
     </Card>
   )

@@ -32,10 +32,10 @@ export function DashboardTopArtists({ artists }: Props) {
         <CardTitle>Artistas Frecuentes</CardTitle>
       </CardHeader>
       <CardContent>
-        <ol className='space-y-2'>
+        <ol className='space-y-1'>
           {artists.map((artist, index) => (
             <li key={artist.id} className='flex items-center gap-3 text-sm'>
-              <span className='text-muted-foreground w-5 text-right font-medium'>
+              <span className='text-muted-foreground w-2 font-medium'>
                 {index + 1}
               </span>
               <span className='flex-1 truncate'>{artist.pseudonimo}</span>

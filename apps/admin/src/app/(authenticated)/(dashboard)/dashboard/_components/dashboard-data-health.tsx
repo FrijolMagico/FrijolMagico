@@ -1,14 +1,16 @@
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle
 } from '@/shared/components/ui/card'
 import { Progress } from '@/shared/components/ui/progress'
 import type { DataCompleteness } from '../_types'
+import { Field, FieldLabel } from '@/shared/components/ui/field'
 
 type Props = {
-  completeness: DataCompleteness | null
+  completeness: DataCompleteness
 }
 
 function pct(part: number, total: number): number {
@@ -17,20 +19,8 @@ function pct(part: number, total: number): number {
 }
 
 export function DashboardDataHealth({ completeness }: Props) {
-  if (!completeness) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Salud de la Base de Datos</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className='text-muted-foreground text-sm'>Sin datos disponibles</p>
-        </CardContent>
-      </Card>
-    )
-  }
-
   const rows = [
+    { label: 'Nombre', value: pct(completeness.withName, completeness.total) },
     { label: 'Correo', value: pct(completeness.withEmail, completeness.total) },
     {
       label: 'Teléfono',
@@ -42,17 +32,21 @@ export function DashboardDataHealth({ completeness }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Salud de la Base de Datos</CardTitle>
+        <CardTitle>Estado de la información de Artistas</CardTitle>
+        <CardDescription>
+          *El valor más importante es el RUT, con él podemos identificar a los
+          artistas de manera única y evitar duplicados.
+        </CardDescription>
       </CardHeader>
       <CardContent className='space-y-4'>
         {rows.map((row) => (
-          <div key={row.label} className='space-y-1'>
-            <div className='flex items-center justify-between text-sm'>
+          <Field key={row.label} className='w-full max-w-sm'>
+            <FieldLabel htmlFor={row.label}>
               <span>{row.label}</span>
-              <span className='text-muted-foreground'>{row.value}%</span>
-            </div>
-            <Progress value={row.value} className='h-2' />
-          </div>
+              <span className='ml-auto'>{row.value}%</span>
+            </FieldLabel>
+            <Progress value={row.value} />
+          </Field>
         ))}
       </CardContent>
     </Card>

@@ -43,10 +43,12 @@ export function FestivalGrowthChart({ data }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Crecimiento del Festival</CardTitle>
+        <CardTitle>
+          Crecimiento de los participantes del Festival Frijol Mágico
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className='h-[250px] w-full'>
+        <ChartContainer config={chartConfig} className='h-62 w-full'>
           <AreaChart data={data} accessibilityLayer>
             <CartesianGrid vertical={false} />
             <XAxis
