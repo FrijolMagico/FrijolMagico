@@ -15,10 +15,6 @@ import type {
 } from '@/shared/push/lib/types'
 import { PUSH_OPERATION_TYPE } from '@/shared/push/lib/types'
 import type {
-  ArtistaInsertInput,
-  ArtistaUpdateInput,
-  ArtistaImagenInsertInput,
-  ArtistaImagenUpdateInput,
   ArtistaInput,
   ArtistaImagenInput
 } from '../_schemas/artista.schema'
