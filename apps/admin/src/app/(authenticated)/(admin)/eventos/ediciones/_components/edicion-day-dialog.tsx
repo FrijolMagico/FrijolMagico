@@ -19,7 +19,8 @@ import {
 import { DatePickerField } from './date-picker-field'
 import { LugarCombobox } from './lugar-combobox'
 import { TimePickerField } from './time-picker-field'
-import type { DayFieldErrors, DayFormState } from '../_types/edition'
+import type { DayFieldErrors, DayFormState, Modality } from '../_types/edition'
+import type { LugarEntry } from '../_types'
 import {
   Field,
   FieldError,
@@ -27,15 +28,7 @@ import {
   FieldLabel
 } from '@/shared/components/ui/field'
 
-const MODALIDAD_VALUES = {
-  PRESENCIAL: 'presencial',
-  ONLINE: 'online',
-  HIBRIDO: 'hibrido'
-} as const
-
-type ModalidadValue = (typeof MODALIDAD_VALUES)[keyof typeof MODALIDAD_VALUES]
-
-const MODALIDAD_LABELS: Record<ModalidadValue, string> = {
+const MODALIDAD_LABELS: Record<Modality, string> = {
   presencial: 'Presencial',
   online: 'Online',
   hibrido: 'Híbrido'
@@ -47,7 +40,7 @@ function createEmptyDayState(): DayFormState {
     fecha: '',
     horaInicio: '',
     horaFin: '',
-    modalidad: '',
+    modalidad: null,
     lugarId: null
   }
 }
@@ -66,13 +59,15 @@ interface EdicionDayDialogProps {
   onClose: () => void
   initialDay: DayFormState | null
   onSave: (day: DayFormState) => void
+  lugares: LugarEntry[]
 }
 
 export function EdicionDayDialog({
   open,
   onClose,
   initialDay,
-  onSave
+  onSave,
+  lugares
 }: EdicionDayDialogProps) {
   const [day, setDay] = useState<DayFormState>(
     () => initialDay ?? createEmptyDayState()
@@ -123,28 +118,20 @@ export function EdicionDayDialog({
             <Field>
               <FieldLabel htmlFor='dia-modalidad'>Modalidad</FieldLabel>
               <Select
-                value={day.modalidad}
+                value={day.modalidad ?? undefined}
                 onValueChange={(value) =>
-                  setDayField('modalidad', value as ModalidadValue)
+                  setDayField('modalidad', value as Modality)
                 }
               >
                 <SelectTrigger id='dia-modalidad'>
                   <SelectValue placeholder='Seleccionar modalidad'>
-                    {day.modalidad
-                      ? MODALIDAD_LABELS[day.modalidad as ModalidadValue]
-                      : null}
+                    {day.modalidad ? MODALIDAD_LABELS[day.modalidad] : null}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={MODALIDAD_VALUES.PRESENCIAL}>
-                    Presencial
-                  </SelectItem>
-                  <SelectItem value={MODALIDAD_VALUES.ONLINE}>
-                    Online
-                  </SelectItem>
-                  <SelectItem value={MODALIDAD_VALUES.HIBRIDO}>
-                    Híbrido
-                  </SelectItem>
+                  <SelectItem value='presencial'>Presencial</SelectItem>
+                  <SelectItem value='online'>Online</SelectItem>
+                  <SelectItem value='hibrido'>Híbrido</SelectItem>
                 </SelectContent>
               </Select>
               {errors.modalidad && <FieldError>{errors.modalidad}</FieldError>}
@@ -174,6 +161,7 @@ export function EdicionDayDialog({
             <LugarCombobox
               value={day.lugarId}
               onChange={(value) => setDayField('lugarId', value)}
+              lugares={lugares}
             />
           </Field>
         </FieldGroup>

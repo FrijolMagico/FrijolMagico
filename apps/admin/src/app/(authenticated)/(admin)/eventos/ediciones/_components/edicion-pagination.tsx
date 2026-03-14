@@ -1,14 +1,13 @@
 'use client'
 
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react'
 import { Button } from '@/shared/components/ui/button'
 import { Separator } from '@/shared/components/ui/separator'
 import { useEdicionPaginationStore } from '../_store/edicion-pagination-store'
 
-export function EdicionPagination() {
+export function EdicionPagination({ totalItems }: { totalItems: number }) {
   const page = useEdicionPaginationStore((s) => s.page)
   const pageSize = useEdicionPaginationStore((s) => s.pageSize)
-  const totalItems = useEdicionPaginationStore((s) => s.totalItems)
   const setPage = useEdicionPaginationStore((s) => s.setPage)
 
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
@@ -58,7 +57,7 @@ export function EdicionPagination() {
             onClick={() => setPage(page - 1)}
             disabled={page === 1}
           >
-            <ChevronLeft className='h-4 w-4' />
+            <IconChevronLeft className='h-4 w-4' />
           </Button>
 
           <div className='flex items-center gap-1'>
@@ -90,7 +89,7 @@ export function EdicionPagination() {
             onClick={() => setPage(page + 1)}
             disabled={page === totalPages}
           >
-            <ChevronRight className='h-4 w-4' />
+            <IconChevronRight className='h-4 w-4' />
           </Button>
         </div>
       </div>

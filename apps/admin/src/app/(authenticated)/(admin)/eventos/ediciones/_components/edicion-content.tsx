@@ -1,22 +1,20 @@
 import { getEdiciones, getLugares } from '../_lib/get-ediciones-data'
-import { EdicionStoreInitialization } from './edicion-store-initialization'
+import { getEventos } from '../../_lib/get-eventos-data'
 import { EdicionContainer } from './edicion-container'
 
 export async function EdicionContent() {
-  const [result, lugares] = await Promise.all([getEdiciones(), getLugares()])
-
-  if (!result) {
-    return <p>No hay ediciones.</p>
-  }
+  const [result, lugares, eventos] = await Promise.all([
+    getEdiciones(),
+    getLugares(),
+    getEventos()
+  ])
 
   return (
-    <>
-      <EdicionStoreInitialization
-        ediciones={result.ediciones}
-        dias={result.dias}
-        lugares={lugares ?? []}
-      />
-      <EdicionContainer />
-    </>
+    <EdicionContainer
+      ediciones={result?.ediciones ?? []}
+      dias={result?.dias ?? []}
+      lugares={lugares ?? []}
+      eventos={eventos ?? []}
+    />
   )
 }

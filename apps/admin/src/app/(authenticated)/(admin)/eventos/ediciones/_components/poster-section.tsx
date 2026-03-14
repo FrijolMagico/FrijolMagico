@@ -1,6 +1,7 @@
+
 'use client'
 
-import { ImageOff } from 'lucide-react'
+import { IconPhotoOff } from '@tabler/icons-react'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 
@@ -55,7 +56,7 @@ export function PosterSection({
           tabIndex={onClick ? 0 : undefined}
           aria-label={onClick ? `Ver ${alt}` : undefined}
         >
-          <ImageOff className='h-6 w-6' />
+          <IconPhotoOff className='h-6 w-6' />
           <span className='text-xs'>Sin poster</span>
         </div>
       )}

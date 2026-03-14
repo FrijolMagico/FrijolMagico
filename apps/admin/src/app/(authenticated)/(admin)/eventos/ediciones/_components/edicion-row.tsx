@@ -1,20 +1,13 @@
 'use client'
 
+import { useState, useTransition } from 'react'
+import { toast } from 'sonner'
 import { TableCell, TableRow } from '@/shared/components/ui/table'
 import { Badge } from '@/shared/components/ui/badge'
 import { cn } from '@/lib/utils'
-import {
-  useEdicionOperationStore,
-  useEdicionProjectionStore
-} from '../_store/edicion-ui-store'
-import { useEdicionDiaProjectionStore } from '../_store/edicion-dia-ui-store'
-import { useLugarProjectionStore } from '../_store/lugar-ui-store'
-import { useEventoProjectionStore } from '../../_store/evento-ui-store'
 import { useEdicionDialog } from '../_store/edicion-dialog-store'
 import { ActionMenuButton } from '@/shared/components/action-menu-button'
-import { StateBadge } from '@/shared/components/state-badge'
 import { formatEdicionFechas } from '../_lib/format-edicion-fechas'
-import { useState } from 'react'
 import {
   Tooltip,
   TooltipContent,
@@ -22,91 +15,111 @@ import {
 } from '@/shared/components/ui/tooltip'
 import { PosterThumbnail } from './poster-thumbnail'
 import { PosterPreview } from './poster-preview'
+import { deleteEdicionAction } from '../_actions/delete-edicion.action'
+import type { EdicionDiaEntry, LugarEntry } from '../_types'
+import type { EventoEntry } from '../../_types'
+import type { PaginatedEdicion } from '../_hooks/use-edicion-list'
+import { Modality, isModality } from '../_types/edition'
 
-interface EdicionRowProps {
-  id: string
+export interface EdicionRowProps {
+  edicion: PaginatedEdicion
+  dias: EdicionDiaEntry[]
+  lugares: LugarEntry[]
+  eventos: EventoEntry[]
 }
 
-const MODALIDAD_LABELS: Record<string, string> = {
+const MODALIDAD_LABELS: Record<Modality | 'mixto', string> = {
   presencial: 'Presencial',
   online: 'Online',
-  hibrido: 'Híbrido'
+  hibrido: 'Híbrido',
+  mixto: 'Mixto'
 }
 
 const MODALIDAD_VARIANTS: Record<
-  string,
+  Modality | 'mixto',
   'default' | 'secondary' | 'outline' | 'destructive'
 > = {
   presencial: 'outline',
   online: 'outline',
-  hibrido: 'outline'
+  hibrido: 'outline',
+  mixto: 'secondary'
 }
 
-export function EdicionRow({ id }: EdicionRowProps) {
+export function EdicionRow({
+  edicion,
+  dias,
+  lugares,
+  eventos
+}: EdicionRowProps) {
   const [isPosterPreviewOpen, setIsPosterPreviewOpen] = useState(false)
-
-  const edicion = useEdicionProjectionStore((s) => s.byId[id])
-  const evento = useEventoProjectionStore((s) =>
-    edicion ? s.byId[edicion.eventoId] : undefined
-  )
-  const diasById = useEdicionDiaProjectionStore((s) => s.byId)
-  const lugarById = useLugarProjectionStore((s) => s.byId)
-
-  const remove = useEdicionOperationStore((s) => s.remove)
-  const restore = useEdicionOperationStore((s) => s.restore)
+  const [isPending, startTransition] = useTransition()
   const openDialog = useEdicionDialog((s) => s.openDialog)
 
   const handlePosterUpload = () => {
     console.warn('[EdicionRow] TODO: CDN poster upload not implemented', {
-      id: edicion?.id
+      id: edicion.id
     })
   }
 
   const handlePosterDelete = () => {
     console.warn('[EdicionRow] TODO: CDN poster delete not implemented', {
-      id: edicion?.id
+      id: edicion.id
     })
   }
 
-  if (!edicion) return null
+  const handleDelete = () => {
+    if (!confirm('¿Estás seguro de que quieres eliminar esta edición?')) return
+    startTransition(async () => {
+      const formData = new FormData()
+      formData.append('id', edicion.id)
+      const result = await deleteEdicionAction({ success: false }, formData)
+      if (!result.success && result.errors) {
+        toast.error(result.errors[0]?.message ?? 'Error al eliminar')
+      } else {
+        toast.success('Edición eliminada')
+      }
+    })
+  }
 
-  const dias = Object.values(diasById)
-    .filter((dia) => dia.eventoEdicionId === id)
-    .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
+  const sortedDias = [...dias].sort(
+    (a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime()
+  )
 
-  const fechasDisplay = formatEdicionFechas(dias)
+  const fechasDisplay = formatEdicionFechas(sortedDias)
 
-  const firstDia = dias[0]
-  const lugar = firstDia?.lugarId ? lugarById[firstDia.lugarId] : undefined
+  const firstDia = sortedDias[0]
+  const lugar = firstDia?.lugarId
+    ? lugares.find((l) => l.id === firstDia.lugarId)
+    : undefined
 
-  const modalidades = [...new Set(dias.map((d) => d.modalidad).filter(Boolean))]
-  const modalidadDisplay =
+  const modalidades = Array.from(
+    new Set(sortedDias.map((d) => d.modalidad).filter(isModality))
+  )
+
+  const modalidadDisplay: Modality | 'mixto' | null =
     modalidades.length === 1
       ? modalidades[0]
       : modalidades.length > 1
         ? 'mixto'
         : null
 
-  const isDeleted = edicion.__meta?.isDeleted
+  const eventoNombre =
+    edicion.eventoNombre ||
+    eventos.find((e) => e.id === edicion.eventoId)?.nombre ||
+    '—'
 
   return (
-    <TableRow
-      className={cn('transition-colors', {
-        'bg-destructive/10 border-destructive/20': isDeleted
-      })}
-    >
-      {/* Poster */}
+    <TableRow className={cn('transition-colors', isPending && 'opacity-50')}>
       <TableCell className='flex size-14'>
         <Tooltip>
-          <TooltipTrigger
-            render={
+          <TooltipTrigger asChild>
+            <div onClick={() => setIsPosterPreviewOpen(true)}>
               <PosterThumbnail
                 posterUrl={edicion.posterUrl}
-                alt={edicion.nombre + edicion.numeroEdicion}
-                onClick={() => setIsPosterPreviewOpen(true)}
+                alt={edicion.nombre || `Edicion ${edicion.numeroEdicion}`}
               />
-            }
-          />
+            </div>
+          </TooltipTrigger>
           <TooltipContent>
             {edicion.posterUrl ? 'Ver imagen' : 'Agregar imagen'}
           </TooltipContent>
@@ -114,17 +127,16 @@ export function EdicionRow({ id }: EdicionRowProps) {
         <PosterPreview
           isOpen={isPosterPreviewOpen}
           posterUrl={edicion.posterUrl}
-          alt={edicion.nombre + edicion.numeroEdicion}
+          alt={edicion.nombre || `Edicion ${edicion.numeroEdicion}`}
           onClose={() => setIsPosterPreviewOpen(false)}
           onUpload={handlePosterUpload}
           onDelete={handlePosterDelete}
         />
       </TableCell>
 
-      {/* Evento */}
       <TableCell>
         <p>
-          {evento?.nombre ?? '—'} {edicion.numeroEdicion}
+          {eventoNombre} {edicion.numeroEdicion}
         </p>
         {edicion.nombre && (
           <span className='text-muted-foreground text-sm'>
@@ -133,15 +145,12 @@ export function EdicionRow({ id }: EdicionRowProps) {
         )}
       </TableCell>
 
-      {/* Fechas */}
       <TableCell className='text-muted-foreground text-sm'>
         {fechasDisplay}
       </TableCell>
 
-      {/* Lugar */}
       <TableCell className='text-sm'>{lugar?.nombre ?? '—'}</TableCell>
 
-      {/* Modalidad */}
       <TableCell className='w-32'>
         {modalidadDisplay ? (
           <Badge variant={MODALIDAD_VARIANTS[modalidadDisplay] ?? 'outline'}>
@@ -152,22 +161,17 @@ export function EdicionRow({ id }: EdicionRowProps) {
         )}
       </TableCell>
 
-      <TableCell>
-        <StateBadge {...edicion.__meta} />
-      </TableCell>
+      <TableCell className='w-26' />
 
-      {/* Acciones */}
       <TableCell className='w-24'>
         <ActionMenuButton
           actions={[
             {
               label: 'Editar',
-              onClick: () => openDialog(id)
+              onClick: () => openDialog(edicion.id)
             }
           ]}
-          isDeleted={isDeleted}
-          onDelete={() => remove(id)}
-          onRestore={() => restore(id)}
+          onDelete={handleDelete}
         />
       </TableCell>
     </TableRow>

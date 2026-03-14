@@ -27,6 +27,26 @@ export const edicionFormSchema = edicionInsertSchema
     eventoId: z.string().min(1, { error: 'El evento es obligatorio' })
   })
 
+export const dayFormStateSchema = z.object({
+  tempId: z.string(),
+  fecha: z.string().min(1, { message: 'La fecha es obligatoria' }),
+  horaInicio: z
+    .string()
+    .min(1, { message: 'La hora de inicio es obligatoria' }),
+  horaFin: z.string().min(1, { message: 'La hora de fin es obligatoria' }),
+  modalidad: z.enum(['presencial', 'online', 'hibrido']).nullable(),
+  lugarId: z.string().nullable(),
+  existingId: z.string().optional()
+})
+
+export const edicionRootFormSchema = edicionFormSchema
+  .omit({ posterUrl: true })
+  .extend({
+    days: z.array(dayFormStateSchema)
+  })
+
+export type EdicionRootFormInput = z.infer<typeof edicionRootFormSchema>
+
 export const edicionDiaInsertSchema = createInsertSchema(eventEditionDay, {
   eventoEdicionId: () => z.coerce.number().int().positive(),
   lugarId: (s) => s.optional(),
@@ -63,6 +83,15 @@ export const lugarFormSchema = lugarInsertSchema.pick({
   url: true
 })
 
+export const edicionWithDaysSchema = z.object({
+  id: z.string().nullable(),
+  eventoId: z.string().min(1),
+  numeroEdicion: z.string().min(1),
+  nombre: z.string().nullable().optional(),
+  posterUrl: z.string().nullable().optional(),
+  days: z.array(dayFormStateSchema)
+})
+
 export type EdicionInput = z.infer<typeof edicionInsertSchema>
 export type EdicionFormInput = z.infer<typeof edicionFormSchema>
 export type EdicionDiaInput = Omit<
@@ -75,3 +104,5 @@ export type EdicionDiaInput = Omit<
 export type EdicionDiaFormInput = z.infer<typeof edicionDiaFormSchema>
 export type LugarInput = z.infer<typeof lugarInsertSchema>
 export type LugarFormInput = z.infer<typeof lugarFormSchema>
+export type DayFormStateInput = z.infer<typeof dayFormStateSchema>
+export type EdicionWithDaysInput = z.infer<typeof edicionWithDaysSchema>

@@ -8,15 +8,28 @@ import {
   TableRow
 } from '@/shared/components/ui/table'
 import { EmptyState } from '@/shared/components/empty-state'
-import { useEdicionList } from '../_hooks/use-edicion-list'
 import { useEdicionFilterStore } from '../_store/edicion-filter-store'
 import { EdicionRow } from './edicion-row'
+import type { EdicionDiaEntry, LugarEntry } from '../_types'
+import type { EventoEntry } from '../../_types'
+import type { PaginatedEdicion } from '../_hooks/use-edicion-list'
 
-export function EdicionTable() {
-  const { paginatedIds } = useEdicionList()
+interface EdicionTableProps {
+  ediciones: PaginatedEdicion[]
+  dias: EdicionDiaEntry[]
+  lugares: LugarEntry[]
+  eventos: EventoEntry[]
+}
+
+export function EdicionTable({
+  ediciones,
+  dias,
+  lugares,
+  eventos
+}: EdicionTableProps) {
   const setFilters = useEdicionFilterStore((s) => s.setFilters)
 
-  if (paginatedIds.length === 0) {
+  if (ediciones.length === 0) {
     return (
       <EmptyState
         title='Sin ediciones'
@@ -49,8 +62,14 @@ export function EdicionTable() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {paginatedIds.map((id) => (
-            <EdicionRow key={id} id={id} />
+          {ediciones.map((edicion) => (
+            <EdicionRow
+              key={edicion.id}
+              edicion={edicion}
+              dias={dias.filter((d) => d.eventoEdicionId === edicion.id)}
+              lugares={lugares}
+              eventos={eventos}
+            />
           ))}
         </TableBody>
       </Table>

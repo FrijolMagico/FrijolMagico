@@ -1,9 +1,15 @@
+export type Modality = 'presencial' | 'online' | 'hibrido'
+
+export function isModality(value: string): value is Modality {
+  return value === 'presencial' || value === 'online' || value === 'hibrido'
+}
+
 export interface DayFormState {
   tempId: string
   fecha: string
   horaInicio: string
   horaFin: string
-  modalidad: 'presencial' | 'online' | 'hibrido' | ''
+  modalidad: Modality | null
   lugarId: string | null
   existingId?: string
 }

@@ -1,5 +1,3 @@
-'use server'
-
 import { cacheTag } from 'next/cache'
 
 import { db } from '@frijolmagico/database/orm'

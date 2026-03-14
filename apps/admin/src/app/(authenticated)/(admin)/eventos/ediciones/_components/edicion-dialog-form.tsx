@@ -1,12 +1,10 @@
 'use client'
 
-import { ProjectedEntity } from '@/shared/operations/projection'
-import { EdicionDiaEntry, EdicionEntry } from '../_types'
-import { NewBaseEntity } from '@/shared/operations/types'
-import { EventoEntry } from '../../_types'
-import { useDialogFormState } from '@/shared/hooks/use-dialog-form-state'
-import { useState } from 'react'
-
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { useForm, Controller, useFieldArray } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { toast } from 'sonner'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
@@ -18,12 +16,14 @@ import {
   SelectValue
 } from '@/shared/components/ui/select'
 import { PosterSection } from './poster-section'
-import { DayFormState, EdicionFormState, FormErrors } from '../_types/edition'
-import { edicionFormSchema } from '../_schemas/edicion.schema'
-import { useEdicionOperationStore } from '../_store/edicion-ui-store'
-import { useLugarProjectionStore } from '../_store/lugar-ui-store'
-import { generateEdicionSlug } from '../../_lib/slug-utils'
-import { Plus } from 'lucide-react'
+import type { EdicionEntry, LugarEntry } from '../_types'
+import type { EventoEntry } from '../../_types'
+import type { DayFormState } from '../_types/edition'
+import {
+  edicionRootFormSchema,
+  type EdicionRootFormInput
+} from '../_schemas/edicion.schema'
+import { IconPlus } from '@tabler/icons-react'
 import { EdicionDaysTable } from './edicion-days-table'
 import { EdicionDayDialog } from './edicion-day-dialog'
 import {
@@ -33,51 +33,56 @@ import {
   FieldLabel
 } from '@/shared/components/ui/field'
 import { PosterPreview } from './poster-preview'
-import { toast } from 'sonner'
-
-const INITIAL_ERRORS: FormErrors = {
-  eventoId: null,
-  numeroEdicion: null,
-  days: {}
-}
-
-type ModalidadValue = 'presencial' | 'online' | 'hibrido'
+import { saveEdicionWithDaysAction } from '../_actions/save-edicion-with-days.action'
 
 interface EdicionFormContentProps {
-  initialFormState: EdicionFormState
+  initialFormState: {
+    eventoId: string
+    numeroEdicion: string
+    nombre: string
+    days: DayFormState[]
+  }
   selectedEdicionId: string | null
-  selectedEdicion: ProjectedEntity<EdicionEntry> | null
-  eventoById: Record<string, ProjectedEntity<EventoEntry>>
-  eventoIds: string[]
+  selectedEdicion: EdicionEntry | null
+  eventos: EventoEntry[]
+  lugares: LugarEntry[]
   closeDialog: () => void
-  addEdicion: (data: NewBaseEntity<EdicionEntry>) => void
-  updateEdicion: (id: string, data: Partial<EdicionEntry>) => void
-  addDia: (data: NewBaseEntity<EdicionDiaEntry>) => void
-  updateDia: (id: string, data: Partial<EdicionDiaEntry>) => void
-  removeDia: (id: string) => void
-  diaById: Record<string, ProjectedEntity<EdicionDiaEntry>>
 }
 
 export function EdicionFormContent({
   initialFormState,
   selectedEdicionId,
   selectedEdicion,
-  eventoById,
-  eventoIds,
-  closeDialog,
-  addEdicion,
-  updateEdicion,
-  addDia,
-  updateDia,
-  removeDia,
-  diaById
+  eventos,
+  lugares,
+  closeDialog
 }: EdicionFormContentProps) {
-  const { formState, setField, setFormState } =
-    useDialogFormState<EdicionFormState>(initialFormState)
-  const [errors, setErrors] = useState<FormErrors>(INITIAL_ERRORS)
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors, isDirty, isValid }
+  } = useForm<EdicionRootFormInput>({
+    resolver: zodResolver(edicionRootFormSchema),
+    defaultValues: {
+      eventoId: initialFormState.eventoId,
+      numeroEdicion: initialFormState.numeroEdicion,
+      nombre: initialFormState.nombre ?? '',
+      days: initialFormState.days
+    }
+  })
+
+  const { fields, append, update, remove } = useFieldArray({
+    control,
+    name: 'days'
+  })
 
   const [isDayDialogOpen, setIsDayDialogOpen] = useState(false)
   const [editingDay, setEditingDay] = useState<DayFormState | null>(null)
+  const [editingDayIndex, setEditingDayIndex] = useState<number | null>(null)
   const [dayDialogKey, setDayDialogKey] = useState(0)
   const [isPosterPreviewOpen, setIsPosterPreviewOpen] = useState(false)
 
@@ -100,248 +105,107 @@ export function EdicionFormContent({
     )
   }
 
-  const lugarById = useLugarProjectionStore((s) => s.byId)
   const lugarNombreById: Record<string, string> = Object.fromEntries(
-    Object.entries(lugarById)
-      .filter(([, lugar]) => !lugar.__meta?.isDeleted)
-      .map(([id, lugar]) => [id, lugar.nombre])
+    lugares.map((l) => [l.id, l.nombre])
   )
 
   const openAddDayDialog = () => {
     setEditingDay(null)
+    setEditingDayIndex(null)
     setDayDialogKey((k) => k + 1)
     setIsDayDialogOpen(true)
   }
 
   const openEditDayDialog = (tempId: string) => {
-    const day = formState.days.find((d) => d.tempId === tempId) ?? null
-    setEditingDay(day)
+    const idx = fields.findIndex((d) => d.tempId === tempId)
+    const day = idx >= 0 ? fields[idx] : null
+    setEditingDay(day ?? null)
+    setEditingDayIndex(idx >= 0 ? idx : null)
     setDayDialogKey((k) => k + 1)
     setIsDayDialogOpen(true)
   }
 
   const removeDayFromForm = (tempId: string) => {
-    setFormState((prev) => ({
-      ...prev,
-      days: prev.days.filter((day) => day.tempId !== tempId)
-    }))
-    setErrors((prev) => {
-      const nextDays = { ...prev.days }
-      delete nextDays[tempId]
-      return { ...prev, days: nextDays }
-    })
+    const idx = fields.findIndex((d) => d.tempId === tempId)
+    if (idx >= 0) remove(idx)
   }
 
   const handleDaySave = (day: DayFormState) => {
-    setFormState((prev) => {
-      const existingIdx = prev.days.findIndex((d) => d.tempId === day.tempId)
-      if (existingIdx >= 0) {
-        const nextDays = [...prev.days]
-        nextDays[existingIdx] = day
-        return { ...prev, days: nextDays }
-      }
-      return { ...prev, days: [...prev.days, day] }
-    })
+    if (editingDayIndex !== null) {
+      update(editingDayIndex, day)
+    } else {
+      append(day)
+    }
   }
 
-  const validateForm = (): boolean => {
-    const trimmedNumeroEdicion = formState.numeroEdicion.trim()
-    const trimmedNombre = formState.nombre.trim()
-
-    const parseResult = edicionFormSchema.safeParse({
-      eventoId: formState.eventoId,
-      numeroEdicion: trimmedNumeroEdicion,
-      nombre: trimmedNombre
-    })
-
-    const nextErrors: FormErrors = {
-      eventoId: null,
-      numeroEdicion: null,
-      days: {}
-    }
-
-    if (!formState.eventoId.trim()) {
-      nextErrors.eventoId = 'El evento es obligatorio'
-    }
-
-    if (!trimmedNumeroEdicion) {
-      nextErrors.numeroEdicion = 'El número de edición es obligatorio'
-    }
-
-    if (!parseResult.success) {
-      for (const issue of parseResult.error.issues) {
-        if (issue.path[0] === 'eventoId') {
-          nextErrors.eventoId = issue.message
-        }
-        if (issue.path[0] === 'numeroEdicion') {
-          nextErrors.numeroEdicion = issue.message
-        }
-      }
-    }
-
-    setErrors(nextErrors)
-
-    return (
-      !nextErrors.eventoId &&
-      !nextErrors.numeroEdicion &&
-      Object.keys(nextErrors.days).length === 0
-    )
-  }
-
-  const handleApply = () => {
-    if (!validateForm()) return
-
-    const now = new Date().toISOString()
+  const onSubmit = (rootFields: EdicionRootFormInput) => {
     const payload = {
-      eventoId: formState.eventoId,
-      numeroEdicion: formState.numeroEdicion.trim(),
-      nombre: formState.nombre.trim() || null
+      id: selectedEdicionId,
+      eventoId: rootFields.eventoId,
+      numeroEdicion: rootFields.numeroEdicion.trim(),
+      nombre: rootFields.nombre?.trim() || null,
+      posterUrl: selectedEdicion?.posterUrl ?? null,
+      days: rootFields.days
     }
 
-    if (!selectedEdicionId) {
-      const previousOperations =
-        useEdicionOperationStore.getState().operations ?? []
+    startTransition(async () => {
+      const result = await saveEdicionWithDaysAction(
+        { success: false },
+        payload
+      )
 
-      addEdicion({
-        ...payload,
-        slug: generateEdicionSlug(payload.numeroEdicion),
-        posterUrl: null,
-        createdAt: now,
-        updatedAt: now
-      })
-
-      const nextOperations =
-        useEdicionOperationStore.getState().operations ?? []
-      const latestOperation = nextOperations[nextOperations.length - 1]
-
-      const createdEdicionId =
-        latestOperation?.type === 'ADD' &&
-        nextOperations.length > previousOperations.length
-          ? latestOperation.id
-          : null
-
-      if (!createdEdicionId) return
-
-      for (const day of formState.days) {
-        addDia({
-          eventoEdicionId: createdEdicionId,
-          fecha: day.fecha,
-          horaInicio: day.horaInicio,
-          horaFin: day.horaFin,
-          modalidad: day.modalidad as ModalidadValue,
-          lugarId: day.lugarId,
-          createdAt: now,
-          updatedAt: now
-        })
+      if (!result.success && result.errors) {
+        toast.error(result.errors[0]?.message ?? 'Error al guardar la edición')
+      } else {
+        toast.success(
+          selectedEdicionId ? 'Edición actualizada' : 'Edición creada'
+        )
+        closeDialog()
+        router.refresh()
       }
-
-      closeDialog()
-      return
-    }
-
-    updateEdicion(selectedEdicionId, payload)
-
-    const persistedDays = Object.values(diaById).filter(
-      (day) =>
-        day.eventoEdicionId === selectedEdicionId && !day.__meta?.isDeleted
-    )
-
-    const persistedDaysById = new Map(
-      persistedDays.map((day) => [day.id, day] as const)
-    )
-
-    const formExistingIds = new Set(
-      formState.days.map((day) => day.existingId).filter(Boolean)
-    )
-
-    for (const day of formState.days) {
-      const dayPayload = {
-        eventoEdicionId: selectedEdicionId,
-        fecha: day.fecha,
-        horaInicio: day.horaInicio,
-        horaFin: day.horaFin,
-        modalidad: day.modalidad as ModalidadValue,
-        lugarId: day.lugarId,
-        updatedAt: now
-      }
-
-      if (!day.existingId) {
-        addDia({ ...dayPayload, createdAt: now })
-        continue
-      }
-
-      const existingDay = persistedDaysById.get(day.existingId)
-      if (!existingDay) {
-        addDia({ ...dayPayload, createdAt: now })
-        continue
-      }
-
-      const didChange =
-        existingDay.fecha !== dayPayload.fecha ||
-        existingDay.horaInicio !== dayPayload.horaInicio ||
-        existingDay.horaFin !== dayPayload.horaFin ||
-        existingDay.modalidad !== dayPayload.modalidad ||
-        (existingDay.lugarId ?? null) !== dayPayload.lugarId
-
-      if (didChange) {
-        updateDia(day.existingId, dayPayload)
-      }
-    }
-
-    for (const existingDay of persistedDays) {
-      if (!formExistingIds.has(existingDay.id)) {
-        removeDia(existingDay.id)
-      }
-    }
-
-    closeDialog()
+    })
   }
-
-  const selectedEventoNombre = formState.eventoId
-    ? eventoById[formState.eventoId]?.nombre
-    : null
 
   return (
     <div className='space-y-6 py-2'>
       <FieldGroup className='flex flex-col sm:flex-row'>
         <Field>
           <FieldLabel htmlFor='edicion-evento'>Evento</FieldLabel>
-          <Select
-            value={formState.eventoId || null}
-            onValueChange={(value) => {
-              setField('eventoId', value ?? '')
-              setErrors((prev) => ({ ...prev, eventoId: null }))
-            }}
-          >
-            <SelectTrigger id='edicion-evento'>
-              <SelectValue placeholder='Seleccionar evento...'>
-                {selectedEventoNombre}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {eventoIds.map((id) => (
-                <SelectItem key={id} value={id}>
-                  {eventoById[id]?.nombre ?? id}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.eventoId && <FieldError>{errors.eventoId}</FieldError>}
+          <Controller
+            name='eventoId'
+            control={control}
+            render={({ field }) => (
+              <Select value={field.value || ''} onValueChange={field.onChange}>
+                <SelectTrigger id='edicion-evento'>
+                  <SelectValue placeholder='Seleccionar evento...'>
+                    {eventos.find((e) => e.id === field.value)?.nombre}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {eventos.map((evento) => (
+                    <SelectItem key={evento.id} value={evento.id}>
+                      {evento.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+          {errors.eventoId && (
+            <FieldError>{errors.eventoId.message}</FieldError>
+          )}
         </Field>
 
         <Field>
           <FieldLabel htmlFor='edicion-numero'>Número de edición</FieldLabel>
           <Input
             id='edicion-numero'
-            value={formState.numeroEdicion}
-            onChange={(e) => {
-              setField('numeroEdicion', e.target.value)
-              setErrors((prev) => ({ ...prev, numeroEdicion: null }))
-            }}
+            {...register('numeroEdicion')}
             placeholder='Ej. 5 o V'
+            aria-invalid={!!errors.numeroEdicion}
           />
           {errors.numeroEdicion && (
-            <FieldError>{errors.numeroEdicion}</FieldError>
+            <FieldError>{errors.numeroEdicion.message}</FieldError>
           )}
         </Field>
 
@@ -349,8 +213,7 @@ export function EdicionFormContent({
           <FieldLabel htmlFor='edicion-nombre'>Nombre (opcional)</FieldLabel>
           <Input
             id='edicion-nombre'
-            value={formState.nombre}
-            onChange={(e) => setField('nombre', e.target.value)}
+            {...register('nombre')}
             placeholder='Ej. Edición aniversario'
           />
         </Field>
@@ -386,13 +249,13 @@ export function EdicionFormContent({
             size='sm'
             onClick={openAddDayDialog}
           >
-            <Plus className='mr-2 h-4 w-4' />
+            <IconPlus className='mr-2 h-4 w-4' />
             Agregar día
           </Button>
         </div>
 
         <EdicionDaysTable
-          days={formState.days}
+          days={fields}
           lugarNombreById={lugarNombreById}
           onEdit={openEditDayDialog}
           onDelete={removeDayFromForm}
@@ -400,11 +263,24 @@ export function EdicionFormContent({
       </section>
 
       <div className='flex justify-end gap-2 border-t pt-4'>
-        <Button type='button' variant='outline' onClick={closeDialog}>
+        <Button
+          type='button'
+          variant='outline'
+          onClick={closeDialog}
+          disabled={isPending}
+        >
           Cancelar
         </Button>
-        <Button type='button' onClick={handleApply}>
-          {selectedEdicionId ? 'Guardar cambios' : 'Crear edición'}
+        <Button
+          type='button'
+          onClick={handleSubmit(onSubmit)}
+          disabled={isPending || (!isDirty && !!selectedEdicionId) || !isValid}
+        >
+          {isPending
+            ? 'Guardando...'
+            : selectedEdicionId
+              ? 'Guardar cambios'
+              : 'Crear edición'}
         </Button>
       </div>
 
@@ -414,6 +290,7 @@ export function EdicionFormContent({
         onClose={() => setIsDayDialogOpen(false)}
         initialDay={editingDay}
         onSave={handleDaySave}
+        lugares={lugares}
       />
     </div>
   )

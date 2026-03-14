@@ -1,6 +1,7 @@
+
 'use client'
 
-import { ImageOff } from 'lucide-react'
+import { IconPhotoOff } from '@tabler/icons-react'
 import { cn } from '@/lib/utils'
 import Image from 'next/image'
 
@@ -38,7 +39,7 @@ export function PosterThumbnail({
         tabIndex={onClick ? 0 : undefined}
         aria-label={onClick ? `Ver ${alt}` : undefined}
       >
-        <ImageOff className='text-muted-foreground h-5 w-5' />
+        <IconPhotoOff className='text-muted-foreground h-5 w-5' />
       </div>
     )
   }

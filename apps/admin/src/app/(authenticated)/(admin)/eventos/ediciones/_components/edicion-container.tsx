@@ -5,26 +5,55 @@ import { EdicionFilters } from './edicion-filters'
 import { EdicionTable } from './edicion-table'
 import { EdicionPagination } from './edicion-pagination'
 import { EdicionDialog } from './edicion-dialog'
-import { EdicionSaveBar } from './edicion-save-bar'
 import { useEdicionDialog } from '../_store/edicion-dialog-store'
-import { Plus } from 'lucide-react'
+import { IconPlus } from '@tabler/icons-react'
+import type { EdicionEntry, EdicionDiaEntry, LugarEntry } from '../_types'
+import type { EventoEntry } from '../../_types'
+import { useEdicionList } from '../_hooks/use-edicion-list'
 
-export function EdicionContainer() {
+interface EdicionContainerProps {
+  ediciones: EdicionEntry[]
+  dias: EdicionDiaEntry[]
+  lugares: LugarEntry[]
+  eventos: EventoEntry[]
+}
+
+export function EdicionContainer({
+  ediciones,
+  dias,
+  lugares,
+  eventos
+}: EdicionContainerProps) {
   const openDialog = useEdicionDialog((state) => state.openDialog)
+
+  const { paginatedEdiciones, totalFilteredItems } = useEdicionList(
+    ediciones,
+    dias,
+    eventos
+  )
 
   return (
     <div className='space-y-4'>
       <div className='flex justify-end'>
         <Button variant='outline' size='sm' onClick={() => openDialog(null)}>
-          <Plus />
+          <IconPlus />
           Agregar Edición
         </Button>
       </div>
-      <EdicionFilters />
-      <EdicionTable />
-      <EdicionPagination />
-      <EdicionDialog />
-      <EdicionSaveBar />
+      <EdicionFilters eventos={eventos} />
+      <EdicionTable
+        ediciones={paginatedEdiciones}
+        dias={dias}
+        lugares={lugares}
+        eventos={eventos}
+      />
+      <EdicionPagination totalItems={totalFilteredItems} />
+      <EdicionDialog
+        ediciones={ediciones}
+        dias={dias}
+        lugares={lugares}
+        eventos={eventos}
+      />
     </div>
   )
 }

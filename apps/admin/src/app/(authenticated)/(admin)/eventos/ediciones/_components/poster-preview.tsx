@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useState } from 'react'
@@ -18,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from '@/shared/components/ui/alert-dialog'
-import { ImageOff } from 'lucide-react'
+import { IconPhotoOff } from '@tabler/icons-react'
 
 interface PosterPreviewProps {
   isOpen: boolean
@@ -61,7 +62,7 @@ export function PosterPreview({
           />
         ) : (
           <div className='bg-muted mx-auto flex h-64 w-64 flex-col items-center justify-center gap-3 rounded-lg'>
-            <ImageOff className='text-muted-foreground h-12 w-12' />
+            <IconPhotoOff className='text-muted-foreground h-12 w-12' />
             <span className='text-muted-foreground text-sm'>Sin poster</span>
           </div>
         )}

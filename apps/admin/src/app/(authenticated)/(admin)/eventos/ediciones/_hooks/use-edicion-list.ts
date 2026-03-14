@@ -1,89 +1,80 @@
-import { useMemo, useEffect } from 'react'
-import { useShallow } from 'zustand/react/shallow'
-import { useEdicionProjectionStore } from '../_store/edicion-ui-store'
-import { useEdicionDiaProjectionStore } from '../_store/edicion-dia-ui-store'
-import { useEventoProjectionStore } from '../../_store/evento-ui-store'
 import { useEdicionFilterStore } from '../_store/edicion-filter-store'
 import { useEdicionPaginationStore } from '../_store/edicion-pagination-store'
 import { formatEdicionFechas } from '../_lib/format-edicion-fechas'
+import type { EdicionEntry, EdicionDiaEntry } from '../_types'
+import type { EventoEntry } from '../../_types'
 
-export function useEdicionList(): {
-  paginatedIds: string[]
+export type PaginatedEdicion = EdicionEntry & {
+  eventoNombre: string
+  dateRange: string
+  firstDate: string
+}
+
+export function useEdicionList(
+  ediciones: EdicionEntry[],
+  dias: EdicionDiaEntry[],
+  eventos: EventoEntry[]
+): {
+  paginatedEdiciones: PaginatedEdicion[]
   totalFilteredItems: number
 } {
   const filters = useEdicionFilterStore((s) => s.filters)
   const page = useEdicionPaginationStore((s) => s.page)
   const pageSize = useEdicionPaginationStore((s) => s.pageSize)
 
-  const { allIds, byId: edicionById } = useEdicionProjectionStore(
-    useShallow((s) => ({ allIds: s.allIds, byId: s.byId }))
-  )
-  const diasById = useEdicionDiaProjectionStore((s) => s.byId)
-  const eventoById = useEventoProjectionStore((s) => s.byId)
+  const eventosById = new Map(eventos.map((e) => [e.id, e]))
 
-  const listData = useMemo(() => {
-    return allIds.map((id) => {
-      const edicion = edicionById[id]
-      const evento = eventoById[edicion.eventoId]
-
-      const dias = Object.values(diasById).filter(
-        (dia) => dia.eventoEdicionId === id
-      )
-      const sortedDias = dias.sort(
-        (a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime()
-      )
-
-      const dateRange = formatEdicionFechas(sortedDias)
-      const firstDate = sortedDias[0]?.fecha ?? ''
-
-      return {
-        id,
-        eventoId: edicion.eventoId,
-        numeroEdicion: edicion.numeroEdicion,
-        nombre: edicion.nombre ?? '',
-        eventoNombre: evento?.nombre ?? '',
-        dateRange,
-        firstDate
-      }
-    })
-  }, [allIds, edicionById, eventoById, diasById])
-
-  const filteredAndSortedIds = useMemo(() => {
-    let filtered = listData
-
-    if (filters.eventoId) {
-      filtered = filtered.filter((item) => item.eventoId === filters.eventoId)
+  const diasByEdicionId = new Map<string, EdicionDiaEntry[]>()
+  for (const dia of dias) {
+    if (!diasByEdicionId.has(dia.eventoEdicionId)) {
+      diasByEdicionId.set(dia.eventoEdicionId, [])
     }
+    diasByEdicionId.get(dia.eventoEdicionId)!.push(dia)
+  }
 
-    if (filters.search) {
-      const term = filters.search.toLowerCase()
-      filtered = filtered.filter((item) => {
-        const nombre = (item.nombre || '').toLowerCase()
-        const numeroEdicion = item.numeroEdicion.toString()
-        return nombre.includes(term) || numeroEdicion.includes(term)
-      })
+  const listData: PaginatedEdicion[] = ediciones.map((edicion) => {
+    const evento = eventosById.get(edicion.eventoId)
+
+    const edicionDias = diasByEdicionId.get(edicion.id) || []
+    const sortedDias = edicionDias.sort(
+      (a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime()
+    )
+
+    const dateRange = formatEdicionFechas(sortedDias)
+    const firstDate = sortedDias[0]?.fecha ?? ''
+
+    return {
+      ...edicion,
+      eventoNombre: evento?.nombre ?? '',
+      dateRange,
+      firstDate
     }
+  })
 
-    const sorted = [...filtered].sort((a, b) => {
-      if (!a.firstDate && !b.firstDate) return 0
-      if (!a.firstDate) return -1
-      if (!b.firstDate) return 1
-      return b.firstDate.localeCompare(a.firstDate)
+  let filtered = listData
+
+  if (filters.eventoId) {
+    filtered = filtered.filter((item) => item.eventoId === filters.eventoId)
+  }
+
+  if (filters.search) {
+    const term = filters.search.toLowerCase()
+    filtered = filtered.filter((item) => {
+      const nombre = (item.nombre || '').toLowerCase()
+      const numeroEdicion = String(item.numeroEdicion)
+      return nombre.includes(term) || numeroEdicion.includes(term)
     })
+  }
 
-    return sorted.map((i) => i.id)
-  }, [listData, filters])
+  const sorted = [...filtered].sort((a, b) => {
+    if (!a.firstDate && !b.firstDate) return 0
+    if (!a.firstDate) return -1
+    if (!b.firstDate) return 1
+    return b.firstDate.localeCompare(a.firstDate)
+  })
 
-  useEffect(() => {
-    useEdicionPaginationStore
-      .getState()
-      .setTotalItems(filteredAndSortedIds.length)
-  }, [filteredAndSortedIds.length])
+  const start = (page - 1) * pageSize
+  const paginatedEdiciones = sorted.slice(start, start + pageSize)
 
-  const paginatedIds = useMemo(() => {
-    const start = (page - 1) * pageSize
-    return filteredAndSortedIds.slice(start, start + pageSize)
-  }, [filteredAndSortedIds, page, pageSize])
-
-  return { paginatedIds, totalFilteredItems: filteredAndSortedIds.length }
+  return { paginatedEdiciones, totalFilteredItems: sorted.length }
 }

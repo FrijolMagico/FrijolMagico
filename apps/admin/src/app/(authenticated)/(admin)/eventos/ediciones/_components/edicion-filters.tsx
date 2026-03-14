@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, X } from 'lucide-react'
+import { IconSearch, IconX } from '@tabler/icons-react'
 import { useDebouncedCallback } from 'use-debounce'
 import { Input } from '@/shared/components/ui/input'
 import {
@@ -13,21 +13,18 @@ import {
 } from '@/shared/components/ui/select'
 import { Button } from '@/shared/components/ui/button'
 import { useEdicionFilterStore } from '../_store/edicion-filter-store'
-import { useEventoProjectionStore } from '../../_store/evento-ui-store'
+import type { EventoEntry } from '../../_types'
 
-export function EdicionFilters() {
+export function EdicionFilters({ eventos }: { eventos: EventoEntry[] }) {
   const filters = useEdicionFilterStore((s) => s.filters)
   const setFilter = useEdicionFilterStore((s) => s.setFilter)
   const setFilters = useEdicionFilterStore((s) => s.setFilters)
 
-  const eventoIds = useEventoProjectionStore((s) => s.allIds)
-  const eventoById = useEventoProjectionStore((s) => s.byId)
-
   const EDITION_FILTERS_OPTIONS: Record<string, string> = {
     all: 'Todos los eventos',
-    ...eventoIds.reduce(
-      (acc, id) => {
-        acc[id] = eventoById[id]?.nombre ?? id
+    ...eventos.reduce(
+      (acc, evento) => {
+        acc[evento.id] = evento.nombre
         return acc
       },
       {} as Record<string, string>
@@ -61,7 +58,7 @@ export function EdicionFilters() {
   return (
     <div className='flex flex-col gap-4 sm:flex-row sm:items-center'>
       <div className='relative max-w-sm flex-1'>
-        <Search className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
+        <IconSearch className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
         <Input
           placeholder='Buscar edición...'
           value={localSearch}
@@ -82,9 +79,9 @@ export function EdicionFilters() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value='all'>Todos los eventos</SelectItem>
-            {eventoIds.map((id) => (
-              <SelectItem key={id} value={id}>
-                {eventoById[id]?.nombre ?? id}
+            {eventos.map((evento) => (
+              <SelectItem key={evento.id} value={evento.id}>
+                {evento.nombre}
               </SelectItem>
             ))}
           </SelectContent>
@@ -92,7 +89,7 @@ export function EdicionFilters() {
 
         {hasActiveFilters && (
           <Button variant='ghost' size='sm' onClick={clearFilters}>
-            <X className='mr-1 h-4 w-4' />
+            <IconX className='mr-1 h-4 w-4' />
             Limpiar
           </Button>
         )}

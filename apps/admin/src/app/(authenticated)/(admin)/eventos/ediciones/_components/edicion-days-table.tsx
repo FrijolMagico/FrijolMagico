@@ -65,7 +65,9 @@ export function EdicionDaysTable({
             <TableRow key={day.tempId}>
               <TableCell>{formatFecha(day.fecha)}</TableCell>
               <TableCell>
-                {(MODALIDAD_LABELS[day.modalidad] ?? day.modalidad) || '—'}
+                {(day.modalidad
+                  ? (MODALIDAD_LABELS[day.modalidad] ?? day.modalidad)
+                  : null) || '—'}
               </TableCell>
               <TableCell>{day.horaInicio || '—'}</TableCell>
               <TableCell>{day.horaFin || '—'}</TableCell>

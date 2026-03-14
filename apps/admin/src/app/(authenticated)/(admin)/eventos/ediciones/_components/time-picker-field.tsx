@@ -1,6 +1,6 @@
 'use client'
 
-import { ClockIcon } from 'lucide-react'
+import { IconClock } from '@tabler/icons-react'
 import { Button } from '@/shared/components/ui/button'
 import {
   Popover,
@@ -57,22 +57,20 @@ export function TimePickerField({
     <Field>
       {label && <FieldLabel htmlFor={id}>{label}</FieldLabel>}
       <Popover>
-        <PopoverTrigger
-          render={
-            <Button
-              id={id}
-              type='button'
-              variant='outline'
-              className={cn(
-                'w-full justify-start text-left font-normal',
-                !displayValue && 'text-muted-foreground',
-                error && 'border-destructive'
-              )}
-            />
-          }
-        >
-          <ClockIcon className='mr-2 h-4 w-4 shrink-0' />
-          {displayValue ?? 'Seleccionar hora...'}
+        <PopoverTrigger asChild>
+          <Button
+            id={id}
+            type='button'
+            variant='outline'
+            className={cn(
+              'w-full justify-start text-left font-normal',
+              !displayValue && 'text-muted-foreground',
+              error && 'border-destructive'
+            )}
+          >
+            <IconClock className='mr-2 h-4 w-4 shrink-0' />
+            {displayValue ?? 'Seleccionar hora...'}
+          </Button>
         </PopoverTrigger>
         <PopoverContent className='w-auto px-3 py-2' align='center'>
           <div className='flex items-center gap-2'>

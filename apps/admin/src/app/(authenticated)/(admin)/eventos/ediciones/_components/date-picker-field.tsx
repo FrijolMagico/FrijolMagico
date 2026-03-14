@@ -1,7 +1,7 @@
 'use client'
 
 import { format, parse, isValid } from 'date-fns'
-import { CalendarIcon } from 'lucide-react'
+import { IconCalendar } from '@tabler/icons-react'
 import { Button } from '@/shared/components/ui/button'
 import { Calendar } from '@/shared/components/ui/calendar'
 import {
@@ -45,22 +45,20 @@ export function DatePickerField({
     <Field>
       {label && <FieldLabel htmlFor={id}>{label}</FieldLabel>}
       <Popover>
-        <PopoverTrigger
-          render={
-            <Button
-              id={id}
-              type='button'
-              variant='outline'
-              className={cn(
-                'w-full justify-start text-left font-normal',
-                !displayDate && 'text-muted-foreground',
-                error && 'border-destructive'
-              )}
-            />
-          }
-        >
-          <CalendarIcon className='mr-2 h-4 w-4 shrink-0' />
-          {displayDate ?? 'Seleccionar fecha...'}
+        <PopoverTrigger asChild>
+          <Button
+            id={id}
+            type='button'
+            variant='outline'
+            className={cn(
+              'w-full justify-start text-left font-normal',
+              !displayDate && 'text-muted-foreground',
+              error && 'border-destructive'
+            )}
+          >
+            <IconCalendar className='mr-2 h-4 w-4 shrink-0' />
+            {displayDate ?? 'Seleccionar fecha...'}
+          </Button>
         </PopoverTrigger>
         <PopoverContent className='w-auto p-0' align='start'>
           <Calendar

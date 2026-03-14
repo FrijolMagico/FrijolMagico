@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { MapPinPlus } from 'lucide-react'
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { IconMapPinPlus } from '@tabler/icons-react'
 import { Button } from '@/shared/components/ui/button'
 import {
   Combobox,
@@ -14,15 +16,9 @@ import {
 } from '@/shared/components/ui/combobox'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
-import {
-  useLugarOperationStore,
-  useLugarProjectionStore
-} from '../_store/lugar-ui-store'
+import { addLugarAction } from '../_actions/add-lugar.action'
+import type { LugarEntry } from '../_types'
 
-// Base UI Combobox automatically uses { value, label } shape:
-// - `label` is shown in the input
-// - `value` is used for form submission
-// Sentinel value represents "no place selected" (null in the DB)
 const NULL_LUGAR_VALUE = null
 
 type LugarItem = { value: string | null; label: string }
@@ -35,6 +31,7 @@ const NULL_LUGAR_ITEM: LugarItem = {
 interface LugarComboboxProps {
   value: string | null
   onChange: (id: string | null) => void
+  lugares: LugarEntry[]
 }
 
 interface LugarFormState {
@@ -51,11 +48,13 @@ const INITIAL_LUGAR_FORM_STATE: LugarFormState = {
   url: ''
 }
 
-export function LugarCombobox({ value, onChange }: LugarComboboxProps) {
-  const addLugar = useLugarOperationStore((s) => s.add)
-  const lugaresById = useLugarProjectionStore((s) => s.byId)
-  const lugarIds = useLugarProjectionStore((s) => s.allIds)
-
+export function LugarCombobox({
+  value,
+  onChange,
+  lugares
+}: LugarComboboxProps) {
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
   const [newLugar, setNewLugar] = useState<LugarFormState>(
@@ -64,10 +63,7 @@ export function LugarCombobox({ value, onChange }: LugarComboboxProps) {
 
   const items: LugarItem[] = [
     NULL_LUGAR_ITEM,
-    ...lugarIds
-      .map((id) => ({ id, lugar: lugaresById[id] }))
-      .filter(({ lugar }) => !!lugar && !lugar.__meta?.isDeleted)
-      .map(({ id, lugar }) => ({ value: id, label: lugar!.nombre }))
+    ...lugares.map((lugar) => ({ value: lugar.id, label: lugar.nombre }))
   ]
 
   const comboboxValue: LugarItem =
@@ -91,21 +87,26 @@ export function LugarCombobox({ value, onChange }: LugarComboboxProps) {
       return
     }
 
-    const now = new Date().toISOString()
+    startTransition(async () => {
+      const formData = new FormData()
+      formData.append('nombre', nombre)
+      if (newLugar.direccion) formData.append('direccion', newLugar.direccion)
+      if (newLugar.ciudad) formData.append('ciudad', newLugar.ciudad)
+      if (newLugar.url) formData.append('url', newLugar.url)
 
-    addLugar({
-      nombre,
-      direccion: newLugar.direccion.trim() || null,
-      ciudad: newLugar.ciudad.trim() || null,
-      url: newLugar.url.trim() || null,
-      coordenadas: null,
-      createdAt: now,
-      updatedAt: now
+      const result = await addLugarAction({ success: false }, formData)
+
+      if (!result.success && result.errors) {
+        setCreateError(result.errors[0]?.message ?? 'Error al crear lugar')
+      } else if (result.success && result.data) {
+        toast.success('Lugar creado')
+        onChange(String(result.data.id))
+        setShowCreateForm(false)
+        setCreateError(null)
+        setNewLugar(INITIAL_LUGAR_FORM_STATE)
+        router.refresh()
+      }
     })
-
-    setShowCreateForm(false)
-    setCreateError(null)
-    setNewLugar(INITIAL_LUGAR_FORM_STATE)
   }
 
   return (
@@ -134,6 +135,7 @@ export function LugarCombobox({ value, onChange }: LugarComboboxProps) {
                   }))
                 }}
                 placeholder='Ej. Centro Cultural GAM'
+                disabled={isPending}
               />
               {createError && (
                 <p className='text-destructive text-xs'>{createError}</p>
@@ -152,6 +154,7 @@ export function LugarCombobox({ value, onChange }: LugarComboboxProps) {
                   }))
                 }
                 placeholder="Av. Libertador Bernardo O'Higgins 227"
+                disabled={isPending}
               />
             </div>
 
@@ -167,6 +170,7 @@ export function LugarCombobox({ value, onChange }: LugarComboboxProps) {
                   }))
                 }
                 placeholder='Santiago'
+                disabled={isPending}
               />
             </div>
 
@@ -179,6 +183,7 @@ export function LugarCombobox({ value, onChange }: LugarComboboxProps) {
                   setNewLugar((prev) => ({ ...prev, url: e.target.value }))
                 }
                 placeholder='https://...'
+                disabled={isPending}
               />
             </div>
 
@@ -192,11 +197,17 @@ export function LugarCombobox({ value, onChange }: LugarComboboxProps) {
                   setCreateError(null)
                   setNewLugar(INITIAL_LUGAR_FORM_STATE)
                 }}
+                disabled={isPending}
               >
                 Cancelar
               </Button>
-              <Button type='button' size='sm' onClick={handleCreateLugar}>
-                Crear
+              <Button
+                type='button'
+                size='sm'
+                onClick={handleCreateLugar}
+                disabled={isPending}
+              >
+                {isPending ? 'Creando...' : 'Crear'}
               </Button>
             </div>
           </div>
@@ -223,7 +234,7 @@ export function LugarCombobox({ value, onChange }: LugarComboboxProps) {
                   setCreateError(null)
                 }}
               >
-                <MapPinPlus className='mr-2 h-4 w-4' />
+                <IconMapPinPlus className='mr-2 h-4 w-4' />
                 Crear nuevo lugar
               </Button>
             </div>
