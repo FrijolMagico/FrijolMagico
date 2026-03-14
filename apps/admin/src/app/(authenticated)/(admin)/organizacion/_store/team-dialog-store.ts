@@ -1,18 +1,33 @@
 import { create } from 'zustand'
-import { TeamMember } from '../_types'
+
+import type { TeamMember } from '../_schemas/organizacion.schema'
 
 interface TeamDialogStore {
-  isDialogOpen: boolean
-  selectedMember: TeamMember | null
+  isAddOpen: boolean
+  editingMember: TeamMember | null
 
-  openDialog: (member: TeamMember | null) => void
-  closeDialog: () => void
+  openAdd: () => void
+  openEdit: (member: TeamMember) => void
+  close: () => void
 }
 
 export const useTeamDialog = create<TeamDialogStore>((set) => ({
-  isDialogOpen: false,
-  selectedMember: null,
+  isAddOpen: false,
+  editingMember: null,
 
-  openDialog: (member) => set({ isDialogOpen: true, selectedMember: member }),
-  closeDialog: () => set({ isDialogOpen: false, selectedMember: null })
+  openAdd: () => {
+    console.log('[DBG:STORE] openAdd called', { stack: new Error().stack })
+    set({ isAddOpen: true, editingMember: null })
+  },
+  openEdit: (member) => {
+    console.log('[DBG:STORE] openEdit called', {
+      memberId: member.id,
+      stack: new Error().stack
+    })
+    set({ isAddOpen: false, editingMember: member })
+  },
+  close: () => {
+    console.log('[DBG:STORE] close called', { stack: new Error().stack })
+    set({ isAddOpen: false, editingMember: null })
+  }
 }))

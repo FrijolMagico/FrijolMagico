@@ -1,100 +1,111 @@
 'use client'
 
-import { Field, FieldGroup, FieldLabel } from '@/shared/components/ui/field'
+import { Controller, useFormContext } from 'react-hook-form'
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel
+} from '@/shared/components/ui/field'
 import { Input } from '@/shared/components/ui/input'
 import { Textarea } from '@/shared/components/ui/textarea'
 import { RichTextarea } from '@/shared/components/rich-textarea'
-import { OrganizationFormInput } from '../_schemas/organizacion.schema'
+import type { OrganizationFormInput } from '../_schemas/organizacion.schema'
+import { ORGANIZATION_FIELDS } from '../_constants'
 
 interface OrganizationFormProps {
   id: string
-  fields: OrganizationFormInput
-  setField: (field: keyof OrganizationFormInput, value: string) => void
-  errors: Partial<Record<keyof OrganizationFormInput, string>>
-  formAction: (formData: FormData) => void | Promise<void>
+  onSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>
 }
 
-export function OrganizationForm({
-  id,
-  fields,
-  setField,
-  errors,
-  formAction
-}: OrganizationFormProps) {
+export function OrganizationForm({ id, onSubmit }: OrganizationFormProps) {
+  const {
+    control,
+    formState: { errors }
+  } = useFormContext<OrganizationFormInput>()
+
   return (
-    <form id={id} action={formAction}>
+    <form id={id} onSubmit={onSubmit}>
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor='nombre'>Nombre de la Organización</FieldLabel>
-          <Input
-            id='nombre'
-            name='nombre'
-            value={fields.nombre ?? ''}
-            onChange={(e) => setField('nombre', e.target.value)}
-            placeholder='Frijol Mágico'
-            className='w-full'
-            aria-invalid={!!errors.nombre}
+          <FieldLabel htmlFor={ORGANIZATION_FIELDS.NAME}>
+            Nombre de la Organización
+          </FieldLabel>
+          <Controller
+            name={ORGANIZATION_FIELDS.NAME}
+            control={control}
+            render={({ field }) => (
+              <Input
+                id={ORGANIZATION_FIELDS.NAME}
+                {...field}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                placeholder='Frijol Mágico'
+                className='w-full'
+                aria-invalid={!!errors.nombre}
+              />
+            )}
           />
-          {errors.nombre && (
-            <p className='text-destructive text-sm'>{errors.nombre}</p>
-          )}
+          {errors.nombre && <FieldError>{errors.nombre.message}</FieldError>}
         </Field>
 
         <Field>
-          <FieldLabel htmlFor='descripcion'>Descripción</FieldLabel>
-          <Textarea
-            id='descripcion'
-            name='descripcion'
-            value={fields.descripcion ?? ''}
-            onChange={(e) => setField('descripcion', e.target.value)}
-            placeholder='Describe la organización...'
-            className='field-sizing-content!'
-            rows={2}
-            aria-invalid={!!errors.descripcion}
+          <FieldLabel htmlFor={ORGANIZATION_FIELDS.DESCRIPTION}>
+            Descripción
+          </FieldLabel>
+          <Controller
+            name={ORGANIZATION_FIELDS.DESCRIPTION}
+            control={control}
+            render={({ field }) => (
+              <Textarea
+                id={ORGANIZATION_FIELDS.DESCRIPTION}
+                {...field}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                placeholder='Describe la organización...'
+                className='field-sizing-content!'
+                rows={2}
+                aria-invalid={!!errors.descripcion}
+              />
+            )}
           />
           {errors.descripcion && (
-            <p className='text-destructive text-sm'>{errors.descripcion}</p>
+            <FieldError>{errors.descripcion.message}</FieldError>
           )}
         </Field>
 
         <Field>
           <FieldLabel htmlFor='mision'>Misión</FieldLabel>
-          <RichTextarea
-            id='mision'
-            value={fields.mision ?? ''}
-            onChange={(value) => setField('mision', value)}
-            placeholder='Nuestra misión es...'
+          <Controller
+            name={ORGANIZATION_FIELDS.MISSION}
+            control={control}
+            render={({ field }) => (
+              <RichTextarea
+                id={ORGANIZATION_FIELDS.MISSION}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                placeholder='Nuestra misión es...'
+              />
+            )}
           />
-          <textarea
-            className='hidden'
-            aria-hidden
-            name='mision'
-            value={fields.mision ?? ''}
-            readOnly
-          />
-          {errors.mision && (
-            <p className='text-destructive text-sm'>{errors.mision}</p>
-          )}
+          {errors.mision && <FieldError>{errors.mision.message}</FieldError>}
         </Field>
 
         <Field>
-          <FieldLabel htmlFor='vision'>Visión</FieldLabel>
-          <RichTextarea
-            id='vision'
-            value={fields.vision ?? ''}
-            onChange={(value) => setField('vision', value)}
-            placeholder='Nuestra visión es...'
+          <FieldLabel htmlFor={ORGANIZATION_FIELDS.VISION}>Visión</FieldLabel>
+          <Controller
+            name={ORGANIZATION_FIELDS.VISION}
+            control={control}
+            render={({ field }) => (
+              <RichTextarea
+                id={ORGANIZATION_FIELDS.VISION}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                placeholder='Nuestra visión es...'
+              />
+            )}
           />
-          <textarea
-            className='hidden'
-            aria-hidden
-            name='vision'
-            value={fields.vision ?? ''}
-            readOnly
-          />
-          {errors.vision && (
-            <p className='text-destructive text-sm'>{errors.vision}</p>
-          )}
+          {errors.vision && <FieldError>{errors.vision.message}</FieldError>}
         </Field>
       </FieldGroup>
     </form>

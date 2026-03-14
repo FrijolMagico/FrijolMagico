@@ -12,30 +12,21 @@ import { TEAM_CACHE_TAG, ORGANIZATION_ID } from '../_constants'
 
 import { ActionState } from '@/shared/types/actions'
 import {
+  type TeamMemberUpdateInput,
+  type TeamMemberFormInput,
   teamMemberInsertSchema,
   teamMemberUpdateSchema
 } from '../_schemas/organizacion.schema'
 
 export async function addTeamMember(
   _prevState: ActionState,
-  formData: FormData
+  data: TeamMemberFormInput
 ): Promise<ActionState> {
   try {
     await requireAuth()
 
-    const raw = {
-      name: formData.get('name'),
-      position: formData.get('position'),
-      rut: formData.get('rut'),
-      email: formData.get('email'),
-      phone: formData.get('phone'),
-      rrss: formData.get('rrss')
-    }
-
-    // TODO: We need to validate the rrss field separately because it's a JSON string in the form but an object in our schema
-
     const validated = teamMemberInsertSchema.safeParse({
-      ...raw,
+      ...data,
       organizationId: ORGANIZATION_ID
     })
 
@@ -73,38 +64,13 @@ export async function addTeamMember(
 }
 
 export async function updateTeamMember(
-  _prevState: ActionState,
-  formData: FormData
-): Promise<ActionState> {
+  _prevState: ActionState<TeamMemberUpdateInput>,
+  data: TeamMemberFormInput & { id: number }
+): Promise<ActionState<TeamMemberUpdateInput>> {
   try {
     await requireAuth()
 
-    const memberId = formData.get('memberId')
-    if (!memberId || typeof memberId !== 'string') {
-      return {
-        success: false,
-        errors: [
-          {
-            entityType: 'organizacion_equipo',
-            message: 'ID del miembro requerido'
-          }
-        ]
-      }
-    }
-
-    const raw = {
-      name: formData.get('name'),
-      position: formData.get('position'),
-      rut: formData.get('rut'),
-      email: formData.get('email'),
-      phone: formData.get('phone'),
-      rrss: formData.get('rrss')
-    }
-
-    const validated = teamMemberUpdateSchema.safeParse({
-      ...raw,
-      rrss: raw.rrss ? JSON.parse(raw.rrss as string) : undefined
-    })
+    const validated = teamMemberUpdateSchema.safeParse(data)
 
     if (!validated.success) {
       return {
@@ -116,15 +82,28 @@ export async function updateTeamMember(
       }
     }
 
+    if (!validated.data.id) {
+      return {
+        success: false,
+        errors: [
+          {
+            entityType: 'organizacion_equipo',
+            message: 'ID del miembro del equipo es requerido'
+          }
+        ]
+      }
+    }
+
     await db
       .update(organizationMember)
       .set(validated.data)
-      .where(eq(organizationMember.id, Number(memberId)))
+      .where(eq(organizationMember.id, validated.data.id))
 
     updateTag(TEAM_CACHE_TAG)
 
     return {
-      success: true
+      success: true,
+      data: validated.data
     }
   } catch (error) {
     return {
@@ -142,11 +121,11 @@ export async function updateTeamMember(
   }
 }
 
-export async function deleteTeamMember(id: string): Promise<ActionState> {
+export async function deleteTeamMember(id: number): Promise<ActionState> {
   try {
     await requireAuth()
 
-    if (!id || typeof id !== 'string') {
+    if (!id || typeof id !== 'number') {
       return {
         success: false,
         errors: [

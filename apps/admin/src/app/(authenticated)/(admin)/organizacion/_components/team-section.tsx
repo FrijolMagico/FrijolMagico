@@ -5,11 +5,13 @@ import {
   CardContent
 } from '@/shared/components/ui/card'
 
-import { AddMember } from './add-member'
 import { IconUserFilled } from '@tabler/icons-react'
 import { TeamTableContainer } from './team-table-container'
+import { TeamMemberAdd } from './team-member-add'
+import { TeamMemberUpdate } from './team-member-update'
 
 export function TeamSection() {
+  console.log('[DBG:TEAM-SECTION] rendered')
   return (
     <Card>
       <CardHeader className='flex flex-row items-center justify-between space-y-0'>
@@ -17,11 +19,12 @@ export function TeamSection() {
           <IconUserFilled className='h-5 w-5' />
           Equipo
         </CardTitle>
-        <AddMember />
+        <TeamMemberAdd />
       </CardHeader>
 
       <CardContent className='space-y-6'>
         <TeamTableContainer />
+        <TeamMemberUpdate />
       </CardContent>
     </Card>
   )

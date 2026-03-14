@@ -7,10 +7,11 @@ import {
 } from '@/shared/components/ui/table'
 
 import { EmptyState } from '@/shared/components/empty-state'
-import { TeamTableList } from './team-table-list'
 import { getTeamData } from '../_lib/get-general-data'
+import { TeamRow } from './team-row'
 
 export async function TeamTableContainer() {
+  console.log('[DBG:TABLE-CONTAINER] rendered (server)')
   const team = await getTeamData()
 
   if (!team) {
@@ -37,18 +38,21 @@ export async function TeamTableContainer() {
   return (
     <div className='rounded-lg border'>
       <Table>
-        <TableHeader>
+        <TableHeader className='bg-muted'>
           <TableRow>
             <TableHead>Nombre</TableHead>
             <TableHead className='w-[15%]'>Cargo</TableHead>
             <TableHead className='w-[20%]'>Correo</TableHead>
             <TableHead className='w-[15%]'>Teléfono</TableHead>
+            <TableHead className='w-[15%]'>RUT</TableHead>
             <TableHead className='w-[5%]'>RRSS</TableHead>
             <TableHead className='w-[5%]'></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TeamTableList initialData={team} />
+          {team.map((member) => (
+            <TeamRow key={member.id} member={member} />
+          ))}
         </TableBody>
       </Table>
     </div>

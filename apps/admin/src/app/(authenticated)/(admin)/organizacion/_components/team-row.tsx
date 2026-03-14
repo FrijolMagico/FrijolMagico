@@ -2,8 +2,7 @@
 
 import { TableCell, TableRow } from '@/shared/components/ui/table'
 import { ActionMenuButton } from '@/shared/components/action-menu-button'
-import { RRSSViewer } from '@/shared/components/rrss-viewer/rrss-viewer'
-import { TeamMember } from '../_types'
+import { RRSSViewer } from '@/shared/components/rrss/rrss-viewer'
 import { deleteTeamMember } from '../_actions/team-member.action'
 import { useTeamDialog } from '../_store/team-dialog-store'
 import { useState } from 'react'
@@ -20,13 +19,14 @@ import {
 } from '@/shared/components/ui/alert-dialog'
 import { IconTrashFilled } from '@tabler/icons-react'
 import { toast } from 'sonner'
+import { TeamMember } from '../_schemas/organizacion.schema'
 
 interface TeamRowProps {
   member: TeamMember
 }
 
 export function TeamRow({ member }: TeamRowProps) {
-  const openDialog = useTeamDialog((state) => state.openDialog)
+  const openEdit = useTeamDialog((state) => state.openEdit)
   const [showAlert, setShowAlert] = useState(false)
 
   const handleMemberDeletion = () => {
@@ -41,10 +41,11 @@ export function TeamRow({ member }: TeamRowProps) {
 
           return
         }
+
+        toast.success('Miembro del equipo eliminado correctamente')
       })
       .finally(() => {
         setShowAlert(false)
-        toast.success('Miembro del equipo eliminado correctamente')
       })
   }
 
@@ -55,6 +56,7 @@ export function TeamRow({ member }: TeamRowProps) {
         <TableCell>{member.position || '-'}</TableCell>
         <TableCell>{member.email || '-'}</TableCell>
         <TableCell>{member.phone || '-'}</TableCell>
+        <TableCell>{member.rut || '-'}</TableCell>
         <TableCell>
           <RRSSViewer rrss={member.rrss} />
         </TableCell>
@@ -64,7 +66,7 @@ export function TeamRow({ member }: TeamRowProps) {
             actions={[
               {
                 label: 'Editar',
-                onClick: () => openDialog(member)
+                onClick: () => openEdit(member)
               }
             ]}
             onDelete={() => setShowAlert(true)}
