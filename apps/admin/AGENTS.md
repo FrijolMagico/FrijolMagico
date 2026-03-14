@@ -30,8 +30,6 @@ src/
 │   ├── components/                     # UI: shadcn/ui + custom components
 │   ├── hooks/                          # Sync hooks: journal, projection, dirty
 │   ├── lib/                            # Glue: entities, registries, stores
-│   ├── operations/                     # Core: journal, log, projection
-│   ├── push/                           # Persistence pipeline
 │   └── ui-state/                       # Pagination + filters factories
 ├── lib/                                # Global: auth, utils, cdn, navigation
 ├── hooks/                              # App-level hooks (use-mobile)
@@ -75,33 +73,16 @@ Every admin feature follows this structure (see artistas/catalogo as reference):
 
 ```
 feature/
-├── _actions/       # Server Actions ('use server', PushOperation[] -> PushResult)
+├── _actions/       # Server Actions ('use server', server validations)
 ├── _components/    # Client components ('use client' only when needed)
-├── _hooks/         # Feature hooks (push, list filtering, etc.)
+├── _hooks/         # Feature hooks
 ├── _lib/           # DAL: server-side data fetching ('use cache' + cacheTag)
 ├── _schemas/       # Zod schemas (shared client + server validation)
-├── _store/         # Zustand stores (operation log + projection + UI)
+├── _store/         # Feature Zustand stores
 ├── _types/         # TypeScript types
 ├── _constants/     # Feature constants
 └── page.tsx        # Route page (default export, calls requireAuth())
 ```
-
-### Data Flow (Local-First)
-
-```
-User Action → OperationLog (Zustand) → Journal (IndexedDB) → Push (Server Action) → Database
-                    ↓
-            ProjectionStore (derived UI state with __meta flags)
-                    ↓
-            DirtyStore (amber dot in sidebar)
-```
-
-Key hooks in `src/shared/hooks/`:
-
-- `useJournalSync` — OperationLog → IndexedDB (debounced auto-save)
-- `useProjectionSync` — OperationLog → ProjectionStore (reactive UI)
-- `useDirtySync` — ProjectionStore → SectionDirtyStore (save bar)
-- `useJournalRestore` — IndexedDB → OperationLog (page reload recovery)
 
 ## Authentication
 
@@ -137,13 +118,11 @@ Key hooks in `src/shared/hooks/`:
 - **`cn()`** for conditional Tailwind classes (from `@/lib/utils`)
 - **Tailwind v4** with `@theme` syntax, OKLch colors, `@frijolmagico/tailwind-config` base
 - **Shadcn/ui** components at `@/shared/components/ui/` (Base UI primitives, not Radix)
-- **Zustand 5** stores created via factories (`createEntityOperationStore`, `createProjectionStore`, `createPaginationStore`, `createFilterStore`)
 - **Zod 4** for validation (double validation: client in `usePush`, server in Server Actions)
 - **Drizzle-Zod** for schema derivation (see Schema Guide below)
-- **Server Actions** accept `PushOperation[]`, use `validateOperationData()`, return `PushResult`
 - **DAL pattern:** `'use cache'` + `cacheTag()` in feature `_lib/` files
 - **UI text in Spanish** (user-facing labels), **code/comments in English**
-- **Lucide** for icons
+- **Tabler Icons** for icons
 
 ## Forbidden Patterns
 
@@ -155,7 +134,7 @@ Key hooks in `src/shared/hooks/`:
 - **NEVER `any` types** — strict TypeScript enforced
 - **NEVER `as any`, `@ts-ignore`, `@ts-expect-error`** — fix the type
 - **NEVER Spanish in code/comments** — English only (UI labels are Spanish)
-- **NEVER `server-only` skip** — MUST use `server-only` package for Server Actions
+- **NEVER `server-only` skip** — MUST use `server-only` package for Server Actions, verify if is installed, if not, install it
 
 ## Cross-Workspace Dependencies
 
@@ -168,7 +147,6 @@ Key hooks in `src/shared/hooks/`:
 ## Testing
 
 - **Unit:** Bun test runner, files in `tests/unit/` mirroring `src/` structure, `.test.ts` suffix
-- **E2E:** Playwright (configured, sparse tests)
 - **Verify changes:** `bun run type-check && bun run lint && bun test`
 
 ## Notes
