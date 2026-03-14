@@ -16,7 +16,7 @@ import {
   DialogTrigger
 } from '@/shared/components/ui/dialog'
 import { Badge } from '@/shared/components/ui/badge'
-import { addTeamMember } from '../_actions/team-member.action'
+import { createTeamMember } from '../_actions/team-member.action'
 import {
   type TeamMemberFormInput,
   teamMemberFormSchema
@@ -34,7 +34,7 @@ const DEFAULT_VALUES: TeamMemberFormInput = {
   rrss: null
 }
 
-export function TeamMemberAdd() {
+export function TeamMemberCreate() {
   const [open, setOpen] = useState(false)
 
   const methods = useForm<TeamMemberFormInput>({
@@ -49,7 +49,7 @@ export function TeamMemberAdd() {
 
   const onSubmit = async (data: TeamMemberFormInput) => {
     try {
-      const result = await addTeamMember({ success: false }, data)
+      const result = await createTeamMember({ success: false }, data)
 
       if (!result.success) {
         toast.error(

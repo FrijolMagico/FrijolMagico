@@ -18,7 +18,7 @@ import {
   teamMemberUpdateSchema
 } from '../_schemas/organizacion.schema'
 
-export async function addTeamMember(
+export async function createTeamMember(
   _prevState: ActionState,
   data: TeamMemberFormInput
 ): Promise<ActionState> {

@@ -7,7 +7,7 @@ import {
 
 import { IconUserFilled } from '@tabler/icons-react'
 import { TeamTableContainer } from './team-table-container'
-import { TeamMemberAdd } from './team-member-add'
+import { TeamMemberCreate } from './team-member-create'
 import { TeamMemberUpdate } from './team-member-update'
 
 export function TeamSection() {
@@ -19,7 +19,7 @@ export function TeamSection() {
           <IconUserFilled className='h-5 w-5' />
           Equipo
         </CardTitle>
-        <TeamMemberAdd />
+        <TeamMemberCreate />
       </CardHeader>
 
       <CardContent className='space-y-6'>

@@ -29,24 +29,21 @@ export function TeamRow({ member }: TeamRowProps) {
   const openEdit = useTeamDialog((state) => state.openEdit)
   const [showAlert, setShowAlert] = useState(false)
 
-  const handleMemberDeletion = () => {
-    deleteTeamMember(member.id)
-      .then((result) => {
-        if (!result.success) {
-          toast.error(
-            result.errors
-              ? result.errors.map((e) => e.message).join(', ')
-              : 'Error al eliminar el miembro del equipo'
-          )
+  const handleMemberDeletion = async () => {
+    const result = await deleteTeamMember(member.id)
 
-          return
-        }
+    if (!result.success) {
+      toast.error(
+        result.errors
+          ? result.errors.map((e) => e.message).join(', ')
+          : 'Error al eliminar el miembro del equipo'
+      )
 
-        toast.success('Miembro del equipo eliminado correctamente')
-      })
-      .finally(() => {
-        setShowAlert(false)
-      })
+      return
+    }
+
+    setShowAlert(false)
+    toast.success('Miembro del equipo eliminado correctamente')
   }
 
   return (
