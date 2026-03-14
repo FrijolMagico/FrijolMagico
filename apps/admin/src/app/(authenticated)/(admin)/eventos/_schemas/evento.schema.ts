@@ -19,6 +19,11 @@ export const eventoFormSchema = eventoInsertSchema.pick({
   descripcion: true
 })
 
+export const eventoUpdateFormSchema = eventoFormSchema.extend({
+  id: z.number().int().positive()
+})
+
 export type EventoInsertInput = z.infer<typeof eventoInsertSchema>
 export type EventoFormInput = z.infer<typeof eventoFormSchema>
+export type EventoUpdateFormInput = z.infer<typeof eventoUpdateFormSchema>
 export type EventoInput = EventoInsertInput

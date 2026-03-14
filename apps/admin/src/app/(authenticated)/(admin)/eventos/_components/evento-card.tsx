@@ -1,9 +1,7 @@
 'use client'
 
-import {
-  useEventoProjectionStore,
-  useEventoOperationStore
-} from '../_store/evento-ui-store'
+import { useTransition } from 'react'
+import { toast } from 'sonner'
 import { useEventoDialog } from '../_store/evento-dialog-store'
 import {
   Card,
@@ -11,70 +9,53 @@ import {
   CardHeader,
   CardTitle
 } from '@/shared/components/ui/card'
-import { cn } from '@/lib/utils'
-import { StateBadge } from '@/shared/components/state-badge'
 import { ActionMenuButton } from '@/shared/components/action-menu-button'
+import { deleteEventoAction } from '../_actions/delete-evento.action'
+import type { EventoEntry } from '../_types'
 
 interface EventoCardProps {
-  id: string
+  evento: EventoEntry
 }
 
-export function EventoCard({ id }: EventoCardProps) {
-  const evento = useEventoProjectionStore((s) => s.byId[id])
-  const remove = useEventoOperationStore((s) => s.remove)
-  const restore = useEventoOperationStore((s) => s.restore)
+export function EventoCard({ evento }: EventoCardProps) {
   const openDialog = useEventoDialog((s) => s.openDialog)
+  const [, startTransition] = useTransition()
 
-  if (!evento) return null
+  const handleDelete = () => {
+    if (!confirm('¿Estás seguro de que quieres eliminar este evento?')) return
 
-  const isDeleted = evento.__meta?.isDeleted
-  const isNew = evento.__meta?.isNew
-  const isUpdated = evento.__meta?.isUpdated
+    startTransition(async () => {
+      const formData = new FormData()
+      formData.append('id', String(evento.id))
+      const result = await deleteEventoAction({ success: false }, formData)
+      if (!result.success && result.errors) {
+        toast.error(result.errors[0]?.message ?? 'Error al eliminar el evento')
+      } else {
+        toast.success('Evento eliminado')
+      }
+    })
+  }
 
   return (
-    <Card
-      className={cn(
-        'flex flex-col justify-between transition-colors',
-        isDeleted && 'bg-destructive/10 border-destructive/20',
-        isNew && 'border-green-500/50',
-        isUpdated && !isDeleted && 'border-amber-500/50'
-      )}
-    >
+    <Card className='flex flex-col justify-between transition-colors'>
       <CardHeader>
         <div className='flex items-start justify-between gap-4'>
           <div>
-            <CardTitle
-              className={cn(
-                'text-lg',
-                isDeleted && 'text-muted-foreground line-through'
-              )}
-            >
-              {evento.nombre}
-            </CardTitle>
-            <div className='flex items-center gap-2'>
-              <StateBadge {...evento.__meta} />
-            </div>
+            <CardTitle className='text-lg'>{evento.nombre}</CardTitle>
           </div>
           <ActionMenuButton
             actions={[
               {
                 label: 'Editar',
-                onClick: () => openDialog(id)
+                onClick: () => openDialog(evento.id)
               }
             ]}
-            isDeleted={isDeleted}
-            onDelete={() => remove(id)}
-            onRestore={() => restore(id)}
+            onDelete={handleDelete}
           />
         </div>
       </CardHeader>
       <CardContent>
-        <p
-          className={cn(
-            'text-muted-foreground text-sm',
-            isDeleted && 'opacity-50'
-          )}
-        >
+        <p className='text-muted-foreground text-sm'>
           {evento.descripcion || 'Sin descripción'}
         </p>
       </CardContent>

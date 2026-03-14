@@ -1,27 +1,20 @@
-'use client'
-
-import { useEventoProjectionStore } from '../_store/evento-ui-store'
-import { useEventoDialog } from '../_store/evento-dialog-store'
 import { EventoCard } from './evento-card'
 import { EventoDialog } from './evento-dialog'
-import { EventoSaveBar } from './evento-save-bar'
-import { Button } from '@/shared/components/ui/button'
-import { Plus } from 'lucide-react'
+import type { EventoEntry } from '../_types'
+import { EventoAddBtn } from './evento-add-btn'
 
-export function EventoSection() {
-  const allIds = useEventoProjectionStore((s) => s.allIds)
-  const openDialog = useEventoDialog((s) => s.openDialog)
+interface EventoSectionProps {
+  eventos: EventoEntry[]
+}
 
+export function EventoSection({ eventos }: EventoSectionProps) {
   return (
     <div className='space-y-6'>
       <div className='flex'>
-        <Button onClick={() => openDialog(null)} size='sm' variant='outline'>
-          <Plus className='h-4 w-4' />
-          Agregar Evento
-        </Button>
+        <EventoAddBtn />
       </div>
 
-      {allIds.length === 0 ? (
+      {eventos.length === 0 ? (
         <div className='flex h-40 items-center justify-center rounded-lg border border-dashed'>
           <p className='text-muted-foreground text-sm'>
             No hay eventos registrados
@@ -29,14 +22,13 @@ export function EventoSection() {
         </div>
       ) : (
         <div className='grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4'>
-          {allIds.map((id) => (
-            <EventoCard key={id} id={id} />
+          {eventos.map((evento) => (
+            <EventoCard key={evento.id} evento={evento} />
           ))}
         </div>
       )}
 
-      <EventoDialog />
-      <EventoSaveBar />
+      <EventoDialog eventos={eventos} />
     </div>
   )
 }

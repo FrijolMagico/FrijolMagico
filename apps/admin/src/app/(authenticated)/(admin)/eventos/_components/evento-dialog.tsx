@@ -1,149 +1,159 @@
 'use client'
 
-import { useState } from 'react'
+import { useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { toast } from 'sonner'
 import { useEventoDialog } from '../_store/evento-dialog-store'
-import {
-  useEventoOperationStore,
-  useEventoProjectionStore
-} from '../_store/evento-ui-store'
 import { EntityFormDialog } from '@/shared/components/entity-form-dialog/entity-form-dialog'
-import { eventoFormSchema } from '../_schemas/evento.schema'
-import { generateSlug } from '../_lib/slug-utils'
+import {
+  eventoFormSchema,
+  type EventoFormInput
+} from '../_schemas/evento.schema'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { Textarea } from '@/shared/components/ui/textarea'
-import { EventoEntry } from '../_types'
-import { ProjectedEntity } from '@/shared/operations/projection'
+import { addEventoAction } from '../_actions/add-evento.action'
+import { updateEventoAction } from '../_actions/update-evento.action'
+import type { EventoEntry } from '../_types'
+import { IconLoader2 } from '@tabler/icons-react'
 
 interface EventoFormContentProps {
-  onApply: (
-    data: Omit<EventoEntry, 'id' | 'organizacionId' | 'createdAt' | 'updatedAt'>
-  ) => void
+  onSuccess: () => void
   onCancel: () => void
-  evento: ProjectedEntity<EventoEntry> | null
+  evento: EventoEntry | null
 }
 
 function EventoFormContent({
-  onApply,
+  onSuccess,
   onCancel,
   evento
 }: EventoFormContentProps) {
-  const [formData, setFormData] = useState({
-    nombre: evento?.nombre || '',
-    descripcion: evento?.descripcion || ''
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isDirty, isValid }
+  } = useForm<EventoFormInput>({
+    resolver: zodResolver(eventoFormSchema),
+    defaultValues: {
+      nombre: evento?.nombre ?? '',
+      descripcion: evento?.descripcion ?? ''
+    }
   })
 
-  const [errors, setErrors] = useState<{ nombre?: string }>({})
+  const onSubmit = (data: EventoFormInput) => {
+    startTransition(async () => {
+      const result = await (evento
+        ? updateEventoAction(
+            { success: false },
+            { ...data, id: Number(evento.id) }
+          )
+        : addEventoAction({ success: false }, data))
 
-  const handleApply = () => {
-    setErrors({})
-
-    const result = eventoFormSchema.safeParse(formData)
-
-    if (!result.success) {
-      const formatted = result.error.format()
-      setErrors({
-        nombre: formatted.nombre?._errors[0]
-      })
-      return
-    }
-
-    onApply({
-      nombre: formData.nombre,
-      slug: generateSlug(formData.nombre),
-      descripcion: formData.descripcion || null
+      if (result.success) {
+        toast.success(evento ? 'Evento actualizado' : 'Evento creado')
+        onSuccess()
+        router.refresh()
+      } else {
+        toast.error(
+          result.errors
+            ? result.errors.map((e) => e.message).join(', ')
+            : 'Error al guardar el evento'
+        )
+      }
     })
   }
 
   return (
-    <div className='space-y-4 py-2'>
-      <div className='grid gap-2'>
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className='flex flex-col gap-4 py-4'
+    >
+      <div className='flex flex-col gap-2'>
         <Label htmlFor='nombre'>
           Nombre <span className='text-destructive'>*</span>
         </Label>
         <Input
           id='nombre'
-          value={formData.nombre}
-          onChange={(e) =>
-            setFormData((prev) => ({ ...prev, nombre: e.target.value }))
-          }
+          {...register('nombre')}
           placeholder='Nombre del evento'
+          disabled={isPending}
           aria-invalid={!!errors.nombre}
         />
         {errors.nombre && (
-          <p className='text-destructive text-xs'>{errors.nombre}</p>
+          <p className='text-destructive text-sm'>{errors.nombre.message}</p>
         )}
       </div>
 
-      <div className='grid gap-2'>
-        <Label htmlFor='descripcion'>Descripción</Label>
+      <div className='flex flex-col gap-2'>
+        <Label htmlFor='descripcion'>Descripción (opcional)</Label>
         <Textarea
           id='descripcion'
-          value={formData.descripcion}
-          onChange={(e) =>
-            setFormData((prev) => ({ ...prev, descripcion: e.target.value }))
-          }
-          placeholder='Descripción del evento...'
+          {...register('descripcion')}
+          placeholder='Breve descripción del evento'
           rows={4}
+          disabled={isPending}
         />
+        {errors.descripcion && (
+          <p className='text-destructive text-sm'>
+            {errors.descripcion.message}
+          </p>
+        )}
       </div>
 
-      <div className='flex justify-end gap-2 pt-4'>
-        <Button variant='outline' onClick={onCancel}>
+      <div className='mt-4 flex justify-end gap-2'>
+        <Button
+          type='button'
+          variant='outline'
+          onClick={onCancel}
+          disabled={isPending}
+        >
           Cancelar
         </Button>
-        <Button onClick={handleApply}>
-          {evento ? 'Guardar cambios' : 'Agregar evento'}
+        <Button
+          type='submit'
+          disabled={isPending || (!isDirty && !!evento) || !isValid}
+        >
+          {isPending && <IconLoader2 className='mr-2 h-4 w-4 animate-spin' />}
+          {evento ? 'Guardar cambios' : 'Crear evento'}
         </Button>
       </div>
-    </div>
+    </form>
   )
 }
 
-export function EventoDialog() {
-  const eventoId = useEventoDialog((s) => s.selectedEventoId)
-  const evento = useEventoProjectionStore((s) =>
-    eventoId ? s.byId[eventoId] : null
-  )
+interface EventoDialogProps {
+  eventos: EventoEntry[]
+}
 
+export function EventoDialog({ eventos }: EventoDialogProps) {
+  const eventoId = useEventoDialog((s) => s.selectedEventoId)
   const isOpen = useEventoDialog((s) => s.isDialogOpen)
   const close = useEventoDialog((s) => s.closeDialog)
-  const add = useEventoOperationStore((s) => s.add)
-  const update = useEventoOperationStore((s) => s.update)
 
-  const handleApply = (
-    data: Omit<EventoEntry, 'id' | 'organizacionId' | 'createdAt' | 'updatedAt'>
-  ) => {
-    if (eventoId) {
-      update(eventoId, {
-        ...data,
-        organizacionId: evento?.organizacionId ?? 1
-      })
-    } else {
-      const now = new Date().toISOString()
-      add({
-        ...data,
-        organizacionId: 1,
-        createdAt: now,
-        updatedAt: now
-      })
-    }
+  const evento = eventoId
+    ? eventos.find((e) => e.id === eventoId) || null
+    : null
 
-    close()
-  }
+  const isReady = !eventoId || evento !== null
 
   return (
     <EntityFormDialog
       open={isOpen}
       onOpenChange={(open) => !open && close()}
-      title={eventoId ? 'Editar Evento' : 'Agregar Evento'}
+      title={evento ? 'Editar Evento' : 'Nuevo Evento'}
     >
-      {isOpen && (
+      {isOpen && isReady && (
         <EventoFormContent
-          onApply={handleApply}
-          onCancel={close}
+          key={evento?.id ?? 'new'}
           evento={evento}
+          onSuccess={close}
+          onCancel={close}
         />
       )}
     </EntityFormDialog>

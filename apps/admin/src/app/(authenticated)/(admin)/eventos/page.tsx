@@ -1,6 +1,9 @@
 import { EventoSection } from './_components/evento-section'
+import { getEventos } from './_lib/get-eventos-data'
 
-export default function EventsPage() {
+export default async function EventsPage() {
+  const eventos = (await getEventos()) || []
+
   return (
     <div className='space-y-6'>
       <div>
@@ -9,7 +12,7 @@ export default function EventsPage() {
           Gestiona los eventos de la organización.
         </p>
       </div>
-      <EventoSection />
+      <EventoSection eventos={eventos} />
     </div>
   )
 }

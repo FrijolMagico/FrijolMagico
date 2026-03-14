@@ -1,5 +1,3 @@
-'use server'
-
 import { db } from '@frijolmagico/database/orm'
 import { events } from '@frijolmagico/database/schema'
 import { eq, asc } from 'drizzle-orm'
