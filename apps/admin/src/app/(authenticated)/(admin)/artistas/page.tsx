@@ -1,10 +1,28 @@
 import { Suspense } from 'react'
 import { ArtistListContainer } from './_components/artist-list-container'
-import { getHistoryData } from './_lib/get-history-data'
+import { getHistoryData } from './_lib/get-artist-history'
+import { getArtists } from './_lib/get-artists'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import { EmptyState } from '@/shared/components/empty-state'
+import { agrupateHistory } from './_lib/aggregate-history'
 
 export default async function ArtistsListPage() {
-  const historyData = await getHistoryData()
+  const [artists, history] = await Promise.all([getArtists(), getHistoryData()])
+  const historyData = agrupateHistory(history)
+
+  if (!artists) {
+    return (
+      <EmptyState
+        title='No se encontraron artistas'
+        description='No hay artistas registrados en el sistema. Puedes agregar nuevos artistas para que aparezcan en esta lista.'
+      />
+    )
+  }
+
+  const enrichedArtist = artists.map((artist) => ({
+    ...artist,
+    history: historyData[artist.id] || null
+  }))
 
   return (
     <article className='h-full min-h-full space-y-6'>
@@ -18,7 +36,7 @@ export default async function ArtistsListPage() {
         </p>
       </header>
       <Suspense fallback={<ArtistListSkeleton />}>
-        <ArtistListContainer historyData={historyData} />
+        <ArtistListContainer artists={enrichedArtist} />
       </Suspense>
     </article>
   )

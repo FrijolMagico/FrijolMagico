@@ -1,154 +1,115 @@
 'use client'
 
-import { useState } from 'react'
 import { EntityFormDialog } from '@/shared/components/entity-form-dialog/entity-form-dialog'
 import { Button } from '@/shared/components/ui/button'
 import { useArtistDialog } from '../_store/artist-dialog-store'
-import { useArtistsOperationStore } from '../_store/artista-ui-store'
-import { artistaFormSchema } from '../_schemas/artista.schema'
+import { addArtistaAction } from '../_actions/add-artista.action'
+import { toast } from 'sonner'
+import { toSlug } from '../_lib/utils'
+import { IconPlus } from '@tabler/icons-react'
+import { ArtistFormLayout } from './artist-form-layout'
+import { FormProvider, useForm, useFormState } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import {
+  ArtistInsertInput,
+  artistInsertSchema
+} from '../_schemas/artista.schema'
+import { ADD_ARTIST_FORM_ID } from '../_constants'
 
-import { ArtistFormLayout } from '@/shared/components/artist-form/artist-form'
+type AddArtistFormData = Omit<ArtistInsertInput, 'slug'>
 
-function toSlug(str: string): string {
-  return str
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '')
-    .replace(/-+/g, '-')
-}
-
-const STATUS_SLUG_MAP: Record<number, string> = {
-  1: 'desconocido',
-  2: 'activo',
-  3: 'inactivo',
-  4: 'vetado',
-  5: 'cancelado'
-}
-
-type AddArtistFormData = {
-  pseudonimo: string
-  nombre: string
-  rut: string
-  telefono: string
-  correo: string
-  estadoId: string
-  ciudad: string
-  pais: string
-}
-
-function AddArtistFormContent({
-  onApply,
-  onCancel
-}: {
-  onApply: (data: AddArtistFormData) => void
-  onCancel: () => void
-}) {
-  const [formData, setFormData] = useState({
-    pseudonimo: '',
-    nombre: '',
-    rut: '',
-    telefono: '',
-    correo: '',
-    estadoId: '2',
-    ciudad: '',
-    pais: ''
-  })
-  const [errors, setErrors] = useState<{
-    pseudonimo?: string
-    estadoId?: string
-  }>({})
-
-  const handleFieldChange = (field: string, val: string) => {
-    setFormData((prev) => ({ ...prev, [field]: val }))
-  }
-
-  const handleApply = () => {
-    setErrors({})
-    const result = artistaFormSchema.safeParse({
-      ...formData,
-      slug: toSlug(formData.pseudonimo),
-      nombre: formData.nombre || undefined,
-      rut: formData.rut || undefined,
-      telefono: formData.telefono || undefined,
-      correo: formData.correo || undefined,
-      ciudad: formData.ciudad || undefined,
-      pais: formData.pais || undefined
-    })
-
-    if (!result.success) {
-      const fieldErrors: {
-        pseudonimo?: string
-        estadoId?: string
-      } = {}
-      for (const issue of result.error.issues) {
-        if (issue.path[0] === 'pseudonimo')
-          fieldErrors.pseudonimo = issue.message
-        if (issue.path[0] === 'estadoId') fieldErrors.estadoId = issue.message
-      }
-      setErrors(fieldErrors)
-      return
-    }
-
-    onApply(formData)
-  }
-
-  return (
-    <ArtistFormLayout
-      formData={formData}
-      errors={errors}
-      onFieldChange={handleFieldChange}
-      customFields={null}
-      actions={
-        <div className='flex justify-end gap-2 pt-4'>
-          <Button variant='outline' onClick={onCancel}>
-            Cancelar
-          </Button>
-          <Button onClick={handleApply}>Agregar artista</Button>
-        </div>
-      }
-    />
-  )
+const DEFUALT_FORM_DATA: AddArtistFormData = {
+  nombre: '',
+  pseudonimo: '',
+  rut: '',
+  telefono: '',
+  correo: '',
+  ciudad: '',
+  pais: '',
+  estadoId: 1,
+  rrss: null
 }
 
 export function AddArtistDialog() {
   const addDialogOpen = useArtistDialog((s) => s.addDialogOpen)
   const closeAddDialog = useArtistDialog((s) => s.closeAddDialog)
-  const add = useArtistsOperationStore((s) => s.add)
+  const openAddDialog = useArtistDialog((s) => s.openAddDialog)
 
-  const handleApply = (formData: AddArtistFormData) => {
-    const numericEstadoId = Number(formData.estadoId)
-    const generatedSlug = toSlug(formData.pseudonimo)
-    add({
-      nombre: formData.nombre.trim() || null,
-      pseudonimo: formData.pseudonimo.trim(),
-      slug: generatedSlug,
-      rut: formData.rut.trim() || null,
-      correo: formData.correo.trim() || null,
-      telefono: formData.telefono.trim() || null,
-      ciudad: formData.ciudad.trim() || null,
-      pais: formData.pais.trim() || null,
-      rrss: null,
-      estadoId: numericEstadoId,
-      estadoSlug: STATUS_SLUG_MAP[numericEstadoId] ?? 'desconocido',
-      deletedAt: null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    })
-    closeAddDialog()
+  const methods = useForm({
+    resolver: zodResolver(artistInsertSchema.omit({ slug: true })),
+    defaultValues: DEFUALT_FORM_DATA,
+    mode: 'onChange'
+  })
+
+  const { isValid, isDirty, isSubmitting } = useFormState({
+    control: methods.control
+  })
+
+  const onSubmit = async (data: AddArtistFormData) => {
+    try {
+      const slug = toSlug(data.pseudonimo)
+      const result = await addArtistaAction(
+        { success: false },
+        {
+          ...data,
+          slug
+        }
+      )
+
+      if (!result.success) {
+        toast.error(
+          result.errors
+            ? result.errors.map((e) => e.message).join(', ')
+            : 'Error al agregar el artista'
+        )
+        return
+      }
+
+      closeAddDialog()
+      toast.success('Artista agregado correctamente')
+    } finally {
+      methods.reset()
+    }
   }
 
   return (
-    <EntityFormDialog
-      open={addDialogOpen}
-      onOpenChange={(open) => !open && closeAddDialog()}
-      title='Agregar Artista'
-    >
-      {addDialogOpen && (
-        <AddArtistFormContent onApply={handleApply} onCancel={closeAddDialog} />
-      )}
-    </EntityFormDialog>
+    <>
+      <FormProvider {...methods}>
+        <EntityFormDialog
+          open={addDialogOpen}
+          onOpenChange={(open) => !open && closeAddDialog()}
+          title='Agregar Artista'
+          trigger={
+            <Button size='sm' variant='outline' onClick={() => openAddDialog()}>
+              <IconPlus />
+              Agregar artista
+            </Button>
+          }
+          footer={{
+            close: (
+              <Button type='button' variant='outline' disabled={isSubmitting}>
+                Cancelar
+              </Button>
+            ),
+            submit: (
+              <Button
+                type='submit'
+                form={ADD_ARTIST_FORM_ID}
+                disabled={!isDirty || !isValid || isSubmitting}
+              >
+                {isSubmitting ? 'Agregando...' : 'Agregar artista'}
+              </Button>
+            )
+          }}
+        >
+          <form
+            id={ADD_ARTIST_FORM_ID}
+            onSubmit={methods.handleSubmit(onSubmit)}
+          >
+            <ArtistFormLayout />
+          </form>
+        </EntityFormDialog>
+      </FormProvider>
+    </>
   )
 }

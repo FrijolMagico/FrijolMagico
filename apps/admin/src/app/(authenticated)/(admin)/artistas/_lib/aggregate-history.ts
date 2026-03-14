@@ -1,52 +1,60 @@
-import { HistoryEntry } from '../_types'
+import { ArtistHistory } from '../_schemas/history.schema'
 
-export interface AggregatedHistory {
+export interface History {
   pseudonimos: string[]
   correos: string[]
   ciudades: string[]
   paises: string[]
-  rrssList: Record<string, string>[]
+  rrss: Record<string, string[]>
 }
 
-export function aggregateHistory(historyRecords: HistoryEntry[]): AggregatedHistory {
-  const aggregated: AggregatedHistory = {
-    pseudonimos: [],
-    correos: [],
-    ciudades: [],
-    paises: [],
-    rrssList: []
-  }
+export interface AgrupateHistory {
+  [key: number]: History
+}
 
-  const uniquePseudonimos = new Set<string>()
-  const uniqueCorreos = new Set<string>()
-  const uniqueCiudades = new Set<string>()
-  const uniquePaises = new Set<string>()
+export function agrupateHistory(
+  historyRecords: ArtistHistory[]
+): AgrupateHistory {
+  return historyRecords.reduce<AgrupateHistory>((acc, record) => {
+    const { artistaId, pseudonimo, correo, ciudad, pais, rrss } = record
 
-  for (const record of historyRecords) {
-    if (record.pseudonimo && !uniquePseudonimos.has(record.pseudonimo)) {
-      uniquePseudonimos.add(record.pseudonimo)
-      aggregated.pseudonimos.push(record.pseudonimo)
+    if (!acc[artistaId]) {
+      acc[artistaId] = {
+        pseudonimos: [],
+        correos: [],
+        ciudades: [],
+        paises: [],
+        rrss: {}
+      }
     }
 
-    if (record.correo && !uniqueCorreos.has(record.correo)) {
-      uniqueCorreos.add(record.correo)
-      aggregated.correos.push(record.correo)
+    const entry = acc[artistaId]
+
+    if (pseudonimo && !entry.pseudonimos.includes(pseudonimo)) {
+      entry.pseudonimos.push(pseudonimo)
+    }
+    if (correo && !entry.correos.includes(correo)) {
+      entry.correos.push(correo)
+    }
+    if (ciudad && !entry.ciudades.includes(ciudad)) {
+      entry.ciudades.push(ciudad)
+    }
+    if (pais && !entry.paises.includes(pais)) {
+      entry.paises.push(pais)
+    }
+    if (rrss) {
+      for (const [platform, urls] of Object.entries(rrss)) {
+        if (!entry.rrss[platform]) {
+          entry.rrss[platform] = []
+        }
+        for (const url of urls) {
+          if (!entry.rrss[platform].includes(url)) {
+            entry.rrss[platform].push(url)
+          }
+        }
+      }
     }
 
-    if (record.ciudad && !uniqueCiudades.has(record.ciudad)) {
-      uniqueCiudades.add(record.ciudad)
-      aggregated.ciudades.push(record.ciudad)
-    }
-
-    if (record.pais && !uniquePaises.has(record.pais)) {
-      uniquePaises.add(record.pais)
-      aggregated.paises.push(record.pais)
-    }
-
-    if (record.rrss && Object.keys(record.rrss).length > 0) {
-      aggregated.rrssList.push(record.rrss)
-    }
-  }
-
-  return aggregated
+    return acc
+  }, {})
 }

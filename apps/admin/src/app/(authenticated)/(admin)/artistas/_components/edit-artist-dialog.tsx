@@ -1,226 +1,99 @@
 'use client'
 
-import { useState } from 'react'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle
-} from '@/shared/components/ui/dialog'
 import { Button } from '@/shared/components/ui/button'
-import {
-  useArtistsOperationStore,
-  useArtistsProjectionStore
-} from '../_store/artista-ui-store'
 import { useArtistDialog } from '../_store/artist-dialog-store'
-import { ArtistRRSSManager } from '../catalogo/_components/artist-rrss-manager'
-import type { ArtistEntry } from '../_types'
-import { ArtistFormLayout } from '@/shared/components/artist-form/artist-form'
-import { Switch } from '@/shared/components/ui/switch'
-import { Label } from '@/shared/components/ui/label'
-
-export function EditFormContent({
-  artist,
-  onClose
-}: {
-  artist: ArtistEntry
-  onClose: () => void
-}) {
-  const update = useArtistsOperationStore((s) => s.update)
-
-  const [formData, setFormData] = useState({
-    nombre: artist.nombre ?? '',
-    pseudonimo: artist.pseudonimo ?? '',
-    rut: artist.rut ?? '',
-    telefono: artist.telefono ?? '',
-    correo: artist.correo ?? '',
-    rrss: artist.rrss ?? {},
-    city: artist.ciudad ?? '',
-    country: artist.pais ?? '',
-    statusId: artist.estadoId
-  })
-
-  const [historialChecks, setHistorialChecks] = useState({
-    pseudonimo: false,
-    correo: false,
-    rrss: false,
-    ciudad: false,
-    pais: false
-  })
-
-  const hasChanged = {
-    pseudonimo:
-      formData.pseudonimo !== (artist.pseudonimo ?? '') &&
-      Boolean(artist.pseudonimo),
-    correo: formData.correo !== (artist.correo ?? '') && Boolean(artist.correo),
-    rrss:
-      JSON.stringify(formData.rrss) !== JSON.stringify(artist.rrss ?? {}) &&
-      Object.keys(artist.rrss ?? {}).length > 0,
-    ciudad: formData.city !== (artist.ciudad ?? '') && Boolean(artist.ciudad),
-    pais: formData.country !== (artist.pais ?? '') && Boolean(artist.pais)
-  }
-
-  const updateField = (
-    field: keyof typeof formData,
-    value: string | number
-  ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
-
-  const updateRRSS = (value: { [key: string]: string }) => {
-    setFormData((prev) => ({ ...prev, rrss: value }))
-  }
-
-  const handleSave = () => {
-    const estadoIdToSlug: Record<number, string> = {
-      1: 'desconocido',
-      2: 'activo',
-      3: 'inactivo',
-      4: 'vetado',
-      5: 'cancelado'
-    }
-
-    const _historialData: ArtistEntry['_historialData'] = {}
-
-    if (
-      historialChecks.pseudonimo &&
-      hasChanged.pseudonimo &&
-      artist.pseudonimo
-    ) {
-      _historialData.pseudonimo = artist.pseudonimo
-    }
-    if (historialChecks.correo && hasChanged.correo && artist.correo) {
-      _historialData.correo = artist.correo
-    }
-    if (historialChecks.rrss && hasChanged.rrss && artist.rrss) {
-      _historialData.rrss = artist.rrss
-    }
-    if (historialChecks.ciudad && hasChanged.ciudad && artist.ciudad) {
-      _historialData.ciudad = artist.ciudad
-    }
-    if (historialChecks.pais && hasChanged.pais && artist.pais) {
-      _historialData.pais = artist.pais
-    }
-
-    update(artist.id, {
-      nombre: formData.nombre,
-      pseudonimo: formData.pseudonimo,
-      rut: formData.rut,
-      telefono: formData.telefono,
-      correo: formData.correo,
-      rrss: formData.rrss,
-      ciudad: formData.city,
-      pais: formData.country,
-      estadoId: formData.statusId,
-      estadoSlug: estadoIdToSlug[formData.statusId] || 'desconocido',
-      ...(Object.keys(_historialData).length > 0 && { _historialData })
-    })
-
-    onClose()
-  }
-
-  const layoutFormData = {
-    nombre: formData.nombre,
-    pseudonimo: formData.pseudonimo,
-    rut: formData.rut,
-    telefono: formData.telefono,
-    correo: formData.correo,
-    estadoId: formData.statusId,
-    ciudad: formData.city,
-    pais: formData.country
-  }
-
-  const handleFieldChange = (field: string, value: string) => {
-    if (field === 'ciudad') updateField('city', value)
-    else if (field === 'pais') updateField('country', value)
-    else if (field === 'estadoId') updateField('statusId', Number(value))
-    else updateField(field as keyof typeof formData, value)
-  }
-
-  return (
-    <ArtistFormLayout
-      formData={layoutFormData}
-      onFieldChange={handleFieldChange}
-      customFields={
-        <>
-          {hasChanged.pseudonimo && (
-            <div className='mt-1 flex items-center gap-2'>
-              <Switch
-                id='historial-pseudonimo'
-                checked={historialChecks.pseudonimo}
-                onCheckedChange={(checked) =>
-                  setHistorialChecks((prev) => ({
-                    ...prev,
-                    pseudonimo: checked
-                  }))
-                }
-              />
-              <Label
-                htmlFor='historial-pseudonimo'
-                className='text-muted-foreground cursor-pointer text-xs font-normal'
-              >
-                Guardar valor anterior en historial
-              </Label>
-            </div>
-          )}
-        </>
-      }
-      actions={
-        <>
-          <ArtistRRSSManager initialValue={artist.rrss} onChange={updateRRSS} />
-          {hasChanged.rrss && (
-            <div className='mt-1 flex items-center gap-2'>
-              <Switch
-                id='historial-rrss'
-                checked={historialChecks.rrss}
-                onCheckedChange={(checked) =>
-                  setHistorialChecks((prev) => ({ ...prev, rrss: checked }))
-                }
-              />
-              <Label
-                htmlFor='historial-rrss'
-                className='text-muted-foreground cursor-pointer text-xs font-normal'
-              >
-                Guardar valor anterior en historial
-              </Label>
-            </div>
-          )}
-
-          <div className='flex justify-end gap-2 pt-4'>
-            <Button variant='outline' onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button onClick={handleSave}>Confirmar Edición</Button>
-          </div>
-        </>
-      }
-    />
-  )
-}
+import { updateArtistaAction } from '../_actions/update-artista.action'
+import { toast } from 'sonner'
+import { EntityFormDialog } from '@/shared/components/entity-form-dialog/entity-form-dialog'
+import { ArtistFormLayout } from './artist-form-layout'
+import { useForm, useFormState, FormProvider } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { artistEditFormSchema } from '../_schemas/artista.schema'
+import type { ArtistEditFormInput } from '../_schemas/artista.schema'
+import { EDIT_ARTIST_FORM_ID } from '../_constants'
 
 export function EditArtistDialog() {
   const isOpen = useArtistDialog((s) => s.editDialogOpen)
   const closeEditDialog = useArtistDialog((s) => s.closeEditDialog)
-  const artistId = useArtistDialog((s) => s.selectedArtistId)
+  const artist = useArtistDialog((s) => s.selectedArtistData)
 
-  const artist = useArtistsProjectionStore((s) =>
-    artistId ? s.byId[artistId] : null
-  )
+  const methods = useForm<ArtistEditFormInput>({
+    resolver: zodResolver(artistEditFormSchema),
+    values: {
+      ...artist,
+      historialFlags: {
+        pseudonimo: false,
+        correo: false,
+        ciudad: false,
+        pais: false,
+        rrss: false
+      }
+    },
+    mode: 'onChange'
+  })
+
+  // NOTE: isValid is always false, identify why
+  const { isValid, isDirty, isSubmitting } = useFormState({
+    control: methods.control
+  })
+
+  if (!artist) {
+    return null
+  }
+
+  const onSubmit = async (data: ArtistEditFormInput) => {
+    try {
+      const result = await updateArtistaAction(
+        { success: false, data: artist },
+        data
+      )
+
+      if (!result.success) {
+        toast.error(
+          result.errors
+            ? result.errors.map((e) => e.message).join(', ')
+            : 'Error al actualizar el artista'
+        )
+        return
+      }
+
+      closeEditDialog()
+      toast.success('Artista actualizado correctamente')
+    } finally {
+      methods.reset()
+    }
+  }
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && closeEditDialog()}>
-      <DialogContent className='max-w-xl'>
-        <DialogHeader>
-          <DialogTitle>Editar Artista</DialogTitle>
-        </DialogHeader>
-        {artist && (
-          <EditFormContent
-            key={artist.id}
-            artist={artist}
-            onClose={closeEditDialog}
-          />
-        )}
-      </DialogContent>
-    </Dialog>
+    <FormProvider {...methods}>
+      <EntityFormDialog
+        open={isOpen}
+        onOpenChange={(open) => !open && closeEditDialog()}
+        title='Editar Artista'
+        footer={{
+          close: (
+            <Button type='button' variant='outline'>
+              Cancelar
+            </Button>
+          ),
+          submit: (
+            <Button
+              type='submit'
+              form={EDIT_ARTIST_FORM_ID}
+              disabled={!isDirty || !isValid || isSubmitting}
+            >
+              {isSubmitting ? 'Guardando...' : 'Guardar'}
+            </Button>
+          )
+        }}
+      >
+        <form
+          id={EDIT_ARTIST_FORM_ID}
+          onSubmit={methods.handleSubmit(onSubmit)}
+        >
+          <ArtistFormLayout check />
+        </form>
+      </EntityFormDialog>
+    </FormProvider>
   )
 }

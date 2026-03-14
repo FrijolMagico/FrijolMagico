@@ -1,20 +1,21 @@
 'use client'
 
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react'
 import { Button } from '@/shared/components/ui/button'
 import { Separator } from '@/shared/components/ui/separator'
 import { useArtistListPaginationStore } from '../_store/artist-list-pagination-store'
 
 interface ArtistListPaginationProps {
   onPageChange: (page: number) => void
+  totalItems: number
 }
 
 export function ArtistListPagination({
-  onPageChange
+  onPageChange,
+  totalItems
 }: ArtistListPaginationProps) {
   const page = useArtistListPaginationStore((s) => s.page)
   const pageSize = useArtistListPaginationStore((s) => s.pageSize)
-  const totalItems = useArtistListPaginationStore((s) => s.totalItems)
 
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
   const startItem = (page - 1) * pageSize + 1
@@ -70,7 +71,7 @@ export function ArtistListPagination({
             onClick={handlePrev}
             disabled={page === 1}
           >
-            <ChevronLeft className='h-4 w-4' />
+            <IconChevronLeft className='h-4 w-4' />
           </Button>
 
           <div className='flex items-center gap-1'>
@@ -102,7 +103,7 @@ export function ArtistListPagination({
             onClick={handleNext}
             disabled={page === totalPages}
           >
-            <ChevronRight className='h-4 w-4' />
+            <IconChevronRight className='h-4 w-4' />
           </Button>
         </div>
       </div>

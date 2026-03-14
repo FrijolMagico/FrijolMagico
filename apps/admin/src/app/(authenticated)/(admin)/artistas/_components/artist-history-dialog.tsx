@@ -1,6 +1,6 @@
 'use client'
 
-import { Mail, User, MapPin, Link as LinkIcon } from 'lucide-react'
+import { IconMail, IconUser, IconMapPin, IconLink } from '@tabler/icons-react'
 import {
   Dialog,
   DialogContent,
@@ -10,13 +10,6 @@ import {
 import { Badge } from '@/shared/components/ui/badge'
 import { Separator } from '@/shared/components/ui/separator'
 import { useArtistDialog } from '../_store/artist-dialog-store'
-import { aggregateHistory } from '../_lib/aggregate-history'
-import { useArtistsProjectionStore } from '../_store/artista-ui-store'
-import type { HistoryEntry } from '../_types'
-
-interface ArtistHistoryDialogProps {
-  historyByArtistId: Map<string, HistoryEntry[]>
-}
 
 interface HistoryConceptProps {
   icon: React.ComponentType<{ className?: string }>
@@ -44,24 +37,25 @@ function HistoryConcept({ icon: Icon, title, items }: HistoryConceptProps) {
   )
 }
 
-function HistoryRrssConcept({ items }: { items: Record<string, string>[] }) {
-  if (items.length === 0) return null
+function HistoryRrssConcept({ items }: { items: Record<string, string[]> }) {
+  if (Object.keys(items).length === 0) return null
 
   return (
     <div className='space-y-1.5'>
       <div className='text-foreground flex items-center gap-1.5 text-sm font-medium'>
-        <LinkIcon className='text-muted-foreground h-4 w-4' />
+        <IconLink className='text-muted-foreground h-4 w-4' />
         Redes Sociales
       </div>
       <div className='flex flex-col gap-1.5 pl-5'>
-        {items.map((rrssSet, idx) => (
-          <div key={idx} className='bg-muted/30 rounded-md p-2 text-xs'>
-            {Object.entries(rrssSet).map(([platform, url]) => (
-              <div key={platform} className='grid grid-cols-[80px_1fr] gap-2'>
-                <span className='text-muted-foreground font-medium capitalize'>
-                  {platform}:
-                </span>
+        {Object.entries(items).map(([platform, urls]) => (
+          <div key={platform} className='bg-muted/30 rounded-md p-2 text-xs'>
+            <span className='text-muted-foreground font-medium capitalize'>
+              {platform}:
+            </span>
+            <div className='mt-1 flex flex-col gap-0.5 pl-2'>
+              {urls.map((url) => (
                 <a
+                  key={url}
                   href={url}
                   target='_blank'
                   rel='noopener noreferrer'
@@ -69,8 +63,8 @@ function HistoryRrssConcept({ items }: { items: Record<string, string>[] }) {
                 >
                   {url}
                 </a>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         ))}
       </div>
@@ -78,19 +72,12 @@ function HistoryRrssConcept({ items }: { items: Record<string, string>[] }) {
   )
 }
 
-export function ArtistHistoryDialog({
-  historyByArtistId
-}: ArtistHistoryDialogProps) {
+export function ArtistHistoryDialog() {
   const isOpen = useArtistDialog((s) => s.historyDialogOpen)
   const closeHistoryDialog = useArtistDialog((s) => s.closeHistoryDialog)
-  const artistId = useArtistDialog((s) => s.selectedHistoryArtistId)
+  const history = useArtistDialog((s) => s.selectedArtistHistory)
 
-  const artist = useArtistsProjectionStore((s) =>
-    artistId ? s.byId[artistId] : null
-  )
-
-  const records = artistId ? historyByArtistId.get(artistId) || [] : []
-  const aggregated = aggregateHistory(records)
+  if (!history) return null
 
   return (
     <Dialog
@@ -100,47 +87,37 @@ export function ArtistHistoryDialog({
       <DialogContent className='max-w-xl'>
         <DialogHeader>
           <DialogTitle>
-            Historial de {artist?.pseudonimo || 'Artista'}
+            Historial de {history.pseudonimo || 'Artista'}
           </DialogTitle>
         </DialogHeader>
 
         <div className='space-y-4 py-4'>
           <HistoryConcept
-            icon={User}
+            icon={IconUser}
             title='Pseudónimos'
-            items={aggregated.pseudonimos}
+            items={history.pseudonimos}
           />
 
-          {aggregated.correos.length > 0 && (
-            <Separator className='opacity-50' />
-          )}
+          {history.correos.length > 0 && <Separator className='opacity-50' />}
           <HistoryConcept
-            icon={Mail}
+            icon={IconMail}
             title='Correos'
-            items={aggregated.correos}
+            items={history.correos}
           />
 
-          {(aggregated.ciudades.length > 0 || aggregated.paises.length > 0) && (
+          {(history.ciudades.length > 0 || history.paises.length > 0) && (
             <Separator className='opacity-50' />
           )}
           <HistoryConcept
-            icon={MapPin}
+            icon={IconMapPin}
             title='Ubicaciones'
-            items={[...aggregated.ciudades, ...aggregated.paises].filter(
-              Boolean
-            )}
+            items={[...history.ciudades, ...history.paises].filter(Boolean)}
           />
 
-          {aggregated.rrssList.length > 0 && (
+          {Object.keys(history.rrss).length > 0 && (
             <Separator className='opacity-50' />
           )}
-          <HistoryRrssConcept items={aggregated.rrssList} />
-
-          {records.length === 0 && (
-            <div className='text-muted-foreground py-4 text-center'>
-              No hay registros históricos para este artista.
-            </div>
-          )}
+          <HistoryRrssConcept items={history.rrss} />
         </div>
       </DialogContent>
     </Dialog>

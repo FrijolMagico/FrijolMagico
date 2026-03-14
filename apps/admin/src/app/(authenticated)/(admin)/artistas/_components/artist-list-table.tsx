@@ -9,23 +9,22 @@ import {
   TableRow
 } from '@/shared/components/ui/table'
 import { EmptyState } from '@/shared/components/empty-state'
-import { useArtistList } from '../_hooks/use-artist-list'
 import { useArtistListFilterStore } from '../_store/artist-list-filter-store'
 import { ArtistListRow } from './artist-list-row'
+import { DomainArtist } from '../_types/artist'
 
 interface ArtistListTableProps {
+  artists: DomainArtist[]
   onClearFilters: () => void
-  artistIdsWithHistory: Set<string>
 }
 
 export const ArtistListTable = memo(function ArtistListTable({
-  onClearFilters,
-  artistIdsWithHistory
+  artists,
+  onClearFilters
 }: ArtistListTableProps) {
-  const { paginatedIds } = useArtistList()
   const setFilters = useArtistListFilterStore((s) => s.setFilters)
 
-  if (paginatedIds.length === 0) {
+  if (artists.length === 0) {
     return (
       <EmptyState
         title='No se encontraron artistas'
@@ -51,7 +50,6 @@ export const ArtistListTable = memo(function ArtistListTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className='w-26'></TableHead>
             <TableHead>Pseudónimo</TableHead>
             <TableHead>Nombre</TableHead>
             <TableHead>Correo</TableHead>
@@ -63,12 +61,8 @@ export const ArtistListTable = memo(function ArtistListTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {paginatedIds.map((id) => (
-            <ArtistListRow
-              key={id}
-              id={id}
-              hasHistory={artistIdsWithHistory.has(id)}
-            />
+          {artists.map((artist) => (
+            <ArtistListRow key={artist.id} artist={artist} />
           ))}
         </TableBody>
       </Table>

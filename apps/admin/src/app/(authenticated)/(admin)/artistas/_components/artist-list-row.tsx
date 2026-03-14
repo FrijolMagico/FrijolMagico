@@ -1,62 +1,48 @@
 'use client'
 
-import { memo, useCallback } from 'react'
 import { TableCell, TableRow } from '@/shared/components/ui/table'
 import { Badge } from '@/shared/components/ui/badge'
 import { cn } from '@/lib/utils'
-import {
-  useArtistsOperationStore,
-  useArtistsProjectionStore
-} from '../_store/artista-ui-store'
 import { useArtistDialog } from '../_store/artist-dialog-store'
-import { StateBadge } from '@/shared/components/state-badge'
 import { ActionMenuButton } from '@/shared/components/action-menu-button'
-import { RRSSViewer } from '@/shared/components/rrss-viewer/rrss-viewer'
+import { RRSSViewer } from '@/shared/components/rrss/rrss-viewer'
+import { deleteArtistaAction } from '../_actions/delete-artista.action'
+import { DomainArtist } from '../_types/artist'
+import { STATUS_LABEL_MAP } from '../_constants'
+import { toast } from 'sonner'
 
 interface ArtistListRowProps {
-  id: string
-  hasHistory: boolean
+  artist: DomainArtist
 }
 
-export const ArtistListRow = memo(function ArtistListRow({
-  id,
-  hasHistory
-}: ArtistListRowProps) {
-  const remove = useArtistsOperationStore((s) => s.remove)
-  const restore = useArtistsOperationStore((s) => s.restore)
-  const artist = useArtistsProjectionStore((s) => s.byId[id])
+export function ArtistListRow({ artist }: ArtistListRowProps) {
+  const { history, ...artistData } = artist
+
   const openEditDialog = useArtistDialog((s) => s.openEditDialog)
   const openHistoryDialog = useArtistDialog((s) => s.openHistoryDialog)
-  const isDeleted = artist?.__meta?.isDeleted ?? false
 
-  const handleOpenHistory = useCallback(
-    () => openHistoryDialog(id),
-    [id, openHistoryDialog]
-  )
-  const handleOpenEdit = useCallback(
-    () => openEditDialog(id),
-    [id, openEditDialog]
-  )
-  const handleRemoveOrRestore = useCallback(() => {
-    if (artist?.__meta?.isDeleted) {
-      restore(id)
-    } else {
-      remove(id)
-    }
-  }, [id, artist, restore, remove])
+  const handleOpenHistory = () =>
+    openHistoryDialog(history, { pseudonimo: artistData.pseudonimo })
 
-  if (!artist) return null
+  const handleOpenEdit = () => openEditDialog(artistData)
+
+  const handleDelete = () => {
+    deleteArtistaAction(artist.id).then((result) => {
+      if (!result.success) {
+        toast.error(
+          result.errors
+            ? result.errors.map((e) => e.message).join(', ')
+            : 'Error al eliminar al Artista'
+        )
+
+        return
+      }
+      toast.success('Artista eliminado correctamente')
+    })
+  }
 
   return (
-    <TableRow
-      className={cn(
-        'group',
-        isDeleted && 'bg-destructive/10 hover:bg-destructive/20'
-      )}
-    >
-      <TableCell>
-        <StateBadge {...artist.__meta} />
-      </TableCell>
+    <TableRow className={cn('group')}>
       <TableCell className='font-medium'>{artist.pseudonimo}</TableCell>
       <TableCell>{artist.nombre || '-'}</TableCell>
       <TableCell>{artist.correo || '-'}</TableCell>
@@ -64,14 +50,14 @@ export const ArtistListRow = memo(function ArtistListRow({
         {[artist.ciudad, artist.pais].filter(Boolean).join(', ') || '-'}
       </TableCell>
       <TableCell>
-        <RRSSViewer rrss={artist.rrss} disabled={isDeleted} />
+        <RRSSViewer rrss={artist.rrss} />
       </TableCell>
       <TableCell className='text-muted-foreground'>
         {artist.rut || '-'}
       </TableCell>
       <TableCell>
         <Badge variant='outline' className='capitalize'>
-          {artist.estadoSlug || 'Desconocido'}
+          {STATUS_LABEL_MAP[artist.estadoId]}
         </Badge>
       </TableCell>
       <TableCell>
@@ -84,14 +70,12 @@ export const ArtistListRow = memo(function ArtistListRow({
             {
               label: 'Historial',
               onClick: handleOpenHistory,
-              hidden: !hasHistory
+              hidden: !artist.history
             }
           ]}
-          isDeleted={isDeleted}
-          onDelete={handleRemoveOrRestore}
-          onRestore={handleRemoveOrRestore}
+          onDelete={handleDelete}
         />
       </TableCell>
     </TableRow>
   )
-})
+}

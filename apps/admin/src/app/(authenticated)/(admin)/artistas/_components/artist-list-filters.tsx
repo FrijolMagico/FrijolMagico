@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useDebouncedCallback } from 'use-debounce'
-import { Search, X } from 'lucide-react'
+import { IconSearch, IconX } from '@tabler/icons-react'
 import { Input } from '@/shared/components/ui/input'
 import {
   Select,
@@ -108,7 +108,7 @@ export function ArtistListFilters({
     <div className='flex flex-col flex-wrap gap-4 sm:flex-row sm:items-center sm:justify-between'>
       <div className='flex min-w-xs flex-1 items-center gap-2'>
         <div className='relative max-w-sm flex-1'>
-          <Search className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
+          <IconSearch className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
           <Input
             placeholder='Buscar por nombre o pseudónimo...'
             value={localSearch}
@@ -192,7 +192,7 @@ export function ArtistListFilters({
 
         {hasActiveFilters && (
           <Button variant='ghost' size='sm' onClick={clearFilters}>
-            <X className='mr-1 h-4 w-4' />
+            <IconX className='mr-1 h-4 w-4' />
             Limpiar
           </Button>
         )}

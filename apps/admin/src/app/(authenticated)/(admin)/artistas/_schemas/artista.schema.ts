@@ -1,99 +1,72 @@
 import { z } from 'zod'
-import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
+import {
+  createInsertSchema,
+  createSelectSchema,
+  createUpdateSchema
+} from 'drizzle-zod'
 import { artist as artistSchema } from '@frijolmagico/database/schema'
+import { ARTIST_STATUS } from '../_constants'
 
 const artistTable = artistSchema.artist
-const artistImageTable = artistSchema.artistImage
 
-export const artistaInsertSchema = createInsertSchema(artistTable, {
-  pseudonimo: (s: z.ZodType) =>
-    (s as z.ZodString).min(1, { error: 'El pseudónimo es obligatorio' }),
-  slug: (s: z.ZodType) =>
-    (s as z.ZodString).min(1, { error: 'El slug es obligatorio' }),
-  estadoId: (s: z.ZodType) =>
-    (s as z.ZodOptional<z.ZodDefault<z.ZodNumber>>).default(1),
+export const artistSelectSchema = createSelectSchema(artistTable, {
+  rrss: z.record(z.string(), z.string()),
+  estadoId: z.number().transform((v) => v as ARTIST_STATUS)
+}).omit({
+  createdAt: true,
+  updatedAt: true,
+  deletedAt: true,
+  slug: true
+})
+
+export const artistInsertSchema = createInsertSchema(artistTable, {
+  pseudonimo: (s) => s.min(1, { error: 'El pseudónimo es obligatorio' }),
+  estadoId: (s) => s.default(1),
   rrss: () =>
-    z.preprocess((val) => {
-      if (val && typeof val === 'object') return JSON.stringify(val)
-      return val
-    }, z.string().optional()) as z.ZodType<string | undefined>
+    z.transform((val) => {
+      if (val && typeof val === 'object') return JSON.stringify(val) as string
+      return val as string
+    })
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  deletedAt: true
 })
 
-export const artistaUpdateSchema = createUpdateSchema(artistTable, {
-  pseudonimo: (s: z.ZodType) =>
-    (s as z.ZodString).min(1, { error: 'El pseudónimo es obligatorio' }),
+export const artistUpdateSchema = createUpdateSchema(artistTable, {
+  pseudonimo: (s) => s.min(1, { error: 'El pseudónimo es obligatorio' }),
   rrss: () =>
-    z.preprocess((val) => {
-      if (val && typeof val === 'object') return JSON.stringify(val)
-      return val
-    }, z.string().optional()) as z.ZodType<string | undefined>
+    z.transform((val) => {
+      if (val && typeof val === 'object') return JSON.stringify(val) as string
+      return val as string
+    })
+}).omit({
+  createdAt: true,
+  updatedAt: true,
+  deletedAt: true,
+  slug: true
 })
 
-export const artistaImagenInsertSchema = createInsertSchema(artistImageTable, {
-  artistaId: () => z.coerce.number().int().positive(),
-  imagenUrl: (s: z.ZodType) =>
-    (s as z.ZodString).min(1, { error: 'La URL de imagen es obligatoria' }),
-  tipo: (s: z.ZodType) => s as z.ZodType<'avatar' | 'galeria'>
+// Historial flags — tracks which fields to snapshot before update
+export const historialFlagsSchema = z.object({
+  pseudonimo: z.boolean(),
+  correo: z.boolean(),
+  ciudad: z.boolean(),
+  pais: z.boolean(),
+  rrss: z.boolean()
 })
 
-export const artistaImagenUpdateSchema = createUpdateSchema(artistImageTable)
-
-export type ArtistaInsertInput = z.infer<typeof artistaInsertSchema>
-export type ArtistaUpdateInput = z.infer<typeof artistaUpdateSchema>
-export type ArtistaImagenInsertInput = z.infer<typeof artistaImagenInsertSchema>
-export type ArtistaImagenUpdateInput = z.infer<typeof artistaImagenUpdateSchema>
-
-export type ArtistaInput = ArtistaInsertInput
-export type ArtistaImagenInput = ArtistaImagenInsertInput
-
-export const artistaFormSchema = artistaInsertSchema
-  .pick({
-    nombre: true,
-    pseudonimo: true,
-    slug: true,
-    rut: true,
-    correo: true,
-    rrss: true,
-    ciudad: true,
-    pais: true,
-    telefono: true
-  })
+// Edit form schema — update fields (without id) + rrss as object + historial flags
+export const artistEditFormSchema = artistUpdateSchema
+  .omit({ id: true })
   .extend({
-    pseudonimo: z.string().min(1, { message: 'El pseudónimo es obligatorio' }),
-    slug: z.string().min(1, { message: 'El slug es obligatorio' }),
-    estadoId: z.string().min(1)
+    rrss: z.record(z.string(), z.string()).optional(),
+    historialFlags: historialFlagsSchema.optional()
   })
 
-export const artistaImagenFormSchema = artistaImagenInsertSchema
-  .pick({
-    artistaId: true,
-    imagenUrl: true,
-    tipo: true,
-    orden: true,
-    metadata: true
-  })
-  .extend({
-    artistaId: z.string().min(1, { message: 'El artista es obligatorio' }),
-    imagenUrl: z.string().min(1, { message: 'La URL es obligatoria' })
-  })
-
-export type ArtistaFormInput = z.infer<typeof artistaFormSchema>
-export type ArtistaImagenFormInput = z.infer<typeof artistaImagenFormSchema>
-
-const artistHistoryTable = artistSchema.artistHistory
-
-export const artistaHistorialInsertSchema = createInsertSchema(
-  artistHistoryTable,
-  {
-    artistaId: () => z.coerce.number().int().positive(),
-    rrss: () =>
-      z.preprocess((val) => {
-        if (val && typeof val === 'object') return JSON.stringify(val)
-        return val
-      }, z.string().nullable().optional()) as z.ZodType<string | null | undefined>
-  }
-)
-
-export type ArtistaHistorialInsertInput = z.infer<
-  typeof artistaHistorialInsertSchema
->
+export type Artist = z.infer<typeof artistSelectSchema>
+export type ArtistInsertInput = z.infer<typeof artistInsertSchema>
+export type ArtistUpdateInput = z.infer<typeof artistUpdateSchema>
+export type HistorialFlags = z.infer<typeof historialFlagsSchema>
+export type ArtistEditFormInput = z.infer<typeof artistEditFormSchema>

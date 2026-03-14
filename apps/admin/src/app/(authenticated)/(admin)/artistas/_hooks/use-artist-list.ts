@@ -1,13 +1,11 @@
 'use client'
 
-import { useMemo, useEffect } from 'react'
-import { useShallow } from 'zustand/react/shallow'
-import { useArtistsProjectionStore } from '../_store/artista-ui-store'
 import { useArtistListFilterStore } from '../_store/artist-list-filter-store'
 import { useArtistListPaginationStore } from '../_store/artist-list-pagination-store'
+import type { DomainArtist } from '../_types/artist'
 
-export function useArtistList(): {
-  paginatedIds: string[]
+export function useArtistList(artists: DomainArtist[]): {
+  paginatedArtists: DomainArtist[]
   totalFilteredItems: number
   countries: string[]
   cities: string[]
@@ -16,74 +14,45 @@ export function useArtistList(): {
   const page = useArtistListPaginationStore((s) => s.page)
   const pageSize = useArtistListPaginationStore((s) => s.pageSize)
 
-  const { allIds, byId } = useArtistsProjectionStore(
-    useShallow((s) => ({ allIds: s.allIds, byId: s.byId }))
-  )
+  const countries = Array.from(
+    new Set(artists.map((a) => a.pais).filter(Boolean))
+  ).sort() as string[]
 
-  const countries = useMemo(() => {
-    const countrySet = new Set<string>()
-    for (const id of allIds) {
-      const artist = byId[id]
-      if (artist?.pais) {
-        countrySet.add(artist.pais)
-      }
-    }
-    return Array.from(countrySet).sort()
-  }, [allIds, byId])
+  const cities = Array.from(
+    new Set(artists.map((a) => a.ciudad).filter(Boolean))
+  ).sort() as string[]
 
-  const cities = useMemo(() => {
-    const citySet = new Set<string>()
-    for (const id of allIds) {
-      const artist = byId[id]
-      if (artist?.ciudad) {
-        citySet.add(artist.ciudad)
-      }
-    }
-    return Array.from(citySet).sort()
-  }, [allIds, byId])
+  let filteredArtists = artists
 
-  const filteredIds = useMemo(() => {
-    let filtered = allIds
+  if (filters.search) {
+    const term = filters.search.toLowerCase()
+    filteredArtists = filteredArtists.filter((a) => {
+      const nombre = (a.nombre ?? '').toLowerCase()
+      const pseudonimo = (a.pseudonimo ?? '').toLowerCase()
+      return nombre.includes(term) || pseudonimo.includes(term)
+    })
+  }
 
-    if (filters.search) {
-      const term = filters.search.toLowerCase()
-      filtered = filtered.filter((id) => {
-        const artist = byId[id]
-        const nombre = (artist?.nombre ?? '').toLowerCase()
-        const pseudonimo = (artist?.pseudonimo ?? '').toLowerCase()
-        return nombre.includes(term) || pseudonimo.includes(term)
-      })
-    }
+  if (filters.country !== null) {
+    filteredArtists = filteredArtists.filter((a) => a.pais === filters.country)
+  }
 
-    if (filters.country !== null) {
-      filtered = filtered.filter((id) => byId[id]?.pais === filters.country)
-    }
+  if (filters.city !== null) {
+    filteredArtists = filteredArtists.filter((a) => a.ciudad === filters.city)
+  }
 
-    if (filters.city !== null) {
-      filtered = filtered.filter((id) => byId[id]?.ciudad === filters.city)
-    }
+  if (filters.statusId !== null) {
+    filteredArtists = filteredArtists.filter(
+      (a) => a.estadoId === filters.statusId
+    )
+  }
 
-    if (filters.statusId !== null) {
-      filtered = filtered.filter(
-        (id) => byId[id]?.estadoId === filters.statusId
-      )
-    }
-
-    return filtered
-  }, [allIds, byId, filters])
-
-  useEffect(() => {
-    useArtistListPaginationStore.getState().setTotalItems(filteredIds.length)
-  }, [filteredIds.length])
-
-  const paginatedIds = useMemo(() => {
-    const start = (page - 1) * pageSize
-    return filteredIds.slice(start, start + pageSize)
-  }, [filteredIds, page, pageSize])
+  const start = (page - 1) * pageSize
+  const paginatedArtists = filteredArtists.slice(start, start + pageSize)
 
   return {
-    paginatedIds,
-    totalFilteredItems: filteredIds.length,
+    paginatedArtists,
+    totalFilteredItems: filteredArtists.length,
     countries,
     cities
   }
