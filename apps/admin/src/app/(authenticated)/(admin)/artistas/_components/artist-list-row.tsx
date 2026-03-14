@@ -18,27 +18,31 @@ interface ArtistListRowProps {
 export function ArtistListRow({ artist }: ArtistListRowProps) {
   const { history, ...artistData } = artist
 
-  const openEditDialog = useArtistDialog((s) => s.openEditDialog)
-  const openHistoryDialog = useArtistDialog((s) => s.openHistoryDialog)
+  const openUpdateArtistDialog = useArtistDialog(
+    (s) => s.openUpdateArtistDialog
+  )
+  const openArtistHistoryDialog = useArtistDialog(
+    (s) => s.openArtistHistoryDialog
+  )
 
   const handleOpenHistory = () =>
-    openHistoryDialog(history, { pseudonimo: artistData.pseudonimo })
+    openArtistHistoryDialog(history, { pseudonimo: artistData.pseudonimo })
 
-  const handleOpenEdit = () => openEditDialog(artistData)
+  const handleOpenEdit = () => openUpdateArtistDialog(artistData)
 
-  const handleDelete = () => {
-    deleteArtistaAction(artist.id).then((result) => {
-      if (!result.success) {
-        toast.error(
-          result.errors
-            ? result.errors.map((e) => e.message).join(', ')
-            : 'Error al eliminar al Artista'
-        )
+  const handleDelete = async () => {
+    const result = await deleteArtistaAction(artist.id)
 
-        return
-      }
-      toast.success('Artista eliminado correctamente')
-    })
+    if (!result.success) {
+      toast.error(
+        result.errors
+          ? result.errors.map((e) => e.message).join(', ')
+          : 'Error al eliminar al Artista'
+      )
+      return
+    }
+
+    toast.success('Artista eliminado correctamente')
   }
 
   return (

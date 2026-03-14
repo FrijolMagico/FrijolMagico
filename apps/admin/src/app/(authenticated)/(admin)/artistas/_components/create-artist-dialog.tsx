@@ -3,9 +3,8 @@
 import { EntityFormDialog } from '@/shared/components/entity-form-dialog/entity-form-dialog'
 import { Button } from '@/shared/components/ui/button'
 import { useArtistDialog } from '../_store/artist-dialog-store'
-import { addArtistaAction } from '../_actions/add-artista.action'
+import { createArtistaAction } from '../_actions/create-artista.action'
 import { toast } from 'sonner'
-import { toSlug } from '../_lib/utils'
 import { IconPlus } from '@tabler/icons-react'
 import { ArtistFormLayout } from './artist-form-layout'
 import { FormProvider, useForm, useFormState } from 'react-hook-form'
@@ -14,11 +13,12 @@ import {
   ArtistInsertInput,
   artistInsertSchema
 } from '../_schemas/artista.schema'
-import { ADD_ARTIST_FORM_ID } from '../_constants'
+import { CREATE_ARTIST_FORM_ID } from '../_constants'
+import { toSlug } from '@/shared/lib/utils'
 
-type AddArtistFormData = Omit<ArtistInsertInput, 'slug'>
+type CreateArtistFormData = Omit<ArtistInsertInput, 'slug'>
 
-const DEFUALT_FORM_DATA: AddArtistFormData = {
+const DEFUALT_FORM_DATA: CreateArtistFormData = {
   nombre: '',
   pseudonimo: '',
   rut: '',
@@ -30,10 +30,11 @@ const DEFUALT_FORM_DATA: AddArtistFormData = {
   rrss: null
 }
 
-export function AddArtistDialog() {
-  const addDialogOpen = useArtistDialog((s) => s.addDialogOpen)
-  const closeAddDialog = useArtistDialog((s) => s.closeAddDialog)
-  const openAddDialog = useArtistDialog((s) => s.openAddDialog)
+export function CreateArtistDialog() {
+  const isCreateArtistOpen = useArtistDialog((s) => s.isCreateArtistOpen)
+  const toggleCreateArtistDialog = useArtistDialog(
+    (s) => s.toggleCreateArtistDialog
+  )
 
   const methods = useForm({
     resolver: zodResolver(artistInsertSchema.omit({ slug: true })),
@@ -45,10 +46,10 @@ export function AddArtistDialog() {
     control: methods.control
   })
 
-  const onSubmit = async (data: AddArtistFormData) => {
+  const onSubmit = async (data: CreateArtistFormData) => {
     try {
       const slug = toSlug(data.pseudonimo)
-      const result = await addArtistaAction(
+      const result = await createArtistaAction(
         { success: false },
         {
           ...data,
@@ -65,7 +66,7 @@ export function AddArtistDialog() {
         return
       }
 
-      closeAddDialog()
+      toggleCreateArtistDialog(false)
       toast.success('Artista agregado correctamente')
     } finally {
       methods.reset()
@@ -76,11 +77,11 @@ export function AddArtistDialog() {
     <>
       <FormProvider {...methods}>
         <EntityFormDialog
-          open={addDialogOpen}
-          onOpenChange={(open) => !open && closeAddDialog()}
+          open={isCreateArtistOpen}
+          onOpenChange={toggleCreateArtistDialog}
           title='Agregar Artista'
           trigger={
-            <Button size='sm' variant='outline' onClick={() => openAddDialog()}>
+            <Button size='sm' variant='outline'>
               <IconPlus />
               Agregar artista
             </Button>
@@ -94,7 +95,7 @@ export function AddArtistDialog() {
             submit: (
               <Button
                 type='submit'
-                form={ADD_ARTIST_FORM_ID}
+                form={CREATE_ARTIST_FORM_ID}
                 disabled={!isDirty || !isValid || isSubmitting}
               >
                 {isSubmitting ? 'Agregando...' : 'Agregar artista'}
@@ -103,7 +104,7 @@ export function AddArtistDialog() {
           }}
         >
           <form
-            id={ADD_ARTIST_FORM_ID}
+            id={CREATE_ARTIST_FORM_ID}
             onSubmit={methods.handleSubmit(onSubmit)}
           >
             <ArtistFormLayout />

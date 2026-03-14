@@ -1,8 +1,8 @@
-export const ARTISTA_CACHE_TAG = 'admin:artistas'
-export const ARTISTA_HISTORIAL_CACHE_TAG = 'admin:artistas:historial'
+export const ARTIST_CACHE_TAG = 'admin:artist'
+export const ARTIST_HISTORY_CACHE_TAG = 'admin:artist:history'
 
-export const ADD_ARTIST_FORM_ID = 'add-artista-form'
-export const EDIT_ARTIST_FORM_ID = 'edit-artista-form'
+export const CREATE_ARTIST_FORM_ID = 'create-artist-form'
+export const UPDATE_ARTIST_FORM_ID = 'update-artist-form'
 
 export enum ARTIST_STATUS {
   UNKNOWN = 1,

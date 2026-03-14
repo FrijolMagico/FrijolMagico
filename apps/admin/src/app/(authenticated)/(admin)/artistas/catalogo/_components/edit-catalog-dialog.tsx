@@ -28,7 +28,9 @@ export function EditCatalogDialog() {
     (s) => s.closeUpdateCatalogDialog
   )
 
-  const openUpdateArtistDialog = useArtistDialog((s) => s.openEditDialog)
+  const openUpdateArtistDialog = useArtistDialog(
+    (s) => s.openUpdateArtistDialog
+  )
 
   const {
     control,
@@ -78,7 +80,7 @@ export function EditCatalogDialog() {
         title='Editar Catálogo'
         footer={{
           close: (
-            <Button type='button' variant='outline' disabled={isSubmitting}>
+            <Button type='button' variant='outline'>
               Cancelar
             </Button>
           ),

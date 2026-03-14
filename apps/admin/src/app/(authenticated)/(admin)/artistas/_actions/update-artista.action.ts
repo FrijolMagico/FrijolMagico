@@ -8,9 +8,9 @@ import { eq, sql } from 'drizzle-orm'
 import { requireAuth } from '@/lib/auth/utils'
 import { artistUpdateSchema } from '../_schemas/artista.schema'
 import { artistHistoryInsertSchema } from '../_schemas/history.schema'
-import type { ArtistEditFormInput, Artist } from '../_schemas/artista.schema'
+import type { ArtistUpdateFormInput, Artist } from '../_schemas/artista.schema'
 import type { ActionState } from '@/shared/types/actions'
-import { ARTISTA_CACHE_TAG, ARTISTA_HISTORIAL_CACHE_TAG } from '../_constants'
+import { ARTIST_CACHE_TAG, ARTIST_HISTORY_CACHE_TAG } from '../_constants'
 
 const HISTORIAL_FIELDS = [
   'pseudonimo',
@@ -22,7 +22,7 @@ const HISTORIAL_FIELDS = [
 
 export async function updateArtistaAction(
   { data: prevData }: ActionState<Artist>,
-  data: ArtistEditFormInput
+  data: ArtistUpdateFormInput
 ): Promise<ActionState> {
   await requireAuth()
 
@@ -97,8 +97,8 @@ export async function updateArtistaAction(
     }
   })
 
-  updateTag(ARTISTA_CACHE_TAG)
-  if (historialInsert) updateTag(ARTISTA_HISTORIAL_CACHE_TAG)
+  updateTag(ARTIST_CACHE_TAG)
+  if (historialInsert) updateTag(ARTIST_HISTORY_CACHE_TAG)
 
   return { success: true }
 }

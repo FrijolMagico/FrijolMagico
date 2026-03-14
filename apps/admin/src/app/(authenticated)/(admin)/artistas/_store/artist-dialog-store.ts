@@ -4,51 +4,50 @@ import { History } from '../_lib/aggregate-history'
 import { Artist } from '../_schemas/artista.schema'
 
 interface ArtistDialogStore {
-  addDialogOpen: boolean
-  editDialogOpen: boolean
-  historyDialogOpen: boolean
+  isCreateArtistOpen: boolean
+  isUpdateArtistOpen: boolean
+  isArtistHistoryOpen: boolean
 
-  selectedArtistData: Artist | null
+  selectedArtist: Artist | null
   selectedArtistHistory: (History & Pick<DomainArtist, 'pseudonimo'>) | null
 
-  openAddDialog: () => void
-  closeAddDialog: () => void
-  openEditDialog: (artist: Artist) => void
-  closeEditDialog: () => void
-  openHistoryDialog: (
+  toggleCreateArtistDialog: (open: boolean) => void
+  openUpdateArtistDialog: (artist: Artist) => void
+  closeUpdateArtistDialog: () => void
+  openArtistHistoryDialog: (
     history: History,
     artist: Pick<DomainArtist, 'pseudonimo'>
   ) => void
-  closeHistoryDialog: () => void
+  closeArtistHistoryDialog: () => void
 }
 
 export const useArtistDialog = create<ArtistDialogStore>((set) => ({
-  addDialogOpen: false,
-  editDialogOpen: false,
-  historyDialogOpen: false,
-  selectedArtistData: null,
+  isCreateArtistOpen: false,
+  isUpdateArtistOpen: false,
+  isArtistHistoryOpen: false,
+  selectedArtist: null,
   selectedArtistHistory: null,
 
-  openAddDialog: () => set({ addDialogOpen: true }),
-  closeAddDialog: () => set({ addDialogOpen: false }),
-  openEditDialog: (artist) =>
+  toggleCreateArtistDialog: (open) => set({ isCreateArtistOpen: open }),
+
+  openUpdateArtistDialog: (artist) =>
     set({
-      editDialogOpen: true,
-      selectedArtistData: artist
+      isUpdateArtistOpen: true,
+      selectedArtist: artist
     }),
-  closeEditDialog: () =>
+  closeUpdateArtistDialog: () =>
     set({
-      editDialogOpen: false,
-      selectedArtistData: null
+      isUpdateArtistOpen: false,
+      selectedArtist: null
     }),
-  openHistoryDialog: (history, artist) =>
+  openArtistHistoryDialog: (history, artist) =>
     set({
-      historyDialogOpen: true,
+      isArtistHistoryOpen: true,
       selectedArtistHistory: {
         ...history,
         pseudonimo: artist.pseudonimo
       }
     }),
-  closeHistoryDialog: () =>
-    set({ historyDialogOpen: false, selectedArtistHistory: null })
+  closeArtistHistoryDialog: () =>
+    set({ isArtistHistoryOpen: false, selectedArtistHistory: null })
 }))

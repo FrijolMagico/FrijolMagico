@@ -4,7 +4,7 @@ import { cacheTag } from 'next/cache'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 
-import { ARTISTA_CACHE_TAG } from '../_constants'
+import { ARTIST_CACHE_TAG } from '../_constants'
 import { Artist } from '../_schemas/artista.schema'
 import { isNull } from 'drizzle-orm'
 
@@ -12,7 +12,7 @@ const { artist: artistTable } = artist
 
 export async function getArtists(): Promise<Artist[] | null> {
   'use cache'
-  cacheTag(ARTISTA_CACHE_TAG)
+  cacheTag(ARTIST_CACHE_TAG)
 
   const results = await db
     .select({

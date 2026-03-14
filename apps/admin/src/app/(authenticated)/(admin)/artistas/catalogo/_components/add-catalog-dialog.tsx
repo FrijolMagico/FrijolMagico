@@ -42,9 +42,7 @@ interface AddCatalogDialogProps {
 
 export function AddCatalogDialog({ artists }: AddCatalogDialogProps) {
   const isCreateCatalogOpen = useCatalogDialog((s) => s.isCreateCatalogOpen)
-  const closeCreateCatalogDialog = useCatalogDialog(
-    (s) => s.closeCreateCatalogDialog
-  )
+  const toggleDialog = useCatalogDialog((s) => s.toggleCreateCatalogDialog)
 
   const {
     formState: { isValid, isDirty, errors, isSubmitting },
@@ -69,7 +67,7 @@ export function AddCatalogDialog({ artists }: AddCatalogDialogProps) {
         return
       }
 
-      closeCreateCatalogDialog()
+      toggleDialog(false)
       toast.success('Artista agregado al catálogo')
     } finally {
       reset()
@@ -79,7 +77,7 @@ export function AddCatalogDialog({ artists }: AddCatalogDialogProps) {
   return (
     <EntityFormDialog
       open={isCreateCatalogOpen}
-      onOpenChange={(open) => !open && closeCreateCatalogDialog()}
+      onOpenChange={toggleDialog}
       title='Agregar al Catálogo'
       trigger={
         <Button size='sm' variant='outline'>

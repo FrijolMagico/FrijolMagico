@@ -10,9 +10,9 @@ import {
   ArtistInsertInput
 } from '../_schemas/artista.schema'
 import type { ActionState } from '@/shared/types/actions'
-import { ARTISTA_CACHE_TAG } from '../_constants'
+import { ARTIST_CACHE_TAG } from '../_constants'
 
-export async function addArtistaAction(
+export async function createArtistaAction(
   _prevState: ActionState,
   data: ArtistInsertInput & { slug: string }
 ): Promise<ActionState> {
@@ -33,7 +33,7 @@ export async function addArtistaAction(
 
     await db.insert(artist.artist).values(parsed.data)
 
-    updateTag(ARTISTA_CACHE_TAG)
+    updateTag(ARTIST_CACHE_TAG)
 
     return { success: true }
   } catch (error) {

@@ -8,17 +8,19 @@ import { EntityFormDialog } from '@/shared/components/entity-form-dialog/entity-
 import { ArtistFormLayout } from './artist-form-layout'
 import { useForm, useFormState, FormProvider } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { artistEditFormSchema } from '../_schemas/artista.schema'
-import type { ArtistEditFormInput } from '../_schemas/artista.schema'
-import { EDIT_ARTIST_FORM_ID } from '../_constants'
+import { artistUpdateFormSchema } from '../_schemas/artista.schema'
+import type { ArtistUpdateFormInput } from '../_schemas/artista.schema'
+import { UPDATE_ARTIST_FORM_ID } from '../_constants'
 
-export function EditArtistDialog() {
-  const isOpen = useArtistDialog((s) => s.editDialogOpen)
-  const closeEditDialog = useArtistDialog((s) => s.closeEditDialog)
-  const artist = useArtistDialog((s) => s.selectedArtistData)
+export function UpdateArtistDialog() {
+  const isUpdateArtistOpen = useArtistDialog((s) => s.isUpdateArtistOpen)
+  const closeUpdateArtistDialog = useArtistDialog(
+    (s) => s.closeUpdateArtistDialog
+  )
+  const artist = useArtistDialog((s) => s.selectedArtist)
 
-  const methods = useForm<ArtistEditFormInput>({
-    resolver: zodResolver(artistEditFormSchema),
+  const methods = useForm<ArtistUpdateFormInput>({
+    resolver: zodResolver(artistUpdateFormSchema),
     values: {
       ...artist,
       historialFlags: {
@@ -41,7 +43,7 @@ export function EditArtistDialog() {
     return null
   }
 
-  const onSubmit = async (data: ArtistEditFormInput) => {
+  const onSubmit = async (data: ArtistUpdateFormInput) => {
     try {
       const result = await updateArtistaAction(
         { success: false, data: artist },
@@ -57,7 +59,7 @@ export function EditArtistDialog() {
         return
       }
 
-      closeEditDialog()
+      closeUpdateArtistDialog()
       toast.success('Artista actualizado correctamente')
     } finally {
       methods.reset()
@@ -67,8 +69,8 @@ export function EditArtistDialog() {
   return (
     <FormProvider {...methods}>
       <EntityFormDialog
-        open={isOpen}
-        onOpenChange={(open) => !open && closeEditDialog()}
+        open={isUpdateArtistOpen}
+        onOpenChange={(open) => !open && closeUpdateArtistDialog()}
         title='Editar Artista'
         footer={{
           close: (
@@ -79,7 +81,7 @@ export function EditArtistDialog() {
           submit: (
             <Button
               type='submit'
-              form={EDIT_ARTIST_FORM_ID}
+              form={UPDATE_ARTIST_FORM_ID}
               disabled={!isDirty || !isValid || isSubmitting}
             >
               {isSubmitting ? 'Guardando...' : 'Guardar'}
@@ -88,7 +90,7 @@ export function EditArtistDialog() {
         }}
       >
         <form
-          id={EDIT_ARTIST_FORM_ID}
+          id={UPDATE_ARTIST_FORM_ID}
           onSubmit={methods.handleSubmit(onSubmit)}
         >
           <ArtistFormLayout check />

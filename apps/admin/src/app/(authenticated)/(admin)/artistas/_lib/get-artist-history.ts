@@ -3,12 +3,12 @@ import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { asc } from 'drizzle-orm'
 
-import { ARTISTA_HISTORIAL_CACHE_TAG } from '../_constants'
+import { ARTIST_HISTORY_CACHE_TAG } from '../_constants'
 import { ArtistHistory } from '../_schemas/history.schema'
 
 export async function getHistoryData(): Promise<ArtistHistory[]> {
   'use cache'
-  cacheTag(ARTISTA_HISTORIAL_CACHE_TAG)
+  cacheTag(ARTIST_HISTORY_CACHE_TAG)
 
   const results = await db
     .select({

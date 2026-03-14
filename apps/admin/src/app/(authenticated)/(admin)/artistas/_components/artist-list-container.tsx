@@ -9,8 +9,8 @@ import { useArtistList } from '../_hooks/use-artist-list'
 import { ArtistListFilters } from './artist-list-filters'
 import { ArtistListPagination } from './artist-list-pagination'
 import { ArtistListTable } from './artist-list-table'
-import { EditArtistDialog } from './edit-artist-dialog'
-import { AddArtistDialog } from './add-artist-dialog'
+import { UpdateArtistDialog } from './update-artist-dialog'
+import { CreateArtistDialog } from './create-artist-dialog'
 import { ArtistHistoryDialog } from './artist-history-dialog'
 import { DomainArtist } from '../_types/artist'
 
@@ -128,7 +128,7 @@ export function ArtistListContainer({ artists }: ArtistListContainerProps) {
           cities={cities}
           onFiltersChange={handleFiltersChange}
         />
-        <AddArtistDialog />
+        <CreateArtistDialog />
       </div>
 
       <ArtistListPagination
@@ -146,7 +146,7 @@ export function ArtistListContainer({ artists }: ArtistListContainerProps) {
         totalItems={totalFilteredItems}
       />
 
-      <EditArtistDialog />
+      <UpdateArtistDialog />
       <ArtistHistoryDialog />
     </div>
   )

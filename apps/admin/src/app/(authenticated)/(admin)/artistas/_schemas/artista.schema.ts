@@ -58,7 +58,7 @@ export const historialFlagsSchema = z.object({
 })
 
 // Edit form schema — update fields (without id) + rrss as object + historial flags
-export const artistEditFormSchema = artistUpdateSchema
+export const artistUpdateFormSchema = artistUpdateSchema
   .omit({ id: true })
   .extend({
     rrss: z.record(z.string(), z.string()).optional(),
@@ -69,4 +69,4 @@ export type Artist = z.infer<typeof artistSelectSchema>
 export type ArtistInsertInput = z.infer<typeof artistInsertSchema>
 export type ArtistUpdateInput = z.infer<typeof artistUpdateSchema>
 export type HistorialFlags = z.infer<typeof historialFlagsSchema>
-export type ArtistEditFormInput = z.infer<typeof artistEditFormSchema>
+export type ArtistUpdateFormInput = z.infer<typeof artistUpdateFormSchema>
