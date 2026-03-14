@@ -113,6 +113,13 @@
       "when": 1773073580852,
       "tag": "0015_redesign-participaciones",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "6",
+      "when": 1773270531261,
+      "tag": "0016_create_asset_table_and_relations",
+      "breakpoints": true
     }
   ]
 }

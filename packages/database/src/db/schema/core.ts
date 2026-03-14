@@ -33,7 +33,7 @@ export const organizationMember = sqliteTable('organization_member', {
     .references(() => organization.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   rut: text('rut').unique(),
-  email: text('email'),
+  email: text('email').notNull(),
   phone: text('phone'),
   position: text('position'),
   rrss: text('rrss'),
