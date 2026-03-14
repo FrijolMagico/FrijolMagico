@@ -1,9 +1,7 @@
-import { EventoSection } from './_components/evento-section'
-import { getEventos } from './_lib/get-eventos-data'
+import { EventDialog } from './_components/event-dialog.js'
+import { EventSection } from './_components/event-section'
 
-export default async function EventsPage() {
-  const eventos = (await getEventos()) || []
-
+export default function EventsPage() {
   return (
     <div className='space-y-6'>
       <div>
@@ -12,7 +10,8 @@ export default async function EventsPage() {
           Gestiona los eventos de la organización.
         </p>
       </div>
-      <EventoSection eventos={eventos} />
+      <EventDialog />
+      <EventSection />
     </div>
   )
 }
