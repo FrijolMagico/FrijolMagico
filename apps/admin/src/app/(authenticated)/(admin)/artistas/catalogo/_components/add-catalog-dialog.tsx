@@ -1,7 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-import { generateKeyBetween } from 'fractional-indexing'
+import { useForm, Controller } from 'react-hook-form'
 import { EntityFormDialog } from '@/shared/components/entity-form-dialog/entity-form-dialog'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -21,191 +20,171 @@ import {
 import { Switch } from '@/shared/components/ui/switch'
 import { Textarea } from '@/shared/components/ui/textarea'
 import { Label } from '@/shared/components/ui/label'
+import { IconPlus } from '@tabler/icons-react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { catalogInsertSchema } from '../_schemas/catalogo.schema'
+import { addCatalogAction } from '../_actions/add-catalog.action'
+import type { CatalogAddFormInput } from '../_schemas/catalogo.schema'
+import { toast } from 'sonner'
+import { useCatalogDialog } from '../_store/catalog-dialog-store'
 
-import { useCatalogViewStore } from '../_store/catalog-view-store'
-import {
-  useCatalogOperationStore,
-  useCatalogProjectionStore
-} from '../_store/catalog-ui-store'
-import { useArtistsProjectionStore } from '../../_store/artista-ui-store'
-
-type ArtistItem = { value: string; label: string }
-
-interface AddCatalogFormContentProps {
-  onApply: (data: {
-    artistaId: string
-    orden: string
-    destacado: boolean
-    activo: boolean
-    descripcion: string | null
-  }) => void
-  onCancel: () => void
+const INITIAL_FORM_DATA: CatalogAddFormInput = {
+  artistaId: 0,
+  descripcion: null,
+  destacado: false,
+  activo: true,
+  avatarUrl: null
 }
 
-function AddCatalogFormContent({
-  onApply,
-  onCancel
-}: AddCatalogFormContentProps) {
-  const [selectedArtist, setSelectedArtist] = useState<ArtistItem | null>(null)
-  const [inputValue, setInputValue] = useState('')
-  const [descripcion, setDescripcion] = useState('')
-  const [destacado, setDestacado] = useState(false)
-  const [activo, setActivo] = useState(true)
-  const [errors, setErrors] = useState<{ artistaId?: string }>({})
+interface AddCatalogDialogProps {
+  artists: { id: number; pseudonimo: string }[]
+}
 
-  const catalogById = useCatalogProjectionStore((s) => s.byId)
-  const catalogArtistIds = new Set(
-    Object.values(catalogById)
-      .filter((e) => !e.__meta?.isDeleted)
-      .map((e) => e.artistaId)
+export function AddCatalogDialog({ artists }: AddCatalogDialogProps) {
+  const isCreateCatalogOpen = useCatalogDialog((s) => s.isCreateCatalogOpen)
+  const closeCreateCatalogDialog = useCatalogDialog(
+    (s) => s.closeCreateCatalogDialog
   )
 
-  const artistAllIds = useArtistsProjectionStore((s) => s.allIds)
-  const artistById = useArtistsProjectionStore((s) => s.byId)
+  const {
+    formState: { isValid, isDirty, errors, isSubmitting },
+    register,
+    reset,
+    control,
+    handleSubmit
+  } = useForm({
+    resolver: zodResolver(catalogInsertSchema.omit({ orden: true })),
+    defaultValues: INITIAL_FORM_DATA,
+    mode: 'onChange'
+  })
 
-  const availableItems: ArtistItem[] = artistAllIds
-    .filter((id) => !artistById[id]?.__meta?.isDeleted)
-    .filter((id) => !artistById[id]?.__meta?.isNew)
-    .filter((id) => !catalogArtistIds.has(id))
-    .map((id) => ({
-      value: id,
-      label: artistById[id]?.pseudonimo ?? id
-    }))
-    .filter((item) =>
-      item.label.toLowerCase().includes(inputValue.toLowerCase())
-    )
+  const onSubmit = async (data: CatalogAddFormInput) => {
+    try {
+      const result = await addCatalogAction({ success: false }, data)
 
-  const handleApply = () => {
-    if (!selectedArtist) {
-      setErrors({ artistaId: 'Debes seleccionar un artista' })
-      return
+      if (!result.success) {
+        toast.error(
+          result.errors?.[0]?.message ?? 'Error al agregar al catálogo'
+        )
+        return
+      }
+
+      closeCreateCatalogDialog()
+      toast.success('Artista agregado al catálogo')
+    } finally {
+      reset()
     }
-
-    const allCatalogIds = useCatalogProjectionStore.getState().allIds
-    const catalogByIdSnap = useCatalogProjectionStore.getState().byId
-    const lastOrden =
-      allCatalogIds
-        .filter((id) => !catalogByIdSnap[id]?.__meta?.isDeleted)
-        .map((id) => catalogByIdSnap[id]?.orden)
-        .filter((o): o is string => !!o)
-        .sort()
-        .at(-1) ?? null
-
-    const newOrden = generateKeyBetween(lastOrden, null)
-
-    onApply({
-      artistaId: selectedArtist.value,
-      orden: newOrden,
-      destacado,
-      activo,
-      descripcion: descripcion.trim() || null
-    })
-  }
-
-  return (
-    <FieldGroup className='pt-4'>
-      <Field>
-        <FieldLabel>
-          Artista <span className='text-destructive'>*</span>
-        </FieldLabel>
-        <Combobox
-          items={availableItems}
-          value={selectedArtist}
-          inputValue={inputValue}
-          onInputValueChange={setInputValue}
-          onValueChange={(item) => {
-            setSelectedArtist(item)
-            setErrors((prev) => ({ ...prev, artistaId: undefined }))
-          }}
-          isItemEqualToValue={(item, val) => item.value === val.value}
-        >
-          <ComboboxInput placeholder='Buscar artista...' showTrigger />
-          <ComboboxContent>
-            <ComboboxEmpty>
-              No hay artistas disponibles para agregar
-            </ComboboxEmpty>
-            <ComboboxList>
-              {availableItems.map((item) => (
-                <ComboboxItem key={item.value} value={item}>
-                  {item.label}
-                </ComboboxItem>
-              ))}
-            </ComboboxList>
-          </ComboboxContent>
-        </Combobox>
-        {errors.artistaId && <FieldError>{errors.artistaId}</FieldError>}
-      </Field>
-
-      <Field>
-        <FieldLabel htmlFor='descripcion'>Descripción</FieldLabel>
-        <Textarea
-          id='descripcion'
-          value={descripcion}
-          onChange={(e) => setDescripcion(e.target.value)}
-          placeholder='Descripción del artista para el catálogo...'
-          className='min-h-32'
-        />
-      </Field>
-
-      <div className='flex items-center justify-center gap-6 py-4'>
-        <div className='flex items-center gap-2'>
-          <Switch checked={destacado} onCheckedChange={setDestacado} />
-          <Label>Destacado</Label>
-        </div>
-        <div className='flex items-center gap-2'>
-          <Switch checked={activo} onCheckedChange={setActivo} />
-          <Label>Activo</Label>
-        </div>
-      </div>
-
-      <div className='flex justify-end gap-2 pt-2'>
-        <Button variant='outline' onClick={onCancel}>
-          Cancelar
-        </Button>
-        <Button onClick={handleApply}>Agregar al catálogo</Button>
-      </div>
-    </FieldGroup>
-  )
-}
-
-export function AddCatalogDialog() {
-  const addCatalogDialogOpen = useCatalogViewStore(
-    (s) => s.addCatalogDialogOpen
-  )
-  const closeAddCatalogDialog = useCatalogViewStore(
-    (s) => s.closeAddCatalogDialog
-  )
-  const add = useCatalogOperationStore((s) => s.add)
-
-  const handleApply = (data: {
-    artistaId: string
-    orden: string
-    destacado: boolean
-    activo: boolean
-    descripcion: string | null
-  }) => {
-    add({
-      ...data,
-      avatarUrl: null,
-      deletedAt: null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    })
-    closeAddCatalogDialog()
   }
 
   return (
     <EntityFormDialog
-      open={addCatalogDialogOpen}
-      onOpenChange={(open) => !open && closeAddCatalogDialog()}
+      open={isCreateCatalogOpen}
+      onOpenChange={(open) => !open && closeCreateCatalogDialog()}
       title='Agregar al Catálogo'
+      trigger={
+        <Button size='sm' variant='outline'>
+          <IconPlus />
+          Agregar al catálogo
+        </Button>
+      }
+      footer={{
+        close: (
+          <Button type='button' variant='outline' disabled={isSubmitting}>
+            Cancelar
+          </Button>
+        ),
+        submit: (
+          <Button type='submit' disabled={!isDirty || !isValid || isSubmitting}>
+            {isSubmitting ? 'Agregando...' : 'Agregar al catálogo'}
+          </Button>
+        )
+      }}
     >
-      {addCatalogDialogOpen && (
-        <AddCatalogFormContent
-          onApply={handleApply}
-          onCancel={closeAddCatalogDialog}
-        />
-      )}
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <FieldGroup className='pt-4'>
+          <Field>
+            <FieldLabel>
+              Artista <span className='text-destructive'>*</span>
+            </FieldLabel>
+            <Controller
+              name='artistaId'
+              control={control}
+              render={({ field }) => (
+                <Combobox
+                  items={artists}
+                  value={
+                    field.value
+                      ? {
+                          value: field.value,
+                          label: artists.find((i) => i.id === field.value)
+                            ?.pseudonimo
+                        }
+                      : null
+                  }
+                  onValueChange={(item) => field.onChange(item?.value ?? '')}
+                  isItemEqualToValue={(item, val) => item.value === val.value}
+                >
+                  <ComboboxInput placeholder='Buscar artista...' showTrigger />
+                  <ComboboxContent>
+                    <ComboboxEmpty>
+                      No hay artistas disponibles para agregar
+                    </ComboboxEmpty>
+                    <ComboboxList>
+                      {artists.map((item) => (
+                        <ComboboxItem key={item.id} value={item}>
+                          {item.pseudonimo}
+                        </ComboboxItem>
+                      ))}
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>
+              )}
+            />
+            {errors.artistaId && (
+              <FieldError>{errors.artistaId.message}</FieldError>
+            )}
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor='descripcion'>Descripción</FieldLabel>
+            <Textarea
+              id='descripcion'
+              {...register('descripcion')}
+              placeholder='Descripción del artista para el catálogo...'
+              className='min-h-32'
+            />
+          </Field>
+
+          <div className='flex items-center justify-center gap-6 py-4'>
+            <div className='flex items-center gap-2'>
+              <Controller
+                name='destacado'
+                control={control}
+                render={({ field }) => (
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                )}
+              />
+              <Label>Destacado</Label>
+            </div>
+            <div className='flex items-center gap-2'>
+              <Controller
+                name='activo'
+                control={control}
+                render={({ field }) => (
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                )}
+              />
+              <Label>Activo</Label>
+            </div>
+          </div>
+        </FieldGroup>
+      </form>
     </EntityFormDialog>
   )
 }

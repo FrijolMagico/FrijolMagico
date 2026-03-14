@@ -1,55 +1,70 @@
 'use client'
 
-import { CatalogPagination } from './catalog-pagination'
-import { CatalogTable } from './catalog-table'
-import { memo, useRef, useCallback } from 'react'
+import { useRef } from 'react'
+import type { Catalog } from '../_schemas/catalogo.schema'
+import type { Artist } from '../../_schemas/artista.schema'
+import { useCatalogList } from '../_hooks/use-catalog-list'
 import { useCatalogPaginationStore } from '../_store/catalog-pagination-store'
-import { useRouter } from 'next/navigation'
+import { reorderCatalogAction } from '../_actions/reorder-catalog.action'
+import { CatalogTable } from './catalog-table'
+import { PaginationControls } from '@/shared/components/pagination-controls'
 
 interface CatalogTableContainerProps {
-  handleFiltersChange: (filters: {
-    activo?: boolean | null
-    destacado?: boolean | null
-    search?: string
-  }) => void
+  catalog: Catalog[]
+  artists: Artist[]
 }
 
-export const CatalogTableContainer = memo(function CatalogTableContainer({
-  handleFiltersChange
+export function CatalogTableContainer({
+  catalog,
+  artists
 }: CatalogTableContainerProps) {
-  const router = useRouter()
-  const setPage = useCatalogPaginationStore((s) => s.setPage)
-  const tableContainerRef = useRef<HTMLDivElement>(null)
+  const resolvedRef = useRef<HTMLDivElement>(null)
 
-  const handlePageChange = useCallback(
-    (newPage: number) => {
-      setPage(newPage)
-      // Read current search params at call time to avoid a reactive subscription
-      // that would cause this component to re-render on every URL change.
-      const params = new URLSearchParams(window.location.search)
-      if (newPage === 1) {
-        params.delete('page')
-      } else {
-        params.set('page', String(newPage))
-      }
-      router.replace(`?${params.toString()}`, { scroll: false })
-    },
-    [setPage, router]
+  const { paginatedItems, filteredItems, totalFilteredItems } = useCatalogList(
+    catalog,
+    artists
   )
+
+  const page = useCatalogPaginationStore((s) => s.page)
+  const pageSize = useCatalogPaginationStore((s) => s.pageSize)
+  const setPage = useCatalogPaginationStore((s) => s.setPage)
+
+  const totalPages = Math.max(1, Math.ceil(totalFilteredItems / pageSize))
+
+  const handleReorder = async (id: number, newKey: string) => {
+    await reorderCatalogAction([{ id, orden: newKey }])
+  }
 
   return (
     <>
-      <CatalogPagination onPageChange={handlePageChange} />
+      <PaginationControls
+        page={page}
+        pageSize={pageSize}
+        totalItems={totalFilteredItems}
+        onPageChange={setPage}
+        itemNoun='artistas'
+      />
 
-      <div ref={tableContainerRef} className='rounded-lg border'>
+      <div ref={resolvedRef} className='rounded-lg border'>
         <CatalogTable
-          handleFiltersChange={handleFiltersChange}
-          containerRef={tableContainerRef}
-          onPageChange={handlePageChange}
+          items={paginatedItems}
+          allItems={filteredItems}
+          artists={artists}
+          onReorder={handleReorder}
+          containerRef={resolvedRef}
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
         />
       </div>
 
-      <CatalogPagination onPageChange={handlePageChange} />
+      <PaginationControls
+        page={page}
+        pageSize={pageSize}
+        totalItems={totalFilteredItems}
+        onPageChange={setPage}
+        itemNoun='artistas'
+      />
     </>
   )
-})
+}

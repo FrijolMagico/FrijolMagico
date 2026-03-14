@@ -1,162 +1,194 @@
 'use client'
 
-import { useState } from 'react'
-import { useDebouncedCallback } from 'use-debounce'
-import { Pencil, MapPin, Mail } from 'lucide-react'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle
-} from '@/shared/components/ui/dialog'
+import { useForm, Controller } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { IconPencil, IconMapPin, IconMail } from '@tabler/icons-react'
 import { Button } from '@/shared/components/ui/button'
 import { Switch } from '@/shared/components/ui/switch'
 import { Label } from '@/shared/components/ui/label'
 import { Textarea } from '@/shared/components/ui/textarea'
 import { ArtistAvatar } from './artist-avatar'
-import { useCatalogViewStore } from '../_store/catalog-view-store'
+import { Field, FieldGroup, FieldLabel } from '@/shared/components/ui/field'
+import { updateCatalogAction } from '../_actions/update-catalog.action'
+import { toast } from 'sonner'
+import { EntityFormDialog } from '@/shared/components/entity-form-dialog/entity-form-dialog'
+import { useCatalogDialog } from '../_store/catalog-dialog-store'
 import {
-  useCatalogOperationStore,
-  useCatalogProjectionStore
-} from '../_store/catalog-ui-store'
-import { useArtistsProjectionStore } from '../../_store/artista-ui-store'
-import { Field, FieldLabel } from '@/shared/components/ui/field'
+  catalogUpdateFormSchema,
+  CatalogUpdateFormInput
+} from '../_schemas/catalogo.schema'
+import { EditArtistDialog } from '../../_components/edit-artist-dialog'
+import { useArtistDialog } from '../../_store/artist-dialog-store'
 
 export function EditCatalogDialog() {
-  const catalogId = useCatalogViewStore((s) => s.selectedCatalogId)
-  const catalog = useCatalogProjectionStore((s) =>
-    catalogId ? s.byId[catalogId] : null
-  )
-  const artist = useArtistsProjectionStore((s) =>
-    catalog ? s.byId[catalog.artistaId] : null
+  const catalog = useCatalogDialog((s) => s.selectedCatalog)
+  const artist = useCatalogDialog((s) => s.selectedArtist)
+  const isUpdateCatalogOpen = useCatalogDialog((s) => s.isUpdateCatalogOpen)
+  const closeUpdateCatalogDialog = useCatalogDialog(
+    (s) => s.closeUpdateCatalogDialog
   )
 
-  const [desc, setDesc] = useState(catalog?.descripcion ?? '')
-  const [prevCatalogDesc, setPrevCatalogDesc] = useState(
-    catalog?.descripcion ?? ''
-  )
-  const [isEditing, setIsEditing] = useState(false)
+  const openUpdateArtistDialog = useArtistDialog((s) => s.openEditDialog)
 
-  const incomingDesc = catalog?.descripcion ?? ''
-  if (incomingDesc !== prevCatalogDesc) {
-    if (!isEditing) {
-      setDesc(incomingDesc)
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { isDirty, isValid, isSubmitting }
+  } = useForm<CatalogUpdateFormInput>({
+    resolver: zodResolver(catalogUpdateFormSchema),
+    values: {
+      avatarUrl: catalog?.avatarUrl ?? '',
+      descripcion: catalog?.descripcion ?? '',
+      activo: catalog?.activo ?? true,
+      destacado: catalog?.destacado ?? false
     }
-    setPrevCatalogDesc(incomingDesc)
-  }
-
-  const update = useCatalogOperationStore((s) => s.update)
-
-  const debouncedUpdate = useDebouncedCallback((val: string) => {
-    if (!catalogId) return
-    update(catalogId, { descripcion: val })
-    setIsEditing(false)
-  }, 500)
-
-  const closeAllDialogs = useCatalogViewStore((s) => s.closeAllDialogs)
-  const openArtistDialog = useCatalogViewStore((s) => s.openArtistDialog)
-  const catalogDialogOpen = useCatalogViewStore((s) => s.catalogDialogOpen)
-
-  const handleEditCatalogDetail = (
-    field: 'destacado' | 'activo' | 'descripcion',
-    value: boolean | string
-  ) => {
-    if (!catalogId) return
-    update(catalogId, { [field]: value })
-  }
+  })
 
   if (!catalog || !artist) return null
 
+  const onSubmit = async (data: CatalogUpdateFormInput) => {
+    try {
+      const result = await updateCatalogAction(
+        { success: false },
+        {
+          ...data,
+          id: catalog.id,
+          artistaId: artist.id
+        }
+      )
+
+      if (!result.success) {
+        toast.error(result.errors?.[0]?.message ?? 'Error al guardar')
+      }
+
+      closeUpdateCatalogDialog()
+      toast.success('Catálogo actualizado correctamente')
+    } finally {
+      reset()
+    }
+  }
+
   return (
-    <Dialog open={catalogDialogOpen} onOpenChange={closeAllDialogs}>
-      <DialogContent className='max-w-2xl'>
-        <DialogHeader>
-          <DialogTitle>Editar Catálogo</DialogTitle>
-        </DialogHeader>
-
-        <div className='space-y-6'>
-          {/* Artist Info Card */}
-          <div className='flex items-center gap-6'>
-            <ArtistAvatar
-              src={catalog.avatarUrl}
-              alt={artist.pseudonimo}
-              size='2xl'
-            />
-            <div className='flex-1'>
-              <div className='flex items-center gap-2'>
-                <h3 className='text-lg font-semibold'>{artist.pseudonimo}</h3>
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  className='h-8 w-8'
-                  onClick={openArtistDialog}
-                  title='Editar información del artista'
-                >
-                  <Pencil className='h-4 w-4' />
-                </Button>
-              </div>
-              {artist.nombre && (
-                <p className='text-muted-foreground font-semibold'>
-                  {artist.nombre}
-                </p>
-              )}
-              <div className='text-muted-foreground mt-2 flex flex-col gap-1 text-xs'>
-                {(artist.ciudad || artist.pais) && (
-                  <span className='flex items-center gap-1'>
-                    <MapPin className='h-3 w-3' />
-                    {[artist.ciudad, artist.pais].filter(Boolean).join(', ')}
-                  </span>
-                )}
-                {artist.correo && (
-                  <span className='flex items-center gap-1'>
-                    <Mail className='h-3 w-3' />
-                    {artist.correo}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className='space-y-6'>
-            <Field className='space-y-2'>
-              <FieldLabel htmlFor='descripcion'>Descripción</FieldLabel>
-              <Textarea
-                id='descripcion'
-                value={desc}
-                onChange={(e) => {
-                  setIsEditing(true)
-                  setDesc(e.target.value)
-                  debouncedUpdate(e.target.value)
-                }}
-                placeholder='Descripción del artista para el catálogo...'
-                className='min-h-50'
+    <>
+      <EditArtistDialog />
+      <EntityFormDialog
+        open={isUpdateCatalogOpen}
+        onOpenChange={(open) => !open && closeUpdateCatalogDialog()}
+        title='Editar Catálogo'
+        footer={{
+          close: (
+            <Button type='button' variant='outline' disabled={isSubmitting}>
+              Cancelar
+            </Button>
+          ),
+          submit: (
+            <Button
+              type='submit'
+              form='edit-catalog-form'
+              disabled={!isValid || !isDirty || isSubmitting}
+            >
+              {isSubmitting ? 'Guardando...' : 'Guardar'}
+            </Button>
+          )
+        }}
+      >
+        <form id='edit-catalog-form' onSubmit={handleSubmit(onSubmit)}>
+          <FieldGroup className='space-y-6'>
+            <div className='flex items-center gap-6'>
+              <ArtistAvatar
+                src={catalog.avatarUrl}
+                alt={artist.pseudonimo}
+                size='2xl'
               />
-            </Field>
-
-            {/* Catalog Fields */}
-            <div className='flex items-center justify-center gap-6'>
-              <div className='flex items-center gap-2'>
-                <Switch
-                  checked={catalog.destacado}
-                  onCheckedChange={(checked) =>
-                    handleEditCatalogDetail('destacado', checked)
-                  }
-                />
-                <Label>Destacado</Label>
-              </div>
-              <div className='flex items-center gap-2'>
-                <Switch
-                  checked={catalog.activo}
-                  onCheckedChange={(checked) =>
-                    handleEditCatalogDetail('activo', checked)
-                  }
-                />
-                <Label>Activo</Label>
+              <div className='flex-1'>
+                <div className='flex items-center gap-2'>
+                  <h3 className='text-lg font-semibold'>{artist.pseudonimo}</h3>
+                  <Button
+                    type='button'
+                    variant='ghost'
+                    size='sm'
+                    className='h-8 w-8'
+                    onClick={() => openUpdateArtistDialog(artist)}
+                    title='Editar información del artista'
+                  >
+                    <IconPencil className='h-4 w-4' />
+                  </Button>
+                </div>
+                {artist.nombre && (
+                  <p className='text-muted-foreground font-semibold'>
+                    {artist.nombre}
+                  </p>
+                )}
+                <div className='text-muted-foreground mt-2 flex flex-col gap-1 text-xs'>
+                  {(artist.ciudad || artist.pais) && (
+                    <span className='flex items-center gap-1'>
+                      <IconMapPin className='h-3 w-3' />
+                      {[artist.ciudad, artist.pais].filter(Boolean).join(', ')}
+                    </span>
+                  )}
+                  {artist.correo && (
+                    <span className='flex items-center gap-1'>
+                      <IconMail className='h-3 w-3' />
+                      {artist.correo}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+
+            <div className='space-y-6'>
+              <Field className='space-y-2'>
+                <FieldLabel htmlFor='descripcion-textarea'>
+                  Descripción
+                </FieldLabel>
+                <Controller
+                  name='descripcion'
+                  control={control}
+                  render={({ field }) => (
+                    <Textarea
+                      id='descripcion-textarea'
+                      value={field.value ?? ''}
+                      onChange={field.onChange}
+                      placeholder='Descripción del artista para el catálogo...'
+                      className='min-h-50'
+                    />
+                  )}
+                />
+              </Field>
+
+              <div className='flex items-center justify-center gap-6'>
+                <div className='flex items-center gap-2'>
+                  <Controller
+                    name='destacado'
+                    control={control}
+                    render={({ field }) => (
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    )}
+                  />
+                  <Label>Destacado</Label>
+                </div>
+                <div className='flex items-center gap-2'>
+                  <Controller
+                    name='activo'
+                    control={control}
+                    render={({ field }) => (
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    )}
+                  />
+                  <Label>Activo</Label>
+                </div>
+              </div>
+            </div>
+          </FieldGroup>
+        </form>
+      </EntityFormDialog>
+    </>
   )
 }

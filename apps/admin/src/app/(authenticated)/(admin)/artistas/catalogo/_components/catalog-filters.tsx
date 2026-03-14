@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useDebouncedCallback } from 'use-debounce'
-import { Search, X } from 'lucide-react'
+import { IconSearch, IconX } from '@tabler/icons-react'
 import { Input } from '@/shared/components/ui/input'
 import {
   Select,
@@ -14,15 +14,7 @@ import {
 import { Button } from '@/shared/components/ui/button'
 import { useCatalogFilterStore } from '../_store/catalog-filter-store'
 
-interface CatalogFiltersProps {
-  onFiltersChange: (filters: {
-    activo?: boolean | null
-    destacado?: boolean | null
-    search?: string
-  }) => void
-}
-
-export function CatalogFilters({ onFiltersChange }: CatalogFiltersProps) {
+export function CatalogFilters() {
   const filters = useCatalogFilterStore((state) => state.filters)
   const setFilter = useCatalogFilterStore((state) => state.setFilter)
 
@@ -31,11 +23,6 @@ export function CatalogFilters({ onFiltersChange }: CatalogFiltersProps) {
   const [localSearch, setLocalSearch] = useState(filters.search)
   const debouncedSearchUpdate = useDebouncedCallback((value: string) => {
     setFilter('search', value)
-    onFiltersChange({
-      activo: filters.activo ?? undefined,
-      destacado: filters.destacado ?? undefined,
-      search: value
-    })
   }, 300)
 
   const hasActiveFilters =
@@ -52,26 +39,12 @@ export function CatalogFilters({ onFiltersChange }: CatalogFiltersProps) {
     if (!value) return
     const activo = value === 'all' ? null : value === 'true'
     setFilter('activo', activo)
-    onFiltersChange({
-      activo: activo,
-      destacado: filters.destacado,
-      // Use localSearch to avoid passing a stale store value when the user
-      // has typed ahead of the debounce window
-      search: localSearch
-    })
   }
 
   const handleDestacadoChange = (value: string | null) => {
     if (!value) return
     const destacado = value === 'all' ? null : value === 'true'
     setFilter('destacado', destacado)
-    onFiltersChange({
-      activo: filters.activo,
-      destacado: destacado,
-      // Use localSearch to avoid passing a stale store value when the user
-      // has typed ahead of the debounce window
-      search: localSearch
-    })
   }
 
   const clearFilters = () => {
@@ -79,15 +52,13 @@ export function CatalogFilters({ onFiltersChange }: CatalogFiltersProps) {
     debouncedSearchUpdate.cancel()
     const filterStore = useCatalogFilterStore.getState()
     filterStore.setFilters({ activo: null, destacado: null, search: '' })
-    // Pass explicit nulls so the parent knows to remove params
-    onFiltersChange({ activo: null, destacado: null, search: '' })
   }
 
   return (
     <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
       <div className='flex flex-1 items-center gap-2'>
         <div className='relative max-w-sm flex-1'>
-          <Search className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
+          <IconSearch className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
           <Input
             placeholder='Buscar artista...'
             value={localSearch}
@@ -99,13 +70,7 @@ export function CatalogFilters({ onFiltersChange }: CatalogFiltersProps) {
 
       <div className='flex items-center gap-2'>
         <Select
-          value={
-            filters.activo === null
-              ? 'Todos'
-              : filters.activo
-                ? 'Activo'
-                : 'Inactivo'
-          }
+          value={filters.activo === null ? 'all' : String(filters.activo)}
           onValueChange={handleActivoChange}
         >
           <SelectTrigger className='w-35'>
@@ -119,13 +84,7 @@ export function CatalogFilters({ onFiltersChange }: CatalogFiltersProps) {
         </Select>
 
         <Select
-          value={
-            filters.destacado === null
-              ? 'Todos'
-              : filters.destacado
-                ? 'Destacados'
-                : 'No destacados'
-          }
+          value={filters.destacado === null ? 'all' : String(filters.destacado)}
           onValueChange={handleDestacadoChange}
         >
           <SelectTrigger className='w-40'>
@@ -140,7 +99,7 @@ export function CatalogFilters({ onFiltersChange }: CatalogFiltersProps) {
 
         {hasActiveFilters && (
           <Button variant='ghost' size='sm' onClick={clearFilters}>
-            <X className='mr-1 h-4 w-4' />
+            <IconX className='mr-1 h-4 w-4' />
             Limpiar
           </Button>
         )}

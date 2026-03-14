@@ -1,16 +1,15 @@
 import { Suspense } from 'react'
 import { getCatalogData } from '../_lib/get-catalog-data'
-import { CatalogStoreInitialization } from './catalog-store-initialization'
-import { CatalogArtistsContainer } from './catalog-artists-container'
+import { getArtists } from '../../_lib/get-artists'
+import { CatalogContainer } from './catalog-container'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 
 export async function CatalogContent() {
-  const catalog = await getCatalogData()
+  const [catalog, artists] = await Promise.all([getCatalogData(), getArtists()])
 
   return (
     <Suspense fallback={<CatalogContentSkeleton />}>
-      <CatalogStoreInitialization initialData={catalog ?? []} />
-      <CatalogArtistsContainer />
+      <CatalogContainer catalog={catalog ?? []} artists={artists ?? []} />
     </Suspense>
   )
 }
