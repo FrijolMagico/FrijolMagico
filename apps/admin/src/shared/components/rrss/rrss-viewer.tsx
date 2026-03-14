@@ -6,7 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/shared/components/ui/dropdown-menu'
-import { ButtonWithTooltip } from '@/shared/components/button-with-tooltip'
+import { Button } from '../ui/button'
 
 interface RRSSViewerProps {
   rrss: Record<string, string | string[]> | null
@@ -54,34 +54,24 @@ export function RRSSViewer({ rrss, disabled }: RRSSViewerProps) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <ButtonWithTooltip
-            size='xs'
-            variant='outline'
-            tooltipContent='Ver RRSS'
-            disabled={disabled}
-          >
-            Ver
-          </ButtonWithTooltip>
-        }
-      />
+      <DropdownMenuTrigger asChild>
+        <Button size='xs' variant='outline' disabled={disabled}>
+          Ver
+        </Button>
+      </DropdownMenuTrigger>
 
       <DropdownMenuContent className='w-full min-w-40'>
         {validEntries.map(({ platform, url }, index) => (
-          <DropdownMenuItem
-            key={`${platform}-${url}-${index}`}
-            render={
-              <a
-                href={url}
-                target='_blank'
-                rel='noopener noreferrer'
-                className='w-full text-nowrap'
-              >
-                {platform}: @{extractHandle(url)}
-              </a>
-            }
-          />
+          <DropdownMenuItem key={`${platform}-${url}-${index}`}>
+            <a
+              href={url}
+              target='_blank'
+              rel='noopener noreferrer'
+              className='w-full text-nowrap'
+            >
+              {platform}: @{extractHandle(url)}
+            </a>
+          </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
     </DropdownMenu>

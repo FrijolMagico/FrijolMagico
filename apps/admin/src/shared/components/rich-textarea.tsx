@@ -1,12 +1,10 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
 import { Tiptap, useEditor, useEditorState, useTiptap } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 
 import { useCallback, useState } from 'react'
-import { type Editor } from '@tiptap/react'
 import { Toggle } from '@/shared/components/ui/toggle'
 import { Button } from '@/shared/components/ui/button'
 import {

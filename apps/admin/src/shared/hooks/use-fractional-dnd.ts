@@ -2,13 +2,13 @@ import { generateKeyBetween } from 'fractional-indexing'
 import type { DragEndEvent } from '@dnd-kit/core'
 
 export interface SortableItem {
-  id: string
+  id: number
   orderKey: string | null
 }
 
 export interface UseFractionalDnDProps {
   items: SortableItem[]
-  onReorder: (id: string, newOrderKey: string) => void
+  onReorder: (id: number, newOrderKey: string) => void
   onDragEnd?: () => void
 }
 
@@ -22,7 +22,7 @@ export function useFractionalDnD(props: UseFractionalDnDProps) {
       return
     }
 
-    const draggedId = active.id as string
+    const draggedId = active.id as number
     const draggedIndex = props.items.findIndex((item) => item.id === draggedId)
     const dropIndex = props.items.findIndex((item) => item.id === over.id)
 

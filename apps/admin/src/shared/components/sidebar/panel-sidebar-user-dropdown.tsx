@@ -12,7 +12,6 @@ import {
   PanelSidebarUserSkeleton
 } from './panel-sidebar-user'
 import { useSidebar } from '../ui/sidebar'
-import { Sparkles } from 'lucide-react'
 import { Suspense } from 'react'
 import { IconLogout } from '@tabler/icons-react'
 

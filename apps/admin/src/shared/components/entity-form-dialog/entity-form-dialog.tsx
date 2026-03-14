@@ -3,10 +3,13 @@
 import type { ReactNode } from 'react'
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
+  DialogTrigger
 } from '@/shared/components/ui/dialog'
 import { cn } from '@/lib/utils'
 
@@ -17,6 +20,11 @@ interface EntityFormDialogProps {
   description?: string
   children: ReactNode
   className?: string
+  trigger?: ReactNode
+  footer?: {
+    close: ReactNode
+    submit: ReactNode
+  }
 }
 
 export function EntityFormDialog({
@@ -25,16 +33,26 @@ export function EntityFormDialog({
   title,
   description,
   children,
+  trigger,
+  footer,
   className
 }: EntityFormDialogProps) {
   return (
-    <Dialog open={open}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent className={cn(className)}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
         {children}
+
+        {footer && (
+          <DialogFooter>
+            {footer.close && <DialogClose asChild>{footer.close}</DialogClose>}
+            {footer.submit && footer.submit}
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   )

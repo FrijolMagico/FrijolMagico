@@ -14,16 +14,15 @@ export async function PanelSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar collapsible='icon' {...props}>
+    <Sidebar {...props}>
       <SidebarHeader>
         <Image
           src='/logotipo_asoc_2026_color.png'
           alt='Logo Frijol Mágico'
           width={400}
           height={228}
-          className='mx-auto h-auto w-[80%] shrink-0'
+          className='h-16 w-fit shrink-0 px-2'
         />
-        <span className='sr-only'>Asociación Cultural Frijol Mágico</span>
       </SidebarHeader>
 
       <SidebarContent>

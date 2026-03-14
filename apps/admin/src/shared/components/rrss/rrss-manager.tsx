@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Trash2 } from 'lucide-react'
+import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import {
@@ -115,7 +115,7 @@ export function RRSSManager({
           disabled={disabled}
           className='gap-2'
         >
-          <Plus className='h-4 w-4' />
+          <IconPlus className='h-4 w-4' />
           Agregar red social
         </Button>
       </div>
@@ -173,7 +173,7 @@ export function RRSSManager({
                     disabled={disabled}
                     className='text-destructive hover:text-destructive/90 h-8 w-8'
                   >
-                    <Trash2 className='h-4 w-4' />
+                    <IconTrash className='h-4 w-4' />
                   </Button>
                 </TableCell>
               </TableRow>
