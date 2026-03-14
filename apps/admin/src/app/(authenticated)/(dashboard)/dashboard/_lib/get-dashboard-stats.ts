@@ -1,5 +1,3 @@
-'use server'
-
 import { cacheTag } from 'next/cache'
 import { count, desc, asc, eq, and, isNotNull, sql } from 'drizzle-orm'
 

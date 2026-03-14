@@ -1,14 +1,14 @@
 import { describe, test, expect } from 'bun:test'
-import { catalogoArtistaInsertSchema } from '@/app/(authenticated)/(admin)/artistas/catalogo/_schemas/catalogo.schema'
+import { catalogInsertSchema } from '@/app/(authenticated)/(admin)/artistas/catalogo/_schemas/catalogo.schema'
 
-describe('catalogoArtistaInsertSchema', () => {
+describe('catalogInsertSchema', () => {
   test('validates valid data', () => {
     const validData = {
       artistaId: 1,
       orden: '001'
     }
 
-    const result = catalogoArtistaInsertSchema.parse(validData)
+    const result = catalogInsertSchema.parse(validData)
 
     expect(result.artistaId).toBe(1)
     expect(result.orden).toBe('001')
@@ -23,7 +23,7 @@ describe('catalogoArtistaInsertSchema', () => {
       descripcion: 'Artista destacado del mes'
     }
 
-    const result = catalogoArtistaInsertSchema.parse(validData)
+    const result = catalogInsertSchema.parse(validData)
 
     expect(result).toMatchObject(validData)
   })
@@ -34,7 +34,7 @@ describe('catalogoArtistaInsertSchema', () => {
       orden: '001'
     }
 
-    expect(() => catalogoArtistaInsertSchema.parse(invalidData)).toThrow()
+    expect(() => catalogInsertSchema.parse(invalidData)).toThrow()
   })
 
   test('rejects empty order', () => {
@@ -43,7 +43,7 @@ describe('catalogoArtistaInsertSchema', () => {
       orden: ''
     }
 
-    expect(() => catalogoArtistaInsertSchema.parse(invalidData)).toThrow()
+    expect(() => catalogInsertSchema.parse(invalidData)).toThrow()
   })
 
   test('rejects non-boolean featured', () => {
@@ -53,7 +53,7 @@ describe('catalogoArtistaInsertSchema', () => {
       destacado: 'true' as unknown as boolean
     }
 
-    expect(() => catalogoArtistaInsertSchema.parse(invalidData)).toThrow()
+    expect(() => catalogInsertSchema.parse(invalidData)).toThrow()
   })
 
   test('allows optional description', () => {
@@ -63,7 +63,7 @@ describe('catalogoArtistaInsertSchema', () => {
       descripcion: undefined
     }
 
-    const result = catalogoArtistaInsertSchema.parse(validData)
+    const result = catalogInsertSchema.parse(validData)
 
     expect(result.descripcion).toBeUndefined()
   })

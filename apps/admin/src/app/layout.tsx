@@ -34,7 +34,7 @@ export default function RootLayout({
       <body className='font-inter'>
         <ThemeProvider>
           {children}
-          <Toaster position='top-center' />
+          <Toaster position='bottom-center' />
         </ThemeProvider>
       </body>
     </html>
