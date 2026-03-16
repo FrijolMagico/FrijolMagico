@@ -14,7 +14,6 @@ bun run start                  # Start production server
 
 # Quality
 bun run lint                   # ESLint
-bun run lint:fix               # ESLint --fix
 bun run type-check             # TypeScript check
 ```
 

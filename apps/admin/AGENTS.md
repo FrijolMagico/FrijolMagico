@@ -1,9 +1,5 @@
 # Admin App — Knowledge Base
 
-**Generated:** 2026-03-02
-**Commit:** 420f739
-**Branch:** dev
-
 ## Overview
 
 Admin panel for Frijol Magico Cultural Association. Next.js 16 (App Router) with React 19, TypeScript strict, Tailwind CSS v4, Better Auth (Google OAuth), Shadcn/ui, Zustand 5, Zod 4. Local-first architecture with IndexedDB journal and server-side persistence via Server Actions.
@@ -19,40 +15,28 @@ src/
 │   ├── (authenticated)/                # Protected: sidebar layout
 │   │   ├── (dashboard)/dashboard/      # Overview page
 │   │   └── (admin)/                    # Admin features
-│   │       ├── artistas/               # Artist management and base route (largest feature)
-│   │       │   ├── catalogo/           # Catalog sub-feature (25 files)
-│   │       ├── general/                # Organization + team management
-│   │       ├── eventos/                # Events (stub)
-│   │       └── config/                 # Configuration (stub)
+│   │       └── (entity)/               # Base route for each entity (artistas, eventos, organizaciones...)
+│   │           ├── _actions/           # Server Actions ('use server', import 'server-only', updateTag)
+│   │           ├── _components/        # Components ('use client' only when needed)
+│   │           ├── _constants/         # Feature-specific constants
+│   │           ├── _hooks/             # Feature-specific hooks
+│   │           ├── _lib/               # DAL: server-side data fetching ('use cache' + cacheTag) and utilities
+│   │           ├── _schemas/           # Database schemas (Zod, shared client/server validation)
+│   │           ├── _store/             # Zustand stores (client state management, import factories) Only when needed
+│   │           ├── _types/             # TypeScript types (shared client/server types)
+│   │           ├── (sub-entity)/       # Optional nested routes (e.g. eventos/edicion, artistas/catalogo)
+│   │           └── page.tsx            # Route page (default export, calls requireAuth())
+│   ├── globals.css                     # Root: fonts, theme, toaster
 │   ├── layout.tsx                      # Root: fonts, theme, toaster
 │   └── page.tsx                        # Redirects to /dashboard
 ├── shared/                             # Cross-route modules (see shared/AGENTS.md)
 │   ├── components/                     # UI: shadcn/ui + custom components
-│   ├── hooks/                          # Sync hooks: journal, projection, dirty
-│   ├── lib/                            # Glue: entities, registries, stores
-│   └── ui-state/                       # Pagination + filters factories
-├── lib/                                # Global: auth, utils, cdn, navigation
-├── hooks/                              # App-level hooks (use-mobile)
-├── styles/                             # globals.css (Tailwind v4 theme)
+│   ├── hooks/                          # Reusable custom hooks
+│   ├── lib/                            # Utilities, infra, general configs
+│   ├── schemas/                        # Shared Zod schemas
+│   └── types/                          # Shared TypeScript types
 └── proxy.ts                            # Middleware-like session check
 ```
-
-## Where to Look
-
-| Task              | Location                           | Notes                                                               |
-| ----------------- | ---------------------------------- | ------------------------------------------------------------------- |
-| Add admin feature | `src/app/(authenticated)/(admin)/` | Copy artistas pattern                                               |
-| Auth config       | `src/lib/auth/`                    | index.ts (Better Auth), config.ts (constants), utils.ts (helpers)   |
-| Protect a route   | `src/lib/auth/utils.ts`            | Call `requireAuth()` in page component                              |
-| Add UI component  | `src/shared/components/ui/`        | Shadcn/ui, imported as `@/shared/components/ui/[name]`              |
-| Add shared hook   | `src/shared/hooks/`                | `use-` prefix, `'use client'` directive                             |
-| Server Action     | Feature `_actions/` dir            | `'use server'`, accepts `PushOperation[]`, returns `PushResult`     |
-| Data fetching     | Feature `_lib/` dir                | `'use cache'` + `cacheTag()`, imports from `@frijolmagico/database` |
-| Zustand store     | Feature `_store/` dir              | Use factories from `shared/operations/`                             |
-| Zod schema        | Feature `_schemas/` dir            | Shared between client validation and server actions                 |
-| Navigation menu   | `src/lib/navigation.ts`            | Add entry, update ROUTE_ENTITY_MAP in database-entities.ts          |
-| Global styles     | `src/styles/globals.css`           | OKLch color system, custom radius scale                             |
-| Tests             | `tests/unit/`                      | Mirror source paths, `.test.ts` suffix, Bun test runner             |
 
 ## Commands
 
@@ -61,27 +45,9 @@ bun run build                  # Production build
 bun run lint                   # ESLint src/
 bun run type-check             # tsc --noEmit
 bun test                       # Unit tests (Bun)
-bun run test:e2e               # E2E tests (Playwright)
 
 # Dev server (check if ports 3001/8080 are already in use first)
 turbo dev --filter=@frijolmagico/database --filter=@frijolmagico/admin
-```
-
-## Feature Architecture
-
-Every admin feature follows this structure (see artistas/catalogo as reference):
-
-```
-feature/
-├── _actions/       # Server Actions ('use server', server validations)
-├── _components/    # Client components ('use client' only when needed)
-├── _hooks/         # Feature hooks
-├── _lib/           # DAL: server-side data fetching ('use cache' + cacheTag)
-├── _schemas/       # Zod schemas (shared client + server validation)
-├── _store/         # Feature Zustand stores
-├── _types/         # TypeScript types
-├── _constants/     # Feature constants
-└── page.tsx        # Route page (default export, calls requireAuth())
 ```
 
 ## Authentication
@@ -97,14 +63,9 @@ feature/
 ## Path Aliases
 
 ```
-@/shared/*    → src/shared/*
 @/admin/*     → src/app/(authenticated)/(admin)/*
 @/dashboard/* → src/app/(authenticated)/(dashboard)/*
 @/auth/*      → src/app/(auth)/*
-@/lib/*       → src/lib/*
-@/hooks/*     → src/hooks/*
-@/types/*     → src/types/*
-@/styles/*    → src/styles/*
 @/tests/*     → tests/*
 @/*           → src/* (fallback)
 ```
@@ -152,10 +113,6 @@ feature/
 ## Notes
 
 - `src/proxy.ts` exists but is NOT a middleware.ts — it's a route matcher config for session checks
-- `docs/journal-issues/` contains known technical debt items for the journal system
-- `eventos` and `config` routes are stubs — follow artistas pattern when implementing
-- Entity definitions in `src/shared/lib/database-entities.ts` must be updated when adding new entities
-- `ROUTE_ENTITY_MAP` in same file connects routes to entities for dirty-state tracking
 
 ## Schema Guide (Drizzle-Zod)
 
@@ -195,7 +152,7 @@ export type ArtistaFormInput = typeof artistaFormSchema._type
 
 | Layer                     | IDs      | Example                                        |
 | ------------------------- | -------- | ---------------------------------------------- |
-| **Server** (InsertSchema) | `number` | `eventoId: z.coerce.number().int().positive()` |
+| **Server** (InsertSchema) | `number` | `eventoId: z.number().int().positive()` |
 | **Client** (FormSchema)   | `string` | `eventoId: z.string().min(1)`                  |
 
 ### Imports
@@ -210,7 +167,6 @@ import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
 
 ### Key Points
 
-- Use `.pipe(z.coerce.number())` for FK fields in insert schemas (client sends strings)
 - Preserve Spanish error messages in refinements
 - Use `.pick()`, `.omit()`, `.extend()` for form schemas
 - Export backward-compat aliases if needed: `export const artistaSchema = artistaInsertSchema`

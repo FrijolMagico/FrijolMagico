@@ -7,9 +7,6 @@
       "bun"
     ],
     "paths": {
-      "@/shared/*": [
-        "./src/shared/*"
-      ],
       // Sections (Add more as needed)
       "@/admin/*": [
         "./src/app/(authenticated)/(admin)/*"
@@ -19,19 +16,6 @@
       ],
       "@/auth/*": [
         "./src/app/(auth)/*"
-      ],
-      // Globals
-      "@/lib/*": [
-        "./src/lib/*"
-      ],
-      "@/hooks/*": [
-        "./src/hooks/*"
-      ],
-      "@/types/*": [
-        "./src/types/*"
-      ],
-      "@/styles/*": [
-        "./src/styles/*"
       ],
       // Test folder
       "@/tests/*": [
