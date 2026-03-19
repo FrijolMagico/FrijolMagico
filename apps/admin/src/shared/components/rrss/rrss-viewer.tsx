@@ -54,11 +54,13 @@ export function RRSSViewer({ rrss, disabled }: RRSSViewerProps) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button size='xs' variant='outline' disabled={disabled}>
-          Ver
-        </Button>
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger
+        render={
+          <Button size='xs' variant='outline' disabled={disabled}>
+            Ver
+          </Button>
+        }
+      />
 
       <DropdownMenuContent className='w-full min-w-40'>
         {validEntries.map(({ platform, url }, index) => (

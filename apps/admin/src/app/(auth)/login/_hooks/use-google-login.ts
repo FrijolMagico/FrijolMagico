@@ -1,6 +1,6 @@
 'use client'
 
-import { authClient } from '@/lib/auth/'
+import { authClient } from '@/shared/lib/auth'
 import { useState } from 'react'
 
 export function useGoogleLogin() {
@@ -18,8 +18,8 @@ export function useGoogleLogin() {
           callbackURL: '/dashboard'
         },
         {
-          onError: (_ctx) => {
-            const message = _ctx.error.message || 'Error al iniciar sesión'
+          onError: (ctx: { error: { message?: string } }) => {
+            const message = ctx.error.message || 'Error al iniciar sesión'
             setError(message)
             setIsLoading(false)
           }

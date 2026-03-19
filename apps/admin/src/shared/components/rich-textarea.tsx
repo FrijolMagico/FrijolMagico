@@ -225,17 +225,21 @@ function TiptapToolbar() {
         {/* Link */}
         <div className='flex items-center gap-1'>
           <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
-            <DialogTrigger asChild>
-              <Toggle
-                size='sm'
-                pressed={editor.isActive('link')}
-                aria-label='Insertar enlace'
-                title='Insertar enlace'
-                className='cursor-pointer'
-              >
-                <IconLink />
-              </Toggle>
-            </DialogTrigger>
+            <DialogTrigger
+              render={
+                <>
+                  <Toggle
+                    size='sm'
+                    pressed={editor.isActive('link')}
+                    aria-label='Insertar enlace'
+                    title='Insertar enlace'
+                    className='cursor-pointer'
+                  >
+                    <IconLink />
+                  </Toggle>
+                </>
+              }
+            />
             <DialogContent className='sm:max-w-md'>
               <DialogHeader>
                 <DialogTitle>Insertar enlace</DialogTitle>

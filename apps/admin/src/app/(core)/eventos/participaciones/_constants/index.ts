@@ -1,0 +1,5 @@
+export const PARTICIPACIONES_CACHE_TAG = 'admin:participaciones'
+export const DISCIPLINAS_CACHE_TAG = 'admin:disciplinas'
+export const ACTIVITY_TYPES_CACHE_TAG = 'admin:activity-types'
+export const ADMISSION_MODES_CACHE_TAG = 'admin:admission-modes'
+export const AGRUPACIONES_CACHE_TAG = 'admin:agrupaciones'

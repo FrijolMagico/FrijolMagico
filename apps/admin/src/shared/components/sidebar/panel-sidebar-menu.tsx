@@ -51,25 +51,31 @@ export const PanelSidebarMenu = ({ items, label }: PanelSidebarMenuProps) => {
                 className='group/collapsible'
               >
                 <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton tooltip={item.title}>
-                      {item.icon && <item.icon />}
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                    <IconChevronsRight className='ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
-                  </CollapsibleTrigger>
+                  <CollapsibleTrigger
+                    render={
+                      <>
+                        <SidebarMenuButton tooltip={item.title}>
+                          {item.icon && <item.icon />}
+                          <span>{item.title}</span>
+                        </SidebarMenuButton>
+                        <IconChevronsRight className='ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
+                      </>
+                    }
+                  />
                   <CollapsibleContent>
                     <SidebarMenuSub>
                       {item.items.map((subItem) => (
                         <SidebarMenuSubItem key={subItem.title}>
-                          <SidebarMenuSubButton asChild>
-                            <Link
-                              onClick={() => setOpenMobile(false)}
-                              href={subItem.url}
-                            >
-                              {subItem.title}
-                            </Link>
-                          </SidebarMenuSubButton>
+                          <SidebarMenuSubButton
+                            render={
+                              <Link
+                                onClick={() => setOpenMobile(false)}
+                                href={subItem.url}
+                              >
+                                {subItem.title}
+                              </Link>
+                            }
+                          />
                         </SidebarMenuSubItem>
                       ))}
                     </SidebarMenuSub>

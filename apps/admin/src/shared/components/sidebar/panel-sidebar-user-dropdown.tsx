@@ -14,6 +14,7 @@ import {
 import { useSidebar } from '../ui/sidebar'
 import { Suspense } from 'react'
 import { IconLogout } from '@tabler/icons-react'
+import { authClient } from '@/shared/lib/auth'
 
 interface PanelSidebarUserDropdownProps {
   user: {
@@ -21,14 +22,16 @@ interface PanelSidebarUserDropdownProps {
     email: string
     image?: string | null
   }
-  handleLogout: () => void
 }
 
 export function PanelSidebarUserDropdown({
-  user,
-  handleLogout
+  user
 }: PanelSidebarUserDropdownProps) {
   const { isMobile } = useSidebar()
+
+  const handleLogout = async () => {
+    await authClient.signOut()
+  }
 
   return (
     <DropdownMenuContent

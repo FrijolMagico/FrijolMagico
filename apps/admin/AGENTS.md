@@ -12,20 +12,23 @@ src/
 │   ├── (auth)/                         # Public: login + OAuth API
 │   │   ├── api/auth/[...all]/          # Better Auth catch-all handler
 │   │   └── login/                      # Google OAuth login page
-│   ├── (authenticated)/                # Protected: sidebar layout
-│   │   ├── (dashboard)/dashboard/      # Overview page
-│   │   └── (admin)/                    # Admin features
-│   │       └── (entity)/               # Base route for each entity (artistas, eventos, organizaciones...)
-│   │           ├── _actions/           # Server Actions ('use server', import 'server-only', updateTag)
-│   │           ├── _components/        # Components ('use client' only when needed)
-│   │           ├── _constants/         # Feature-specific constants
-│   │           ├── _hooks/             # Feature-specific hooks
-│   │           ├── _lib/               # DAL: server-side data fetching ('use cache' + cacheTag) and utilities
-│   │           ├── _schemas/           # Database schemas (Zod, shared client/server validation)
-│   │           ├── _store/             # Zustand stores (client state management, import factories) Only when needed
-│   │           ├── _types/             # TypeScript types (shared client/server types)
-│   │           ├── (sub-entity)/       # Optional nested routes (e.g. eventos/edicion, artistas/catalogo)
-│   │           └── page.tsx            # Route page (default export, calls requireAuth())
+│   ├── (core)/                         # Private: Core features
+│   │   ├── dashboard/                  # Overview page
+│   │   ├── entity/                     # Base route for each entity (artistas, eventos, organizaciones...)
+│   │   │   ├── _actions/               # Server Actions ('use server', import 'server-only', updateTag)
+│   │   │   ├── _components/            # Components ('use client' only when needed)
+│   │   │   ├── _constants/             # Feature-specific constants
+│   │   │   ├── _hooks/                 # Feature-specific hooks
+│   │   │   ├── _lib/                   # DAL: server-side data fetching ('use cache' + cacheTag) and utilities
+│   │   │   ├── _schemas/               # Database schemas (Zod, shared client/server validation)
+│   │   │   ├── _store/                 # Zustand stores (client state management, import factories) Only when needed
+│   │   │   ├── _types/                 # TypeScript types (shared client/server types)
+│   │   │   ├── (sub-entity)/           # Optional nested routes (e.g. eventos/edicion, artistas/catalogo)
+│   │   │   └── page.tsx                # Route page (default export, calls requireAuth())
+│   │   ├── (entity)/                   # Case when a entity needs api folder
+│   │   │   ├── api/                    # Define scoped api folder
+│   │   │   └── entity/                 # Base route of the entity
+│   │   │       └──...                  # Same structure for entity scope
 │   ├── globals.css                     # Root: fonts, theme, toaster
 │   ├── layout.tsx                      # Root: fonts, theme, toaster
 │   └── page.tsx                        # Redirects to /dashboard
@@ -63,8 +66,7 @@ turbo dev --filter=@frijolmagico/database --filter=@frijolmagico/admin
 ## Path Aliases
 
 ```
-@/admin/*     → src/app/(authenticated)/(admin)/*
-@/dashboard/* → src/app/(authenticated)/(dashboard)/*
+@/core/*      → src/app/(core)/*
 @/auth/*      → src/app/(auth)/*
 @/tests/*     → tests/*
 @/*           → src/* (fallback)

@@ -14,11 +14,14 @@
   "devDependencies": {
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
-    "turbo": "^2.8.14"
+    "turbo": "^2.8.18"
   },
   "packageManager": "bun@1.2.2",
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "overrides": {
+    "eslint": "9.39.4"
+  }
 }

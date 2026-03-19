@@ -33,7 +33,10 @@ export const event = sqliteTable(
       .notNull()
       .default(sql`CURRENT_TIMESTAMP`)
   },
-  (table) => [uniqueIndex('idx_event_slug').on(table.slug)]
+  (table) => [
+    uniqueIndex('idx_event_slug').on(table.slug),
+    index('idx_evento_organizacion_id').on(table.organizacionId)
+  ]
 )
 
 /**
@@ -63,7 +66,8 @@ export const eventEdition = sqliteTable(
       table.numeroEdicion
     ),
     uniqueIndex('idx_event_edition_slug').on(table.eventoId, table.slug),
-    index('idx_event_edition_evento').on(table.eventoId)
+    index('idx_event_edition_evento').on(table.eventoId),
+    index('idx_evento_edicion_created_at').on(table.createdAt)
   ]
 )
 

@@ -48,11 +48,17 @@ export const ActionMenuButton = ({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button size='icon' variant='ghost' aria-label='Abrir menú de acciones'>
-          <IconDotsVertical />
-        </Button>
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            size='icon'
+            variant='ghost'
+            aria-label='Abrir menú de acciones'
+          >
+            <IconDotsVertical />
+          </Button>
+        }
+      />
       <DropdownMenuContent>
         {actions.map((action) => {
           if (!action) return null

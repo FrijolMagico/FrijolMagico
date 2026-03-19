@@ -22,13 +22,9 @@ export function EmptyState({ title, description, action }: EmptyStateProps) {
       {action && (
         <Button
           onClick={action.onClick}
-          {...(action.href ? { asChild: true } : {})}
+          render={action.href ? <a href={action.href} /> : undefined}
         >
-          {action.href ? (
-            <a href={action.href}>{action.label}</a>
-          ) : (
-            action.label
-          )}
+          {action.label}
         </Button>
       )}
     </div>

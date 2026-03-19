@@ -1,6 +1,6 @@
 'use client'
 
-import { navigation } from '@/lib/navigation'
+import { navigation } from '@/shared/lib/nav/config'
 import { PanelSidebarMenu } from './panel-sidebar-menu'
 
 export function PanelSidebarContent() {

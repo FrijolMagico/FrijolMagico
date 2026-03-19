@@ -23,6 +23,7 @@ export const artistStatus = sqliteTable('artista_estado', {
 
 /**
  * Artist - Artists registered in the system
+ * Includes idx_artista_telefono to codify an existing local DB index and avoid schema drift.
  */
 export const artist = sqliteTable(
   'artista',
@@ -55,7 +56,9 @@ export const artist = sqliteTable(
       .on(table.correo, table.pseudonimo)
       .where(sql`${table.correo} IS NOT NULL`),
     index('idx_artist_estado').on(table.estadoId),
-    index('idx_artist_deleted_at').on(table.deletedAt)
+    index('idx_artist_deleted_at').on(table.deletedAt),
+    index('idx_artista_deleted_created').on(table.deletedAt, table.createdAt),
+    index('idx_artista_telefono').on(table.telefono)
   ]
 )
 
@@ -112,13 +115,16 @@ export const artistHistory = sqliteTable(
   (table) => [
     uniqueIndex('uq_artist_history_orden').on(table.artistaId, table.orden),
     index('idx_artist_history_artista').on(table.artistaId),
-    index('idx_artist_history_pseudonimo').on(table.pseudonimo),
-    index('idx_artist_history_orden').on(table.artistaId, table.orden)
+    index('idx_artist_history_pseudonimo').on(table.pseudonimo)
   ]
 )
 
 /**
  * Catalog Artist - Artists in the public catalog
+ *
+ * NOTE: idx_catalogo_artista_artista_deleted (artista_id, deleted_at) exists in DB
+ * as a manual index useful for anti-join queries. Not added to schema to avoid
+ * duplicate creation if drizzle-kit push is ever run.
  */
 export const catalogArtist = sqliteTable(
   'catalogo_artista',

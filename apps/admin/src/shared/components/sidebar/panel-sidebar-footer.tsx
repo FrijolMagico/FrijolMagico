@@ -8,9 +8,8 @@ import {
   PanelSidebarUserSkeleton
 } from './panel-sidebar-user'
 
-import { getUser } from '@/lib/auth/utils'
+import { getUser } from '@/shared/lib/auth/utils'
 import { redirect } from 'next/navigation'
-import { authClient } from '@/lib/auth'
 import { IconSelector } from '@tabler/icons-react'
 
 export async function PanelSidebarFooter() {
@@ -20,24 +19,21 @@ export async function PanelSidebarFooter() {
     redirect('/login')
   }
 
-  const handleLogout = async () => {
-    'use server'
-    await authClient.signOut()
-  }
-
   return (
     <Suspense fallback={<PanelSidebarUserSkeleton />}>
       <SidebarMenu>
         <SidebarMenuItem>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <SidebarMenuButton size='lg' className='cursor-pointer'>
-                <PanelSidebarUser user={user} />
-                <IconSelector />
-              </SidebarMenuButton>
-            </DropdownMenuTrigger>
+            <DropdownMenuTrigger
+              render={
+                <SidebarMenuButton size='lg' className='cursor-pointer'>
+                  <PanelSidebarUser user={user} />
+                  <IconSelector />
+                </SidebarMenuButton>
+              }
+            />
 
-            <PanelSidebarUserDropdown user={user} handleLogout={handleLogout} />
+            <PanelSidebarUserDropdown user={user} />
           </DropdownMenu>
         </SidebarMenuItem>
       </SidebarMenu>
