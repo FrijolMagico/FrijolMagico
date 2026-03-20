@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { type ReactNode } from 'react'
 import { toast } from 'sonner'
-import { Button } from '@/shared/components/ui/button'
 import { IconCopy, IconCheck } from '@tabler/icons-react'
 import { cn } from '@/shared/lib/utils'
 

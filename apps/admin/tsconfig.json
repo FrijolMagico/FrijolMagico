@@ -9,6 +9,9 @@
       "*": [
         "./*"
       ],
+      "@/shared/": [
+        "./src/shared/*"
+      ],
       "@/core/*": [
         "./src/app/(core)/*"
       ],
