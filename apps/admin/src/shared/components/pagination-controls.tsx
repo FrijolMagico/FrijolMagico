@@ -3,12 +3,12 @@
 import type { ReactElement } from 'react'
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react'
 import { Button } from '@/shared/components/ui/button'
-import { Separator } from '@/shared/components/ui/separator'
+import { PaginatedResponse } from '../types/pagination'
 
-interface PaginationControlsProps {
-  page: number
-  pageSize: number
-  totalItems: number
+interface PaginationControlsProps extends Omit<
+  PaginatedResponse<unknown>,
+  'data'
+> {
   onPageChange: (page: number) => void
   /** Label used in "Mostrando X-Y de Z {itemNoun}" — defaults to 'elementos' */
   itemNoun?: string
@@ -28,7 +28,8 @@ interface PaginationControlsProps {
  * <PaginationControls
  *   page={page}
  *   pageSize={pageSize}
- *   totalItems={totalFilteredItems}
+ *   totalPages={totalPages}
+ *   total={totalFilteredItems}
  *   onPageChange={setPage}
  *   itemNoun='artistas'
  * />
@@ -37,16 +38,15 @@ interface PaginationControlsProps {
 export function PaginationControls({
   page,
   pageSize,
-  totalItems,
+  totalPages,
+  total,
   onPageChange,
   itemNoun = 'elementos'
 }: PaginationControlsProps): ReactElement | null {
-  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
-
   if (totalPages <= 1) return null
 
   const startItem = (page - 1) * pageSize + 1
-  const endItem = Math.min(page * pageSize, totalItems)
+  const endItem = Math.min(page * pageSize, total)
 
   const handlePrev = () => {
     if (page > 1) {
@@ -90,56 +90,53 @@ export function PaginationControls({
   }
 
   return (
-    <>
-      <Separator />
-      <div className='flex flex-col items-center justify-between gap-2 pt-4 md:flex-row'>
-        <p className='text-muted-foreground text-sm'>
-          Mostrando {startItem}-{endItem} de {totalItems} {itemNoun}
-        </p>
+    <div className='flex flex-col items-center justify-between gap-2 md:flex-row'>
+      <p className='text-muted-foreground text-sm'>
+        Mostrando {startItem}-{endItem} de {total} {itemNoun}
+      </p>
 
-        <div className='flex items-center gap-2'>
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={handlePrev}
-            disabled={page === 1}
-          >
-            <IconChevronLeft className='h-4 w-4' />
-          </Button>
+      <div className='flex items-center gap-2'>
+        <Button
+          variant='outline'
+          size='sm'
+          onClick={handlePrev}
+          disabled={page === 1}
+        >
+          <IconChevronLeft />
+        </Button>
 
-          <div className='flex items-center gap-1'>
-            {getPageNumbers().map((pageNum, idx) =>
-              pageNum === '...' ? (
-                <span
-                  key={`ellipsis-${idx}`}
-                  className='text-muted-foreground/70 px-2'
-                >
-                  ...
-                </span>
-              ) : (
-                <Button
-                  key={pageNum}
-                  variant={page === pageNum ? 'default' : 'outline'}
-                  size='sm'
-                  onClick={() => onPageChange(pageNum as number)}
-                  className='min-w-9'
-                >
-                  {pageNum}
-                </Button>
-              )
-            )}
-          </div>
-
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={handleNext}
-            disabled={page === totalPages}
-          >
-            <IconChevronRight className='h-4 w-4' />
-          </Button>
+        <div className='flex items-center gap-1'>
+          {getPageNumbers().map((pageNum, idx) =>
+            pageNum === '...' ? (
+              <span
+                key={`ellipsis-${idx}`}
+                className='text-muted-foreground/70 px-2'
+              >
+                ...
+              </span>
+            ) : (
+              <Button
+                key={pageNum}
+                variant={page === pageNum ? 'default' : 'outline'}
+                size='sm'
+                onClick={() => onPageChange(pageNum as number)}
+                className='min-w-9'
+              >
+                {pageNum}
+              </Button>
+            )
+          )}
         </div>
+
+        <Button
+          variant='outline'
+          size='sm'
+          onClick={handleNext}
+          disabled={page === totalPages}
+        >
+          <IconChevronRight />
+        </Button>
       </div>
-    </>
+    </div>
   )
 }
