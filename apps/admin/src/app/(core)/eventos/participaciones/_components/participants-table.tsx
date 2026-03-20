@@ -20,8 +20,18 @@ import {
 import { Button } from '@/shared/components/ui/button'
 import { PaginationControls } from '@/shared/components/pagination-controls'
 import { useParticipacionesViewStore } from '../_store/participaciones-view-store'
-import type { ParticipantListRow } from '../_types'
+import {
+  isParticipationStatus,
+  type ParticipantListRow,
+  type ParticipationStatus
+} from '../_types'
 import type { PaginatedResponse } from '@/shared/types/pagination'
+
+function toParticipationStatus(
+  value: string | null
+): ParticipationStatus | null {
+  return value && isParticipationStatus(value) ? value : null
+}
 
 function getEstadoVariant(estado: string) {
   switch (estado) {
@@ -47,10 +57,10 @@ export function ParticipantsTable({
   onClearFilters,
   onPageChange
 }: {
-  filters: { search: string; estado: string | null }
+  filters: { search: string; estado: ParticipationStatus | null }
   pagination: PaginatedResponse<ParticipantListRow>
   onSearchChange: (search: string) => void
-  onEstadoChange: (estado: string | null) => void
+  onEstadoChange: (estado: ParticipationStatus | null) => void
   onClearFilters: () => void
   onPageChange: (page: number) => void
 }) {
@@ -83,7 +93,9 @@ export function ParticipantsTable({
             <Select
               value={filters.estado ?? 'all'}
               onValueChange={(value) =>
-                onEstadoChange(value === 'all' ? null : value)
+                onEstadoChange(
+                  value === 'all' ? null : toParticipationStatus(value)
+                )
               }
             >
               <SelectTrigger className='w-44'>
@@ -127,7 +139,9 @@ export function ParticipantsTable({
           <Select
             value={filters.estado ?? 'all'}
             onValueChange={(value) =>
-              onEstadoChange(value === 'all' ? null : value)
+              onEstadoChange(
+                value === 'all' ? null : toParticipationStatus(value)
+              )
             }
           >
             <SelectTrigger className='w-44'>

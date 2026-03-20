@@ -20,34 +20,32 @@ const getAgrupaciones = vi.fn()
 const dbProxy = {
   query: {
     eventEdition: {
-      findMany: (...args: unknown[]) => currentDb.query.eventEdition.findMany(...args)
+      findMany: (
+        ...args: Parameters<typeof currentDb.query.eventEdition.findMany>
+      ) => currentDb.query.eventEdition.findMany(...args)
     }
   },
-  select: (...args: unknown[]) => currentDb.select(...args)
+  select: (...args: Parameters<typeof currentDb.select>) =>
+    currentDb.select(...args)
 }
 
 mock.module('next/cache', () => ({ cacheTag }))
 mock.module('@frijolmagico/database/orm', () => ({ db: dbProxy }))
-mock.module(
-  '@/core/eventos/participaciones/_lib/get-disciplinas',
-  () => ({ getDisciplinas })
-)
-mock.module(
-  '@/core/eventos/participaciones/_lib/get-activity-types',
-  () => ({ getActivityTypes })
-)
-mock.module(
-  '@/core/eventos/participaciones/_lib/get-admission-modes',
-  () => ({ getAdmissionModes })
-)
-mock.module(
-  '@/core/eventos/participaciones/_lib/get-artistas-lookup',
-  () => ({ getArtistasLookup })
-)
-mock.module(
-  '@/core/eventos/participaciones/_lib/get-agrupaciones',
-  () => ({ getAgrupaciones })
-)
+mock.module('@/core/eventos/participaciones/_lib/get-disciplinas', () => ({
+  getDisciplinas
+}))
+mock.module('@/core/eventos/participaciones/_lib/get-activity-types', () => ({
+  getActivityTypes
+}))
+mock.module('@/core/eventos/participaciones/_lib/get-admission-modes', () => ({
+  getAdmissionModes
+}))
+mock.module('@/core/eventos/participaciones/_lib/get-artistas-lookup', () => ({
+  getArtistasLookup
+}))
+mock.module('@/core/eventos/participaciones/_lib/get-agrupaciones', () => ({
+  getAgrupaciones
+}))
 
 function resolved<T>(value: T): QueryPlan<T> {
   return { type: 'resolve', value }
@@ -94,7 +92,9 @@ function createDbMock(plans: {
           const plan = plans.eventEditionFindMany.shift()
 
           if (!plan) {
-            throw new Error('No mocked plan available for db.query.eventEdition.findMany')
+            throw new Error(
+              'No mocked plan available for db.query.eventEdition.findMany'
+            )
           }
 
           return plan.type === 'resolve'
@@ -215,9 +215,8 @@ function primeLookupMocks() {
   getAgrupaciones.mockResolvedValue([{ id: '20', nombre: 'Colectivo Sur' }])
 }
 
-const { getParticipacionesData } = await import(
-  '@/core/eventos/participaciones/_lib/get-participaciones-data'
-)
+const { getParticipacionesData } =
+  await import('@/core/eventos/participaciones/_lib/get-participaciones-data')
 
 describe('getParticipacionesData partial failure behavior', () => {
   beforeEach(() => {
@@ -245,7 +244,14 @@ describe('getParticipacionesData partial failure behavior', () => {
       ]
     })
 
-    const result = await getParticipacionesData(1)
+    const result = await getParticipacionesData(1, {
+      page: 1,
+      limit: 25,
+      search: '',
+      edicion: null,
+      edicionId: null,
+      estado: null
+    })
 
     expect(result.ediciones).toEqual([])
     expect(result.participants.data).toHaveLength(1)
@@ -278,7 +284,14 @@ describe('getParticipacionesData partial failure behavior', () => {
       ]
     })
 
-    const result = await getParticipacionesData(1)
+    const result = await getParticipacionesData(1, {
+      page: 1,
+      limit: 25,
+      search: '',
+      edicion: null,
+      edicionId: null,
+      estado: null
+    })
 
     expect(result.ediciones).toEqual([
       {
@@ -322,7 +335,14 @@ describe('getParticipacionesData partial failure behavior', () => {
       ]
     })
 
-    const result = await getParticipacionesData(1)
+    const result = await getParticipacionesData(1, {
+      page: 1,
+      limit: 25,
+      search: '',
+      edicion: null,
+      edicionId: null,
+      estado: null
+    })
 
     expect(result.ediciones).toHaveLength(1)
     expect(result.participants.data).toHaveLength(1)

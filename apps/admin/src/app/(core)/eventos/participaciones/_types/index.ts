@@ -95,7 +95,7 @@ export interface EdicionOption {
 
 export interface ParticipacionesFilters {
   search: string
-  estado: string | null
+  estado: ParticipationStatus | null
 }
 
 export interface ParticipantListRow {

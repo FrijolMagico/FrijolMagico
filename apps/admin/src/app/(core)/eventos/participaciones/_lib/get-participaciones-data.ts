@@ -2,44 +2,38 @@ import { cacheTag } from 'next/cache'
 
 import { db } from '@frijolmagico/database/orm'
 import {
-  participations,
   artist,
+  core,
   events,
-  core
+  participations
 } from '@frijolmagico/database/schema'
 import { and, asc, count, desc, eq, inArray, sql } from 'drizzle-orm'
 import type { SQL } from 'drizzle-orm'
 
-import { PARTICIPACIONES_CACHE_TAG } from '../_constants'
 import { EVENT_EDITION_CACHE_TAG } from '../../_constants'
-import type { ParticipacionesListQueryFilters } from '@/shared/types/admin-list-filters'
-import {
-  createPaginatedResponse,
-  type ListQueryParams,
-  type PaginatedResponse
-} from '@/shared/types/pagination'
-
+import { participacionesQueryParamsSchema } from '../_schemas/query-params.schema'
+import { PARTICIPACIONES_CACHE_TAG } from '../_constants'
 import type {
-  ExpositorEntry,
-  ActividadEntry,
   ActividadDetallesEntry,
+  ActividadEntry,
   EdicionOption,
+  ExpositorEntry,
   ParticipantListRow,
   ParticipantProjectionRow
 } from '../_types'
-import {
-  buildParticipantRowsFromProjection,
-  getParticipantKey
-} from './participants-view'
-import {
-  DEFAULT_PARTICIPACIONES_LIST_PARAMS,
-  normalizeParticipacionesListQuery
-} from './participaciones-list-query'
 import { getActivityTypes } from './get-activity-types'
 import { getAdmissionModes } from './get-admission-modes'
 import { getAgrupaciones } from './get-agrupaciones'
 import { getArtistasLookup } from './get-artistas-lookup'
 import { getDisciplinas } from './get-disciplinas'
+import {
+  buildParticipantRowsFromProjection,
+  getParticipantKey
+} from './participants-view'
+import {
+  createPaginatedResponse,
+  type PaginatedResponse
+} from '@/shared/types/pagination'
 
 const {
   participationExhibition,
@@ -84,14 +78,14 @@ export async function getEdicionIdFromSlugOrLatest(
 
   if (slug) {
     const found = await db.query.eventEdition.findFirst({
-      where: (t, { eq }) => eq(t.slug, slug),
+      where: (table, { eq }) => eq(table.slug, slug),
       columns: { id: true, slug: true }
     })
     return found ? { id: found.id, slug: found.slug } : null
   }
 
   const latest = await db.query.eventEdition.findFirst({
-    orderBy: (t) => [desc(t.id)],
+    orderBy: (table) => [desc(table.id)],
     columns: { id: true, slug: true }
   })
   return latest ? { id: latest.id, slug: latest.slug } : null
@@ -123,13 +117,13 @@ export interface ParticipacionesData {
 
 export async function getParticipacionesData(
   edicionId: number,
-  params: ListQueryParams<ParticipacionesListQueryFilters> = DEFAULT_PARTICIPACIONES_LIST_PARAMS
+  rawParams: unknown
 ): Promise<ParticipacionesData> {
   'use cache'
   cacheTag(PARTICIPACIONES_CACHE_TAG)
 
-  const query = normalizeParticipacionesListQuery(params)
-  const offset = (query.page - 1) * query.pageSize
+  const query = participacionesQueryParamsSchema.parse(rawParams)
+  const offset = (query.page - 1) * query.limit
   const conditions: SQL[] = [eq(editionParticipation.edicionId, edicionId)]
 
   if (query.estado) {
@@ -218,7 +212,7 @@ export async function getParticipacionesData(
           sql`lower(coalesce(${artistTable.pseudonimo}, ${artistTable.nombre}, ${collective.nombre}, 'participante sin nombre'))`,
           asc(editionParticipation.id)
         )
-        .limit(query.pageSize)
+        .limit(query.limit)
         .offset(offset),
       db
         .select({ total: count(sql`distinct ${editionParticipation.id}`) })
@@ -407,7 +401,7 @@ export async function getParticipacionesData(
     modoIngresoSlug: row.modoIngresoSlug
   }))
 
-  const actividadIds = actividadesRaw.map((r) => r.activ.id)
+  const actividadIds = actividadesRaw.map((row) => row.activ.id)
 
   const [
     detallesResult,
@@ -505,7 +499,7 @@ export async function getParticipacionesData(
     participants: createPaginatedResponse(paginatedParticipants, {
       total: totalResult[0]?.total ?? 0,
       page: query.page,
-      pageSize: query.pageSize
+      pageSize: query.limit
     }),
     expositores,
     actividades,

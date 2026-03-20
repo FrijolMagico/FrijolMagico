@@ -1,38 +1,35 @@
 'use client'
 
 import { useState } from 'react'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useQueryStates } from 'nuqs'
 import { IconPlus, IconChevronDown } from '@tabler/icons-react'
 import { Button } from '@/shared/components/ui/button'
-import { buildAdminListUrl } from '@/shared/lib/admin-list-url'
 import {
   Popover,
   PopoverContent,
   PopoverTrigger
 } from '@/shared/components/ui/popover'
 import type { ParticipacionesData } from '../_lib/get-participaciones-data'
-import type { ParticipacionesListQueryFilters } from '@/shared/types/admin-list-filters'
-import type { ListQueryParams } from '@/shared/types/pagination'
 import { ParticipantsTable } from './participants-table'
 import { ConfigurationSheet } from './configuration-sheet'
 import { AddExpositorDialog } from './add-expositor-dialog'
 import { AddActividadDialog } from './add-actividad-dialog'
 import { useParticipacionesViewStore } from '../_store/participaciones-view-store'
+import { participacionesSearchParams } from '../_lib/search-params'
+import type { ParticipationStatus } from '../_types'
 
 interface ParticipacionesContainerProps {
   data: ParticipacionesData
   edicionId: string
-  query: ListQueryParams<ParticipacionesListQueryFilters>
 }
 
 export function ParticipacionesContainer({
   data,
-  edicionId,
-  query
+  edicionId
 }: ParticipacionesContainerProps) {
-  const pathname = usePathname()
-  const router = useRouter()
-  const searchParams = useSearchParams()
+  const [filters, setFilters] = useQueryStates(participacionesSearchParams, {
+    shallow: false
+  })
   const [popoverOpen, setPopoverOpen] = useState(false)
 
   const { setAddExpositorDialogOpen, setAddActividadDialogOpen } =
@@ -43,45 +40,25 @@ export function ParticipacionesContainer({
     ? `${currentEdicion.eventoNombre} — Ed. ${currentEdicion.nombre ?? currentEdicion.id}`
     : 'Seleccionar edición'
 
-  const filters = {
-    search: query.search,
-    estado: query.filters.estado ?? null
-  }
-
-  const replaceListUrl = (nextUrl: string) => {
-    router.replace(`${pathname}${nextUrl}`, { scroll: false })
-  }
-
   const handleEditionSelect = (slugOrId: string) => {
     setPopoverOpen(false)
-    router.push(`?edicion=${slugOrId}`)
+    void setFilters({ edicion: slugOrId })
   }
 
   const handleSearchChange = (search: string) => {
-    replaceListUrl(buildAdminListUrl(searchParams, { page: 1, search }))
+    void setFilters({ page: 1, search })
   }
 
-  const handleEstadoChange = (estado: string | null) => {
-    replaceListUrl(
-      buildAdminListUrl(searchParams, {
-        page: 1,
-        filters: { estado }
-      })
-    )
+  const handleEstadoChange = (estado: ParticipationStatus | null) => {
+    void setFilters({ page: 1, estado })
   }
 
   const handleClearFilters = () => {
-    replaceListUrl(
-      buildAdminListUrl(searchParams, {
-        page: 1,
-        search: '',
-        filters: { estado: null }
-      })
-    )
+    void setFilters({ page: 1, search: '', estado: null })
   }
 
   const handlePageChange = (page: number) => {
-    replaceListUrl(buildAdminListUrl(searchParams, { page }))
+    void setFilters({ page })
   }
 
   // Group editions by event name

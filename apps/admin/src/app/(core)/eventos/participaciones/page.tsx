@@ -1,43 +1,25 @@
 import { redirect } from 'next/navigation'
-import type { RawAdminListSearchParams } from '@/shared/lib/admin-list-params'
-import { parseAdminListParams } from '@/shared/lib/admin-list-params'
-import {
-  PARTICIPACIONES_LIST_FILTER_KEYS,
-  type ParticipacionesListQueryFilters
-} from '@/shared/types/admin-list-filters'
 
+import { ParticipacionesContainer } from './_components/participaciones-container'
 import {
   getEdicionIdFromSlugOrLatest,
   getParticipacionesData
 } from './_lib/get-participaciones-data'
-import { ParticipacionesContainer } from './_components/participaciones-container'
+import { loadParticipacionesSearchParams } from './_lib/search-params'
+
+interface PageSearchParams {
+  [key: string]: string | string[] | undefined
+}
 
 interface ParticipacionesPageProps {
-  searchParams: Promise<RawAdminListSearchParams>
+  searchParams: Promise<PageSearchParams>
 }
 
 export default async function ParticipacionesPage({
   searchParams
 }: ParticipacionesPageProps) {
-  const rawSearchParams = await searchParams
-  const edicionSlug =
-    typeof rawSearchParams.edicion === 'string'
-      ? rawSearchParams.edicion
-      : Array.isArray(rawSearchParams.edicion)
-        ? rawSearchParams.edicion[0]
-        : undefined
-
-  const query = parseAdminListParams<ParticipacionesListQueryFilters>(
-    rawSearchParams,
-    {
-      defaultPageSize: 25,
-      allowedFilters: [
-        PARTICIPACIONES_LIST_FILTER_KEYS.EDICION_ID,
-        PARTICIPACIONES_LIST_FILTER_KEYS.ESTADO
-      ]
-    }
-  )
-
+  const params = await loadParticipacionesSearchParams(searchParams)
+  const edicionSlug = params.edicion ?? undefined
   const edicion = await getEdicionIdFromSlugOrLatest(edicionSlug)
 
   if (!edicion) {
@@ -60,11 +42,8 @@ export default async function ParticipacionesPage({
   }
 
   const data = await getParticipacionesData(edicion.id, {
-    ...query,
-    filters: {
-      ...query.filters,
-      edicionId: String(edicion.id)
-    }
+    ...params,
+    edicionId: String(edicion.id)
   })
 
   return (
@@ -78,13 +57,6 @@ export default async function ParticipacionesPage({
       <ParticipacionesContainer
         data={data}
         edicionId={String(edicion.id)}
-        query={{
-          ...query,
-          filters: {
-            ...query.filters,
-            edicionId: String(edicion.id)
-          }
-        }}
       />
     </article>
   )
