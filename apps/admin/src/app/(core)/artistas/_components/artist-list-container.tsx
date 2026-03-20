@@ -1,139 +1,86 @@
 'use client'
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import type { ArtistListQueryFilters } from '@/shared/types/admin-list-filters'
-import { buildAdminListUrl } from '@/shared/lib/admin-list-url'
-import type {
-  ListQueryParams,
-  PaginatedResponse
-} from '@/shared/types/pagination'
+import type { PaginatedResponse } from '@/shared/types/pagination'
 import { ArtistListFilters } from './artist-list-filters'
-import { ArtistListPagination } from './artist-list-pagination'
 import { ArtistListTable } from './artist-list-table'
 import { UpdateArtistDialog } from './update-artist-dialog'
 import { CreateArtistDialog } from './create-artist-dialog'
 import { ArtistHistoryDialog } from './artist-history-dialog'
 import type { Artist } from '../_schemas/artista.schema'
 import { ArtistWithHistory } from '../_types/artist'
+import { throttle, useQueryStates } from 'nuqs'
+import { PaginationControls } from 'src/shared/components/pagination-controls'
+import { EmptyState } from 'src/shared/components/empty-state'
+import { artistQueryParams } from '../_lib/search-params'
 
 interface ArtistListContainerProps {
   artists: ArtistWithHistory[]
   countries: string[]
   cities: string[]
-  pagination: PaginatedResponse<Artist>
-  query: ListQueryParams<ArtistListQueryFilters>
+  pagination: Omit<PaginatedResponse<Artist>, 'data'>
 }
 
 export function ArtistListContainer({
   artists,
   countries,
   cities,
-  pagination,
-  query
+  pagination
 }: ArtistListContainerProps) {
-  const pathname = usePathname()
-  const router = useRouter()
-  const searchParams = useSearchParams()
-
-  const filters = {
-    search: query.search,
-    country: query.filters.country ?? null,
-    city: query.filters.city ?? null,
-    statusId: query.filters.statusId ? Number(query.filters.statusId) : null
-  }
-
-  const replaceListUrl = (nextUrl: string) => {
-    router.replace(`${pathname}${nextUrl}`, { scroll: false })
-  }
-
-  const handlePageChange = (newPage: number) => {
-    replaceListUrl(buildAdminListUrl(searchParams, { page: newPage }))
-  }
-
-  const handleSearchChange = (search: string) => {
-    replaceListUrl(
-      buildAdminListUrl(searchParams, {
-        page: 1,
-        search
-      })
-    )
-  }
-
-  const handleCountryChange = (country: string | null) => {
-    replaceListUrl(
-      buildAdminListUrl(searchParams, {
-        page: 1,
-        filters: { country }
-      })
-    )
-  }
-
-  const handleCityChange = (city: string | null) => {
-    replaceListUrl(
-      buildAdminListUrl(searchParams, {
-        page: 1,
-        filters: { city }
-      })
-    )
-  }
-
-  const handleStatusChange = (statusId: number | null) => {
-    replaceListUrl(
-      buildAdminListUrl(searchParams, {
-        page: 1,
-        filters: { statusId }
-      })
-    )
-  }
+  const [filters, setFilters] = useQueryStates(artistQueryParams, {
+    shallow: false,
+    limitUrlUpdates: throttle(500)
+  })
 
   const handleClearFilters = () => {
-    replaceListUrl(
-      buildAdminListUrl(searchParams, {
-        page: 1,
-        search: '',
-        filters: {
-          country: null,
-          city: null,
-          statusId: null
-        }
-      })
-    )
+    setFilters({
+      page: 1,
+      search: '',
+      pais: null,
+      ciudad: null,
+      estado: null
+    })
   }
 
   return (
-    <div className='grid space-y-4'>
+    <article className='grid space-y-4'>
       <div className='flex items-center justify-between gap-4'>
-        <ArtistListFilters
-          countries={countries}
-          cities={cities}
-          filters={filters}
-          onSearchChange={handleSearchChange}
-          onCountryChange={handleCountryChange}
-          onCityChange={handleCityChange}
-          onStatusChange={handleStatusChange}
-          onClearFilters={handleClearFilters}
-        />
         <CreateArtistDialog />
       </div>
 
-      <ArtistListPagination
-        page={pagination.page}
-        pageSize={pagination.pageSize}
-        onPageChange={handlePageChange}
-        totalItems={pagination.total}
+      <ArtistListFilters
+        countries={countries}
+        cities={cities}
+        filters={filters}
+        setFilters={setFilters}
       />
 
-      <ArtistListTable artists={artists} onClearFilters={handleClearFilters} />
+      <PaginationControls
+        {...pagination}
+        onPageChange={(newPage) => setFilters({ page: newPage })}
+        itemNoun='artistas'
+      />
 
-      <ArtistListPagination
-        page={pagination.page}
-        pageSize={pagination.pageSize}
-        onPageChange={handlePageChange}
-        totalItems={pagination.total}
+      {artists.length === 0 ? (
+        <EmptyState
+          title='No se encontraron artistas'
+          description='No hay artistas que coincidan con los filtros seleccionados.'
+          action={{
+            label: 'Limpiar filtros',
+            onClick: handleClearFilters
+          }}
+        />
+      ) : (
+        <ArtistListTable artists={artists} />
+      )}
+
+      <PaginationControls
+        {...pagination}
+        onPageChange={(newPage) => setFilters({ page: newPage })}
+        itemNoun='artistas'
       />
 
       <UpdateArtistDialog />
       <ArtistHistoryDialog />
-    </div>
+    </article>
   )
 }

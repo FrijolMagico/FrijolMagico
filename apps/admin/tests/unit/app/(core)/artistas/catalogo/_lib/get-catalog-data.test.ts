@@ -148,9 +148,10 @@ describe('get-catalog-data DAL', () => {
 
     const result = await getCatalogData({
       page: 1,
-      pageSize: 20,
+      limit: 20,
       search: '',
-      filters: {}
+      activo: null,
+      destacado: null
     })
 
     expect(getCacheTags()).toEqual(['admin:catalog:artists', 'admin:artist'])
@@ -179,9 +180,10 @@ describe('get-catalog-data DAL', () => {
 
     const result = await getCatalogData({
       page: 1,
-      pageSize: 20,
+      limit: 20,
       search: '',
-      filters: {}
+      activo: null,
+      destacado: null
     })
 
     expect(result.data).toEqual([])

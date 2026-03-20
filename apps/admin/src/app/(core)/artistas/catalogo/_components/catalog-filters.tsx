@@ -1,6 +1,5 @@
 'use client'
 
-import { useDebouncedCallback } from 'use-debounce'
 import { IconSearch, IconX } from '@tabler/icons-react'
 import { Input } from '@/shared/components/ui/input'
 import {
@@ -11,56 +10,42 @@ import {
   SelectValue
 } from '@/shared/components/ui/select'
 import { Button } from '@/shared/components/ui/button'
-
-interface CatalogFiltersValue {
-  activo: boolean | null
-  destacado: boolean | null
-  search: string
-}
+import type { CatalogQueryParams } from '../_schemas/query-params.schema'
 
 interface CatalogFiltersProps {
-  filters: CatalogFiltersValue
-  onSearchChange: (search: string) => void
-  onActivoChange: (activo: boolean | null) => void
-  onDestacadoChange: (destacado: boolean | null) => void
-  onClearFilters: () => void
+  filters: CatalogQueryParams
+  setFilters: (filters: Partial<CatalogQueryParams>) => void
 }
 
-export function CatalogFilters({
-  filters,
-  onSearchChange,
-  onActivoChange,
-  onDestacadoChange,
-  onClearFilters
-}: CatalogFiltersProps) {
-  const debouncedSearchUpdate = useDebouncedCallback((value: string) => {
-    onSearchChange(value)
-  }, 300)
-
+export function CatalogFilters({ filters, setFilters }: CatalogFiltersProps) {
   const hasActiveFilters =
     filters.activo !== null ||
     filters.destacado !== null ||
     filters.search !== ''
 
   const handleSearchChange = (value: string) => {
-    debouncedSearchUpdate(value)
+    setFilters({ page: 1, search: value })
   }
 
   const handleActivoChange = (value: string | null) => {
     if (!value) return
     const activo = value === 'all' ? null : value === 'true'
-    onActivoChange(activo)
+    setFilters({ page: 1, activo })
   }
 
   const handleDestacadoChange = (value: string | null) => {
     if (!value) return
     const destacado = value === 'all' ? null : value === 'true'
-    onDestacadoChange(destacado)
+    setFilters({ page: 1, destacado })
   }
 
   const clearFilters = () => {
-    debouncedSearchUpdate.cancel()
-    onClearFilters()
+    setFilters({
+      page: 1,
+      search: '',
+      activo: null,
+      destacado: null
+    })
   }
 
   return (

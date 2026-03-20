@@ -1,12 +1,3 @@
-export type ListFilters = Record<string, string | undefined>
-
-export interface ListQueryParams<TFilters extends ListFilters = ListFilters> {
-  page: number
-  pageSize: number
-  search: string
-  filters: TFilters
-}
-
 export interface PaginatedResponse<T> {
   data: T[]
   total: number
@@ -15,13 +6,13 @@ export interface PaginatedResponse<T> {
   totalPages: number
 }
 
-export type PaginatedResult<T> = PaginatedResponse<T>
-
 interface CreatePaginatedResponseOptions {
   total: number
   page: number
   pageSize: number
 }
+
+export type PaginationParams = Omit<PaginatedResponse<unknown>, 'data'>
 
 export function getTotalPages(total: number, pageSize: number): number {
   if (total <= 0) return 0
@@ -41,5 +32,3 @@ export function createPaginatedResponse<T>(
     totalPages: getTotalPages(options.total, options.pageSize)
   }
 }
-
-export const createPaginatedResult = createPaginatedResponse

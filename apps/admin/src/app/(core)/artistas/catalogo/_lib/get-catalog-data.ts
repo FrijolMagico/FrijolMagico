@@ -1,27 +1,27 @@
 import 'server-only'
+
+import { cacheTag } from 'next/cache'
+
+import { isNotDeleted } from '@frijolmagico/database/filters'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
-import { isNotDeleted } from '@frijolmagico/database/filters'
 import { and, asc, count, eq, inArray, notExists, sql } from 'drizzle-orm'
 import { getAvatarUrl } from '@/shared/lib/cdn'
-import { cacheTag } from 'next/cache'
-import type { CatalogListQueryFilters } from '@/shared/types/admin-list-filters'
 import {
   createPaginatedResponse,
-  type ListQueryParams,
   type PaginatedResponse
 } from '@/shared/types/pagination'
 import { ARTIST_CACHE_TAG, type ARTIST_STATUS } from '../../_constants'
 import type { Artist } from '../../_schemas/artista.schema'
 import { CATALOG_CACHE_TAG } from '../_constants'
+import {
+  catalogQueryParamsSchema,
+  type CatalogQueryParams
+} from '../_schemas/query-params.schema'
 import type {
   CatalogAvailableArtist,
   CatalogListItem
 } from '../_types/catalog-list-item'
-import {
-  DEFAULT_CATALOG_LIST_PARAMS,
-  normalizeCatalogListQuery
-} from './catalog-list-query'
 
 const { catalogArtist, artistImage, artist: artistTable } = artist
 
@@ -58,13 +58,13 @@ function mapCatalogArtist(row: CatalogArtistRow): Artist {
 }
 
 export async function getCatalogData(
-  params: ListQueryParams<CatalogListQueryFilters> = DEFAULT_CATALOG_LIST_PARAMS
+  rawParams: unknown
 ): Promise<PaginatedResponse<CatalogListItem>> {
   'use cache'
   cacheTag(CATALOG_CACHE_TAG)
   cacheTag(ARTIST_CACHE_TAG)
 
-  const query = normalizeCatalogListQuery(params)
+  const query: CatalogQueryParams = catalogQueryParamsSchema.parse(rawParams)
   const conditions = [isNotDeleted(catalogArtist.deletedAt)]
 
   if (query.activo !== null) {
@@ -85,9 +85,8 @@ export async function getCatalogData(
   }
 
   const whereClause = and(...conditions)
-  const offset = (query.page - 1) * query.pageSize
+  const offset = (query.page - 1) * query.limit
 
-  // Query 1: Get catalog artists with basic data
   const catalogResults: CatalogResultRow[] = await db
     .select({
       id: catalogArtist.id,
@@ -114,11 +113,10 @@ export async function getCatalogData(
     .innerJoin(artistTable, eq(artistTable.id, catalogArtist.artistaId))
     .where(whereClause)
     .orderBy(asc(catalogArtist.orden))
-    .limit(query.pageSize)
+    .limit(query.limit)
     .offset(offset)
 
-  // Query 2: Get all avatars for the artists in the result (single query, no N+1)
-  const artistIds = catalogResults.map((r) => r.artistaId)
+  const artistIds = catalogResults.map((result) => result.artistaId)
   const avatars =
     artistIds.length > 0
       ? await db
@@ -138,7 +136,6 @@ export async function getCatalogData(
           .orderBy(asc(artistImage.orden))
       : []
 
-  // Build a map of artistId -> avatarUrl (taking the one with lowest orden)
   const avatarMap = new Map<number, string>()
   for (const avatar of avatars) {
     if (!avatarMap.has(avatar.artistaId)) {
@@ -146,14 +143,12 @@ export async function getCatalogData(
     }
   }
 
-  // Combine results
   const results = catalogResults.map((row) => ({
     ...row,
     artist: mapCatalogArtist(row.artist),
     avatarUrl: avatarMap.get(row.artistaId) ?? null
   }))
 
-  // Query 3: Get total count
   const totalResult = await db
     .select({ total: count() })
     .from(catalogArtist)
@@ -168,7 +163,7 @@ export async function getCatalogData(
     {
       total: totalResult[0]?.total ?? 0,
       page: query.page,
-      pageSize: query.pageSize
+      pageSize: query.limit
     }
   )
 }
@@ -180,9 +175,6 @@ export async function getArtistsNotInCatalog(): Promise<
   cacheTag(CATALOG_CACHE_TAG)
   cacheTag(ARTIST_CACHE_TAG)
 
-  // NOTE: We intentionally exclude only active catalog rows here.
-  // If a soft-deleted row still exists, create-time behavior remains governed by the
-  // current unique `artistaId` constraint until restore semantics are explicitly defined.
   return db
     .select({
       id: artistTable.id,

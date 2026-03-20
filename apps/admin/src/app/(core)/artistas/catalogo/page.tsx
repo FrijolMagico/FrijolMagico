@@ -1,29 +1,15 @@
-import type { RawAdminListSearchParams } from '@/shared/lib/admin-list-params'
-import { parseAdminListParams } from '@/shared/lib/admin-list-params'
-import {
-  CATALOG_LIST_FILTER_KEYS,
-  type CatalogListQueryFilters
-} from '@/shared/types/admin-list-filters'
-import { getCatalogData, getArtistsNotInCatalog } from './_lib/get-catalog-data'
+import { SearchParamsProps } from '@/shared/types/query-params'
 import { CatalogContainer } from './_components/catalog-container'
-
-interface CatalogArtistsPageProps {
-  searchParams: Promise<RawAdminListSearchParams>
-}
+import { getCatalogData, getArtistsNotInCatalog } from './_lib/get-catalog-data'
+import { loadCatalogQueryParams } from './_lib/search-params'
 
 export default async function CatalogArtistsPage({
   searchParams
-}: CatalogArtistsPageProps) {
-  const rawSearchParams = await searchParams
-  const query = parseAdminListParams<CatalogListQueryFilters>(rawSearchParams, {
-    allowedFilters: [
-      CATALOG_LIST_FILTER_KEYS.ACTIVO,
-      CATALOG_LIST_FILTER_KEYS.DESTACADO
-    ]
-  })
+}: SearchParamsProps) {
+  const params = await loadCatalogQueryParams(searchParams)
 
-  const [catalog, availableArtists] = await Promise.all([
-    getCatalogData(query),
+  const [{ data, ...pagination }, availableArtists] = await Promise.all([
+    getCatalogData(params),
     getArtistsNotInCatalog()
   ])
 
@@ -39,10 +25,9 @@ export default async function CatalogArtistsPage({
       </header>
 
       <CatalogContainer
-        catalog={catalog.data}
+        catalog={data}
         availableArtists={availableArtists}
-        pagination={catalog}
-        query={query}
+        pagination={pagination}
       />
     </article>
   )

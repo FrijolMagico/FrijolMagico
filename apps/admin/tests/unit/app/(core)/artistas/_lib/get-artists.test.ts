@@ -1,23 +1,22 @@
 import { describe, expect, test } from 'bun:test'
-import { createPaginatedResponse } from '@/shared/types/pagination'
-import { normalizeArtistListQuery } from '@/core/artistas/_lib/artist-list-query'
 
-describe('normalizeArtistListQuery', () => {
-  test('normalizes search and status filters for server queries', () => {
-    const result = normalizeArtistListQuery({
+import { artistQueryParamsSchema } from '@/core/artistas/_schemas/query-params.schema'
+import { createPaginatedResponse } from '@/shared/types/pagination'
+
+describe('artistQueryParamsSchema', () => {
+  test('accepts flat nuqs params for server queries', () => {
+    const result = artistQueryParamsSchema.parse({
       page: 2,
-      pageSize: 20,
-      search: '  Ana  ',
-      filters: {
-        statusId: '3',
-        country: 'Chile',
-        city: 'Santiago'
-      }
+      limit: 20,
+      search: 'Ana',
+      statusId: 3,
+      country: 'Chile',
+      city: 'Santiago'
     })
 
     expect(result).toEqual({
       page: 2,
-      pageSize: 20,
+      limit: 20,
       search: 'Ana',
       statusId: 3,
       country: 'Chile',
@@ -25,17 +24,17 @@ describe('normalizeArtistListQuery', () => {
     })
   })
 
-  test('drops invalid status filters before querying', () => {
-    const result = normalizeArtistListQuery({
-      page: 1,
-      pageSize: 20,
-      search: '',
-      filters: {
-        statusId: 'foo'
-      }
-    })
-
-    expect(result.statusId).toBeNull()
+  test('requires typed values after nuqs deserialization', () => {
+    expect(() =>
+      artistQueryParamsSchema.parse({
+        page: 1,
+        limit: 20,
+        search: '',
+        statusId: 'foo',
+        country: null,
+        city: null
+      })
+    ).toThrow()
   })
 })
 

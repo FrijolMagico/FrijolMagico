@@ -1,6 +1,5 @@
 'use client'
 
-import { useDebouncedCallback } from 'use-debounce'
 import { IconSearch, IconX } from '@tabler/icons-react'
 import { Input } from '@/shared/components/ui/input'
 import {
@@ -12,71 +11,60 @@ import {
 } from '@/shared/components/ui/select'
 import { Button } from '@/shared/components/ui/button'
 import { ARTIST_STATUS, STATUS_LABEL_MAP } from '../_constants'
-
-interface ArtistListFiltersValue {
-  search: string
-  country: string | null
-  city: string | null
-  statusId: number | null
-}
+import { ArtistQueryParams } from '../_schemas/query-params.schema'
 
 interface ArtistListFiltersProps {
   countries: string[]
   cities: string[]
-  filters: ArtistListFiltersValue
-  onSearchChange: (search: string) => void
-  onCountryChange: (country: string | null) => void
-  onCityChange: (city: string | null) => void
-  onStatusChange: (statusId: number | null) => void
-  onClearFilters: () => void
+  setFilters: (filters: Partial<ArtistQueryParams>) => void
+  filters: ArtistQueryParams
 }
 
 export function ArtistListFilters({
   countries,
   cities,
   filters,
-  onSearchChange,
-  onCountryChange,
-  onCityChange,
-  onStatusChange,
-  onClearFilters
+  setFilters
 }: ArtistListFiltersProps) {
-  const debouncedSearchUpdate = useDebouncedCallback((value: string) => {
-    onSearchChange(value)
-  }, 300)
-
   const hasActiveFilters =
     filters.search !== '' ||
-    filters.country !== null ||
-    filters.city !== null ||
-    filters.statusId !== null
+    filters.pais !== null ||
+    filters.ciudad !== null ||
+    filters.estado !== null
 
   const handleSearchChange = (value: string) => {
-    debouncedSearchUpdate(value)
+    setFilters({ page: 1, search: value })
   }
 
   const handleCountryChange = (value: string | null) => {
     if (!value) return
     const country = value === 'all' ? null : value
-    onCountryChange(country)
+    setFilters({ page: 1, pais: country })
   }
 
   const handleCityChange = (value: string | null) => {
     if (!value) return
-    const city = value === 'all' ? null : value
-    onCityChange(city)
+    const ciudad = value === 'all' ? null : value
+    setFilters({ page: 1, ciudad: ciudad })
   }
 
   const handleStatusChange = (value: string | null) => {
     if (!value) return
-    const statusId = value === 'all' ? null : Number(value)
-    onStatusChange(statusId)
+    const estado = value === '0' ? null : Number(value)
+    setFilters({ page: 1, estado })
   }
 
   const clearFilters = () => {
-    debouncedSearchUpdate.cancel()
-    onClearFilters()
+    setFilters({
+      page: 1,
+      search: '',
+      pais: null,
+      ciudad: null,
+      estado: null
+    })
   }
+
+  console.log('Current filters:', filters.estado)
 
   return (
     <div className='flex flex-col flex-wrap gap-4 sm:flex-row sm:items-center sm:justify-between'>
@@ -84,9 +72,8 @@ export function ArtistListFilters({
         <div className='relative max-w-sm flex-1'>
           <IconSearch className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
           <Input
-            key={filters.search}
             placeholder='Buscar por nombre o pseudónimo...'
-            defaultValue={filters.search}
+            value={filters.search}
             onChange={(e) => handleSearchChange(e.target.value)}
             className='pl-9'
           />
@@ -95,16 +82,16 @@ export function ArtistListFilters({
 
       <div className='flex flex-wrap items-center gap-2'>
         <Select
-          value={filters.statusId ? String(filters.statusId) : 'all'}
+          value={filters.estado ? String(filters.estado) : '0'}
           onValueChange={handleStatusChange}
         >
           <SelectTrigger>
             <SelectValue placeholder='Estado'>
-              {STATUS_LABEL_MAP[filters.statusId as ARTIST_STATUS]}{' '}
+              {STATUS_LABEL_MAP[filters.estado as ARTIST_STATUS] ?? 'Todos'}
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value='all'>Todos los estados</SelectItem>
+            <SelectItem value='0'>Todos los estados</SelectItem>
             <SelectItem value='2'>Activo</SelectItem>
             <SelectItem value='3'>Inactivo</SelectItem>
             <SelectItem value='4'>Vetado</SelectItem>
@@ -115,12 +102,12 @@ export function ArtistListFilters({
 
         {countries.length > 0 && (
           <Select
-            value={filters.country ?? 'all'}
+            value={filters.pais ?? 'all'}
             onValueChange={handleCountryChange}
           >
             <SelectTrigger>
               <SelectValue placeholder='País'>
-                {filters.country ?? 'Todos los países'}
+                {filters.pais ?? 'Todos los países'}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -136,12 +123,12 @@ export function ArtistListFilters({
 
         {cities.length > 0 && (
           <Select
-            value={filters.city ?? 'all'}
+            value={filters.ciudad ?? 'all'}
             onValueChange={handleCityChange}
           >
             <SelectTrigger>
               <SelectValue placeholder='Ciudad'>
-                {filters.city ?? 'Todas las ciudades'}
+                {filters.ciudad ?? 'Todas las ciudades'}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>

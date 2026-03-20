@@ -6,18 +6,15 @@ import { artist } from '@frijolmagico/database/schema'
 import { and, asc, count, eq, isNull, sql } from 'drizzle-orm'
 import {
   createPaginatedResponse,
-  type ListQueryParams,
   type PaginatedResponse
 } from '@/shared/types/pagination'
 import { ARTIST_CACHE_TAG } from '../_constants'
 import type { ARTIST_STATUS } from '../_constants'
-import type { Artist } from '../_schemas/artista.schema'
 import {
-  DEFAULT_ARTIST_LIST_PARAMS,
-  normalizeArtistListQuery,
-  type ArtistListQuery
-} from './artist-list-query'
-import type { ArtistListQueryFilters } from '@/shared/types/admin-list-filters'
+  artistQueryParamsSchema,
+  type ArtistQueryParams
+} from '../_schemas/query-params.schema'
+import type { Artist } from '../_schemas/artista.schema'
 
 const { artist: artistTable } = artist
 
@@ -47,19 +44,19 @@ function mapArtistRow(row: ArtistRow): Artist {
   }
 }
 
-function buildArtistWhereClause(query: ArtistListQuery) {
+function buildArtistWhereClause(query: ArtistQueryParams) {
   const conditions = [isNull(artistTable.deletedAt)]
 
-  if (query.country) {
-    conditions.push(eq(artistTable.pais, query.country))
+  if (query.pais) {
+    conditions.push(eq(artistTable.pais, query.pais))
   }
 
-  if (query.city) {
-    conditions.push(eq(artistTable.ciudad, query.city))
+  if (query.ciudad) {
+    conditions.push(eq(artistTable.ciudad, query.ciudad))
   }
 
-  if (query.statusId !== null) {
-    conditions.push(eq(artistTable.estadoId, query.statusId))
+  if (query.estado !== null) {
+    conditions.push(eq(artistTable.estadoId, query.estado))
   }
 
   if (query.search) {
@@ -110,6 +107,8 @@ export async function getAllArtists(): Promise<Artist[]> {
   return results.map(mapArtistRow)
 }
 
+// NOTE: This function is used to populate the filter options in the UI, so we need to fetch all distinct countries and cities from the artists table. We can optimize this by fetching only the distinct values directly from the database, but for simplicity, we'll fetch all and then extract unique values in memory.
+// Keep track of the detabase reads to ensure we don't exceed limits, especially if the artists table grows significantly. If performance becomes an issue, consider implementing a caching strategy for the filter options or fetching distinct values directly from the database using SQL's DISTINCT keyword.
 export async function getArtistFilterOptions(): Promise<ArtistListFilterOptions> {
   'use cache'
   cacheTag(ARTIST_CACHE_TAG)
@@ -132,14 +131,14 @@ export async function getArtistFilterOptions(): Promise<ArtistListFilterOptions>
 }
 
 export async function getArtists(
-  params: ListQueryParams<ArtistListQueryFilters> = DEFAULT_ARTIST_LIST_PARAMS
+  queryParams: unknown
 ): Promise<PaginatedResponse<Artist>> {
   'use cache'
   cacheTag(ARTIST_CACHE_TAG)
 
-  const query = normalizeArtistListQuery(params)
+  const query = artistQueryParamsSchema.parse(queryParams)
   const whereClause = buildArtistWhereClause(query)
-  const offset = (query.page - 1) * query.pageSize
+  const offset = (query.page - 1) * query.limit
 
   const [results, totalResult] = await Promise.all([
     db
@@ -158,7 +157,7 @@ export async function getArtists(
       .from(artistTable)
       .where(whereClause)
       .orderBy(asc(artistTable.createdAt))
-      .limit(query.pageSize)
+      .limit(query.limit)
       .offset(offset),
     db.select({ total: count() }).from(artistTable).where(whereClause)
   ])
@@ -166,6 +165,6 @@ export async function getArtists(
   return createPaginatedResponse(results.map(mapArtistRow), {
     total: totalResult[0]?.total ?? 0,
     page: query.page,
-    pageSize: query.pageSize
+    pageSize: query.limit
   })
 }

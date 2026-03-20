@@ -5,7 +5,6 @@ export const CREATE_ARTIST_FORM_ID = 'create-artist-form'
 export const UPDATE_ARTIST_FORM_ID = 'update-artist-form'
 
 export enum ARTIST_STATUS {
-  ALL,
   UNKNOWN,
   ACTIVE,
   INACTIVE,
@@ -14,7 +13,6 @@ export enum ARTIST_STATUS {
 }
 
 export const STATUS_LABEL_MAP: Record<ARTIST_STATUS, string> = {
-  [ARTIST_STATUS.ALL]: 'Todos',
   [ARTIST_STATUS.UNKNOWN]: 'Desconocido',
   [ARTIST_STATUS.ACTIVE]: 'Activo',
   [ARTIST_STATUS.INACTIVE]: 'Inactivo',
