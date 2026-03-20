@@ -2,30 +2,29 @@
 
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
-import { TableCell, TableRow } from '@/shared/components/ui/table'
-import { Badge } from '@/shared/components/ui/badge'
-import { cn } from '@/shared/lib/utils'
-import { useEdicionDialog } from '../_store/edicion-dialog-store'
 import { ActionMenuButton } from '@/shared/components/action-menu-button'
-import { formatEdicionFechas } from '../_lib/format-edicion-fechas'
+import { Badge } from '@/shared/components/ui/badge'
+import { TableCell, TableRow } from '@/shared/components/ui/table'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger
 } from '@/shared/components/ui/tooltip'
-import { PosterThumbnail } from './poster-thumbnail'
-import { PosterPreview } from './poster-preview'
+import { cn } from '@/shared/lib/utils'
 import { deleteEdicionAction } from '../_actions/delete-edicion.action'
-import type { EdicionDiaEntry, LugarEntry } from '../_types'
-import type { EventoEntry } from '../../_types'
-import type { PaginatedEdicion } from '../_types/paginated-edicion'
-import { type Modality, isModality } from '../_types/edition'
+import type { EditionDay, Place } from '../_schemas/edicion.schema'
+import { useEdicionDialog } from '../_store/edicion-dialog-store'
+import type { Modality } from '../_types/edition'
+import type { PaginatedEdition } from '../_types/paginated-edition'
+import type { EventoLookup } from '../_types'
+import { PosterPreview } from './poster-preview'
+import { PosterThumbnail } from './poster-thumbnail'
 
 export interface EdicionRowProps {
-  edicion: PaginatedEdicion
-  dias: EdicionDiaEntry[]
-  lugares: LugarEntry[]
-  eventos: EventoEntry[]
+  edicion: PaginatedEdition
+  dias: EditionDay[]
+  lugares: Place[]
+  eventos: EventoLookup[]
 }
 
 const MODALIDAD_LABELS: Record<Modality | 'mixto', string> = {
@@ -53,7 +52,7 @@ export function EdicionRow({
 }: EdicionRowProps) {
   const [isPosterPreviewOpen, setIsPosterPreviewOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
-  const openDialog = useEdicionDialog((s) => s.openDialog)
+  const openDialog = useEdicionDialog((state) => state.openDialog)
 
   const handlePosterUpload = () => {
     console.warn('[EdicionRow] TODO: CDN poster upload not implemented', {
@@ -69,10 +68,13 @@ export function EdicionRow({
 
   const handleDelete = () => {
     if (!confirm('¿Estás seguro de que quieres eliminar esta edición?')) return
+
     startTransition(async () => {
-      const formData = new FormData()
-      formData.append('id', edicion.id)
-      const result = await deleteEdicionAction({ success: false }, formData)
+      const result = await deleteEdicionAction(
+        { success: false },
+        { id: edicion.id }
+      )
+
       if (!result.success && result.errors) {
         toast.error(result.errors[0]?.message ?? 'Error al eliminar')
       } else {
@@ -82,30 +84,18 @@ export function EdicionRow({
   }
 
   const sortedDias = [...dias].sort(
-    (a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime()
+    (left, right) =>
+      new Date(left.fecha).getTime() - new Date(right.fecha).getTime()
   )
-
-  const fechasDisplay = formatEdicionFechas(sortedDias)
 
   const firstDia = sortedDias[0]
   const lugar = firstDia?.lugarId
-    ? lugares.find((l) => l.id === firstDia.lugarId)
+    ? lugares.find((entry) => entry.id === firstDia.lugarId)
     : undefined
-
-  const modalidades = Array.from(
-    new Set(sortedDias.map((d) => d.modalidad).filter(isModality))
-  )
-
-  const modalidadDisplay: Modality | 'mixto' | null =
-    modalidades.length === 1
-      ? modalidades[0]
-      : modalidades.length > 1
-        ? 'mixto'
-        : null
 
   const eventoNombre =
     edicion.eventoNombre ||
-    eventos.find((e) => e.id === edicion.eventoId)?.nombre ||
+    eventos.find((evento) => evento.id === edicion.eventoId)?.nombre ||
     '—'
 
   return (
@@ -148,15 +138,22 @@ export function EdicionRow({
       </TableCell>
 
       <TableCell className='text-muted-foreground text-sm'>
-        {fechasDisplay}
+        {edicion.dateRange}
       </TableCell>
 
       <TableCell className='text-sm'>{lugar?.nombre ?? '—'}</TableCell>
 
       <TableCell className='w-32'>
-        {modalidadDisplay ? (
-          <Badge variant={MODALIDAD_VARIANTS[modalidadDisplay] ?? 'outline'}>
-            {MODALIDAD_LABELS[modalidadDisplay] ?? modalidadDisplay}
+        {edicion.modalidadLabel ? (
+          <Badge
+            variant={
+              MODALIDAD_VARIANTS[
+                edicion.modalidadLabel as Modality | 'mixto'
+              ] ?? 'outline'
+            }
+          >
+            {MODALIDAD_LABELS[edicion.modalidadLabel as Modality | 'mixto'] ??
+              edicion.modalidadLabel}
           </Badge>
         ) : (
           <span className='text-muted-foreground'>—</span>

@@ -1,28 +1,26 @@
-import type { RawAdminListSearchParams } from '@/shared/lib/admin-list-params'
-import { parseAdminListParams } from '@/shared/lib/admin-list-params'
-import {
-  EDICION_LIST_FILTER_KEYS,
-  type EdicionListQueryFilters
-} from '@/shared/types/admin-list-filters'
+import type { SearchParamsProps } from '@/shared/types/query-params'
 import { EdicionContainer } from './_components/edicion-container'
-import { getEdicionesData, getLugares } from './_lib/get-ediciones-data'
-
-interface EdicionesPageProps {
-  searchParams: Promise<RawAdminListSearchParams>
-}
+import { composeEditions } from './_lib/compose-editions'
+import { getEditionDays } from './_lib/get-edition-days'
+import { getEditions } from './_lib/get-editions'
+import { getEventosLookup } from './_lib/get-eventos-lookup'
+import { getPlaces } from './_lib/get-places'
+import { loadEdicionSearchParams } from './_lib/search-params'
 
 export default async function EdicionesPage({
   searchParams
-}: EdicionesPageProps) {
-  const rawSearchParams = await searchParams
-  const query = parseAdminListParams<EdicionListQueryFilters>(rawSearchParams, {
-    allowedFilters: [EDICION_LIST_FILTER_KEYS.EVENTO_ID]
-  })
+}: SearchParamsProps) {
+  const params = await loadEdicionSearchParams(searchParams)
+  const editionsResult = await getEditions(params)
+  const editionIds = editionsResult.data.map((edition) => edition.id)
 
-  const [result, lugares] = await Promise.all([
-    getEdicionesData(query),
-    getLugares()
+  const [days, places, eventos] = await Promise.all([
+    getEditionDays(editionIds),
+    getPlaces(),
+    getEventosLookup()
   ])
+
+  const ediciones = composeEditions(editionsResult.data, days, places, eventos)
 
   return (
     <div className='space-y-6'>
@@ -33,12 +31,11 @@ export default async function EdicionesPage({
         </p>
       </div>
       <EdicionContainer
-        ediciones={result.ediciones.data}
-        dias={result.dias}
-        lugares={lugares ?? []}
-        eventos={result.eventos}
-        pagination={result.ediciones}
-        query={query}
+        ediciones={ediciones}
+        dias={days}
+        lugares={places}
+        eventos={eventos}
+        pagination={{ ...editionsResult, data: ediciones }}
       />
     </div>
   )

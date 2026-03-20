@@ -8,7 +8,7 @@ import { events } from '@frijolmagico/database/schema'
 import { toSlug } from '@/shared/lib/utils'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import type { ActionState } from '@/shared/types/actions'
-import { EVENT_EDITION_CACHE_TAG } from '../../_constants'
+import { EDITION_CACHE_TAG, EDITION_DAY_CACHE_TAG } from '../_constants'
 import {
   edicionWithDaysSchema,
   type EdicionWithDaysInput
@@ -40,14 +40,14 @@ export async function saveEdicionWithDaysAction(
     const slug = toSlug(`edicion-${numeroEdicion}-${eventoId}`)
 
     await db.transaction(async (tx) => {
-      let edicionId = id ? Number(id) : null
+      let edicionId = id
 
-      if (edicionId) {
+      if (edicionId !== null) {
         await tx
           .update(eventEdition)
           .set({
-            eventoId: Number(eventoId),
-            numeroEdicion: String(numeroEdicion),
+            eventoId,
+            numeroEdicion,
             nombre: nombre ?? null,
             posterUrl: posterUrl ?? null,
             slug
@@ -57,8 +57,8 @@ export async function saveEdicionWithDaysAction(
         const [inserted] = await tx
           .insert(eventEdition)
           .values({
-            eventoId: Number(eventoId),
-            numeroEdicion: String(numeroEdicion),
+            eventoId,
+            numeroEdicion,
             nombre: nombre ?? null,
             posterUrl: posterUrl ?? null,
             slug
@@ -69,7 +69,7 @@ export async function saveEdicionWithDaysAction(
 
       const existingDayIds = days
         .filter((d) => d.existingId)
-        .map((d) => Number(d.existingId))
+        .map((d) => d.existingId as number)
 
       if (existingDayIds.length > 0) {
         await tx
@@ -93,21 +93,22 @@ export async function saveEdicionWithDaysAction(
           horaInicio: day.horaInicio,
           horaFin: day.horaFin,
           modalidad: day.modalidad ?? undefined,
-          lugarId: day.lugarId ? Number(day.lugarId) : undefined
+          lugarId: day.lugarId ?? undefined
         }
 
         if (day.existingId) {
           await tx
             .update(eventEditionDay)
             .set(dayData)
-            .where(eq(eventEditionDay.id, Number(day.existingId)))
+            .where(eq(eventEditionDay.id, day.existingId))
         } else {
           await tx.insert(eventEditionDay).values(dayData)
         }
       }
     })
 
-    updateTag(EVENT_EDITION_CACHE_TAG)
+    updateTag(EDITION_CACHE_TAG)
+    updateTag(EDITION_DAY_CACHE_TAG)
 
     return { success: true }
   } catch (error) {

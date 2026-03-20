@@ -1,6 +1,6 @@
-import type { EdicionEntry } from './index'
+import type { Edition } from '../_schemas/edicion.schema'
 
-export interface PaginatedEdicion extends EdicionEntry {
+export interface PaginatedEdition extends Edition {
   eventoNombre: string
   dateRange: string
   firstDate: string

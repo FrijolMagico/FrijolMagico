@@ -2,6 +2,7 @@
 
 import { IconSearch, IconX } from '@tabler/icons-react'
 import { useDebouncedCallback } from 'use-debounce'
+import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import {
   Select,
@@ -10,19 +11,18 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/shared/components/ui/select'
-import { Button } from '@/shared/components/ui/button'
-import type { EventoEntry } from '../../_types'
+import type { EventoLookup } from '../_types'
 
 interface EdicionFiltersValue {
-  eventoId: string | null
+  evento: number | null
   search: string
 }
 
 interface EdicionFiltersProps {
-  eventos: EventoEntry[]
+  eventos: EventoLookup[]
   filters: EdicionFiltersValue
   onSearchChange: (search: string) => void
-  onEventoChange: (eventoId: string | null) => void
+  onEventoChange: (evento: number | null) => void
   onClearFilters: () => void
 }
 
@@ -33,15 +33,12 @@ export function EdicionFilters({
   onEventoChange,
   onClearFilters
 }: EdicionFiltersProps) {
-  const EDITION_FILTERS_OPTIONS: Record<string, string> = {
+  const editionFilterOptions: Record<string, string> = {
     all: 'Todos los eventos',
-    ...eventos.reduce(
-      (acc, evento) => {
-        acc[evento.id] = evento.nombre
-        return acc
-      },
-      {} as Record<string, string>
-    )
+    ...eventos.reduce<Record<string, string>>((accumulator, evento) => {
+      accumulator[String(evento.id)] = evento.nombre
+      return accumulator
+    }, {})
   }
 
   const debouncedSearch = useDebouncedCallback((value: string) => {
@@ -54,10 +51,10 @@ export function EdicionFilters({
 
   const handleEventoChange = (value: string | null) => {
     if (!value) return
-    onEventoChange(value === 'all' ? null : value)
+    onEventoChange(value === 'all' ? null : Number(value))
   }
 
-  const hasActiveFilters = filters.eventoId !== null || filters.search !== ''
+  const hasActiveFilters = filters.evento !== null || filters.search !== ''
 
   const clearFilters = () => {
     debouncedSearch.cancel()
@@ -72,25 +69,27 @@ export function EdicionFilters({
           key={filters.search}
           placeholder='Buscar edición...'
           defaultValue={filters.search}
-          onChange={(e) => handleSearchChange(e.target.value)}
+          onChange={(event) => handleSearchChange(event.target.value)}
           className='pl-9'
         />
       </div>
 
       <div className='flex items-center gap-2'>
         <Select
-          value={filters.eventoId ?? 'all'}
+          value={filters.evento === null ? 'all' : String(filters.evento)}
           onValueChange={handleEventoChange}
         >
           <SelectTrigger className='w-48'>
             <SelectValue placeholder='Todos los eventos'>
-              {EDITION_FILTERS_OPTIONS[filters.eventoId ?? 'all']}
+              {editionFilterOptions[
+                filters.evento === null ? 'all' : String(filters.evento)
+              ]}
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value='all'>Todos los eventos</SelectItem>
             {eventos.map((evento) => (
-              <SelectItem key={evento.id} value={evento.id}>
+              <SelectItem key={evento.id} value={String(evento.id)}>
                 {evento.nombre}
               </SelectItem>
             ))}

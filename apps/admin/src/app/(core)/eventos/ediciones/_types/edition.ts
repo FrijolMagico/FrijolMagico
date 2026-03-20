@@ -10,12 +10,12 @@ export interface DayFormState {
   horaInicio: string
   horaFin: string
   modalidad: Modality | null
-  lugarId: string | null
-  existingId?: string
+  lugarId: number | null
+  existingId?: number
 }
 
 export interface EdicionFormState {
-  eventoId: string
+  eventoId: number | null
   numeroEdicion: string
   nombre: string
   days: DayFormState[]

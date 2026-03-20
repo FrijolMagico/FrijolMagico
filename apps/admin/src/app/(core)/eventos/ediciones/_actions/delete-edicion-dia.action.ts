@@ -7,7 +7,7 @@ import { db } from '@frijolmagico/database/orm'
 import { events } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import type { ActionState } from '@/shared/types/actions'
-import { EVENT_EDITION_CACHE_TAG } from '../../_constants'
+import { EDITION_DAY_CACHE_TAG } from '../_constants'
 
 const { eventEditionDay } = events
 
@@ -27,7 +27,7 @@ export async function deleteEdicionDiaAction(
 
   await db.delete(eventEditionDay).where(eq(eventEditionDay.id, id))
 
-  updateTag(EVENT_EDITION_CACHE_TAG)
+  updateTag(EDITION_DAY_CACHE_TAG)
 
   return { success: true }
 }

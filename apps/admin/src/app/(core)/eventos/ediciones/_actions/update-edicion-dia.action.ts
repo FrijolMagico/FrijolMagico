@@ -8,7 +8,7 @@ import { events } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import { edicionDiaUpdateSchema } from '../_schemas/edicion.schema'
 import type { ActionState } from '@/shared/types/actions'
-import { EVENT_EDITION_CACHE_TAG } from '../../_constants'
+import { EDITION_DAY_CACHE_TAG } from '../_constants'
 
 const { eventEditionDay } = events
 
@@ -27,18 +27,22 @@ export async function updateEdicionDiaAction(
   }
 
   const rawData: {
+    id: number
     fecha?: string
     horaInicio?: string
     horaFin?: string
-    lugarId?: number
+    lugarId?: number | null
   } = {
+    id,
     fecha: formData.get('fecha') as string | undefined,
     horaInicio: formData.get('horaInicio') as string | undefined,
     horaFin: formData.get('horaFin') as string | undefined
   }
 
   const lugarId = formData.get('lugarId')
-  if (lugarId) {
+  if (lugarId === '') {
+    rawData.lugarId = null
+  } else if (lugarId) {
     rawData.lugarId = Number(lugarId)
   }
 
@@ -54,12 +58,14 @@ export async function updateEdicionDiaAction(
     }
   }
 
+  const { id: _id, ...editionDayData } = parsed.data
+
   await db
     .update(eventEditionDay)
-    .set(parsed.data)
+    .set(editionDayData)
     .where(eq(eventEditionDay.id, id))
 
-  updateTag(EVENT_EDITION_CACHE_TAG)
+  updateTag(EDITION_DAY_CACHE_TAG)
 
   return { success: true }
 }

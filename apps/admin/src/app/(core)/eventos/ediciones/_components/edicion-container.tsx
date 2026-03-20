@@ -1,30 +1,25 @@
 'use client'
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { IconPlus } from '@tabler/icons-react'
+import { useQueryStates } from 'nuqs'
 import { Button } from '@/shared/components/ui/button'
-import { buildAdminListUrl } from '@/shared/lib/admin-list-url'
+import { PaginationControls } from '@/shared/components/pagination-controls'
+import type { PaginatedResponse } from '@/shared/types/pagination'
+import type { EditionDay, Place } from '../_schemas/edicion.schema'
+import { edicionSearchParams } from '../_lib/search-params'
+import type { PaginatedEdition } from '../_types/paginated-edition'
+import type { EventoLookup } from '../_types'
+import { EdicionDialog } from './edicion-dialog'
 import { EdicionFilters } from './edicion-filters'
 import { EdicionTable } from './edicion-table'
-import { EdicionPagination } from './edicion-pagination'
-import { EdicionDialog } from './edicion-dialog'
 import { useEdicionDialog } from '../_store/edicion-dialog-store'
-import { IconPlus } from '@tabler/icons-react'
-import type { EdicionEntry, EdicionDiaEntry, LugarEntry } from '../_types'
-import type { PaginatedEdicion } from '../_types/paginated-edicion'
-import type { EventoEntry } from '../../_types'
-import type { EdicionListQueryFilters } from '@/shared/types/admin-list-filters'
-import type {
-  ListQueryParams,
-  PaginatedResponse
-} from '@/shared/types/pagination'
 
 interface EdicionContainerProps {
-  ediciones: PaginatedEdicion[]
-  dias: EdicionDiaEntry[]
-  lugares: LugarEntry[]
-  eventos: EventoEntry[]
-  pagination: PaginatedResponse<PaginatedEdicion>
-  query: ListQueryParams<EdicionListQueryFilters>
+  ediciones: PaginatedEdition[]
+  dias: EditionDay[]
+  lugares: Place[]
+  eventos: EventoLookup[]
+  pagination: PaginatedResponse<PaginatedEdition>
 }
 
 export function EdicionContainer({
@@ -32,64 +27,49 @@ export function EdicionContainer({
   dias,
   lugares,
   eventos,
-  pagination,
-  query
+  pagination
 }: EdicionContainerProps) {
-  const pathname = usePathname()
-  const router = useRouter()
-  const searchParams = useSearchParams()
+  const [filters, setFilters] = useQueryStates(edicionSearchParams, {
+    shallow: false
+  })
   const openDialog = useEdicionDialog((state) => state.openDialog)
 
-  const filters = {
-    search: query.search,
-    eventoId: query.filters.eventoId ?? null
-  }
-
-  const replaceListUrl = (nextUrl: string) => {
-    router.replace(`${pathname}${nextUrl}`, { scroll: false })
-  }
-
   const handleSearchChange = (search: string) => {
-    replaceListUrl(buildAdminListUrl(searchParams, { page: 1, search }))
+    void setFilters({ page: 1, search })
   }
 
-  const handleEventoChange = (eventoId: string | null) => {
-    replaceListUrl(
-      buildAdminListUrl(searchParams, {
-        page: 1,
-        filters: { eventoId }
-      })
-    )
+  const handleEventoChange = (evento: number | null) => {
+    void setFilters({ page: 1, evento })
   }
 
   const handleClearFilters = () => {
-    replaceListUrl(
-      buildAdminListUrl(searchParams, {
-        page: 1,
-        search: '',
-        filters: { eventoId: null }
-      })
-    )
+    void setFilters({ page: 1, search: '', evento: null })
   }
 
   const handlePageChange = (page: number) => {
-    replaceListUrl(buildAdminListUrl(searchParams, { page }))
+    void setFilters({ page })
   }
 
   return (
     <div className='space-y-4'>
       <div className='flex justify-end'>
+        <EdicionFilters
+          eventos={eventos}
+          filters={filters}
+          onSearchChange={handleSearchChange}
+          onEventoChange={handleEventoChange}
+          onClearFilters={handleClearFilters}
+        />
         <Button variant='outline' size='sm' onClick={() => openDialog(null)}>
           <IconPlus />
           Agregar Edición
         </Button>
       </div>
-      <EdicionFilters
-        eventos={eventos}
-        filters={filters}
-        onSearchChange={handleSearchChange}
-        onEventoChange={handleEventoChange}
-        onClearFilters={handleClearFilters}
+
+      <PaginationControls
+        {...pagination}
+        onPageChange={handlePageChange}
+        itemNoun='ediciones'
       />
       <EdicionTable
         ediciones={ediciones}
@@ -98,14 +78,15 @@ export function EdicionContainer({
         eventos={eventos}
         onClearFilters={handleClearFilters}
       />
-      <EdicionPagination
-        page={pagination.page}
-        pageSize={pagination.pageSize}
-        totalItems={pagination.total}
+
+      <PaginationControls
+        {...pagination}
         onPageChange={handlePageChange}
+        itemNoun='ediciones'
       />
+
       <EdicionDialog
-        ediciones={ediciones as EdicionEntry[]}
+        ediciones={ediciones}
         dias={dias}
         lugares={lugares}
         eventos={eventos}

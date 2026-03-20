@@ -9,7 +9,7 @@ import { toSlug } from '@/shared/lib/utils'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import { edicionUpdateSchema } from '../_schemas/edicion.schema'
 import type { ActionState } from '@/shared/types/actions'
-import { EVENT_EDITION_CACHE_TAG } from '../../_constants'
+import { EDITION_CACHE_TAG } from '../_constants'
 
 const { eventEdition } = events
 
@@ -35,12 +35,14 @@ export async function updateEdicionAction(
     : undefined
 
   const rawData: {
+    id: number
     nombre?: string | null
     posterUrl?: string | null
     numeroEdicion?: number
     eventoId?: number
     slug?: string
   } = {
+    id,
     nombre: formData.get('nombre') as string | null,
     posterUrl: formData.get('posterUrl') as string | null
   }
@@ -63,9 +65,11 @@ export async function updateEdicionAction(
     }
   }
 
-  await db.update(eventEdition).set(parsed.data).where(eq(eventEdition.id, id))
+  const { id: _id, ...editionData } = parsed.data
 
-  updateTag(EVENT_EDITION_CACHE_TAG)
+  await db.update(eventEdition).set(editionData).where(eq(eventEdition.id, id))
+
+  updateTag(EDITION_CACHE_TAG)
 
   return { success: true }
 }

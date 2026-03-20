@@ -1,11 +1,10 @@
-
 import { create } from 'zustand'
 
 interface EdicionDialogStore {
   isDialogOpen: boolean
-  selectedEdicionId: string | null
+  selectedEdicionId: number | null
 
-  openDialog: (id: string | null) => void
+  openDialog: (id: number | null) => void
   closeDialog: () => void
 }
 

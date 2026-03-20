@@ -7,7 +7,7 @@ import { events } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import { edicionDiaInsertSchema } from '../_schemas/edicion.schema'
 import type { ActionState } from '@/shared/types/actions'
-import { EVENT_EDITION_CACHE_TAG } from '../../_constants'
+import { EDITION_DAY_CACHE_TAG } from '../_constants'
 
 const { eventEditionDay } = events
 
@@ -44,7 +44,7 @@ export async function addEdicionDiaAction(
     .values(parsed.data)
     .returning({ id: eventEditionDay.id })
 
-  updateTag(EVENT_EDITION_CACHE_TAG)
+  updateTag(EDITION_DAY_CACHE_TAG)
 
   return { success: true, data: { id: result.id } }
 }

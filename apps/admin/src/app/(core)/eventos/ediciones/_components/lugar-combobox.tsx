@@ -2,8 +2,10 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
 import { IconMapPinPlus } from '@tabler/icons-react'
+import { toast } from 'sonner'
+import { addLugarAction } from '../_actions/add-lugar.action'
+import type { Place } from '../_schemas/edicion.schema'
 import { Button } from '@/shared/components/ui/button'
 import {
   Combobox,
@@ -16,12 +18,10 @@ import {
 } from '@/shared/components/ui/combobox'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
-import { addLugarAction } from '../_actions/add-lugar.action'
-import type { LugarEntry } from '../_types'
 
 const NULL_LUGAR_VALUE = null
 
-type LugarItem = { value: string | null; label: string }
+type LugarItem = { value: number | null; label: string }
 
 const NULL_LUGAR_ITEM: LugarItem = {
   value: NULL_LUGAR_VALUE,
@@ -29,9 +29,9 @@ const NULL_LUGAR_ITEM: LugarItem = {
 }
 
 interface LugarComboboxProps {
-  value: string | null
-  onChange: (id: string | null) => void
-  lugares: LugarEntry[]
+  value: number | null
+  onChange: (id: number | null) => void
+  lugares: Place[]
 }
 
 interface LugarFormState {
@@ -68,7 +68,7 @@ export function LugarCombobox({
 
   const comboboxValue: LugarItem =
     value !== null
-      ? (items.find((i) => i.value === value) ?? NULL_LUGAR_ITEM)
+      ? (items.find((item) => item.value === value) ?? NULL_LUGAR_ITEM)
       : NULL_LUGAR_ITEM
 
   const handleValueChange = (selected: LugarItem | null) => {
@@ -100,7 +100,7 @@ export function LugarCombobox({
         setCreateError(result.errors[0]?.message ?? 'Error al crear lugar')
       } else if (result.success && result.data) {
         toast.success('Lugar creado')
-        onChange(String(result.data.id))
+        onChange(result.data.id)
         setShowCreateForm(false)
         setCreateError(null)
         setNewLugar(INITIAL_LUGAR_FORM_STATE)
@@ -114,7 +114,7 @@ export function LugarCombobox({
       items={items}
       value={comboboxValue}
       onValueChange={handleValueChange}
-      isItemEqualToValue={(item, val) => item.value === val.value}
+      isItemEqualToValue={(item, selected) => item.value === selected.value}
     >
       <ComboboxInput placeholder='Seleccionar lugar...' showTrigger />
       <ComboboxContent>
@@ -127,11 +127,11 @@ export function LugarCombobox({
               <Input
                 id='lugar-nombre'
                 value={newLugar.nombre}
-                onChange={(e) => {
+                onChange={(event) => {
                   setCreateError(null)
                   setNewLugar((prev) => ({
                     ...prev,
-                    nombre: e.target.value
+                    nombre: event.target.value
                   }))
                 }}
                 placeholder='Ej. Centro Cultural GAM'
@@ -147,10 +147,10 @@ export function LugarCombobox({
               <Input
                 id='lugar-direccion'
                 value={newLugar.direccion}
-                onChange={(e) =>
+                onChange={(event) =>
                   setNewLugar((prev) => ({
                     ...prev,
-                    direccion: e.target.value
+                    direccion: event.target.value
                   }))
                 }
                 placeholder="Av. Libertador Bernardo O'Higgins 227"
@@ -163,10 +163,10 @@ export function LugarCombobox({
               <Input
                 id='lugar-ciudad'
                 value={newLugar.ciudad}
-                onChange={(e) =>
+                onChange={(event) =>
                   setNewLugar((prev) => ({
                     ...prev,
-                    ciudad: e.target.value
+                    ciudad: event.target.value
                   }))
                 }
                 placeholder='Santiago'
@@ -179,8 +179,8 @@ export function LugarCombobox({
               <Input
                 id='lugar-url'
                 value={newLugar.url}
-                onChange={(e) =>
-                  setNewLugar((prev) => ({ ...prev, url: e.target.value }))
+                onChange={(event) =>
+                  setNewLugar((prev) => ({ ...prev, url: event.target.value }))
                 }
                 placeholder='https://...'
                 disabled={isPending}

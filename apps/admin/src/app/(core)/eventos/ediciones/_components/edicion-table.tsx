@@ -1,5 +1,6 @@
 'use client'
 
+import { EmptyState } from '@/shared/components/empty-state'
 import {
   Table,
   TableBody,
@@ -7,17 +8,16 @@ import {
   TableHeader,
   TableRow
 } from '@/shared/components/ui/table'
-import { EmptyState } from '@/shared/components/empty-state'
+import type { EditionDay, Place } from '../_schemas/edicion.schema'
+import type { PaginatedEdition } from '../_types/paginated-edition'
+import type { EventoLookup } from '../_types'
 import { EdicionRow } from './edicion-row'
-import type { EdicionDiaEntry, LugarEntry } from '../_types'
-import type { EventoEntry } from '../../_types'
-import type { PaginatedEdicion } from '../_types/paginated-edicion'
 
 interface EdicionTableProps {
-  ediciones: PaginatedEdicion[]
-  dias: EdicionDiaEntry[]
-  lugares: LugarEntry[]
-  eventos: EventoEntry[]
+  ediciones: PaginatedEdition[]
+  dias: EditionDay[]
+  lugares: Place[]
+  eventos: EventoLookup[]
   onClearFilters: () => void
 }
 
@@ -60,7 +60,7 @@ export function EdicionTable({
             <EdicionRow
               key={edicion.id}
               edicion={edicion}
-              dias={dias.filter((d) => d.eventoEdicionId === edicion.id)}
+              dias={dias.filter((dia) => dia.eventoEdicionId === edicion.id)}
               lugares={lugares}
               eventos={eventos}
             />

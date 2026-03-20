@@ -16,17 +16,17 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/shared/components/ui/select'
-import { DatePickerField } from './date-picker-field'
-import { LugarCombobox } from './lugar-combobox'
-import { TimePickerField } from './time-picker-field'
-import type { DayFieldErrors, DayFormState, Modality } from '../_types/edition'
-import type { LugarEntry } from '../_types'
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel
 } from '@/shared/components/ui/field'
+import type { Place } from '../_schemas/edicion.schema'
+import type { DayFieldErrors, DayFormState, Modality } from '../_types/edition'
+import { DatePickerField } from './date-picker-field'
+import { LugarCombobox } from './lugar-combobox'
+import { TimePickerField } from './time-picker-field'
 
 const MODALIDAD_LABELS: Record<Modality, string> = {
   presencial: 'Presencial',
@@ -59,7 +59,7 @@ interface EdicionDayDialogProps {
   onClose: () => void
   initialDay: DayFormState | null
   onSave: (day: DayFormState) => void
-  lugares: LugarEntry[]
+  lugares: Place[]
 }
 
 export function EdicionDayDialog({
@@ -118,10 +118,8 @@ export function EdicionDayDialog({
             <Field>
               <FieldLabel htmlFor='dia-modalidad'>Modalidad</FieldLabel>
               <Select
-                value={day.modalidad}
-                onValueChange={(value) =>
-                  setDayField('modalidad', value as Modality)
-                }
+                value={day.modalidad ?? undefined}
+                onValueChange={(value) => setDayField('modalidad', value as Modality)}
               >
                 <SelectTrigger id='dia-modalidad'>
                   <SelectValue placeholder='Seleccionar modalidad'>

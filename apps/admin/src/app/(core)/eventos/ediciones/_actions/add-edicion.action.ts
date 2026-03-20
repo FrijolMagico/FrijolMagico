@@ -8,7 +8,7 @@ import { toSlug } from '@/shared/lib/utils'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import { edicionInsertSchema } from '../_schemas/edicion.schema'
 import type { ActionState } from '@/shared/types/actions'
-import { EVENT_EDITION_CACHE_TAG } from '../../_constants'
+import { EDITION_CACHE_TAG } from '../_constants'
 
 const { eventEdition } = events
 
@@ -46,7 +46,7 @@ export async function addEdicionAction(
     .values(parsed.data)
     .returning({ id: eventEdition.id })
 
-  updateTag(EVENT_EDITION_CACHE_TAG)
+  updateTag(EDITION_CACHE_TAG)
 
   return { success: true, data: { id: result.id } }
 }

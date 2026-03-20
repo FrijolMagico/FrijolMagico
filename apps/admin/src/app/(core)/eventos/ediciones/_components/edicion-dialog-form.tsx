@@ -1,11 +1,31 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
-import { useForm, Controller, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { IconPlus } from '@tabler/icons-react'
+import { useRouter } from 'next/navigation'
+import { Controller, useFieldArray, useForm } from 'react-hook-form'
+import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
+import { saveEdicionWithDaysAction } from '../_actions/save-edicion-with-days.action'
+import {
+  edicionRootFormSchema,
+  type Edition,
+  type EdicionRootFormInput,
+  type Place
+} from '../_schemas/edicion.schema'
+import type { DayFormState } from '../_types/edition'
+import type { EventoLookup } from '../_types'
+import { EdicionDayDialog } from './edicion-day-dialog'
+import { EdicionDaysTable } from './edicion-days-table'
+import { PosterPreview } from './poster-preview'
+import { PosterSection } from './poster-section'
 import { Button } from '@/shared/components/ui/button'
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel
+} from '@/shared/components/ui/field'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import {
@@ -15,37 +35,18 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/shared/components/ui/select'
-import { PosterSection } from './poster-section'
-import type { EdicionEntry, LugarEntry } from '../_types'
-import type { EventoEntry } from '../../_types'
-import type { DayFormState } from '../_types/edition'
-import {
-  edicionRootFormSchema,
-  type EdicionRootFormInput
-} from '../_schemas/edicion.schema'
-import { IconPlus } from '@tabler/icons-react'
-import { EdicionDaysTable } from './edicion-days-table'
-import { EdicionDayDialog } from './edicion-day-dialog'
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel
-} from '@/shared/components/ui/field'
-import { PosterPreview } from './poster-preview'
-import { saveEdicionWithDaysAction } from '../_actions/save-edicion-with-days.action'
 
 interface EdicionFormContentProps {
   initialFormState: {
-    eventoId: string
+    eventoId: number | null
     numeroEdicion: string
     nombre: string
     days: DayFormState[]
   }
-  selectedEdicionId: string | null
-  selectedEdicion: EdicionEntry | null
-  eventos: EventoEntry[]
-  lugares: LugarEntry[]
+  selectedEdicionId: number | null
+  selectedEdicion: Edition | null
+  eventos: EventoLookup[]
+  lugares: Place[]
   closeDialog: () => void
 }
 
@@ -59,6 +60,11 @@ export function EdicionFormContent({
 }: EdicionFormContentProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const [isDayDialogOpen, setIsDayDialogOpen] = useState(false)
+  const [editingDay, setEditingDay] = useState<DayFormState | null>(null)
+  const [editingDayIndex, setEditingDayIndex] = useState<number | null>(null)
+  const [dayDialogKey, setDayDialogKey] = useState(0)
+  const [isPosterPreviewOpen, setIsPosterPreviewOpen] = useState(false)
 
   const {
     register,
@@ -68,9 +74,9 @@ export function EdicionFormContent({
   } = useForm<EdicionRootFormInput>({
     resolver: zodResolver(edicionRootFormSchema),
     defaultValues: {
-      eventoId: initialFormState.eventoId,
+      eventoId: initialFormState.eventoId ?? undefined,
       numeroEdicion: initialFormState.numeroEdicion,
-      nombre: initialFormState.nombre ?? '',
+      nombre: initialFormState.nombre,
       days: initialFormState.days
     }
   })
@@ -80,65 +86,72 @@ export function EdicionFormContent({
     name: 'days'
   })
 
-  const [isDayDialogOpen, setIsDayDialogOpen] = useState(false)
-  const [editingDay, setEditingDay] = useState<DayFormState | null>(null)
-  const [editingDayIndex, setEditingDayIndex] = useState<number | null>(null)
-  const [dayDialogKey, setDayDialogKey] = useState(0)
-  const [isPosterPreviewOpen, setIsPosterPreviewOpen] = useState(false)
-
   const handlePosterUpload = () => {
-    if (!selectedEdicionId) {
+    if (selectedEdicionId === null) {
       toast.info('Guarda la edición primero para agregar poster')
       return
     }
+
     console.warn(
       '[EdicionFormContent] TODO: CDN poster upload not implemented',
-      { selectedEdicionId }
+      {
+        selectedEdicionId
+      }
     )
   }
 
   const handlePosterDelete = () => {
-    if (!selectedEdicionId) return
+    if (selectedEdicionId === null) return
+
     console.warn(
       '[EdicionFormContent] TODO: CDN poster delete not implemented',
-      { selectedEdicionId }
+      {
+        selectedEdicionId
+      }
     )
   }
 
-  const lugarNombreById: Record<string, string> = Object.fromEntries(
-    lugares.map((l) => [l.id, l.nombre])
+  const lugarNombreById = new Map(
+    lugares.map((lugar) => [lugar.id, lugar.nombre] as const)
   )
 
   const openAddDayDialog = () => {
     setEditingDay(null)
     setEditingDayIndex(null)
-    setDayDialogKey((k) => k + 1)
+    setDayDialogKey((current) => current + 1)
     setIsDayDialogOpen(true)
   }
 
   const openEditDayDialog = (tempId: string) => {
-    const idx = fields.findIndex((d) => d.tempId === tempId)
-    const day = idx >= 0 ? fields[idx] : null
+    const index = fields.findIndex((day) => day.tempId === tempId)
+    const day = index >= 0 ? fields[index] : null
+
     setEditingDay(day ?? null)
-    setEditingDayIndex(idx >= 0 ? idx : null)
-    setDayDialogKey((k) => k + 1)
+    setEditingDayIndex(index >= 0 ? index : null)
+    setDayDialogKey((current) => current + 1)
     setIsDayDialogOpen(true)
   }
 
   const removeDayFromForm = (tempId: string) => {
-    const idx = fields.findIndex((d) => d.tempId === tempId)
-    if (idx >= 0) remove(idx)
+    const index = fields.findIndex((day) => day.tempId === tempId)
+    if (index >= 0) remove(index)
   }
 
   const handleDaySave = (day: DayFormState) => {
     if (editingDayIndex !== null) {
       update(editingDayIndex, day)
-    } else {
-      append(day)
+      return
     }
+
+    append(day)
   }
 
   const onSubmit = (rootFields: EdicionRootFormInput) => {
+    if (rootFields.eventoId === undefined || rootFields.eventoId === null) {
+      toast.error('El evento es obligatorio')
+      return
+    }
+
     const payload = {
       id: selectedEdicionId,
       eventoId: rootFields.eventoId,
@@ -156,13 +169,14 @@ export function EdicionFormContent({
 
       if (!result.success && result.errors) {
         toast.error(result.errors[0]?.message ?? 'Error al guardar la edición')
-      } else {
-        toast.success(
-          selectedEdicionId ? 'Edición actualizada' : 'Edición creada'
-        )
-        closeDialog()
-        router.refresh()
+        return
       }
+
+      toast.success(
+        selectedEdicionId !== null ? 'Edición actualizada' : 'Edición creada'
+      )
+      closeDialog()
+      router.refresh()
     })
   }
 
@@ -175,10 +189,16 @@ export function EdicionFormContent({
             name='eventoId'
             control={control}
             render={({ field }) => (
-              <Select value={field.value || ''} onValueChange={field.onChange}>
+              <Select
+                value={field.value ?? undefined}
+                onValueChange={field.onChange}
+              >
                 <SelectTrigger id='edicion-evento'>
                   <SelectValue placeholder='Seleccionar evento...'>
-                    {eventos.find((e) => e.id === field.value)?.nombre}
+                    {
+                      eventos.find((evento) => evento.id === field.value)
+                        ?.nombre
+                    }
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -274,11 +294,13 @@ export function EdicionFormContent({
         <Button
           type='button'
           onClick={handleSubmit(onSubmit)}
-          disabled={isPending || (!isDirty && !!selectedEdicionId) || !isValid}
+          disabled={
+            isPending || (!isDirty && selectedEdicionId !== null) || !isValid
+          }
         >
           {isPending
             ? 'Guardando...'
-            : selectedEdicionId
+            : selectedEdicionId !== null
               ? 'Guardar cambios'
               : 'Crear edición'}
         </Button>

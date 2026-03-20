@@ -1,6 +1,8 @@
 'use client'
 
-import { format, parse, isValid } from 'date-fns'
+import { format, isValid, parse } from 'date-fns'
+import { ActionMenuButton } from '@/shared/components/action-menu-button'
+import { EmptyState } from '@/shared/components/empty-state'
 import {
   Table,
   TableBody,
@@ -10,8 +12,6 @@ import {
   TableRow
 } from '@/shared/components/ui/table'
 import type { DayFormState } from '../_types/edition'
-import { ActionMenuButton } from '@/shared/components/action-menu-button'
-import { EmptyState } from '@/shared/components/empty-state'
 
 const MODALIDAD_LABELS: Record<string, string> = {
   presencial: 'Presencial',
@@ -27,7 +27,7 @@ function formatFecha(fecha: string): string {
 
 interface EdicionDaysTableProps {
   days: DayFormState[]
-  lugarNombreById: Record<string, string>
+  lugarNombreById: Map<number, string>
   onEdit: (tempId: string) => void
   onDelete: (tempId: string) => void
 }
@@ -72,7 +72,7 @@ export function EdicionDaysTable({
               <TableCell>{day.horaInicio || '—'}</TableCell>
               <TableCell>{day.horaFin || '—'}</TableCell>
               <TableCell>
-                {day.lugarId ? (lugarNombreById[day.lugarId] ?? '—') : '—'}
+                {day.lugarId ? (lugarNombreById.get(day.lugarId) ?? '—') : '—'}
               </TableCell>
               <TableCell>
                 <ActionMenuButton
