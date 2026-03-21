@@ -12,11 +12,11 @@ import { EDITION_CACHE_TAG, EDITION_DAY_CACHE_TAG } from '../_constants'
 import {
   edicionWithDaysSchema,
   type EdicionWithDaysInput
-} from '../_schemas/edicion.schema'
+} from '../_schemas/edition-composite.schema'
 
 const { eventEdition, eventEditionDay } = events
 
-export async function saveEdicionWithDaysAction(
+export async function saveEditionWithDaysAction(
   _prevState: ActionState<void>,
   data: EdicionWithDaysInput
 ): Promise<ActionState<void>> {

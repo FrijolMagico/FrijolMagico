@@ -1,4 +1,6 @@
-import type { Edition, EditionDay, Place } from '../_schemas/edicion.schema'
+import type { Edition } from '../_schemas/edition.schema'
+import type { EditionDay } from '../_schemas/edition-day.schema'
+import type { Place } from '../_schemas/place.schema'
 import type { PaginatedEdition } from '../_types/paginated-edition'
 import type { EventoLookup } from '../_types'
 import { formatEdicionFechas } from './format-edicion-fechas'

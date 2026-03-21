@@ -8,12 +8,12 @@ import {
   createPaginatedResponse,
   type PaginatedResponse
 } from '@/shared/types/pagination'
-import { EDITION_CACHE_TAG } from '../_constants'
+import { EDITION_CACHE_TAG } from '@/core/eventos/ediciones/_constants'
 import {
   editionQueryParamsSchema,
   type EditionsQueryParams
-} from '../_schemas/query-params.schema'
-import type { Edition } from '../_schemas/edicion.schema'
+} from '@/core/eventos/ediciones/_schemas/query-params.schema'
+import type { Edition } from '@/core/eventos/ediciones/_schemas/edition.schema'
 
 const { eventEdition } = events
 

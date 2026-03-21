@@ -1,4 +1,4 @@
-import type { Edition } from '../_schemas/edicion.schema'
+import type { Edition } from '../_schemas/edition.schema'
 
 export interface PaginatedEdition extends Edition {
   eventoNombre: string

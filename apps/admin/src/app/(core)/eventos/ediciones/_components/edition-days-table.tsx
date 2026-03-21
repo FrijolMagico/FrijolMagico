@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow
 } from '@/shared/components/ui/table'
-import type { DayFormState } from '../_types/edition'
+import type { DayFormStateInput } from '../_schemas/edition-day.schema'
 
 const MODALIDAD_LABELS: Record<string, string> = {
   presencial: 'Presencial',
@@ -26,7 +26,7 @@ function formatFecha(fecha: string): string {
 }
 
 interface EdicionDaysTableProps {
-  days: DayFormState[]
+  days: DayFormStateInput[]
   lugarNombreById: Map<number, string>
   onEdit: (tempId: string) => void
   onDelete: (tempId: string) => void

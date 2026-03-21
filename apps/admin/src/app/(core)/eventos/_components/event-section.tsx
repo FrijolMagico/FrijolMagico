@@ -1,4 +1,4 @@
-import { getEvents } from '../_lib/get-events-data'
+import { getEvents } from '@/core/eventos/_lib/data-access-layer/get-events-data'
 import { EmptyState } from '@/shared/components/empty-state'
 import { CreateEventDialog } from './create-event-dialog'
 import { EventGrid } from './event-grid'

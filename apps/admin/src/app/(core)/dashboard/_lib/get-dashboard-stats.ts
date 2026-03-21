@@ -12,10 +12,7 @@ import { isNotDeleted } from '@frijolmagico/database/filters'
 
 import { ARTIST_CACHE_TAG } from '@/core/artistas/_constants'
 import { CATALOG_CACHE_TAG } from '@/core/artistas/catalogo/_constants'
-import {
-  EVENT_CACHE_TAG,
-  EVENT_EDITION_CACHE_TAG
-} from '@/core/eventos/_constants'
+import { EVENT_CACHE_TAG } from '@/core/eventos/_constants'
 
 import type {
   DashboardArtistStats,
@@ -26,6 +23,7 @@ import type {
   TopArtistEntry
 } from '../_types'
 import { FESTIVAL_EVENT_ID } from '../_constants'
+import { EDITION_CACHE_TAG } from '../../eventos/ediciones/_constants'
 
 const { artist: artistTable, artistStatus, catalogArtist } = artist
 const { eventEdition } = events
@@ -85,7 +83,7 @@ export async function getDashboardArtistStats(): Promise<DashboardArtistStats | 
 
 export async function getDashboardEventStats(): Promise<DashboardEventStats | null> {
   'use cache'
-  cacheTag(EVENT_CACHE_TAG, EVENT_EDITION_CACHE_TAG)
+  cacheTag(EVENT_CACHE_TAG, EDITION_CACHE_TAG)
 
   const [participationRow, editionCountRow, latestRows] = await Promise.all([
     db.select({ count: count() }).from(editionParticipation),
@@ -126,7 +124,7 @@ export async function getDashboardEventStats(): Promise<DashboardEventStats | nu
 
 export async function getDashboardGrowthData(): Promise<EditionGrowthPoint[]> {
   'use cache'
-  cacheTag(ARTIST_CACHE_TAG, EVENT_EDITION_CACHE_TAG)
+  cacheTag(ARTIST_CACHE_TAG, EDITION_CACHE_TAG)
 
   const rows = await db
     .select({
@@ -154,7 +152,7 @@ export async function getDashboardGrowthData(): Promise<EditionGrowthPoint[]> {
 
 export async function getDashboardDisciplineData(): Promise<DisciplinePoint[]> {
   'use cache'
-  cacheTag(ARTIST_CACHE_TAG, EVENT_EDITION_CACHE_TAG)
+  cacheTag(ARTIST_CACHE_TAG, EDITION_CACHE_TAG)
 
   const rows = await db
     .select({
@@ -177,7 +175,7 @@ export async function getDashboardDisciplineData(): Promise<DisciplinePoint[]> {
 
 export async function getDashboardTopArtists(): Promise<TopArtistEntry[]> {
   'use cache'
-  cacheTag(ARTIST_CACHE_TAG, EVENT_EDITION_CACHE_TAG)
+  cacheTag(ARTIST_CACHE_TAG, EDITION_CACHE_TAG)
 
   const rows = await db
     .select({

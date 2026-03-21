@@ -1,10 +1,10 @@
 import type { SearchParamsProps } from '@/shared/types/query-params'
-import { EdicionContainer } from './_components/edicion-container'
+import { EditionsContainer } from './_components/edition-container'
+import { getEditionDays } from './_lib/data-access-layer/get-edition-days'
+import { getEditions } from './_lib/data-access-layer/get-editions'
+import { getEventosLookup } from './_lib/data-access-layer/get-eventos-lookup'
+import { getPlaces } from './_lib/data-access-layer/get-places'
 import { composeEditions } from './_lib/compose-editions'
-import { getEditionDays } from './_lib/get-edition-days'
-import { getEditions } from './_lib/get-editions'
-import { getEventosLookup } from './_lib/get-eventos-lookup'
-import { getPlaces } from './_lib/get-places'
 import { loadEdicionSearchParams } from './_lib/search-params'
 
 export default async function EdicionesPage({
@@ -14,13 +14,13 @@ export default async function EdicionesPage({
   const editionsResult = await getEditions(params)
   const editionIds = editionsResult.data.map((edition) => edition.id)
 
-  const [days, places, eventos] = await Promise.all([
+  const [days, places, events] = await Promise.all([
     getEditionDays(editionIds),
     getPlaces(),
     getEventosLookup()
   ])
 
-  const ediciones = composeEditions(editionsResult.data, days, places, eventos)
+  const editions = composeEditions(editionsResult.data, days, places, events)
 
   return (
     <div className='space-y-6'>
@@ -30,12 +30,12 @@ export default async function EdicionesPage({
           Gestiona las ediciones de los eventos.
         </p>
       </div>
-      <EdicionContainer
-        ediciones={ediciones}
-        dias={days}
-        lugares={places}
-        eventos={eventos}
-        pagination={{ ...editionsResult, data: ediciones }}
+      <EditionsContainer
+        editions={editions}
+        days={days}
+        places={places}
+        events={events}
+        pagination={{ ...editionsResult, data: editions }}
       />
     </div>
   )

@@ -7,26 +7,27 @@ import { db } from '@frijolmagico/database/orm'
 import { events } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import type { ActionState } from '@/shared/types/actions'
-import { EDITION_DAY_CACHE_TAG } from '../_constants'
+import { EDITION_CACHE_TAG, EDITION_DAY_CACHE_TAG } from '../_constants'
 
-const { eventEditionDay } = events
+const { eventEdition } = events
 
-export async function deleteEdicionDiaAction(
+export async function deleteEditionAction(
   _prevState: ActionState<void>,
-  formData: FormData
+  payload: { id: number }
 ): Promise<ActionState<void>> {
   await requireAuth()
 
-  const id = Number(formData.get('id'))
+  const id = payload.id
   if (!id || isNaN(id)) {
     return {
       success: false,
-      errors: [{ entityType: 'edicion-dia', message: 'ID inválido' }]
+      errors: [{ entityType: 'edicion', message: 'ID inválido' }]
     }
   }
 
-  await db.delete(eventEditionDay).where(eq(eventEditionDay.id, id))
+  await db.delete(eventEdition).where(eq(eventEdition.id, id))
 
+  updateTag(EDITION_CACHE_TAG)
   updateTag(EDITION_DAY_CACHE_TAG)
 
   return { success: true }

@@ -1,30 +1,24 @@
 'use server'
 
 import 'server-only'
+import { z } from 'zod'
 import { updateTag } from 'next/cache'
 import { db } from '@frijolmagico/database/orm'
 import { core } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/shared/lib/auth/utils'
-import { lugarInsertSchema } from '../_schemas/edicion.schema'
+import { lugarInsertSchema } from '../_schemas/place.schema'
 import type { ActionState } from '@/shared/types/actions'
-import { PLACE_CACHE_TAG } from '../../_constants'
+import { PLACE_CACHE_TAG } from '../_constants'
 
 const { place } = core
 
-export async function addLugarAction(
+export async function createPlaceAction(
   _prevState: ActionState<{ id: number }>,
-  formData: FormData
+  data: z.infer<typeof lugarInsertSchema>
 ): Promise<ActionState<{ id: number }>> {
   await requireAuth()
 
-  const rawData = {
-    nombre: formData.get('nombre') as string,
-    direccion: formData.get('direccion') as string | null,
-    ciudad: formData.get('ciudad') as string | null,
-    url: formData.get('url') as string | null
-  }
-
-  const parsed = lugarInsertSchema.safeParse(rawData)
+  const parsed = lugarInsertSchema.safeParse(data)
 
   if (!parsed.success) {
     return {

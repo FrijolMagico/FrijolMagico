@@ -4,8 +4,8 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { IconMapPinPlus } from '@tabler/icons-react'
 import { toast } from 'sonner'
-import { addLugarAction } from '../_actions/add-lugar.action'
-import type { Place } from '../_schemas/edicion.schema'
+import { createPlaceAction } from '../_actions/create-place.action'
+import type { LugarInsertInput, Place } from '../_schemas/place.schema'
 import { Button } from '@/shared/components/ui/button'
 import {
   Combobox,
@@ -88,13 +88,14 @@ export function LugarCombobox({
     }
 
     startTransition(async () => {
-      const formData = new FormData()
-      formData.append('nombre', nombre)
-      if (newLugar.direccion) formData.append('direccion', newLugar.direccion)
-      if (newLugar.ciudad) formData.append('ciudad', newLugar.ciudad)
-      if (newLugar.url) formData.append('url', newLugar.url)
+      const payload: LugarInsertInput = {
+        nombre,
+        direccion: newLugar.direccion || null,
+        ciudad: newLugar.ciudad || null,
+        url: newLugar.url || null
+      }
 
-      const result = await addLugarAction({ success: false }, formData)
+      const result = await createPlaceAction({ success: false }, payload)
 
       if (!result.success && result.errors) {
         setCreateError(result.errors[0]?.message ?? 'Error al crear lugar')
