@@ -9,18 +9,18 @@ describe('artistQueryParamsSchema', () => {
       page: 2,
       limit: 20,
       search: 'Ana',
-      statusId: 3,
-      country: 'Chile',
-      city: 'Santiago'
+      estado: 3,
+      pais: 'Chile',
+      ciudad: 'Santiago'
     })
 
     expect(result).toEqual({
       page: 2,
       limit: 20,
       search: 'Ana',
-      statusId: 3,
-      country: 'Chile',
-      city: 'Santiago'
+      estado: 3,
+      pais: 'Chile',
+      ciudad: 'Santiago'
     })
   })
 
@@ -30,9 +30,9 @@ describe('artistQueryParamsSchema', () => {
         page: 1,
         limit: 20,
         search: '',
-        statusId: 'foo',
-        country: null,
-        city: null
+        estado: 'foo',
+        pais: null,
+        ciudad: null
       })
     ).toThrow()
   })

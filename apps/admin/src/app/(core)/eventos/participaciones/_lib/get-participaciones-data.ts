@@ -8,9 +8,9 @@ import {
   participations
 } from '@frijolmagico/database/schema'
 import { and, asc, count, desc, eq, inArray, sql } from 'drizzle-orm'
-import type { SQL } from 'drizzle-orm'
+import type { SQL, type PromiseSettledResult } from 'drizzle-orm'
 
-import { EVENT_EDITION_CACHE_TAG } from '../../_constants'
+import { EDITION_CACHE_TAG } from '../../ediciones/_constants'
 import { participacionesQueryParamsSchema } from '../_schemas/query-params.schema'
 import { PARTICIPACIONES_CACHE_TAG } from '../_constants'
 import type {
@@ -74,7 +74,7 @@ export async function getEdicionIdFromSlugOrLatest(
   slug?: string
 ): Promise<EdicionLookupResult | null> {
   'use cache'
-  cacheTag(EVENT_EDITION_CACHE_TAG)
+  cacheTag(EDITION_CACHE_TAG)
 
   if (slug) {
     const found = await db.query.eventEdition.findFirst({
