@@ -121,6 +121,8 @@ export const artista = sqliteTable(
 
 Custom SQL migrations supported. Use `--> statement-breakpoint` between statements.
 
+> **IMPORTANT:** All statements in a migration must be separated by `--> statement-breakpoint`. Do not use separate code blocks or empty lines between statements. This ensures the migration runs as a single atomic unit.
+
 ## Environment Variables
 
 ```bash
