@@ -227,17 +227,15 @@ function TiptapToolbar() {
           <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
             <DialogTrigger
               render={
-                <>
-                  <Toggle
-                    size='sm'
-                    pressed={editor.isActive('link')}
-                    aria-label='Insertar enlace'
-                    title='Insertar enlace'
-                    className='cursor-pointer'
-                  >
-                    <IconLink />
-                  </Toggle>
-                </>
+                <Toggle
+                  size='sm'
+                  pressed={editor.isActive('link')}
+                  aria-label='Insertar enlace'
+                  title='Insertar enlace'
+                  className='cursor-pointer'
+                >
+                  <IconLink />
+                </Toggle>
               }
             />
             <DialogContent className='sm:max-w-md'>
