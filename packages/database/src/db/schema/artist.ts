@@ -152,7 +152,8 @@ export const catalogArtist = sqliteTable(
     index('idx_catalog_artist_orden').on(table.orden),
     index('idx_catalog_artist_activo').on(table.activo),
     index('idx_catalog_artist_destacado').on(table.destacado),
-    index('idx_catalog_artist_deleted_at').on(table.deletedAt)
+    index('idx_catalog_artist_deleted_at').on(table.deletedAt),
+    index('idx_catalog_artist_artista_deleted').on(table.artistaId, table.deletedAt)
   ]
 )
 
@@ -174,14 +175,20 @@ export const collective = sqliteTable('agrupacion', {
 })
 
 /**
- * Banda - Music bands
+ * Band - Music bands
+ * DB Table: "band" (not "banda")
+ * NOTE: Existe trigger trg_banda_updated_at en DB
  */
-export const banda = sqliteTable('banda', {
+export const band = sqliteTable('band', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  nombre: text('nombre').unique().notNull(),
-  descripcion: text('descripcion'),
-  correo: text('correo'),
-  activo: integer('activo', { mode: 'boolean' }).notNull().default(true),
+  name: text('name').notNull().unique(),
+  description: text('description'),
+  email: text('email'),
+  active: integer('active', { mode: 'boolean' }).notNull().default(true),
+  phone: text('phone'),
+  city: text('city'),
+  country: text('country'),
+  deletedAt: text('deleted_at'),
   createdAt: text('created_at')
     .notNull()
     .default(sql`CURRENT_TIMESTAMP`),

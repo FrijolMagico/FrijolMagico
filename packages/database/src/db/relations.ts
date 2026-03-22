@@ -32,8 +32,10 @@ import {
   artistHistory,
   artistImage,
   catalogArtist,
-  banda
+  band
 } from './schema/artist'
+
+import { user, session, account } from './schema/auth'
 
 // ============================================
 // Core Relations
@@ -215,9 +217,9 @@ export const editionParticipationRelations = relations(
       fields: [editionParticipation.agrupacionId],
       references: [collective.id]
     }),
-    banda: one(banda, {
+    banda: one(band, {
       fields: [editionParticipation.bandaId],
-      references: [banda.id]
+      references: [band.id]
     }),
     exposicion: one(participationExhibition, {
       fields: [editionParticipation.id],
@@ -288,8 +290,6 @@ export const activityRelations = relations(activity, ({ one }) => ({
 // ============================================
 // Auth Relations (Better Auth)
 // ============================================
-
-import { user, session, account } from './schema/auth'
 
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
