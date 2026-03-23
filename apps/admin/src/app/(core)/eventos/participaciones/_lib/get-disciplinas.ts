@@ -10,12 +10,7 @@ import { DISCIPLINAS_CACHE_TAG } from '../_constants'
 
 const { discipline } = core
 
-export interface DisciplinaLookup {
-  id: string
-  nombre: string
-}
-
-export async function getDisciplinas(): Promise<DisciplinaLookup[]> {
+export async function getDisciplinas(): Promise<Map<number, string>> {
   'use cache'
   cacheTag(DISCIPLINAS_CACHE_TAG)
 
@@ -24,8 +19,5 @@ export async function getDisciplinas(): Promise<DisciplinaLookup[]> {
     .from(discipline)
     .orderBy(asc(discipline.slug))
 
-  return results.map((row) => ({
-    id: String(row.id),
-    nombre: row.nombre
-  }))
+  return new Map(results.map((row) => [row.id, row.nombre]))
 }

@@ -5,7 +5,7 @@ import {
   parseAsStringLiteral
 } from 'nuqs/server'
 
-import { baseListParsers } from '@/shared/lib/list-parsers'
+import { paginationParsers, searchParser } from '@/shared/lib/list-parsers'
 
 const participationStatusValues = [
   'seleccionado',
@@ -17,8 +17,9 @@ const participationStatusValues = [
 ] as const
 
 export const participacionesSearchParams = {
-  ...baseListParsers,
+  ...paginationParsers,
   limit: parseAsInteger.withDefault(25),
+  ...searchParser,
   edicion: parseAsString,
   edicionId: parseAsString,
   estado: parseAsStringLiteral(participationStatusValues)

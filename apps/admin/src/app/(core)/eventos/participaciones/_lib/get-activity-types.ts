@@ -10,12 +10,7 @@ import { ACTIVITY_TYPES_CACHE_TAG } from '../_constants'
 
 const { activityType } = participations
 
-export interface ActivityTypeLookup {
-  id: string
-  nombre: string
-}
-
-export async function getActivityTypes(): Promise<ActivityTypeLookup[]> {
+export async function getActivityTypes(): Promise<Map<number, string>> {
   'use cache'
   cacheTag(ACTIVITY_TYPES_CACHE_TAG)
 
@@ -24,8 +19,5 @@ export async function getActivityTypes(): Promise<ActivityTypeLookup[]> {
     .from(activityType)
     .orderBy(asc(activityType.slug))
 
-  return results.map((row) => ({
-    id: String(row.id),
-    nombre: row.nombre
-  }))
+  return new Map(results.map((row) => [row.id, row.nombre]))
 }

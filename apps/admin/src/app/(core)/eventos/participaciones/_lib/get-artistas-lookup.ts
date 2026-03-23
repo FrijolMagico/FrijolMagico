@@ -12,14 +12,14 @@ import { ARTIST_CACHE_TAG } from '@/core/artistas/_constants'
 const { artist: artistTable, artistStatus } = artist
 
 export interface ArtistaLookup {
-  id: string
+  id: number
   pseudonimo: string
   nombre: string | null
   estadoSlug: string
   fotoUrl: string | null
 }
 
-export async function getArtistasLookup(): Promise<ArtistaLookup[]> {
+export async function getArtistasLookup(): Promise<Map<number, ArtistaLookup>> {
   'use cache'
   cacheTag(ARTIST_CACHE_TAG)
 
@@ -35,11 +35,16 @@ export async function getArtistasLookup(): Promise<ArtistaLookup[]> {
     .where(isNotDeleted(artistTable.deletedAt))
     .orderBy(asc(artistTable.pseudonimo))
 
-  return results.map((row) => ({
-    id: String(row.id),
-    pseudonimo: row.pseudonimo,
-    nombre: row.nombre,
-    estadoSlug: row.estadoSlug ?? 'desconocido',
-    fotoUrl: null
-  }))
+  return new Map(
+    results.map((row) => [
+      row.id,
+      {
+        id: row.id,
+        pseudonimo: row.pseudonimo,
+        nombre: row.nombre,
+        estadoSlug: row.estadoSlug ?? 'desconocido',
+        fotoUrl: null
+      }
+    ])
+  )
 }

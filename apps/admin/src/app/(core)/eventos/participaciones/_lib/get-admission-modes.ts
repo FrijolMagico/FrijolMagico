@@ -10,12 +10,7 @@ import { ADMISSION_MODES_CACHE_TAG } from '../_constants'
 
 const { admissionMode } = participations
 
-export interface AdmissionModeLookup {
-  id: string
-  nombre: string
-}
-
-export async function getAdmissionModes(): Promise<AdmissionModeLookup[]> {
+export async function getAdmissionModes(): Promise<Map<number, string>> {
   'use cache'
   cacheTag(ADMISSION_MODES_CACHE_TAG)
 
@@ -24,8 +19,5 @@ export async function getAdmissionModes(): Promise<AdmissionModeLookup[]> {
     .from(admissionMode)
     .orderBy(asc(admissionMode.slug))
 
-  return results.map((row) => ({
-    id: String(row.id),
-    nombre: row.nombre
-  }))
+  return new Map(results.map((row) => [row.id, row.nombre]))
 }

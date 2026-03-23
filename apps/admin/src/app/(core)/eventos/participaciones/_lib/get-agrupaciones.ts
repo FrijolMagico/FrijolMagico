@@ -11,11 +11,13 @@ import { AGRUPACIONES_CACHE_TAG } from '../_constants'
 const { collective } = artist
 
 export interface AgrupacionLookup {
-  id: string
+  id: number
   nombre: string
 }
 
-export async function getAgrupaciones(): Promise<AgrupacionLookup[]> {
+export async function getAgrupaciones(): Promise<
+  Map<number, AgrupacionLookup>
+> {
   'use cache'
   cacheTag(AGRUPACIONES_CACHE_TAG)
 
@@ -24,8 +26,13 @@ export async function getAgrupaciones(): Promise<AgrupacionLookup[]> {
     .from(collective)
     .orderBy(asc(collective.nombre))
 
-  return results.map((row) => ({
-    id: String(row.id),
-    nombre: row.nombre
-  }))
+  return new Map(
+    results.map((row) => [
+      row.id,
+      {
+        id: row.id,
+        nombre: row.nombre
+      }
+    ])
+  )
 }
