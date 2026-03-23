@@ -6,7 +6,7 @@ import { db } from '@frijolmagico/database/orm'
 import { participations } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import { ActionState } from '@/shared/types/actions'
-import { PARTICIPACIONES_CACHE_TAG } from '../_constants'
+import { EXPOSICION_CACHE_TAG } from '../_constants'
 import { expositorUpdateSchema } from '../_schemas/participaciones.schema'
 import { ParticipationStatus } from '../_types'
 
@@ -65,7 +65,7 @@ export async function updateExpositorAction(
         .where(eq(participationExhibition.id, expositorId))
     })
 
-    updateTag(PARTICIPACIONES_CACHE_TAG)
+    updateTag(EXPOSICION_CACHE_TAG)
 
     return { success: true }
   } catch (error) {

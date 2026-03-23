@@ -21,16 +21,32 @@ import {
   SelectValue
 } from '@/shared/components/ui/select'
 import { useParticipacionesViewStore } from '../_store/participaciones-view-store'
-import type { ParticipacionesData } from '../_lib/get-participaciones-data'
 import { addExpositorAction } from '../_actions/expositores/add-expositor.action'
 import { IconLoader2 } from '@tabler/icons-react'
 import { ActionState } from '@/shared/types/actions'
 
+interface DialogArtistaOption {
+  id: string
+  pseudonimo: string
+  nombre: string | null
+  estadoSlug: string
+}
+
+interface DialogAgrupacionOption {
+  id: string
+  nombre: string
+}
+
+interface DialogDisciplinaOption {
+  id: string
+  slug: string
+}
+
 interface AddExpositorDialogProps {
   edicionId: string
-  artistas: ParticipacionesData['artistas']
-  agrupaciones: ParticipacionesData['agrupaciones']
-  disciplinas: ParticipacionesData['disciplinas']
+  artistas: DialogArtistaOption[]
+  agrupaciones: DialogAgrupacionOption[]
+  disciplinas: DialogDisciplinaOption[]
 }
 
 export function AddExpositorDialog({

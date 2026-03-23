@@ -6,7 +6,11 @@ import { participations } from '@frijolmagico/database/schema'
 import { eq } from 'drizzle-orm'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import { ActionState } from '@/shared/types/actions'
-import { PARTICIPACIONES_CACHE_TAG } from '../../_constants'
+import {
+  ACTIVIDAD_CACHE_TAG,
+  EXPOSICION_CACHE_TAG,
+  PARTICIPATIONS_CACHE_TAG
+} from '../../_constants'
 
 const { participationExhibition, editionParticipation } = participations
 
@@ -53,7 +57,9 @@ export async function deleteExpositorAction(
       }
     })
 
-    updateTag(PARTICIPACIONES_CACHE_TAG)
+    updateTag(EXPOSICION_CACHE_TAG)
+    updateTag(PARTICIPATIONS_CACHE_TAG)
+    updateTag(ACTIVIDAD_CACHE_TAG)
 
     return { success: true }
   } catch (error) {
