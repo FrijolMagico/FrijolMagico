@@ -1,5 +1,8 @@
 'use client'
 
+import { IconRotateClockwise } from '@tabler/icons-react'
+
+import { Button } from '@/shared/components/ui/button'
 import { TableCell, TableRow } from '@/shared/components/ui/table'
 import { Badge } from '@/shared/components/ui/badge'
 import { cn } from '@/shared/lib/utils'
@@ -12,10 +15,19 @@ import { CopyToClipboard } from 'src/shared/components/copy-to-clipboard'
 
 interface ArtistListRowProps {
   artist: ArtistWithHistory
-  onDelete: (id: number) => void
+  isDeletedView: boolean
+  onDelete: () => void
+  onRestore: () => void
+  isPending?: boolean
 }
 
-export function ArtistListRow({ artist, onDelete }: ArtistListRowProps) {
+export function ArtistListRow({
+  artist,
+  isDeletedView,
+  onDelete,
+  onRestore,
+  isPending = false
+}: ArtistListRowProps) {
   const { history, ...artistData } = artist
 
   const openUpdateArtistDialog = useArtistDialog(
@@ -29,7 +41,6 @@ export function ArtistListRow({ artist, onDelete }: ArtistListRowProps) {
     openArtistHistoryDialog(history, { pseudonimo: artistData.pseudonimo })
 
   const handleOpenEdit = () => openUpdateArtistDialog(artistData)
-  const handleDelete = () => onDelete(artist.id)
 
   return (
     <TableRow className={cn('group')}>
@@ -57,20 +68,33 @@ export function ArtistListRow({ artist, onDelete }: ArtistListRowProps) {
         </Badge>
       </TableCell>
       <TableCell>
-        <ActionMenuButton
-          actions={[
-            {
-              label: 'Editar',
-              onClick: handleOpenEdit
-            },
-            {
-              label: 'Historial',
-              onClick: handleOpenHistory,
-              hidden: !artist.history
-            }
-          ]}
-          onDelete={handleDelete}
-        />
+        {isDeletedView ? (
+          <Button
+            size='icon'
+            variant='ghost'
+            onClick={onRestore}
+            disabled={isPending}
+            className='text-green-500 hover:text-green-500/80'
+            aria-label={`Restaurar artista ${artist.pseudonimo}`}
+          >
+            <IconRotateClockwise />
+          </Button>
+        ) : (
+          <ActionMenuButton
+            actions={[
+              {
+                label: 'Editar',
+                onClick: handleOpenEdit
+              },
+              {
+                label: 'Historial',
+                onClick: handleOpenHistory,
+                hidden: !artist.history
+              }
+            ]}
+            onDelete={onDelete}
+          />
+        )}
       </TableCell>
     </TableRow>
   )

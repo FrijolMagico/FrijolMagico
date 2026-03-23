@@ -1,44 +1,38 @@
 'use client'
 
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '@/shared/components/ui/table'
+import type { ReactNode } from 'react'
+
+import { DeletedListTable } from '@/shared/components/deleted-toggle-list'
+import { TableHead, TableRow } from '@/shared/components/ui/table'
 import type { ArtistWithHistory } from '../_types/artist'
 import { ArtistListRow } from './artist-list-row'
-import { startTransition, useOptimistic } from 'react'
-import { deleteArtistaAction } from '../_actions/delete-artista.action'
-import { toast } from 'sonner'
 
 interface ArtistListTableProps {
   artists: ArtistWithHistory[]
+  showDeleted: boolean
+  handleDelete: (id: number) => void
+  handleRestore: (id: number) => void
+  emptyState?: ReactNode
+  isPending?: boolean
 }
 
-export function ArtistListTable({ artists }: ArtistListTableProps) {
-  const [displayArtists, setOptimisticArtists] = useOptimistic(
-    artists,
-    (current, id: number) => current.filter((curr) => curr.id !== id)
-  )
-
-  const handleArtistsDelete = (id: number) => {
-    startTransition(async () => {
-      setOptimisticArtists(id)
-      try {
-        const result = await deleteArtistaAction(id)
-        if (result.success) toast.success('Artista eliminado exitósamente c:')
-      } catch (error) {
-        toast.error('Ocurrió un problema al intentar eliminar al artista')
-        console.error(error)
-      }
-    })
-  }
-
+export function ArtistListTable({
+  artists,
+  showDeleted,
+  handleDelete,
+  handleRestore,
+  emptyState,
+  isPending = false
+}: ArtistListTableProps) {
   return (
-    <Table>
-      <TableHeader>
+    <DeletedListTable
+      items={artists}
+      getId={(artist) => artist.id}
+      onDelete={handleDelete}
+      onRestore={handleRestore}
+      isDeletedView={showDeleted}
+      emptyState={emptyState}
+      columns={
         <TableRow>
           <TableHead>Pseudónimo</TableHead>
           <TableHead>Nombre</TableHead>
@@ -49,16 +43,17 @@ export function ArtistListTable({ artists }: ArtistListTableProps) {
           <TableHead>Estado</TableHead>
           <TableHead>Acciones</TableHead>
         </TableRow>
-      </TableHeader>
-      <TableBody>
-        {displayArtists.map((artist) => (
-          <ArtistListRow
-            key={artist.id}
-            artist={artist}
-            onDelete={handleArtistsDelete}
-          />
-        ))}
-      </TableBody>
-    </Table>
+      }
+      renderRow={(artist, context) => (
+        <ArtistListRow
+          key={artist.id}
+          artist={artist}
+          isDeletedView={context.isDeletedView}
+          onDelete={context.onDelete}
+          onRestore={context.onRestore}
+          isPending={isPending}
+        />
+      )}
+    />
   )
 }

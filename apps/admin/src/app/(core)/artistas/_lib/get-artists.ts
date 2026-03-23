@@ -14,7 +14,7 @@ import {
   artistQueryParamsSchema,
   type ArtistQueryParams
 } from '../_schemas/query-params.schema'
-import type { Artist } from '../_schemas/artista.schema'
+import type { ArtistListItem } from '../_types/artist'
 
 const { artist: artistTable } = artist
 
@@ -34,9 +34,10 @@ interface ArtistRow {
   pais: string | null
   estadoId: number
   rrss: string | null
+  deletedAt: string | null
 }
 
-function mapArtistRow(row: ArtistRow): Artist {
+function mapArtistRow(row: ArtistRow): ArtistListItem {
   return {
     ...row,
     estadoId: row.estadoId as ARTIST_STATUS,
@@ -81,7 +82,7 @@ function uniqueValues(rows: Array<{ value: string | null }>): string[] {
   ).sort((left, right) => left.localeCompare(right))
 }
 
-export async function getAllArtists(): Promise<Artist[]> {
+export async function getAllArtists(): Promise<ArtistListItem[]> {
   'use cache'
   cacheTag(ARTIST_CACHE_TAG)
 
@@ -96,7 +97,8 @@ export async function getAllArtists(): Promise<Artist[]> {
       ciudad: artistTable.ciudad,
       pais: artistTable.pais,
       estadoId: artistTable.estadoId,
-      rrss: artistTable.rrss
+      rrss: artistTable.rrss,
+      deletedAt: artistTable.deletedAt
     })
     .from(artistTable)
     .where(isNull(artistTable.deletedAt))
@@ -132,7 +134,7 @@ export async function getArtistFilterOptions(): Promise<ArtistListFilterOptions>
 
 export async function getArtists(
   queryParams: unknown
-): Promise<PaginatedResponse<Artist>> {
+): Promise<PaginatedResponse<ArtistListItem>> {
   'use cache'
   cacheTag(ARTIST_CACHE_TAG)
 
@@ -152,7 +154,8 @@ export async function getArtists(
         ciudad: artistTable.ciudad,
         pais: artistTable.pais,
         estadoId: artistTable.estadoId,
-        rrss: artistTable.rrss
+        rrss: artistTable.rrss,
+        deletedAt: artistTable.deletedAt
       })
       .from(artistTable)
       .where(whereClause)
