@@ -1,10 +1,7 @@
 'use client'
 
 import { throttle, useQueryStates } from 'nuqs'
-import {
-  DeletedToggle,
-  useDeletedToggleList
-} from '@/shared/components/deleted-toggle-list'
+import { DeletedToggle } from '@/shared/components/deleted-toggle-list'
 import { EmptyState } from '@/shared/components/empty-state'
 import { PaginationControls } from '@/shared/components/pagination-controls'
 import type { PaginatedResponse } from '@/shared/types/pagination'
@@ -15,6 +12,7 @@ import type { BandRow, DeletedBandRow } from '../_types/band'
 import { BandCreateDialog } from './band-create-dialog'
 import { BandListTable } from './band-list-table'
 import { BandUpdateDialog } from './band-update-dialog'
+import { useDeletedToggleList } from '@/shared/components/deleted-toggle-list/use-deleted-toggle-list'
 
 interface BandListContainerProps {
   activeBands: PaginatedResponse<BandRow>
@@ -76,6 +74,12 @@ export function BandListContainer({
 
         {!mostrar_eliminados && <BandCreateDialog />}
       </div>
+
+      <PaginationControls
+        {...pagination}
+        onPageChange={(page) => setParams({ page })}
+        itemNoun='bandas'
+      />
 
       {visibleItems.length === 0 ? (
         <EmptyState {...emptyState} />

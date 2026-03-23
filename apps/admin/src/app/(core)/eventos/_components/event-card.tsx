@@ -10,7 +10,7 @@ import {
 import { ActionMenuButton } from '@/shared/components/action-menu-button'
 import { Event } from '../_schemas/event.schema'
 import { useState } from 'react'
-import { ConfirmationDialog } from 'src/shared/components/confirmation-dialog'
+import { ConfirmationDialog } from '@/shared/components/confirmation-dialog'
 
 interface EventCardProps {
   event: Event

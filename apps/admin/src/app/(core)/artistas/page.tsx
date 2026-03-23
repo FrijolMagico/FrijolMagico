@@ -1,4 +1,4 @@
-import { SearchParamsProps } from 'src/shared/types/query-params'
+import { SearchParamsProps } from '@/shared/types/search-params'
 import { ArtistListContainer } from './_components/artist-list-container'
 import { agrupateHistory } from './_lib/aggregate-history'
 import { getHistoryData } from './_lib/get-artist-history'

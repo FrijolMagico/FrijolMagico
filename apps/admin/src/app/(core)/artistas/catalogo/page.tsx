@@ -1,4 +1,4 @@
-import { SearchParamsProps } from '@/shared/types/query-params'
+import { SearchParamsProps } from '@/shared/types/search-params'
 import { CatalogContainer } from './_components/catalog-container'
 import { getCatalogData, getArtistsNotInCatalog } from './_lib/get-catalog-data'
 import { loadCatalogQueryParams } from './_lib/search-params'

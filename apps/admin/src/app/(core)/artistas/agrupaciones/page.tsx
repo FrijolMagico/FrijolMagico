@@ -1,4 +1,4 @@
-import type { SearchParamsProps } from '@/shared/types/query-params'
+import type { SearchParamsProps } from '@/shared/types/search-params'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import { AgrupacionListContainer } from './_components/agrupacion-list-container'
 import { getActiveAgrupaciones } from './_lib/get-active-agrupaciones'

@@ -1,4 +1,4 @@
-import type { SearchParamsProps } from '@/shared/types/query-params'
+import type { SearchParamsProps } from '@/shared/types/search-params'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import { BandListContainer } from './_components/band-list-container'
 import { getActiveBands } from './_lib/get-active-bands'

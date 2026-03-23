@@ -6,8 +6,8 @@ import { RRSSViewer } from '@/shared/components/rrss/rrss-viewer'
 import { useTeamDialog } from '../_store/team-dialog-store'
 import { useState } from 'react'
 import { TeamMember } from '../_schemas/organizacion.schema'
-import { ConfirmationDialog } from 'src/shared/components/confirmation-dialog'
-import { CopyToClipboard } from 'src/shared/components/copy-to-clipboard'
+import { ConfirmationDialog } from '@/shared/components/confirmation-dialog'
+import { CopyToClipboard } from '@/shared/components/copy-to-clipboard'
 
 interface TeamRowProps {
   member: TeamMember

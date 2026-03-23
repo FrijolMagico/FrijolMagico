@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 
-import type { SearchParamsProps } from '@/shared/types/query-params'
+import type { SearchParamsProps } from '@/shared/types/search-params'
 import type {
   EdicionOption,
   ParticipacionesViewData,

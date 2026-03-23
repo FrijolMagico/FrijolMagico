@@ -1,4 +1,4 @@
-import type { SearchParamsProps } from '@/shared/types/query-params'
+import type { SearchParamsProps } from '@/shared/types/search-params'
 import { EditionsContainer } from './_components/edition-container'
 import { getEditionDays } from './_lib/data-access-layer/get-edition-days'
 import { getEditions } from './_lib/data-access-layer/get-editions'

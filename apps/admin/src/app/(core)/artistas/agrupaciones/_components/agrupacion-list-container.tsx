@@ -1,10 +1,7 @@
 'use client'
 
 import { throttle, useQueryStates } from 'nuqs'
-import {
-  DeletedToggle,
-  useDeletedToggleList
-} from '@/shared/components/deleted-toggle-list'
+import { DeletedToggle } from '@/shared/components/deleted-toggle-list'
 import { EmptyState } from '@/shared/components/empty-state'
 import { PaginationControls } from '@/shared/components/pagination-controls'
 import type { PaginatedResponse } from '@/shared/types/pagination'
@@ -13,9 +10,10 @@ import { restoreAgrupacionAction } from '../_actions/restore-agrupacion.action'
 import { agrupacionQueryParams } from '../_lib/search-params'
 import type { AgrupacionRow, DeletedAgrupacionRow } from '../_types/agrupacion'
 import { AgrupacionCreateDialog } from './agrupacion-create-dialog'
-import { AgrupacionDetailDialog } from './agrupacion-detail-dialog'
+// import { AgrupacionDetailDialog } from './agrupacion-detail-dialog'
 import { AgrupacionListTable } from './agrupacion-list-table'
 import { AgrupacionUpdateDialog } from './agrupacion-update-dialog'
+import { useDeletedToggleList } from '@/shared/components/deleted-toggle-list/use-deleted-toggle-list'
 
 interface AgrupacionListContainerProps {
   activeAgrupaciones: PaginatedResponse<AgrupacionRow>
@@ -110,7 +108,7 @@ export function AgrupacionListContainer({
       />
 
       <AgrupacionUpdateDialog />
-      <AgrupacionDetailDialog />
+      {/* <AgrupacionDetailDialog /> */}
     </article>
   )
 }

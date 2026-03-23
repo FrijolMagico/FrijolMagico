@@ -11,7 +11,7 @@ import { ActionMenuButton } from '@/shared/components/action-menu-button'
 import { RRSSViewer } from '@/shared/components/rrss/rrss-viewer'
 import type { ArtistWithHistory } from '../_types/artist'
 import { STATUS_LABEL_MAP } from '../_constants'
-import { CopyToClipboard } from 'src/shared/components/copy-to-clipboard'
+import { CopyToClipboard } from '@/shared/components/copy-to-clipboard'
 
 interface ArtistListRowProps {
   artist: ArtistWithHistory

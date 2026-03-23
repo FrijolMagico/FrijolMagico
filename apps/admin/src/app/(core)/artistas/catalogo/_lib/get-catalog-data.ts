@@ -5,7 +5,6 @@ import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { and, asc, count, eq, inArray, notExists, sql } from 'drizzle-orm'
 import { getAvatarUrl } from '@/shared/lib/cdn'
-import { cacheTag } from '@/shared/lib/next-cache'
 import {
   createPaginatedResponse,
   type PaginatedResponse
@@ -21,6 +20,7 @@ import type {
   CatalogAvailableArtist,
   CatalogListItem
 } from '../_types/catalog-list-item'
+import { cacheTag } from 'next/cache'
 
 const { catalogArtist, artistImage, artist: artistTable } = artist
 

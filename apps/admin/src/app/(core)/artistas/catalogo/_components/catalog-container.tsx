@@ -11,8 +11,8 @@ import { CreateCatalogDialog } from './create-catalog-dialog'
 import { UpdateCatalogDialog } from './update-catalog-dialog'
 import { catalogQueryParams } from '../_lib/search-params'
 import { CatalogTable } from './catalog-table'
-import { PaginationControls } from 'src/shared/components/pagination-controls'
-import { EmptyState } from 'src/shared/components/empty-state'
+import { PaginationControls } from '@/shared/components/pagination-controls'
+import { EmptyState } from '@/shared/components/empty-state'
 
 interface CatalogContainerProps {
   catalog: CatalogListItem[]
