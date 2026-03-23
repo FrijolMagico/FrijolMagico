@@ -3,29 +3,42 @@
 import { useState } from 'react'
 import { useQueryStates } from 'nuqs'
 import { IconPlus, IconChevronDown } from '@tabler/icons-react'
+import {
+  getTotalPages,
+  type PaginatedResponse
+} from '@/shared/types/pagination'
 import { Button } from '@/shared/components/ui/button'
 import {
   Popover,
   PopoverContent,
   PopoverTrigger
 } from '@/shared/components/ui/popover'
-import type { ParticipacionesData } from '../_lib/get-participaciones-data'
 import { ParticipantsTable } from './participants-table'
 import { ConfigurationSheet } from './configuration-sheet'
 import { AddExpositorDialog } from './add-expositor-dialog'
 import { AddActividadDialog } from './add-actividad-dialog'
 import { useParticipacionesViewStore } from '../_store/participaciones-view-store'
 import { participacionesSearchParams } from '../_lib/search-params'
-import type { ParticipationStatus } from '../_types'
+import type {
+  ParticipationStatus,
+  ParticipacionesViewData,
+  ParticipantListRow
+} from '../_types'
 
 interface ParticipacionesContainerProps {
-  data: ParticipacionesData
-  edicionId: string
+  data: ParticipacionesViewData
+  edicionId: number
+  pagination: {
+    page: number
+    pageSize: number
+    total: number
+  }
 }
 
 export function ParticipacionesContainer({
   data,
-  edicionId
+  edicionId,
+  pagination
 }: ParticipacionesContainerProps) {
   const [filters, setFilters] = useQueryStates(participacionesSearchParams, {
     shallow: false
@@ -60,6 +73,29 @@ export function ParticipacionesContainer({
   const handlePageChange = (page: number) => {
     void setFilters({ page })
   }
+
+  const participantesPagination: PaginatedResponse<ParticipantListRow> = {
+    data: data.participantes,
+    page: pagination.page,
+    pageSize: pagination.pageSize,
+    total: pagination.total,
+    totalPages: getTotalPages(pagination.total, pagination.pageSize)
+  }
+
+  const totalActividades = data.participantes.reduce(
+    (total, participante) => total + participante.actividades.length,
+    0
+  )
+
+  const disciplinasForDialog = data.disciplinas.map((disciplina) => ({
+    ...disciplina,
+    id: String(disciplina.id)
+  }))
+
+  const tiposActividadForDialog = data.tiposActividad.map((tipoActividad) => ({
+    ...tipoActividad,
+    id: Number(tipoActividad.id)
+  }))
 
   // Group editions by event name
   const groupedEdiciones = data.ediciones.reduce(
@@ -96,7 +132,9 @@ export function ParticipacionesContainer({
                     <button
                       key={ed.id}
                       className='hover:bg-accent hover:text-accent-foreground w-full px-3 py-1.5 text-left text-sm'
-                      onClick={() => handleEditionSelect(ed.slug ?? ed.id)}
+                      onClick={() =>
+                        handleEditionSelect(ed.slug ?? String(ed.id))
+                      }
                     >
                       Edición {ed.nombre ?? ed.id}
                     </button>
@@ -124,18 +162,18 @@ export function ParticipacionesContainer({
       {/* Stats Bar */}
       <div className='text-muted-foreground flex items-center gap-6 text-sm'>
         <span>
-          <strong className='text-foreground'>{data.participants.total}</strong>{' '}
+          <strong className='text-foreground'>{pagination.total}</strong>{' '}
           participantes
         </span>
         <span>
-          <strong className='text-foreground'>{data.actividades.length}</strong>{' '}
+          <strong className='text-foreground'>{totalActividades}</strong>{' '}
           actividades
         </span>
       </div>
 
       <ParticipantsTable
         filters={filters}
-        pagination={data.participants}
+        pagination={participantesPagination}
         onSearchChange={handleSearchChange}
         onEstadoChange={handleEstadoChange}
         onClearFilters={handleClearFilters}
@@ -145,17 +183,26 @@ export function ParticipacionesContainer({
       <ConfigurationSheet data={data} />
 
       <AddExpositorDialog
-        edicionId={edicionId}
-        artistas={data.artistas}
-        agrupaciones={data.agrupaciones}
-        disciplinas={data.disciplinas}
+        edicionId={String(edicionId)}
+        artistas={data.artistas.map((artista) => ({
+          ...artista,
+          id: String(artista.id)
+        }))}
+        agrupaciones={data.agrupaciones.map((agrupacion) => ({
+          ...agrupacion,
+          id: String(agrupacion.id),
+          descripcion: null,
+          correo: null
+        }))}
+        disciplinas={disciplinasForDialog}
       />
 
       <AddActividadDialog
         edicionId={edicionId}
         artistas={data.artistas}
         agrupaciones={data.agrupaciones}
-        tiposActividad={data.tiposActividad}
+        bandas={data.bandas}
+        tiposActividad={tiposActividadForDialog}
       />
     </div>
   )

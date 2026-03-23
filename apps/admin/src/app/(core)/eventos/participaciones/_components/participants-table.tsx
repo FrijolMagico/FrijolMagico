@@ -168,7 +168,8 @@ export function ParticipantsTable({
       <PaginationControls
         page={pagination.page}
         pageSize={pagination.pageSize}
-        totalItems={pagination.total}
+        total={pagination.total}
+        totalPages={pagination.totalPages}
         onPageChange={onPageChange}
         itemNoun='participantes'
       />
@@ -183,12 +184,15 @@ export function ParticipantsTable({
         </TableHeader>
         <TableBody>
           {rows.map((row) => {
-            const isCollective = !row.artistaId
-            const name = isCollective
-              ? row.agrupacionNombre || 'Agrupación sin nombre'
-              : row.artistaPseudonimo ||
-                row.artistaNombre ||
-                'Artista sin nombre'
+            const isCollective = row.participantType !== 'artista'
+            const isBand = row.participantType === 'banda'
+            const name = isBand
+              ? row.bandaNombre || 'Banda sin nombre'
+              : isCollective
+                ? row.agrupacionNombre || 'Agrupación sin nombre'
+                : row.artistaPseudonimo ||
+                  row.artistaNombre ||
+                  'Artista sin nombre'
             const isVetado = row.artistaEstadoSlug === 'vetado'
 
             return (
@@ -222,7 +226,11 @@ export function ParticipantsTable({
                         )}
                       </span>
                       <span className='text-muted-foreground text-xs'>
-                        {isCollective ? 'Agrupación' : 'Individual'}
+                        {isBand
+                          ? 'Banda'
+                          : isCollective
+                            ? 'Agrupación'
+                            : 'Individual'}
                       </span>
                     </div>
                   </div>
@@ -267,7 +275,8 @@ export function ParticipantsTable({
       <PaginationControls
         page={pagination.page}
         pageSize={pagination.pageSize}
-        totalItems={pagination.total}
+        total={pagination.total}
+        totalPages={pagination.totalPages}
         onPageChange={onPageChange}
         itemNoun='participantes'
       />
