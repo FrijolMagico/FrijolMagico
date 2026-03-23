@@ -6,7 +6,7 @@ import { db } from '@frijolmagico/database/orm'
 import { participations } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import { ActionState } from '@/shared/types/actions'
-import { PARTICIPACIONES_CACHE_TAG } from '../_constants'
+import { ACTIVIDAD_DETALLE_CACHE_TAG } from '../_constants'
 import { actividadDetallesUpdateSchema } from '../_schemas/participaciones.schema'
 
 const { activity } = participations
@@ -63,7 +63,7 @@ export async function updateDetallesAction(
         .where(eq(activity.id, detallesId))
     })
 
-    updateTag(PARTICIPACIONES_CACHE_TAG)
+    updateTag(ACTIVIDAD_DETALLE_CACHE_TAG)
 
     return { success: true }
   } catch (error) {
