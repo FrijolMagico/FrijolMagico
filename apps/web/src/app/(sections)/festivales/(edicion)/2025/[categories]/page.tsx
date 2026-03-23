@@ -15,14 +15,14 @@ type CategoryParams = {
 }
 
 export default async function ApprovedArtistsPage({
-  params,
+  params
 }: {
   params: Promise<CategoryParams>
 }) {
   const { data, error } = await getApprovedArtistsData()
 
   const groupedArtists = Object.groupBy(data || [], ({ category }) =>
-    normalizeString(category),
+    normalizeString(category)
   )
 
   const { categories } = await params
@@ -59,7 +59,7 @@ export default async function ApprovedArtistsPage({
 }
 
 export async function generateMetadata({
-  params,
+  params
 }: {
   params: Promise<CategoryParams>
 }): Promise<Metadata> {
@@ -67,12 +67,12 @@ export async function generateMetadata({
 
   return {
     title: siteData.selected_artists.seo.category[categories].title,
-    description: siteData.selected_artists.seo.category[categories].description,
+    description: siteData.selected_artists.seo.category[categories].description
   }
 }
 
 export async function generateStaticParams() {
   return siteData.selected_artists.categories.map((category) => ({
-    categories: normalizeString(category),
+    categories: normalizeString(category)
   }))
 }

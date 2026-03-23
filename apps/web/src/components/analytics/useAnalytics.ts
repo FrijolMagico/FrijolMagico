@@ -9,7 +9,7 @@ import {
   type FilterAppliedParams,
   type CatalogSearchParams,
   type SocialClickParams,
-  type SectionViewParams,
+  type SectionViewParams
 } from '@/config/analytics'
 
 // Extend window type for gtag
@@ -18,7 +18,7 @@ declare global {
     gtag?: (
       command: 'config' | 'event' | 'js',
       targetId: string | Date,
-      config?: Record<string, unknown>,
+      config?: Record<string, unknown>
     ) => void
   }
 }
@@ -40,7 +40,7 @@ const isAnalyticsAvailable = (): boolean => {
  */
 const trackEvent = (
   eventName: string,
-  parameters?: Record<string, unknown>,
+  parameters?: Record<string, unknown>
 ): void => {
   if (!isAnalyticsAvailable()) return
 
@@ -60,7 +60,7 @@ export const useAnalytics = () => {
     trackEvent(GA_EVENTS.ARTIST_VIEW, {
       artist_name: params.artist_name,
       artist_category: params.artist_category,
-      artist_city: params.artist_city,
+      artist_city: params.artist_city
     })
   }, [])
 
@@ -70,7 +70,7 @@ export const useAnalytics = () => {
   const trackFilterApplied = useCallback((params: FilterAppliedParams) => {
     trackEvent(GA_EVENTS.FILTER_APPLIED, {
       filter_type: params.filter_type,
-      filter_value: params.filter_value,
+      filter_value: params.filter_value
     })
   }, [])
 
@@ -80,7 +80,7 @@ export const useAnalytics = () => {
   const trackCatalogSearch = useCallback((params: CatalogSearchParams) => {
     trackEvent(GA_EVENTS.CATALOG_SEARCH, {
       search_term: params.search_term,
-      results_count: params.results_count,
+      results_count: params.results_count
     })
   }, [])
 
@@ -90,7 +90,7 @@ export const useAnalytics = () => {
   const trackSocialClick = useCallback((params: SocialClickParams) => {
     trackEvent(GA_EVENTS.SOCIAL_CLICK, {
       platform: params.platform,
-      location: params.location,
+      location: params.location
     })
   }, [])
 
@@ -100,7 +100,7 @@ export const useAnalytics = () => {
   const trackSectionView = useCallback((params: SectionViewParams) => {
     trackEvent(GA_EVENTS.SECTION_VIEW, {
       section_name: params.section_name,
-      section_path: params.section_path,
+      section_path: params.section_path
     })
   }, [])
 
@@ -111,7 +111,7 @@ export const useAnalytics = () => {
     if (!isAnalyticsAvailable()) return
 
     window.gtag?.('config', GA_MEASUREMENT_ID, {
-      page_path: url,
+      page_path: url
     })
   }, [])
 
@@ -121,6 +121,6 @@ export const useAnalytics = () => {
     trackCatalogSearch,
     trackSocialClick,
     trackSectionView,
-    trackPageView,
+    trackPageView
   }
 }

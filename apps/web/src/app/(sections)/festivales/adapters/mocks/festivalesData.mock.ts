@@ -20,8 +20,8 @@ export function getFestivalesMock(): FestivalEdicion[] {
             modalidad: 'presencial',
             lugar: {
               nombre: 'Casa Editorial ULS',
-              direccion: 'Av. Alberto Solari 1301, La Serena',
-            },
+              direccion: 'Av. Alberto Solari 1301, La Serena'
+            }
           },
           {
             fecha: '2025-10-04',
@@ -30,23 +30,23 @@ export function getFestivalesMock(): FestivalEdicion[] {
             modalidad: 'presencial',
             lugar: {
               nombre: 'Casa Editorial ULS',
-              direccion: 'Av. Alberto Solari 1301, La Serena',
-            },
-          },
-        ],
+              direccion: 'Av. Alberto Solari 1301, La Serena'
+            }
+          }
+        ]
       },
       resumen: {
         total_participantes: {
           exponentes: 42,
           talleres: 6,
-          musica: 3,
+          musica: 3
         },
         por_disciplina: {
           ilustracion: 28,
           manualidades: 10,
-          'narrativa-grafica': 4,
-        },
-      },
+          'narrativa-grafica': 4
+        }
+      }
     },
     // Ilustradores en Benders 3 - 2025
     {
@@ -66,21 +66,21 @@ export function getFestivalesMock(): FestivalEdicion[] {
             modalidad: 'presencial',
             lugar: {
               nombre: 'Benders Bar',
-              direccion: 'Av. del Mar 2100, La Serena',
-            },
-          },
-        ],
+              direccion: 'Av. del Mar 2100, La Serena'
+            }
+          }
+        ]
       },
       resumen: {
         total_participantes: {
           exponentes: 15,
           talleres: 0,
-          musica: 2,
+          musica: 2
         },
         por_disciplina: {
-          ilustracion: 15,
-        },
-      },
+          ilustracion: 15
+        }
+      }
     },
     // Festival Frijol Mágico XIV - 2024
     {
@@ -100,23 +100,23 @@ export function getFestivalesMock(): FestivalEdicion[] {
             modalidad: 'presencial',
             lugar: {
               nombre: 'Mall VIVO Coquimbo',
-              direccion: 'Av. Costanera 800, Coquimbo',
-            },
-          },
-        ],
+              direccion: 'Av. Costanera 800, Coquimbo'
+            }
+          }
+        ]
       },
       resumen: {
         total_participantes: {
           exponentes: 38,
           talleres: 4,
-          musica: 2,
+          musica: 2
         },
         por_disciplina: {
           ilustracion: 25,
           manualidades: 9,
-          'narrativa-grafica': 4,
-        },
-      },
+          'narrativa-grafica': 4
+        }
+      }
     },
     // Ilustradores en Benders 2 - 2024
     {
@@ -136,21 +136,21 @@ export function getFestivalesMock(): FestivalEdicion[] {
             modalidad: 'presencial',
             lugar: {
               nombre: 'Benders Bar',
-              direccion: 'Av. del Mar 2100, La Serena',
-            },
-          },
-        ],
+              direccion: 'Av. del Mar 2100, La Serena'
+            }
+          }
+        ]
       },
       resumen: {
         total_participantes: {
           exponentes: 12,
           talleres: 0,
-          musica: 1,
+          musica: 1
         },
         por_disciplina: {
-          ilustracion: 12,
-        },
-      },
+          ilustracion: 12
+        }
+      }
     },
     // Festival Frijol Mágico XIII - 2024
     {
@@ -170,23 +170,23 @@ export function getFestivalesMock(): FestivalEdicion[] {
             modalidad: 'presencial',
             lugar: {
               nombre: 'Mall VIVO Coquimbo',
-              direccion: 'Av. Costanera 800, Coquimbo',
-            },
-          },
-        ],
+              direccion: 'Av. Costanera 800, Coquimbo'
+            }
+          }
+        ]
       },
       resumen: {
         total_participantes: {
           exponentes: 35,
           talleres: 3,
-          musica: 2,
+          musica: 2
         },
         por_disciplina: {
           ilustracion: 24,
           manualidades: 8,
-          'narrativa-grafica': 3,
-        },
-      },
+          'narrativa-grafica': 3
+        }
+      }
     },
     // Ilustradores en Benders 1 - 2023
     {
@@ -206,21 +206,21 @@ export function getFestivalesMock(): FestivalEdicion[] {
             modalidad: 'presencial',
             lugar: {
               nombre: 'Benders Bar',
-              direccion: 'Av. del Mar 2100, La Serena',
-            },
-          },
-        ],
+              direccion: 'Av. del Mar 2100, La Serena'
+            }
+          }
+        ]
       },
       resumen: {
         total_participantes: {
           exponentes: 10,
           talleres: 0,
-          musica: 1,
+          musica: 1
         },
         por_disciplina: {
-          ilustracion: 10,
-        },
-      },
+          ilustracion: 10
+        }
+      }
     },
     // Festival Frijol Mágico XII - 2022
     {
@@ -240,22 +240,22 @@ export function getFestivalesMock(): FestivalEdicion[] {
             modalidad: 'presencial',
             lugar: {
               nombre: 'Centro Cultural Santa Inés',
-              direccion: 'Almagro #232, La Serena',
-            },
-          },
-        ],
+              direccion: 'Almagro #232, La Serena'
+            }
+          }
+        ]
       },
       resumen: {
         total_participantes: {
           exponentes: 45,
           talleres: 3,
-          musica: 2,
+          musica: 2
         },
         por_disciplina: {
           ilustracion: 35,
-          manualidades: 10,
-        },
-      },
+          manualidades: 10
+        }
+      }
     },
     // Festival Frijol Mágico XI - 2021 (Online)
     {
@@ -273,35 +273,35 @@ export function getFestivalesMock(): FestivalEdicion[] {
             hora_inicio: '15:00',
             hora_fin: '21:00',
             modalidad: 'online',
-            lugar: null,
+            lugar: null
           },
           {
             fecha: '2021-04-17',
             hora_inicio: '15:00',
             hora_fin: '21:00',
             modalidad: 'online',
-            lugar: null,
+            lugar: null
           },
           {
             fecha: '2021-04-18',
             hora_inicio: '15:00',
             hora_fin: '21:00',
             modalidad: 'online',
-            lugar: null,
-          },
-        ],
+            lugar: null
+          }
+        ]
       },
       resumen: {
         total_participantes: {
           exponentes: 30,
           talleres: 8,
-          musica: 4,
+          musica: 4
         },
         por_disciplina: {
           ilustracion: 25,
-          manualidades: 5,
-        },
-      },
+          manualidades: 5
+        }
+      }
     },
     // Festival Frijol Mágico X - 2020
     {
@@ -321,8 +321,8 @@ export function getFestivalesMock(): FestivalEdicion[] {
             modalidad: 'presencial',
             lugar: {
               nombre: 'Centro Cultural Santa Inés',
-              direccion: 'Almagro #232, La Serena',
-            },
+              direccion: 'Almagro #232, La Serena'
+            }
           },
           {
             fecha: '2020-02-29',
@@ -331,22 +331,22 @@ export function getFestivalesMock(): FestivalEdicion[] {
             modalidad: 'presencial',
             lugar: {
               nombre: 'Centro Cultural Santa Inés',
-              direccion: 'Almagro #232, La Serena',
-            },
-          },
-        ],
+              direccion: 'Almagro #232, La Serena'
+            }
+          }
+        ]
       },
       resumen: {
         total_participantes: {
           exponentes: 61,
           talleres: 5,
-          musica: 3,
+          musica: 3
         },
         por_disciplina: {
           ilustracion: 51,
-          manualidades: 10,
-        },
-      },
-    },
+          manualidades: 10
+        }
+      }
+    }
   ]
 }

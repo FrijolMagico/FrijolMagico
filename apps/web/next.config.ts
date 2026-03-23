@@ -2,17 +2,17 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   experimental: {
-    viewTransition: true,
+    viewTransition: true
   },
   images: {
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'cdn.frijolmagico.cl',
-        pathname: '/**',
-      },
-    ],
-  },
+        pathname: '/**'
+      }
+    ]
+  }
 }
 
 export default nextConfig

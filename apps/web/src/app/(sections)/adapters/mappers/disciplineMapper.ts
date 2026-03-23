@@ -6,7 +6,7 @@ export const DISCIPLINE_LABELS: Record<string, string> = {
   ilustracion: 'Ilustración',
   'narrativa-grafica': 'Narrativa Gráfica',
   manualidades: 'Manualidades',
-  fotografia: 'Fotografía',
+  fotografia: 'Fotografía'
 }
 
 /**
@@ -17,7 +17,7 @@ export const getDisciplineLabel = (slug: string): string => {
   const label = DISCIPLINE_LABELS[slug]
   if (!label) {
     throw new Error(
-      `Unknown discipline slug: "${slug}". Add it to DISCIPLINE_LABELS in disciplineMapper.ts`,
+      `Unknown discipline slug: "${slug}". Add it to DISCIPLINE_LABELS in disciplineMapper.ts`
     )
   }
   return label
@@ -27,12 +27,12 @@ export const getDisciplineLabel = (slug: string): string => {
  * Transforma un Record de disciplinas con slugs como keys a labels como keys.
  */
 export const mapPorDisciplina = (
-  porDisciplina: Record<string, number>,
+  porDisciplina: Record<string, number>
 ): Record<string, number> => {
   return Object.fromEntries(
     Object.entries(porDisciplina).map(([slug, count]) => [
       getDisciplineLabel(slug),
-      count,
-    ]),
+      count
+    ])
   )
 }

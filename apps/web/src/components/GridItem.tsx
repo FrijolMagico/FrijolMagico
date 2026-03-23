@@ -36,7 +36,7 @@ export const GridItem = ({
   as,
   row,
   col,
-  className,
+  className
 }: Props) => {
   const Component = as || 'div'
   return (
@@ -46,14 +46,15 @@ export const GridItem = ({
         hidden && 'hidden',
         classVariantSelector({
           variants: gridSpanVariants.row,
-          selector: row,
+          selector: row
         }),
         classVariantSelector({
           variants: gridSpanVariants.col,
-          selector: col,
+          selector: col
         }),
-        className,
-      )}>
+        className
+      )}
+    >
       {children}
     </Component>
   )
@@ -73,7 +74,7 @@ const gridSpanVariants = {
       'row-span-9',
       'row-span-10',
       'row-span-11',
-      'row-span-12',
+      'row-span-12'
     ],
     sm: [
       'sm:row-span-1',
@@ -87,7 +88,7 @@ const gridSpanVariants = {
       'sm:row-span-9',
       'sm:row-span-10',
       'sm:row-span-11',
-      'sm:row-span-12',
+      'sm:row-span-12'
     ],
     md: [
       'md:row-span-1',
@@ -101,7 +102,7 @@ const gridSpanVariants = {
       'md:row-span-9',
       'md:row-span-10',
       'md:row-span-11',
-      'md:row-span-12',
+      'md:row-span-12'
     ],
     lg: [
       'lg:row-span-1',
@@ -115,7 +116,7 @@ const gridSpanVariants = {
       'lg:row-span-9',
       'lg:row-span-10',
       'lg:row-span-11',
-      'lg:row-span-12',
+      'lg:row-span-12'
     ],
     xl: [
       'xl:row-span-1',
@@ -129,8 +130,8 @@ const gridSpanVariants = {
       'xl:row-span-9',
       'xl:row-span-10',
       'xl:row-span-11',
-      'xl:row-span-12',
-    ],
+      'xl:row-span-12'
+    ]
   },
   col: {
     base: [
@@ -145,7 +146,7 @@ const gridSpanVariants = {
       'col-span-9',
       'col-span-10',
       'col-span-11',
-      'col-span-12',
+      'col-span-12'
     ],
     sm: [
       'sm:col-span-1',
@@ -159,7 +160,7 @@ const gridSpanVariants = {
       'sm:col-span-9',
       'sm:col-span-10',
       'sm:col-span-11',
-      'sm:col-span-12',
+      'sm:col-span-12'
     ],
     md: [
       'md:col-span-1',
@@ -173,7 +174,7 @@ const gridSpanVariants = {
       'md:col-span-9',
       'md:col-span-10',
       'md:col-span-11',
-      'md:col-span-12',
+      'md:col-span-12'
     ],
     lg: [
       'lg:col-span-1',
@@ -187,7 +188,7 @@ const gridSpanVariants = {
       'lg:col-span-9',
       'lg:col-span-10',
       'lg:col-span-11',
-      'lg:col-span-12',
+      'lg:col-span-12'
     ],
     xl: [
       'xl:col-span-1',
@@ -201,7 +202,7 @@ const gridSpanVariants = {
       'xl:col-span-9',
       'xl:col-span-10',
       'xl:col-span-11',
-      'xl:col-span-12',
-    ],
-  },
+      'xl:col-span-12'
+    ]
+  }
 }

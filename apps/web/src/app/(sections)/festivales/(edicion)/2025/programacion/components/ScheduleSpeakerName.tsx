@@ -8,7 +8,7 @@ type ScheduleSpeakerNameProps = Pick<
 
 export const ScheduleSpeakerName = ({
   speaker,
-  speakerSocialLink,
+  speakerSocialLink
 }: ScheduleSpeakerNameProps) => {
   if (!speaker || speaker === '') return null
 
@@ -48,7 +48,7 @@ const SpeakerName = ({ speaker }: { speaker: string }): React.ReactNode => {
 
 const SpeakerLink = ({
   speaker,
-  speakerSocialLink,
+  speakerSocialLink
 }: {
   speaker: string
   speakerSocialLink: string
@@ -58,7 +58,8 @@ const SpeakerLink = ({
       target='_blank'
       rel='noopener noreferrer'
       href={speakerSocialLink}
-      className='mt-1 flex items-center gap-1 font-light hover:underline'>
+      className='mt-1 flex items-center gap-1 font-light hover:underline'
+    >
       {speaker}
       <ExternalLink size={14} strokeWidth={1.2} />
     </a>

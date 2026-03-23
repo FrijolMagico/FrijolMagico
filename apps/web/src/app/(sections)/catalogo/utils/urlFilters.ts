@@ -16,7 +16,7 @@ export function getFiltersFromURL(): CatalogFilterValues {
     category: parseParamArray(params.get(FILTER_KEYS.category)),
     city: parseParamArray(params.get(FILTER_KEYS.city)),
     country: parseParamArray(params.get(FILTER_KEYS.country)),
-    search: params.get(FILTER_KEYS.search) || '',
+    search: params.get(FILTER_KEYS.search) || ''
   }
 }
 
@@ -37,11 +37,11 @@ export function urlHasFilters(): boolean {
 export function updateURLParams(filters: CatalogFilterValues) {
   if (typeof window === 'undefined') return
   const uniqueCategory = Array.from(
-    new Set(filters.category.map(normalizeString)),
+    new Set(filters.category.map(normalizeString))
   )
   const uniqueCity = Array.from(new Set(filters.city.map(normalizeString)))
   const uniqueCountry = Array.from(
-    new Set(filters.country.map(normalizeString)),
+    new Set(filters.country.map(normalizeString))
   )
   const params = new URLSearchParams()
   if (uniqueCategory.length > 0)

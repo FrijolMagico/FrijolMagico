@@ -18,7 +18,7 @@ export async function approvedArtistsRepository(): Promise<ApprovedArtist[]> {
 
   if (!data) {
     throw new Error(
-      'Data not found or an error ocurred while fetching approved artists',
+      'Data not found or an error ocurred while fetching approved artists'
     )
   }
 

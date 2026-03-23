@@ -12,7 +12,7 @@ interface ScheduleWrapperProps {
 
 export const ScheduleWrapper = ({
   firstDay,
-  secondDay,
+  secondDay
 }: ScheduleWrapperProps) => {
   const [selectedDay, setSelectedDay] = useState<1 | 2>(1)
 

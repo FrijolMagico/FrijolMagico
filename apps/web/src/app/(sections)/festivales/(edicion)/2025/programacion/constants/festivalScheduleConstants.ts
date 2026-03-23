@@ -8,7 +8,7 @@ export const FESTIVAL_SCHEDULE_SHEET_HEADERS: ScheduleHeaders = {
   description: 'Descripción',
   speaker: 'Encargado',
   speakerSocialLink: 'RRSS',
-  infoLink: 'Información',
+  infoLink: 'Información'
 } as const
 
 export const WORKSHOP_INSCRIPTION_LINK =

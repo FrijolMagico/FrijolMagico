@@ -26,7 +26,7 @@ export const CatalogFilter = ({
   onToggle,
   selectedValues = [],
   onSelect,
-  onClear,
+  onClear
 }: CatalogFilterProps) => {
   const dropdownRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
@@ -73,7 +73,8 @@ export const CatalogFilter = ({
         aria-haspopup='true'
         aria-expanded={isOpen}
         aria-controls={`filter-options-${filterKey}`}
-        className='border-fm-green/30 text-fm-dark/80 hover:bg-fm-dark/10 flex cursor-pointer items-center gap-2 rounded-xl border border-dashed px-3 py-1.5 text-sm transition-colors'>
+        className='border-fm-green/30 text-fm-dark/80 hover:bg-fm-dark/10 flex cursor-pointer items-center gap-2 rounded-xl border border-dashed px-3 py-1.5 text-sm transition-colors'
+      >
         <PlusCircle className='h-4 w-4' />
         <span>{title}</span>
         {selectedValues.length > 0 && (
@@ -88,7 +89,8 @@ export const CatalogFilter = ({
           ref={dropdownRef}
           id={`filter-options-${filterKey}`}
           role='menu'
-          className='bg-fm-white absolute z-10 mt-2 w-48 rounded-md border border-gray-200 shadow-lg'>
+          className='bg-fm-white absolute z-10 mt-2 w-48 rounded-md border border-gray-200 shadow-lg'
+        >
           <ul className='max-h-60 space-y-1 overflow-auto p-1'>
             {options.map((option) => {
               const isSelected = selectedValues
@@ -109,7 +111,8 @@ export const CatalogFilter = ({
                     isSelected
                       ? 'text-fm-green font-bold'
                       : 'hover:bg-fm-dark/10 text-fm-dark/80'
-                  }`}>
+                  }`}
+                >
                   <span className='flex-1'>{option.value}</span>
                   {isSelected && <Check className='text-fm-green h-4 w-4' />}
                 </li>
@@ -119,7 +122,8 @@ export const CatalogFilter = ({
               <li className='mt-1 border-t border-gray-200 pt-1'>
                 <button
                   onClick={handleClearClick}
-                  className='text-fm-orange hover:bg-fm-black/10 w-full cursor-pointer rounded px-3 py-2 text-center text-sm'>
+                  className='text-fm-orange hover:bg-fm-black/10 w-full cursor-pointer rounded px-3 py-2 text-center text-sm'
+                >
                   Borrar filtros
                 </button>
               </li>

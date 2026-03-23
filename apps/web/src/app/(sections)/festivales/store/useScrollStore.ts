@@ -14,5 +14,5 @@ export const useScrollStore = create<ScrollState>((set) => ({
   targetId: null,
   setScrolling: (targetId: string) =>
     set({ isProgrammaticScroll: true, targetId }),
-  clearScrolling: () => set({ isProgrammaticScroll: false, targetId: null }),
+  clearScrolling: () => set({ isProgrammaticScroll: false, targetId: null })
 }))

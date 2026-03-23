@@ -12,7 +12,7 @@ export async function getApprovedArtistsData(): Promise<{
 
     return {
       data,
-      error: null,
+      error: null
     }
   } catch (error) {
     const err = error as Error
@@ -21,8 +21,8 @@ export async function getApprovedArtistsData(): Promise<{
       data: [],
       error: {
         message:
-          'Error al obtener los artistas aprobados. Por favor intente nuevamente más tarde.',
-      },
+          'Error al obtener los artistas aprobados. Por favor intente nuevamente más tarde.'
+      }
     }
   }
 }

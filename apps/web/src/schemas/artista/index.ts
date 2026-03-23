@@ -3,7 +3,7 @@ export {
   artistaInsertSchema,
   type Artista,
   type ArtistaInsert,
-  type RrssObject,
+  type RrssObject
 } from './artistaSchema'
 
 export {
@@ -14,5 +14,5 @@ export {
   ensureHttps,
   urlToRrssObject,
   rrssToJson,
-  jsonToRrss,
+  jsonToRrss
 } from './rrssSchema'

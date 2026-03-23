@@ -7,7 +7,7 @@ import { ViewTransition } from 'react'
 import { Suspense } from 'react'
 import {
   CatalogCardLoader,
-  CatalogSearchSectionLoader,
+  CatalogSearchSectionLoader
 } from './components/CatalogSkeletonLoaders'
 import { CatalogSearchSection } from './components/CatalogSearchSection'
 import { CatalogFiltersInitializer } from './components/CatalogFiltersInitializer'
@@ -20,7 +20,7 @@ const { catalog } = siteData
 
 export const metadata: Metadata = {
   title: catalog.seo.title,
-  description: catalog.seo.description,
+  description: catalog.seo.description
 }
 
 export default async function CatalogPage() {

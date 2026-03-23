@@ -2,5 +2,5 @@ export {
   catalogSheetRowSchema,
   validateCatalogSheetRow,
   type CatalogSheetRow,
-  type CatalogSheetRowValidationResult,
+  type CatalogSheetRowValidationResult
 } from './catalogSheetRowSchema'

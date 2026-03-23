@@ -29,7 +29,7 @@ export const Festival2025Card = () => {
       scale: 1.04,
       transformPerspective: 800,
       duration: 0.35,
-      ease: 'power2.out',
+      ease: 'power2.out'
     })
   }
 
@@ -40,7 +40,7 @@ export const Festival2025Card = () => {
       rotateX: 0,
       scale: 1,
       duration: 0.5,
-      ease: 'power3.out',
+      ease: 'power3.out'
     })
   }
 
@@ -75,7 +75,8 @@ export const Festival2025Card = () => {
         onTouchEnd={handleActionLeave}
         ref={cardWrapperRef}
         href={paths.festival[2025].base}
-        className='relative block size-full will-change-transform'>
+        className='relative block size-full will-change-transform'
+      >
         <NewBadget
           color='text-2025-orange'
           backgroundColor='bg-2025-white'
@@ -83,7 +84,8 @@ export const Festival2025Card = () => {
         />
         <div
           ref={cardRef}
-          className='from-2025-yellow to-2025-orange text-2025-white relative size-full overflow-hidden rounded-2xl bg-gradient-to-tr p-6 will-change-transform'>
+          className='from-2025-yellow to-2025-orange text-2025-white relative size-full overflow-hidden rounded-2xl bg-gradient-to-tr p-6 will-change-transform'
+        >
           <Image
             src='/sections/festivales/2025/images/CITY.webp'
             alt='Ilustración de la ciudad de Coquimbo destruída por un Frijol Mágico'

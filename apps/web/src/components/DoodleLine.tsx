@@ -11,7 +11,7 @@ export const DoodleLine = ({
   width = '100%',
   height = '50px',
   color,
-  loopCount = 7,
+  loopCount = 7
 }: DoodleLineProps) => {
   const generatePath = (count: number) => {
     let path = 'M0,25 '
@@ -41,14 +41,16 @@ export const DoodleLine = ({
         viewBox='0 0 300 50'
         xmlns='http://www.w3.org/2000/svg'
         className={color}
-        preserveAspectRatio='xMidYMid meet'>
+        preserveAspectRatio='xMidYMid meet'
+      >
         <path
           d={generatePath(loopCount)}
           fill='none'
           className='stroke-current'
           strokeWidth='2'
           strokeLinecap='round'
-          strokeLinejoin='round'></path>
+          strokeLinejoin='round'
+        ></path>
       </svg>
     </div>
   )

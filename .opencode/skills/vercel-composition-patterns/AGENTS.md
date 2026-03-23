@@ -62,7 +62,7 @@ function Composer({
   isDMThread,
   dmId,
   isEditing,
-  isForwarding,
+  isForwarding
 }: Props) {
   return (
     <form>
@@ -160,7 +160,7 @@ function Composer({
   renderActions,
   showAttachments,
   showFormatting,
-  showEmojis,
+  showEmojis
 }: Props) {
   return (
     <form>
@@ -202,7 +202,7 @@ function ComposerInput() {
   const {
     state,
     actions: { update },
-    meta: { inputRef },
+    meta: { inputRef }
   } = use(ComposerContext)
   return (
     <TextInput
@@ -215,7 +215,7 @@ function ComposerInput() {
 
 function ComposerSubmit() {
   const {
-    actions: { submit },
+    actions: { submit }
   } = use(ComposerContext)
   return <Button onPress={submit}>Send</Button>
 }
@@ -230,7 +230,7 @@ const Composer = {
   Footer: ComposerFooter,
   Attachments: ComposerAttachments,
   Formatting: ComposerFormatting,
-  Emojis: ComposerEmojis,
+  Emojis: ComposerEmojis
 }
 ```
 
@@ -296,7 +296,7 @@ function ChannelComposer({ channelId }: { channelId: string }) {
 // Provider handles all state management details
 function ChannelProvider({
   channelId,
-  children,
+  children
 }: {
   channelId: string
   children: React.ReactNode
@@ -433,7 +433,7 @@ function ComposerInput() {
   const {
     state,
     actions: { update },
-    meta,
+    meta
   } = use(ComposerContext)
 
   // This component works with ANY provider that implements the interface
@@ -461,7 +461,7 @@ function ForwardMessageProvider({ children }: { children: React.ReactNode }) {
       value={{
         state,
         actions: { update: setState, submit },
-        meta: { inputRef },
+        meta: { inputRef }
       }}
     >
       {children}
@@ -479,7 +479,7 @@ function ChannelProvider({ channelId, children }: Props) {
       value={{
         state,
         actions: { update, submit },
-        meta: { inputRef },
+        meta: { inputRef }
       }}
     >
       {children}
@@ -540,7 +540,7 @@ function ForwardMessageDialog() {
 // This button lives OUTSIDE Composer.Frame but can still submit based on its context!
 function ForwardButton() {
   const {
-    actions: { submit },
+    actions: { submit }
   } = use(ComposerContext)
   return <Button onPress={submit}>Forward</Button>
 }
@@ -667,10 +667,12 @@ function ForwardMessageDialog() {
     <ForwardMessageProvider>
       <Dialog>
         <ForwardMessageComposer />
-        <MessagePreview /> {/* Custom components can access state and actions */}
+        <MessagePreview />{' '}
+        {/* Custom components can access state and actions */}
         <DialogActions>
           <CancelButton />
-          <ForwardButton /> {/* Custom components can access state and actions */}
+          <ForwardButton />{' '}
+          {/* Custom components can access state and actions */}
         </DialogActions>
       </Dialog>
     </ForwardMessageProvider>
@@ -821,7 +823,7 @@ signatures.
 function Composer({
   renderHeader,
   renderFooter,
-  renderActions,
+  renderActions
 }: {
   renderHeader?: () => React.ReactNode
   renderFooter?: () => React.ReactNode
@@ -918,7 +920,10 @@ const ComposerInput = forwardRef<TextInput, Props>((props, ref) => {
 **Correct: ref as a regular prop**
 
 ```tsx
-function ComposerInput({ ref, ...props }: Props & { ref?: React.Ref<TextInput> }) {
+function ComposerInput({
+  ref,
+  ...props
+}: Props & { ref?: React.Ref<TextInput> }) {
   return <TextInput ref={ref} {...props} />
 }
 ```

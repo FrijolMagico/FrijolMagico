@@ -1,6 +1,6 @@
 import {
   getRandomName,
-  getRandomInstagram,
+  getRandomInstagram
 } from '@/infra/__mocks__/mockDataUtils'
 
 import type { CatalogArtist } from '../../types/catalog'
@@ -30,17 +30,17 @@ export const getDataFromCatalogMock = (): CatalogArtist[] => {
               {
                 name: `Colectivo ${Math.ceil((i + 1) / 3)}`,
                 edicion: 'XV',
-                evento: 'Festival Frijol Magico',
-              },
+                evento: 'Festival Frijol Magico'
+              }
             ]
           : [],
       editions: [
         {
           edicion: 'XV',
           evento: 'Festival Frijol Magico',
-          año: '2025',
-        },
-      ],
+          año: '2025'
+        }
+      ]
     })),
     ...Array.from({ length: quantitys[1] }).map((_, i) => ({
       id: (i + quantitys[0] + 1).toString(),
@@ -61,9 +61,9 @@ export const getDataFromCatalogMock = (): CatalogArtist[] => {
         {
           edicion: 'XIV',
           evento: 'Festival Frijol Magico',
-          año: '2024',
-        },
-      ],
+          año: '2024'
+        }
+      ]
     })),
     ...Array.from({ length: quantitys[2] }).map((_, i) => ({
       id: (i + quantitys[0] + quantitys[1] + 1).toString(),
@@ -84,14 +84,14 @@ export const getDataFromCatalogMock = (): CatalogArtist[] => {
         {
           edicion: 'XIII',
           evento: 'Festival Frijol Magico',
-          año: '2023',
+          año: '2023'
         },
         {
           edicion: 'XIV',
           evento: 'Festival Frijol Magico',
-          año: '2024',
-        },
-      ],
-    })),
+          año: '2024'
+        }
+      ]
+    }))
   ].sort(() => Math.random() - 0.5)
 }

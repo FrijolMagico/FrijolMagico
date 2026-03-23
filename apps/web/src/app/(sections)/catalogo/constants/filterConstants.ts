@@ -3,12 +3,12 @@ export const FILTER_LABELS = {
   country: 'País',
   city: 'Ciudad',
   category: 'Categoría',
-  search: 'Busqueda',
+  search: 'Busqueda'
 } as const
 
 export const FILTER_KEYS = {
   country: 'country',
   city: 'city',
   category: 'category',
-  search: 'search',
+  search: 'search'
 } as const

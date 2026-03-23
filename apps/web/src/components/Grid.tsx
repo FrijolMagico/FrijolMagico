@@ -37,7 +37,7 @@ export const Grid = ({
   row = { base: 1 },
   col = { base: 1 },
   className,
-  as,
+  as
 }: Props) => {
   const Component = as || 'section'
   return (
@@ -47,14 +47,15 @@ export const Grid = ({
         container && 'container',
         classVariantSelector({
           variants: gridTemplateVariants.row,
-          selector: row,
+          selector: row
         }),
         classVariantSelector({
           variants: gridTemplateVariants.col,
-          selector: col,
+          selector: col
         }),
-        className,
-      )}>
+        className
+      )}
+    >
       {children}
     </Component>
   )
@@ -74,7 +75,7 @@ const gridTemplateVariants = {
       'grid-rows-9',
       'grid-rows-10',
       'grid-rows-11',
-      'grid-rows-12',
+      'grid-rows-12'
     ],
     sm: [
       'sm:grid-rows-1',
@@ -88,7 +89,7 @@ const gridTemplateVariants = {
       'sm:grid-rows-9',
       'sm:grid-rows-10',
       'sm:grid-rows-11',
-      'sm:grid-rows-12',
+      'sm:grid-rows-12'
     ],
     md: [
       'md:grid-rows-1',
@@ -102,7 +103,7 @@ const gridTemplateVariants = {
       'md:grid-rows-9',
       'md:grid-rows-10',
       'md:grid-rows-11',
-      'md:grid-rows-12',
+      'md:grid-rows-12'
     ],
     lg: [
       'lg:grid-rows-1',
@@ -116,7 +117,7 @@ const gridTemplateVariants = {
       'lg:grid-rows-9',
       'lg:grid-rows-10',
       'lg:grid-rows-11',
-      'lg:grid-rows-12',
+      'lg:grid-rows-12'
     ],
     xl: [
       'xl:grid-rows-1',
@@ -130,8 +131,8 @@ const gridTemplateVariants = {
       'xl:grid-rows-9',
       'xl:grid-rows-10',
       'xl:grid-rows-11',
-      'xl:grid-rows-12',
-    ],
+      'xl:grid-rows-12'
+    ]
   },
   col: {
     base: [
@@ -146,7 +147,7 @@ const gridTemplateVariants = {
       'grid-cols-9',
       'grid-cols-10',
       'grid-cols-11',
-      'grid-cols-12',
+      'grid-cols-12'
     ],
     sm: [
       'sm:grid-cols-1',
@@ -160,7 +161,7 @@ const gridTemplateVariants = {
       'sm:grid-cols-9',
       'sm:grid-cols-10',
       'sm:grid-cols-11',
-      'sm:grid-cols-12',
+      'sm:grid-cols-12'
     ],
     md: [
       'md:grid-cols-1',
@@ -174,7 +175,7 @@ const gridTemplateVariants = {
       'md:grid-cols-9',
       'md:grid-cols-10',
       'md:grid-cols-11',
-      'md:grid-cols-12',
+      'md:grid-cols-12'
     ],
     lg: [
       'lg:grid-cols-1',
@@ -188,7 +189,7 @@ const gridTemplateVariants = {
       'lg:grid-cols-9',
       'lg:grid-cols-10',
       'lg:grid-cols-11',
-      'lg:grid-cols-12',
+      'lg:grid-cols-12'
     ],
     xl: [
       'xl:grid-cols-1',
@@ -202,7 +203,7 @@ const gridTemplateVariants = {
       'xl:grid-cols-9',
       'xl:grid-cols-10',
       'xl:grid-cols-11',
-      'xl:grid-cols-12',
-    ],
-  },
+      'xl:grid-cols-12'
+    ]
+  }
 }

@@ -8,7 +8,8 @@ export const LogoHomeLink = () => {
       href={paths.home}
       target='_self'
       aria-label='Ir a la página de inicio'
-      className='group relative m-auto block size-fit'>
+      className='group relative m-auto block size-fit'
+    >
       <span className='font-noto text-fm-white absolute -top-2 right-0 left-0 mx-auto rotate-[32deg] text-center font-bold opacity-0 mix-blend-difference transition-opacity duration-100 group-hover:opacity-100'>
         Inicio
       </span>

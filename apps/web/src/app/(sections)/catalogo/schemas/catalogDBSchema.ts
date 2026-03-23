@@ -6,7 +6,7 @@ import { z } from 'zod'
 export const CollectiveParticipationSchema = z.object({
   name: z.string(),
   edicion: z.string(),
-  evento: z.string(),
+  evento: z.string()
 })
 
 /**
@@ -15,7 +15,7 @@ export const CollectiveParticipationSchema = z.object({
 export const EditionParticipationSchema = z.object({
   edicion: z.string(),
   evento: z.string(),
-  año: z.string().nullable().optional(),
+  año: z.string().nullable().optional()
 })
 
 /**
@@ -37,14 +37,14 @@ export const CatalogArtistFromDBSchema = z.object({
   category: z.string().nullable(),
   collective: z.string().nullable(),
   collectives: z.array(CollectiveParticipationSchema),
-  editions: z.array(EditionParticipationSchema),
+  editions: z.array(EditionParticipationSchema)
 })
 
 /**
  * Schema para el resultado raw de la query (JSON string)
  */
 export const RawCatalogResultSchema = z.object({
-  resultado: z.string(),
+  resultado: z.string()
 })
 
 export type CollectiveParticipation = z.infer<

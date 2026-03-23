@@ -9,5 +9,5 @@ export const CATALOG_SHEET_HEADERS = {
   bio: 'bio',
   email: 'email',
   city: 'city',
-  collective: 'collective',
+  collective: 'collective'
 } as const

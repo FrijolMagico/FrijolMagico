@@ -33,7 +33,7 @@ export const BackToTop = () => {
     if (!visible) return
     window.scrollTo({
       top: 0,
-      behavior: 'smooth',
+      behavior: 'smooth'
     })
   }
 
@@ -43,7 +43,8 @@ export const BackToTop = () => {
       className={`${
         visible ? 'cursor-pointer opacity-100' : 'cursor-default opacity-0'
       } bg-flexible-orange text-flexible-white transition-150 fixed bottom-4 left-4 z-50 aspect-square w-10 transform-gpu rounded-full transition-[transform,opacity] hover:scale-105`}
-      onClick={handleOnClick}>
+      onClick={handleOnClick}
+    >
       <ArrowUp className='mx-auto' />
     </button>
   )

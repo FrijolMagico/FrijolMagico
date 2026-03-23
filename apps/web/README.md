@@ -74,6 +74,7 @@ cp .env.example .env.local
 ```
 
 Key variable categories:
+
 - **Turso Database**: `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`
 - **Google Sheets**: `GOOGLE_API_KEY`, sheet IDs for catalog and festivals
 - **Analytics**: `NEXT_PUBLIC_GA_MEASUREMENT_ID`
@@ -128,14 +129,17 @@ useGSAP(() => {
 ## Features
 
 ### Responsive Design
+
 Mobile-first responsive design with Tailwind CSS v4.
 
 ### SEO
+
 - Automatic sitemap generation via `next-sitemap`
 - Meta tags and Open Graph
 - Structured data
 
 ### Performance
+
 - Static generation for most pages
 - Image optimization with Next.js Image
 - Code splitting with Turbopack
@@ -143,6 +147,7 @@ Mobile-first responsive design with Tailwind CSS v4.
 ## Deployment
 
 Deployed to Vercel with:
+
 - Automatic deployments on push to main
 - Preview deployments for PRs
 

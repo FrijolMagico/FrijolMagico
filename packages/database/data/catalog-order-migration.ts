@@ -1,6 +1,6 @@
 /**
  * Migration script to regenerate catalog order keys using fractional-indexing.
- * 
+ *
  * Run with: TURSO_DATABASE_URL=file:local.db bun run data/catalog-order-migration.ts
  */
 import { eq } from 'drizzle-orm'
@@ -29,7 +29,7 @@ async function migrate() {
   for (const item of currentItems) {
     const newKey = generateKeyBetween(lastKey, null)
     updates.push({ id: item.id, oldOrden: item.orden, newOrden: newKey })
-    
+
     await db
       .update(artist.catalogArtist)
       .set({ orden: newKey })

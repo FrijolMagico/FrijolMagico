@@ -6,5 +6,5 @@ export type {
   CatalogArtistFromDB,
   CollectiveParticipation,
   EditionParticipation,
-  RawCatalogResult,
+  RawCatalogResult
 } from '../schemas/catalogDBSchema'

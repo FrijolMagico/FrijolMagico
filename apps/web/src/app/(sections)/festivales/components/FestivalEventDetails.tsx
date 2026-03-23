@@ -7,7 +7,7 @@ interface FestivalEventDetailsProps {
 
 export const FestivalEventDetails = ({
   daysDisplay,
-  locationDisplay,
+  locationDisplay
 }: FestivalEventDetailsProps) => (
   <dl className='space-y-2'>
     {daysDisplay && (

@@ -29,13 +29,13 @@ export const CatalogSearchBar = () => {
         if (searchValue.trim().length >= 2) {
           debounceRef.current = setTimeout(() => {
             trackCatalogSearch({
-              search_term: searchValue.trim(),
+              search_term: searchValue.trim()
             })
           }, 1000)
         }
       }
     },
-    [setFilters, isReady, trackCatalogSearch],
+    [setFilters, isReady, trackCatalogSearch]
   )
 
   if (!isReady) return <CatalogSearchBarLoader />

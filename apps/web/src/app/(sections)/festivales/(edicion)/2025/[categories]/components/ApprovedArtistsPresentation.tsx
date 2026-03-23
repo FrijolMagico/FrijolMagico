@@ -15,7 +15,7 @@ interface ApprovedArtistsPresentationProps {
 }
 
 export const ApprovedArtistsPresentation = ({
-  artists,
+  artists
 }: ApprovedArtistsPresentationProps) => {
   const containerRef = useRef<HTMLUListElement>(null)
   const scrollIconRef = useRef<HTMLDivElement>(null)
@@ -43,8 +43,8 @@ export const ApprovedArtistsPresentation = ({
             if (scrollIconRef.current) {
               scrollIconRef.current.classList.remove('opacity-0')
             }
-          },
-        },
+          }
+        }
       })
 
       artistsList.forEach((artist) => {
@@ -57,11 +57,11 @@ export const ApprovedArtistsPresentation = ({
           },
           onComplete: () => {
             artist.classList.remove('pointer-events-none')
-          },
+          }
         })
       })
     },
-    { scope: containerRef },
+    { scope: containerRef }
   )
 
   return (
@@ -69,17 +69,20 @@ export const ApprovedArtistsPresentation = ({
       <ApprovedArtistsScrollDownSignal ref={scrollIconRef} />
       <section
         ref={containerRef}
-        className='container grid h-full min-h-screen place-items-center overflow-x-clip'>
+        className='container grid h-full min-h-screen place-items-center overflow-x-clip'
+      >
         <ul className='flex h-full flex-wrap content-center justify-center sm:gap-x-2'>
           {artists.map((artist) => (
             <li
               key={artist.id}
-              className='approved-artist group pointer-events-none rounded-lg px-2 text-center'>
+              className='approved-artist group pointer-events-none rounded-lg px-2 text-center'
+            >
               <a
                 href={formatUrl(artist.rrss)}
                 target='_blank'
                 rel='noopener noreferrer'
-                className='font-superfortress text-2025-orange text-stroke-2025-white text-stroke-3 2xl:text-stroke-6 group-hover:text-2025-pink hover:text-2025-pink lg:text-stroke-5 inline-block text-xl leading-none transition-colors duration-300 ease-in-out [paint-order:stroke_fill] md:text-4xl 2xl:text-5xl'>
+                className='font-superfortress text-2025-orange text-stroke-2025-white text-stroke-3 2xl:text-stroke-6 group-hover:text-2025-pink hover:text-2025-pink lg:text-stroke-5 inline-block text-xl leading-none transition-colors duration-300 ease-in-out [paint-order:stroke_fill] md:text-4xl 2xl:text-5xl'
+              >
                 {artist.name}
               </a>
             </li>

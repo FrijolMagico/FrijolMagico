@@ -12,7 +12,7 @@ export const agrupacionSchema = z.object({
     .email()
     .nullable()
     .or(z.literal(''))
-    .transform((v) => v || null),
+    .transform((v) => v || null)
 })
 
 /**

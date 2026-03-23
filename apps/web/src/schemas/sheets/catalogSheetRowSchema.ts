@@ -35,7 +35,7 @@ export const catalogSheetRowSchema = z.object({
         .string()
         .email()
         .or(z.literal(''))
-        .transform((v) => v || null),
+        .transform((v) => v || null)
     ),
 
   // rrss es un string simple del sheet (ej: "https://instagram.com/user")
@@ -66,7 +66,7 @@ export const catalogSheetRowSchema = z.object({
   bio: z
     .string()
     .optional()
-    .transform((v) => v?.trim() || null),
+    .transform((v) => v?.trim() || null)
 })
 
 /**
@@ -94,7 +94,7 @@ export interface CatalogSheetRowValidationResult {
  * @returns Resultado de validacion con data, errors y/o warnings
  */
 export function validateCatalogSheetRow(
-  data: unknown,
+  data: unknown
 ): CatalogSheetRowValidationResult {
   // Campos que causan error si fallan (vs warning)
   const criticalFields = ['name']
@@ -126,7 +126,7 @@ export function validateCatalogSheetRow(
       ...(data as Record<string, unknown>),
       // Forzar campos permisivos a null para que pasen validacion
       email: '',
-      rrss: '',
+      rrss: ''
     }
 
     const retryResult = catalogSheetRowSchema.safeParse(permissiveData)
@@ -135,7 +135,7 @@ export function validateCatalogSheetRow(
       return {
         success: true,
         data: retryResult.data,
-        warnings,
+        warnings
       }
     }
   }

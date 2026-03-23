@@ -19,9 +19,9 @@ export async function getFestivalScheduleData(): Promise<{
     return {
       data: {
         firstDay: firstDayAppData,
-        secondDay: secondDayAppData,
+        secondDay: secondDayAppData
       },
-      error: null,
+      error: null
     }
   } catch (error) {
     const err = error as Error
@@ -30,8 +30,8 @@ export async function getFestivalScheduleData(): Promise<{
       data: { firstDay: [], secondDay: [] },
       error: {
         message:
-          'Error al obtener la programación del festival. Por favor intente nuevamente más tarde.',
-      },
+          'Error al obtener la programación del festival. Por favor intente nuevamente más tarde.'
+      }
     }
   }
 }

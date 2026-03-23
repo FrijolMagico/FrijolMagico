@@ -71,7 +71,7 @@ This is a **Turborepo** monorepo with the following architecture:
    ```bash
    # Root environment
    cp .env.example .env.local
-   
+
    # App-specific environments (see each app's README for details)
    cp apps/web/.env.example apps/web/.env.local
    cp apps/admin/.env.example apps/admin/.env.local

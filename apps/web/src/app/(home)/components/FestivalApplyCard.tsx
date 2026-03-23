@@ -9,7 +9,8 @@ export const FestivalApplyCard = () => {
     <>
       <Link
         href={paths.apply}
-        className='group from-fm-black to-fm-dark text-fm-white relative block size-full rounded-2xl bg-gradient-to-tr'>
+        className='group from-fm-black to-fm-dark text-fm-white relative block size-full rounded-2xl bg-gradient-to-tr'
+      >
         <div className='bg-fm-orange absolute inset-0 -z-10 animate-pulse blur-sm transition duration-300 group-hover:blur-xl'></div>
         <NewBadget />
         <div className='relative size-full overflow-hidden px-4'>

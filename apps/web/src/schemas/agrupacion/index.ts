@@ -2,5 +2,5 @@ export {
   agrupacionSchema,
   agrupacionInsertSchema,
   type Agrupacion,
-  type AgrupacionInsert,
+  type AgrupacionInsert
 } from './agrupacionSchema'
