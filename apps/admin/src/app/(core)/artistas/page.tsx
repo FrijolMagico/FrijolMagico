@@ -2,6 +2,7 @@ import { SearchParamsProps } from 'src/shared/types/query-params'
 import { ArtistListContainer } from './_components/artist-list-container'
 import { agrupateHistory } from './_lib/aggregate-history'
 import { getHistoryData } from './_lib/get-artist-history'
+import { getDeletedArtists } from './_lib/get-deleted-artists'
 import { getArtistFilterOptions, getArtists } from './_lib/get-artists'
 import { loadArtistQueryParams } from './_lib/search-params'
 
@@ -10,14 +11,21 @@ export default async function ArtistsListPage({
 }: SearchParamsProps) {
   const params = await loadArtistQueryParams(searchParams)
 
-  const [{ data, ...pagination }, history, filterOptions] = await Promise.all([
-    getArtists(params),
-    getHistoryData(),
-    getArtistFilterOptions()
-  ])
+  const [{ data, ...pagination }, deletedArtists, history, filterOptions] =
+    await Promise.all([
+      getArtists(params),
+      getDeletedArtists(),
+      getHistoryData(),
+      getArtistFilterOptions()
+    ])
   const historyData = agrupateHistory(history)
 
   const enrichedArtist = data.map((artist) => ({
+    ...artist,
+    history: historyData[artist.id] || null
+  }))
+
+  const enrichedDeletedArtists = deletedArtists.map((artist) => ({
     ...artist,
     history: historyData[artist.id] || null
   }))
@@ -35,6 +43,7 @@ export default async function ArtistsListPage({
       </header>
       <ArtistListContainer
         artists={enrichedArtist}
+        deletedArtists={enrichedDeletedArtists}
         countries={filterOptions.countries}
         cities={filterOptions.cities}
         pagination={pagination}

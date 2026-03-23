@@ -1,12 +1,11 @@
 import 'server-only'
 
-import { cacheTag } from 'next/cache'
-
 import { isNotDeleted } from '@frijolmagico/database/filters'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { and, asc, count, eq, inArray, notExists, sql } from 'drizzle-orm'
 import { getAvatarUrl } from '@/shared/lib/cdn'
+import { cacheTag } from '@/shared/lib/next-cache'
 import {
   createPaginatedResponse,
   type PaginatedResponse
