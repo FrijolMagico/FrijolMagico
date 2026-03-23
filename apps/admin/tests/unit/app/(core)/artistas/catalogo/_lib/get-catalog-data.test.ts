@@ -6,6 +6,7 @@ type SelectCall = {
 }
 
 const cacheTag = mock(() => {})
+const updateTag = mock(() => {})
 let currentDb: ReturnType<typeof createDbMock>['db']
 const dbProxy = {
   select: (...args: unknown[]) => {
@@ -18,7 +19,7 @@ const dbProxy = {
 }
 
 mock.module('server-only', () => ({}))
-mock.module('next/cache', () => ({ cacheTag }))
+mock.module('@/shared/lib/next-cache', () => ({ cacheTag, updateTag }))
 mock.module('@frijolmagico/database/orm', () => ({ db: dbProxy }))
 
 function flattenPrimitiveValues(value: unknown): Array<string | number> {

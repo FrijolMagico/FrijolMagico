@@ -11,7 +11,8 @@ describe('artistQueryParamsSchema', () => {
       search: 'Ana',
       estado: 3,
       pais: 'Chile',
-      ciudad: 'Santiago'
+      ciudad: 'Santiago',
+      mostrar_eliminados: false
     })
 
     expect(result).toEqual({
@@ -20,7 +21,8 @@ describe('artistQueryParamsSchema', () => {
       search: 'Ana',
       estado: 3,
       pais: 'Chile',
-      ciudad: 'Santiago'
+      ciudad: 'Santiago',
+      mostrar_eliminados: false
     })
   })
 
