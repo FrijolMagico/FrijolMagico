@@ -1,8 +1,13 @@
 import { z } from 'zod'
-import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
+import {
+  createInsertSchema,
+  createSelectSchema,
+  createUpdateSchema
+} from 'drizzle-zod'
 import { participations } from '@frijolmagico/database/schema'
 
-const { participationExhibition, participationActivity, activity } = participations
+const { participationExhibition, participationActivity, activity } =
+  participations
 
 // ============================================
 // Expositor (participacion_exposicion)
@@ -32,7 +37,7 @@ export const expositorFormSchema = z
       ])
       .default('seleccionado')
   })
-  .refine((d) => !!d.artistaId !== !!d.agrupacionId, {
+  .refine((data) => !!data.artistaId !== !!data.agrupacionId, {
     message: 'Debe especificar artista o agrupación, no ambos ni ninguno'
   })
 
@@ -47,6 +52,7 @@ export const actividadFormSchema = z
   .object({
     artistaId: z.string().optional(),
     agrupacionId: z.string().optional(),
+    bandaId: z.string().optional(),
     eventoEdicionId: z.string().min(1),
     tipoActividadId: z.string().min(1, {
       message: 'El tipo de actividad es obligatorio'
@@ -64,9 +70,15 @@ export const actividadFormSchema = z
       ])
       .default('seleccionado')
   })
-  .refine((d) => !!d.artistaId !== !!d.agrupacionId, {
-    message: 'Debe especificar artista o agrupación, no ambos ni ninguno'
-  })
+  .refine(
+    (data) =>
+      [data.artistaId, data.agrupacionId, data.bandaId].filter(Boolean)
+        .length === 1,
+    {
+      message:
+        'Debe especificar artista, agrupación o banda, y solo uno de ellos'
+    }
+  )
 
 // ============================================
 // Actividad detalles (actividad)
@@ -99,3 +111,36 @@ export type ActividadDetallesInsertInput = z.infer<
 export type ActividadDetallesFormInput = z.infer<
   typeof actividadDetallesFormSchema
 >
+
+export const editionParticipationSelectSchema = createSelectSchema(
+  participations.editionParticipation
+).omit({
+  createdAt: true,
+  updatedAt: true
+})
+
+export const participationExhibitionSelectSchema = createSelectSchema(
+  participations.participationExhibition
+).omit({
+  createdAt: true,
+  updatedAt: true
+})
+
+export const participationActivitySelectSchema = createSelectSchema(
+  participations.participationActivity
+).omit({
+  createdAt: true,
+  updatedAt: true
+})
+
+export const activitySelectSchema = createSelectSchema(
+  participations.activity
+).omit({
+  createdAt: true,
+  updatedAt: true
+})
+
+export type Participacion = z.infer<typeof editionParticipationSelectSchema>
+export type Exposicion = z.infer<typeof participationExhibitionSelectSchema>
+export type Actividad = z.infer<typeof participationActivitySelectSchema>
+export type ActividadDetalle = z.infer<typeof activitySelectSchema>
