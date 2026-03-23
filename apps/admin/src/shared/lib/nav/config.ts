@@ -2,10 +2,12 @@ import {
   IconCardsFilled,
   IconConfettiFilled,
   IconDropletsFilled,
+  IconFileMusicFilled,
   IconHomeFilled,
   IconLeafFilled,
   IconPaletteFilled,
-  IconTicketFilled
+  IconTicketFilled,
+  IconUsersGroup
 } from '@tabler/icons-react'
 
 export const navigation = {
@@ -31,6 +33,16 @@ export const navigation = {
       title: 'Catálogo',
       icon: IconCardsFilled,
       url: '/artistas/catalogo'
+    },
+    {
+      title: 'Agrupaciones',
+      icon: IconUsersGroup,
+      url: '/artistas/agrupaciones'
+    },
+    {
+      title: 'Bandas',
+      icon: IconFileMusicFilled,
+      url: '/artistas/bandas'
     }
   ],
   eventos: [
