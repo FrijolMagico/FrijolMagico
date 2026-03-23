@@ -152,10 +152,10 @@ export type ArtistaFormInput = typeof artistaFormSchema._type
 
 ### Client vs Server Validation
 
-| Layer                     | IDs      | Example                                        |
-| ------------------------- | -------- | ---------------------------------------------- |
+| Layer                     | IDs      | Example                                 |
+| ------------------------- | -------- | --------------------------------------- |
 | **Server** (InsertSchema) | `number` | `eventoId: z.number().int().positive()` |
-| **Client** (FormSchema)   | `string` | `eventoId: z.string().min(1)`                  |
+| **Client** (FormSchema)   | `string` | `eventoId: z.string().min(1)`           |
 
 ### Imports
 

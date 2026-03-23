@@ -7,10 +7,7 @@ import { and, asc, eq, isNull } from 'drizzle-orm'
 import { getAgrupacionMembersCacheTag } from '../_constants'
 import type { CollectiveMember } from '../_types/agrupacion'
 
-const {
-  collectiveArtist,
-  artist: artistTable
-} = artist
+const { collectiveArtist, artist: artistTable } = artist
 
 export async function getMembers(
   agrupacionId: number

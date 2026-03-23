@@ -15,7 +15,9 @@ import {
 
 const { collective } = artist
 
-export async function restoreAgrupacionAction(id: number): Promise<ActionState> {
+export async function restoreAgrupacionAction(
+  id: number
+): Promise<ActionState> {
   try {
     await requireAuth()
 

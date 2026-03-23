@@ -25,15 +25,21 @@ describe('agrupacion detail dialog source contracts', () => {
   test('submits agrupacion updates before syncing member mutations and closing on success', () => {
     const source = readSource()
 
-    expect(source).toContain('const updateResult = await updateAgrupacionAction(')
+    expect(source).toContain(
+      'const updateResult = await updateAgrupacionAction('
+    )
     expect(source).toContain('for (const artistaId of removedMemberIds) {')
     expect(source).toContain('for (const member of members) {')
     expect(source).toContain('for (const member of pendingMembers) {')
     expect(source).toContain('await addMemberAction(')
     expect(source).toContain('await updateMemberAction(')
     expect(source).toContain('await removeMemberAction(')
-    expect(source).toContain("toast.success('Agrupación actualizada correctamente')")
-    expect(source).toContain('methods.reset(getDefaultValues(selectedAgrupacion))')
+    expect(source).toContain(
+      "toast.success('Agrupación actualizada correctamente')"
+    )
+    expect(source).toContain(
+      'methods.reset(getDefaultValues(selectedAgrupacion))'
+    )
     expect(source).toContain('closeDetailDialog()')
   })
 })

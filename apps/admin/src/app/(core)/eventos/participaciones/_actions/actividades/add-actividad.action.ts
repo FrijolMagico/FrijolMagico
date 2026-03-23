@@ -79,7 +79,11 @@ export async function addActividadAction(
     const horaInicio = getFormString(formData, 'horaInicio')
     const cupos = toOptionalNumber(formData.get('cupos'))
 
-    if (!edicionId || !tipoActividadId || !participantSelection.hasSingleSelection) {
+    if (
+      !edicionId ||
+      !tipoActividadId ||
+      !participantSelection.hasSingleSelection
+    ) {
       return {
         success: false,
         errors: [
@@ -90,7 +94,9 @@ export async function addActividadAction(
 
     if (
       bandaId !== null &&
-      (artistaId !== null || agrupacionId !== null || tipoActividadId !== MUSICA_ACTIVITY_TYPE_ID)
+      (artistaId !== null ||
+        agrupacionId !== null ||
+        tipoActividadId !== MUSICA_ACTIVITY_TYPE_ID)
     ) {
       return {
         success: false,

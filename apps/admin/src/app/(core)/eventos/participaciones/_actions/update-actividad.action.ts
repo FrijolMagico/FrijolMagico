@@ -76,7 +76,8 @@ export async function updateActividadAction(
 
     // Determine if this is a band participation
     const bandaId = patch.bandaId ? Number(patch.bandaId) : null
-    const isBandParticipation = bandaId !== null || actividadRecord.participacion.bandaId !== null
+    const isBandParticipation =
+      bandaId !== null || actividadRecord.participacion.bandaId !== null
 
     // Validate: bands can only be in music activities
     if (isBandParticipation && patch.tipoActividadId !== undefined) {
@@ -87,7 +88,8 @@ export async function updateActividadAction(
           errors: [
             {
               entityType: 'actividad',
-              message: 'Las bandas solo pueden participar en actividades de música'
+              message:
+                'Las bandas solo pueden participar en actividades de música'
             }
           ]
         }
@@ -120,7 +122,9 @@ export async function updateActividadAction(
 
     const parsed = actividadUpdateSchema.safeParse({
       tipoActividadId: nextTipoActividadId,
-      modoIngresoId: patch.modoIngresoId ? Number(patch.modoIngresoId) : undefined,
+      modoIngresoId: patch.modoIngresoId
+        ? Number(patch.modoIngresoId)
+        : undefined,
       estado: patch.estado,
       notas: patch.notas
     })

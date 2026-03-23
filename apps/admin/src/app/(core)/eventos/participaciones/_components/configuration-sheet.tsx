@@ -616,7 +616,8 @@ export function ConfigurationSheet({ data }: ConfigurationSheetProps) {
                           </Select>
                           {activ.bandaId !== null && (
                             <p className='text-muted-foreground text-xs'>
-                              Las bandas solo pueden participar en actividades de música.
+                              Las bandas solo pueden participar en actividades
+                              de música.
                             </p>
                           )}
                         </div>

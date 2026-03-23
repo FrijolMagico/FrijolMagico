@@ -1,10 +1,7 @@
 'use client'
 
 import { EmptyState } from '@/shared/components/empty-state'
-import type {
-  CollectiveMember,
-  PendingMember
-} from '../_types/agrupacion'
+import type { CollectiveMember, PendingMember } from '../_types/agrupacion'
 import { MemberFormRow } from './member-form-row'
 
 interface MemberListProps {

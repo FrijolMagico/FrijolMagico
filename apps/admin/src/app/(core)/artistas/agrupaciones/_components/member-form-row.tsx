@@ -5,10 +5,7 @@ import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Switch } from '@/shared/components/ui/switch'
 import { IconTrash } from '@tabler/icons-react'
-import type {
-  CollectiveMember,
-  PendingMember
-} from '../_types/agrupacion'
+import type { CollectiveMember, PendingMember } from '../_types/agrupacion'
 
 interface MemberFormRowProps {
   member?: CollectiveMember
@@ -43,7 +40,9 @@ export function MemberFormRow({
           <p className='truncate font-medium'>{pseudonimo}</p>
           {isPending ? <Badge variant='secondary'>Pendiente</Badge> : null}
         </div>
-        <p className='text-muted-foreground text-xs'>{ciudad || 'Sin ciudad'}</p>
+        <p className='text-muted-foreground text-xs'>
+          {ciudad || 'Sin ciudad'}
+        </p>
       </div>
 
       <Input

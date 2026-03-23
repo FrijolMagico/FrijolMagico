@@ -1,7 +1,12 @@
 'use client'
 
 import { Controller, useFormContext } from 'react-hook-form'
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/components/ui/field'
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel
+} from '@/shared/components/ui/field'
 import { Input } from '@/shared/components/ui/input'
 import { Switch } from '@/shared/components/ui/switch'
 import { Textarea } from '@/shared/components/ui/textarea'

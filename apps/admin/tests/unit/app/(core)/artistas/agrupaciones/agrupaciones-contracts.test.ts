@@ -157,7 +157,9 @@ describe('agrupaciones query contracts', () => {
       pageSize: 10,
       totalPages: 1
     })
-    expect(dbMock.calls[0]?.orderByArgs).toEqual([asc(artist.collective.nombre)])
+    expect(dbMock.calls[0]?.orderByArgs).toEqual([
+      asc(artist.collective.nombre)
+    ])
 
     const whereValues = flattenPrimitiveValues(dbMock.calls[0]?.whereArgs ?? [])
 
@@ -212,7 +214,9 @@ describe('agrupaciones query contracts', () => {
       }
     ])
     expect(result.total).toBe(2)
-    expect(dbMock.calls[0]?.orderByArgs).toEqual([asc(artist.collective.nombre)])
+    expect(dbMock.calls[0]?.orderByArgs).toEqual([
+      asc(artist.collective.nombre)
+    ])
 
     const whereValues = flattenPrimitiveValues(dbMock.calls[0]?.whereArgs ?? [])
 

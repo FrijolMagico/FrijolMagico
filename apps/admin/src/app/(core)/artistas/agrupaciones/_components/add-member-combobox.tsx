@@ -20,13 +20,9 @@ interface AddMemberComboboxProps {
   onAdd: (artist: ArtistLookup) => void
 }
 
-export function AddMemberCombobox({
-  artists,
-  onAdd
-}: AddMemberComboboxProps) {
-  const [selectedArtist, setSelectedArtist] = useState<ArtistComboboxItem | null>(
-    null
-  )
+export function AddMemberCombobox({ artists, onAdd }: AddMemberComboboxProps) {
+  const [selectedArtist, setSelectedArtist] =
+    useState<ArtistComboboxItem | null>(null)
 
   const items = useMemo<ArtistComboboxItem[]>(
     () =>
@@ -59,11 +55,7 @@ export function AddMemberCombobox({
       itemToStringLabel={(item) => item?.label ?? ''}
       isItemEqualToValue={(item, value) => item.id === value.id}
     >
-      <ComboboxInput
-        placeholder='Buscar artista...'
-        showTrigger
-        showClear
-      />
+      <ComboboxInput placeholder='Buscar artista...' showTrigger showClear />
       <ComboboxContent className='pointer-events-auto!'>
         <ComboboxEmpty>No hay artistas disponibles</ComboboxEmpty>
         <ComboboxList>

@@ -45,7 +45,10 @@ export async function updateAgrupacionAction(
       }
     }
 
-    await db.update(collective).set(parsed.data).where(eq(collective.id, parsed.data.id))
+    await db
+      .update(collective)
+      .set(parsed.data)
+      .where(eq(collective.id, parsed.data.id))
 
     updateTag(AGRUPACION_CACHE_TAG)
     updateTag(AGRUPACION_ACTIVE_CACHE_TAG)

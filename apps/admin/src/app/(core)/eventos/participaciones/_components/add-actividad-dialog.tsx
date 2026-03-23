@@ -77,7 +77,9 @@ export function AddActividadDialog({
   const { isAddActividadDialogOpen, setAddActividadDialogOpen } =
     useParticipacionesViewStore()
 
-  const [tipo, setTipo] = useState<DialogParticipantType>(PARTICIPANT_TYPE.ARTISTA)
+  const [tipo, setTipo] = useState<DialogParticipantType>(
+    PARTICIPANT_TYPE.ARTISTA
+  )
   const [selectedArtistaId, setSelectedArtistaId] = useState('')
   const [selectedAgrupacionId, setSelectedAgrupacionId] = useState('')
   const [selectedBandaId, setSelectedBandaId] = useState('')
@@ -166,9 +168,17 @@ export function AddActividadDialog({
           </DialogDescription>
         </DialogHeader>
         <form action={formAction} className='flex flex-col gap-4'>
-          <input type='hidden' name='eventoEdicionId' value={String(edicionId)} />
+          <input
+            type='hidden'
+            name='eventoEdicionId'
+            value={String(edicionId)}
+          />
           <input type='hidden' name='artistaId' value={selectedArtistaId} />
-          <input type='hidden' name='agrupacionId' value={selectedAgrupacionId} />
+          <input
+            type='hidden'
+            name='agrupacionId'
+            value={selectedAgrupacionId}
+          />
           <input type='hidden' name='bandaId' value={selectedBandaId} />
           <input
             type='hidden'
@@ -217,10 +227,7 @@ export function AddActividadDialog({
                   {artistas
                     .filter((artista) => artista.estadoSlug !== 'vetado')
                     .map((artista) => (
-                      <SelectItem
-                        key={artista.id}
-                        value={String(artista.id)}
-                      >
+                      <SelectItem key={artista.id} value={String(artista.id)}>
                         {artista.pseudonimo} ({artista.nombre ?? 'Sin nombre'})
                       </SelectItem>
                     ))}

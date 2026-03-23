@@ -1,4 +1,3 @@
-
 const MONTHS: Record<number, string> = {
   1: 'enero',
   2: 'febrero',
@@ -18,7 +17,11 @@ interface DiaWithFecha {
   fecha: string
 }
 
-function parseDateParts(fecha: string): { day: number; month: number; year: number } {
+function parseDateParts(fecha: string): {
+  day: number
+  month: number
+  year: number
+} {
   const [y, m, d] = fecha.slice(0, 10).split('-').map(Number)
   return { day: d, month: m, year: y }
 }

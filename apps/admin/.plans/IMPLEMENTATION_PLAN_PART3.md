@@ -289,9 +289,7 @@ function validateBusinessRules(entries: ChangeEntry[]): ValidationError[] {
 /**
  * Valida orden cronológico
  */
-function validateChronologicalOrder(
-  entries: ChangeEntry[]
-): ValidationError[] {
+function validateChronologicalOrder(entries: ChangeEntry[]): ValidationError[] {
   const errors: ValidationError[] = []
 
   let lastCreatedAt = 0

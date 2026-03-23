@@ -51,17 +51,21 @@ export default async function ParticipacionesPage({
     )
   }
 
-  const [participacionesResult, artistasLookup, agrupacionesLookup, bandsLookup] =
-    await Promise.all([
-      getParticipacionesPaginated(edicion.id, {
-        ...params,
-        estado,
-        edicionId: params.edicionId
-      }),
-      getArtistasLookup(),
-      getAgrupacionesLookup(),
-      getBandsLookup()
-    ])
+  const [
+    participacionesResult,
+    artistasLookup,
+    agrupacionesLookup,
+    bandsLookup
+  ] = await Promise.all([
+    getParticipacionesPaginated(edicion.id, {
+      ...params,
+      estado,
+      edicionId: params.edicionId
+    }),
+    getArtistasLookup(),
+    getAgrupacionesLookup(),
+    getBandsLookup()
+  ])
 
   const [disciplinasLookup, tiposActividadLookup, modosIngresoLookup] =
     await Promise.all([
