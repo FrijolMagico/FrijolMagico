@@ -153,26 +153,37 @@ export const catalogArtist = sqliteTable(
     index('idx_catalog_artist_activo').on(table.activo),
     index('idx_catalog_artist_destacado').on(table.destacado),
     index('idx_catalog_artist_deleted_at').on(table.deletedAt),
-    index('idx_catalog_artist_artista_deleted').on(table.artistaId, table.deletedAt)
+    index('idx_catalog_artist_artista_deleted').on(
+      table.artistaId,
+      table.deletedAt
+    )
   ]
 )
 
 /**
  * Collective - Artist groupings
  */
-export const collective = sqliteTable('agrupacion', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  nombre: text('nombre').unique().notNull(),
-  descripcion: text('descripcion'),
-  correo: text('correo'),
-  activo: integer('activo', { mode: 'boolean' }).notNull().default(true),
-  createdAt: text('created_at')
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: text('updated_at')
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`)
-})
+export const collective = sqliteTable(
+  'agrupacion',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    nombre: text('nombre').unique().notNull(),
+    descripcion: text('descripcion'),
+    correo: text('correo'),
+    activo: integer('activo', { mode: 'boolean' }).notNull().default(true),
+    deletedAt: text('deleted_at'),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text('updated_at')
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`)
+  },
+  (table) => [
+    index('idx_collective_deleted_at').on(table.deletedAt),
+    index('idx_agrupacion_deleted_created').on(table.deletedAt, table.createdAt)
+  ]
+)
 
 /**
  * Band - Music bands
