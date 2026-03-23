@@ -40,18 +40,18 @@ import { Textarea } from '@/shared/components/ui/textarea'
 import { Label } from '@/shared/components/ui/label'
 import { Input } from '@/shared/components/ui/input'
 import { useParticipacionesViewStore } from '../_store/participaciones-view-store'
-import type { ParticipacionesData } from '../_lib/get-participaciones-data'
 import type {
-  ExpositorEntry,
-  ActividadEntry,
+  ComposedActividad,
+  ComposedExposicion,
   ParticipationStatus
 } from '../_types'
 import { updateExpositorAction } from '../_actions/update-expositor.action'
 import { updateActividadAction } from '../_actions/update-actividad.action'
 import { updateDetallesAction } from '../_actions/update-detalles.action'
+import type { ParticipacionesViewData } from '../_types'
 
 interface ConfigurationSheetProps {
-  data: ParticipacionesData
+  data: ParticipacionesViewData
 }
 
 const ESTADO_OPCIONES: { value: ParticipationStatus; label: string }[] = [
@@ -63,19 +63,9 @@ const ESTADO_OPCIONES: { value: ParticipationStatus; label: string }[] = [
   { value: 'completado', label: 'Completado' }
 ]
 
-function parseParticipantKey(key: string | null): {
-  type: string | null
-  id: string | null
-} {
-  if (!key) return { type: null, id: null }
-  const colonIdx = key.indexOf(':')
-  if (colonIdx === -1) return { type: null, id: null }
-  return { type: key.slice(0, colonIdx), id: key.slice(colonIdx + 1) }
-}
-
 export function ConfigurationSheet({ data }: ConfigurationSheetProps) {
   const [removeExpositorOpen, setRemoveExpositorOpen] = useState(false)
-  const [removeActividadId, setRemoveActividadId] = useState<string | null>(
+  const [removeActividadId, setRemoveActividadId] = useState<number | null>(
     null
   )
 
@@ -90,23 +80,28 @@ export function ConfigurationSheet({ data }: ConfigurationSheetProps) {
   )
 
   const isOpen = selectedParticipantId !== null
-  const { type, id } = parseParticipantKey(selectedParticipantId)
+  const participant =
+    data.participantes.find((row) => row.key === selectedParticipantId) ?? null
+  const expositor: ComposedExposicion | null = participant?.exposicion ?? null
+  const actividades: ComposedActividad[] = participant?.actividades ?? []
 
-  const expositor: ExpositorEntry | null =
-    data.expositores.find((e) =>
-      type === 'artista' ? e.artistaId === id : e.agrupacionId === id
-    ) ?? null
-
-  const actividades: ActividadEntry[] = data.actividades.filter((a) =>
-    type === 'artista' ? a.artistaId === id : a.agrupacionId === id
+  const detallesByActividadId = new Map(
+    actividades.flatMap((actividad) =>
+      actividad.detalle ? [[actividad.id, actividad.detalle] as const] : []
+    )
   )
 
-  const detallesMap = new Map(
-    data.actividadDetalles.map((d) => [d.participanteActividadId, d])
+  const detallesById = new Map(
+    actividades.flatMap((actividad) =>
+      actividad.detalle
+        ? [[actividad.detalle.id, actividad.detalle] as const]
+        : []
+    )
   )
 
-  const isCollective = type === 'agrupacion'
-  const isVetado = expositor?.artistaEstadoSlug === 'vetado'
+  const isCollective = participant?.participantType === 'agrupacion'
+  const isBand = participant?.participantType === 'banda'
+  const isVetado = participant?.artistaEstadoSlug === 'vetado'
 
   // Expositor local state
   const [expositorDirty, setExpositorDirty] = useState(false)
@@ -119,14 +114,7 @@ export function ConfigurationSheet({ data }: ConfigurationSheetProps) {
   const [isSavingExpositor, startSavingExpositor] = useTransition()
 
   // Header info
-  const headerName = isCollective
-    ? (actividades[0]?.agrupacionNombre ??
-      expositor?.agrupacionNombre ??
-      'Agrupación')
-    : (expositor?.artistaPseudonimo ??
-      expositor?.artistaNombre ??
-      actividades[0]?.artistaPseudonimo ??
-      'Artista')
+  const headerName = participant?.displayName ?? 'Participante'
 
   const handleExpositorFieldChange = (
     field: 'disciplinaId' | 'estado' | 'modoIngresoId' | 'notas',
@@ -144,8 +132,8 @@ export function ConfigurationSheet({ data }: ConfigurationSheetProps) {
 
     startSavingExpositor(async () => {
       const result = await updateExpositorAction({
-        expositorId: expositor.id,
-        edicionId: expositor.eventoEdicionId,
+        expositorId: String(expositor.id),
+        edicionId: String(expositor.edicionId),
         ...expositorPatch
       })
 
@@ -162,7 +150,7 @@ export function ConfigurationSheet({ data }: ConfigurationSheetProps) {
   // Actividad local state per actividad
   const [actividadPatches, setActividadPatches] = useState<
     Record<
-      string,
+      number,
       {
         tipoActividadId?: string
         estado?: ParticipationStatus
@@ -173,7 +161,7 @@ export function ConfigurationSheet({ data }: ConfigurationSheetProps) {
   >({})
   const [detallesPatches, setDetallesPatches] = useState<
     Record<
-      string,
+      number,
       {
         titulo?: string | null
         descripcion?: string | null
@@ -184,15 +172,15 @@ export function ConfigurationSheet({ data }: ConfigurationSheetProps) {
       }
     >
   >({})
-  const [savingActividadIds, setSavingActividadIds] = useState<Set<string>>(
+  const [savingActividadIds, setSavingActividadIds] = useState<Set<number>>(
     new Set()
   )
-  const [savingDetallesIds, setSavingDetallesIds] = useState<Set<string>>(
+  const [savingDetallesIds, setSavingDetallesIds] = useState<Set<number>>(
     new Set()
   )
 
   const handleActividadFieldChange = (
-    actividadId: string,
+    actividadId: number,
     field: 'tipoActividadId' | 'estado' | 'modoIngresoId' | 'notas',
     value: string | null
   ) => {
@@ -205,7 +193,7 @@ export function ConfigurationSheet({ data }: ConfigurationSheetProps) {
     }))
   }
 
-  const handleSaveActividad = (actividadId: string) => {
+  const handleSaveActividad = (actividadId: number) => {
     const actividad = actividades.find((a) => a.id === actividadId)
     if (!actividad) return
 
@@ -216,8 +204,8 @@ export function ConfigurationSheet({ data }: ConfigurationSheetProps) {
 
     startSavingActividad(async () => {
       const result = await updateActividadAction({
-        actividadId,
-        edicionId: actividad.eventoEdicionId,
+        actividadId: String(actividadId),
+        edicionId: String(actividad.edicionId),
         ...patch
       })
 
@@ -243,7 +231,7 @@ export function ConfigurationSheet({ data }: ConfigurationSheetProps) {
   const [, startSavingActividad] = useTransition()
 
   const handleDetallesFieldChange = (
-    detallesId: string,
+    detallesId: number,
     field:
       | 'titulo'
       | 'descripcion'
@@ -262,7 +250,7 @@ export function ConfigurationSheet({ data }: ConfigurationSheetProps) {
     }))
   }
 
-  const handleSaveDetalles = (detallesId: string) => {
+  const handleSaveDetalles = (detallesId: number) => {
     const patch = detallesPatches[detallesId]
     if (!patch) return
 
@@ -270,7 +258,7 @@ export function ConfigurationSheet({ data }: ConfigurationSheetProps) {
 
     startSavingDetalles(async () => {
       const result = await updateDetallesAction({
-        detallesId,
+        detallesId: String(detallesId),
         ...patch
       })
 
@@ -299,41 +287,63 @@ export function ConfigurationSheet({ data }: ConfigurationSheetProps) {
     field: 'disciplinaId' | 'estado' | 'modoIngresoId' | 'notas'
   ): string => {
     if (expositorPatch[field] !== undefined) {
-      return field === 'notas'
-        ? (expositorPatch[field] ?? '')
-        : (expositorPatch[field] ?? '')
+      return expositorPatch[field] ?? ''
     }
+
     if (!expositor) return ''
-    return field === 'notas'
-      ? (expositor.notas ?? '')
-      : (expositor[field] ?? '')
+
+    if (field === 'notas') {
+      return expositor.notas ?? ''
+    }
+
+    if (field === 'estado') {
+      return expositor.estado
+    }
+
+    if (field === 'disciplinaId') {
+      return String(expositor.disciplinaId)
+    }
+
+    return String(expositor.modoIngresoId)
   }
 
-  const isActividadDirty = (actividadId: string): boolean => {
+  const isActividadDirty = (actividadId: number): boolean => {
     return !!actividadPatches[actividadId]
   }
 
-  const isDetallesDirty = (detallesId: string): boolean => {
+  const isDetallesDirty = (detallesId: number): boolean => {
     return !!detallesPatches[detallesId]
   }
 
   const getActividadValue = (
-    actividadId: string,
+    actividadId: number,
     field: 'tipoActividadId' | 'estado' | 'modoIngresoId' | 'notas'
   ): string => {
     const patch = actividadPatches[actividadId]
     if (patch && patch[field] !== undefined) {
-      return field === 'notas' ? (patch[field] ?? '') : (patch[field] ?? '')
+      return patch[field] ?? ''
     }
+
     const actividad = actividades.find((a) => a.id === actividadId)
     if (!actividad) return ''
-    return field === 'notas'
-      ? (actividad.notas ?? '')
-      : (actividad[field] ?? '')
+
+    if (field === 'notas') {
+      return actividad.notas ?? ''
+    }
+
+    if (field === 'estado') {
+      return actividad.estado
+    }
+
+    if (field === 'tipoActividadId') {
+      return String(actividad.tipoActividadId)
+    }
+
+    return String(actividad.modoIngresoId)
   }
 
   const getDetallesValue = (
-    detallesId: string,
+    detallesId: number,
     field:
       | 'titulo'
       | 'descripcion'
@@ -349,7 +359,8 @@ export function ConfigurationSheet({ data }: ConfigurationSheetProps) {
       }
       return patch[field] ?? ''
     }
-    const detalles = data.actividadDetalles.find((d) => d.id === detallesId)
+
+    const detalles = detallesById.get(detallesId)
     if (!detalles) return ''
     const val = detalles[field]
     if (val === null || val === undefined) return ''
@@ -376,7 +387,11 @@ export function ConfigurationSheet({ data }: ConfigurationSheetProps) {
               )}
             </SheetTitle>
             <SheetDescription>
-              {isCollective ? 'Agrupación' : 'Artista individual'}
+              {isBand
+                ? 'Banda'
+                : isCollective
+                  ? 'Agrupación'
+                  : 'Artista individual'}
             </SheetDescription>
           </SheetHeader>
 
@@ -387,7 +402,13 @@ export function ConfigurationSheet({ data }: ConfigurationSheetProps) {
                 Exposición
               </h3>
 
-              {expositor ? (
+              {isBand ? (
+                <div className='flex flex-col gap-2'>
+                  <p className='text-muted-foreground text-sm'>
+                    Las bandas no pueden participar como expositoras.
+                  </p>
+                </div>
+              ) : expositor ? (
                 <div className='flex flex-col gap-4'>
                   {/* Disciplina */}
                   <div className='flex flex-col gap-1.5'>
@@ -406,7 +427,7 @@ export function ConfigurationSheet({ data }: ConfigurationSheetProps) {
                       </SelectTrigger>
                       <SelectContent>
                         {data.disciplinas.map((d) => (
-                          <SelectItem key={d.id} value={d.id}>
+                          <SelectItem key={d.id} value={String(d.id)}>
                             {d.slug}
                           </SelectItem>
                         ))}
@@ -454,7 +475,7 @@ export function ConfigurationSheet({ data }: ConfigurationSheetProps) {
                       </SelectTrigger>
                       <SelectContent>
                         {data.modosIngreso.map((m) => (
-                          <SelectItem key={m.id} value={m.id}>
+                          <SelectItem key={m.id} value={String(m.id)}>
                             {m.slug}
                           </SelectItem>
                         ))}
@@ -520,6 +541,7 @@ export function ConfigurationSheet({ data }: ConfigurationSheetProps) {
                       setSelectedParticipantId(null)
                       setAddExpositorDialogOpen(true)
                     }}
+                    disabled={isBand}
                   >
                     + Agregar como expositor
                   </Button>
@@ -540,7 +562,7 @@ export function ConfigurationSheet({ data }: ConfigurationSheetProps) {
               ) : (
                 <div className='flex flex-col gap-3'>
                   {actividades.map((activ) => {
-                    const det = detallesMap.get(activ.id)
+                    const det = detallesByActividadId.get(activ.id)
                     const isDirty = isActividadDirty(activ.id)
                     const isSavingAct = savingActividadIds.has(activ.id)
 
@@ -579,18 +601,24 @@ export function ConfigurationSheet({ data }: ConfigurationSheetProps) {
                                 val
                               )
                             }
+                            disabled={activ.bandaId !== null}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder='Tipo de actividad' />
                             </SelectTrigger>
                             <SelectContent>
                               {data.tiposActividad.map((t) => (
-                                <SelectItem key={t.id} value={t.id}>
+                                <SelectItem key={t.id} value={String(t.id)}>
                                   {t.slug}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
+                          {activ.bandaId !== null && (
+                            <p className='text-muted-foreground text-xs'>
+                              Las bandas solo pueden participar en actividades de música.
+                            </p>
+                          )}
                         </div>
 
                         {/* Estado */}
@@ -638,7 +666,7 @@ export function ConfigurationSheet({ data }: ConfigurationSheetProps) {
                             </SelectTrigger>
                             <SelectContent>
                               {data.modosIngreso.map((m) => (
-                                <SelectItem key={m.id} value={m.id}>
+                                <SelectItem key={m.id} value={String(m.id)}>
                                   {m.slug}
                                 </SelectItem>
                               ))}
