@@ -1,23 +1,30 @@
 import type { SearchParamsProps } from '@/shared/types/search-params'
 import { requireAuth } from '@/shared/lib/auth/utils'
-import { AgrupacionListContainer } from './_components/agrupacion-list-container'
-import { getActiveAgrupaciones } from './_lib/get-active-agrupaciones'
-import { getDeletedAgrupaciones } from './_lib/get-deleted-agrupaciones'
-import { loadAgrupacionQueryParams } from './_lib/search-params'
-import { agrupacionQueryParamsSchema } from './_schemas/query-params.schema'
+import { CollectiveListContainer } from './_components/collective-list-container'
+import { getActiveCollectives } from './_lib/get-active-collectives'
+import { getCollectiveDetail } from './_lib/get-collective-detail'
+import { getDeletedCollectives } from './_lib/get-deleted-collectives'
+import { loadCollectiveQueryParams } from './_lib/search-params'
+import { collectiveQueryParamsSchema } from './_schemas/query-params.schema'
 
-export default async function AgrupacionesPage({
+export default async function CollectivesPage({
   searchParams
 }: SearchParamsProps) {
   await requireAuth()
 
-  const rawParams = await loadAgrupacionQueryParams(searchParams)
-  const params = agrupacionQueryParamsSchema.parse(rawParams)
+  const rawParams = await loadCollectiveQueryParams(searchParams)
+  const params = collectiveQueryParamsSchema.parse(rawParams)
 
-  const [activeAgrupaciones, deletedAgrupaciones] = await Promise.all([
-    getActiveAgrupaciones(params),
-    getDeletedAgrupaciones(params)
+  const [activeCollectives, deletedCollectives] = await Promise.all([
+    getActiveCollectives(params),
+    getDeletedCollectives(params)
   ])
+
+  const collectiveIds = activeCollectives.data.map(
+    (collective) => collective.id
+  )
+  const { membersByCollectiveId, availableArtists } =
+    await getCollectiveDetail(collectiveIds)
 
   return (
     <section className='h-full min-h-full space-y-6'>
@@ -29,9 +36,11 @@ export default async function AgrupacionesPage({
         </p>
       </header>
 
-      <AgrupacionListContainer
-        activeAgrupaciones={activeAgrupaciones}
-        deletedAgrupaciones={deletedAgrupaciones}
+      <CollectiveListContainer
+        activeCollectives={activeCollectives}
+        deletedCollectives={deletedCollectives}
+        membersByCollectiveId={membersByCollectiveId}
+        availableArtists={availableArtists}
       />
     </section>
   )

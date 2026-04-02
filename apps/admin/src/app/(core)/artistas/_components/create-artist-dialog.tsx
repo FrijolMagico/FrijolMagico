@@ -1,6 +1,6 @@
 'use client'
 
-import { EntityFormDialog } from '@/shared/components/entity-form-dialog/entity-form-dialog'
+import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
 import { useArtistDialog } from '../_store/artist-dialog-store'
 import { createArtistaAction } from '../_actions/create-artista.action'
 import { toast } from 'sonner'

@@ -5,7 +5,7 @@ export const CREATE_ARTIST_FORM_ID = 'create-artist-form'
 export const UPDATE_ARTIST_FORM_ID = 'update-artist-form'
 
 export enum ARTIST_STATUS {
-  UNKNOWN,
+  UNKNOWN = 1,
   ACTIVE,
   INACTIVE,
   SUSPENDED,

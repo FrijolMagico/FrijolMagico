@@ -1,28 +1,12 @@
-import {
-  createLoader,
-  parseAsInteger,
-  parseAsString,
-  parseAsStringLiteral
-} from 'nuqs/server'
+import { createLoader, parseAsString, parseAsStringLiteral } from 'nuqs/server'
 
-import { paginationParsers, searchParser } from '@/shared/lib/list-parsers'
-
-const participationStatusValues = [
-  'seleccionado',
-  'confirmado',
-  'desistido',
-  'cancelado',
-  'ausente',
-  'completado'
-] as const
+import { searchParser } from '@/shared/lib/list-parsers'
+import { PARTICIPATION_STATUSES } from '../_constants/participations.constants'
 
 export const participacionesSearchParams = {
-  ...paginationParsers,
-  limit: parseAsInteger.withDefault(25),
   ...searchParser,
   edicion: parseAsString,
-  edicionId: parseAsString,
-  estado: parseAsStringLiteral(participationStatusValues)
+  estado: parseAsStringLiteral(PARTICIPATION_STATUSES)
 }
 
 export const loadParticipacionesSearchParams = createLoader(

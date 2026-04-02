@@ -4,10 +4,10 @@ import {
   searchParamsSchema
 } from '@/shared/schemas/query-params.schema'
 
-export const agrupacionQueryParamsSchema = z.object({
+export const collectiveQueryParamsSchema = z.object({
   ...paginationParamsSchema.shape,
   ...searchParamsSchema.shape,
-  mostrar_eliminados: z.boolean().optional().default(false)
+  showDeleted: z.boolean().optional().default(false)
 })
 
-export type AgrupacionQueryParams = z.infer<typeof agrupacionQueryParamsSchema>
+export type CollectiveQueryParams = z.infer<typeof collectiveQueryParamsSchema>

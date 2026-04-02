@@ -1,7 +1,7 @@
 'use client'
 
 import { useForm, Controller } from 'react-hook-form'
-import { EntityFormDialog } from '@/shared/components/entity-form-dialog/entity-form-dialog'
+import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
 import {
   Combobox,
   ComboboxContent,
@@ -25,7 +25,7 @@ import type { CatalogAvailableArtist } from '../_types/catalog-list-item'
 import { toast } from 'sonner'
 import { useCatalogDialog } from '../_store/catalog-dialog-store'
 import { CREATE_CATALOG_FORM_ID } from '../_constants'
-import { ControllerSwitch } from './controller-switch'
+import { ControllerSwitch } from '@/shared/components/controller-switch'
 
 interface CreateCatalogDialogProps {
   availableArtists: CatalogAvailableArtist[]

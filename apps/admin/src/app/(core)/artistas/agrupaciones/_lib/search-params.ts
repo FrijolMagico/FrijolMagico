@@ -1,10 +1,10 @@
 import { createLoader, parseAsBoolean } from 'nuqs/server'
 import { paginationParsers, searchParser } from '@/shared/lib/list-parsers'
 
-export const agrupacionQueryParams = {
+export const collectiveQueryParams = {
   ...searchParser,
   ...paginationParsers,
-  mostrar_eliminados: parseAsBoolean.withDefault(false)
+  showDeleted: parseAsBoolean.withDefault(false)
 }
 
-export const loadAgrupacionQueryParams = createLoader(agrupacionQueryParams)
+export const loadCollectiveQueryParams = createLoader(collectiveQueryParams)

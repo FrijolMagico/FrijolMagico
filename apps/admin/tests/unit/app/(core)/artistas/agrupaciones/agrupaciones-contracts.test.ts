@@ -106,17 +106,17 @@ function createDbMock(results: unknown[]) {
   }
 }
 
-const { getActiveAgrupaciones } =
-  await import('@/core/artistas/agrupaciones/_lib/get-active-agrupaciones')
-const { getDeletedAgrupaciones } =
-  await import('@/core/artistas/agrupaciones/_lib/get-deleted-agrupaciones')
+const { getActiveCollectives } =
+  await import('@/core/artistas/agrupaciones/_lib/get-active-collectives')
+const { getDeletedCollectives } =
+  await import('@/core/artistas/agrupaciones/_lib/get-deleted-collectives')
 
-describe('agrupaciones query contracts', () => {
+describe('collectives query contracts', () => {
   beforeEach(() => {
     cacheTag.mockClear()
   })
 
-  test('getActiveAgrupaciones returns paginated active rows, orders by nombre and tags the cache', async () => {
+  test('getActiveCollectives returns paginated active rows, orders by nombre and tags the cache', async () => {
     const dbMock = createDbMock([
       [
         {
@@ -133,13 +133,13 @@ describe('agrupaciones query contracts', () => {
     ])
     currentDb = dbMock.db
 
-    const result = await getActiveAgrupaciones({
+    const result = await getActiveCollectives({
       page: 2,
       limit: 10,
       search: 'Río'
     })
 
-    expect(cacheTag).toHaveBeenCalledWith('agrupacion-active')
+    expect(cacheTag).toHaveBeenCalledWith('admin:collective:active')
     expect(result).toEqual({
       data: [
         {
@@ -166,7 +166,7 @@ describe('agrupaciones query contracts', () => {
     expect(whereValues).toContain('%río%')
   })
 
-  test('getDeletedAgrupaciones keeps deleted rows only and tags the deleted cache', async () => {
+  test('getDeletedCollectives keeps deleted rows only and tags the deleted cache', async () => {
     const dbMock = createDbMock([
       [
         {
@@ -194,13 +194,13 @@ describe('agrupaciones query contracts', () => {
     ])
     currentDb = dbMock.db
 
-    const result = await getDeletedAgrupaciones({
+    const result = await getDeletedCollectives({
       page: 1,
       limit: 20,
       search: 'Sur'
     })
 
-    expect(cacheTag).toHaveBeenCalledWith('agrupacion-deleted')
+    expect(cacheTag).toHaveBeenCalledWith('admin:collective:deleted')
     expect(result.data).toEqual([
       {
         id: 2,

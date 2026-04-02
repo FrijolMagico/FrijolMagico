@@ -11,7 +11,7 @@ import { ArtistAvatar } from './artist-avatar'
 import { Field, FieldGroup, FieldLabel } from '@/shared/components/ui/field'
 import { updateCatalogAction } from '../_actions/update-catalog.action'
 import { toast } from 'sonner'
-import { EntityFormDialog } from '@/shared/components/entity-form-dialog/entity-form-dialog'
+import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
 import { useCatalogDialog } from '../_store/catalog-dialog-store'
 import {
   catalogUpdateFormSchema,

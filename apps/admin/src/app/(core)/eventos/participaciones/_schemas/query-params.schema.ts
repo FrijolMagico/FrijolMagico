@@ -1,23 +1,13 @@
 import { z } from 'zod'
+import { PARTICIPATION_STATUSES } from '../_constants/participations.constants'
+import { searchParamsSchema } from '@/shared/schemas/query-params.schema'
 
-const participationStatusValues = [
-  'seleccionado',
-  'confirmado',
-  'desistido',
-  'cancelado',
-  'ausente',
-  'completado'
-] as const
-
-export const participacionesQueryParamsSchema = z.object({
-  page: z.number().int().positive(),
-  limit: z.number().int().positive(),
-  search: z.string(),
+export const participationsQueryParamsSchema = z.object({
+  ...searchParamsSchema.shape,
   edicion: z.string().nullable(),
-  edicionId: z.string().nullable(),
-  estado: z.enum(participationStatusValues).nullable()
+  estado: z.enum(PARTICIPATION_STATUSES).nullable()
 })
 
-export type ParticipacionesQueryParams = z.infer<
-  typeof participacionesQueryParamsSchema
+export type ParticipationsQueryParams = z.infer<
+  typeof participationsQueryParamsSchema
 >

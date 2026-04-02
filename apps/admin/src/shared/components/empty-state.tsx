@@ -1,5 +1,5 @@
-import { IconFileOff } from '@tabler/icons-react'
 import { Button } from '@/shared/components/ui/button'
+import { IconFileOff } from '@tabler/icons-react'
 
 interface EmptyStateProps {
   title: string

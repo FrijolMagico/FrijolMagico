@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'bun:test'
 import {
-  agrupacionFormSchema,
-  agrupacionInsertSchema
-} from '@/core/artistas/agrupaciones/_schemas/agrupacion.schema'
-import { agrupacionQueryParamsSchema } from '@/core/artistas/agrupaciones/_schemas/query-params.schema'
+  collectiveFormSchema,
+  collectiveInsertSchema
+} from '@/core/artistas/agrupaciones/_schemas/collective.schema'
+import { collectiveQueryParamsSchema } from '@/core/artistas/agrupaciones/_schemas/query-params.schema'
 
-describe('agrupacion schemas', () => {
+describe('collective schemas', () => {
   test('validates form payload with required nombre and valid email', () => {
-    const result = agrupacionFormSchema.parse({
+    const result = collectiveFormSchema.parse({
       nombre: 'Las del Valle',
       descripcion: 'Colectivo musical',
       correo: 'lasdelvalle@frijolmagico.cl',
@@ -20,7 +20,7 @@ describe('agrupacion schemas', () => {
 
   test('rejects empty nombre in form schema', () => {
     expect(() =>
-      agrupacionFormSchema.parse({
+      collectiveFormSchema.parse({
         nombre: '',
         descripcion: '',
         correo: '',
@@ -30,7 +30,7 @@ describe('agrupacion schemas', () => {
   })
 
   test('server insert schema accepts nullable optional fields', () => {
-    const result = agrupacionInsertSchema.parse({
+    const result = collectiveInsertSchema.parse({
       nombre: 'Colectiva Norte',
       descripcion: null,
       correo: null,
@@ -45,14 +45,14 @@ describe('agrupacion schemas', () => {
     })
   })
 
-  test('query params schema parses mostrar_eliminados boolean', () => {
-    const result = agrupacionQueryParamsSchema.parse({
+  test('query params schema parses showDeleted boolean', () => {
+    const result = collectiveQueryParamsSchema.parse({
       page: 1,
       limit: 20,
       search: '',
-      mostrar_eliminados: true
+      showDeleted: true
     })
 
-    expect(result.mostrar_eliminados).toBe(true)
+    expect(result.showDeleted).toBe(true)
   })
 })

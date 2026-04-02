@@ -3,7 +3,7 @@
 import { useArtistDialog } from '../_store/artist-dialog-store'
 import { updateArtistaAction } from '../_actions/update-artista.action'
 import { toast } from 'sonner'
-import { EntityFormDialog } from '@/shared/components/entity-form-dialog/entity-form-dialog'
+import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
 import { ArtistFormLayout } from './artist-form-layout'
 import { useForm, useFormState, FormProvider } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'

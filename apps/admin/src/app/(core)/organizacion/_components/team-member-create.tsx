@@ -11,7 +11,7 @@ import {
 import { TeamMemberFormFields } from './team-member-form-fields'
 import { ADD_TEAM_FORM_ID } from '../_constants'
 import { useTeamDialog } from '../_store/team-dialog-store'
-import { EntityFormDialog } from '@/shared/components/entity-form-dialog/entity-form-dialog'
+import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
 
 export function TeamMemberCreate() {
   const isCreateMemberOpen = useTeamDialog((s) => s.isCreateMemberOpen)

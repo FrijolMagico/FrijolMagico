@@ -13,7 +13,7 @@ import type { Place } from '../_schemas/place.schema'
 import { useEditionDialog } from '../_store/edition-dialog-store'
 import type { EventoLookup } from '../_types'
 import { EditionFormLayout } from './edition-form-layout'
-import { EntityFormDialog } from '@/shared/components/entity-form-dialog/entity-form-dialog'
+import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
 
 interface CreateEditionDialogProps {
   eventos: EventoLookup[]

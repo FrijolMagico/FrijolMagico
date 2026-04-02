@@ -11,7 +11,7 @@ import {
 } from '../_schemas/organizacion.schema'
 import { TeamMemberFormFields } from './team-member-form-fields'
 import { UPDATE_TEAM_FORM_ID } from '../_constants'
-import { EntityFormDialog } from '@/shared/components/entity-form-dialog/entity-form-dialog'
+import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
 
 export function TeamMemberUpdate() {
   const selectedMember = useTeamDialog((s) => s.selectedMember)
