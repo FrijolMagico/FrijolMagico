@@ -21,7 +21,7 @@ export const GA_EVENTS = {
 
   // Festival events
   FESTIVAL_SECTION_VIEW: 'festival_section_view',
-  CONVOCATORIA_VIEW: 'convocatoria_view',
+  CONVOCATORIA_VIEW: 'convocatoria_view'
 } as const
 
 /**

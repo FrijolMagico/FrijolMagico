@@ -9,7 +9,7 @@ export const FestivalHeader = ({
   id,
   nombre,
   edicion,
-  edicionNombre,
+  edicionNombre
 }: FestivalHeaderProps) => (
   <header>
     <h3 className='from-fm-orange to-fm-yellow bg-linear-to-r bg-clip-text pb-2 text-4xl leading-none font-black tracking-tight text-transparent md:text-5xl'>

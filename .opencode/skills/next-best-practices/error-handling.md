@@ -15,7 +15,7 @@ Catches errors in a route segment and its children:
 
 export default function Error({
   error,
-  reset,
+  reset
 }: {
   error: Error & { digest?: string }
   reset: () => void
@@ -40,7 +40,7 @@ Catches errors in root layout:
 
 export default function GlobalError({
   error,
-  reset,
+  reset
 }: {
   error: Error & { digest?: string }
   reset: () => void
@@ -107,6 +107,7 @@ async function createPost(formData: FormData) {
 ```
 
 Same applies to:
+
 - `redirect()` - 307 temporary redirect
 - `permanentRedirect()` - 308 permanent redirect
 - `notFound()` - 404 not found
@@ -199,12 +200,16 @@ export default function NotFound() {
 ```tsx
 import { notFound } from 'next/navigation'
 
-export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+export default async function Page({
+  params
+}: {
+  params: Promise<{ id: string }>
+}) {
   const { id } = await params
   const post = await getPost(id)
 
   if (!post) {
-    notFound()  // Renders closest not-found.tsx
+    notFound() // Renders closest not-found.tsx
   }
 
   return <div>{post.title}</div>

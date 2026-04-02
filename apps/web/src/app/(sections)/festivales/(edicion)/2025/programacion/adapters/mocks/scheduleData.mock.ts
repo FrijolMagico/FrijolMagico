@@ -11,7 +11,7 @@ export const getDataFromMock = (): RawSchedule[][] => {
       Encargado: '',
       'Duración (min)': '',
       RRSS: '',
-      Información: '',
+      Información: ''
     },
     {
       Horario: '10:30',
@@ -22,7 +22,7 @@ export const getDataFromMock = (): RawSchedule[][] => {
       Encargado: 'Ana García, Felipe Mendez',
       'Duración (min)': '120',
       RRSS: 'https://instagram.com/anagarcia_art, https://twitter.com/felipe_mendez',
-      Información: 'https://example.com/taller-comic-digital',
+      Información: 'https://example.com/taller-comic-digital'
     },
     {
       Horario: '13:00',
@@ -33,7 +33,7 @@ export const getDataFromMock = (): RawSchedule[][] => {
       Encargado: 'Dr. Carlos Mendez',
       'Duración (min)': '60',
       RRSS: 'https://twitter.com/carlosmendez',
-      Información: 'https://example.com/historia-comic',
+      Información: 'https://example.com/historia-comic'
     },
     {
       Horario: '14:30',
@@ -44,7 +44,7 @@ export const getDataFromMock = (): RawSchedule[][] => {
       Encargado: 'Editorial Austral',
       'Duración (min)': '45',
       RRSS: 'https://instagram.com/editorialaustral',
-      Información: 'https://example.com/heroes-del-sur',
+      Información: 'https://example.com/heroes-del-sur'
     },
     {
       Horario: '15:30',
@@ -55,7 +55,7 @@ export const getDataFromMock = (): RawSchedule[][] => {
       Encargado: 'Roberto Silva, Carmen Reyes, Diego Torres',
       'Duración (min)': '90',
       RRSS: 'https://instagram.com/robertosilva_comics, https://twitter.com/carmen_reyes, https://facebook.com/diego_torres_art',
-      Información: 'https://example.com/narrativa-visual',
+      Información: 'https://example.com/narrativa-visual'
     },
     {
       Horario: '17:00',
@@ -66,7 +66,7 @@ export const getDataFromMock = (): RawSchedule[][] => {
       Encargado: 'María López, Valentina Cruz',
       'Duración (min)': '75',
       RRSS: 'https://instagram.com/mujerescomic, https://twitter.com/valentina_cruz',
-      Información: 'https://example.com/mujeres-comic',
+      Información: 'https://example.com/mujeres-comic'
     },
     {
       Horario: '18:30',
@@ -77,8 +77,8 @@ export const getDataFromMock = (): RawSchedule[][] => {
       Encargado: 'Pedro Vega',
       'Duración (min)': '120',
       RRSS: 'https://instagram.com/pedrovega_ink',
-      Información: 'https://example.com/tecnicas-entintado',
-    },
+      Información: 'https://example.com/tecnicas-entintado'
+    }
   ]
 
   // Día 2
@@ -91,7 +91,7 @@ export const getDataFromMock = (): RawSchedule[][] => {
       Encargado: '',
       'Duración (min)': '',
       RRSS: '',
-      Información: '',
+      Información: ''
     },
     {
       Horario: '10:30',
@@ -102,7 +102,7 @@ export const getDataFromMock = (): RawSchedule[][] => {
       Encargado: 'Elena Morales, Sebastián Rojas',
       'Duración (min)': '150',
       RRSS: 'https://instagram.com/elenamorales_color, https://behance.net/sebastian_rojas',
-      Información: 'https://example.com/colorizacion-digital',
+      Información: 'https://example.com/colorizacion-digital'
     },
     {
       Horario: '13:30',
@@ -113,7 +113,7 @@ export const getDataFromMock = (): RawSchedule[][] => {
       Encargado: 'Editores Indie Chile',
       'Duración (min)': '90',
       RRSS: 'https://facebook.com/editoresindiecl',
-      Información: 'https://example.com/industria-independiente',
+      Información: 'https://example.com/industria-independiente'
     },
     {
       Horario: '15:00',
@@ -124,7 +124,7 @@ export const getDataFromMock = (): RawSchedule[][] => {
       Encargado: 'Editorial Mítica, Fernanda Soto',
       'Duración (min)': '45',
       RRSS: 'https://instagram.com/editorialmitica, https://twitter.com/fernanda_soto',
-      Información: 'https://example.com/leyendas-del-sur',
+      Información: 'https://example.com/leyendas-del-sur'
     },
     {
       Horario: '16:00',
@@ -135,7 +135,7 @@ export const getDataFromMock = (): RawSchedule[][] => {
       Encargado: 'Character Design Studio',
       'Duración (min)': '120',
       RRSS: 'https://instagram.com/characterdesign_studio',
-      Información: 'https://example.com/personajes-memorables',
+      Información: 'https://example.com/personajes-memorables'
     },
     {
       Horario: '18:30',
@@ -146,7 +146,7 @@ export const getDataFromMock = (): RawSchedule[][] => {
       Encargado: 'Tech Innovation Panel, Andrea Martinez',
       'Duración (min)': '75',
       RRSS: 'https://linkedin.com/company/techinnovation, https://twitter.com/andrea_martinez',
-      Información: 'https://example.com/comic-tecnologia',
+      Información: 'https://example.com/comic-tecnologia'
     },
     {
       Horario: '20:00',
@@ -157,8 +157,8 @@ export const getDataFromMock = (): RawSchedule[][] => {
       Encargado: 'Dr. Anatomy Comics, Patricia Vera, Luis Contreras',
       'Duración (min)': '135',
       RRSS: 'https://instagram.com/anatomycomics, https://twitter.com/patricia_vera, https://behance.net/luis_contreras',
-      Información: 'https://example.com/anatomia-dibujantes',
-    },
+      Información: 'https://example.com/anatomia-dibujantes'
+    }
   ]
 
   return [day1, day2]

@@ -14,30 +14,36 @@ export default function Home() {
   return (
     <main
       data-palette='base'
-      className='mx-auto flex h-full w-full max-w-4xl flex-1 items-center p-4'>
+      className='mx-auto flex h-full w-full max-w-4xl flex-1 items-center p-4'
+    >
       <Grid
         className='gap-4'
         row={{ base: 8, sm: 4, lg: 3 }}
-        col={{ base: 1, sm: 6, lg: 9 }}>
+        col={{ base: 1, sm: 6, lg: 9 }}
+      >
         <GridItem
           row={{ base: 1, sm: 1, lg: 1 }}
-          col={{ base: 1, sm: 4, lg: 6 }}>
+          col={{ base: 1, sm: 4, lg: 6 }}
+        >
           <HeroCard />
         </GridItem>
         <GridItem
           row={{ base: 2, sm: 2, lg: 2 }}
-          col={{ base: 1, sm: 3, lg: 3 }}>
+          col={{ base: 1, sm: 3, lg: 3 }}
+        >
           <Festival2025Card />
         </GridItem>
         <GridItem
           row={{ base: 2, sm: 2, lg: 2 }}
-          col={{ base: 1, sm: 3, lg: 3 }}>
+          col={{ base: 1, sm: 3, lg: 3 }}
+        >
           <CatalogCard />
         </GridItem>
         <GridItem
           className='order-last sm:order-first lg:order-0'
           row={{ base: 1, sm: 1, lg: 1 }}
-          col={{ base: 1, sm: 2, lg: 3 }}>
+          col={{ base: 1, sm: 2, lg: 3 }}
+        >
           <div className='flex size-full flex-col items-center justify-center'>
             <DoodleLine className='sm:hidden' />
             <ViewTransition name='transition-logo'>
@@ -51,12 +57,14 @@ export default function Home() {
         </GridItem>
         <GridItem
           row={{ base: 1, sm: 1, lg: 1 }}
-          col={{ base: 1, sm: 3, lg: 3 }}>
+          col={{ base: 1, sm: 3, lg: 3 }}
+        >
           <SpotifyCard />
         </GridItem>
         <GridItem
           row={{ base: 1, sm: 1, lg: 1 }}
-          col={{ base: 1, sm: 3, lg: 3 }}>
+          col={{ base: 1, sm: 3, lg: 3 }}
+        >
           <div className='flex h-full flex-col gap-4'>
             <RRSSCard />
             <NosotrosCard />

@@ -16,14 +16,14 @@ interface TrackPageViewProps {
  */
 export const TrackPageView = ({
   sectionName,
-  sectionPath,
+  sectionPath
 }: TrackPageViewProps) => {
   const { trackSectionView } = useAnalytics()
 
   useEffect(() => {
     trackSectionView({
       section_name: sectionName,
-      section_path: sectionPath,
+      section_path: sectionPath
     })
   }, [sectionName, sectionPath, trackSectionView])
 

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import '@/styles/globals.css'
+import './globals.css'
 import { Toaster } from '@/shared/components/ui/sonner'
 import { ThemeProvider } from '@/shared/components/theme-provider'
 import { Inter, Rubik_Bubbles } from 'next/font/google'
@@ -34,7 +34,7 @@ export default function RootLayout({
       <body className='font-inter'>
         <ThemeProvider>
           {children}
-          <Toaster position='top-center' />
+          <Toaster position='bottom-center' />
         </ThemeProvider>
       </body>
     </html>

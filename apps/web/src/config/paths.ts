@@ -16,9 +16,9 @@ export const paths = {
       schedule: '/festivales/2025/programacion',
       ilustracion: '/festivales/2025/ilustracion',
       manualidades: '/festivales/2025/manualidades',
-      narrativagrafica: '/festivales/2025/narrativagrafica',
-    },
-  },
+      narrativagrafica: '/festivales/2025/narrativagrafica'
+    }
+  }
 } as const
 
 // Helper types for type safety

@@ -20,7 +20,8 @@ export const HeroCard = () => {
         width={571}
         height={321}
         poster='/images/FestivalFrijolMagico.png'
-        className='absolute inset-0 -z-10 aspect-video w-full scale-125 sm:scale-105'>
+        className='absolute inset-0 -z-10 aspect-video w-full scale-125 sm:scale-105'
+      >
         <source src='/videos/FestivalFrijolMagico.webm' type='video/webm' />
         Tu navegador no soporta videos.
       </video>

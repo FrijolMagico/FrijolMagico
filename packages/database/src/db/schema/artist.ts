@@ -23,6 +23,7 @@ export const artistStatus = sqliteTable('artista_estado', {
 
 /**
  * Artist - Artists registered in the system
+ * Includes idx_artista_telefono to codify an existing local DB index and avoid schema drift.
  */
 export const artist = sqliteTable(
   'artista',
@@ -55,7 +56,9 @@ export const artist = sqliteTable(
       .on(table.correo, table.pseudonimo)
       .where(sql`${table.correo} IS NOT NULL`),
     index('idx_artist_estado').on(table.estadoId),
-    index('idx_artist_deleted_at').on(table.deletedAt)
+    index('idx_artist_deleted_at').on(table.deletedAt),
+    index('idx_artista_deleted_created').on(table.deletedAt, table.createdAt),
+    index('idx_artista_telefono').on(table.telefono)
   ]
 )
 
@@ -112,13 +115,16 @@ export const artistHistory = sqliteTable(
   (table) => [
     uniqueIndex('uq_artist_history_orden').on(table.artistaId, table.orden),
     index('idx_artist_history_artista').on(table.artistaId),
-    index('idx_artist_history_pseudonimo').on(table.pseudonimo),
-    index('idx_artist_history_orden').on(table.artistaId, table.orden)
+    index('idx_artist_history_pseudonimo').on(table.pseudonimo)
   ]
 )
 
 /**
  * Catalog Artist - Artists in the public catalog
+ *
+ * NOTE: idx_catalogo_artista_artista_deleted (artista_id, deleted_at) exists in DB
+ * as a manual index useful for anti-join queries. Not added to schema to avoid
+ * duplicate creation if drizzle-kit push is ever run.
  */
 export const catalogArtist = sqliteTable(
   'catalogo_artista',
@@ -146,36 +152,54 @@ export const catalogArtist = sqliteTable(
     index('idx_catalog_artist_orden').on(table.orden),
     index('idx_catalog_artist_activo').on(table.activo),
     index('idx_catalog_artist_destacado').on(table.destacado),
-    index('idx_catalog_artist_deleted_at').on(table.deletedAt)
+    index('idx_catalog_artist_deleted_at').on(table.deletedAt),
+    index('idx_catalog_artist_artista_deleted').on(
+      table.artistaId,
+      table.deletedAt
+    )
   ]
 )
 
 /**
  * Collective - Artist groupings
  */
-export const collective = sqliteTable('agrupacion', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  nombre: text('nombre').unique().notNull(),
-  descripcion: text('descripcion'),
-  correo: text('correo'),
-  activo: integer('activo', { mode: 'boolean' }).notNull().default(true),
-  createdAt: text('created_at')
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: text('updated_at')
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`)
-})
+export const collective = sqliteTable(
+  'agrupacion',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    nombre: text('nombre').unique().notNull(),
+    descripcion: text('descripcion'),
+    correo: text('correo'),
+    activo: integer('activo', { mode: 'boolean' }).notNull().default(true),
+    deletedAt: text('deleted_at'),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text('updated_at')
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`)
+  },
+  (table) => [
+    index('idx_collective_deleted_at').on(table.deletedAt),
+    index('idx_agrupacion_deleted_created').on(table.deletedAt, table.createdAt)
+  ]
+)
 
 /**
- * Banda - Music bands
+ * Band - Music bands
+ * DB Table: "band" (not "banda")
+ * NOTE: Existe trigger trg_banda_updated_at en DB
  */
-export const banda = sqliteTable('banda', {
+export const band = sqliteTable('band', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  nombre: text('nombre').unique().notNull(),
-  descripcion: text('descripcion'),
-  correo: text('correo'),
-  activo: integer('activo', { mode: 'boolean' }).notNull().default(true),
+  name: text('name').notNull().unique(),
+  description: text('description'),
+  email: text('email'),
+  active: integer('active', { mode: 'boolean' }).notNull().default(true),
+  phone: text('phone'),
+  city: text('city'),
+  country: text('country'),
+  deletedAt: text('deleted_at'),
   createdAt: text('created_at')
     .notNull()
     .default(sql`CURRENT_TIMESTAMP`),

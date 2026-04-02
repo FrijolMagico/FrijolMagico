@@ -18,7 +18,7 @@ export async function scheduleRepository(): Promise<RawSchedule[][]> {
 
   if (!data) {
     throw new Error(
-      'Data not found or an error occurred while fetching festival schedule.',
+      'Data not found or an error occurred while fetching festival schedule.'
     )
   }
 

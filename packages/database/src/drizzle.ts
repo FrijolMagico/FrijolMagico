@@ -37,6 +37,22 @@ export const db = drizzle(getTursoClient(), {
   }
 })
 
+/**
+ * Transaction type derived from the db instance.
+ * Use this to type `tx` parameters in utility functions that receive
+ * a transaction object from `db.transaction()`.
+ *
+ * @example
+ * ```typescript
+ * import type { Transaction } from '@frijolmagico/database/orm'
+ *
+ * async function transferFunds(tx: Transaction, from: number, to: number) {
+ *   // tx has the same query API as db
+ * }
+ * ```
+ */
+export type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
+
 // Re-export schema and types for convenience
 export * from './db/schema/index'
 export * from './db/types'

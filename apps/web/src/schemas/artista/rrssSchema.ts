@@ -9,7 +9,7 @@ export const RRSS_PLATFORMS = [
   'twitter',
   'tiktok',
   'youtube',
-  'web',
+  'web'
 ] as const
 
 export type RrssPlatform = (typeof RRSS_PLATFORMS)[number]
@@ -25,7 +25,7 @@ export const rrssObjectSchema = z
     twitter: z.string().url().optional(),
     tiktok: z.string().url().optional(),
     youtube: z.string().url().optional(),
-    web: z.string().url().optional(),
+    web: z.string().url().optional()
   })
   .partial()
 
@@ -90,7 +90,7 @@ export function ensureHttps(url: string): string {
  * @returns RrssObject con la plataforma detectada, o null si vacio
  */
 export function urlToRrssObject(
-  url: string | null | undefined,
+  url: string | null | undefined
 ): RrssObject | null {
   if (!url || !url.trim()) return null
 

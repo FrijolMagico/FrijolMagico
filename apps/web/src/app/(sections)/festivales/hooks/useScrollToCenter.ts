@@ -12,7 +12,7 @@ interface WindowWithGsap extends Window {
   gsap?: {
     to: (
       target: unknown,
-      config: unknown,
+      config: unknown
     ) => {
       then?: (callback: () => void) => void
     }
@@ -36,7 +36,7 @@ export const useScrollToCenter = (options: UseScrollToCenterOptions = {}) => {
       } catch (error) {
         console.warn(
           'GSAP failed to load, falling back to native scroll',
-          error,
+          error
         )
         setIsGsapLoaded(true) // Still mark as loaded to allow fallback
       }
@@ -53,7 +53,7 @@ export const useScrollToCenter = (options: UseScrollToCenterOptions = {}) => {
       setScrolling(festivalId)
 
       const element = document.querySelector(
-        `[data-festival-id="${festivalId}"]`,
+        `[data-festival-id="${festivalId}"]`
       )
       if (!element) {
         console.warn(`Element with id ${festivalId} not found`)
@@ -78,9 +78,9 @@ export const useScrollToCenter = (options: UseScrollToCenterOptions = {}) => {
             duration: SCROLL_DURATION,
             scrollTo: {
               y: element,
-              offsetY: scrollOffset,
+              offsetY: scrollOffset
             },
-            ease: 'power2.inOut',
+            ease: 'power2.inOut'
           })
 
           // Clear scroll flag when animation completes
@@ -98,13 +98,13 @@ export const useScrollToCenter = (options: UseScrollToCenterOptions = {}) => {
       element.scrollIntoView({
         behavior: smooth ? 'smooth' : 'auto',
         block: 'center',
-        inline: 'nearest',
+        inline: 'nearest'
       })
 
       // For native scroll, estimate completion time
       setTimeout(onScrollComplete, SCROLL_DURATION * 1000)
     },
-    [smooth, offset, isGsapLoaded, setScrolling, clearScrolling],
+    [smooth, offset, isGsapLoaded, setScrolling, clearScrolling]
   )
 
   return scrollToFestival

@@ -14,7 +14,7 @@ export const artistaSchema = z.object({
   pseudonimo: z.string().nullable(),
   correo: z.preprocess(
     (v) => (typeof v === 'string' && v === '' ? null : v),
-    z.string().email().nullable(),
+    z.string().email().nullable()
   ),
   ciudad: z
     .string()
@@ -28,7 +28,7 @@ export const artistaSchema = z.object({
     .string()
     .nullable()
     .transform((v) => v?.trim() || null),
-  rrss: rrssObjectSchema.nullable(),
+  rrss: rrssObjectSchema.nullable()
 })
 
 /**

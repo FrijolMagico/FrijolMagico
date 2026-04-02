@@ -12,8 +12,8 @@ const getCachedFestivalesData = unstable_cache(
   ['festivales-list'],
   {
     revalidate: false,
-    tags: ['festivales'],
-  },
+    tags: ['festivales']
+  }
 )
 
 export async function getFestivalesData(): Promise<{
@@ -25,7 +25,7 @@ export async function getFestivalesData(): Promise<{
 
     return {
       data,
-      error: null,
+      error: null
     }
   } catch (error) {
     const err = error as Error
@@ -35,8 +35,8 @@ export async function getFestivalesData(): Promise<{
       data: [],
       error: {
         message:
-          'Error al obtener los festivales. Por favor intente nuevamente más tarde.',
-      },
+          'Error al obtener los festivales. Por favor intente nuevamente más tarde.'
+      }
     }
   }
 }

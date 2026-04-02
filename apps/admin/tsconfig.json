@@ -1,7 +1,6 @@
 {
   "extends": "@frijolmagico/typescript-config/next",
   "compilerOptions": {
-    "baseUrl": ".",
     "skipLibCheck": true,
     "types": [
       "bun"
@@ -10,44 +9,35 @@
       "@/shared/*": [
         "./src/shared/*"
       ],
-      // Sections (Add more as needed)
-      "@/admin/*": [
-        "./src/app/(authenticated)/(admin)/*"
-      ],
-      "@/dashboard/*": [
-        "./src/app/(authenticated)/(dashboard)/*"
+      "@/core/*": [
+        "./src/app/(core)/*"
       ],
       "@/auth/*": [
         "./src/app/(auth)/*"
-      ],
-      // Globals
-      "@/lib/*": [
-        "./src/lib/*"
-      ],
-      "@/hooks/*": [
-        "./src/hooks/*"
-      ],
-      "@/types/*": [
-        "./src/types/*"
-      ],
-      "@/styles/*": [
-        "./src/styles/*"
       ],
       // Test folder
       "@/tests/*": [
         "./tests/*"
       ],
-      // Fallback
       "@/*": [
         "./src/*"
+      ],
+      "*": [
+        "./*"
       ]
     }
   },
   "include": [
     "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
+    ".next/dev/types/**/*.ts",
+    "../../packages/database/**/*.ts",
+    "../../packages/utils/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules/*",
+    ".next"
   ]
 }

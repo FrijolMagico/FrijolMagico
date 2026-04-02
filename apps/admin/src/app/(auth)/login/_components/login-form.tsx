@@ -3,16 +3,16 @@
 import { Alert, AlertDescription } from '@/shared/components/ui/alert'
 import { Button } from '@/shared/components/ui/button'
 import { useGoogleLogin } from '../_hooks/use-google-login'
-import { AlertCircle, Loader2 } from 'lucide-react'
+import { IconAlertCircle, IconLoader2 } from '@tabler/icons-react'
 
 export function LoginForm() {
   const { login, isLoading, error } = useGoogleLogin()
 
   return (
-    <div className='space-y-4'>
+    <div className='flex w-full flex-col items-center gap-2'>
       {error && (
         <Alert variant='destructive'>
-          <AlertCircle className='size-4' />
+          <IconAlertCircle className='size-4' />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
@@ -25,7 +25,7 @@ export function LoginForm() {
       >
         {isLoading ? (
           <>
-            <Loader2 className='size-5 animate-spin' />
+            <IconLoader2 className='size-5 animate-spin' />
             <span>Iniciando sesión...</span>
           </>
         ) : (
@@ -53,10 +53,10 @@ export function LoginForm() {
         )}
       </Button>
 
-      <p className='text-muted-foreground text-center text-xs'>
+      <span className='text-muted-foreground text-xs'>
         Solo cuentas <span className='font-semibold'>@frijolmagico.cl</span>{' '}
         pueden acceder
-      </p>
+      </span>
     </div>
   )
 }

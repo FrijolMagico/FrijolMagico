@@ -10,7 +10,7 @@ gsap.registerPlugin(useGSAP)
 
 export const FestivalCard = ({
   text,
-  href,
+  href
 }: {
   text: string
   href: string
@@ -33,7 +33,7 @@ export const FestivalCard = ({
       scale: 1.04,
       transformPerspective: 800,
       duration: 0.35,
-      ease: 'power2.out',
+      ease: 'power2.out'
     })
   }
 
@@ -44,7 +44,7 @@ export const FestivalCard = ({
       rotateX: 0,
       scale: 1,
       duration: 0.5,
-      ease: 'power3.out',
+      ease: 'power3.out'
     })
   }
 
@@ -79,10 +79,12 @@ export const FestivalCard = ({
         onTouchEnd={handleActionLeave}
         ref={cardWrapperRef}
         href={href || paths.festival[2025].base}
-        className='relative block size-full will-change-transform'>
+        className='relative block size-full will-change-transform'
+      >
         <div
           ref={cardRef}
-          className='text-2025-white bg-2025-white relative size-full overflow-hidden rounded-2xl p-6 will-change-transform'>
+          className='text-2025-white bg-2025-white relative size-full overflow-hidden rounded-2xl p-6 will-change-transform'
+        >
           <Image
             src='/sections/festivales/2025/images/CITY.webp'
             alt='Ilustración de la ciudad de Coquimbo destruída por un Frijol Mágico'

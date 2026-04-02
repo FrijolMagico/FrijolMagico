@@ -1,10 +1,34 @@
 'use client'
 
-import { useEffect, useMemo, useRef } from 'react'
-import { EditorContent, EditorContext, useEditor } from '@tiptap/react'
+import { Tiptap, useEditor, useEditorState, useTiptap } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
-import dynamic from 'next/dynamic'
+
+import { useCallback, useState } from 'react'
+import { Toggle } from '@/shared/components/ui/toggle'
+import { Button } from '@/shared/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from '@/shared/components/ui/dialog'
+import { Input } from '@/shared/components/ui/input'
+import { Label } from '@/shared/components/ui/label'
+import { Separator } from '@/shared/components/ui/separator'
+import {
+  IconArrowBackUp,
+  IconArrowForwardUp,
+  IconBold,
+  IconItalic,
+  IconLink,
+  IconListFilled,
+  IconListNumbers,
+  IconUnlink
+} from '@tabler/icons-react'
 
 import { Skeleton } from './ui/skeleton'
 
@@ -14,26 +38,15 @@ interface RichTextareaProps {
   id: string
   value: string
   onChange: (value: string) => void
-  onBlur?: () => void
-  ref?: React.Ref<HTMLDivElement>
   placeholder?: string
-  disabled?: boolean
 }
 
-export function RichTextareaUI({
+export function RichTextarea({
   id,
   value,
   onChange,
-  onBlur,
-  ref,
-  placeholder = 'Escribe aquí...',
-  disabled = false
+  placeholder = 'Escribe aquí...'
 }: RichTextareaProps) {
-  // Track last propagated value to avoid update loops
-  const lastValueRef = useRef(value)
-  // Track if we're updating from external value change
-  const isExternalUpdateRef = useRef(false)
-
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -49,69 +62,31 @@ export function RichTextareaUI({
       }),
       Placeholder.configure({ placeholder })
     ],
-    content: value || '',
-    editable: !disabled,
-    onBlur: () => {
-      onBlur?.()
+    editorProps: {
+      attributes: {
+        class: 'min-h-16'
+      }
     },
     onUpdate: ({ editor }) => {
-      // Skip propagating if this update came from external value change
-      if (isExternalUpdateRef.current) {
-        isExternalUpdateRef.current = false
-        return
-      }
-
       const html = editor.getHTML()
-      const newValue = html === '<p></p>' ? '' : html
-
-      // Only propagate if value actually changed from last known
-      if (newValue !== lastValueRef.current) {
-        lastValueRef.current = newValue
-        onChange(newValue)
-      }
+      onChange(html)
     },
+    content: value || '',
     immediatelyRender: false
   })
 
-  // Sync editor content when external value changes
-  useEffect(() => {
-    if (!editor) return
-
-    const currentContent = editor.getHTML()
-    const normalizedCurrent = currentContent === '<p></p>' ? '' : currentContent
-    const normalizedValue = value || ''
-
-    // Only update if the value is actually different
-    if (
-      normalizedValue !== normalizedCurrent &&
-      normalizedValue !== lastValueRef.current
-    ) {
-      isExternalUpdateRef.current = true
-      lastValueRef.current = normalizedValue
-
-      // Use queueMicrotask to ensure DOM is ready
-      queueMicrotask(() => {
-        editor.commands.setContent(normalizedValue, { emitUpdate: false })
-      })
-    }
-  }, [editor, value])
-
-  const providerValue = useMemo(() => ({ editor }), [editor])
+  if (!editor) return <RichTextareaSkeleton />
 
   return (
-    <EditorContext.Provider value={providerValue}>
-      <div
-        ref={ref}
-        className='border-input dark:bg-input/30 focus-within:border-ring focus-within:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 placeholder:text-muted-foreground field-sizing-content min-h-16 w-full overflow-clip rounded-md border bg-transparent text-base shadow-xs transition-[color,box-shadow] outline-none focus-within:ring-3 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:ring-3 md:text-sm'
-      >
-        <TiptapToolbar editor={editor} disabled={disabled} />
-        <EditorContent
+    <Tiptap editor={editor}>
+      <div className='border-input dark:bg-input/30 focus-within:border-ring focus-within:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 placeholder:text-muted-foreground field-sizing-content min-h-16 w-full overflow-clip rounded-md border bg-transparent text-base shadow-xs transition-[color,box-shadow] outline-none focus-within:ring-3 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:ring-3 md:text-sm'>
+        <TiptapToolbar />
+        <Tiptap.Content
           id={id}
-          editor={editor}
-          className='min-h-16 px-2.5 py-2 *:ring-0 *:outline-none *:focus:outline-none'
+          className='px-2.5 py-2 *:ring-0 *:outline-none *:focus:outline-none'
         />
       </div>
-    </EditorContext.Provider>
+    </Tiptap>
   )
 }
 
@@ -119,52 +94,21 @@ function RichTextareaSkeleton() {
   return (
     <div className='flex flex-col gap-3'>
       <Skeleton className='h-12 w-full' />
-      <Skeleton className='h-46 w-full' />
+      <Skeleton className='h-20 w-full' />
     </div>
   )
 }
 
-export const RichTextarea = dynamic(
-  () => import('./rich-textarea').then((mod) => mod.RichTextareaUI),
-  {
-    ssr: false,
-    loading: () => <RichTextareaSkeleton />
-  }
-)
+function TiptapToolbar() {
+  const { editor } = useTiptap()
 
-import { useCallback, useState } from 'react'
-import { type Editor } from '@tiptap/react'
-import {
-  Bold,
-  Italic,
-  List,
-  ListOrdered,
-  Link,
-  Unlink,
-  Undo,
-  Redo
-} from 'lucide-react'
-import { Toggle } from '@/shared/components/ui/toggle'
-import { Button } from '@/shared/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from '@/shared/components/ui/dialog'
-import { Input } from '@/shared/components/ui/input'
-import { Label } from '@/shared/components/ui/label'
-import { Separator } from '@/shared/components/ui/separator'
-
-interface TiptapToolbarProps {
-  editor: Editor | null
-  disabled?: boolean
-}
-
-function TiptapToolbar({ editor, disabled = false }: TiptapToolbarProps) {
+  const { canUndo, canRedo } = useEditorState({
+    editor,
+    selector: ({ editor }) => ({
+      canUndo: editor.can().undo(),
+      canRedo: editor.can().redo()
+    })
+  })
   const [linkUrl, setLinkUrl] = useState('')
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false)
 
@@ -197,28 +141,30 @@ function TiptapToolbar({ editor, disabled = false }: TiptapToolbarProps) {
         {/* History */}
         <div className='flex items-center gap-1'>
           <Button
+            type='button'
             variant='ghost'
             size='icon'
             onClick={() => editor.chain().focus().undo().run()}
-            disabled={!editor.can().undo() || disabled}
-            className='h-8 w-8'
+            disabled={!canUndo}
+            className='cursor-pointer'
             title='Deshacer'
           >
-            <Undo className='h-4 w-4' />
+            <IconArrowBackUp />
           </Button>
           <Button
+            type='button'
             variant='ghost'
             size='icon'
             onClick={() => editor.chain().focus().redo().run()}
-            disabled={!editor.can().redo() || disabled}
-            className='h-8 w-8'
+            disabled={!canRedo}
+            className='cursor-pointer'
             title='Rehacer'
           >
-            <Redo className='h-4 w-4' />
+            <IconArrowForwardUp />
           </Button>
         </div>
 
-        <Separator orientation='vertical' className='mx-1 h-6' />
+        <Separator orientation='vertical' />
 
         {/* Text formatting */}
         <div className='flex items-center gap-1'>
@@ -226,25 +172,25 @@ function TiptapToolbar({ editor, disabled = false }: TiptapToolbarProps) {
             size='sm'
             pressed={editor.isActive('bold')}
             onPressedChange={() => editor.chain().focus().toggleBold().run()}
-            disabled={disabled}
             aria-label='Negrita'
             title='Negrita (Ctrl+B)'
+            className='cursor-pointer'
           >
-            <Bold className='h-4 w-4' />
+            <IconBold />
           </Toggle>
           <Toggle
             size='sm'
             pressed={editor.isActive('italic')}
             onPressedChange={() => editor.chain().focus().toggleItalic().run()}
-            disabled={disabled}
             aria-label='Cursiva'
             title='Cursiva (Ctrl+I)'
+            className='cursor-pointer'
           >
-            <Italic className='h-4 w-4' />
+            <IconItalic />
           </Toggle>
         </div>
 
-        <Separator orientation='vertical' className='mx-1 h-6' />
+        <Separator orientation='vertical' />
 
         {/* Lists */}
         <div className='flex items-center gap-1'>
@@ -254,11 +200,11 @@ function TiptapToolbar({ editor, disabled = false }: TiptapToolbarProps) {
             onPressedChange={() =>
               editor.chain().focus().toggleBulletList().run()
             }
-            disabled={disabled}
             aria-label='Lista con viñetas'
             title='Lista con viñetas'
+            className='cursor-pointer'
           >
-            <List className='h-4 w-4' />
+            <IconListFilled />
           </Toggle>
           <Toggle
             size='sm'
@@ -266,15 +212,15 @@ function TiptapToolbar({ editor, disabled = false }: TiptapToolbarProps) {
             onPressedChange={() =>
               editor.chain().focus().toggleOrderedList().run()
             }
-            disabled={disabled}
             aria-label='Lista numerada'
             title='Lista numerada'
+            className='cursor-pointer'
           >
-            <ListOrdered className='h-4 w-4' />
+            <IconListNumbers />
           </Toggle>
         </div>
 
-        <Separator orientation='vertical' className='mx-1 h-6' />
+        <Separator orientation='vertical' />
 
         {/* Link */}
         <div className='flex items-center gap-1'>
@@ -284,14 +230,14 @@ function TiptapToolbar({ editor, disabled = false }: TiptapToolbarProps) {
                 <Toggle
                   size='sm'
                   pressed={editor.isActive('link')}
-                  disabled={disabled}
                   aria-label='Insertar enlace'
                   title='Insertar enlace'
-                />
+                  className='cursor-pointer'
+                >
+                  <IconLink />
+                </Toggle>
               }
-            >
-              <Link className='h-4 w-4' />
-            </DialogTrigger>
+            />
             <DialogContent className='sm:max-w-md'>
               <DialogHeader>
                 <DialogTitle>Insertar enlace</DialogTitle>
@@ -332,11 +278,10 @@ function TiptapToolbar({ editor, disabled = false }: TiptapToolbarProps) {
               variant='ghost'
               size='icon'
               onClick={unsetLink}
-              disabled={disabled}
-              className='h-8 w-8'
+              className='cursor-pointer'
               title='Quitar enlace'
             >
-              <Unlink className='h-4 w-4' />
+              <IconUnlink />
             </Button>
           )}
         </div>

@@ -3,7 +3,7 @@ interface FestivalExponentesCountProps {
 }
 
 export const FestivalExponentesCount = ({
-  count,
+  count
 }: FestivalExponentesCountProps) => (
   <dl className='flex flex-col items-center justify-center'>
     <dt className='sr-only'>Cantidad de exponentes</dt>

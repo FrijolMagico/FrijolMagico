@@ -7,7 +7,7 @@ import { TrackPageView } from '@/components/analytics/TrackPageView'
 
 const {
   data: { firstDay, secondDay },
-  error,
+  error
 } = await getFestivalScheduleData()
 
 export default function ProgramacionPage() {

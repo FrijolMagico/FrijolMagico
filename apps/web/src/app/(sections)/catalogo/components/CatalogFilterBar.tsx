@@ -24,7 +24,7 @@ export const CatalogFilterBar = ({ catalogData }: CatalogFilterBarProps) => {
   >({
     city: false,
     category: false,
-    country: false,
+    country: false
   })
 
   const filters = useCatalogFiltersStore((state) => state.filters)
@@ -41,7 +41,7 @@ export const CatalogFilterBar = ({ catalogData }: CatalogFilterBarProps) => {
             curr === filterKey ? !prev[filterKey] : false
           return acc
         },
-        {} as Record<CatalogSelectionFilterKey, boolean>,
+        {} as Record<CatalogSelectionFilterKey, boolean>
       )
     })
   }, [])
@@ -60,7 +60,7 @@ export const CatalogFilterBar = ({ catalogData }: CatalogFilterBarProps) => {
       if (!alreadySelected) {
         trackFilterApplied({
           filter_type: filterKey,
-          filter_value: value,
+          filter_value: value
         })
       }
 
@@ -68,10 +68,10 @@ export const CatalogFilterBar = ({ catalogData }: CatalogFilterBarProps) => {
       setFilters({
         [filterKey]: alreadySelected
           ? current.filter((v) => normalizeString(v) !== normalizedValue)
-          : [...current, value],
+          : [...current, value]
       })
     },
-    [filters, setFilters, isReady, trackFilterApplied],
+    [filters, setFilters, isReady, trackFilterApplied]
   )
 
   const handleClear = useCallback(
@@ -79,7 +79,7 @@ export const CatalogFilterBar = ({ catalogData }: CatalogFilterBarProps) => {
       if (!isReady) return
       setFilters({ [filterKey]: [] })
     },
-    [setFilters, isReady],
+    [setFilters, isReady]
   )
 
   if (!isReady) return <CatalogFiltersBarLoader />
@@ -125,7 +125,8 @@ export const CatalogFilterBar = ({ catalogData }: CatalogFilterBarProps) => {
           onClick={() =>
             setFilters({ city: [], category: [], search: '', country: [] })
           }
-          className='border-fm-orange/30 bg-fm-orange/80 text-fm-white hover:bg-fm-orange flex cursor-pointer items-center gap-2 rounded-xl border border-dashed px-3 py-1.5 text-sm transition-colors'>
+          className='border-fm-orange/30 bg-fm-orange/80 text-fm-white hover:bg-fm-orange flex cursor-pointer items-center gap-2 rounded-xl border border-dashed px-3 py-1.5 text-sm transition-colors'
+        >
           <span>Limpiar filtros</span>
         </button>
       )}

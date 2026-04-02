@@ -17,8 +17,8 @@ export async function getAboutData(): Promise<{
       data: null,
       error: {
         message:
-          'Error al obtener la información. Por favor intente nuevamente.',
-      },
+          'Error al obtener la información. Por favor intente nuevamente.'
+      }
     }
   }
 }

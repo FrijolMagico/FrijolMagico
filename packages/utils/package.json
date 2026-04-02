@@ -6,17 +6,19 @@
   "exports": {
     "./string": "./src/string.ts",
     "./url": "./src/url.ts",
-    "./css": "./src/css.ts"
+    "./css": "./src/css.ts",
+    "./shallow-diff": "./src/shallow-diff.ts"
   },
   "files": [
     "./src/string.ts",
     "./src/url.ts",
-    "./src/css.ts"
+    "./src/css.ts",
+    "./src/shallow-diff.ts"
   ],
   "devDependencies": {
-    "@frijolmagico/typescript-config": "workspace:*",
     "@frijolmagico/eslint-config": "workspace:*",
-    "eslint": "^9.39.2",
+    "@frijolmagico/typescript-config": "workspace:*",
+    "eslint": "9",
     "typescript": "^5.9.3"
   }
 }

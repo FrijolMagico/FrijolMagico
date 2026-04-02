@@ -1,7 +1,7 @@
 import { Footer } from '@/components/Footer'
 
 export default function NosotrosLayout({
-  children,
+  children
 }: {
   children: React.ReactNode
 }) {

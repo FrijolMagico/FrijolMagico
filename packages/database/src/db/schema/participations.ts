@@ -8,7 +8,7 @@ import {
 } from 'drizzle-orm/sqlite-core'
 
 import { eventEdition, eventEditionApplication } from './events'
-import { collective, artist, banda } from './artist'
+import { collective, artist, band } from './artist'
 import { discipline } from './core'
 
 /**
@@ -57,7 +57,7 @@ export const editionParticipation = sqliteTable(
     agrupacionId: integer('agrupacion_id').references(() => collective.id, {
       onDelete: 'restrict'
     }),
-    bandaId: integer('banda_id').references(() => banda.id, {
+    bandaId: integer('banda_id').references(() => band.id, {
       onDelete: 'restrict'
     }),
     notas: text('notas'),

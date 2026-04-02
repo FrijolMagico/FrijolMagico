@@ -16,8 +16,8 @@ const getCachedCatalogData = unstable_cache(
   ['catalog-list'],
   {
     revalidate: false,
-    tags: ['catalog'],
-  },
+    tags: ['catalog']
+  }
 )
 
 export async function getCatalogData(): Promise<{
@@ -29,7 +29,7 @@ export async function getCatalogData(): Promise<{
 
     return {
       data: formatArtistData(data),
-      error: null,
+      error: null
     }
   } catch (error) {
     const err = error as Error
@@ -38,8 +38,8 @@ export async function getCatalogData(): Promise<{
       data: [],
       error: {
         message:
-          'Error al obtener los artistas del catalogo. Por favor intente nuevamente mas tarde.',
-      },
+          'Error al obtener los artistas del catalogo. Por favor intente nuevamente mas tarde.'
+      }
     }
   }
 }
@@ -50,7 +50,7 @@ export async function getCatalogData(): Promise<{
  * - Formatea URLs de redes sociales
  */
 export const formatArtistData = (
-  artistsData: CatalogArtist[],
+  artistsData: CatalogArtist[]
 ): CatalogArtist[] => {
   return artistsData.map((artist) => {
     const rrssUrl = formatUrlWithoutQuery(artist.rrss)
@@ -71,7 +71,7 @@ export const formatArtistData = (
     return {
       ...artist,
       bio: formattedBio,
-      rrss: rrssUrl,
+      rrss: rrssUrl
     }
   })
 }

@@ -11,7 +11,7 @@ export const mapFestivalEdicion = (raw: FestivalEdicion): FestivalEdicion => {
     ...raw,
     resumen: {
       ...raw.resumen,
-      por_disciplina: mapPorDisciplina(raw.resumen.por_disciplina),
-    },
+      por_disciplina: mapPorDisciplina(raw.resumen.por_disciplina)
+    }
   }
 }

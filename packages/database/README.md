@@ -16,9 +16,9 @@ bun install
 ## Package Exports
 
 ```typescript
-import { db } from '@frijolmagico/database/orm'      // Drizzle ORM client
-import { executeQuery } from '@frijolmagico/database/client'  // Raw SQL client
-import { schema } from '@frijolmagico/database/schema'        // Schema exports
+import { db } from '@frijolmagico/database/orm' // Drizzle ORM client
+import { executeQuery } from '@frijolmagico/database/client' // Raw SQL client
+import { schema } from '@frijolmagico/database/schema' // Schema exports
 ```
 
 ## Project Structure
@@ -67,10 +67,7 @@ import { eq } from 'drizzle-orm'
 const artistas = await db.select().from(artista)
 
 // With filters
-const activos = await db
-  .select()
-  .from(artista)
-  .where(eq(artista.estadoId, 1))
+const activos = await db.select().from(artista).where(eq(artista.estadoId, 1))
 
 // With relations
 const conImagenes = await db.query.artista.findMany({
@@ -90,7 +87,11 @@ const [nuevo] = await db
 ### Raw SQL Client
 
 ```typescript
-import { executeQuery, executeBatch, executeInsert } from '@frijolmagico/database/client'
+import {
+  executeQuery,
+  executeBatch,
+  executeInsert
+} from '@frijolmagico/database/client'
 
 // Query
 const { data, error } = await executeQuery<{ id: number; nombre: string }>(
@@ -144,6 +145,7 @@ cp .env.example .env.local
 ```
 
 Key variables:
+
 - `TURSO_DATABASE_URL` - Database URL (remote or file:local.db)
 - `TURSO_AUTH_TOKEN` - Auth token for remote databases
 - `TURSO_DATABASE_NAME` - Database name for CLI commands

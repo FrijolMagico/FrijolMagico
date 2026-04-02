@@ -26,7 +26,8 @@ export default function Festival2025Page() {
         <Grid
           className='h-[800px] gap-4 md:h-[500px]'
           row={{ base: 8, md: 4 }}
-          col={{ base: 1, md: 2 }}>
+          col={{ base: 1, md: 2 }}
+        >
           <GridItem row={{ base: 4, md: 4 }} col={{ base: 1 }}>
             <FestivalCard
               text='Seleccionados'

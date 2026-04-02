@@ -1,7 +1,7 @@
 import { Footer } from '@/components/Footer'
 
 export default function CatalogLayout({
-  children,
+  children
 }: {
   children: React.ReactNode
 }) {

@@ -10,7 +10,7 @@ interface UseScrollSpyOptions {
 
 export const useScrollSpy = (
   ids: string[],
-  options: UseScrollSpyOptions = {},
+  options: UseScrollSpyOptions = {}
 ) => {
   const { threshold = 0.8, offset = 0 } = options
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -24,7 +24,7 @@ export const useScrollSpy = (
     const elements = ids
       .map((id) => ({
         id,
-        element: document.querySelector(`[data-festival-id="${id}"]`),
+        element: document.querySelector(`[data-festival-id="${id}"]`)
       }))
       .filter(({ element }) => element !== null) as Array<{
       id: string

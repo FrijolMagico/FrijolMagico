@@ -7,7 +7,8 @@ export const CatalogCardLoader = () => {
         {[...Array(11)].map((_, i) => (
           <li
             key={i}
-            className='bg-fm-black/10 relative flex h-[130px] w-full animate-pulse flex-col items-center justify-center rounded-xl sm:max-w-xs lg:max-w-sm'></li>
+            className='bg-fm-black/10 relative flex h-[130px] w-full animate-pulse flex-col items-center justify-center rounded-xl sm:max-w-xs lg:max-w-sm'
+          ></li>
         ))}
       </ul>
     </div>

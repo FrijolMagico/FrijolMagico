@@ -22,7 +22,7 @@ function getContrastRatio(r: number, g: number, b: number): number {
 }
 
 export function extractDominantColors(
-  imgElement: HTMLImageElement,
+  imgElement: HTMLImageElement
 ): string[] | null {
   const canvas = document.createElement('canvas')
   const ctx = canvas.getContext('2d')
@@ -86,12 +86,12 @@ export function extractDominantColors(
 
       const isTooSimilar = filteredColors.some((existingColor) => {
         const existingRgb = existingColor.match(/\d+/g)?.map(Number) || [
-          0, 0, 0,
+          0, 0, 0
         ]
         const distance = Math.sqrt(
           (rgb[0] - existingRgb[0]) ** 2 +
             (rgb[1] - existingRgb[1]) ** 2 +
-            (rgb[2] - existingRgb[2]) ** 2,
+            (rgb[2] - existingRgb[2]) ** 2
         )
         return distance < minDistance
       })

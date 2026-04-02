@@ -3,7 +3,7 @@ import { CatalogSearchBar } from './CatalogSearchBar'
 import { CatalogFilterBar } from './CatalogFilterBar'
 
 export const CatalogSearchSection = ({
-  catalogData,
+  catalogData
 }: {
   catalogData: CatalogArtist[]
 }) => {

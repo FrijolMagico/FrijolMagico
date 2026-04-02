@@ -1,40 +1,38 @@
-import Link from 'next/link'
 import Image from 'next/image'
 
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarHeader
+  SidebarHeader,
+  SidebarRail
 } from '@/shared/components/ui/sidebar'
-import { PanelSidebarMenu } from './panel-sidebar-menu'
-import { PanelSidebarUserInfo } from './panel-sidebar-user-info'
+import { PanelSidebarFooter } from './panel-sidebar-footer'
+import { PanelSidebarContent } from './panel-sidebar-content'
 
-export function PanelSidebar() {
+export async function PanelSidebar({
+  ...props
+}: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar collapsible='icon' className='max-w-64'>
-      <SidebarHeader className='h-16'>
-        <Link href='/dashboard' className='flex h-full items-center gap-2'>
-          <Image
-            src='/logotipo_mono.png'
-            alt='Logo Frijol Mágico'
-            width={32}
-            height={34}
-            className='h-auto w-7.5 shrink-0'
-          />
-          <span className='text-foreground truncate font-semibold'>
-            Frijol Mágico
-          </span>
-        </Link>
+    <Sidebar {...props}>
+      <SidebarHeader>
+        <Image
+          src='/logotipo_asoc_2026_color.png'
+          alt='Logo Frijol Mágico'
+          width={400}
+          height={228}
+          className='h-16 w-fit shrink-0 px-2'
+        />
       </SidebarHeader>
 
-      <SidebarContent className='px-2'>
-        <PanelSidebarMenu />
+      <SidebarContent>
+        <PanelSidebarContent />
       </SidebarContent>
 
-      <SidebarFooter className='border-t px-2 py-4'>
-        <PanelSidebarUserInfo />
+      <SidebarFooter>
+        <PanelSidebarFooter />
       </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
   )
 }

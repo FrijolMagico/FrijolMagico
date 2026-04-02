@@ -3,7 +3,7 @@ import type { CatalogFilterValues } from '../types/filters'
 import {
   getFiltersFromURL,
   updateURLParams,
-  urlHasFilters,
+  urlHasFilters
 } from '../utils/urlFilters'
 
 interface CatalogFiltersState {
@@ -17,7 +17,7 @@ export const defaultFilters: CatalogFilterValues = {
   category: [],
   city: [],
   country: [],
-  search: '',
+  search: ''
 }
 
 export const useCatalogFiltersStore = create<CatalogFiltersState>((set) => ({
@@ -34,7 +34,7 @@ export const useCatalogFiltersStore = create<CatalogFiltersState>((set) => ({
         category: uniqueCategory,
         city: uniqueCity,
         search: merged.search,
-        country: uniqueCountry,
+        country: uniqueCountry
       }
 
       updateURLParams(updated)
@@ -47,5 +47,5 @@ export const useCatalogFiltersStore = create<CatalogFiltersState>((set) => ({
     } else {
       set({ filters: defaultFilters, isReady: true })
     }
-  },
+  }
 }))

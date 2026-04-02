@@ -14,7 +14,8 @@ export const MinimalFooter = () => {
         </p>
         <Link
           href='https://github.com/Strocs'
-          className='hover:text-2025-yellow text-2025-white text-center text-sm leading-none transition duration-150'>
+          className='hover:text-2025-yellow text-2025-white text-center text-sm leading-none transition duration-150'
+        >
           Desarrollado con ❤ por StrocsDev
         </Link>
       </div>

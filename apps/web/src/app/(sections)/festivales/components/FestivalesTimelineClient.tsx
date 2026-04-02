@@ -9,11 +9,11 @@ interface FestivalesTimelineClientProps {
 }
 
 export const FestivalesTimelineClient = ({
-  festivales,
+  festivales
 }: FestivalesTimelineClientProps) => {
   // Generate IDs for scrollSpy
   const festivalIds = festivales.map(
-    (f) => `festival-${f.evento.evento_id}-${f.evento.edicion}`,
+    (f) => `festival-${f.evento.evento_id}-${f.evento.edicion}`
   )
 
   // ScrollSpy hook to detect active festival

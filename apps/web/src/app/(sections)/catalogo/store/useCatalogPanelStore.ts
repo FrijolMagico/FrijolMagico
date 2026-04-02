@@ -19,5 +19,5 @@ export const useCatalogPanelStore = create<CatalogPanelState>((set) => ({
         set({ selectedArtist: null })
       }, 300)
     }
-  },
+  }
 }))

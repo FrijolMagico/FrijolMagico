@@ -14,7 +14,6 @@ bun run start                  # Start production server
 
 # Quality
 bun run lint                   # ESLint
-bun run lint:fix               # ESLint --fix
 bun run type-check             # TypeScript check
 ```
 
@@ -29,6 +28,7 @@ cp .env.example .env.local
 ```
 
 Key variable categories:
+
 - **Turso Database**: `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`
 - **Better Auth**: `BETTER_AUTH_URL`, `NEXT_PUBLIC_APP_URL`
 - **Google OAuth**: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
@@ -62,11 +62,11 @@ export default async function DashboardPage() {
   const session = await auth.api.getSession({
     headers: await headers()
   })
-  
+
   if (!session) {
     redirect('/login')
   }
-  
+
   // ...
 }
 ```
@@ -105,6 +105,7 @@ const [nuevo] = await db
 ## Deployment
 
 Deployed to Vercel alongside the web app:
+
 - Separate deployment configuration
 - Port 3001 in development
 

@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 
-import { cn } from '@/lib/utils'
+import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Textarea } from '@/shared/components/ui/textarea'
@@ -58,9 +58,7 @@ function InputGroupAddon({
         if ((e.target as HTMLElement).closest('button')) {
           return
         }
-        e.currentTarget.parentElement
-          ?.querySelector<HTMLElement>('[data-slot="input-group-control"]')
-          ?.focus()
+        e.currentTarget.parentElement?.querySelector('input')?.focus()
       }}
       {...props}
     />
