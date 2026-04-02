@@ -204,7 +204,7 @@ export const admissionModeRelations = relations(admissionMode, ({ many }) => ({
 
 export const editionParticipationRelations = relations(
   editionParticipation,
-  ({ one, many }) => ({
+  ({ one }) => ({
     edicion: one(eventEdition, {
       fields: [editionParticipation.edicionId],
       references: [eventEdition.id]
