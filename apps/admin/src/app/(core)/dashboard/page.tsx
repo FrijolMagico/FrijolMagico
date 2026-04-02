@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
-import { Skeleton } from '@/shared/components/ui/skeleton'
 import { DashboardContent } from './_components/dashboard-content'
+import { Skeleton } from '@/shared/components/ui/skeleton'
 
 function DashboardSkeleton() {
   return (
