@@ -6,10 +6,7 @@
       "bun"
     ],
     "paths": {
-      "*": [
-        "./*"
-      ],
-      "@/shared/": [
+      "@/shared/*": [
         "./src/shared/*"
       ],
       "@/core/*": [
@@ -24,17 +21,23 @@
       ],
       "@/*": [
         "./src/*"
+      ],
+      "*": [
+        "./*"
       ]
     }
   },
   "include": [
     "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
+    ".next/dev/types/**/*.ts",
+    "../../packages/database/**/*.ts",
+    "../../packages/utils/**/*.ts"
   ],
   "exclude": [
-    "node_modules/*"
+    "node_modules/*",
+    ".next"
   ]
 }
