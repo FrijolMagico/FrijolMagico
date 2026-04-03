@@ -19,7 +19,7 @@ import { useForm } from 'react-hook-form'
 import { ORGANIZATION_ID } from '@/core/organizacion/_constants'
 import { toSlug } from '@/shared/lib/utils'
 
-export function UpdateCreateEventDialog() {
+export function UpdateEventDialog() {
   const selectedEvent = useEventDialog((s) => s.selectedEvent)
   const isUpdateEventOpen = useEventDialog((s) => s.isUpdateEventOpen)
   const closeUpdateEventDialog = useEventDialog((s) => s.closeUpdateEventDialog)
@@ -31,7 +31,7 @@ export function UpdateCreateEventDialog() {
     formState: { isValid, isDirty, isSubmitting, errors }
   } = useForm<EventFormInput>({
     resolver: zodResolver(eventFormSchema),
-    defaultValues: {
+    values: {
       nombre: selectedEvent?.nombre ?? '',
       descripcion: selectedEvent?.descripcion ?? null
     },
@@ -67,8 +67,6 @@ export function UpdateCreateEventDialog() {
       reset()
     }
   }
-
-  console.log(isUpdateEventOpen)
 
   return (
     <EntityFormDialog
