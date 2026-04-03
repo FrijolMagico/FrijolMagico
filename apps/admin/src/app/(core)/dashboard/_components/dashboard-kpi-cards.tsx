@@ -1,16 +1,18 @@
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle
-} from '@/shared/components/ui/card'
-import type { DashboardArtistStats, DashboardEventStats } from '../_types'
-import {
   IconBook2,
   IconCalendar,
   IconTicketFilled,
   IconUsers
 } from '@tabler/icons-react'
+
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle
+} from '@/shared/components/ui/card'
+
+import type { DashboardArtistStats, DashboardEventStats } from '../_types'
 
 type Props = {
   artistStats: DashboardArtistStats | null
@@ -27,7 +29,7 @@ export function DashboardKpiCards({ artistStats, eventStats }: Props) {
 
   return (
     <>
-      <Card>
+      <Card className='col-span-3'>
         <CardHeader className='flex flex-row items-center justify-between'>
           <CardTitle>Total de Artistas</CardTitle>
           <IconUsers className='size-4' />
@@ -40,7 +42,7 @@ export function DashboardKpiCards({ artistStats, eventStats }: Props) {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className='col-span-3'>
         <CardHeader className='flex flex-row items-center justify-between'>
           <CardTitle>Participaciones Históricas</CardTitle>
           <IconTicketFilled className='h-4 w-4' />
@@ -55,7 +57,7 @@ export function DashboardKpiCards({ artistStats, eventStats }: Props) {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className='col-span-3'>
         <CardHeader className='flex flex-row items-center justify-between'>
           <CardTitle>Catálogo Activo</CardTitle>
           <IconBook2 className='h-4 w-4' />
@@ -70,7 +72,7 @@ export function DashboardKpiCards({ artistStats, eventStats }: Props) {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className='col-span-3'>
         <CardHeader className='flex flex-row items-center justify-between'>
           <CardTitle>Última Edición</CardTitle>
           <IconCalendar className='h-4 w-4' />

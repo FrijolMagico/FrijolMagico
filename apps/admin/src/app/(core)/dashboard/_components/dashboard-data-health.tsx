@@ -6,8 +6,9 @@ import {
   CardTitle
 } from '@/shared/components/ui/card'
 import { Progress } from '@/shared/components/ui/progress'
-import type { DataCompleteness } from '../_types'
 import { Field, FieldLabel } from '@/shared/components/ui/field'
+
+import type { DataCompleteness } from '../_types'
 
 type Props = {
   completeness: DataCompleteness
@@ -30,7 +31,7 @@ export function DashboardDataHealth({ completeness }: Props) {
   ]
 
   return (
-    <Card>
+    <Card className='col-span-3'>
       <CardHeader>
         <CardTitle>Estado de la información de Artistas</CardTitle>
         <CardDescription>

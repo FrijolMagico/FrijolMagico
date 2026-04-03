@@ -4,9 +4,10 @@ import {
   CardHeader,
   CardTitle
 } from '@/shared/components/ui/card'
-import type { CityPoint } from '../_types'
 import { Field, FieldLabel } from '@/shared/components/ui/field'
 import { Progress } from '@/shared/components/ui/progress'
+
+import type { CityPoint } from '../_types'
 
 type Props = {
   data: CityPoint[]
@@ -31,7 +32,7 @@ export function DashboardGeography({ data }: Props) {
   const maxCount = Math.max(...data.map((d) => d.count))
 
   return (
-    <Card>
+    <Card className='col-span-4'>
       <CardHeader>
         <CardTitle>Origen Geográfico</CardTitle>
       </CardHeader>

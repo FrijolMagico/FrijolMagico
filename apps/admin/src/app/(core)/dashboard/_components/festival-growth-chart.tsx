@@ -1,6 +1,7 @@
 'use client'
 
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
+
 import {
   ChartContainer,
   ChartTooltip,
@@ -12,6 +13,7 @@ import {
   CardHeader,
   CardTitle
 } from '@/shared/components/ui/card'
+
 import type { EditionGrowthPoint } from '../_types'
 import type { ChartConfig } from '@/shared/components/ui/chart'
 
@@ -41,14 +43,14 @@ export function FestivalGrowthChart({ data }: Props) {
   }
 
   return (
-    <Card>
+    <Card className='col-span-9 h-full'>
       <CardHeader>
         <CardTitle>
           Crecimiento de los participantes del Festival Frijol Mágico
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className='h-62 w-full'>
+        <ChartContainer config={chartConfig} className='h-70 w-full'>
           <AreaChart data={data} accessibilityLayer>
             <CartesianGrid vertical={false} />
             <XAxis

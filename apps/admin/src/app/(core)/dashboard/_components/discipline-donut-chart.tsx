@@ -1,6 +1,7 @@
 'use client'
 
 import { Pie, PieChart, Cell } from 'recharts'
+
 import {
   ChartContainer,
   ChartTooltip,
@@ -14,6 +15,7 @@ import {
   CardHeader,
   CardTitle
 } from '@/shared/components/ui/card'
+
 import type { DisciplinePoint } from '../_types'
 import type { ChartConfig } from '@/shared/components/ui/chart'
 
@@ -61,11 +63,11 @@ export function DisciplineDonutChart({ data, labels }: Props) {
   const chartConfig = buildChartConfig(data, labels)
 
   return (
-    <Card>
+    <Card className='col-span-4'>
       <CardHeader>
         <CardTitle>Disciplinas</CardTitle>
       </CardHeader>
-      <CardContent className='my-auto'>
+      <CardContent>
         <ChartContainer config={chartConfig}>
           <PieChart accessibilityLayer>
             <ChartTooltip

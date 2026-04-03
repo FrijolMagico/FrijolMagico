@@ -1,11 +1,5 @@
 import { Suspense } from 'react'
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent
-} from '@/shared/components/ui/card'
-import { Skeleton } from '@/shared/components/ui/skeleton'
+
 import {
   getDashboardArtistStats,
   getDashboardEventStats,
@@ -14,13 +8,9 @@ import {
   getDashboardTopArtists,
   getDashboardGeographicData
 } from '../_lib/get-dashboard-stats'
+
 import { DISCIPLINE_LABELS } from '../_constants'
-import {
-  DashboardSessionExpiration,
-  DashboardUserEmail,
-  DashboardUserName,
-  DashboardWelcomeName
-} from './dashboard-user-info'
+import { DashboardWelcomeName } from './dashboard-user-info'
 import { DashboardKpiCards } from './dashboard-kpi-cards'
 import { FestivalGrowthChart } from './festival-growth-chart'
 import { DashboardDataHealth } from './dashboard-data-health'
@@ -81,14 +71,12 @@ export async function DashboardContent() {
         </p>
       </header>
 
-      <section className='grid w-full grid-cols-4 gap-6'>
+      <section className='grid w-full grid-cols-12 gap-6'>
         {/* Row 1: Hero KPI cards */}
         <DashboardKpiCards artistStats={artistStats} eventStats={eventStats} />
 
         {/* Row 2: Growth chart (3/4) + Data health (1/4) */}
-        <div className='lg:col-span-3'>
-          <FestivalGrowthChart data={growthData} />
-        </div>
+        <FestivalGrowthChart data={growthData} />
         {artistStats && (
           <DashboardDataHealth completeness={artistStats.completeness} />
         )}
@@ -100,33 +88,6 @@ export async function DashboardContent() {
         />
         <DashboardGeography data={geoData} />
         <DashboardTopArtists artists={topArtists} />
-
-        {/* Session card — PRESERVED */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Información de Sesión</CardTitle>
-          </CardHeader>
-          <CardContent className='space-y-2 text-sm'>
-            <div className='flex justify-between'>
-              <span className='text-muted-foreground'>Nombre:</span>
-              <Suspense fallback={<Skeleton className='h-4 w-42' />}>
-                <DashboardUserName />
-              </Suspense>
-            </div>
-            <div className='flex justify-between'>
-              <span className='text-muted-foreground'>Email:</span>
-              <Suspense fallback={<Skeleton className='h-4 w-38' />}>
-                <DashboardUserEmail />
-              </Suspense>
-            </div>
-            <div className='flex justify-between'>
-              <span className='text-muted-foreground'>Sesión expira:</span>
-              <Suspense fallback={<Skeleton className='h-4 w-48' />}>
-                <DashboardSessionExpiration />
-              </Suspense>
-            </div>
-          </CardContent>
-        </Card>
       </section>
     </>
   )

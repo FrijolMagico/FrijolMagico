@@ -4,6 +4,7 @@ import {
   CardHeader,
   CardTitle
 } from '@/shared/components/ui/card'
+
 import type { TopArtistEntry } from '../_types'
 
 type Props = {
@@ -27,7 +28,7 @@ export function DashboardTopArtists({ artists }: Props) {
   }
 
   return (
-    <Card>
+    <Card className='col-span-4'>
       <CardHeader>
         <CardTitle>Artistas Frecuentes</CardTitle>
       </CardHeader>
