@@ -64,8 +64,6 @@ export function ArtistListFilters({
     })
   }
 
-  console.log('Current filters:', filters.estado)
-
   return (
     <div className='flex flex-col flex-wrap gap-4 sm:flex-row sm:items-center sm:justify-between'>
       <div className='flex min-w-xs flex-1 items-center gap-2'>
