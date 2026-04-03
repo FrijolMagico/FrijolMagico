@@ -5,3 +5,6 @@
 tests/e2e/_reports/
 
 docs/
+
+.sisyphus/
+openspec/
