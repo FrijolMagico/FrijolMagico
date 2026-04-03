@@ -156,6 +156,7 @@ export function UpdateExhibitionDialog({ edition }: ExhibitionEditorFormProps) {
       title={`Editar expositor: ${entityTitle} en ${edition.eventName} ${edition.editionNumber}`}
       description='Modifica los detalles de esta exhibición.'
       submit={{
+        type: 'submit',
         label: 'Guardar cambios',
         disabled: !isDirty || isSubmitting || !isValid,
         isSubmitting,

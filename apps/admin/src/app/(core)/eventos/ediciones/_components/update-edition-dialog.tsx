@@ -87,6 +87,7 @@ export function UpdateEditionDialog({
         className='sm:max-w-3xl'
         close={{ label: 'Cancelar' }}
         submit={{
+          type: 'submit',
           form: UPDATE_EDITION_FORM_ID,
           label: 'Guardar cambios',
           disabled: !isDirty || !isValid || isSubmitting,

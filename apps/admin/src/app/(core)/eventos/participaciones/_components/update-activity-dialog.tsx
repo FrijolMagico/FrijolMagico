@@ -212,6 +212,7 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
       description='Modifica los detalles de esta actividad.'
       className='sm:max-w-3xl'
       submit={{
+        type: 'submit',
         label: 'Guardar cambios',
         disabled: !isDirty || isSubmitting || !isValid,
         isSubmitting,

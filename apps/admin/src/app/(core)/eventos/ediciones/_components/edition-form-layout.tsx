@@ -133,15 +133,14 @@ export function EditionFormLayout({
             control={control}
             render={({ field }) => (
               <Select
-                value={field.value ? String(field.value) : undefined}
+                value={field.value ?? ''}
                 onValueChange={(value) => field.onChange(Number(value))}
               >
                 <SelectTrigger id='edicion-evento'>
                   <SelectValue placeholder='Seleccionar evento...'>
                     {
-                      eventos.find(
-                        (evento) => evento.id === Number(field.value)
-                      )?.nombre
+                      eventos.find((evento) => evento.id === field.value)
+                        ?.nombre
                     }
                   </SelectValue>
                 </SelectTrigger>

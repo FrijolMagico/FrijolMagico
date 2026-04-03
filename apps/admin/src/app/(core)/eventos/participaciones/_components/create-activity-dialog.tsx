@@ -174,6 +174,7 @@ export function CreateActivityDialog({
       className='sm:max-w-3xl'
       triggerLabel='Agregar Actividad'
       submit={{
+        type: 'submit',
         label: 'Agregar',
         isSubmitting,
         disabled: !isDirty || !isValid || isSubmitting,

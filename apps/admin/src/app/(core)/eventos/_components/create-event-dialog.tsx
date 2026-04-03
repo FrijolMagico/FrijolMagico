@@ -76,6 +76,7 @@ export function CreateEventDialog() {
       triggerLabel='Crear evento'
       isDirty={isDirty}
       submit={{
+        type: 'submit',
         form: CREATE_EVENT_FORM_ID,
         disabled: !isDirty || !isValid || isSubmitting,
         isSubmitting

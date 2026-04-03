@@ -83,7 +83,6 @@ export function EdicionDayDialog({
   const onSubmit = (data: DayFormStateInput) => {
     onSave(data)
     handleDialogClose()
-    reset(createEmptyDayState())
   }
 
   return (
@@ -92,7 +91,12 @@ export function EdicionDayDialog({
       onOpenChange={(isOpen) => !isOpen && handleDialogClose()}
     >
       <DialogContent className='max-w-md'>
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form
+          onSubmit={(e) => {
+            e.stopPropagation()
+            handleSubmit(onSubmit)(e)
+          }}
+        >
           <DialogHeader>
             <DialogTitle>
               {initialDay?.existingId ? 'Editar día' : 'Agregar día'}

@@ -132,6 +132,7 @@ export function CreateExhibitionDialog({
       description='Añade un artista o agrupación como expositor a esta edición.'
       triggerLabel='Agregar Expositor'
       submit={{
+        type: 'submit',
         label: 'Agregar',
         isSubmitting,
         disabled: !isDirty || !isValid || isSubmitting,

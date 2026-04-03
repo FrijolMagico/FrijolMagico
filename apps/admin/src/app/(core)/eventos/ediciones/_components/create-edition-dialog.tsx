@@ -81,6 +81,7 @@ export function CreateEditionDialog({
         className='sm:max-w-3xl'
         close={{ label: 'Cancelar' }}
         submit={{
+          type: 'submit',
           form: CREATE_EDITION_FORM_ID,
           label: 'Crear edición',
           disabled: !isDirty || !isValid || isSubmitting,

@@ -68,14 +68,16 @@ export function UpdateCreateEventDialog() {
     }
   }
 
+  console.log(isUpdateEventOpen)
+
   return (
     <EntityFormDialog
       open={isUpdateEventOpen}
       onOpenChange={(open) => !open && closeUpdateEventDialog()}
       title='Actualizar evento'
-      triggerLabel='Actualizar evento'
       isDirty={isDirty}
       submit={{
+        type: 'submit',
         form: UPDATE_EVENT_FORM_ID,
         disabled: !isDirty || !isValid || isSubmitting,
         isSubmitting

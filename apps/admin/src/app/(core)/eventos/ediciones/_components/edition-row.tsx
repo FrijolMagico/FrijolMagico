@@ -20,6 +20,7 @@ import type { PaginatedEdition } from '../_types/paginated-edition'
 import type { EventoLookup } from '../_types'
 import { PosterPreview } from './poster-preview'
 import { PosterThumbnail } from './poster-thumbnail'
+import { ConfirmationDialog } from '@/shared/components/confirmation-dialog'
 
 type Modality = NonNullable<EditionDay['modalidad']>
 
@@ -50,6 +51,7 @@ const MODALIDAD_VARIANTS: Record<
 export function EditionRow({ edition, days, places, events }: EditionRowProps) {
   const [isPosterPreviewOpen, setIsPosterPreviewOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const [showAlert, setShowAlert] = useState(false)
   const openUpdateEditionDialog = useEditionDialog(
     (state) => state.openUpdateEditionDialog
   )
@@ -67,8 +69,6 @@ export function EditionRow({ edition, days, places, events }: EditionRowProps) {
   }
 
   const handleDelete = () => {
-    if (!confirm('¿Estás seguro de que quieres eliminar esta edición?')) return
-
     startTransition(async () => {
       const result = await deleteEditionAction(
         { success: false },
@@ -117,6 +117,13 @@ export function EditionRow({ edition, days, places, events }: EditionRowProps) {
 
   return (
     <TableRow className={cn('transition-colors', isPending && 'opacity-50')}>
+      <ConfirmationDialog
+        open={showAlert}
+        onOpenChange={setShowAlert}
+        title='¿Estás seguro de que deseas eliminar esta edición?'
+        description='Esta acción no se puede deshacer.'
+        onConfirm={handleDelete}
+      />
       <TableCell className='flex size-14'>
         <Tooltip>
           <TooltipTrigger
@@ -187,7 +194,7 @@ export function EditionRow({ edition, days, places, events }: EditionRowProps) {
               onClick: () => openUpdateEditionDialog(editionWithDays)
             }
           ]}
-          onDelete={handleDelete}
+          onDelete={() => setShowAlert(true)}
         />
       </TableCell>
     </TableRow>
