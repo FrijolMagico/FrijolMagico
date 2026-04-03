@@ -94,8 +94,6 @@ export async function updateTeamMember(
       }
     }
 
-    console.log(validated)
-
     await db
       .update(organizationMember)
       .set(validated.data)

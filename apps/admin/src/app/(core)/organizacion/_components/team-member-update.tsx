@@ -37,12 +37,6 @@ export function TeamMemberUpdate() {
   })
 
   const onSubmit = async (data: TeamMemberFormInput) => {
-    console.log(
-      'Submitting update for member ID:',
-      selectedMember?.id,
-      'with data:',
-      data
-    )
     if (!selectedMember?.id) {
       toast.error('No se ha seleccionado ningún miembro del equipo')
       return
