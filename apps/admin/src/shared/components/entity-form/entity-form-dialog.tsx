@@ -25,11 +25,11 @@ interface BaseSubmitButtonProps {
 type DialogSubmitProps = BaseSubmitButtonProps &
   (
     | {
-        type?: 'submit'
+        type: 'submit'
         form: string
       }
     | {
-        type?: 'button'
+        type: 'button'
         onClick: () => void
       }
   )

@@ -69,6 +69,7 @@ export function TeamMemberCreate() {
         isDirty={isDirty}
         triggerLabel='Agregar miembro'
         submit={{
+          type: 'submit',
           form: ADD_TEAM_FORM_ID,
           isSubmitting,
           disabled: isSubmitting || !isDirty || !isValid
