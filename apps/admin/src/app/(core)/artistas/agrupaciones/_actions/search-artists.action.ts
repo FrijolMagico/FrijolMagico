@@ -2,11 +2,9 @@
 
 import 'server-only'
 
-import { cacheTag } from 'next/cache'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { and, asc, isNull, like } from 'drizzle-orm'
-import { ARTIST_CACHE_TAG } from '@/app/(core)/artistas/_constants'
 import type { ArtistOption } from '../_types/collective.types'
 
 const { artist: artistTable } = artist
@@ -15,8 +13,6 @@ export async function searchArtistsAction(
   query: string,
   limit = 20
 ): Promise<ArtistOption[]> {
-  cacheTag(ARTIST_CACHE_TAG)
-
   const trimmedQuery = query.trim()
   if (trimmedQuery.length === 0) {
     return []
@@ -44,4 +40,3 @@ export async function searchArtistsAction(
     city: row.city
   }))
 }
-
