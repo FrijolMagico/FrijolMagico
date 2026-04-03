@@ -18,11 +18,8 @@ export const useEventDialog = create<EventDialogStore>((set) => ({
 
   toggleCreateEventDialog: (open) =>
     set({ isCreateEventOpen: open, selectedEvent: null }),
-  openUpdateEventDialog: (event) => {
-    console.log('Opening update dialog for event:', event)
-
-    set({ isUpdateEventOpen: true, selectedEvent: event })
-  },
+  openUpdateEventDialog: (event) =>
+    set({ isUpdateEventOpen: true, selectedEvent: event }),
   closeUpdateEventDialog: () =>
     set({ isUpdateEventOpen: false, selectedEvent: null })
 }))

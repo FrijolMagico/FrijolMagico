@@ -49,7 +49,6 @@ export const useParticipationsStore = create<ParticipationsStore>((set) => ({
   },
 
   setSelectedParticipant: (participant) => {
-    console.log('Selected participant:', participant)
     const { exhibition, activity, entity } = participant
 
     const isExhibitionSelected = !!exhibition && !activity
