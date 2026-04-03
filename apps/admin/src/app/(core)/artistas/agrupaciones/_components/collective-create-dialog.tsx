@@ -3,7 +3,9 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormProvider, useForm, useFormState } from 'react-hook-form'
 import { toast } from 'sonner'
+
 import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
+
 import { CREATE_COLLECTIVE_FORM_ID } from '../_constants'
 import { createCollectiveAction } from '../_actions/create-collective.action'
 import {
@@ -85,6 +87,7 @@ export function CollectiveCreateDialog() {
         description='Completá los datos básicos para registrar una nueva agrupación.'
         isDirty={isDirty}
         submit={{
+          type: 'submit',
           form: CREATE_COLLECTIVE_FORM_ID,
           disabled: isSubmitting || !isDirty || !isValid,
           isSubmitting

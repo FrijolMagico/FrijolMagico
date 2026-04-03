@@ -1,20 +1,17 @@
 'use client'
 
-import { deleteArtistaAction } from '../_actions/delete-artista.action'
-import { restoreArtistaAction } from '../_actions/restore-artista.action'
+import { throttle, useQueryStates } from 'nuqs'
+
 import type { PaginatedResponse } from '@/shared/types/pagination'
 import { DeletedToggle } from '@/shared/components/deleted-toggle-list'
 import { EmptyState } from '@/shared/components/empty-state'
 import { PaginationControls } from '@/shared/components/pagination-controls'
-import type { ArtistListItem, ArtistWithHistory } from '../_types/artist'
-import { ArtistListFilters } from './artist-list-filters'
-import { ArtistListTable } from './artist-list-table'
-import { UpdateArtistDialog } from './update-artist-dialog'
-import { CreateArtistDialog } from './create-artist-dialog'
-import { ArtistHistoryDialog } from './artist-history-dialog'
-import { throttle, useQueryStates } from 'nuqs'
-import { artistQueryParams } from '../_lib/search-params'
 import { useDeletedToggleList } from '@/shared/components/deleted-toggle-list/use-deleted-toggle-list'
+
+import { deleteArtistaAction } from '../_actions/delete-artista.action'
+import { restoreArtistaAction } from '../_actions/restore-artista.action'
+import type { ArtistListItem, ArtistWithHistory } from '../_types/artist'
+import { artistQueryParams } from '../_lib/search-params'
 
 interface ArtistListContainerProps {
   artists: ArtistWithHistory[]
@@ -96,12 +93,13 @@ export function ArtistListContainer({
   return (
     <article className='grid space-y-4'>
       <div className='flex items-center justify-between gap-4'>
-        {!showDeleted ? <CreateArtistDialog /> : null}
         <DeletedToggle
           showDeleted={showDeleted}
           onToggle={toggleShowDeleted}
           deletedCount={deletedCount}
         />
+
+        {!showDeleted ? <CreateArtistDialog /> : null}
       </div>
 
       <ArtistListFilters

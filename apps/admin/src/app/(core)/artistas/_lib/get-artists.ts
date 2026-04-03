@@ -1,15 +1,17 @@
 import 'server-only'
 import { cacheTag } from 'next/cache'
+import { and, asc, count, eq, isNull, sql } from 'drizzle-orm'
 
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
-import { and, asc, count, eq, isNull, sql } from 'drizzle-orm'
+
 import {
   createPaginatedResponse,
   type PaginatedResponse
 } from '@/shared/types/pagination'
-import { ARTIST_CACHE_TAG } from '../_constants'
-import type { ARTIST_STATUS } from '../_constants'
+import { parseRRSS } from '@/shared/lib/rrss'
+
+import { ARTIST_CACHE_TAG, type ARTIST_STATUS } from '../_constants'
 import {
   artistQueryParamsSchema,
   type ArtistQueryParams
@@ -41,7 +43,7 @@ function mapArtistRow(row: ArtistRow): ArtistListItem {
   return {
     ...row,
     estadoId: row.estadoId as ARTIST_STATUS,
-    rrss: row.rrss ? (JSON.parse(row.rrss) as Record<string, string>) : {}
+    rrss: parseRRSS(row.rrss)
   }
 }
 

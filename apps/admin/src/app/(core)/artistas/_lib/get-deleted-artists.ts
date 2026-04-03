@@ -1,12 +1,13 @@
 import 'server-only'
-
 import { cacheTag } from 'next/cache'
+import { asc, isNotNull } from 'drizzle-orm'
 
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
-import { asc, isNotNull } from 'drizzle-orm'
-import { ARTIST_CACHE_TAG } from '../_constants'
-import type { ARTIST_STATUS } from '../_constants'
+
+import { parseRRSS } from '@/shared/lib/rrss'
+
+import { ARTIST_CACHE_TAG, type ARTIST_STATUS } from '../_constants'
 import type { ArtistListItem } from '../_types/artist'
 
 const { artist: artistTable } = artist
@@ -29,7 +30,7 @@ function mapDeletedArtistRow(row: DeletedArtistRow): ArtistListItem {
   return {
     ...row,
     estadoId: row.estadoId as ARTIST_STATUS,
-    rrss: row.rrss ? (JSON.parse(row.rrss) as Record<string, string>) : {}
+    rrss: parseRRSS(row.rrss)
   }
 }
 

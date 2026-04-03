@@ -1,14 +1,18 @@
 import 'server-only'
+import { cacheTag } from 'next/cache'
+import { and, asc, count, eq, inArray, notExists, sql } from 'drizzle-orm'
 
 import { isNotDeleted } from '@frijolmagico/database/filters'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
-import { and, asc, count, eq, inArray, notExists, sql } from 'drizzle-orm'
+
 import { getAvatarUrl } from '@/shared/lib/cdn'
 import {
   createPaginatedResponse,
   type PaginatedResponse
 } from '@/shared/types/pagination'
+import { parseRRSS } from '@/shared/lib/rrss'
+
 import { ARTIST_CACHE_TAG, type ARTIST_STATUS } from '../../_constants'
 import type { Artist } from '../../_schemas/artista.schema'
 import { CATALOG_CACHE_TAG } from '../_constants'
@@ -20,7 +24,6 @@ import type {
   CatalogAvailableArtist,
   CatalogListItem
 } from '../_types/catalog-list-item'
-import { cacheTag } from 'next/cache'
 
 const { catalogArtist, artistImage, artist: artistTable } = artist
 
@@ -52,7 +55,7 @@ function mapCatalogArtist(row: CatalogArtistRow): Artist {
   return {
     ...row,
     estadoId: row.estadoId as ARTIST_STATUS,
-    rrss: row.rrss ? (JSON.parse(row.rrss) as Record<string, string>) : {}
+    rrss: parseRRSS(row.rrss)
   }
 }
 

@@ -1,15 +1,20 @@
 'use client'
 
-import { useArtistDialog } from '../_store/artist-dialog-store'
-import { updateArtistaAction } from '../_actions/update-artista.action'
 import { toast } from 'sonner'
-import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
-import { ArtistFormLayout } from './artist-form-layout'
 import { useForm, useFormState, FormProvider } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { artistUpdateFormSchema } from '../_schemas/artista.schema'
-import type { ArtistUpdateFormInput } from '../_schemas/artista.schema'
+
+import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
+
+import { useArtistDialog } from '../_store/artist-dialog-store'
+import { updateArtistaAction } from '../_actions/update-artista.action'
+import {
+  artistUpdateFormSchema,
+  type ArtistUpdateFormInput
+} from '../_schemas/artista.schema'
 import { UPDATE_ARTIST_FORM_ID } from '../_constants'
+
+import { ArtistFormLayout } from './artist-form-layout'
 
 export function UpdateArtistDialog() {
   const isUpdateArtistOpen = useArtistDialog((s) => s.isUpdateArtistOpen)
@@ -21,7 +26,15 @@ export function UpdateArtistDialog() {
   const methods = useForm<ArtistUpdateFormInput>({
     resolver: zodResolver(artistUpdateFormSchema),
     values: {
-      ...artist,
+      nombre: artist?.nombre || '',
+      pseudonimo: artist?.pseudonimo || '',
+      rut: artist?.rut || '',
+      telefono: artist?.telefono || '',
+      correo: artist?.correo || '',
+      ciudad: artist?.ciudad || '',
+      pais: artist?.pais || '',
+      rrss: artist?.rrss ?? null,
+      estadoId: artist?.estadoId || 1,
       historialFlags: {
         pseudonimo: false,
         correo: false,
@@ -73,6 +86,7 @@ export function UpdateArtistDialog() {
         title='Editar artista'
         isDirty={isDirty}
         submit={{
+          type: 'submit',
           form: UPDATE_ARTIST_FORM_ID,
           isSubmitting,
           disabled: isSubmitting || !isDirty || !isValid

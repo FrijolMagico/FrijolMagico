@@ -1,18 +1,21 @@
 'use client'
 
-import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
-import { useArtistDialog } from '../_store/artist-dialog-store'
-import { createArtistaAction } from '../_actions/create-artista.action'
 import { toast } from 'sonner'
-import { ArtistFormLayout } from './artist-form-layout'
 import { FormProvider, useForm, useFormState } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+
+import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
+import { toSlug } from '@/shared/lib/utils'
+
+import { useArtistDialog } from '../_store/artist-dialog-store'
+import { createArtistaAction } from '../_actions/create-artista.action'
 import {
   ArtistInsertInput,
   artistInsertSchema
 } from '../_schemas/artista.schema'
 import { CREATE_ARTIST_FORM_ID } from '../_constants'
-import { toSlug } from '@/shared/lib/utils'
+
+import { ArtistFormLayout } from './artist-form-layout'
 
 type CreateArtistFormData = Omit<ArtistInsertInput, 'slug'>
 
@@ -83,6 +86,7 @@ export function CreateArtistDialog() {
           isDirty={isDirty}
           triggerLabel='Agregar artista'
           submit={{
+            type: 'submit',
             isSubmitting,
             disabled: isSubmitting || !isDirty || !isValid,
             form: CREATE_ARTIST_FORM_ID

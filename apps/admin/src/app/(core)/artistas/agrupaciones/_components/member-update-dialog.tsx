@@ -3,11 +3,13 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
+
 import { Input } from '@/shared/components/ui/input'
-import { useCollectiveDraftStore } from '../_store/use-collective-draft-store'
 import { ControllerSwitch } from '@/shared/components/controller-switch'
 import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
 import { Field, FieldLabel } from '@/shared/components/ui/field'
+
+import { useCollectiveDraftStore } from '../_store/use-collective-draft-store'
 
 const memberUpdateFormSchema = z.object({
   role: z.string(),
@@ -54,6 +56,7 @@ export function MemberUpdateDialog() {
       description='Ajusta el rol y el estado del integrante seleccionado.'
       submit={{
         label: 'Guardar miembro',
+        type: 'button',
         disabled: methods.formState.isSubmitting,
         isSubmitting: methods.formState.isSubmitting,
         onClick: methods.handleSubmit(handleSubmit)

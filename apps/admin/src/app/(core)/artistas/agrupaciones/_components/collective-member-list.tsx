@@ -2,10 +2,12 @@
 
 import { IconEdit, IconRotateClockwise2, IconTrash } from '@tabler/icons-react'
 import { useShallow } from 'zustand/react/shallow'
+
 import { EmptyState } from '@/shared/components/empty-state'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent } from '@/shared/components/ui/card'
+
 import { useCollectiveDraftStore } from '../_store/use-collective-draft-store'
 import type { MemberDraftItem } from '../_types/collective.types'
 
@@ -59,7 +61,7 @@ function MemberRow({
       className={status === 'removed' ? 'border-destructive/30' : ''}
     >
       <CardContent className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-        <div className='min-w-0 space-y-1'>
+        <div className='min-w-0'>
           <div className='flex flex-wrap items-center gap-2'>
             <p className='truncate font-medium'>{member.pseudonym}</p>
 
@@ -77,9 +79,6 @@ function MemberRow({
             ) : null}
           </div>
 
-          <p className='text-muted-foreground text-sm'>
-            {member.city || 'Sin ciudad'}
-          </p>
           <p className='text-muted-foreground text-sm'>
             Rol: {member.role || 'Sin rol asignado'}
           </p>

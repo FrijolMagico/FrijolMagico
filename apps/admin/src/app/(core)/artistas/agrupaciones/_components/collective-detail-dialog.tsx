@@ -6,9 +6,11 @@ import { FormProvider, useForm, useFormState } from 'react-hook-form'
 import { useShallow } from 'zustand/react/shallow'
 import { IconUsersPlus } from '@tabler/icons-react'
 import { toast } from 'sonner'
+
 import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
+
 import { UPDATE_COLLECTIVE_FORM_ID } from '../_constants'
 import { upsertCollectiveWithMembersAction } from '../_actions/upsert-collective-with-members.action'
 import {
@@ -220,6 +222,7 @@ export function CollectiveDetailDialog({
         isDirty={isDirty || hasDraftChanges}
         className='sm:max-w-4xl'
         submit={{
+          type: 'submit',
           form: UPDATE_COLLECTIVE_FORM_ID,
           disabled: isSubmitting || (!isDirty && !hasDraftChanges) || !isValid,
           isSubmitting,
@@ -229,13 +232,13 @@ export function CollectiveDetailDialog({
         <form
           id={UPDATE_COLLECTIVE_FORM_ID}
           onSubmit={methods.handleSubmit(onSubmit)}
-          className='space-y-6'
+          className='flex gap-6'
         >
-          <section className='space-y-3'>
+          <section className='w-full max-w-sm space-y-4'>
             <div>
               <h3 className='font-semibold'>Información general</h3>
               <p className='text-muted-foreground text-sm'>
-                Actualizá los datos básicos de la agrupación.
+                Actualiza los datos básicos de la agrupación.
               </p>
             </div>
             <CollectiveFormLayout />
@@ -245,10 +248,6 @@ export function CollectiveDetailDialog({
             <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
               <div>
                 <h3 className='font-semibold'>Miembros</h3>
-                <p className='text-muted-foreground text-sm'>
-                  Sumá artistas, ajustá sus roles y revisá los cambios
-                  pendientes antes de guardar.
-                </p>
               </div>
 
               <div className='flex items-center gap-2'>

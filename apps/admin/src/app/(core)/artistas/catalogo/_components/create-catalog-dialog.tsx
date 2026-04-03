@@ -1,6 +1,9 @@
 'use client'
 
 import { useForm, Controller } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { toast } from 'sonner'
+
 import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
 import {
   Combobox,
@@ -17,15 +20,14 @@ import {
   FieldLabel
 } from '@/shared/components/ui/field'
 import { Textarea } from '@/shared/components/ui/textarea'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { ControllerSwitch } from '@/shared/components/controller-switch'
+
 import { catalogInsertSchema } from '../_schemas/catalog.schema'
 import { createCatalogAction } from '../_actions/create-catalog.action'
 import type { CatalogCreateFormInput } from '../_schemas/catalog.schema'
 import type { CatalogAvailableArtist } from '../_types/catalog-list-item'
-import { toast } from 'sonner'
 import { useCatalogDialog } from '../_store/catalog-dialog-store'
 import { CREATE_CATALOG_FORM_ID } from '../_constants'
-import { ControllerSwitch } from '@/shared/components/controller-switch'
 
 interface CreateCatalogDialogProps {
   availableArtists: CatalogAvailableArtist[]
@@ -90,6 +92,7 @@ export function CreateCatalogDialog({
       triggerLabel='Agregar al catálogo'
       isDirty={isDirty}
       submit={{
+        type: 'submit',
         form: CREATE_CATALOG_FORM_ID,
         isSubmitting,
         disabled: isSubmitting || !isDirty || !isValid

@@ -3,7 +3,9 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormProvider, useForm, useFormState } from 'react-hook-form'
 import { toast } from 'sonner'
+
 import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
+
 import { UPDATE_COLLECTIVE_FORM_ID } from '../_constants'
 import { upsertCollectiveWithMembersAction } from '../_actions/upsert-collective-with-members.action'
 import {
@@ -80,6 +82,7 @@ export function CollectiveUpdateDialog({
         description='Actualizá los datos básicos de la agrupación seleccionada.'
         isDirty={isDirty}
         submit={{
+          type: 'submit',
           form: UPDATE_COLLECTIVE_FORM_ID,
           disabled: isSubmitting || !isDirty || !isValid,
           isSubmitting

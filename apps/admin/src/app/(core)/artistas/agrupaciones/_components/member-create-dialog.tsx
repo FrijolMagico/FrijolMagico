@@ -1,6 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
+import { useShallow } from 'zustand/react/shallow'
+
 import {
   Combobox,
   ComboboxContent,
@@ -20,8 +23,7 @@ import {
 } from '@/shared/components/ui/dialog'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
-import { toast } from 'sonner'
-import { useShallow } from 'zustand/react/shallow'
+
 import { searchArtistsAction } from '../_actions/search-artists.action'
 import { useCollectiveDraftStore } from '../_store/use-collective-draft-store'
 import type { ArtistOption } from '../_types/collective.types'
@@ -180,7 +182,7 @@ export function MemberCreateDialog() {
                     id='member-search'
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    placeholder='Escribí nombre o pseudónimo'
+                    placeholder='Escribe nombre o pseudónimo'
                   />
                   <Button
                     type='button'
@@ -192,7 +194,7 @@ export function MemberCreateDialog() {
                   </Button>
                 </div>
                 <p className='text-muted-foreground text-xs'>
-                  Hay demasiados artistas para precargar, así que usá la
+                  Hay demasiados artistas para precargar, así que usa la
                   búsqueda puntual.
                 </p>
               </div>
@@ -202,7 +204,7 @@ export function MemberCreateDialog() {
                   <p className='text-muted-foreground text-sm'>
                     {search.trim()
                       ? 'No encontramos artistas para esa búsqueda.'
-                      : 'Ingresá un término para buscar artistas disponibles.'}
+                      : 'Ingresa un término para buscar artistas disponibles.'}
                   </p>
                 ) : (
                   visibleSearchResults.map((artist) => {
@@ -239,7 +241,7 @@ export function MemberCreateDialog() {
               id='member-role'
               value={role}
               onChange={(event) => setRole(event.target.value)}
-              placeholder='Ej. Dirección musical'
+              placeholder='Ej. Dirección artística'
             />
           </div>
         </div>

@@ -3,19 +3,21 @@
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconPencil, IconMapPin, IconMail } from '@tabler/icons-react'
+import { toast } from 'sonner'
+
 import { Button } from '@/shared/components/ui/button'
 import { Switch } from '@/shared/components/ui/switch'
 import { Label } from '@/shared/components/ui/label'
 import { Textarea } from '@/shared/components/ui/textarea'
 import { ArtistAvatar } from './artist-avatar'
 import { Field, FieldGroup, FieldLabel } from '@/shared/components/ui/field'
-import { updateCatalogAction } from '../_actions/update-catalog.action'
-import { toast } from 'sonner'
 import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
+
+import { updateCatalogAction } from '../_actions/update-catalog.action'
 import { useCatalogDialog } from '../_store/catalog-dialog-store'
 import {
   catalogUpdateFormSchema,
-  CatalogUpdateFormInput
+  type CatalogUpdateFormInput
 } from '../_schemas/catalog.schema'
 import { UpdateArtistDialog } from '../../_components/update-artist-dialog'
 import { useArtistDialog } from '../../_store/artist-dialog-store'
@@ -81,6 +83,7 @@ export function UpdateCatalogDialog() {
         title='Editar Catálogo'
         isDirty={isDirty}
         submit={{
+          type: 'submit',
           isSubmitting,
           disabled: isSubmitting || !isDirty || !isValid,
           form: UPDATE_CATALOG_FORM_ID

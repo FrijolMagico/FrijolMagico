@@ -3,7 +3,9 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormProvider, useForm, useFormState } from 'react-hook-form'
 import { toast } from 'sonner'
+
 import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
+
 import { BAND_FORM_ID } from '../_constants'
 import { createBandaAction } from '../_actions/create-banda.action'
 import { bandFormSchema, type BandFormInput } from '../_schemas/banda.schema'
@@ -85,6 +87,7 @@ export function BandCreateDialog() {
         description='Completa los datos básicos para registrar una nueva banda.'
         isDirty={isDirty}
         submit={{
+          type: 'submit',
           form: BAND_FORM_ID,
           disabled: isSubmitting || !isDirty || !isValid,
           isSubmitting
