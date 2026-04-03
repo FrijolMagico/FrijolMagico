@@ -6,11 +6,12 @@ import {
 } from 'drizzle-zod'
 import { artist as artistSchema } from '@frijolmagico/database/schema'
 import { ARTIST_STATUS } from '../_constants'
+import { rrssSchema } from '@/shared/schemas/person.schema'
 
 const artistTable = artistSchema.artist
 
 export const artistSelectSchema = createSelectSchema(artistTable, {
-  rrss: z.record(z.string(), z.string()),
+  rrss: rrssSchema,
   estadoId: z.number().transform((v) => v as ARTIST_STATUS)
 }).omit({
   createdAt: true,
@@ -22,11 +23,10 @@ export const artistSelectSchema = createSelectSchema(artistTable, {
 export const artistInsertSchema = createInsertSchema(artistTable, {
   pseudonimo: (s) => s.min(1, { error: 'El pseudónimo es obligatorio' }),
   estadoId: (s) => s.default(1),
-  rrss: () =>
-    z.transform((val) => {
-      if (val && typeof val === 'object') return JSON.stringify(val) as string
-      return val as string
-    })
+  rrss: rrssSchema.transform((val) => {
+    if (val && typeof val === 'object') return JSON.stringify(val) as string
+    return val
+  })
 }).omit({
   id: true,
   createdAt: true,
@@ -36,11 +36,10 @@ export const artistInsertSchema = createInsertSchema(artistTable, {
 
 export const artistUpdateSchema = createUpdateSchema(artistTable, {
   pseudonimo: (s) => s.min(1, { error: 'El pseudónimo es obligatorio' }),
-  rrss: () =>
-    z.transform((val) => {
-      if (val && typeof val === 'object') return JSON.stringify(val) as string
-      return val as string
-    })
+  rrss: rrssSchema.transform((val) => {
+    if (val && typeof val === 'object') return JSON.stringify(val) as string
+    return val
+  })
 }).omit({
   createdAt: true,
   updatedAt: true,
@@ -59,11 +58,11 @@ export const historialFlagsSchema = z.object({
 
 // Edit form schema — update fields (without id) + rrss as object + historial flags
 export const artistUpdateFormSchema = artistUpdateSchema
-  .omit({ id: true })
   .extend({
-    rrss: z.record(z.string(), z.string()).optional(),
-    historialFlags: historialFlagsSchema.optional()
+    rrss: rrssSchema,
+    historialFlags: historialFlagsSchema
   })
+  .omit({ id: true })
 
 export type Artist = z.infer<typeof artistSelectSchema>
 export type ArtistInsertInput = z.infer<typeof artistInsertSchema>

@@ -21,6 +21,7 @@ import type {
   ArtistUpdateFormInput,
   HistorialFlags
 } from '../_schemas/artista.schema'
+import { RRSSManager } from '@/shared/components/rrss/rrss-manager'
 
 interface ArtistFormLayoutProps {
   check?: boolean
@@ -159,6 +160,14 @@ export function ArtistFormLayout({ check }: ArtistFormLayoutProps) {
           <Input id='pais' {...register('pais')} placeholder='Chile' />
         </Field>
       </div>
+
+      <Controller
+        name='rrss'
+        control={control}
+        render={({ field }) => (
+          <RRSSManager values={field.value} onChange={field.onChange} />
+        )}
+      />
     </FieldGroup>
   )
 }

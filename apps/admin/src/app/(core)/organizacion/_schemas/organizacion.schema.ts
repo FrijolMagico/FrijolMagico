@@ -33,7 +33,7 @@ export const organizationFormSchema = organizationUpdateSchema
 export type OrganizationFormInput = z.infer<typeof organizationFormSchema>
 
 export const teamMemberSelectSchema = createSelectSchema(organizationMember, {
-  rrss: z.record(z.string(), z.array(z.string())).nullable()
+  rrss: rrssSchema
 })
 
 export type TeamMember = z.infer<typeof teamMemberSelectSchema>
@@ -44,13 +44,9 @@ export const teamMemberInsertSchema = createInsertSchema(organizationMember, {
   email: z
     .email('El email no es válido')
     .min(1, { message: 'El email es obligatorio' }),
-  rrss: (s) =>
-    s
-      .transform((val: unknown) => {
-        if (val && typeof val === 'object') return JSON.stringify(val)
-        return val as string | null | undefined
-      })
-      .optional()
+  rrss: rrssSchema
+    .transform((val) => (val ? JSON.stringify(val) : null))
+    .optional()
 }).omit({ id: true, createdAt: true, updatedAt: true })
 
 export type TeamMemberInsertInput = z.infer<typeof teamMemberInsertSchema>
@@ -62,13 +58,9 @@ export const teamMemberUpdateSchema = createUpdateSchema(organizationMember, {
     .email('El email no es válido')
     .trim()
     .min(1, { message: 'El email es obligatorio' }),
-  rrss: (s) =>
-    s
-      .transform((val: unknown) => {
-        if (val && typeof val === 'object') return JSON.stringify(val)
-        return val as string | null | undefined
-      })
-      .optional()
+  rrss: rrssSchema
+    .transform((val) => (val ? JSON.stringify(val) : null))
+    .optional()
 }).omit({
   createdAt: true,
   updatedAt: true

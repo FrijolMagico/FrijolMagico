@@ -143,7 +143,7 @@ export function RRSSManager({
 
             {/* Existing Entries */}
             {rows.map(({ platform, url, id }) => (
-              <TableRow key={platform}>
+              <TableRow key={id}>
                 <TableCell className='font-medium capitalize'>
                   <Input
                     value={platform}
