@@ -7,7 +7,7 @@ import type { FestivalEdicion, RawFestivalEdicion } from '../types/festival'
 import { FESTIVALES_QUERY } from './queries/festivalesQuery'
 
 export async function festivalesRepository(): Promise<FestivalEdicion[]> {
-  const source = getDataSource({ prod: 'database' })
+  const source = getDataSource({ prod: 'database', dev: 'local' })
 
   if (source === 'local' || source === 'database') {
     const { data, error } = await executeQuery<RawFestivalEdicion>(

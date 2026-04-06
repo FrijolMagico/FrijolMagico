@@ -1,27 +1,17 @@
-import { unstable_cache } from 'next/cache'
-
+import { cacheTag } from 'next/cache'
 import { festivalesRepository } from '../adapters/festivalesRepository'
 
 import type { FestivalEdicion } from '../types/festival'
 import type { ErrorObject } from '@/types/errors'
 
-const getCachedFestivalesData = unstable_cache(
-  async (): Promise<FestivalEdicion[]> => {
-    return festivalesRepository()
-  },
-  ['festivales-list'],
-  {
-    revalidate: false,
-    tags: ['festivales']
-  }
-)
-
 export async function getFestivalesData(): Promise<{
   data: FestivalEdicion[]
   error: ErrorObject
 }> {
+  'use cache'
+  cacheTag('web:festivales')
   try {
-    const data = await getCachedFestivalesData()
+    const data = await festivalesRepository()
 
     return {
       data,
