@@ -28,7 +28,7 @@ export const artistImagenFormSchema = artistImagenInsertSchema
     metadata: true
   })
   .extend({
-    artistId: z.string().min(1, { message: 'El artist es obligatorio' }),
+    artistId: z.string().min(1, { message: 'El artista es obligatorio' }),
     imagenUrl: z.string().min(1, { message: 'La URL es obligatoria' })
   })
 
