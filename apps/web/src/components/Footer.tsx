@@ -60,9 +60,7 @@ export const Footer = ({ doodleColor = 'text-fm-green' }: FooterProps) => {
           <div className='bg-flexible-white flex size-full flex-col items-center justify-center rounded-2xl md:flex-row md:gap-8'>
             <p className='font-josefin text-flexible-green text-lg leading-none font-black'>
               Frijol Mágico{' '}
-              <span className='text-flexible-green'>
-                {new Date().getFullYear()}{' '}
-              </span>
+              <span className='text-flexible-green'>{'2026 '}</span>
               🌱
             </p>
 

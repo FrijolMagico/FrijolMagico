@@ -53,9 +53,7 @@ export const FestivalsSidebarNav = ({ items }: FestivalsSidebarNavProps) => {
             aria-hidden='true'
           />
           <span className='text-xl font-bold'>
-            {activeId
-              ? items.find((i) => i.id === activeId)?.year
-              : new Date().getFullYear()}
+            {activeId ? items.find((i) => i.id === activeId)?.year : 2026}
           </span>
         </div>
       </div>
