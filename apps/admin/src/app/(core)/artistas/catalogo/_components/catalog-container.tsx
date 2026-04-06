@@ -54,7 +54,7 @@ export function CatalogContainer({
 
       {catalog.length === 0 ? (
         <EmptyState
-          title='No se encontrron artistas en el catálogo'
+          title='No se encontraron artistas en el catálogo'
           description='No hay artistas que coincidan con los filtros aplicados. Intenta ajustar los filtros para encontrar artistas.'
           action={{
             label: 'Limpiar filtros',
