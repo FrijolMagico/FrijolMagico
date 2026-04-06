@@ -8,7 +8,7 @@ import type { AboutData } from '../types/about'
 const ORGANIZATION_ID = 1
 
 export async function aboutRepository(): Promise<AboutData | null> {
-  const source = getDataSource({ prod: 'database' })
+  const source = getDataSource({ prod: 'database', dev: 'local' })
 
   if (source === 'mock') {
     return getAboutDataMock()
