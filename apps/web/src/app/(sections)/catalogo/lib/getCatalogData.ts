@@ -1,4 +1,4 @@
-import { unstable_cache } from 'next/cache'
+import { cacheTag } from 'next/cache'
 
 import { formatUrlWithoutQuery } from '@frijolmagico/utils/url'
 import { catalogRepository } from '../adapters/catalogRepository'
@@ -6,26 +6,15 @@ import { catalogRepository } from '../adapters/catalogRepository'
 import type { CatalogArtist } from '../types/catalog'
 import type { ErrorObject } from '@/types/errors'
 
-/**
- * Obtiene los datos del catálogo con cache de Next.js.
- */
-const getCachedCatalogData = unstable_cache(
-  async (): Promise<CatalogArtist[]> => {
-    return catalogRepository()
-  },
-  ['catalog-list'],
-  {
-    revalidate: false,
-    tags: ['catalog']
-  }
-)
-
 export async function getCatalogData(): Promise<{
   data: CatalogArtist[]
   error: ErrorObject
 }> {
+  'use cache'
+  cacheTag('web:catalogo')
+
   try {
-    const data = await getCachedCatalogData()
+    const data = await catalogRepository()
 
     return {
       data: formatArtistData(data),
