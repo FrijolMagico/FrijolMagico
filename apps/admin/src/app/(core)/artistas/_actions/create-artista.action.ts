@@ -41,7 +41,7 @@ export async function createArtistaAction(
       success: false,
       errors: [
         {
-          entityType: 'organizacion',
+          entityType: 'artista',
           message: error instanceof Error ? error.message : 'Error desconocido'
         }
       ]
