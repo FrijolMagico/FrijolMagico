@@ -1,0 +1,5 @@
+export const EDITION_CACHE_TAG = 'admin:edition'
+export const EDITION_DAY_CACHE_TAG = 'admin:edition:day'
+export const PLACE_CACHE_TAG = 'admin:edition:place'
+export const CREATE_EDITION_FORM_ID = 'create-edition-form'
+export const UPDATE_EDITION_FORM_ID = 'update-edition-form'

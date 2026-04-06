@@ -1,0 +1,48 @@
+{
+  "name": "@frijolmagico/database",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./client": {
+      "types": "./src/client.ts",
+      "default": "./src/client.ts"
+    },
+    "./orm": {
+      "types": "./src/drizzle.ts",
+      "default": "./src/drizzle.ts"
+    },
+    "./schema": {
+      "types": "./src/db/schema/index.ts",
+      "default": "./src/db/schema/index.ts"
+    },
+    "./filters": {
+      "types": "./src/filters.ts",
+      "default": "./src/filters.ts"
+    },
+    "./sql": {
+      "types": "./src/sql.ts",
+      "default": "./src/sql.ts"
+    }
+  },
+  "scripts": {
+    "migrate": "bun run --env-file .env.local drizzle-kit migrate --config drizzle.config.ts",
+    "new": "bun run --env-file .env.local drizzle-kit generate --custom --name",
+    "seed": "bun run --env-file .env.local turso db shell $TURSO_DATABASE_NAME < seed/seed.sql",
+    "dev": "turso dev --db-file local.db",
+    "lint": "eslint .",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.17.0",
+    "drizzle-orm": "^0.45.1",
+    "drizzle-zod": "^0.8.3",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@frijolmagico/eslint-config": "workspace:*",
+    "@frijolmagico/typescript-config": "workspace:*",
+    "drizzle-kit": "^0.31.10",
+    "eslint": "9",
+    "typescript": "^5.9.3"
+  }
+}

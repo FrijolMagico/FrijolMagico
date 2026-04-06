@@ -1,0 +1,10 @@
+.vercel
+.env*.local
+
+# Playwright
+tests/e2e/_reports/
+
+docs/
+
+.sisyphus/
+openspec/

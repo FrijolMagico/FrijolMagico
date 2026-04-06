@@ -1,0 +1,26 @@
+{
+  "name": "@frijolmagico/utils",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./string": "./src/string.ts",
+    "./url": "./src/url.ts",
+    "./css": "./src/css.ts",
+    "./shallow-diff": "./src/shallow-diff.ts",
+    "./rrss": "./src/rrss.ts"
+  },
+  "files": [
+    "./src/string.ts",
+    "./src/url.ts",
+    "./src/css.ts",
+    "./src/shallow-diff.ts",
+    "./src/rrss.ts"
+  ],
+  "devDependencies": {
+    "@frijolmagico/eslint-config": "workspace:*",
+    "@frijolmagico/typescript-config": "workspace:*",
+    "eslint": "9",
+    "typescript": "^5.9.3"
+  }
+}

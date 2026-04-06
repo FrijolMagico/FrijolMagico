@@ -1,6 +1,6 @@
-# Frijol Mágico Cultural Association
+# Frijol Mágico
 
-Frijol Mágico is a space that brings together illustrators from the Coquimbo Region, creating various opportunities to enhance their work. This modern web platform, built with Next.js, React, and TypeScript, serves as the digital hub for the Frijol Mágico Festival, facilitating communication, open calls, and artist participation in the annual event.
+Frijol Mágico is a cultural association that brings together illustrators from the Coquimbo Region, Chile. This modern web platform, built as a Turborepo monorepo with Next.js, React, and TypeScript, serves as the digital hub for the Frijol Mágico Festival.
 
 ## About the Project
 
@@ -11,17 +11,43 @@ Frijol Mágico is more than just a festival; it's a community that seeks to show
 - Connect with other illustrators in the region
 - Access resources and opportunities from the artistic community
 
-The website serves as a digital meeting point for this community, providing information about the upcoming festival, important dates, and ways to participate.
+## Tech Stack
+
+This is a **Turborepo** monorepo with the following architecture:
+
+- **Monorepo**: Turborepo + Bun workspaces
+- **Frontend Framework**: Next.js 16 (App Router) with Turbopack
+- **UI**: React 19, TypeScript (strict), Tailwind CSS v4
+- **State**: Zustand
+- **Animation**: GSAP with ScrollTrigger
+- **Database**: Turso (libSQL) with Drizzle ORM
+- **CMS**: Google Sheets via `google-spreadsheet`
+- **Package Manager**: Bun
+
+## Project Structure
+
+```
+├── apps/
+│   ├── web/              # Main website (frijolmagico.cl) - Port 3000
+│   └── admin/            # Admin panel - Port 3001
+├── packages/
+│   ├── database/         # Drizzle ORM + Turso
+│   ├── ui/               # Shared UI components
+│   ├── utils/            # Shared utilities
+│   ├── eslint-config/    # Shared ESLint config
+│   ├── typescript-config/# Shared TS config
+│   └── tailwind-config/  # Shared Tailwind config
+├── turbo.json            # Turborepo configuration
+└── package.json          # Root package.json with workspace scripts
+```
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js (v18 or later)
-- Bun (preferred) or npm package manager
+- Bun package manager (v1.2.2 or later)
 - Turso CLI (for database management) - [Installation guide](https://docs.turso.tech/cli/installation)
-- Geni (for database migrations) - `brew install geni`
-- Google Cloud Platform account (for Google Sheets API)
 
 ### Installation
 
@@ -36,17 +62,23 @@ The website serves as a digital meeting point for this community, providing info
 
    ```bash
    bun install
-   # or
-   npm install
    ```
 
 3. **Set up environment variables**
 
+   Copy the example env files and fill in the required values:
+
    ```bash
+   # Root environment
    cp .env.example .env.local
+
+   # App-specific environments (see each app's README for details)
+   cp apps/web/.env.example apps/web/.env.local
+   cp apps/admin/.env.example apps/admin/.env.local
+   cp packages/database/.env.example packages/database/.env.local
    ```
 
-   Edit `.env.local` and fill in the required values (see Environment Variables section).
+   See each app's README for environment variable details.
 
 4. **Run database migrations**
 
@@ -54,289 +86,91 @@ The website serves as a digital meeting point for this community, providing info
    bun run db:migrate
    ```
 
-5. **Run development server**
+5. **Run development servers**
 
    ```bash
    bun run dev
-   # or
-   npm run dev
    ```
 
-6. **Open your browser**
+   This starts all apps via Turborepo:
+   - Web app: http://localhost:3000
+   - Admin app: http://localhost:3001
 
-   Navigate to [http://localhost:3000](http://localhost:3000)
+## Available Scripts
 
-## Technologies Used
-
-- **Frontend Framework**: Next.js 15 (App Router)
-- **UI Components**: React 19 and TypeScript
-- **Styling**: Tailwind CSS with custom variants and `tailwind-variants`
-- **Database**: Turso (libSQL) for data persistence
-- **Migrations**: Geni for database schema management
-- **Content Management**: Google Sheets as headless CMS (via `google-spreadsheet`)
-- **State Management**: Zustand
-- **Animation**: GSAP and ScrollTrigger (via `@gsap/react`)
-- **Code Quality**: ESLint and Prettier
-- **Package Manager**: Bun (preferred) or npm
-- **Additional Libraries**:
-  - `clsx` and `tailwind-merge` for conditional styling
-  - `react-markdown` for markdown content rendering
-  - `next-sitemap` for SEO sitemap generation
-  - `lucide-react` for iconography
-
-## Environment Variables
-
-Create a `.env.local` file in the root directory. See `.env.example` for a complete reference.
-
-### Required Variables
+### Root Level
 
 ```bash
-# Turso Database (used by the application)
-TURSO_DATABASE_URL=https://your-database-org.turso.io
-TURSO_AUTH_TOKEN=your-auth-token
-TURSO_DATABASE_NAME=your-database-name
+# Development
+bun run dev                    # Start all apps with Turborepo
 
-# Google Sheets API Configuration
-GOOGLE_API_KEY=your_google_api_key_here
-CATALOG_SHEET_ID=your_catalog_sheet_id_here
+# Build
+bun run build                  # Production build (all apps)
+
+# Quality
+bun run lint                   # ESLint all apps
+bun run lint:fix               # ESLint with auto-fix
+bun run type-check             # TypeScript check all packages
+bun run format                 # Prettier format
+
+# Database
+bun run db:migrate             # Run pending migrations
 ```
 
-### Development Only (Geni Migrations)
+### Per-App Commands
 
-These variables are only needed locally for running database migrations:
+Run these from `apps/web/` or `apps/admin/`:
 
 ```bash
-# Geni Migration Tool
-DATABASE_URL=https://your-database-org.turso.io  # Same as TURSO_DATABASE_URL
-DATABASE_TOKEN=your-auth-token                    # Same as TURSO_AUTH_TOKEN
-DATABASE_MIGRATIONS_FOLDER=./db/migrations
+bun run dev                    # Next.js dev with Turbopack
+bun run build                  # Production build
+bun run lint                   # ESLint
+bun run lint:fix               # ESLint --fix
+bun run type-check             # tsc --noEmit
 ```
 
-**Note**: In development mode, you can use a local SQLite database or connect to Turso directly.
+## Apps & Packages Documentation
 
-## Project Structure
+For detailed documentation on each app and package, see:
 
-```
-src/
-├── app/              # Next.js app directory with App Router
-│   ├── (home)/       # Home page and its components
-│   ├── (sections)/   # Main sections (catalogo, festivales, convocatoria, etc.)
-│   │   └── */store/  # Section-specific Zustand stores
-│   └── layout.tsx    # Root layout
-├── components/       # Shared UI components (Header, Footer, Grid, etc.)
-│   └── ui/           # UI primitives (Button, Pagination, etc.)
-├── config/           # App configuration (paths, etc.)
-├── data/             # Static site data (site.json, etc.)
-├── infra/            # Infrastructure (database adapters, importers)
-├── schemas/          # Zod schemas for data validation
-├── services/         # Data fetching and integration (Google Sheets, etc.)
-├── styles/           # Global and section-specific styles
-│   └── palettes/     # Color palette system
-├── types/            # TypeScript type definitions
-└── utils/            # Utility functions
+- **[apps/web/README.md](apps/web/README.md)** - Main website documentation
+- **[apps/admin/README.md](apps/admin/README.md)** - Admin panel documentation
+- **[packages/database/README.md](packages/database/README.md)** - Database/Drizzle ORM documentation
 
-db/
-├── migrations/       # Database migrations (Geni)
-└── seed/             # Seed data
+### Agent Conventions
 
-public/
-├── fonts/            # Local fonts
-├── images/           # Shared images
-└── sections/         # Section-specific images and assets
-```
+For development conventions and coding standards, see the AGENTS.md files:
 
-## Scripts
+- **[AGENTS.md](./AGENTS.md)** - Monorepo-wide conventions
+- **[apps/web/AGENTS.md](./apps/web/AGENTS.md)** - Web app architecture
+- **[apps/admin/AGENTS.md](./apps/admin/AGENTS.md)** - Admin app architecture
+- **[packages/database/AGENTS.md](./packages/database/AGENTS.md)** - Database package
 
-### Development
+## Development Guidelines
 
-- `bun run dev`: Start development server with Turbopack
-- `bun run build`: Create production build
-- `bun run start`: Start production server
-- `bun run lint`: Run ESLint for code quality
+For detailed development conventions and best practices, see **[AGENTS.md](AGENTS.md)**.
 
-### Database
+### Quick Reference
 
-- `bun run db:migrate`: Run pending migrations
-- `bun run db:rollback`: Rollback last migration
-- `bun run db:status`: Show pending migrations
-- `bun run db:new <name>`: Create new migration (e.g., `bun run db:new add_sponsors_table`)
-- `bun run db:seed`: Seed database with initial data
-- `bun run db:import`: Import data from Google Sheets to Turso
-
-## Database
-
-The application uses a multi-layer data management system with Turso as the primary database.
-
-### Data Flow
-
-```
-Google Sheets (CMS) → db:import → Turso (Database) → Application
-```
-
-1. **Google Sheets**: Acts as an easy-to-use CMS for content editors to manage artist data, events, and other content.
-2. **Import Process**: The `db:import` command synchronizes data from Google Sheets to the Turso database.
-3. **Turso Database**: Serves as the primary data store for the application, providing fast queries and reliable data persistence.
-4. **Application**: Reads data directly from Turso for rendering pages.
-
-### Turso (libSQL)
-
-The project uses [Turso](https://turso.tech), a SQLite-compatible database optimized for edge deployments. It provides:
-
-- Low-latency reads with edge replicas
-- SQLite compatibility
-- Simple authentication with tokens
-
-### Migrations with Geni
-
-[Geni](https://github.com/emilpriver/geni) is a standalone migration tool that manages database schema changes.
-
-#### Creating a New Migration
-
-```bash
-# Generate migration files
-bun run db:new add_new_feature
-
-# This creates:
-# db/migrations/20251226123456_add_new_feature.up.sql   (changes to apply)
-# db/migrations/20251226123456_add_new_feature.down.sql (rollback)
-```
-
-#### Applying Migrations
-
-```bash
-# Check pending migrations
-bun run db:status
-
-# Apply all pending migrations
-bun run db:migrate
-
-# Rollback last migration
-bun run db:rollback
-```
-
-#### Migration Best Practices
-
-- Use `IF NOT EXISTS` / `IF EXISTS` for idempotent migrations
-- One logical change per migration
-- Always write the `.down.sql` rollback (even if SQLite has limitations)
-- Use descriptive names: `add_website_to_artista`, `create_sponsors_table`
-
-### Local Development
-
-#### Option 1: Turso Dev Server (Recommended)
-
-```bash
-# Start local libSQL server
-turso dev
-
-# Your app connects to:
-# DATABASE_URL="http://127.0.0.1:8080"
-```
-
-#### Option 2: SQLite File
-
-```bash
-# Create a dump from remote database
-turso db shell $TURSO_DATABASE_NAME .dump > db/dump.sql
-
-# Create local SQLite file
-cat db/dump.sql | sqlite3 db/local.db
-
-# Your app connects to:
-# DATABASE_URL="file:db/local.db"
-```
-
-#### Option 3: Remote Database
-
-Connect directly to Turso Cloud during development (simplest, but consumes quota).
-
-## Advanced Styling Features
-
-### Flexible Color Palette System
-
-- **Dynamic Theming**: Uses `[data-palette]` attributes for context-specific styling
-- **CSS-in-Tailwind**: Custom CSS themes defined in `@theme` blocks
-- **Flexible Tokens**: Color tokens that can be overridden per section/component
-- **Festival-Specific Palettes**: Dedicated color schemes for different festival years
-
-### Custom Animations
-
-- **Card Slides**: Infinite scrolling animations for promotional content
-- **Soft Bounce**: Subtle hover effects and micro-interactions
-- **Keyframe System**: Custom CSS animations integrated with Tailwind
-- **Accessibility**: Respects `prefers-reduced-motion` for accessibility
-
-### Responsive Design
-
-- **Mobile-First**: Progressive enhancement from mobile to desktop
-- **Custom Breakpoints**: Tailored breakpoints for optimal viewing experience
-- **Grid System**: Flexible grid components for complex layouts
+- **Component Naming**: PascalCase, named exports only
+- **Hooks/Stores**: camelCase with `use` prefix
+- **Utilities**: camelCase
+- **Constants**: UPPER_SNAKE_CASE
+- **Strict TypeScript**: Never disable `strict` or `noImplicitAny`
+- **App Router**: Prefer Server Components, mark Client Components with `'use client'`
 
 ## Deployment
 
 - **Production URL**: [https://frijolmagico.cl](https://frijolmagico.cl)
-- **Platform**: Optimized for Vercel deployment
+- **Platform**: Vercel
 - **Database**: Turso Cloud with edge replicas
-- **SEO**: Automatic sitemap generation via `next-sitemap`
-- **Performance**: Static generation with dynamic data fetching
-- **Environment Handling**: Automatic environment detection and configuration
+- **Monorepo**: Turborepo with Remote Caching on Vercel
 
-## Development Guidelines
+## Contributing
 
-### Component Conventions
-
-- **Naming**: PascalCase for components; section-specific components in dedicated folders
-- **Structure**: Co-locate components with their styles, types, and tests
-- **Composition**: Prefer composition over inheritance; use compound components pattern
-
-### TypeScript Standards
-
-- **Strict Typing**: All code is strongly typed with strict TypeScript configuration
-- **Type Organization**: Types in `src/types/` for global types, section-specific types in respective folders
-- **Interface Naming**: Use descriptive interface names with proper suffixes (Props, State, Config)
-
-### Styling Guidelines
-
-- **Tailwind CSS**: Primary styling solution with custom variants and extensions
-- **Class Composition**: Use `clsx` and `tailwind-merge` for conditional and merged classes
-- **Component Variants**: Leverage `class-variance-authority` for component API design
-- **Custom CSS**: Minimal custom CSS; prefer Tailwind utilities and custom theme tokens
-
-### State Management
-
-- **Zustand**: Preferred for client-side state management
-- **Local State**: Use React's built-in state for component-specific data
-- **URL State**: Sync filters and navigation state with URL parameters
-- **Server State**: Fetch data at build time when possible; use dynamic fetching sparingly
-
-### Data Fetching
-
-- **Static Generation**: Preferred approach for most content
-- **Database Queries**: Direct queries to Turso for dynamic data
-- **Error Boundaries**: Implement proper error handling and user feedback
-- **Loading States**: Provide skeleton loaders and loading indicators
-
-### Accessibility
-
-- **Semantic HTML**: Use proper HTML elements and structure
-- **ARIA Labels**: Provide meaningful labels for screen readers
-- **Keyboard Navigation**: Ensure full keyboard accessibility
-- **Image Alt Text**: Descriptive alt text for all images and graphics
-- **Motion Preferences**: Respect user preferences for reduced motion
-
-### Performance
-
-- **Image Optimization**: Use Next.js `<Image />` component for all images
-- **Code Splitting**: Leverage Next.js automatic code splitting
-- **Bundle Analysis**: Monitor bundle size and optimize imports
-- **Core Web Vitals**: Maintain excellent performance scores
-
-### File Organization
-
-- **Images**: Store in `public/sections/` for section-specific assets
-- **Fonts**: Local fonts in `public/fonts/` with proper loading strategies
-- **Icons**: Use `lucide-react` for consistent iconography
-- **Data**: Static data in `src/data/`, dynamic data via services
+1. Follow the conventions in [AGENTS.md](AGENTS.md)
+2. Run `bun run lint` and `bun run format` before committing
+3. Ensure TypeScript checks pass: `bun run type-check`
 
 ---
 

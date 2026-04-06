@@ -1,7 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules/
+*/**/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -16,10 +17,13 @@ package-lock.json
 
 # public files that are generated
 /public/*.xml
+apps/*/public/*.xml
+**/public/sitemap*.xml
 
 # next.js
 /.next/
 /out/
+apps/*/.next/
 
 # production
 /build
@@ -52,10 +56,21 @@ next-env.d.ts
 .codecompanion-workspace.json
 
 tmp/
-local.db
-
-# database backups
-db/backups/
+/dump.sql
+*/**/dump.sql
+*/**/local.db*
 
 # database data insertion scripts (keep README and .gitkeep)
-db/data/*.sql
+packages/database/data/*.sql
+
+# Turborepo
+.turbo
+.sisyphus
+*/**/.sisyphus
+openscpe
+*/**/openspec
+db-workspace
+
+# OpenCode
+.agents/
+skills-lock.json

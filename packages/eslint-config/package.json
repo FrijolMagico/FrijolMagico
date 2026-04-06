@@ -1,0 +1,28 @@
+{
+  "name": "@frijolmagico/eslint-config",
+  "type": "module",
+  "private": true,
+  "main": "base.js",
+  "files": [
+    "base.js",
+    "base.d.ts",
+    "next.js",
+    "next.d.ts"
+  ],
+  "exports": {
+    "./base": {
+      "types": "./base.d.ts",
+      "default": "./base.js"
+    },
+    "./next": {
+      "types": "./next.d.ts",
+      "default": "./next.js"
+    }
+  },
+  "devDependencies": {
+    "eslint": "9",
+    "eslint-config-next": "16.2.0",
+    "eslint-config-prettier": "^10.1.8",
+    "typescript": "^5.9.3"
+  }
+}
