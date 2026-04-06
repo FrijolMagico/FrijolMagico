@@ -2,7 +2,6 @@ import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import siteData from '@/data/site.json'
 import { cn } from '@/utils/cn'
-import { paths } from '@/config/paths'
 const { top_bar } = siteData
 
 export const TopBarInfo = () => {
@@ -23,7 +22,9 @@ export const TopBarInfo = () => {
         </h2>
       </div>
       <Link
-        href={top_bar.button.active ? paths.festival[2025].schedule : '#'}
+        href={
+          top_bar.button.active ? 'https://forms.gle/ARFdjYmz3RbG9khV6' : '#'
+        }
         className={cn(
           'text-fm-white from-fm-orange to-fm-yellow rounded-lg bg-gradient-to-r [background-size:150%] px-4 py-0.5 font-bold transition-[background-position] duration-200 hover:bg-right',
           top_bar.button.active
