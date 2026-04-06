@@ -18,7 +18,6 @@ export const CatalogArtistCard = ({
   email,
   rrss,
   collective,
-  collectives,
   editions,
   orden,
   destacado
@@ -46,7 +45,6 @@ export const CatalogArtistCard = ({
       email,
       rrss,
       collective,
-      collectives,
       editions,
       orden,
       destacado

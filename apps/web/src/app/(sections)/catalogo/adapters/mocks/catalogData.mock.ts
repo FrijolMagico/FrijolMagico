@@ -24,23 +24,24 @@ export const getDataFromCatalogMock = (): CatalogArtist[] => {
       orden: (i + 1).toString().padStart(3, '0'),
       destacado: i < 5,
       collective: i % 3 === 0 ? `Colectivo ${Math.ceil((i + 1) / 3)}` : null,
-      collectives:
+      editions:
         i % 3 === 0
           ? [
               {
-                name: `Colectivo ${Math.ceil((i + 1) / 3)}`,
                 edicion: 'XV',
-                evento: 'Festival Frijol Magico'
+                evento: 'Festival Frijol Magico',
+                año: '2025',
+                via_agrupacion: `Colectivo ${Math.ceil((i + 1) / 3)}`
               }
             ]
-          : [],
-      editions: [
-        {
-          edicion: 'XV',
-          evento: 'Festival Frijol Magico',
-          año: '2025'
-        }
-      ]
+          : [
+              {
+                edicion: 'XV',
+                evento: 'Festival Frijol Magico',
+                año: '2025',
+                via_agrupacion: null
+              }
+            ]
     })),
     ...Array.from({ length: quantitys[1] }).map((_, i) => ({
       id: (i + quantitys[0] + 1).toString(),
@@ -56,12 +57,12 @@ export const getDataFromCatalogMock = (): CatalogArtist[] => {
       orden: (i + quantitys[0] + 1).toString().padStart(3, '0'),
       destacado: false,
       collective: null,
-      collectives: [],
       editions: [
         {
           edicion: 'XIV',
           evento: 'Festival Frijol Magico',
-          año: '2024'
+          año: '2024',
+          via_agrupacion: null
         }
       ]
     })),
@@ -79,17 +80,18 @@ export const getDataFromCatalogMock = (): CatalogArtist[] => {
       orden: (i + quantitys[0] + quantitys[1] + 1).toString().padStart(3, '0'),
       destacado: false,
       collective: null,
-      collectives: [],
       editions: [
         {
           edicion: 'XIII',
           evento: 'Festival Frijol Magico',
-          año: '2023'
+          año: '2023',
+          via_agrupacion: null
         },
         {
           edicion: 'XIV',
           evento: 'Festival Frijol Magico',
-          año: '2024'
+          año: '2024',
+          via_agrupacion: null
         }
       ]
     }))

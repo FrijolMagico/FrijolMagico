@@ -1,10 +1,10 @@
 import { z } from 'zod'
 
+import { getFirstRrssUrl } from '@frijolmagico/utils/rrss'
 import { getDisciplineLabel } from '@/app/(sections)/adapters/mappers/disciplineMapper'
 
 import {
   CatalogArtistFromDBSchema,
-  CollectiveParticipationSchema,
   EditionParticipationSchema
 } from './catalogDBSchema'
 
@@ -55,7 +55,7 @@ export const CatalogArtistSchema = CatalogArtistFromDBSchema.transform(
     name: data.name,
     slug: data.slug,
     email: data.email ?? '',
-    rrss: data.rrss ?? '',
+    rrss: getFirstRrssUrl(data.rrss, 'instagram'),
     city: data.city ?? '',
     country: data.country ?? '',
     bio: data.bio ?? '',
@@ -64,12 +64,11 @@ export const CatalogArtistSchema = CatalogArtistFromDBSchema.transform(
     avatar: formatAvatarUrl(data.avatar),
     category: data.category ? getDisciplineLabel(data.category) : null,
     collective: data.collective,
-    collectives: data.collectives,
     editions: data.editions
   })
 )
 
-export { CollectiveParticipationSchema, EditionParticipationSchema }
+export { EditionParticipationSchema }
 
 export type CatalogArtist = z.infer<typeof CatalogArtistSchema>
 export type Collective = z.infer<typeof CollectiveSchema>

@@ -4,7 +4,4 @@
  */
 export type { CatalogArtist, Collective } from '../schemas/catalogArtistSchema'
 
-export type {
-  CollectiveParticipation,
-  EditionParticipation
-} from '../schemas/catalogDBSchema'
+export type { EditionParticipation } from '../schemas/catalogDBSchema'

@@ -1,21 +1,15 @@
 import { z } from 'zod'
 
 /**
- * Schema para participación en un colectivo/agrupación
- */
-export const CollectiveParticipationSchema = z.object({
-  name: z.string(),
-  edicion: z.string(),
-  evento: z.string()
-})
-
-/**
- * Schema para participación en una edición del festival
+ * Schema para participación en una edición del festival.
+ * Incluye via_agrupacion para indicar cuando la participación
+ * fue a través de una agrupación.
  */
 export const EditionParticipationSchema = z.object({
   edicion: z.string(),
   evento: z.string(),
-  año: z.string().nullable().optional()
+  año: z.string().nullable().optional(),
+  via_agrupacion: z.string().nullable().optional()
 })
 
 /**
@@ -36,7 +30,6 @@ export const CatalogArtistFromDBSchema = z.object({
   avatar: z.string().nullable(),
   category: z.string().nullable(),
   collective: z.string().nullable(),
-  collectives: z.array(CollectiveParticipationSchema),
   editions: z.array(EditionParticipationSchema)
 })
 
@@ -47,9 +40,6 @@ export const RawCatalogResultSchema = z.object({
   resultado: z.string()
 })
 
-export type CollectiveParticipation = z.infer<
-  typeof CollectiveParticipationSchema
->
 export type EditionParticipation = z.infer<typeof EditionParticipationSchema>
 export type CatalogArtistFromDB = z.infer<typeof CatalogArtistFromDBSchema>
 export type RawCatalogResult = z.infer<typeof RawCatalogResultSchema>
