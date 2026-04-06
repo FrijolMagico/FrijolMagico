@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   experimental: {
     viewTransition: true
   },
+  cacheComponents: true,
   images: {
     remotePatterns: [
       {
