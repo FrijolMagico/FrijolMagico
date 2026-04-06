@@ -1,10 +1,14 @@
 import { artist } from '@frijolmagico/database/schema'
-import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
+import {
+  createInsertSchema,
+  createSelectSchema,
+  createUpdateSchema
+} from 'drizzle-zod'
 import z from 'zod'
 
 const artistImageTable = artist.artistImage
 
-export const artistImagenSelectSchema = createInsertSchema(artistImageTable, {})
+export const artistImagenSelectSchema = createSelectSchema(artistImageTable, {})
 
 export const artistImagenInsertSchema = createInsertSchema(artistImageTable, {
   artistaId: () => z.coerce.number().int().positive(),
