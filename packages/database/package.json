@@ -18,6 +18,10 @@
     "./filters": {
       "types": "./src/filters.ts",
       "default": "./src/filters.ts"
+    },
+    "./sql": {
+      "types": "./src/sql.ts",
+      "default": "./src/sql.ts"
     }
   },
   "scripts": {

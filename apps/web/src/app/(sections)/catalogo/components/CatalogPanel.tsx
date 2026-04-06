@@ -12,6 +12,57 @@ import { useAnalytics } from '@/components/analytics/useAnalytics'
 
 import type { CatalogArtist } from '../types/catalog'
 
+interface SortedEditionParticipation {
+  año?: string | null
+  edicion: string
+  evento: string
+  originalIndex: number
+}
+
+interface FestivalEditionGroup {
+  editions: SortedEditionParticipation[]
+  evento: string
+}
+
+const getYearSortValue = (año?: string | null): number => {
+  const parsedYear = Number.parseInt(año ?? '', 10)
+
+  return Number.isNaN(parsedYear) ? Number.MIN_SAFE_INTEGER : parsedYear
+}
+
+const groupFestivalParticipations = (
+  editions: CatalogArtist['editions']
+): FestivalEditionGroup[] => {
+  const sortedEditions: SortedEditionParticipation[] = editions
+    .map((edition, index) => ({
+      ...edition,
+      originalIndex: index
+    }))
+    .sort(
+      (a, b) =>
+        getYearSortValue(b.año) - getYearSortValue(a.año) ||
+        a.originalIndex - b.originalIndex
+    )
+
+  const groupedFestivals = sortedEditions.reduce((groups, edition) => {
+    const currentGroup = groups.get(edition.evento)
+
+    if (currentGroup) {
+      currentGroup.editions.push(edition)
+      return groups
+    }
+
+    groups.set(edition.evento, {
+      editions: [edition],
+      evento: edition.evento
+    })
+
+    return groups
+  }, new Map<string, FestivalEditionGroup>())
+
+  return Array.from(groupedFestivals.values())
+}
+
 export const CatalogPanel = ({
   catalogData
 }: {
@@ -82,6 +133,10 @@ export const CatalogPanel = ({
           artist.collective === selectedArtist.collective &&
           artist.id !== selectedArtist.id
       )
+    : []
+
+  const festivalParticipations = selectedArtist
+    ? groupFestivalParticipations(selectedArtist.editions)
     : []
 
   const handleChangePanelToCollectiveMember = (collectiveMemberId: string) => {
@@ -186,42 +241,30 @@ export const CatalogPanel = ({
                 </section>
               )}
 
-              {/* Historial de participaciones en colectivos */}
-              {selectedArtist.collectives.length > 0 && (
-                <section>
-                  <h4 className='mb-2 font-semibold'>
-                    Participaciones en Colectivos
-                  </h4>
-                  <ul className='space-y-1 text-sm'>
-                    {selectedArtist.collectives.map((participation, index) => (
-                      <li key={index} className='flex items-center gap-2'>
-                        <span className='bg-fm-orange/10 text-fm-orange rounded px-2 py-0.5 text-xs'>
-                          {participation.edicion}
-                        </span>
-                        <span>{participation.name}</span>
-                        <span className='text-gray-500'>
-                          ({participation.evento})
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              )}
-
               {/* Ediciones en las que ha participado */}
-              {selectedArtist.editions.length > 0 && (
-                <section>
-                  <h4 className='mb-2 font-semibold'>
+              {festivalParticipations.length > 0 && (
+                <section className='space-y-3'>
+                  <h4 className='font-semibold'>
                     Participaciones en Festivales
                   </h4>
-                  <ul className='flex flex-wrap gap-2'>
-                    {selectedArtist.editions.map((edition, index) => (
-                      <li
-                        key={index}
-                        className='bg-fm-green/10 text-fm-green rounded px-2 py-1 text-xs'
-                      >
-                        {edition.evento} {edition.edicion}
-                        {edition.año && ` (${edition.año})`}
+                  <ul className='space-y-4 pl-2'>
+                    {festivalParticipations.map((festival) => (
+                      <li key={festival.evento} className='space-y-2 pl-2'>
+                        <p className='text-sm font-semibold'>
+                          {festival.evento}
+                        </p>
+                        <ul className='flex flex-wrap gap-2 pl-2'>
+                          {festival.editions.map((edition) => (
+                            <li
+                              key={`${festival.evento}-${edition.edicion}-${edition.año ?? 'sin-año'}`}
+                            >
+                              <span className='bg-fm-green/10 text-fm-green rounded px-2 py-1 text-xs'>
+                                {edition.edicion}
+                                {edition.año && ` (${edition.año})`}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
                       </li>
                     ))}
                   </ul>

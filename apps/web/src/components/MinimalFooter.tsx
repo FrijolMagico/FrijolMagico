@@ -8,8 +8,7 @@ export const MinimalFooter = () => {
 
       <div className='bg-2025-orange/80 rounded-2xl px-4'>
         <p className='font-josefin text-2025-white -mb-1.5 pt-1.5 text-center text-lg leading-none font-black'>
-          Frijol Mágico{' '}
-          <span className='text-2025-yellow'>{new Date().getFullYear()} </span>
+          Frijol Mágico <span className='text-2025-yellow'>2026 </span>
           🌱
         </p>
         <Link

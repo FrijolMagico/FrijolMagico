@@ -1,3 +1,4 @@
+import { cacheTag } from 'next/cache'
 import { aboutRepository } from '../adapters/aboutRepository'
 
 import type { AboutData } from '../types/about'
@@ -7,6 +8,9 @@ export async function getAboutData(): Promise<{
   data: AboutData | null
   error: ErrorObject
 }> {
+  'use cache'
+  cacheTag('web:nosotros')
+
   try {
     const data = await aboutRepository()
     return { data, error: null }

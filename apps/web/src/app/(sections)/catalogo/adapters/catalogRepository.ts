@@ -9,7 +9,7 @@ import type { RawCatalogResult } from '../types/catalogDB'
 import { CATALOG_QUERY } from './queries/catalogoQuery'
 
 export async function catalogRepository(): Promise<CatalogArtist[]> {
-  const source = getDataSource({ prod: 'database' })
+  const source = getDataSource({ prod: 'database', dev: 'local' })
 
   if (source === 'local' || source === 'database') {
     const { data, error } = await executeQuery<RawCatalogResult>(

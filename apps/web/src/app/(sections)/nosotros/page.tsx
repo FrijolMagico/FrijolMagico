@@ -50,9 +50,10 @@ export default async function NosotrosPage() {
                 <h2 className='font-noto text-fm-orange text-right text-5xl font-black lg:text-7xl'>
                   Misión
                 </h2>
-                <p className='text-fm-black text-right text-sm leading-relaxed lg:text-lg'>
-                  {data?.mision}
-                </p>
+                <p
+                  className='text-fm-black text-right text-sm leading-relaxed lg:text-lg'
+                  dangerouslySetInnerHTML={{ __html: data?.mision ?? '' }}
+                />
               </article>
             </GridItem>
             <GridItem
@@ -96,9 +97,10 @@ export default async function NosotrosPage() {
                 <h2 className='font-noto text-fm-orange text-5xl font-black lg:text-7xl'>
                   Visión
                 </h2>
-                <p className='text-fm-black text-sm leading-relaxed lg:text-lg'>
-                  {data?.vision}
-                </p>
+                <p
+                  className='text-fm-black text-sm leading-relaxed lg:text-lg'
+                  dangerouslySetInnerHTML={{ __html: data?.vision ?? '' }}
+                />
               </article>
             </GridItem>
 

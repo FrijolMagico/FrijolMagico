@@ -7,13 +7,15 @@
     "./string": "./src/string.ts",
     "./url": "./src/url.ts",
     "./css": "./src/css.ts",
-    "./shallow-diff": "./src/shallow-diff.ts"
+    "./shallow-diff": "./src/shallow-diff.ts",
+    "./rrss": "./src/rrss.ts"
   },
   "files": [
     "./src/string.ts",
     "./src/url.ts",
     "./src/css.ts",
-    "./src/shallow-diff.ts"
+    "./src/shallow-diff.ts",
+    "./src/rrss.ts"
   ],
   "devDependencies": {
     "@frijolmagico/eslint-config": "workspace:*",

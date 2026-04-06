@@ -28,7 +28,7 @@ export const FestivalesTimelineContent = ({
     nombre: f.evento.nombre,
     edicion: f.evento.edicion,
     eventoId: f.evento.evento_id,
-    year: new Date(f.evento.dias[0].fecha).getFullYear()
+    year: 2026
   }))
 
   return (
@@ -46,7 +46,7 @@ export const FestivalesTimelineContent = ({
             <div className='flex flex-col items-center'>
               <div className='bg-fm-orange/10 text-fm-orange relative mx-auto flex size-32 flex-col items-center justify-center rounded-full'>
                 <span className='font-josefin landing-0 block text-3xl font-black'>
-                  {new Date().getFullYear()}
+                  2026
                 </span>
                 <span className='block text-center leading-0'>y más...</span>
               </div>
