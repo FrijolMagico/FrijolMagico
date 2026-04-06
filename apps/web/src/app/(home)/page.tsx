@@ -5,10 +5,10 @@ import { HeroCard } from './components/HeroCard'
 import { LogoHomeLink } from '@/components/LogoHomeLink'
 import { SpotifyCard } from './components/SpotifyCard'
 import { RRSSCard } from './components/RRSSCard'
-import { Festival2025Card } from './components/Festival2025Card'
 import { DoodleLine } from '@/components/DoodleLine'
 import { ViewTransition } from 'react'
 import { NosotrosCard } from './components/NosotrosCard'
+import { GenericApplyCard } from './components/GenericApplyCard'
 
 export default function Home() {
   return (
@@ -31,7 +31,7 @@ export default function Home() {
           row={{ base: 2, sm: 2, lg: 2 }}
           col={{ base: 1, sm: 3, lg: 3 }}
         >
-          <Festival2025Card />
+          <GenericApplyCard />
         </GridItem>
         <GridItem
           row={{ base: 2, sm: 2, lg: 2 }}
