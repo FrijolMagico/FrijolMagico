@@ -174,6 +174,7 @@ import { createInsertSchema, createUpdateSchema } from 'drizzle-zod'
 - Export backward-compat aliases if needed: `export const artistaSchema = artistaInsertSchema`
 
 <!-- VERCEL BEST PRACTICES START -->
+
 ## Best practices for developing on Vercel
 
 These defaults are optimized for AI coding agents (and humans) working on apps that deploy to Vercel.

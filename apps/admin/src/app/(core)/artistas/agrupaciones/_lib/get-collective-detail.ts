@@ -74,7 +74,10 @@ export async function getCollectiveDetail(
             city: artistTable.ciudad
           })
           .from(collectiveArtist)
-          .innerJoin(artistTable, eq(artistTable.id, collectiveArtist.artistaId))
+          .innerJoin(
+            artistTable,
+            eq(artistTable.id, collectiveArtist.artistaId)
+          )
           .where(
             and(
               inArray(collectiveArtist.agrupacionId, collectiveIds),
