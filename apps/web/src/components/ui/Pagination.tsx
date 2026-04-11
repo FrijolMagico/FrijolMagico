@@ -138,7 +138,7 @@ export function Pagination({
         className
       )}
     >
-      <div className='text-fm-dark/80 text-sm whitespace-nowrap'>
+      <div className='text-foreground/80 text-sm whitespace-nowrap'>
         Mostrando{' '}
         <span className='font-medium'>
           {(currentPage - 1) * itemsPerPage + 1}-

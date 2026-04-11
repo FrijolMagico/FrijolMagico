@@ -5,10 +5,5 @@ export default function CatalogLayout({
 }: {
   children: React.ReactNode
 }) {
-  return (
-    <>
-      {children}
-      <Footer />
-    </>
-  )
+  return <>{children}</>
 }

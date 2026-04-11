@@ -7,7 +7,7 @@ export const CatalogCardLoader = () => {
         {[...Array(11)].map((_, i) => (
           <li
             key={i}
-            className='bg-fm-black/10 relative flex h-[130px] w-full animate-pulse flex-col items-center justify-center rounded-xl sm:max-w-xs lg:max-w-sm'
+            className='bg-foreground/10 relative flex h-[130px] w-full animate-pulse flex-col items-center justify-center rounded-xl sm:max-w-xs lg:max-w-sm'
           ></li>
         ))}
       </ul>
@@ -18,16 +18,16 @@ export const CatalogCardLoader = () => {
 export const CatalogFiltersBarLoader = () => {
   return (
     <div className='flex flex-wrap justify-center gap-4'>
-      <div className='bg-fm-black/10 flex h-8 w-28 animate-pulse rounded-xl px-3 py-1.5'></div>
-      <div className='bg-fm-black/10 flex h-8 w-28 animate-pulse rounded-xl px-3 py-1.5'></div>
-      <div className='bg-fm-black/10 flex h-8 w-28 animate-pulse rounded-xl px-3 py-1.5'></div>
+      <div className='bg-foreground/10 flex h-8 w-28 animate-pulse rounded-xl px-3 py-1.5'></div>
+      <div className='bg-foreground/10 flex h-8 w-28 animate-pulse rounded-xl px-3 py-1.5'></div>
+      <div className='bg-foreground/10 flex h-8 w-28 animate-pulse rounded-xl px-3 py-1.5'></div>
     </div>
   )
 }
 
 export const CatalogSearchBarLoader = () => {
   return (
-    <div className='bg-fm-black/10 h-8 w-full max-w-md animate-pulse rounded-xl px-3' />
+    <div className='bg-foreground/10 h-8 w-full max-w-md animate-pulse rounded-xl px-3' />
   )
 }
 

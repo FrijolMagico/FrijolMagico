@@ -23,11 +23,11 @@ export function Button({
     'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none'
 
   const variants = {
-    default: 'bg-fm-orange text-fm-white hover:bg-fm-orange/90',
+    default: 'bg-secondary text-background hover:bg-secondary/90',
     outline:
-      'border border-fm-green/30 border-dashed text-fm-black/90 bg-fm-white hover:bg-fm-black/20',
-    ghost: 'hover:bg-fm-orange/50 hover:text-fm-white text-fm-black/90',
-    link: 'text-fm-green underline-offset-4 hover:underline'
+      'border border-primary/30 border-dashed text-foreground/90 bg-background hover:bg-foreground/20',
+    ghost: 'hover:bg-secondary/50 hover:text-background text-foreground/90',
+    link: 'text-primary underline-offset-4 hover:underline'
   }
 
   const sizes = {

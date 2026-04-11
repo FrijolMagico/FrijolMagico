@@ -42,7 +42,7 @@ export const BackToTop = () => {
       aria-label='Navegar hacia arriba'
       className={`${
         visible ? 'cursor-pointer opacity-100' : 'cursor-default opacity-0'
-      } bg-flexible-orange text-flexible-white transition-150 fixed bottom-4 left-4 z-50 aspect-square w-10 transform-gpu rounded-full transition-[transform,opacity] hover:scale-105`}
+      } bg-secondary text-background transition-150 fixed bottom-8 left-8 z-50 aspect-square w-10 transform-gpu rounded-full transition-[transform,opacity] hover:scale-105`}
       onClick={handleOnClick}
     >
       <ArrowUp className='mx-auto' />

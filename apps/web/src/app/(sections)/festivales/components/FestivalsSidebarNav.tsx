@@ -42,13 +42,13 @@ export const FestivalsSidebarNav = ({ items }: FestivalsSidebarNavProps) => {
         <div
           className={cn(
             'flex items-center gap-2',
-            activeId ? 'text-fm-black' : 'text-fm-orange'
+            activeId ? 'text-foreground' : 'text-secondary'
           )}
         >
           <div
             className={cn(
               'size-2 shrink-0 rounded-full',
-              activeId ? 'bg-fm-black/50' : 'bg-fm-orange/50'
+              activeId ? 'bg-foreground/50' : 'bg-secondary/50'
             )}
             aria-hidden='true'
           />
@@ -59,7 +59,7 @@ export const FestivalsSidebarNav = ({ items }: FestivalsSidebarNavProps) => {
       </div>
 
       {/* Divider */}
-      <div className='bg-fm-black/10 mx-2 h-px' aria-hidden='true' />
+      <div className='bg-foreground/10 mx-2 h-px' aria-hidden='true' />
 
       {items.map((item) => {
         const isActive = activeId === item.id
@@ -73,11 +73,11 @@ export const FestivalsSidebarNav = ({ items }: FestivalsSidebarNavProps) => {
             aria-current={isActive ? 'location' : undefined}
             aria-label={`Navegar a ${item.nombre} - Edición ${item.edicion}`}
             className={cn(
-              'group hover:bg-fm-black/5 outline-fm-black/50 relative flex cursor-pointer gap-2 rounded-lg px-3 py-2 text-left outline transition-all duration-300 outline-dashed',
+              'group hover:bg-foreground/5 outline-foreground/50 relative flex cursor-pointer gap-2 rounded-lg px-3 py-2 text-left outline transition-all duration-300 outline-dashed',
               isActive &&
                 (isOrangeEvent
-                  ? 'bg-fm-orange/20 outline-fm-orange'
-                  : 'bg-fm-green/20 outline-fm-green')
+                  ? 'bg-secondary/20 outline-secondary'
+                  : 'bg-primary/20 outline-primary')
             )}
           >
             {/* Active indicator dot */}
@@ -86,9 +86,9 @@ export const FestivalsSidebarNav = ({ items }: FestivalsSidebarNavProps) => {
                 'mt-1 size-2 shrink-0 rounded-full transition-all duration-300',
                 isActive
                   ? isOrangeEvent
-                    ? 'bg-fm-orange scale-100'
-                    : 'bg-fm-green scale-100'
-                  : 'bg-fm-black/20 scale-75'
+                    ? 'bg-secondary scale-100'
+                    : 'bg-primary scale-100'
+                  : 'bg-foreground/20 scale-75'
               )}
               aria-hidden='true'
             />
@@ -100,9 +100,9 @@ export const FestivalsSidebarNav = ({ items }: FestivalsSidebarNavProps) => {
                   'truncate text-xs font-semibold tracking-wide uppercase transition-colors duration-300',
                   isActive
                     ? isOrangeEvent
-                      ? 'text-fm-orange'
-                      : 'text-fm-green'
-                    : 'text-fm-black/50 group-hover:text-fm-black/70'
+                      ? 'text-secondary'
+                      : 'text-primary'
+                    : 'text-foreground/50 group-hover:text-foreground/70'
                 )}
               >
                 {item.nombre} <strong>{item.edicion}</strong>
@@ -113,7 +113,7 @@ export const FestivalsSidebarNav = ({ items }: FestivalsSidebarNavProps) => {
       })}
 
       {/* Divider */}
-      <div className='bg-fm-black/10 mx-2 h-px' aria-hidden='true' />
+      <div className='bg-foreground/10 mx-2 h-px' aria-hidden='true' />
     </nav>
   )
 }

@@ -16,7 +16,7 @@ export const FestivalPoster = ({
   isActive,
   priority = false
 }: FestivalPosterProps) => (
-  <div className='bg-fm-black/5 relative aspect-283/400 w-72 shrink-0 overflow-hidden rounded-3xl'>
+  <div className='bg-foreground/5 relative aspect-283/400 w-72 shrink-0 overflow-hidden rounded-3xl'>
     {posterUrl ? (
       <>
         <Image
@@ -31,11 +31,11 @@ export const FestivalPoster = ({
             isActive && 'scale-110'
           )}
         />
-        <div className='from-fm-black/60 via-fm-black/10 absolute inset-0 bg-linear-to-t to-transparent opacity-80 mix-blend-multiply transition-opacity duration-500 group-hover:opacity-0' />
+        <div className='from-foreground/60 via-foreground/10 absolute inset-0 bg-linear-to-t to-transparent opacity-80 mix-blend-multiply transition-opacity duration-500 group-hover:opacity-0' />
       </>
     ) : (
-      <div className='from-fm-orange to-fm-yellow flex size-full items-center justify-center bg-linear-to-br'>
-        <span className='text-fm-white text-7xl leading-none font-black drop-shadow-lg'>
+      <div className='from-secondary to-accent flex size-full items-center justify-center bg-linear-to-br'>
+        <span className='text-background text-7xl leading-none font-black drop-shadow-lg'>
           {edicion}
         </span>
       </div>

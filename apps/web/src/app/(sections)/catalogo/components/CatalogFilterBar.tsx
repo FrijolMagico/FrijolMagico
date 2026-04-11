@@ -125,7 +125,7 @@ export const CatalogFilterBar = ({ catalogData }: CatalogFilterBarProps) => {
           onClick={() =>
             setFilters({ city: [], category: [], search: '', country: [] })
           }
-          className='border-fm-orange/30 bg-fm-orange/80 text-fm-white hover:bg-fm-orange flex cursor-pointer items-center gap-2 rounded-xl border border-dashed px-3 py-1.5 text-sm transition-colors'
+          className='border-secondary/30 bg-secondary/80 text-background hover:bg-secondary flex cursor-pointer items-center gap-2 rounded-xl border border-dashed px-3 py-1.5 text-sm transition-colors'
         >
           <span>Limpiar filtros</span>
         </button>

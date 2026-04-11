@@ -6,7 +6,7 @@ export const Header = ({
   title,
   subTitle,
   description,
-  doodleColor = 'text-fm-green',
+  doodleColor = 'text-primary',
   fontFamily,
   textColor,
   fontSize
@@ -114,9 +114,9 @@ const defaultFontFamily: StylesClassProps = {
 
 const defaultTextColor: StylesClassProps = {
   titleClass:
-    'from-flexible-orange to-flexible-yellow bg-gradient-to-r bg-clip-text text-transparent',
-  subTitleClass: 'text-flexible-orange',
-  descriptionClass: 'text-flexible-green'
+    'from-secondary to-accent bg-gradient-to-r bg-clip-text text-transparent',
+  subTitleClass: 'text-secondary',
+  descriptionClass: 'text-primary'
 }
 
 const defaultFontSize: StylesClassProps = {

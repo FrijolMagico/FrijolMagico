@@ -8,3 +8,9 @@ export interface BaseArtist {
   category: Categories
   rrss: string
 }
+
+export interface FeaturedArtist {
+  pseudonimo: string
+  slug: string
+  imagen_url: string
+}

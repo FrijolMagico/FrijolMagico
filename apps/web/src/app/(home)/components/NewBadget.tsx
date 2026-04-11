@@ -1,9 +1,9 @@
 import { cn } from '@/utils/cn'
 
 export const NewBadget = ({
-  color = 'text-fm-orange',
-  backgroundColor = 'bg-fm-white',
-  outlineColor = 'outline-fm-white'
+  color = 'text-secondary',
+  backgroundColor = 'bg-background',
+  outlineColor = 'outline-background'
 }) => {
   return (
     <span

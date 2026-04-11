@@ -47,11 +47,11 @@ export default async function NosotrosPage() {
               className='order-0 flex items-center'
             >
               <article className='space-y-3'>
-                <h2 className='font-noto text-fm-orange text-right text-5xl font-black lg:text-7xl'>
+                <h2 className='font-noto text-secondary text-right text-5xl font-black lg:text-7xl'>
                   Misión
                 </h2>
                 <p
-                  className='text-fm-black text-right text-sm leading-relaxed lg:text-lg'
+                  className='text-foreground text-right text-sm leading-relaxed lg:text-lg'
                   dangerouslySetInnerHTML={{ __html: data?.mision ?? '' }}
                 />
               </article>
@@ -94,11 +94,11 @@ export default async function NosotrosPage() {
               className='order-2 flex items-center md:order-0'
             >
               <article className='space-y-3'>
-                <h2 className='font-noto text-fm-orange text-5xl font-black lg:text-7xl'>
+                <h2 className='font-noto text-secondary text-5xl font-black lg:text-7xl'>
                   Visión
                 </h2>
                 <p
-                  className='text-fm-black text-sm leading-relaxed lg:text-lg'
+                  className='text-foreground text-sm leading-relaxed lg:text-lg'
                   dangerouslySetInnerHTML={{ __html: data?.vision ?? '' }}
                 />
               </article>
