@@ -6,6 +6,7 @@ import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { eq, and, max } from 'drizzle-orm'
 import { requireAuth } from '@/shared/lib/auth/utils'
+import { invalidateWebFeaturedArtists } from '@/shared/lib/web-invalidation'
 import type { ActionState } from '@/shared/types/actions'
 import {
   type CatalogUpdateInput,
@@ -108,6 +109,7 @@ export async function updateCatalogAction(
     .where(eq(artist.catalogArtist.id, id))
 
   updateTag(CATALOG_CACHE_TAG)
+  void invalidateWebFeaturedArtists()
 
   return { success: true }
 }

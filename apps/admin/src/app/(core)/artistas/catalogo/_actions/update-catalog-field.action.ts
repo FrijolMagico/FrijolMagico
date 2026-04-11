@@ -6,6 +6,7 @@ import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { eq } from 'drizzle-orm'
 import { requireAuth } from '@/shared/lib/auth/utils'
+import { invalidateWebFeaturedArtists } from '@/shared/lib/web-invalidation'
 import {
   catalogFieldUpdateSchema,
   type CatalogFieldUpdateInput
@@ -37,6 +38,7 @@ export async function updateCatalogFieldAction(
     .where(eq(artist.catalogArtist.id, id))
 
   updateTag(CATALOG_CACHE_TAG)
+  void invalidateWebFeaturedArtists()
 
   return { success: true }
 }
