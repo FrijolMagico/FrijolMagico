@@ -3,7 +3,6 @@ import { ErrorSection } from '@/components/ErrorSection'
 import siteData from '@/data/site.json'
 import { getFestivalesData } from './lib/getFestivalesData'
 import { FestivalesTimeline } from './components/FestivalesTimeline'
-import { Footer } from '@/components/Footer'
 import { TrackPageView } from '@/components/analytics/TrackPageView'
 import { ViewTransition } from 'react'
 import { SectionHomeButton } from '@/components/SectionsHomeButton'
@@ -30,7 +29,6 @@ export default async function FestivalesPage() {
       ) : (
         <FestivalesTimeline festivales={festivales} />
       )}
-      <Footer />
     </>
   )
 }
