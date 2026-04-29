@@ -4,8 +4,7 @@ import { FissureBanner } from './components/FissureBanner'
 import { HeroSection } from './components/HeroSection'
 import { getAvatarUrl } from '@frijolmagico/utils/cdn'
 import Image from 'next/image'
-import Link from 'next/link'
-import { ArrowRight, StarIcon } from 'lucide-react'
+import { StarIcon } from 'lucide-react'
 import { DoodleLine } from '@/components/DoodleLine'
 import { LinkBtn } from '@/components/LinkBtn'
 import { paths } from '@/config/paths'
@@ -17,16 +16,17 @@ export default async function Home() {
     <>
       <FissureBanner height={400}>
         <ApplyBanner
-          description='¡Crea el próximo afiche del Festival Frijol Mágico 2026!'
+          title='Postulación'
+          description='Frijol Mágico: Módulos de formación profesional'
           buttons={{
             apply: {
               text: 'Postula aquí',
-              href: 'https://forms.gle/ARFdjYmz3RbG9khV6',
+              href: 'https://docs.google.com/forms/d/e/1FAIpQLSdHPZtRBDqlOFjXvoU06BMrZcrvnKPQIdRzdffev4dMdwZr0Q/viewform',
               target: '_blank'
             },
             bases: {
               text: 'Lee las Bases',
-              href: 'https://drive.google.com/file/d/134sWOpUBxplRwzQHQM27RESKXMurLTfj/view?usp=sharing',
+              href: 'https://drive.google.com/file/d/162s1nFGUmIXdvY1D8ubKAOdgU4fu9_ye/view?usp=sharing',
               target: '_blank'
             }
           }}

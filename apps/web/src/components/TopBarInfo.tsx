@@ -23,7 +23,9 @@ export const TopBarInfo = () => {
       </div>
       <Link
         href={
-          top_bar.button.active ? 'https://forms.gle/ARFdjYmz3RbG9khV6' : '#'
+          top_bar.button.active
+            ? 'https://drive.google.com/file/d/162s1nFGUmIXdvY1D8ubKAOdgU4fu9_ye/view?usp=sharing'
+            : '#'
         }
         className={cn(
           'to-secondary from-accent background-size-[150%] rounded-lg bg-linear-to-r px-4 py-0.5 font-bold text-white transition-[background-position] duration-200 hover:bg-right',

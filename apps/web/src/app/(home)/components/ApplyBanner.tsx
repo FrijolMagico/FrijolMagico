@@ -29,17 +29,17 @@ export function ApplyBanner({
       data-palette={palette}
       className='bg-palette-background relative flex h-full w-full items-center justify-center'
     >
-      <div className='-mt-18 w-screen max-w-xl space-y-4'>
+      <div className='-mt-18 w-screen max-w-xl space-y-6'>
         <div>
           <span className='font-roboto-mono text-palette-foreground text-md block text-center font-light'>
             Nueva
           </span>
-          <h2 className='wavy-underline text-palette-accent text-center text-4xl font-bold tracking-wide uppercase lg:text-6xl'>
+          <h2 className='wavy-underline text-palette-accent text-center text-2xl font-bold tracking-wide uppercase lg:text-3xl'>
             {title}
           </h2>
         </div>
         {description && (
-          <p className='text-palette-foreground text-center text-xl lg:text-2xl'>
+          <p className='text-palette-foreground text-center text-3xl font-bold lg:text-4xl'>
             {description}
           </p>
         )}
