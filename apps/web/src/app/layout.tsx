@@ -54,6 +54,24 @@ const robotoMono = Roboto_Mono({
   subsets: ['latin']
 })
 
+const canarinaFont = localFont({
+  src: [
+    {
+      path: '../../public/fonts/canarina/Canarina-Chica.woff2',
+      weight: '200'
+    },
+    {
+      path: '../../public/fonts/canarina/Canarina-Mediana.woff2',
+      weight: '400'
+    },
+    {
+      path: '../../public/fonts/canarina/Canarina-Grande.woff2',
+      weight: '600'
+    }
+  ],
+  variable: '--font-canarina'
+})
+
 export const metadata: Metadata = {
   title: SITE.title,
   description: SITE.description,
@@ -97,7 +115,8 @@ export default function RootLayout({
           superFortress.variable,
           rubik.variable,
           rubikBubbles.variable,
-          robotoMono.variable
+          robotoMono.variable,
+          canarinaFont.variable
         )}
       >
         <GoogleAnalytics />

@@ -26,8 +26,8 @@ export const Footer = () => {
         <BackToTop />
         <div className='grid w-full items-center justify-center gap-12 py-10 lg:grid-cols-3 lg:gap-4'>
           <section className='max-w-md'>
-            <div className='flex'>
-              <h2 className='font-rubik-bubbles text-accent text-stroke-1 text-stroke-background block text-6xl uppercase md:text-7xl'>
+            <div className='grid grid-cols-2 gap-4'>
+              <h2 className='font-canarina text-accent text-stroke-1 text-stroke-background block text-6xl font-bold tracking-wide uppercase md:text-7xl'>
                 Frijol Mágico
               </h2>
               <Image
@@ -35,7 +35,7 @@ export const Footer = () => {
                 alt='Logo Frijol Mágico'
                 width={120}
                 height={100}
-                className='mr-6 h-20 self-end md:h-fit'
+                className='h-20 self-end md:h-fit'
               />
             </div>
             <p className='font-roboto-mono text-background/60 text-xs font-extralight tracking-wider uppercase'>

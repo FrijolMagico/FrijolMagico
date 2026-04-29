@@ -15,7 +15,7 @@ export function HeroSection() {
     <header className='mx-auto h-fit max-w-6xl space-y-10'>
       <section>
         <div className='relative h-fit w-full'>
-          <h1 className='font-rubik-bubbles text-stroke-1 lg:text-stroke-2 text-stroke-foreground text-secondary text-center text-[5rem] leading-none uppercase md:text-[10rem] lg:text-[12rem]'>
+          <h1 className='font-canarina text-stroke-1 lg:text-stroke-3 text-stroke-foreground text-secondary text-center text-[5rem] leading-none font-bold uppercase md:text-[10rem] lg:text-[12rem]'>
             Frijol Mágico
           </h1>
           <ViewTransition name='transition-logo'>
