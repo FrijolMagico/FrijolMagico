@@ -10,7 +10,7 @@ export interface FestivalsSidebarNavItem {
   nombre: string
   edicion: string
   eventoId: number
-  year: number
+  year: string
 }
 
 interface FestivalsSidebarNavProps {
@@ -53,7 +53,7 @@ export const FestivalsSidebarNav = ({ items }: FestivalsSidebarNavProps) => {
             aria-hidden='true'
           />
           <span className='text-xl font-bold'>
-            {activeId ? items.find((i) => i.id === activeId)?.year : 2026}
+            {activeId ? items.find((i) => i.id === activeId)?.year : 2015}
           </span>
         </div>
       </div>

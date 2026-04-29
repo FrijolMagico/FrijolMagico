@@ -28,7 +28,7 @@ export const FestivalesTimelineContent = ({
     nombre: f.evento.nombre,
     edicion: f.evento.edicion,
     eventoId: f.evento.evento_id,
-    year: 2026
+    year: f.evento.dias[0].fecha.split('-')[0]
   }))
 
   return (
@@ -46,9 +46,11 @@ export const FestivalesTimelineContent = ({
             <div className='flex flex-col items-center'>
               <div className='bg-secondary/10 text-secondary relative mx-auto flex size-32 flex-col items-center justify-center rounded-full'>
                 <span className='font-josefin landing-0 block text-3xl font-black'>
-                  2026
+                  2015
                 </span>
-                <span className='block text-center leading-0'>y más...</span>
+                <span className='block text-center leading-none'>
+                  La historia comienza
+                </span>
               </div>
 
               <svg
@@ -154,11 +156,9 @@ export const FestivalesTimelineContent = ({
               </svg>
               <div className='bg-primary/10 text-primary relative mx-auto flex size-32 flex-col items-center justify-center rounded-full'>
                 <span className='font-josefin landing-0 block text-3xl font-black'>
-                  2016
+                  2026
                 </span>
-                <span className='block text-center leading-none'>
-                  La historia comienza
-                </span>
+                <span className='block text-center leading-0'>y más...</span>
               </div>
             </div>
           </div>
