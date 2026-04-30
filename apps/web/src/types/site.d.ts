@@ -10,6 +10,7 @@ declare module '@/data/site.json' {
     social_media: {
       ig: string
       fb: string
+      yt: string
     }
     top_banner: {
       text: string

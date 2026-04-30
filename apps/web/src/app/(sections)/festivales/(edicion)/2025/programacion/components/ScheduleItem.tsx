@@ -17,7 +17,7 @@ export const ScheduleItem = ({
   return (
     <li
       className={cn([
-        'hover:text-2025-white text-fm-black before:bg-2025-white after:bg-fm-black',
+        'hover:text-2025-white text-foreground before:bg-2025-white after:bg-foreground',
         'group relative grid h-fit min-h-44 w-full max-w-[340px] gap-4 px-4 pt-8 leading-4 shadow-lg duration-300',
         "before:absolute before:-z-20 before:h-full before:w-full before:rounded-xl before:content-['']",
         "after:absolute after:bottom-0 after:-z-10 after:h-7 after:w-full after:rounded-b-xl after:duration-300 after:content-[''] hover:after:h-full hover:after:rounded-t-xl"
@@ -25,7 +25,7 @@ export const ScheduleItem = ({
     >
       <ScheduleItemLabel text={activityType} />
       <header>
-        <h2 className='group-hover:text-2025-yellow text-fm-black font-bold tracking-wide uppercase duration-300'>
+        <h2 className='group-hover:text-2025-yellow text-foreground font-bold tracking-wide uppercase duration-300'>
           {title}
         </h2>
         <ScheduleSpeakerName
@@ -40,7 +40,7 @@ export const ScheduleItem = ({
         </div>
         <p className='text-sm leading-5'>{description}</p>
       </section>
-      <footer className='text-fm-white flex h-fit min-h-8 w-full items-center justify-center gap-2 self-end text-center'>
+      <footer className='text-background flex h-fit min-h-8 w-full items-center justify-center gap-2 self-end text-center'>
         {!!infoLink && (
           <>
             <a

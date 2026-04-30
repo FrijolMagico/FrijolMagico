@@ -155,7 +155,7 @@ export const CatalogPanel = ({
   return (
     <div
       className={cn(
-        'text-fm-black fixed inset-0 z-50 overflow-hidden backdrop-blur-sm transition-opacity duration-300',
+        'text-foreground fixed inset-0 z-50 overflow-hidden backdrop-blur-sm transition-opacity duration-300',
         isVisible ? 'opacity-100' : 'pointer-events-none opacity-0'
       )}
       aria-label='Panel de detalles del artista'
@@ -168,7 +168,7 @@ export const CatalogPanel = ({
 
       <aside
         className={cn(
-          'bg-fm-white fixed inset-0 w-full max-w-md shadow-xl transition-transform duration-300 ease-in-out sm:top-4 sm:right-4 sm:bottom-4 sm:left-auto sm:rounded-2xl',
+          'bg-background fixed inset-0 w-full max-w-md shadow-xl transition-transform duration-300 ease-in-out sm:top-4 sm:right-4 sm:bottom-4 sm:left-auto sm:rounded-2xl',
           isVisible ? 'translate-x-0' : 'translate-x-full'
         )}
         aria-labelledby='artist-details-heading'
@@ -180,7 +180,7 @@ export const CatalogPanel = ({
             </h2>
             <button
               onClick={() => setArtistPanelOpen(false)}
-              className='hover:text-fm-orange cursor-pointer rounded-full p-1 transition duration-150 hover:scale-110'
+              className='hover:text-secondary cursor-pointer rounded-full p-1 transition duration-150 hover:scale-110'
               aria-label='Cerrar panel'
             >
               <X className='h-6 w-6' />
@@ -195,18 +195,18 @@ export const CatalogPanel = ({
                     src={selectedArtist.avatar}
                     alt={`Imagen de ${selectedArtist.name}`}
                     fill
-                    className='border-fm-green rounded-full border-2 object-cover'
+                    className='border-primary rounded-full border-2 object-cover'
                   />
                 </figure>
                 <div>
-                  <h3 className='text-fm-orange text-2xl leading-none font-bold'>
+                  <h3 className='text-secondary text-2xl leading-none font-bold'>
                     {selectedArtist.name}
                   </h3>
                   <p className='text-sm text-gray-600'>
                     {selectedArtist.city} - {selectedArtist.country}
                   </p>
                   {selectedArtist.category && (
-                    <span className='bg-fm-green/10 text-fm-green mt-1 inline-block rounded-sm px-2 py-1 text-xs'>
+                    <span className='bg-primary/10 text-primary mt-1 inline-block rounded-sm px-2 py-1 text-xs'>
                       {selectedArtist.category}
                     </span>
                   )}
@@ -216,7 +216,7 @@ export const CatalogPanel = ({
               {/* Colectivo actual y miembros */}
               {selectedArtist.collective && (
                 <section>
-                  <p className='text-fm-black'>
+                  <p className='text-foreground'>
                     <strong>Colectivo</strong>: {selectedArtist.collective}
                   </p>
                   {collectiveMembers.length > 0 && (
@@ -229,7 +229,7 @@ export const CatalogPanel = ({
                               onClick={() =>
                                 handleChangePanelToCollectiveMember(member.id)
                               }
-                              className='text-fm-orange cursor-pointer hover:underline'
+                              className='text-secondary cursor-pointer hover:underline'
                             >
                               {member.name}
                             </button>
@@ -258,7 +258,7 @@ export const CatalogPanel = ({
                             <li
                               key={`${festival.evento}-${edition.edicion}-${edition.año ?? 'sin-año'}`}
                             >
-                              <span className='bg-fm-green/10 text-fm-green rounded px-2 py-1 text-xs'>
+                              <span className='bg-primary/10 text-primary rounded px-2 py-1 text-xs'>
                                 {edition.edicion}
                                 {edition.año && ` (${edition.año})`}
                               </span>
@@ -283,7 +283,7 @@ export const CatalogPanel = ({
                 <address className='space-y-2 not-italic'>
                   <a
                     href={`mailto:${selectedArtist.email}`}
-                    className='hover:text-fm-orange flex items-center transition-colors duration-150'
+                    className='hover:text-secondary flex items-center transition-colors duration-150'
                     target='_blank'
                     rel='noopener noreferrer'
                     onClick={() =>
@@ -300,7 +300,7 @@ export const CatalogPanel = ({
                   </a>
                   <a
                     href={selectedArtist.rrss}
-                    className='hover:text-fm-orange flex items-center transition-colors duration-150'
+                    className='hover:text-secondary flex items-center transition-colors duration-150'
                     target='_blank'
                     rel='noopener noreferrer'
                     onClick={() =>

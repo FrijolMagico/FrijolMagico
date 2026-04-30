@@ -19,7 +19,9 @@ export const useCollectiveStore = create<CollectiveDialogStore>((set) => ({
   toggleCreateCollectiveDialog: (open) =>
     set({
       isCreateCollectiveOpen: open,
-      ...(open ? { isUpdateCollectiveOpen: false, selectedCollective: null } : {})
+      ...(open
+        ? { isUpdateCollectiveOpen: false, selectedCollective: null }
+        : {})
     }),
 
   openUpdateCollectiveDialog: (collective) =>

@@ -14,11 +14,7 @@ export const FestivalTimelineCardBacklight = ({
 
   const colors = dominantColors?.length
     ? dominantColors
-    : [
-        'var(--color-fm-orange)',
-        'var(--color-fm-green)',
-        'var(--color-fm-yellow)'
-      ]
+    : ['var(--color-secondary)', 'var(--color-primary)', 'var(--color-accent)']
 
   return (
     <div

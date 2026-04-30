@@ -1,2 +1,11 @@
 @import '@frijolmagico/tailwind-config/css';
-@import '@frijolmagico/tailwind-config/palettes/2025';
+
+@theme {
+  --font-josefin: var(--font-josefin-sans);
+  --font-noto: var(--font-noto-sans);
+  --font-superfortress: var(--font-superfortress);
+  --font-rubik: var(--font-rubik);
+  --font-rubik-bubbles: var(--font-rubik-bubbles);
+  --font-roboto-mono: var(--font-roboto-mono);
+  --font-canarina: var(--font-canarina);
+}

@@ -9,6 +9,7 @@ import { isNotDeleted } from '@frijolmagico/database/filters'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import type { ActionState } from '@/shared/types/actions'
 import { ARTIST_CACHE_TAG } from '../_constants'
+import { invalidateWebFeaturedArtists } from '@/shared/lib/web-invalidation'
 
 export async function deleteArtistaAction(id: number): Promise<ActionState> {
   try {
@@ -22,6 +23,7 @@ export async function deleteArtistaAction(id: number): Promise<ActionState> {
       )
 
     updateTag(ARTIST_CACHE_TAG)
+    void invalidateWebFeaturedArtists()
 
     return { success: true }
   } catch (error) {

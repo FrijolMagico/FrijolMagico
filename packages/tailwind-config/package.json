@@ -6,7 +6,7 @@
   "exports": {
     "./css": "./globals.css",
     "./palettes/base": "./palettes/base.css",
-    "./palettes/2025": "./palettes/festivales-2025.css"
+    "./palettes/": "./palettes/*"
   },
   "files": [
     "globals.css",

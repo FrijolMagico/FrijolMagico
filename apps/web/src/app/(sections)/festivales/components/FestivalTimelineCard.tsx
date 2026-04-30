@@ -42,7 +42,7 @@ export const FestivalTimelineCard = ({
   const locationDisplay = getLocation(evento.dias)
 
   // Generate color palette for discipline dots (cycling through available colors)
-  const disciplineColors = ['bg-fm-orange', 'bg-fm-green', 'bg-fm-yellow']
+  const disciplineColors = ['bg-secondary', 'bg-primary', 'bg-accent']
 
   return (
     <div className='relative w-full max-w-160'>
@@ -50,7 +50,7 @@ export const FestivalTimelineCard = ({
         id={festivalId}
         data-festival-id={festivalId}
         className={cn(
-          'group bg-fm-white outline-fm-black/20 flex flex-col overflow-hidden rounded-3xl shadow-lg outline transition-all duration-300 outline-dashed hover:shadow-xl',
+          'group bg-background outline-foreground/20 flex flex-col overflow-hidden rounded-3xl shadow-lg outline transition-all duration-300 outline-dashed hover:shadow-xl',
           alignment === 'right' ? 'md:flex-row-reverse' : 'md:flex-row'
         )}
       >
@@ -78,7 +78,7 @@ export const FestivalTimelineCard = ({
             />
 
             <div
-              className='via-fm-black/10 w-px bg-linear-to-b from-transparent to-transparent'
+              className='via-foreground/10 w-px bg-linear-to-b from-transparent to-transparent'
               aria-hidden='true'
             />
 

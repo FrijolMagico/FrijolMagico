@@ -72,4 +72,4 @@ ORDER BY (
     SELECT MIN(eed.fecha)
     FROM evento_edicion_dia eed
     WHERE eed.evento_edicion_id = ee.id
-) DESC
+) ASC

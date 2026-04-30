@@ -38,7 +38,7 @@ export default function ConvocatoriaPage() {
   //       <section className='relative flex h-[25rem] flex-col rounded-2xl sm:flex-row'>
   //         <Link
   //           href={apply.steps[0].link}
-  //           className='bg-fm-orange relative z-10 flex-1 origin-right overflow-hidden rounded-t-2xl p-4 transition-all duration-300 ease-out hover:flex-[1.2] hover:scale-110 hover:rounded-r-2xl sm:rounded-l-2xl sm:rounded-tr-none sm:p-8'
+  //           className='bg-secondary relative z-10 flex-1 origin-right overflow-hidden rounded-t-2xl p-4 transition-all duration-300 ease-out hover:flex-[1.2] hover:scale-110 hover:rounded-r-2xl sm:rounded-l-2xl sm:rounded-tr-none sm:p-8'
   //         >
   //           <Image
   //             src='/enredadera.png'
@@ -53,7 +53,7 @@ export default function ConvocatoriaPage() {
   //               components={{
   //                 h3: ({ ...props }) => (
   //                   <h3
-  //                     className='text-fm-white font-noto text-4xl font-bold sm:text-5xl lg:text-6xl'
+  //                     className='text-background font-noto text-4xl font-bold sm:text-5xl lg:text-6xl'
   //                     {...props}
   //                   />
   //                 )
@@ -61,7 +61,7 @@ export default function ConvocatoriaPage() {
   //             >
   //               {apply.steps[0].title}
   //             </ReactMarkdown>
-  //             <p className='text-fm-white font-noto'>
+  //             <p className='text-background font-noto'>
   //               {apply.steps[0].description}
   //             </p>
   //           </div>
@@ -69,7 +69,7 @@ export default function ConvocatoriaPage() {
   //
   //         <Link
   //           href={apply.steps[1].link}
-  //           className='bg-fm-yellow relative z-10 flex flex-1 origin-left flex-col justify-end overflow-hidden rounded-b-2xl p-4 transition-all duration-300 ease-out hover:flex-[1.2] hover:scale-110 hover:rounded-l-2xl sm:rounded-r-2xl sm:rounded-bl-none sm:p-8'
+  //           className='bg-accent relative z-10 flex flex-1 origin-left flex-col justify-end overflow-hidden rounded-b-2xl p-4 transition-all duration-300 ease-out hover:flex-[1.2] hover:scale-110 hover:rounded-l-2xl sm:rounded-r-2xl sm:rounded-bl-none sm:p-8'
   //         >
   //           <Image
   //             src='/enredadera-esquina.png'
@@ -84,7 +84,7 @@ export default function ConvocatoriaPage() {
   //               components={{
   //                 h3: ({ ...props }) => (
   //                   <h3
-  //                     className='text-fm-black font-noto text-4xl font-bold sm:text-5xl lg:text-6xl'
+  //                     className='text-foreground font-noto text-4xl font-bold sm:text-5xl lg:text-6xl'
   //                     {...props}
   //                   />
   //                 )
@@ -92,7 +92,7 @@ export default function ConvocatoriaPage() {
   //             >
   //               {apply.steps[1].title}
   //             </ReactMarkdown>
-  //             <p className='text-fm-black font-noto'>
+  //             <p className='text-foreground font-noto'>
   //               {apply.steps[1].description}
   //             </p>
   //           </div>

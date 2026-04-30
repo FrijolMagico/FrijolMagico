@@ -13,7 +13,7 @@ export default function NotFound() {
       </ViewTransition>
       <Header title='# 404' subTitle='## Página no encontrada' />
       <main className='flex h-full flex-col items-center justify-center p-4 text-center'>
-        <p className='text-fm-dark/80 text-lg'>
+        <p className='text-foreground/80 text-lg'>
           <strong>QUÉ BUSCABAS REALMENTE?</strong> ACÁ NO HAY NADA QUE VER, LE
           SOLICITO QUE VUELVA EN OTRO MOMENTO{' '}
           <i>(Seguramente la página está en construcción u.u)</i>

@@ -1,78 +1,102 @@
-import Link from 'next/link'
 import Image from 'next/image'
-import { DoodleLine } from './DoodleLine'
-import { Grid } from '@/components/Grid'
-import { GridItem } from '@/components/GridItem'
-import { SpotifyCard } from '@/app/(home)/components/SpotifyCard'
-import { RRSSCard } from '@/app/(home)/components/RRSSCard'
-import { BackToTop } from './BackToTop'
 import { paths } from '@/config/paths'
+import siteData from '@/data/site.json'
 import { cn } from '@/utils/cn'
+import { BackToTop } from './BackToTop'
+import { LinkBtn } from './LinkBtn'
 
-interface FooterProps {
-  doodleColor?: string
-}
+const navLinks = [
+  { name: 'Inicio', href: paths.home },
+  { name: 'Festivales', href: paths.festival.base },
+  { name: 'Catálogo', href: paths.catalog },
+  { name: 'Nosotros', href: paths.about }
+]
 
-export const Footer = ({ doodleColor = 'text-fm-green' }: FooterProps) => {
+const socialLinks = [
+  { name: 'Instagram', href: siteData.social_media.ig },
+  { name: 'Facebook', href: siteData.social_media.fb },
+  { name: 'Youtube', href: siteData.social_media.yt },
+  { name: 'Spotify', href: siteData.podcast }
+]
+
+export const Footer = () => {
   return (
-    <footer className={cn('mx-auto w-full max-w-3xl px-4', doodleColor)}>
-      <BackToTop />
-      <DoodleLine />
-      <Grid
-        row={{ base: 6, sm: 4, lg: 4 }}
-        col={{ base: 1, sm: 6, lg: 8 }}
-        className='gap-2 pt-4 sm:gap-4'
-      >
-        <GridItem
-          row={{ base: 2, sm: 2, lg: 2 }}
-          col={{ base: 1, sm: 4, lg: 6 }}
-        >
-          <Link
-            href={paths.home}
-            className='bg-flexible-dark group relative grid size-full place-items-center overflow-hidden rounded-2xl text-center'
-          >
+    <footer className='w-full'>
+      <div className={cn('bg-foreground w-full px-4 md:px-10')}>
+        <BackToTop />
+        <div className='grid w-full items-center justify-center gap-12 py-10 lg:grid-cols-3 lg:gap-4'>
+          <section className='max-w-md'>
+            <div className='grid grid-cols-2 gap-4'>
+              <h2 className='font-canarina text-accent text-stroke-1 text-stroke-background block text-6xl font-bold tracking-wide uppercase md:text-7xl'>
+                Frijol Mágico
+              </h2>
+              <Image
+                src='/images/frijol.png'
+                alt='Logo Frijol Mágico'
+                width={120}
+                height={100}
+                className='h-20 self-end md:h-fit'
+              />
+            </div>
+            <p className='font-roboto-mono text-background/60 text-xs font-extralight tracking-wider uppercase'>
+              Frijol Mágico es un espacio que reúne a las y los Ilustradores de
+              la Región de Coquimbo, generando distintas instancias que ayuden a
+              potenciar su trabajo.
+            </p>
+          </section>
+          <section className='mx-auto flex items-center justify-center'>
             <Image
-              src='/images/enredadera.png'
-              alt='Frijol Mágico'
-              width={600}
-              height={600}
-              className='absolute -bottom-16 sm:-bottom-40'
+              src='/logos/logo-white.png'
+              alt='Logo de la Asociación Cultural Frijol Mágico'
+              width={200}
+              height={200}
+              className='h-20 w-fit'
             />
-            <p className='text-flexible-yellow z-10 text-2xl font-black duration-300 group-hover:scale-110'>
-              <span className='text-flexible-white font-bold'>Volver al </span>
-              Inicio
-            </p>
-          </Link>
-        </GridItem>
-
-        <GridItem
-          row={{ base: 2, sm: 2, lg: 3 }}
-          col={{ base: 1, sm: 2, lg: 2 }}
-        >
-          <SpotifyCard />
-        </GridItem>
-
-        <GridItem col={{ base: 1, sm: 3, lg: 6 }} row={{ base: 1 }}>
-          <RRSSCard orientation='horizontal' />
-        </GridItem>
-
-        <GridItem col={{ base: 1, sm: 3, lg: 8 }} row={{ base: 1 }}>
-          <div className='bg-flexible-white flex size-full flex-col items-center justify-center rounded-2xl md:flex-row md:gap-8'>
-            <p className='font-josefin text-flexible-green text-lg leading-none font-black'>
-              Frijol Mágico{' '}
-              <span className='text-flexible-green'>{'2026 '}</span>
-              🌱
-            </p>
-
-            <Link
-              href='https://github.com/Strocs'
-              className='hover:text-flexible-orange text-flexible-green text-center text-sm transition duration-150'
-            >
-              Desarrollado con ❤ por StrocsDev
-            </Link>
-          </div>
-        </GridItem>
-      </Grid>
+          </section>
+          <nav className='text-background/80 flex items-center justify-center gap-12'>
+            <div className='space-y-2'>
+              <h4 className='wavy-underline text-background/60 uppercase'>
+                Síguenos
+              </h4>
+              <ul>
+                {socialLinks.map((link) => (
+                  <li key={link.name}>
+                    <LinkBtn
+                      withArrow
+                      href={link.href}
+                      className='text-sm uppercase'
+                    >
+                      {link.name}
+                    </LinkBtn>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className='space-y-2'>
+              <h4 className='wavy-underline text-background/60 uppercase'>
+                Navegar
+              </h4>
+              <ul>
+                {navLinks.map((link) => (
+                  <li key={link.name}>
+                    <LinkBtn href={link.href}>{link.name}</LinkBtn>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </nav>
+        </div>
+        <div className='border-background/20 text-background/50 font-roboto-mono grid h-fit border-t py-4 text-center text-xs md:grid-cols-3 md:text-left'>
+          <p>2026 | Asociación Cultural Frijol Mágico </p>
+          <p className='text-center'>v4.0.0</p>
+          <p className='text-center md:text-right'>
+            Desarrollado por{' '}
+            <a target='_blank' href='https://github.com/Strocs'>
+              Strocsdev
+            </a>
+          </p>
+        </div>
+      </div>
     </footer>
   )
 }

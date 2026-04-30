@@ -68,7 +68,7 @@ export const CatalogList: React.FC<CatalogListProps> = ({ catalog }) => {
           <CatalogArtistCard key={item.id} {...item} />
         ))}
         {filteredCatalog.length === 0 && (
-          <li className='text-mutedfm-white w-full py-8 text-center'>
+          <li className='text-mutedbackground w-full py-8 text-center'>
             No se encontraron artistas que coincidan con los filtros
             seleccionados.
           </li>

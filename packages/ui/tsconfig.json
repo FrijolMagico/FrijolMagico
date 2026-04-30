@@ -1,0 +1,9 @@
+{
+  "extends": "@frijolmagico/typescript-config/base",
+  "compilerOptions": {
+    "paths": {
+      "@frijolmagico/utils/*": ["../utils/src/*.ts"]
+    }
+  },
+  "include": ["src/**/*"]
+}

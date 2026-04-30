@@ -4,19 +4,27 @@
   "type": "module",
   "private": true,
   "exports": {
+    "./cn": "./src/cn.ts",
     "./string": "./src/string.ts",
     "./url": "./src/url.ts",
     "./css": "./src/css.ts",
     "./shallow-diff": "./src/shallow-diff.ts",
-    "./rrss": "./src/rrss.ts"
+    "./rrss": "./src/rrss.ts",
+    "./cdn": "./src/cdn.ts"
   },
   "files": [
+    "./src/cn.ts",
     "./src/string.ts",
     "./src/url.ts",
     "./src/css.ts",
     "./src/shallow-diff.ts",
-    "./src/rrss.ts"
+    "./src/rrss.ts",
+    "./src/cdn.ts"
   ],
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^3.5.0"
+  },
   "devDependencies": {
     "@frijolmagico/eslint-config": "workspace:*",
     "@frijolmagico/typescript-config": "workspace:*",

@@ -17,7 +17,7 @@ export const FestivalesTimelineContent = ({
   if (festivales.length === 0) {
     return (
       <div className='py-20 text-center'>
-        <p className='text-fm-black/50'>No hay festivales para mostrar.</p>
+        <p className='text-foreground/50'>No hay festivales para mostrar.</p>
       </div>
     )
   }
@@ -28,7 +28,7 @@ export const FestivalesTimelineContent = ({
     nombre: f.evento.nombre,
     edicion: f.evento.edicion,
     eventoId: f.evento.evento_id,
-    year: 2026
+    year: f.evento.dias[0].fecha.split('-')[0]
   }))
 
   return (
@@ -44,11 +44,13 @@ export const FestivalesTimelineContent = ({
           <div className='relative grid gap-8 lg:grid-cols-[40rem_40rem]'>
             {/* Superior indicator */}
             <div className='flex flex-col items-center'>
-              <div className='bg-fm-orange/10 text-fm-orange relative mx-auto flex size-32 flex-col items-center justify-center rounded-full'>
+              <div className='bg-secondary/10 text-secondary relative mx-auto flex size-32 flex-col items-center justify-center rounded-full'>
                 <span className='font-josefin landing-0 block text-3xl font-black'>
-                  2026
+                  2015
                 </span>
-                <span className='block text-center leading-0'>y más...</span>
+                <span className='block text-center leading-none'>
+                  La historia comienza
+                </span>
               </div>
 
               <svg
@@ -60,7 +62,7 @@ export const FestivalesTimelineContent = ({
                   fill='none'
                   strokeWidth={6}
                   strokeDasharray='20,10'
-                  className='stroke-fm-orange'
+                  className='stroke-secondary'
                   d='M 10 0 L 10 200'
                 />
               </svg>
@@ -73,8 +75,8 @@ export const FestivalesTimelineContent = ({
             const isFirstCard = index === 0
             const connectorColor =
               festival.evento.evento_id === 1
-                ? 'stroke-fm-orange'
-                : 'stroke-fm-green'
+                ? 'stroke-secondary'
+                : 'stroke-primary'
             const festivalId = `festival-${festival.evento.evento_id}-${festival.evento.edicion}`
             const isActive = activeId === festivalId
             return (
@@ -148,17 +150,15 @@ export const FestivalesTimelineContent = ({
                   fill='none'
                   strokeWidth={6}
                   strokeDasharray='20,10'
-                  className='stroke-fm-green'
+                  className='stroke-primary'
                   d='M 10 0 L 10 200'
                 />
               </svg>
-              <div className='bg-fm-green/10 text-fm-green relative mx-auto flex size-32 flex-col items-center justify-center rounded-full'>
+              <div className='bg-primary/10 text-primary relative mx-auto flex size-32 flex-col items-center justify-center rounded-full'>
                 <span className='font-josefin landing-0 block text-3xl font-black'>
-                  2016
+                  2026
                 </span>
-                <span className='block text-center leading-none'>
-                  La historia comienza
-                </span>
+                <span className='block text-center leading-0'>y más...</span>
               </div>
             </div>
           </div>

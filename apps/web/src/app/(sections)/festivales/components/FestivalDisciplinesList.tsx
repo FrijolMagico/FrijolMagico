@@ -13,9 +13,9 @@ interface FestivalDisciplinesListProps {
 export const FestivalDisciplinesList = ({
   disciplines,
   disciplineColors = [
-    'bg-fm-orange',
-    'bg-fm-green',
-    'bg-fm-yellow',
+    'bg-secondary',
+    'bg-primary',
+    'bg-accent',
     'bg-2025-green'
   ]
 }: FestivalDisciplinesListProps) => (
@@ -23,7 +23,7 @@ export const FestivalDisciplinesList = ({
     {disciplines.length > 0 ? (
       disciplines.map(({ label, count }, index) => (
         <div className='flex items-center justify-between' key={label}>
-          <dt className='text-fm-black/60 group/item flex items-center gap-2 text-xs font-bold uppercase'>
+          <dt className='text-foreground/60 group/item flex items-center gap-2 text-xs font-bold uppercase'>
             <span
               className={cn(
                 'h-1.5 w-1.5 shrink-0 rounded-full transition-transform group-hover/item:scale-125',
@@ -33,13 +33,13 @@ export const FestivalDisciplinesList = ({
             />
             {label}
           </dt>
-          <dd className='text-fm-black -mt-1 ml-3.5 inline-block text-sm font-black'>
+          <dd className='text-foreground -mt-1 ml-3.5 inline-block text-sm font-black'>
             {count}
           </dd>
         </div>
       ))
     ) : (
-      <p className='text-fm-black/40 text-xs'>
+      <p className='text-foreground/40 text-xs'>
         Sin participaciones registradas
       </p>
     )}
