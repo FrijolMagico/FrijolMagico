@@ -11,5 +11,8 @@
   "files": [
     "globals.css",
     "palettes/"
-  ]
+  ],
+  "devDependencies": {
+    "tailwindcss": "^4.2.2"
+  }
 }

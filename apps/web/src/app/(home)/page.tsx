@@ -16,17 +16,17 @@ export default async function Home() {
     <>
       <FissureBanner height={400}>
         <ApplyBanner
-          title='Postulación'
-          description='Frijol Mágico: Módulos de formación profesional'
+          title='Convocatoria Abierta'
+          description='Festival Frijol Mágico 2026 🪄'
           buttons={{
             apply: {
               text: 'Postula aquí',
-              href: 'https://docs.google.com/forms/d/e/1FAIpQLSdHPZtRBDqlOFjXvoU06BMrZcrvnKPQIdRzdffev4dMdwZr0Q/viewform',
+              href: 'https://forms.gle/Jn2p5SmE7qv9VRhy5',
               target: '_blank'
             },
             bases: {
               text: 'Lee las Bases',
-              href: 'https://drive.google.com/file/d/162s1nFGUmIXdvY1D8ubKAOdgU4fu9_ye/view?usp=sharing',
+              href: 'https://drive.google.com/file/d/1EIXU7pHN7Xf29BA5xu6Uia5L5_MV2SaX/view',
               target: '_blank'
             }
           }}
