@@ -39,7 +39,7 @@ export async function GET(request: Request) {
       })
     }
 
-    await invalidateWebFeaturedArtists()
+    const invalidationResult = await invalidateWebFeaturedArtists()
 
     const durationMs = Date.now() - startedAt
     await sendCronitorPing({
@@ -47,7 +47,11 @@ export async function GET(request: Request) {
       metrics: [
         { name: 'rotated', value: result.rotated ? 1 : 0 },
         { name: 'featured_count', value: result.count },
-        { name: 'duration_ms', value: durationMs }
+        { name: 'duration_ms', value: durationMs },
+        {
+          name: 'cache_invalidated',
+          value: invalidationResult.revalidated ? 1 : 0
+        }
       ]
     })
 
