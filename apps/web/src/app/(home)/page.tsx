@@ -8,6 +8,7 @@ import { StarIcon } from 'lucide-react'
 import { DoodleLine } from '@/components/DoodleLine'
 import { LinkBtn } from '@/components/LinkBtn'
 import { paths } from '@/config/paths'
+import bannerData from '@/data/banner_data.json'
 
 export default async function Home() {
   const featuredArtists = await getFeaturedArtists()
@@ -16,17 +17,17 @@ export default async function Home() {
     <>
       <FissureBanner height={400}>
         <ApplyBanner
-          title='Convocatoria Abierta'
-          description='Festival Frijol Mágico 2026 🪄'
+          title={bannerData.title}
+          description={bannerData.description}
           buttons={{
             apply: {
-              text: 'Postula aquí',
-              href: 'https://forms.gle/Jn2p5SmE7qv9VRhy5',
+              text: bannerData.right_button.text,
+              href: bannerData.right_button.url,
               target: '_blank'
             },
             bases: {
-              text: 'Lee las Bases',
-              href: 'https://drive.google.com/file/d/1EIXU7pHN7Xf29BA5xu6Uia5L5_MV2SaX/view',
+              text: bannerData.left_button.text,
+              href: bannerData.left_button.url,
               target: '_blank'
             }
           }}
