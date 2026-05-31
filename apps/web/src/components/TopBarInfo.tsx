@@ -2,6 +2,7 @@ import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import siteData from '@/data/site.json'
 import { cn } from '@/utils/cn'
+import bannerData from '@/data/banner_data.json'
 const { top_bar } = siteData
 
 export const TopBarInfo = () => {
@@ -22,9 +23,7 @@ export const TopBarInfo = () => {
         </h2>
       </div>
       <Link
-        href={
-          top_bar.button.active ? 'https://forms.gle/Jn2p5SmE7qv9VRhy5' : '#'
-        }
+        href={top_bar.button.active ? bannerData.right_button.url : '#'}
         className={cn(
           'to-secondary from-accent background-size-[150%] rounded-lg bg-linear-to-r px-4 py-0.5 font-bold text-white transition-[background-position] duration-200 hover:bg-right',
           top_bar.button.active
