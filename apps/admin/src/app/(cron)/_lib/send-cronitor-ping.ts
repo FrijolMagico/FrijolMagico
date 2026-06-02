@@ -1,4 +1,4 @@
-const CRONITOR_BASE_URL = process.env.CRONITOR_URL
+const CRONITOR_BASE_URL = process.env.CRONITOR_BASE_URL
 
 interface CronitorPingOptions {
   state: 'run' | 'complete' | 'fail'

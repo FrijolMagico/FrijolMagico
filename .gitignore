@@ -74,3 +74,5 @@ db-workspace
 # OpenCode
 .agents/
 skills-lock.json
+# Local Pi runtime state
+.atl/
