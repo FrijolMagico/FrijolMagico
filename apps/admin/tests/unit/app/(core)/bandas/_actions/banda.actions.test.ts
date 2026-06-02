@@ -50,8 +50,8 @@ function createDbMock() {
 let currentDb = createDbMock().db
 
 mock.module('server-only', () => ({}))
-mock.module('next/cache', () => ({ updateTag }))
-mock.module('next/cache.js', () => ({ updateTag }))
+mock.module('next/cache', () => ({ cacheTag: mock(() => {}), updateTag }))
+mock.module('next/cache.js', () => ({ cacheTag: mock(() => {}), updateTag }))
 mock.module('@/shared/lib/auth/utils', () => ({ requireAuth }))
 mock.module('@frijolmagico/database/orm', () => ({
   db: new Proxy(
