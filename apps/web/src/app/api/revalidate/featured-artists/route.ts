@@ -1,4 +1,4 @@
-import { revalidateTag } from 'next/cache'
+import { updateTag } from 'next/cache'
 import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  revalidateTag('home:featured-artists', 'max')
+  updateTag('home:featured-artists')
 
   return NextResponse.json({ revalidated: true })
 }
