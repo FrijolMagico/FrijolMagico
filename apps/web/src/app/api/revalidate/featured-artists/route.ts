@@ -1,4 +1,4 @@
-import { revalidateTag } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
@@ -17,6 +17,7 @@ export async function POST(request: Request) {
   }
 
   revalidateTag('home:featured-artists', { expire: 0 })
+  revalidatePath('/')
 
   return NextResponse.json({ revalidated: true })
 }
