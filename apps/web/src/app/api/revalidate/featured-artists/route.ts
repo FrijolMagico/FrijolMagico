@@ -1,7 +1,7 @@
 import { revalidatePath, revalidateTag } from 'next/cache'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
-export async function POST(request: Request) {
+export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('Authorization')
   const expectedSecret = process.env.REVALIDATION_SECRET
 
@@ -16,8 +16,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  revalidateTag('home:featured-artists', { expire: 0 })
-  revalidatePath('/')
+  const tag = request.nextUrl.searchParams.get('tag')
+  const path = request.nextUrl.searchParams.get('path')
+
+  if (tag) {
+    revalidateTag(tag, { expire: 0 })
+  }
+  if (path) {
+    revalidatePath(path)
+  }
 
   return NextResponse.json({ revalidated: true })
 }

@@ -1,132 +1,210 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
-import { invalidateWebFeaturedArtists } from '@/shared/lib/web-invalidation'
+import {
+  buildWebInvalidationUrl,
+  revalidateWebCache
+} from '@/shared/lib/web-invalidation'
 
-const originalEnv = { ...process.env }
+const ORIGINAL_ENV = { ...process.env }
 
-const mockFetch = mock(() =>
-  Promise.resolve(
-    new Response(JSON.stringify({ revalidated: true }), { status: 200 })
-  )
-)
+let mockFetch: ReturnType<typeof mock>
 
 beforeEach(() => {
   process.env.WEB_REVALIDATION_URL =
     'https://web.test/api/revalidate/featured-artists'
   process.env.REVALIDATION_SECRET = 'test-secret-123'
+
+  mockFetch = mock(() =>
+    Promise.resolve(
+      new Response(JSON.stringify({ revalidated: true }), { status: 200 })
+    )
+  )
   globalThis.fetch = mockFetch as unknown as typeof fetch
-  mockFetch.mockClear()
 })
 
 afterEach(() => {
-  process.env = { ...originalEnv }
+  process.env = { ...ORIGINAL_ENV }
 })
 
-describe('invalidateWebFeaturedArtists', () => {
-  test('sends POST with Bearer token to WEB_REVALIDATION_URL', async () => {
-    await invalidateWebFeaturedArtists()
+// ---------------------------------------------------------------------------
+// buildWebInvalidationUrl
+// ---------------------------------------------------------------------------
+
+describe('buildWebInvalidationUrl', () => {
+  test('uses WEB_REVALIDATION_URL env var when no explicit URL given', () => {
+    const url = buildWebInvalidationUrl()
+    expect(url).toBe('https://web.test/api/revalidate/featured-artists')
+  })
+
+  test('uses explicit URL over env var', () => {
+    const url = buildWebInvalidationUrl({
+      url: 'https://custom.test/revalidate'
+    })
+    expect(url).toBe('https://custom.test/revalidate')
+  })
+
+  test('appends tag query param with URL encoding', () => {
+    const url = buildWebInvalidationUrl({ tag: 'home:featured-artists' })
+    expect(url).toBe(
+      'https://web.test/api/revalidate/featured-artists?tag=home%3Afeatured-artists'
+    )
+  })
+
+  test('appends path query param with URL encoding', () => {
+    const url = buildWebInvalidationUrl({ path: '/' })
+    expect(url).toBe(
+      'https://web.test/api/revalidate/featured-artists?path=%2F'
+    )
+  })
+
+  test('appends both tag and path query params', () => {
+    const url = buildWebInvalidationUrl({
+      tag: 'home:featured-artists',
+      path: '/'
+    })
+    expect(url).toBe(
+      'https://web.test/api/revalidate/featured-artists?tag=home%3Afeatured-artists&path=%2F'
+    )
+  })
+
+  test('returns plain URL when no tag or path', () => {
+    const url = buildWebInvalidationUrl({
+      url: 'https://plain.test/revalidate'
+    })
+    expect(url).toBe('https://plain.test/revalidate')
+  })
+
+  test('throws when no URL given and env var is missing', () => {
+    delete process.env.WEB_REVALIDATION_URL
+    expect(() => buildWebInvalidationUrl()).toThrow(
+      'WEB_REVALIDATION_URL is not set'
+    )
+  })
+})
+
+// ---------------------------------------------------------------------------
+// revalidateWebCache
+// ---------------------------------------------------------------------------
+
+describe('revalidateWebCache', () => {
+  test('sends GET request with Bearer token to correct URL', async () => {
+    const result = await revalidateWebCache()
 
     expect(mockFetch).toHaveBeenCalledTimes(1)
 
     const [url, options] = mockFetch.mock.calls[0] as [string, RequestInit]
     expect(url).toBe('https://web.test/api/revalidate/featured-artists')
-    expect(options.method).toBe('POST')
+    expect(options.method).toBe('GET')
     expect(options.headers).toEqual(
       expect.objectContaining({
         Authorization: 'Bearer test-secret-123'
       })
     )
+
+    expect(result).toEqual({ revalidated: true })
   })
 
-  test('does not throw when fetch succeeds', async () => {
-    await expect(invalidateWebFeaturedArtists()).resolves.toBeUndefined()
+  test('passes tag as query param when provided', async () => {
+    await revalidateWebCache({ tag: 'home:featured-artists' })
+
+    const [url] = mockFetch.mock.calls[0] as [string]
+    expect(url).toContain('tag=home%3Afeatured-artists')
   })
 
-  test('logs warning and returns when WEB_REVALIDATION_URL is missing', async () => {
-    delete process.env.WEB_REVALIDATION_URL
-
-    const consoleWarn = mock(() => {})
-    const originalWarn = console.warn
-    console.warn = consoleWarn as unknown as typeof console.warn
-
-    await invalidateWebFeaturedArtists()
-
-    expect(mockFetch).not.toHaveBeenCalled()
-    expect(consoleWarn).toHaveBeenCalledTimes(1)
-    expect((consoleWarn.mock.calls[0] as [string])[0]).toContain(
-      'WEB_REVALIDATION_URL'
-    )
-
-    console.warn = originalWarn
+  test('returns WebInvalidationResult on success', async () => {
+    const result = await revalidateWebCache()
+    expect(result).toEqual({ revalidated: true })
   })
 
-  test('logs warning and returns when REVALIDATION_SECRET is missing', async () => {
+  test('throws when REVALIDATION_SECRET is missing', async () => {
     delete process.env.REVALIDATION_SECRET
 
-    const consoleWarn = mock(() => {})
-    const originalWarn = console.warn
-    console.warn = consoleWarn as unknown as typeof console.warn
-
-    await invalidateWebFeaturedArtists()
+    try {
+      await revalidateWebCache()
+      expect.unreachable('should have thrown')
+    } catch (error) {
+      expect((error as Error).message).toContain(
+        'REVALIDATION_SECRET is not set'
+      )
+    }
 
     expect(mockFetch).not.toHaveBeenCalled()
-    expect(consoleWarn).toHaveBeenCalledTimes(1)
-    expect((consoleWarn.mock.calls[0] as [string])[0]).toContain(
-      'REVALIDATION_SECRET'
-    )
-
-    console.warn = originalWarn
   })
 
-  test('swallows fetch errors and logs them', async () => {
+  test('throws when WEB_REVALIDATION_URL is missing', async () => {
+    delete process.env.WEB_REVALIDATION_URL
+
+    try {
+      await revalidateWebCache()
+      expect.unreachable('should have thrown')
+    } catch (error) {
+      expect((error as Error).message).toContain(
+        'WEB_REVALIDATION_URL is not set'
+      )
+    }
+
+    expect(mockFetch).not.toHaveBeenCalled()
+  })
+
+  test('throws on non-ok response', async () => {
+    mockFetch.mockImplementationOnce(() =>
+      Promise.resolve(
+        new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          statusText: 'Unauthorized'
+        })
+      )
+    )
+
+    try {
+      await revalidateWebCache()
+      expect.unreachable('should have thrown')
+    } catch (error) {
+      expect((error as Error).message).toContain(
+        'Failed to invalidate cache: 401'
+      )
+    }
+  })
+
+  test('throws when revalidated field is false', async () => {
+    mockFetch.mockImplementationOnce(() =>
+      Promise.resolve(
+        new Response(JSON.stringify({ revalidated: false }), { status: 200 })
+      )
+    )
+
+    try {
+      await revalidateWebCache()
+      expect.unreachable('should have thrown')
+    } catch (error) {
+      expect((error as Error).message).toContain(
+        'Cache invalidation was not confirmed'
+      )
+    }
+  })
+
+  test('re-throws network errors', async () => {
     mockFetch.mockImplementationOnce(() =>
       Promise.reject(new Error('Network failure'))
     )
 
-    const consoleError = mock(() => {})
-    const originalError = console.error
-    console.error = consoleError as unknown as typeof console.error
-
-    await expect(invalidateWebFeaturedArtists()).resolves.toBeUndefined()
-    expect(consoleError).toHaveBeenCalledTimes(1)
-    expect((consoleError.mock.calls[0] as [string])[0]).toContain(
-      'web featured artists'
-    )
-
-    console.error = originalError
+    try {
+      await revalidateWebCache()
+      expect.unreachable('should have thrown')
+    } catch (error) {
+      expect((error as Error).message).toContain('Network failure')
+    }
   })
 
-  test('uses different URL when WEB_REVALIDATION_URL changes', async () => {
-    process.env.WEB_REVALIDATION_URL = 'https://other.test/revalidate'
-    process.env.REVALIDATION_SECRET = 'other-secret'
-
-    await invalidateWebFeaturedArtists()
-
-    const [url, options] = mockFetch.mock.calls[0] as [string, RequestInit]
-    expect(url).toBe('https://other.test/revalidate')
-    expect(options.headers).toEqual(
-      expect.objectContaining({
-        Authorization: 'Bearer other-secret'
-      })
-    )
-  })
-
-  test('swallows non-200 responses and logs them', async () => {
+  test('throws when response JSON is malformed', async () => {
     mockFetch.mockImplementationOnce(() =>
-      Promise.resolve(
-        new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
-      )
+      Promise.resolve(new Response('not-json', { status: 200 }))
     )
 
-    const consoleError = mock(() => {})
-    const originalError = console.error
-    console.error = consoleError as unknown as typeof console.error
-
-    await expect(invalidateWebFeaturedArtists()).resolves.toBeUndefined()
-    expect(consoleError).toHaveBeenCalledTimes(1)
-    expect((consoleError.mock.calls[0] as [string])[0]).toContain(
-      'web featured artists'
-    )
-
-    console.error = originalError
+    try {
+      await revalidateWebCache()
+      expect.unreachable('should have thrown')
+    } catch {
+      // expected
+    }
   })
 })

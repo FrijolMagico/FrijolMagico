@@ -10,8 +10,50 @@ interface WebInvalidationResult {
   revalidated: boolean
 }
 
-export async function invalidateWebFeaturedArtists(): Promise<WebInvalidationResult> {
-  const url = process.env.WEB_REVALIDATION_URL
+interface BuildWebInvalidationUrlOptions {
+  url?: string
+  path?: string
+  tag?: string
+}
+
+/**
+ * Build the revalidation endpoint URL from a base URL with dynamic query params.
+ * Defaults to WEB_REVALIDATION_URL env var when no explicit URL is given.
+ * Appends `?tag=...` and/or `?path=...` only when the corresponding param is present.
+ */
+export function buildWebInvalidationUrl({
+  url,
+  path,
+  tag
+}: BuildWebInvalidationUrlOptions = {}): string {
+  const baseUrl = url ?? process.env.WEB_REVALIDATION_URL
+
+  if (!baseUrl) {
+    throw new Error(
+      '[web-invalidation] WEB_REVALIDATION_URL is not set — cannot build invalidation URL'
+    )
+  }
+
+  const params = new URLSearchParams()
+  if (tag) params.set('tag', tag)
+  if (path) params.set('path', path)
+
+  const qs = params.toString()
+  return qs ? `${baseUrl}?${qs}` : baseUrl
+}
+
+interface RevalidateWebCacheOptions {
+  tag?: string
+  path?: string
+}
+
+export async function revalidateWebCache(
+  options: RevalidateWebCacheOptions = {}
+): Promise<WebInvalidationResult> {
+  const url = buildWebInvalidationUrl({
+    url: process.env.WEB_REVALIDATION_URL,
+    ...options
+  })
   const secret = process.env.REVALIDATION_SECRET
 
   if (!url) {
@@ -27,7 +69,7 @@ export async function invalidateWebFeaturedArtists(): Promise<WebInvalidationRes
   }
 
   const response = await fetch(url, {
-    method: 'POST',
+    method: 'GET',
     headers: {
       Authorization: `Bearer ${secret}`
     }
