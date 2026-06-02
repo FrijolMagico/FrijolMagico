@@ -21,44 +21,47 @@ const DELETE_CATALOG_PATH = join(ACTIONS_DIR, 'delete-catalog.action.ts')
 // ---------------------------------------------------------------------------
 
 describe('catalog server actions — web invalidation contracts', () => {
-  test('update-catalog-field.action imports invalidateWebFeaturedArtists', () => {
+  test('update-catalog-field.action imports revalidateWebCache', () => {
     const source = readFileSync(UPDATE_FIELD_PATH, 'utf8')
 
-    expect(source).toContain('invalidateWebFeaturedArtists')
+    expect(source).toContain('revalidateWebCache')
     expect(source).toContain('@/shared/lib/web-invalidation')
   })
 
-  test('update-catalog-field.action calls void invalidateWebFeaturedArtists()', () => {
+  test('update-catalog-field.action calls void revalidateWebCache with path', () => {
     const source = readFileSync(UPDATE_FIELD_PATH, 'utf8')
 
     // Must use fire-and-forget pattern
-    expect(source).toContain('void invalidateWebFeaturedArtists()')
+    expect(source).toContain('void revalidateWebCache')
+    expect(source).toContain("path: '/catalogo'")
   })
 
-  test('update-catalog.action imports invalidateWebFeaturedArtists', () => {
+  test('update-catalog.action imports revalidateWebCache', () => {
     const source = readFileSync(UPDATE_CATALOG_PATH, 'utf8')
 
-    expect(source).toContain('invalidateWebFeaturedArtists')
+    expect(source).toContain('revalidateWebCache')
     expect(source).toContain('@/shared/lib/web-invalidation')
   })
 
-  test('update-catalog.action calls void invalidateWebFeaturedArtists()', () => {
+  test('update-catalog.action calls void revalidateWebCache with path', () => {
     const source = readFileSync(UPDATE_CATALOG_PATH, 'utf8')
 
-    expect(source).toContain('void invalidateWebFeaturedArtists()')
+    expect(source).toContain('void revalidateWebCache')
+    expect(source).toContain("path: '/catalogo'")
   })
 
-  test('delete-catalog.action imports invalidateWebFeaturedArtists', () => {
+  test('delete-catalog.action imports revalidateWebCache', () => {
     const source = readFileSync(DELETE_CATALOG_PATH, 'utf8')
 
-    expect(source).toContain('invalidateWebFeaturedArtists')
+    expect(source).toContain('revalidateWebCache')
     expect(source).toContain('@/shared/lib/web-invalidation')
   })
 
-  test('delete-catalog.action calls void invalidateWebFeaturedArtists()', () => {
+  test('delete-catalog.action calls void revalidateWebCache with path', () => {
     const source = readFileSync(DELETE_CATALOG_PATH, 'utf8')
 
-    expect(source).toContain('void invalidateWebFeaturedArtists()')
+    expect(source).toContain('void revalidateWebCache')
+    expect(source).toContain("path: '/catalogo'")
   })
 
   test('all three actions preserve existing updateTag() call', () => {

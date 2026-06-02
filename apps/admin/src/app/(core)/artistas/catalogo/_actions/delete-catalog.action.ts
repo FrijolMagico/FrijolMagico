@@ -7,7 +7,7 @@ import { artist } from '@frijolmagico/database/schema'
 import { and, eq, sql } from 'drizzle-orm'
 import { isNotDeleted } from '@frijolmagico/database/filters'
 import { requireAuth } from '@/shared/lib/auth/utils'
-import { invalidateWebFeaturedArtists } from '@/shared/lib/web-invalidation'
+import { revalidateWebCache } from '@/shared/lib/web-invalidation'
 import type { ActionState } from '@/shared/types/actions'
 import { CATALOG_CACHE_TAG } from '../_constants'
 
@@ -25,7 +25,7 @@ export async function deleteCatalogAction(id: number): Promise<ActionState> {
     )
 
   updateTag(CATALOG_CACHE_TAG)
-  void invalidateWebFeaturedArtists()
+  void revalidateWebCache({ path: '/catalogo' })
 
   return { success: true }
 }

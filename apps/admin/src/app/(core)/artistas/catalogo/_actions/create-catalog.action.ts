@@ -18,6 +18,7 @@ import {
   ArtistImagenInsertInput,
   artistImagenInsertSchema
 } from '../../_schemas/image.schema'
+import { revalidateWebCache } from '@/shared/lib/web-invalidation'
 
 export async function createCatalogAction(
   _prevState: ActionState<{ id: number }>,
@@ -84,6 +85,9 @@ export async function createCatalogAction(
     // constraint. This change does not introduce restore-or-reinsert semantics.
 
     updateTag(CATALOG_CACHE_TAG)
+    revalidateWebCache({
+      path: '/catalogo'
+    })
 
     return { success: true }
   } catch (error) {
