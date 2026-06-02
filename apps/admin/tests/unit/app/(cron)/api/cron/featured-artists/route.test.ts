@@ -8,7 +8,9 @@ const mockRotateFeaturedArtists = mock(() =>
   Promise.resolve({ rotated: true, count: 3 } as const)
 )
 
-const mockInvalidateWebFeaturedArtists = mock(() => Promise.resolve())
+const mockInvalidateWebFeaturedArtists = mock(() =>
+  Promise.resolve({ revalidated: true } as const)
+)
 
 const mockTransaction = mock((fn: (tx: unknown) => Promise<unknown>) =>
   fn('mock-tx')
@@ -23,7 +25,7 @@ mock.module('@/app/(cron)/_lib/rotate-featured-artists', () => ({
 }))
 
 mock.module('@/shared/lib/web-invalidation', () => ({
-  invalidateWebFeaturedArtists: mockInvalidateWebFeaturedArtists
+  revalidateWebCache: mockInvalidateWebFeaturedArtists
 }))
 
 import { GET } from '@/app/(cron)/api/cron/featured-artists/route'
@@ -101,7 +103,7 @@ describe('GET /api/cron/featured-artists', () => {
     expect(mockRotateFeaturedArtists).toHaveBeenCalledWith('mock-tx')
   })
 
-  test('calls invalidateWebFeaturedArtists after successful rotation', async () => {
+  test('calls revalidateWebCache after successful rotation', async () => {
     const request = createRequest('Bearer test-cron-secret')
     await GET(request)
 
@@ -128,7 +130,7 @@ describe('GET /api/cron/featured-artists', () => {
     console.error = originalError
   })
 
-  test('does not call invalidateWebFeaturedArtists on transaction failure', async () => {
+  test('does not call revalidateWebCache on transaction failure', async () => {
     mockTransaction.mockImplementation(() => {
       throw new Error('DB error')
     })

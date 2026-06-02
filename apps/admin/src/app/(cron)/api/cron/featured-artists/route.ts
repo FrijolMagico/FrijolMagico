@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { db } from '@frijolmagico/database/orm'
 
 import { rotateFeaturedArtists } from '@/app/(cron)/_lib/rotate-featured-artists'
-import { invalidateWebFeaturedArtists } from '@/shared/lib/web-invalidation'
+import { revalidateWebCache } from '@/shared/lib/web-invalidation'
 import { sendCronitorPing } from '@/app/(cron)/_lib/send-cronitor-ping'
 
 /**
@@ -39,7 +39,9 @@ export async function GET(request: Request) {
       })
     }
 
-    const invalidationResult = await invalidateWebFeaturedArtists()
+    const invalidationResult = await revalidateWebCache({
+      tag: 'home:featured-artists'
+    })
 
     const durationMs = Date.now() - startedAt
     await sendCronitorPing({
