@@ -4,7 +4,7 @@ import { loadSql } from '@frijolmagico/database/sql'
 import { cacheTag } from 'next/cache'
 
 export const getFeaturedArtists = async () => {
-  'use cache: remote'
+  'use cache'
   cacheTag('home:featured-artists')
 
   const query = loadSql(import.meta.url, './featured-artists.sql')
