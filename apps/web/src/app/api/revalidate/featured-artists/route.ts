@@ -1,7 +1,7 @@
 import { revalidatePath, revalidateTag } from 'next/cache'
 import { NextRequest, NextResponse } from 'next/server'
 
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   const authHeader = request.headers.get('Authorization')
   const expectedSecret = process.env.REVALIDATION_SECRET
 

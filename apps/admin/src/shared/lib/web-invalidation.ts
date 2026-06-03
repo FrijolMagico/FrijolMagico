@@ -69,7 +69,7 @@ export async function revalidateWebCache(
   }
 
   const response = await fetch(url, {
-    method: 'GET',
+    method: 'POST',
     headers: {
       Authorization: `Bearer ${secret}`
     }
