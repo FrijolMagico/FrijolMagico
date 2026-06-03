@@ -14,7 +14,7 @@ import {
 import { useSidebar } from '../ui/sidebar'
 import { Suspense } from 'react'
 import { IconLogout } from '@tabler/icons-react'
-import { authClient } from '@/shared/lib/auth'
+import { authClient } from '@/shared/lib/auth/client'
 
 interface PanelSidebarUserDropdownProps {
   user: {

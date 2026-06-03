@@ -1,6 +1,6 @@
 'use client'
 
-import { authClient } from '@/shared/lib/auth'
+import { authClient } from '@/shared/lib/auth/client'
 import { useState } from 'react'
 
 export function useGoogleLogin() {

@@ -1,4 +1,4 @@
-import { auth } from '.'
+import { auth } from './server'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
