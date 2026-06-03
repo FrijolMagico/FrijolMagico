@@ -19,11 +19,13 @@
         "CDN_URL",
         "BETTER_AUTH_SECRET",
         "BETTER_AUTH_URL",
+        "BETTER_AUTH_API_KEY",
         "GOOGLE_CLIENT_ID",
         "GOOGLE_CLIENT_SECRET",
         "REVALIDATION_SECRET",
         "CRON_SECRET",
-        "WEB_REVALIDATION_URL"
+        "WEB_REVALIDATION_URL",
+        "CRONITOR_BASE_URL"
       ],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": [".next/**", "!.next/cache/**"]
