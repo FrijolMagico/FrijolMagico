@@ -2,9 +2,10 @@
 
 import Image from 'next/image'
 import type { CatalogArtist } from '../types/catalog'
-import { Instagram, Mail } from 'lucide-react'
+import { Mail } from 'lucide-react'
 import { useCatalogPanelStore } from '../store/useCatalogPanelStore'
 import { cn } from '@/utils/cn'
+import { Instagram } from '@/components/icons/Instagram'
 
 export const CatalogArtistCard = ({
   id,
@@ -112,7 +113,7 @@ export const CatalogArtistCard = ({
             aria-label='Email'
             className='hover:text-secondary transition duration-300 hover:scale-105'
           >
-            <Mail size={18} />
+            <Mail size={20} strokeWidth={1.2} />
           </a>
         </section>
 

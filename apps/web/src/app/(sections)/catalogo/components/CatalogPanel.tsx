@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { Instagram, Mail, X } from 'lucide-react'
+import { Mail, X } from 'lucide-react'
+import { Instagram } from '@/components/icons/Instagram'
 import Markdown from 'react-markdown'
 
 import { useCatalogPanelStore } from '../store/useCatalogPanelStore'
@@ -294,7 +295,7 @@ export const CatalogPanel = ({
                     }
                   >
                     <span className='w-6'>
-                      <Mail size={18} />
+                      <Mail size={18} strokeWidth={1.5} />
                     </span>
                     <span>{selectedArtist.email}</span>
                   </a>
@@ -311,7 +312,7 @@ export const CatalogPanel = ({
                     }
                   >
                     <span className='w-6'>
-                      <Instagram size={18} />
+                      <Instagram size={18} strokeWidth={1.6} />
                     </span>
                     <span>{getInstagramUserTag(selectedArtist.rrss)}</span>
                   </a>
