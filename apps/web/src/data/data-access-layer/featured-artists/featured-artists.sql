@@ -1,6 +1,7 @@
 SELECT
     a.pseudonimo,
     a.slug,
+    a.rrss,
     ai.imagen_url
 FROM catalogo_artista ac
 LEFT JOIN artista a ON ac.artista_id = a.id

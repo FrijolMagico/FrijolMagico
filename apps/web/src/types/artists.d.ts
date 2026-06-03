@@ -13,4 +13,5 @@ export interface FeaturedArtist {
   pseudonimo: string
   slug: string
   imagen_url: string
+  rrss: string
 }
