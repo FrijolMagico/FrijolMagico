@@ -15,6 +15,12 @@ export const auth = betterAuth({
     provider: 'sqlite'
   }),
   baseURL: process.env.BETTER_AUTH_URL || 'http://localhost:3001',
+  appName: 'Panel de Administración - Frijol Mágico',
+  advanced: {
+    ipAddress: {
+      ipAddressHeaders: ['x-vercel-forwarded-for', 'x-forwarded-for']
+    }
+  },
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID || '',
@@ -29,7 +35,8 @@ export const auth = betterAuth({
     updateAge: SESSION_UPDATE_AGE,
     cookieCache: {
       enabled: true,
-      maxAge: SESSION_EXPIRATION_TIME
+      maxAge: SESSION_EXPIRATION_TIME,
+      strategy: 'jwt'
     }
   },
   hooks: {
