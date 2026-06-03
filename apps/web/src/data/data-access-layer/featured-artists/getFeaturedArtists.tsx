@@ -1,28 +1,44 @@
 import { FeaturedArtist } from '@/types/artists'
 import { executeQuery } from '@frijolmagico/database/client'
-import { loadSql } from '@frijolmagico/database/sql'
-import { cacheTag } from 'next/cache'
+import { unstable_cache } from 'next/cache'
 
-export const getFeaturedArtists = async () => {
-  'use cache'
-  cacheTag('home:featured-artists')
+const FEATURED_ARTISTS_QUERY = `SELECT
+    a.pseudonimo,
+    a.slug,
+    a.rrss,
+    ai.imagen_url
+FROM catalogo_artista ac
+LEFT JOIN artista a ON ac.artista_id = a.id
+LEFT JOIN artista_imagen ai ON a.id = ai.artista_id
+WHERE a.deleted_at IS null AND ac.destacado = true AND ac.activo = true
+LIMIT 3`
 
-  const query = loadSql(import.meta.url, './featured-artists.sql')
-  try {
-    const { data, error } = await executeQuery<FeaturedArtist>(query, [])
+const getCachedFeaturedArtists = unstable_cache(
+  async () => {
+    const { data, error } = await executeQuery<FeaturedArtist>(
+      FEATURED_ARTISTS_QUERY,
+      []
+    )
 
     if (error) {
       console.error('Error fetching featured artists:', error)
-      return []
+      return [] as FeaturedArtist[]
     }
 
     if (!data || data.length === 0) {
       console.warn('No featured artists found')
-      return []
+      return [] as FeaturedArtist[]
     }
 
     return data
-  } catch (error) {
-    console.error('Unexpected error fetching featured artists:', error)
+  },
+  ['featured-artists'],
+  {
+    tags: ['home:featured-artists'],
+    revalidate: 86400 // backup: expire after 1 day
   }
+)
+
+export const getFeaturedArtists = async (): Promise<FeaturedArtist[]> => {
+  return getCachedFeaturedArtists()
 }
