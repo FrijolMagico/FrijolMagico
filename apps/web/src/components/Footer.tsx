@@ -50,7 +50,7 @@ export const Footer = () => {
               <div className='mx-auto flex w-full max-w-4xl flex-col items-center justify-between gap-4 md:flex-row lg:py-4'>
                 <section className='max-w-md space-y-2'>
                   <Image
-                    src='/logos/logo-white.png'
+                    src='https://cdn.frijolmagico.cl/asoc/logos/logotipo_white.png'
                     alt='Logo de la Asociación Cultural Frijol Mágico'
                     width={300}
                     height={173}

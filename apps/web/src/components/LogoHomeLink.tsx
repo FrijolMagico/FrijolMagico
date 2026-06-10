@@ -16,7 +16,7 @@ export const LogoHomeLink = ({ className }: LogoHomeLinkProps) => {
       className={cn('group relative m-auto block size-fit', className)}
     >
       <Image
-        src='/logos/icon_frijol_asoc_2026_color.png'
+        src='https://cdn.frijolmagico.cl/asoc/logos/icono_color.png'
         loading='eager'
         alt='Logo Frijol Mágico'
         width={120}

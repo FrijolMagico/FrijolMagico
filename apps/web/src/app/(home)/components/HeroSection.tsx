@@ -15,7 +15,7 @@ export function HeroSection() {
       <section className='flex flex-col items-center px-2'>
         <div className='relative w-fit lg:-mr-14'>
           <Image
-            src='/logos/logotipo_asoc_2026_color.png'
+            src='https://cdn.frijolmagico.cl/asoc/logos/logotipo_color.png'
             alt=''
             width={1428}
             height={814}
