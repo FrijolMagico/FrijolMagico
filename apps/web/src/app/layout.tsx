@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import {
-  Fragment_Mono,
   Josefin_Sans,
   Noto_Sans,
   Roboto_Mono,
@@ -109,7 +108,7 @@ export default function RootLayout({
     <html lang={SITE.lang}>
       <body
         className={cn(
-          'bg-background font-rubik relative flex size-full min-h-dvh flex-col antialiased',
+          'bg-background font-rubik relative mt-12 flex size-full min-h-dvh flex-col antialiased lg:mt-4',
           josefinSans.variable,
           notoSans.variable,
           superFortress.variable,

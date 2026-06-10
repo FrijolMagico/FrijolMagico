@@ -1,12 +1,13 @@
 {
-  "title": "Convocatoria Abierta",
-  "description": "Festival Frijol Mágico 2026 🪄",
+  "type": "Convocatoria",
+  "title": "XVI Festival Frijol Mágico 🪄",
+  "description": "Ilustración y Narrativa Gráfica",
   "left_button": {
-    "text": "Postula aquí",
-    "url": "https://forms.gle/Jn2p5SmE7qv9VRhy5"
-  },
-  "right_button": {
     "text": "Lee las bases",
     "url": "https://drive.google.com/file/d/1Bts-bS5bqTzEuhVDWwWgY5l9bjdRFidq/view?usp=drivesdk"
+  },
+  "right_button": {
+    "text": "Postula aquí",
+    "url": "https://forms.gle/Jn2p5SmE7qv9VRhy5"
   }
 }

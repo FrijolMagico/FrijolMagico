@@ -1,6 +1,7 @@
 import Link from 'next/link'
 
 interface ApplyBannerProps {
+  type?: string
   title?: string
   description?: string
   buttons: {
@@ -19,7 +20,8 @@ interface ApplyBannerProps {
 }
 
 export function ApplyBanner({
-  title = 'Convocatoria',
+  type = 'Convocatoria',
+  title,
   description,
   buttons,
   palette = 'base'
@@ -27,19 +29,28 @@ export function ApplyBanner({
   return (
     <section
       data-palette={palette}
-      className='bg-palette-background relative flex h-full w-full items-center justify-center'
+      className='bg-palette-outline relative flex h-full w-full items-center justify-center overflow-hidden px-2'
     >
-      <div className='-mt-18 w-screen max-w-xl space-y-6'>
-        <div>
-          <span className='font-roboto-mono text-palette-foreground text-md block text-center font-light'>
+      {/* Animated background orbs */}
+      <div className='bg-palette-background pointer-events-none absolute top-0 right-0 left-0 z-0 mx-auto aspect-square w-1/2 rounded-full blur-[100px]' />
+
+      <div className='relative z-10 w-screen max-w-lg space-y-4'>
+        <div className='flex justify-center gap-2'>
+          <span className='wavy-underline font-roboto-mono text-palette-foreground block text-center text-sm lowercase'>
             Nueva
           </span>
-          <h2 className='wavy-underline text-palette-accent text-center text-2xl font-bold tracking-wide uppercase lg:text-3xl'>
-            {title}
+          <h2 className='text-palette-accent text-center text-xl font-bold tracking-wider uppercase'>
+            {type}
           </h2>
         </div>
+        {title && (
+          <p className='text-palette-foreground font-canarina -mt-4 text-center text-4xl leading-none font-bold tracking-wider lg:text-6xl'>
+            {title}
+          </p>
+        )}
+
         {description && (
-          <p className='text-palette-foreground text-center text-3xl font-bold lg:text-4xl'>
+          <p className='text-palette-accent font-canarina -mt-2 text-center text-lg leading-none tracking-wider'>
             {description}
           </p>
         )}

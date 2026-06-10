@@ -85,7 +85,7 @@ export const Header = ({
           {description}
         </ReactMarkdown>
       )}
-      <DoodleLine />
+      <DoodleLine color='text-secondary' />
     </header>
   )
 }
@@ -107,14 +107,13 @@ interface HeaderProps {
 }
 
 const defaultFontFamily: StylesClassProps = {
-  titleClass: 'font-josefin',
-  subTitleClass: 'font-josefin',
+  titleClass: 'font-canarina',
+  subTitleClass: 'font-noto',
   descriptionClass: 'font-noto'
 }
 
 const defaultTextColor: StylesClassProps = {
-  titleClass:
-    'from-secondary to-accent bg-gradient-to-r bg-clip-text text-transparent',
+  titleClass: 'text-primary',
   subTitleClass: 'text-secondary',
   descriptionClass: 'text-primary'
 }
