@@ -1,8 +1,7 @@
 import { LinkBtn } from '@/components/LinkBtn'
-import { LogoHomeLink } from '@/components/LogoHomeLink'
 import { paths } from '@/config/paths'
 import { cn } from '@/utils/cn'
-import { ViewTransition } from 'react'
+import Image from 'next/image'
 
 const navItems = [
   { prefix: 'Historia', name: 'Festivales', href: paths.festival.base },
@@ -12,15 +11,17 @@ const navItems = [
 
 export function HeroSection() {
   return (
-    <header className='mx-auto h-fit max-w-6xl space-y-10'>
-      <section>
-        <div className='relative h-fit w-full'>
-          <h1 className='font-canarina text-stroke-1 lg:text-stroke-3 text-stroke-foreground text-secondary text-center text-[5rem] leading-none font-bold uppercase md:text-[10rem] lg:text-[12rem]'>
-            Frijol Mágico
-          </h1>
-          <ViewTransition name='transition-logo'>
-            <LogoHomeLink className='absolute inset-0 size-18 md:size-fit' />
-          </ViewTransition>
+    <header className='mx-auto h-fit max-w-6xl space-y-12'>
+      <section className='flex flex-col items-center px-2'>
+        <div className='relative w-fit lg:-mr-14'>
+          <Image
+            src='/logos/logotipo_asoc_2026_color.png'
+            alt=''
+            width={1428}
+            height={814}
+            className='mx-auto w-full lg:max-w-2xl'
+            loading='eager'
+          />
         </div>
         <p className='font-roboto-mono w-prose mx-auto max-w-xl px-2 text-center text-xs tracking-wide uppercase'>
           Espacio que reúne a las y los Ilustradores de la Región de Coquimbo,

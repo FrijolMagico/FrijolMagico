@@ -1,27 +1,21 @@
 @theme inline {
   /* Base site-wide palette */
-  --color-background: #f0f0f0;
+  --color-background: #e4e4e4;
   --color-foreground: oklch(0.2178 0 0);
-  --color-primary: oklch(0.4866 0.1317 149.67);
-  --color-secondary: oklch(64.598% 0.20233 35.168);
-  --color-accent: oklch(84.405% 0.16049 86.113);
-  --color-link: oklch(84.405% 0.16049 86.113);
+  --color-primary: #005e99;
+  --color-secondary: #8ccc53;
+  --color-accent: #ff9165;
+  --color-link: #c096b5;
   --color-border: oklch(0.2178 0 0);
 
   /* Component-level palette tokens linked to dynamic CSS variables */
-  --color-palette-foreground: var(
-    --theme-palette-foreground,
-    var(--color-background)
-  );
-  --color-palette-background: var(
-    --theme-palette-background,
-    var(--color-accent)
-  );
+  --color-palette-foreground: var(--theme-palette-foreground,
+      var(--color-background));
+  --color-palette-background: var(--theme-palette-background,
+      var(--color-accent));
   --color-palette-primary: var(--theme-palette-primary, var(--color-primary));
-  --color-palette-secondary: var(
-    --theme-palette-secondary,
-    var(--color-secondary)
-  );
+  --color-palette-secondary: var(--theme-palette-secondary,
+      var(--color-secondary));
   --color-palette-accent: var(--theme-palette-accent, var(--color-accent));
   --color-palette-outline: var(--theme-palette-outline, var(--color-accent));
 }
