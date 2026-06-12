@@ -23,7 +23,7 @@ export function HeroSection() {
             loading='eager'
           />
         </div>
-        <p className='font-roboto-mono w-prose mx-auto max-w-xl px-2 text-center text-xs tracking-wide uppercase'>
+        <p className='font-roboto-mono text-foreground/80 w-prose mx-auto max-w-xl px-2 text-center text-xs tracking-wide uppercase'>
           Espacio que reúne a las y los Ilustradores de la Región de Coquimbo,
           generando distintas instancias que ayuden a potenciar su trabajo.
         </p>
