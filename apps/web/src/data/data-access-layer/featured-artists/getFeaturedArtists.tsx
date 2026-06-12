@@ -35,7 +35,7 @@ const getCachedFeaturedArtists = unstable_cache(
   ['featured-artists'],
   {
     tags: ['home:featured-artists'],
-    revalidate: 86400 // backup: expire after 1 day
+    revalidate: 86400 * 7 // backup: expire after 7 days
   }
 )
 
