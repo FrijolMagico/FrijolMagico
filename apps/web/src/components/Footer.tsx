@@ -46,15 +46,15 @@ export const Footer = () => {
         >
           <div className='flex w-full max-w-svw flex-1 flex-col px-4 lg:px-10'>
             <BackToTop />
-            <div className='space-y-4 pt-8'>
+            <div className='space-y-4 pt-24 md:pt-8'>
               <div className='mx-auto flex w-full max-w-4xl flex-col items-center justify-between gap-4 md:flex-row lg:py-4'>
-                <section className='max-w-md space-y-2'>
+                <section className='max-w-sm space-y-2'>
                   <Image
                     src='https://cdn.frijolmagico.cl/asoc/logos/logotipo_white.png'
                     alt='Logo de la Asociación Cultural Frijol Mágico'
                     width={300}
                     height={173}
-                    className='mx-auto'
+                    className='mx-auto w-64'
                     loading='lazy'
                   />
                   <p className='font-roboto-mono text-background/80 text-center text-[10px] font-extralight tracking-wide uppercase md:text-left lg:px-2'>
