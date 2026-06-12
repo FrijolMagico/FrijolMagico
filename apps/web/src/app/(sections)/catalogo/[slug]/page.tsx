@@ -28,14 +28,14 @@ export async function generateMetadata({
   const { slug } = await params
 
   if (!slug) {
-    return { title: 'Artista no encontrado — Catálogo · Frijol Mágico' }
+    return { title: 'Artista no encontrado | Catálogo — Frijol Mágico' }
   }
 
   const { data } = await getCatalogData()
   const artist = getArtistBySlug(data, slug)
 
   if (!artist) {
-    return { title: 'Artista no encontrado — Catálogo · Frijol Mágico' }
+    return { title: 'Artista no encontrado | Catálogo — Frijol Mágico' }
   }
 
   const description = artist.bio
@@ -43,7 +43,7 @@ export async function generateMetadata({
     : `Conoce el perfil de ${artist.name} en el catálogo de Frijol Mágico.`
 
   return {
-    title: `${artist.name} — Catálogo · Frijol Mágico`,
+    title: `${artist.name} | Catálogo — Frijol Mágico`,
     description,
     openGraph: {
       title: artist.name,
@@ -99,7 +99,7 @@ export default async function ArtistPage({
 
           <div className='min-w-0 flex-1 space-y-8'>
             <header>
-              <h1 className='text-primary text-4xl leading-tight font-bold md:text-6xl'>
+              <h1 className='text-primary text-4xl leading-none font-bold md:text-6xl'>
                 {artist.name}
               </h1>
               <p className='text-foreground/70 text-lg'>
