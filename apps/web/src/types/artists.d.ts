@@ -15,3 +15,10 @@ export interface FeaturedArtist {
   imagen_url: string
   rrss: string
 }
+
+export interface FeaturedArtistWithParsedRRSS extends Omit<
+  FeaturedArtist,
+  'rrss'
+> {
+  rrss: { [key: string]: string }
+}
