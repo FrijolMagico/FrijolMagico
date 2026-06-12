@@ -14,7 +14,7 @@ import type { CatalogArtist } from '../types/catalog'
 const getArtistSlugFromURL = () => {
   if (typeof window === 'undefined') return null
   const params = new URLSearchParams(window.location.search)
-  return params.get('artist')
+  return params.get('artista')
 }
 
 export const CatalogPanel = ({
@@ -50,7 +50,7 @@ export const CatalogPanel = ({
 
   const initialized = useRef(false)
 
-  // On mount: leer ?artist de la URL e inicializar (navegación directa / bookmark)
+  // On mount: leer ?artista de la URL e inicializar (navegación directa / bookmark)
   useEffect(() => {
     if (initialized.current) return
     initialized.current = true
@@ -103,13 +103,21 @@ export const CatalogPanel = ({
 
   const closePanel = () => {
     const params = new URLSearchParams(window.location.search)
-    params.delete('artist')
+    params.delete('artista')
     const newUrl = params.toString()
       ? `${window.location.pathname}?${params.toString()}`
       : window.location.pathname
     window.history.replaceState(null, '', newUrl)
-    setArtistSlug(null)
+    const slugAtClose = useCatalogPanelStore.getState().artistSlug
     setArtistPanelOpen(false)
+    // Limpiar el slug después de la animación de cierre (300ms),
+    // pero solo si el slug no cambió (evita pisar un nuevo click del usuario)
+    setTimeout(() => {
+      const current = useCatalogPanelStore.getState()
+      if (current.artistSlug === slugAtClose) {
+        current.setArtistSlug(null)
+      }
+    }, 300)
   }
 
   if (!isMounted || !selectedArtist) return null
