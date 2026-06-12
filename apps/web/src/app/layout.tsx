@@ -78,21 +78,14 @@ export const metadata: Metadata = {
     title: SITE.title,
     description: SITE.description,
     url: SITE.url,
-    images: [
-      {
-        url: SITE.image
-      }
-    ]
+    type: 'website',
+    siteName: SITE.title,
+    locale: `${SITE.lang}_CL`
   },
   twitter: {
     title: SITE.title,
     description: SITE.description,
-    card: 'summary_large_image',
-    images: [
-      {
-        url: SITE.image
-      }
-    ]
+    card: 'summary_large_image'
   },
   icons: {
     icon: SITE.favicon
