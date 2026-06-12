@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { X } from 'lucide-react'
 import Link from 'next/link'
 
@@ -11,6 +10,12 @@ import { useAnalytics } from '@/components/analytics/useAnalytics'
 import { cn } from '@/utils/cn'
 
 import type { CatalogArtist } from '../types/catalog'
+
+const getArtistSlugFromURL = () => {
+  if (typeof window === 'undefined') return null
+  const params = new URLSearchParams(window.location.search)
+  return params.get('artist')
+}
 
 export const CatalogPanel = ({
   catalogData
@@ -23,9 +28,15 @@ export const CatalogPanel = ({
   const setArtistPanelOpen = useCatalogPanelStore(
     (state) => state.setArtistPanelOpen
   )
+  const storeSlug = useCatalogPanelStore(
+    (state) => state.artistSlug
+  )
+  const setArtistSlug = useCatalogPanelStore(
+    (state) => state.setArtistSlug
+  )
 
-  const searchParams = useSearchParams()
-  const artistSlug = searchParams.get('artist')
+  // Slug prioritario: el del store (set sincrónicamente por el card) o el de la URL
+  const artistSlug = storeSlug ?? getArtistSlugFromURL()
 
   const selectedArtist = useMemo(
     () => catalogData.find((a) => a.slug === artistSlug) ?? null,
@@ -37,12 +48,34 @@ export const CatalogPanel = ({
 
   const { trackArtistView } = useAnalytics()
 
-  // Initialize panel from URL param: auto-open when ?artist=<slug> is present
+  const initialized = useRef(false)
+
+  // On mount: leer ?artist de la URL e inicializar (navegación directa / bookmark)
   useEffect(() => {
-    if (artistSlug && selectedArtist && !isArtistPanelOpen) {
+    if (initialized.current) return
+    initialized.current = true
+
+    const urlSlug = getArtistSlugFromURL()
+    if (urlSlug) {
+      setArtistSlug(urlSlug)
       setArtistPanelOpen(true)
     }
-  }, [artistSlug, selectedArtist, isArtistPanelOpen, setArtistPanelOpen])
+  }, [setArtistSlug, setArtistPanelOpen])
+
+  // Sincronizar con navegación hacia atrás/adelante del navegador
+  useEffect(() => {
+    const handlePopState = () => {
+      const slug = getArtistSlugFromURL()
+      setArtistSlug(slug)
+      if (slug) {
+        setArtistPanelOpen(true)
+      } else {
+        setArtistPanelOpen(false)
+      }
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [setArtistSlug, setArtistPanelOpen])
 
   useEffect(() => {
     if (isArtistPanelOpen && selectedArtist) {
@@ -75,6 +108,7 @@ export const CatalogPanel = ({
       ? `${window.location.pathname}?${params.toString()}`
       : window.location.pathname
     window.history.replaceState(null, '', newUrl)
+    setArtistSlug(null)
     setArtistPanelOpen(false)
   }
 
