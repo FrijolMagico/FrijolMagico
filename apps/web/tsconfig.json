@@ -1,10 +1,16 @@
 {
   "extends": "@frijolmagico/typescript-config/next",
   "compilerOptions": {
-    "baseUrl": ".",
+    "skipLibCheck": true,
+    "types": [
+      "bun-types"
+    ],
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "*": [
+        "./*"
       ]
     }
   },
@@ -14,5 +20,9 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "../admin/"
   ]
 }
