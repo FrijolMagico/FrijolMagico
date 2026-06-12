@@ -1,7 +1,9 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { X } from 'lucide-react'
+import Link from 'next/link'
 
 import { useCatalogPanelStore } from '../store/useCatalogPanelStore'
 import { CatalogArtistPanelContent } from './CatalogArtistPanelContent'
@@ -9,7 +11,6 @@ import { useAnalytics } from '@/components/analytics/useAnalytics'
 import { cn } from '@/utils/cn'
 
 import type { CatalogArtist } from '../types/catalog'
-import Link from 'next/link'
 
 export const CatalogPanel = ({
   catalogData
@@ -22,7 +23,14 @@ export const CatalogPanel = ({
   const setArtistPanelOpen = useCatalogPanelStore(
     (state) => state.setArtistPanelOpen
   )
-  const selectedArtist = useCatalogPanelStore((state) => state.selectedArtist)
+
+  const searchParams = useSearchParams()
+  const artistSlug = searchParams.get('artist')
+
+  const selectedArtist = useMemo(
+    () => catalogData.find((a) => a.slug === artistSlug) ?? null,
+    [catalogData, artistSlug]
+  )
 
   const [isVisible, setIsVisible] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
@@ -53,9 +61,15 @@ export const CatalogPanel = ({
     }
   }, [isArtistPanelOpen])
 
-  const closePanel = useCallback(() => {
+  const closePanel = () => {
+    const params = new URLSearchParams(window.location.search)
+    params.delete('artist')
+    const newUrl = params.toString()
+      ? `${window.location.pathname}?${params.toString()}`
+      : window.location.pathname
+    window.history.replaceState(null, '', newUrl)
     setArtistPanelOpen(false)
-  }, [setArtistPanelOpen])
+  }
 
   if (!isMounted || !selectedArtist) return null
 

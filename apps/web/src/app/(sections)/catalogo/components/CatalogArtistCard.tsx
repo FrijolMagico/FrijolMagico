@@ -8,48 +8,24 @@ import { cn } from '@/utils/cn'
 import { Instagram } from '@/components/icons/Instagram'
 
 export const CatalogArtistCard = ({
-  id,
   avatar,
   name,
   slug,
   city,
-  country,
   category,
-  bio,
   email,
   rrss,
-  collective,
-  editions,
-  orden,
-  destacado
+  collective
 }: CatalogArtist) => {
-  const selectedArtist = useCatalogPanelStore((state) => state.selectedArtist)
-  const setSelectedArtist = useCatalogPanelStore(
-    (state) => state.setSelectedArtist
-  )
   const setArtistPanelOpen = useCatalogPanelStore(
     (state) => state.setArtistPanelOpen
   )
 
-  const isSelected = selectedArtist?.id === id
-
   const handleOpenPanel = () => {
-    setSelectedArtist({
-      id,
-      avatar,
-      name,
-      slug,
-      city,
-      country,
-      category,
-      bio,
-      email,
-      rrss,
-      collective,
-      editions,
-      orden,
-      destacado
-    })
+    if (!slug) return
+    const params = new URLSearchParams(window.location.search)
+    params.set('artist', slug)
+    window.history.pushState(null, '', `?${params.toString()}`)
     setArtistPanelOpen(true)
   }
 
@@ -57,10 +33,7 @@ export const CatalogArtistCard = ({
     <li
       className={cn(
         'text-primary group hover:bg-background outline-primary/50 bg-background w-full outline-1 outline-dashed hover:outline-solid sm:max-w-xs lg:max-w-sm',
-        'relative flex flex-col justify-around space-y-2 rounded-xl p-4 transition-all duration-300',
-        {
-          'scale-105 outline-solid': isSelected
-        }
+        'relative flex flex-col justify-around space-y-2 rounded-xl p-4 transition-all duration-300'
       )}
     >
       <section className='flex items-center gap-4'>
