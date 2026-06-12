@@ -37,6 +37,13 @@ export const CatalogPanel = ({
 
   const { trackArtistView } = useAnalytics()
 
+  // Initialize panel from URL param: auto-open when ?artist=<slug> is present
+  useEffect(() => {
+    if (artistSlug && selectedArtist && !isArtistPanelOpen) {
+      setArtistPanelOpen(true)
+    }
+  }, [artistSlug, selectedArtist, isArtistPanelOpen, setArtistPanelOpen])
+
   useEffect(() => {
     if (isArtistPanelOpen && selectedArtist) {
       trackArtistView({
