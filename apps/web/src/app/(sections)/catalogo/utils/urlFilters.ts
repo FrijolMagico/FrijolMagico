@@ -1,11 +1,7 @@
 import { normalizeString } from '@frijolmagico/utils/string'
 import type { CatalogFilterValues } from '../types/filters'
 import { FILTER_KEYS } from '../constants/filterConstants'
-
-export const parseParamArray = (param?: string | null) =>
-  param && param.length > 0
-    ? param.split(',').filter(Boolean).map(normalizeString)
-    : []
+import { dedupeArray, parseParamArray } from './searchParams'
 
 export function getFiltersFromURL(): CatalogFilterValues {
   if (typeof window === 'undefined') {
@@ -36,13 +32,9 @@ export function urlHasFilters(): boolean {
 // constructs the query string, and updates the URL using history.replaceState.
 export function updateURLParams(filters: CatalogFilterValues) {
   if (typeof window === 'undefined') return
-  const uniqueCategory = Array.from(
-    new Set(filters.category.map(normalizeString))
-  )
-  const uniqueCity = Array.from(new Set(filters.city.map(normalizeString)))
-  const uniqueCountry = Array.from(
-    new Set(filters.country.map(normalizeString))
-  )
+  const uniqueCategory = dedupeArray(filters.category)
+  const uniqueCity = dedupeArray(filters.city)
+  const uniqueCountry = dedupeArray(filters.country)
   const params = new URLSearchParams()
   if (uniqueCategory.length > 0)
     params.set(FILTER_KEYS.category, uniqueCategory.join(','))
