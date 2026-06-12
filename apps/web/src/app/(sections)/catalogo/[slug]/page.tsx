@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation'
-import { cache } from 'react'
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -14,13 +13,13 @@ import { RelatedArtists } from './components/RelatedArtists'
 import { TrackPageView } from '@/components/analytics/TrackPageView'
 import { SectionHomeButton } from '@/components/SectionsHomeButton'
 
-/**
- * React cache() deduplica getCatalogData() entre generateMetadata y
- * ArtistPage — una sola consulta real. Luego getArtistBySlug es un
- * .find() puro sobre el array en memoria.
- */
-const getCatalogDataCached = cache(getCatalogData)
+// Generate params for all artist pages at build time
+export async function generateStaticParams() {
+  const { data } = await getCatalogData()
+  return data.map((artist) => ({ slug: artist.slug }))
+}
 
+// Generate dynamic metadata for each artist page
 export async function generateMetadata({
   params
 }: {
@@ -32,7 +31,7 @@ export async function generateMetadata({
     return { title: 'Artista no encontrado — Catálogo · Frijol Mágico' }
   }
 
-  const { data } = await getCatalogDataCached()
+  const { data } = await getCatalogData()
   const artist = getArtistBySlug(data, slug)
 
   if (!artist) {
@@ -64,7 +63,7 @@ export default async function ArtistPage({
 
   if (!slug) notFound()
 
-  const { data: catalogData } = await getCatalogDataCached()
+  const { data: catalogData } = await getCatalogData()
   const artist = getArtistBySlug(catalogData, slug)
   if (!artist) notFound()
 
