@@ -3,7 +3,6 @@ import { Header } from '@/components/Header'
 import { CatalogList } from './components/CatalogList'
 import { ErrorSection } from '@/components/ErrorSection'
 import siteData from '@/data/site.json'
-import { ViewTransition } from 'react'
 import { Suspense } from 'react'
 import {
   CatalogCardLoader,
@@ -29,9 +28,7 @@ export default async function CatalogPage() {
   return (
     <>
       <TrackPageView sectionName='Catálogo' sectionPath='/catalogo' />
-      <ViewTransition name='transition-logo'>
-        <SectionHomeButton />
-      </ViewTransition>
+      <SectionHomeButton />
       <Header title={catalog.title} description={catalog.description} />
       <main className='container mx-auto w-full px-4 py-8'>
         {/* Search and Filter Section */}

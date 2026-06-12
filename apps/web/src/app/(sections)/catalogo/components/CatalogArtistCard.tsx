@@ -33,7 +33,7 @@ export const CatalogArtistCard = ({
 
   const isSelected = selectedArtist?.id === id
 
-  const handleViewMoreButton = () => {
+  const handleOpenPanel = () => {
     setSelectedArtist({
       id,
       avatar,
@@ -56,8 +56,8 @@ export const CatalogArtistCard = ({
   return (
     <li
       className={cn(
-        'text-primary group hover:bg-background outline-primary/50 bg-background w-full cursor-default outline-1 outline-dashed hover:outline-solid sm:max-w-xs lg:max-w-sm',
-        'relative flex flex-col justify-around space-y-6 rounded-xl p-4 transition-all duration-300',
+        'text-primary group hover:bg-background outline-primary/50 bg-background w-full outline-1 outline-dashed hover:outline-solid sm:max-w-xs lg:max-w-sm',
+        'relative flex flex-col justify-around space-y-2 rounded-xl p-4 transition-all duration-300',
         {
           'scale-105 outline-solid': isSelected
         }
@@ -72,23 +72,23 @@ export const CatalogArtistCard = ({
           height={48}
           className='h-12 w-12 shrink-0 overflow-hidden rounded-full bg-slate-300 object-cover'
         />
-        <section className=''>
-          <h2 className='text-primary text-xl leading-none font-bold transition-colors duration-300'>
+        <section>
+          <h2 className='text-primary font-canarina text-3xl leading-none font-bold tracking-wide transition-colors duration-300'>
             {name}
           </h2>
           {collective && (
-            <p className='text-foreground mt-1 text-sm leading-none'>
+            <p className='text-primary/80 mt-1 text-sm leading-none'>
               <span className='font-semibold'>Colectivo:</span> {collective}
             </p>
           )}
           <div className='flex gap-2 py-1'>
             {category && (
-              <span className='bg-accent/20 text-accent rounded px-2 py-1 text-xs leading-none font-medium'>
+              <span className='bg-secondary/20 text-secondary rounded px-2 py-1 text-xs leading-none font-medium'>
                 {category}
               </span>
             )}
             {city && (
-              <span className='bg-accent/20 text-accent rounded px-2 py-1 text-xs leading-none font-medium'>
+              <span className='bg-secondary/20 text-secondary rounded px-2 py-1 text-xs leading-none font-medium'>
                 {city}
               </span>
             )}
@@ -102,29 +102,31 @@ export const CatalogArtistCard = ({
           <a
             href={rrss}
             aria-label='Instagram'
-            className='hover:text-secondary transition duration-300 hover:scale-105'
+            className='hover:text-secondary relative z-20 transition duration-300 hover:scale-105'
             target='_blank'
             rel='noopener noreferrer'
+            onClick={(e) => e.stopPropagation()}
           >
             <Instagram size={18} />
           </a>
           <a
             href={`mailto:${email}`}
             aria-label='Email'
-            className='hover:text-secondary transition duration-300 hover:scale-105'
+            className='hover:text-secondary relative z-20 transition duration-300 hover:scale-105'
+            onClick={(e) => e.stopPropagation()}
           >
             <Mail size={20} strokeWidth={1.2} />
           </a>
         </section>
 
+        {/* Ver más — solo on hover */}
         <button
-          onClick={handleViewMoreButton}
-          aria-label={`Ver más detalles de ${name}`}
-          className={cn([
-            'outline-background absolute right-4 bottom-4 rotate-6 cursor-pointer outline group-hover:rotate-0',
-            'text-background hover:bg-primary outline-primary hover:text-background rounded px-3 py-1.5 text-xs outline transition duration-300',
-            isSelected ? 'bg-primary rotate-0' : 'bg-background text-primary'
-          ])}
+          onClick={handleOpenPanel}
+          className={cn(
+            'absolute right-4 bottom-4 cursor-pointer rounded px-3 py-1.5 text-xs font-medium transition-all duration-300',
+            'bg-primary text-background rotate-6',
+            'opacity-100 group-hover:rotate-0 group-hover:opacity-100 xl:opacity-0'
+          )}
         >
           Ver más
         </button>

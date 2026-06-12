@@ -1,68 +1,15 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import Image from 'next/image'
-import { Mail, X } from 'lucide-react'
-import { Instagram } from '@/components/icons/Instagram'
-import Markdown from 'react-markdown'
+import { useCallback, useEffect, useState } from 'react'
+import { X } from 'lucide-react'
 
 import { useCatalogPanelStore } from '../store/useCatalogPanelStore'
-import { cn } from '@/utils/cn'
-import { getInstagramUserTag } from '@frijolmagico/utils/string'
+import { CatalogArtistPanelContent } from './CatalogArtistPanelContent'
 import { useAnalytics } from '@/components/analytics/useAnalytics'
+import { cn } from '@/utils/cn'
 
 import type { CatalogArtist } from '../types/catalog'
-
-interface SortedEditionParticipation {
-  año?: string | null
-  edicion: string
-  evento: string
-  originalIndex: number
-}
-
-interface FestivalEditionGroup {
-  editions: SortedEditionParticipation[]
-  evento: string
-}
-
-const getYearSortValue = (año?: string | null): number => {
-  const parsedYear = Number.parseInt(año ?? '', 10)
-
-  return Number.isNaN(parsedYear) ? Number.MIN_SAFE_INTEGER : parsedYear
-}
-
-const groupFestivalParticipations = (
-  editions: CatalogArtist['editions']
-): FestivalEditionGroup[] => {
-  const sortedEditions: SortedEditionParticipation[] = editions
-    .map((edition, index) => ({
-      ...edition,
-      originalIndex: index
-    }))
-    .sort(
-      (a, b) =>
-        getYearSortValue(b.año) - getYearSortValue(a.año) ||
-        a.originalIndex - b.originalIndex
-    )
-
-  const groupedFestivals = sortedEditions.reduce((groups, edition) => {
-    const currentGroup = groups.get(edition.evento)
-
-    if (currentGroup) {
-      currentGroup.editions.push(edition)
-      return groups
-    }
-
-    groups.set(edition.evento, {
-      editions: [edition],
-      evento: edition.evento
-    })
-
-    return groups
-  }, new Map<string, FestivalEditionGroup>())
-
-  return Array.from(groupedFestivals.values())
-}
+import Link from 'next/link'
 
 export const CatalogPanel = ({
   catalogData
@@ -75,17 +22,13 @@ export const CatalogPanel = ({
   const setArtistPanelOpen = useCatalogPanelStore(
     (state) => state.setArtistPanelOpen
   )
-  const setSelectedArtist = useCatalogPanelStore(
-    (state) => state.setSelectedArtist
-  )
-
   const selectedArtist = useCatalogPanelStore((state) => state.selectedArtist)
+
   const [isVisible, setIsVisible] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
 
-  const { trackArtistView, trackSocialClick } = useAnalytics()
+  const { trackArtistView } = useAnalytics()
 
-  // Track artist view when panel opens with a selected artist
   useEffect(() => {
     if (isArtistPanelOpen && selectedArtist) {
       trackArtistView({
@@ -96,62 +39,25 @@ export const CatalogPanel = ({
     }
   }, [isArtistPanelOpen, selectedArtist, trackArtistView])
 
-  // Handle mount/unmount animation sequence for the panel.
-  // We need to mount the component first (setIsMounted), then trigger the visibility animation.
-  // This two-phase approach allows CSS transitions to work properly on mount.
-  // The setState is intentional here to coordinate the animation lifecycle.
   useEffect(() => {
     if (isArtistPanelOpen) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsMounted(true)
-      setTimeout(() => setIsVisible(true), 10) // allow mount before animating in
-      window.history.pushState({ artistPanel: true }, '')
+      requestAnimationFrame(() => {
+        setIsMounted(true)
+        requestAnimationFrame(() => setIsVisible(true))
+      })
     } else {
-      setIsVisible(false)
-      // Unmount after animation duration
-      const timeout = setTimeout(() => setIsMounted(false), 300)
-      return () => clearTimeout(timeout)
+      requestAnimationFrame(() => {
+        setIsVisible(false)
+        setTimeout(() => setIsMounted(false), 300)
+      })
     }
   }, [isArtistPanelOpen])
 
-  // Handle back gesture (popstate) to close the panel instead of navigating back
-  useEffect(() => {
-    const handlePopState = () => {
-      if (isArtistPanelOpen) {
-        setArtistPanelOpen(false)
-      }
-    }
-    window.addEventListener('popstate', handlePopState)
-    return () => {
-      window.removeEventListener('popstate', handlePopState)
-    }
-  }, [isArtistPanelOpen, setArtistPanelOpen])
+  const closePanel = useCallback(() => {
+    setArtistPanelOpen(false)
+  }, [setArtistPanelOpen])
 
-  // Obtener miembros del colectivo actual buscando otros artistas con el mismo collective
-  const collectiveMembers = selectedArtist?.collective
-    ? catalogData.filter(
-        (artist) =>
-          artist.collective === selectedArtist.collective &&
-          artist.id !== selectedArtist.id
-      )
-    : []
-
-  const festivalParticipations = selectedArtist
-    ? groupFestivalParticipations(selectedArtist.editions)
-    : []
-
-  const handleChangePanelToCollectiveMember = (collectiveMemberId: string) => {
-    const collectiveMember = catalogData.find(
-      (artist) => artist.id === collectiveMemberId
-    )
-
-    if (collectiveMember) {
-      setSelectedArtist(collectiveMember)
-      setArtistPanelOpen(true)
-    }
-  }
-
-  if (!isMounted) return null
+  if (!isMounted || !selectedArtist) return null
 
   return (
     <div
@@ -161,11 +67,7 @@ export const CatalogPanel = ({
       )}
       aria-label='Panel de detalles del artista'
     >
-      <div
-        className='fixed inset-0'
-        onClick={() => setArtistPanelOpen(false)}
-        role='presentation'
-      />
+      <div className='fixed inset-0' onClick={closePanel} role='presentation' />
 
       <aside
         className={cn(
@@ -174,13 +76,13 @@ export const CatalogPanel = ({
         )}
         aria-labelledby='artist-details-heading'
       >
-        <div className='h-full overflow-y-auto p-6'>
+        <div className='flex h-full flex-col overflow-y-auto p-6'>
           <header className='mb-6 flex items-start justify-between'>
             <h2 id='artist-details-heading' className='text-2xl font-bold'>
               Detalles del Artista
             </h2>
             <button
-              onClick={() => setArtistPanelOpen(false)}
+              onClick={closePanel}
               className='hover:text-secondary cursor-pointer rounded-full p-1 transition duration-150 hover:scale-110'
               aria-label='Cerrar panel'
             >
@@ -188,137 +90,24 @@ export const CatalogPanel = ({
             </button>
           </header>
 
-          {selectedArtist && (
-            <article className='space-y-6'>
-              <section className='flex items-center space-x-4'>
-                <figure className='relative h-20 w-20 shrink-0'>
-                  <Image
-                    src={selectedArtist.avatar}
-                    alt={`Imagen de ${selectedArtist.name}`}
-                    fill
-                    className='border-primary rounded-full border-2 object-cover'
-                  />
-                </figure>
-                <div>
-                  <h3 className='text-secondary text-2xl leading-none font-bold'>
-                    {selectedArtist.name}
-                  </h3>
-                  <p className='text-sm text-gray-600'>
-                    {selectedArtist.city} - {selectedArtist.country}
-                  </p>
-                  {selectedArtist.category && (
-                    <span className='bg-primary/10 text-primary mt-1 inline-block rounded-sm px-2 py-1 text-xs'>
-                      {selectedArtist.category}
-                    </span>
-                  )}
-                </div>
-              </section>
+          <div className='flex-1'>
+            <CatalogArtistPanelContent
+              artist={selectedArtist}
+              catalogData={catalogData}
+            />
+          </div>
 
-              {/* Colectivo actual y miembros */}
-              {selectedArtist.collective && (
-                <section>
-                  <p className='text-foreground'>
-                    <strong>Colectivo</strong>: {selectedArtist.collective}
-                  </p>
-                  {collectiveMembers.length > 0 && (
-                    <div className='flex gap-1 text-sm'>
-                      <p>Miembros:</p>
-                      <ul className='flex flex-wrap gap-2'>
-                        {collectiveMembers.map((member) => (
-                          <li key={member.id}>
-                            <button
-                              onClick={() =>
-                                handleChangePanelToCollectiveMember(member.id)
-                              }
-                              className='text-secondary cursor-pointer hover:underline'
-                            >
-                              {member.name}
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </section>
-              )}
-
-              {/* Ediciones en las que ha participado */}
-              {festivalParticipations.length > 0 && (
-                <section className='space-y-3'>
-                  <h4 className='font-semibold'>
-                    Participaciones en Festivales
-                  </h4>
-                  <ul className='space-y-4 pl-2'>
-                    {festivalParticipations.map((festival) => (
-                      <li key={festival.evento} className='space-y-2 pl-2'>
-                        <p className='text-sm font-semibold'>
-                          {festival.evento}
-                        </p>
-                        <ul className='flex flex-wrap gap-2 pl-2'>
-                          {festival.editions.map((edition) => (
-                            <li
-                              key={`${festival.evento}-${edition.edicion}-${edition.año ?? 'sin-año'}`}
-                            >
-                              <span className='bg-primary/10 text-primary rounded px-2 py-1 text-xs'>
-                                {edition.edicion}
-                                {edition.año && ` (${edition.año})`}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              )}
-
-              <section>
-                <h4 className='mb-2 font-semibold'>Biografia</h4>
-                <div className='flex flex-col gap-2 text-sm'>
-                  <Markdown>{selectedArtist.bio}</Markdown>
-                </div>
-              </section>
-
-              <section>
-                <h4 className='mb-2 font-semibold'>Contacto</h4>
-                <address className='space-y-2 not-italic'>
-                  <a
-                    href={`mailto:${selectedArtist.email}`}
-                    className='hover:text-secondary flex items-center transition-colors duration-150'
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    onClick={() =>
-                      trackSocialClick({
-                        platform: 'email',
-                        location: 'artist_panel'
-                      })
-                    }
-                  >
-                    <span className='w-6'>
-                      <Mail size={18} strokeWidth={1.5} />
-                    </span>
-                    <span>{selectedArtist.email}</span>
-                  </a>
-                  <a
-                    href={selectedArtist.rrss}
-                    className='hover:text-secondary flex items-center transition-colors duration-150'
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    onClick={() =>
-                      trackSocialClick({
-                        platform: 'instagram',
-                        location: 'artist_panel'
-                      })
-                    }
-                  >
-                    <span className='w-6'>
-                      <Instagram size={18} strokeWidth={1.6} />
-                    </span>
-                    <span>{getInstagramUserTag(selectedArtist.rrss)}</span>
-                  </a>
-                </address>
-              </section>
-            </article>
+          {/* Sticky CTA: Perfil completo */}
+          {selectedArtist.slug && (
+            <div className='border-border/20 bg-background sticky bottom-0 mt-6 border-t pt-4'>
+              <Link
+                href={`/catalogo/${selectedArtist.slug}`}
+                aria-label={`Ver perfil completo de ${selectedArtist.name}`}
+                className='bg-primary text-background hover:bg-primary/90 block w-full cursor-pointer rounded-lg px-4 py-3 text-center text-sm font-semibold transition-colors'
+              >
+                Perfil completo →
+              </Link>
+            </div>
           )}
         </div>
       </aside>
