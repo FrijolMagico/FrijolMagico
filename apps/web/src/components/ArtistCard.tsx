@@ -40,6 +40,7 @@ export function ArtistCard({ artist, isFeatured }: ArtistCardProps) {
               alt={`${artist.pseudonimo} avatar`}
               width={200}
               height={200}
+              sizes='200px'
               className='size-full origin-center object-cover duration-300 group-hover:scale-110'
             />
           </ArtistAvatarTransition>

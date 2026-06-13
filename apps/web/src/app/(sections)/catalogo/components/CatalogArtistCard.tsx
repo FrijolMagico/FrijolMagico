@@ -47,6 +47,7 @@ export const CatalogArtistCard = ({
           alt={`Imagen de ${name}`}
           width={48}
           height={48}
+          sizes='48px'
           className='h-12 w-12 shrink-0 overflow-hidden rounded-full bg-slate-300 object-cover'
         />
         <section>
