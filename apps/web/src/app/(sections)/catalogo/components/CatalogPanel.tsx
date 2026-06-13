@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { X } from 'lucide-react'
 import Link from 'next/link'
 
@@ -11,6 +10,12 @@ import { useAnalytics } from '@/components/analytics/useAnalytics'
 import { cn } from '@/utils/cn'
 
 import type { CatalogArtist } from '../types/catalog'
+
+const getArtistSlugFromURL = () => {
+  if (typeof window === 'undefined') return null
+  const params = new URLSearchParams(window.location.search)
+  return params.get('artista')
+}
 
 export const CatalogPanel = ({
   catalogData
@@ -23,13 +28,11 @@ export const CatalogPanel = ({
   const setArtistPanelOpen = useCatalogPanelStore(
     (state) => state.setArtistPanelOpen
   )
-
-  const searchParams = useSearchParams()
-  const artistSlug = searchParams.get('artist')
-
-  const selectedArtist = useMemo(
-    () => catalogData.find((a) => a.slug === artistSlug) ?? null,
-    [catalogData, artistSlug]
+  const storeSlug = useCatalogPanelStore(
+    (state) => state.artistSlug
+  )
+  const setArtistSlug = useCatalogPanelStore(
+    (state) => state.setArtistSlug
   )
 
   const [isVisible, setIsVisible] = useState(false)
@@ -37,12 +40,42 @@ export const CatalogPanel = ({
 
   const { trackArtistView } = useAnalytics()
 
-  // Initialize panel from URL param: auto-open when ?artist=<slug> is present
+  const initialized = useRef(false)
+
+  // Slug prioritario: el del store (set sincrónicamente por el card) o el de la URL
+  const artistSlug = storeSlug ?? getArtistSlugFromURL()
+
+  const selectedArtist = useMemo(
+    () => catalogData.find((a) => a.slug === artistSlug) ?? null,
+    [catalogData, artistSlug]
+  )
+
+  // On mount: leer ?artista de la URL e inicializar (navegación directa / bookmark)
   useEffect(() => {
-    if (artistSlug && selectedArtist && !isArtistPanelOpen) {
+    if (initialized.current) return
+    initialized.current = true
+
+    const urlSlug = getArtistSlugFromURL()
+    if (urlSlug) {
+      setArtistSlug(urlSlug)
       setArtistPanelOpen(true)
     }
-  }, [artistSlug, selectedArtist, isArtistPanelOpen, setArtistPanelOpen])
+  }, [setArtistSlug, setArtistPanelOpen])
+
+  // Sincronizar con navegación hacia atrás/adelante del navegador
+  useEffect(() => {
+    const handlePopState = () => {
+      const slug = getArtistSlugFromURL()
+      setArtistSlug(slug)
+      if (slug) {
+        setArtistPanelOpen(true)
+      } else {
+        setArtistPanelOpen(false)
+      }
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [setArtistSlug, setArtistPanelOpen])
 
   useEffect(() => {
     if (isArtistPanelOpen && selectedArtist) {
@@ -54,27 +87,42 @@ export const CatalogPanel = ({
     }
   }, [isArtistPanelOpen, selectedArtist, trackArtistView])
 
+  // Contador para evitar race conditions entre animación de cierre y re-apertura
+  const closeIdRef = useRef(0)
+
   useEffect(() => {
     if (isArtistPanelOpen) {
       requestAnimationFrame(() => {
         setIsMounted(true)
         requestAnimationFrame(() => setIsVisible(true))
       })
-    } else {
+    } else if (isMounted) {
+      // Solo animar cierre si el panel estaba visible. El guard isMounted
+      // evita que el primer render (con isOpen=false) arranque un timeout
+      // antes de que el mount effect inicialice desde la URL.
+      const thisCloseId = ++closeIdRef.current
       requestAnimationFrame(() => {
         setIsVisible(false)
-        setTimeout(() => setIsMounted(false), 300)
+        setTimeout(() => {
+          if (closeIdRef.current === thisCloseId) {
+            setIsMounted(false)
+          }
+        }, 300)
       })
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isArtistPanelOpen])
 
   const closePanel = () => {
     const params = new URLSearchParams(window.location.search)
-    params.delete('artist')
+    params.delete('artista')
     const newUrl = params.toString()
       ? `${window.location.pathname}?${params.toString()}`
       : window.location.pathname
     window.history.replaceState(null, '', newUrl)
+    // No limpiamos el slug — se mantiene para que la animación de cierre
+    // tenga el artista disponible. Se actualizará al clickear otra card
+    // o al navegar con popstate.
     setArtistPanelOpen(false)
   }
 

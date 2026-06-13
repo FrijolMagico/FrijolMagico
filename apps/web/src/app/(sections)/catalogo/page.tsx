@@ -30,7 +30,7 @@ export default async function CatalogPage() {
       <TrackPageView sectionName='Catálogo' sectionPath='/catalogo' />
       <SectionHomeButton />
       <Header title={catalog.title} description={catalog.description} />
-      <main className='container mx-auto w-full px-4 py-8'>
+      <main className='container mx-auto w-full flex-1 px-4 pt-8 pb-16'>
         {/* Search and Filter Section */}
         <CatalogFiltersInitializer />
         {error ? (

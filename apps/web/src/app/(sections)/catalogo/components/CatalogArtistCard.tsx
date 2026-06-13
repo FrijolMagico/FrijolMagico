@@ -20,12 +20,16 @@ export const CatalogArtistCard = ({
   const setArtistPanelOpen = useCatalogPanelStore(
     (state) => state.setArtistPanelOpen
   )
+  const setArtistSlug = useCatalogPanelStore(
+    (state) => state.setArtistSlug
+  )
 
   const handleOpenPanel = () => {
     if (!slug) return
     const params = new URLSearchParams(window.location.search)
-    params.set('artist', slug)
+    params.set('artista', slug)
     window.history.pushState(null, '', `?${params.toString()}`)
+    setArtistSlug(slug)
     setArtistPanelOpen(true)
   }
 
