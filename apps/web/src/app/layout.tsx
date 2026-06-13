@@ -101,7 +101,7 @@ export default function RootLayout({
     <html lang={SITE.lang}>
       <body
         className={cn(
-          'bg-background font-rubik relative mt-12 flex size-full min-h-dvh flex-col antialiased lg:mt-4',
+          'bg-background font-rubik relative flex h-full min-h-screen w-full flex-col pt-12 antialiased',
           josefinSans.variable,
           notoSans.variable,
           superFortress.variable,

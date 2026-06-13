@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'bun:test'
-import { getRelatedArtists } from './RelatedArtists'
 import type { CatalogArtist } from '../../types/catalog'
+import { getRelatedArtists } from '../lib/getRelatedArtists'
 
 const mockCatalogData: CatalogArtist[] = [
   {

@@ -15,7 +15,7 @@ interface ArtistCardProps {
 export function ArtistCard({ artist, isFeatured }: ArtistCardProps) {
   return (
     <div className='relative'>
-      <h3 className='font-roboto-mono text-primary ml-2 text-lg font-bold'>
+      <h3 className='font-roboto-mono text-primary mb-2 ml-2 text-lg leading-none font-bold'>
         {artist.pseudonimo}
       </h3>
       <Link

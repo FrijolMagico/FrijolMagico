@@ -1,7 +1,6 @@
 import { normalizeString } from '@frijolmagico/utils/string'
 import { CatalogArtist } from '../types/catalog'
 import { CatalogFilterValues } from '../types/filters'
-import { dedupeArray, parseParamArray } from './searchParams'
 
 // Keys that can be used for filtering (string fields only)
 type FilterableKey = 'city' | 'country' | 'category'
