@@ -12,6 +12,8 @@ import { ArtistCollectiveGrid } from './components/ArtistCollectiveGrid'
 import { RelatedArtists } from './components/RelatedArtists'
 import { TrackPageView } from '@/components/analytics/TrackPageView'
 import { SectionHomeButton } from '@/components/SectionsHomeButton'
+import { ArtistAvatarTransition } from '@/components/transitions/ArtistAvatarTransition'
+import { ArtistNameTransition } from '@/components/transitions/ArtistNameTransition'
 
 // Generate params for all artist pages at build time
 export async function generateStaticParams() {
@@ -85,23 +87,27 @@ export default async function ArtistPage({
 
         <div className='flex flex-col gap-8 md:flex-row'>
           <aside className='md:sticky md:top-24 md:self-start'>
-            <figure className='relative size-64 shrink-0 md:size-100'>
-              <Image
-                src={artist.avatar}
-                alt={`Imagen de ${artist.name}`}
-                fill
-                className='border-primary rounded-xl border-2 object-cover shadow-xl'
-                priority
-                sizes='(max-width: 768px) 256px, 320px'
-              />
-            </figure>
+            <ArtistAvatarTransition slug={slug}>
+              <figure className='relative size-64 shrink-0 md:size-100'>
+                <Image
+                  src={artist.avatar}
+                  alt={`Imagen de ${artist.name}`}
+                  fill
+                  className='border-primary rounded-xl border-2 object-cover shadow-xl'
+                  priority
+                  sizes='(max-width: 768px) 256px, 320px'
+                />
+              </figure>
+            </ArtistAvatarTransition>
           </aside>
 
           <div className='min-w-0 flex-1 space-y-8'>
             <header>
-              <h1 className='text-primary text-4xl leading-none font-bold md:text-6xl'>
-                {artist.name}
-              </h1>
+              <ArtistNameTransition slug={slug}>
+                <h1 className='text-primary text-4xl leading-none font-bold md:text-6xl'>
+                  {artist.name}
+                </h1>
+              </ArtistNameTransition>
               <p className='text-foreground/70 text-lg'>
                 {artist.city}
                 {artist.country ? `, ${artist.country}` : ''}
