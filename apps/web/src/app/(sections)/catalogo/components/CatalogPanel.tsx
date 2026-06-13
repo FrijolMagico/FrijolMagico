@@ -35,6 +35,13 @@ export const CatalogPanel = ({
     (state) => state.setArtistSlug
   )
 
+  const [isVisible, setIsVisible] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
+
+  const { trackArtistView } = useAnalytics()
+
+  const initialized = useRef(false)
+
   // Slug prioritario: el del store (set sincrónicamente por el card) o el de la URL
   const artistSlug = storeSlug ?? getArtistSlugFromURL()
 
@@ -42,13 +49,6 @@ export const CatalogPanel = ({
     () => catalogData.find((a) => a.slug === artistSlug) ?? null,
     [catalogData, artistSlug]
   )
-
-  const [isVisible, setIsVisible] = useState(false)
-  const [isMounted, setIsMounted] = useState(false)
-
-  const { trackArtistView } = useAnalytics()
-
-  const initialized = useRef(false)
 
   // On mount: leer ?artista de la URL e inicializar (navegación directa / bookmark)
   useEffect(() => {
@@ -87,18 +87,30 @@ export const CatalogPanel = ({
     }
   }, [isArtistPanelOpen, selectedArtist, trackArtistView])
 
+  // Contador para evitar race conditions entre animación de cierre y re-apertura
+  const closeIdRef = useRef(0)
+
   useEffect(() => {
     if (isArtistPanelOpen) {
       requestAnimationFrame(() => {
         setIsMounted(true)
         requestAnimationFrame(() => setIsVisible(true))
       })
-    } else {
+    } else if (isMounted) {
+      // Solo animar cierre si el panel estaba visible. El guard isMounted
+      // evita que el primer render (con isOpen=false) arranque un timeout
+      // antes de que el mount effect inicialice desde la URL.
+      const thisCloseId = ++closeIdRef.current
       requestAnimationFrame(() => {
         setIsVisible(false)
-        setTimeout(() => setIsMounted(false), 300)
+        setTimeout(() => {
+          if (closeIdRef.current === thisCloseId) {
+            setIsMounted(false)
+          }
+        }, 300)
       })
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isArtistPanelOpen])
 
   const closePanel = () => {
@@ -108,16 +120,10 @@ export const CatalogPanel = ({
       ? `${window.location.pathname}?${params.toString()}`
       : window.location.pathname
     window.history.replaceState(null, '', newUrl)
-    const slugAtClose = useCatalogPanelStore.getState().artistSlug
+    // No limpiamos el slug — se mantiene para que la animación de cierre
+    // tenga el artista disponible. Se actualizará al clickear otra card
+    // o al navegar con popstate.
     setArtistPanelOpen(false)
-    // Limpiar el slug después de la animación de cierre (300ms),
-    // pero solo si el slug no cambió (evita pisar un nuevo click del usuario)
-    setTimeout(() => {
-      const current = useCatalogPanelStore.getState()
-      if (current.artistSlug === slugAtClose) {
-        current.setArtistSlug(null)
-      }
-    }, 300)
   }
 
   if (!isMounted || !selectedArtist) return null
