@@ -171,6 +171,7 @@ export const CatalogPanel = ({
             <div className='border-border/20 bg-background sticky bottom-0 mt-6 border-t pt-4'>
               <Link
                 href={`/catalogo/${selectedArtist.slug}`}
+                transitionTypes={['artist-detail']}
                 aria-label={`Ver perfil completo de ${selectedArtist.name}`}
                 className='bg-primary text-background hover:bg-primary/90 block w-full cursor-pointer rounded-lg px-4 py-3 text-center text-sm font-semibold transition-colors'
               >

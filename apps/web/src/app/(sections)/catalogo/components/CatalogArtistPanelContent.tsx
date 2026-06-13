@@ -3,6 +3,8 @@ import { Mail } from 'lucide-react'
 import { Instagram } from '@/components/icons/Instagram'
 import Markdown from 'react-markdown'
 
+import { ArtistAvatarTransition } from '@/components/transitions/ArtistAvatarTransition'
+import { ArtistNameTransition } from '@/components/transitions/ArtistNameTransition'
 import { CollectiveMemberLink } from './CollectiveMemberLink'
 import { getInstagramUserTag } from '@frijolmagico/utils/string'
 
@@ -87,19 +89,23 @@ export const CatalogArtistPanelContent = ({
     <article className='space-y-6'>
       {/* Avatar + Name + Location + Category */}
       <section className='flex items-center space-x-4'>
-        <figure className='relative h-20 w-20 shrink-0'>
-          <Image
-            src={artist.avatar}
-            alt={`Imagen de ${artist.name}`}
-            fill
-            sizes='80px'
-            className='border-primary rounded-full border-2 object-cover'
-          />
-        </figure>
+        <ArtistAvatarTransition slug={artist.slug ?? ''}>
+          <figure className='relative h-20 w-20 shrink-0'>
+            <Image
+              src={artist.avatar}
+              alt={`Imagen de ${artist.name}`}
+              fill
+              sizes='80px'
+              className='border-primary rounded-full border-2 object-cover'
+            />
+          </figure>
+        </ArtistAvatarTransition>
         <div>
-          <h3 className='text-secondary text-2xl leading-none font-bold'>
-            {artist.name}
-          </h3>
+          <ArtistNameTransition slug={artist.slug ?? ''}>
+            <h3 className='text-secondary text-2xl leading-none font-bold'>
+              {artist.name}
+            </h3>
+          </ArtistNameTransition>
           <p className='text-sm text-gray-600'>
             {artist.city} - {artist.country}
           </p>
