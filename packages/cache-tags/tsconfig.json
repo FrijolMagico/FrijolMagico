@@ -1,0 +1,6 @@
+{
+  "extends": "@frijolmagico/typescript-config/base",
+  "include": [
+    "src/**/*"
+  ]
+}
