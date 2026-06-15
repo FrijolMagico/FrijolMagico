@@ -67,9 +67,13 @@ packages/database/data/*.sql
 .turbo
 .sisyphus
 */**/.sisyphus
-openscpe
+openspec/
 */**/openspec
 db-workspace
+
+# AI tooling
+.claude/
+.playwright-cli/
 
 # OpenCode
 .agents/
