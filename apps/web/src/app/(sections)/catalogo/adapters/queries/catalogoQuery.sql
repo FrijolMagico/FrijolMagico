@@ -96,5 +96,5 @@ SELECT json_object(
 ) as resultado
 FROM catalogo_artista ca
 JOIN artista a ON ca.artista_id = a.id
-WHERE ca.activo = 1
+WHERE ca.activo = 1 AND ca.deleted_at IS NULL
 ORDER BY ca.orden ASC

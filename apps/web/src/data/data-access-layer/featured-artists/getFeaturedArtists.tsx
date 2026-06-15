@@ -1,3 +1,4 @@
+import { FEATURED_ARTISTS_CACHE_TAG } from '@frijolmagico/cache-tags'
 import { FeaturedArtist } from '@/types/artists'
 import { executeQuery } from '@frijolmagico/database/client'
 import { unstable_cache } from 'next/cache'
@@ -10,7 +11,7 @@ const FEATURED_ARTISTS_QUERY = `SELECT
 FROM catalogo_artista ac
 LEFT JOIN artista a ON ac.artista_id = a.id
 LEFT JOIN artista_imagen ai ON a.id = ai.artista_id
-WHERE a.deleted_at IS null AND ac.destacado = true AND ac.activo = true
+WHERE a.deleted_at IS null AND ac.destacado = true AND ac.activo = true AND ac.deleted_at IS NULL
 LIMIT 3`
 
 const getCachedFeaturedArtists = unstable_cache(
@@ -34,7 +35,7 @@ const getCachedFeaturedArtists = unstable_cache(
   },
   ['featured-artists'],
   {
-    tags: ['home:featured-artists'],
+    tags: [FEATURED_ARTISTS_CACHE_TAG],
     revalidate: 86400 * 7 // backup: expire after 7 days
   }
 )

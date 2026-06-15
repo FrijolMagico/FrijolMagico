@@ -1,4 +1,5 @@
 import { cacheTag } from 'next/cache'
+import { FESTIVALES_CACHE_TAG } from '@frijolmagico/cache-tags'
 import { festivalesRepository } from '../adapters/festivalesRepository'
 
 import type { FestivalEdicion } from '../types/festival'
@@ -9,7 +10,7 @@ export async function getFestivalesData(): Promise<{
   error: ErrorObject
 }> {
   'use cache'
-  cacheTag('web:festivales')
+  cacheTag(FESTIVALES_CACHE_TAG)
   try {
     const data = await festivalesRepository()
 

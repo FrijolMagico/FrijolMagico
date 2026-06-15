@@ -1,4 +1,5 @@
 import { cacheTag } from 'next/cache'
+import { NOSOTROS_CACHE_TAG } from '@frijolmagico/cache-tags'
 import { aboutRepository } from '../adapters/aboutRepository'
 
 import type { AboutData } from '../types/about'
@@ -9,7 +10,7 @@ export async function getAboutData(): Promise<{
   error: ErrorObject
 }> {
   'use cache'
-  cacheTag('web:nosotros')
+  cacheTag(NOSOTROS_CACHE_TAG)
 
   try {
     const data = await aboutRepository()
