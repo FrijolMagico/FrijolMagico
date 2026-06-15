@@ -153,7 +153,7 @@ describe.skipIf(!modulesLoaded)('collectives query contracts', () => {
       search: 'Río'
     })
 
-    expect(cacheTag).toHaveBeenCalledWith('admin:collective:active')
+    expect(cacheTag).toHaveBeenCalledWith('agrupacion:activas')
     expect(result).toEqual({
       data: [
         {
@@ -214,7 +214,7 @@ describe.skipIf(!modulesLoaded)('collectives query contracts', () => {
       search: 'Sur'
     })
 
-    expect(cacheTag).toHaveBeenCalledWith('admin:collective:deleted')
+    expect(cacheTag).toHaveBeenCalledWith('agrupacion:eliminadas')
     expect(result.data).toEqual([
       {
         id: 2,

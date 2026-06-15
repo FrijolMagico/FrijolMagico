@@ -8,7 +8,7 @@ import { events } from '@frijolmagico/database/schema'
 import { toSlug } from '@/shared/lib/utils'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import type { ActionState } from '@/shared/types/actions'
-import { EDITION_CACHE_TAG, EDITION_DAY_CACHE_TAG } from '../_constants'
+import { EDITION_CACHE_TAG, EDITION_DAY_CACHE_TAG } from '@frijolmagico/cache-tags'
 import {
   edicionWithDaysSchema,
   type EdicionWithDaysInput

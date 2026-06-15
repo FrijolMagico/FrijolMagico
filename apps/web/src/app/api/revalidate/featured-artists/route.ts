@@ -1,30 +1,17 @@
-import { revalidatePath, revalidateTag } from 'next/cache'
 import { NextRequest, NextResponse } from 'next/server'
 
+/**
+ * Redirect to the unified /api/revalidate endpoint.
+ *
+ * Kept during transition so existing WEB_REVALIDATION_URL values
+ * (pointing to the old /api/revalidate/featured-artists path)
+ * don't 404 until the env var is updated in Vercel dashboard.
+ *
+ * 308 preserves POST method and Authorization header on same-origin
+ * redirects, so the admin's fetch() will follow transparently.
+ */
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get('Authorization')
-  const expectedSecret = process.env.REVALIDATION_SECRET
-
-  if (!expectedSecret) {
-    console.error(
-      '[revalidate/featured-artists] REVALIDATION_SECRET is not configured'
-    )
-    return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
-  }
-
-  if (authHeader !== `Bearer ${expectedSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const tag = request.nextUrl.searchParams.get('tag')
-  const path = request.nextUrl.searchParams.get('path')
-
-  if (tag) {
-    revalidateTag(tag, { expire: 0 })
-  }
-  if (path) {
-    revalidatePath(path)
-  }
-
-  return NextResponse.json({ revalidated: true })
+  const url = new URL('/api/revalidate', request.url)
+  url.search = request.nextUrl.search
+  return NextResponse.redirect(url, 308)
 }

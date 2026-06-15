@@ -10,7 +10,7 @@ import { ActionState } from '@/shared/types/actions'
 import {
   getEditionParticipationsCacheTag,
   getParticipationExhibitionsCacheTag
-} from '../../_constants/cache-tags'
+} from '@frijolmagico/cache-tags'
 
 const { participationExhibition, editionParticipation } = participations
 

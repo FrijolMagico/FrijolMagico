@@ -5,6 +5,10 @@ import { updateTag } from 'next/cache'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { eq } from 'drizzle-orm'
+import {
+  CATALOG_CACHE_TAG,
+  FEATURED_ARTISTS_CACHE_TAG
+} from '@frijolmagico/cache-tags'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import { revalidateWebCache } from '@/shared/lib/web-invalidation'
 import {
@@ -12,7 +16,6 @@ import {
   type CatalogFieldUpdateInput
 } from '../_schemas/catalog.schema'
 import type { ActionState } from '@/shared/types/actions'
-import { CATALOG_CACHE_TAG } from '../_constants'
 
 export async function updateCatalogFieldAction(
   id: number,
@@ -39,8 +42,19 @@ export async function updateCatalogFieldAction(
 
   updateTag(CATALOG_CACHE_TAG)
   void revalidateWebCache({
+    tag: CATALOG_CACHE_TAG,
     path: '/catalogo'
   })
+
+  if ('destacado' in parsed.data) {
+    console.log(
+      '[updateCatalogFieldAction] Destacado field updated, invalidating featured artists cache'
+    )
+    void revalidateWebCache({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      path: '/'
+    })
+  }
 
   return { success: true }
 }

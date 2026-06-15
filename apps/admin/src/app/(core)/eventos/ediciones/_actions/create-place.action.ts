@@ -8,7 +8,7 @@ import { core } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import { lugarInsertSchema } from '../_schemas/place.schema'
 import type { ActionState } from '@/shared/types/actions'
-import { PLACE_CACHE_TAG } from '../_constants'
+import { PLACE_CACHE_TAG } from '@frijolmagico/cache-tags'
 
 const { place } = core
 

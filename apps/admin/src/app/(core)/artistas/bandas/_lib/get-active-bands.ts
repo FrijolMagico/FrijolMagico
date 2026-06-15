@@ -8,7 +8,7 @@ import {
   createPaginatedResponse,
   type PaginatedResponse
 } from '@/shared/types/pagination'
-import { BAND_ACTIVE_CACHE_TAG } from '../_constants'
+import { BAND_ACTIVE_CACHE_TAG } from '@frijolmagico/cache-tags'
 import {
   bandQueryParamsSchema,
   type BandQueryParams

@@ -6,7 +6,7 @@ import { db } from '@frijolmagico/database/orm'
 import { core } from '@frijolmagico/database/schema'
 import { asc } from 'drizzle-orm'
 
-import { DISCIPLINES_CACHE_TAG } from '@/core/eventos/participaciones/_constants/cache-tags'
+import { DISCIPLINES_CACHE_TAG } from '@frijolmagico/cache-tags'
 
 const { discipline } = core
 

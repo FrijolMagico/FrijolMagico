@@ -4,7 +4,7 @@ import { cacheTag } from 'next/cache'
 import { db } from '@frijolmagico/database/orm'
 import { events } from '@frijolmagico/database/schema'
 import { asc, inArray } from 'drizzle-orm'
-import { EDITION_DAY_CACHE_TAG } from '@/core/eventos/ediciones/_constants'
+import { EDITION_DAY_CACHE_TAG } from '@frijolmagico/cache-tags'
 import type { EditionDay } from '@/core/eventos/ediciones/_schemas/edition-day.schema'
 
 const { eventEditionDay } = events

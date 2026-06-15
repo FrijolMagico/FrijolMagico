@@ -5,6 +5,7 @@ import {
   updateURLParams,
   urlHasFilters
 } from '../utils/urlFilters'
+import { dedupeArray } from '../utils/searchParams'
 
 interface CatalogFiltersState {
   filters: CatalogFilterValues
@@ -26,9 +27,9 @@ export const useCatalogFiltersStore = create<CatalogFiltersState>((set) => ({
   setFilters: (newFilters) => {
     set((state) => {
       const merged = { ...state.filters, ...newFilters }
-      const uniqueCategory = Array.from(new Set(merged.category))
-      const uniqueCity = Array.from(new Set(merged.city))
-      const uniqueCountry = Array.from(new Set(merged.country))
+      const uniqueCategory = dedupeArray(merged.category)
+      const uniqueCity = dedupeArray(merged.city)
+      const uniqueCountry = dedupeArray(merged.country)
 
       const updated = {
         category: uniqueCategory,

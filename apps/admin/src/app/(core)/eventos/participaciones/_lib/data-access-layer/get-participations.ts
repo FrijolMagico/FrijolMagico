@@ -7,7 +7,7 @@ import { artist, participations } from '@frijolmagico/database/schema'
 import { and, asc, eq, sql } from 'drizzle-orm'
 import { participationsQueryParamsSchema } from '@/core/eventos/participaciones/_schemas/query-params.schema'
 
-import { getEditionParticipationsCacheTag } from '@/core/eventos/participaciones/_constants/cache-tags'
+import { getEditionParticipationsCacheTag } from '@frijolmagico/cache-tags'
 
 const { editionParticipation, participationExhibition, participationActivity } =
   participations

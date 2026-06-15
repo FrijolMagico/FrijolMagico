@@ -7,8 +7,11 @@ import { isNotDeleted } from '@frijolmagico/database/filters'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/shared/lib/auth/utils'
+import {
+  BAND_ACTIVE_CACHE_TAG,
+  BAND_DELETED_CACHE_TAG
+} from '@frijolmagico/cache-tags'
 import type { ActionState } from '@/shared/types/actions'
-import { BAND_ACTIVE_CACHE_TAG, BAND_DELETED_CACHE_TAG } from '../_constants'
 
 export async function deleteBandaAction(id: number): Promise<ActionState> {
   try {

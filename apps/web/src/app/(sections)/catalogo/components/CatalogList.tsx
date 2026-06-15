@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import type { CatalogArtist } from '../types/catalog'
 import { CatalogArtistCard } from './CatalogArtistCard'
 import { useCatalogFiltersStore } from '../store/useCatalogFiltersStore'
 import { Pagination } from '@/components/ui/Pagination'
 import { CatalogCardLoader } from './CatalogSkeletonLoaders'
 import { filterCatalog } from '../utils/filterUtils'
+import { getPageFromURL, updatePageURL } from '../utils/urlFilters'
 
 interface CatalogListProps {
   catalog: CatalogArtist[]
@@ -15,24 +16,29 @@ interface CatalogListProps {
 export const CatalogList: React.FC<CatalogListProps> = ({ catalog }) => {
   const filters = useCatalogFiltersStore((state) => state.filters)
   const isReady = useCatalogFiltersStore((state) => state.isReady)
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 15
+  const [rawPage, setRawPage] = useState(() => getPageFromURL())
+  const itemsPerPage = 18
 
   // Filter the catalog based on search and filters
   const filteredCatalog = useMemo(() => {
     return filterCatalog(catalog, filters)
   }, [catalog, filters])
 
-  // Reset pagination to first page when filters change.
-  // This is intentional behavior - when the user changes filters, they should see results from page 1.
-  // The setState is necessary here to sync pagination state with filter changes.
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setCurrentPage(1)
-  }, [filters])
-
-  // Calculate pagination
+  // Derive effective page in render — React-recommended pattern
+  // (avoids unnecessary setState and double-rendering)
   const totalItems = filteredCatalog.length
+  const maxPage = Math.max(1, Math.ceil(totalItems / itemsPerPage))
+  const currentPage = rawPage > maxPage ? maxPage : rawPage
+
+  // When the effective page is clamped (filters narrowed results),
+  // sync the browser URL. This is a legitimate DOM side effect.
+  const urlSynced = useRef(-1)
+  useEffect(() => {
+    if (urlSynced.current !== currentPage) {
+      urlSynced.current = currentPage
+      updatePageURL(currentPage)
+    }
+  }, [currentPage])
 
   // Get current items
   const currentItems = useMemo<CatalogArtist[]>(() => {
@@ -41,7 +47,8 @@ export const CatalogList: React.FC<CatalogListProps> = ({ catalog }) => {
   }, [filteredCatalog, currentPage, itemsPerPage])
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page)
+    setRawPage(page)
+    updatePageURL(page)
   }
 
   // Only show pagination if there are items to paginate

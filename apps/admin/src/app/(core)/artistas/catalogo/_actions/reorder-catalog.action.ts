@@ -5,9 +5,9 @@ import { updateTag } from 'next/cache'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { eq } from 'drizzle-orm'
+import { CATALOG_CACHE_TAG } from '@frijolmagico/cache-tags'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import type { ActionState } from '@/shared/types/actions'
-import { CATALOG_CACHE_TAG } from '../_constants'
 
 export async function reorderCatalogAction(
   reorders: Array<{ id: number; orden: string }>

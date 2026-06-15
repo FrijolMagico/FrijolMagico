@@ -1,7 +1,6 @@
 import { ApplyBanner } from './components/ApplyBanner'
 import { FissureBanner } from './components/FissureBanner'
 import { HeroSection } from './components/HeroSection'
-import { DoodleLine } from '@/components/DoodleLine'
 import { LinkBtn } from '@/components/LinkBtn'
 import { paths } from '@/config/paths'
 import bannerData from '@/data/banner_data.json'
@@ -12,31 +11,33 @@ import { FeaturedArtistsSkeleton } from './components/FeaturedArtistsSkeleton'
 export default async function Home() {
   return (
     <>
-      <FissureBanner height={400}>
-        <ApplyBanner
-          title={bannerData.title}
-          description={bannerData.description}
-          buttons={{
-            apply: {
-              text: bannerData.right_button.text,
-              href: bannerData.right_button.url,
-              target: '_blank'
-            },
-            bases: {
-              text: bannerData.left_button.text,
-              href: bannerData.left_button.url,
-              target: '_blank'
-            }
-          }}
-          palette='ffm-xvi'
-        />
-      </FissureBanner>
       <main
         data-palette='base'
-        className='mx-auto h-full w-full space-y-12 py-12'
+        className='mx-auto h-full w-full space-y-12 overflow-x-hidden py-12'
       >
         <HeroSection />
-        <DoodleLine color='text-primary' loopCount={4} />
+
+        <div className='pt-6'>
+          <FissureBanner height={500}>
+            <ApplyBanner
+              title={bannerData.title}
+              description={bannerData.description}
+              buttons={{
+                bases: {
+                  text: bannerData.left_button.text,
+                  href: bannerData.left_button.url,
+                  target: '_blank'
+                },
+                apply: {
+                  text: bannerData.right_button.text,
+                  href: bannerData.right_button.url,
+                  target: '_blank'
+                }
+              }}
+              palette='ffm-xvi'
+            />
+          </FissureBanner>
+        </div>
         <section className='mx-auto h-full max-w-6xl space-y-20 px-6'>
           <article className='space-y-10'>
             <div className='flex flex-col items-center gap-2'>
@@ -52,12 +53,12 @@ export default async function Home() {
                 </strong>
               </h2>
             </div>
-            <section className='mx-auto flex flex-col flex-wrap items-center justify-center gap-6 md:flex-row md:gap-12'>
+            <section className='mx-auto flex flex-col flex-wrap items-center justify-center gap-6 pb-24 md:flex-row md:gap-12'>
               <Suspense fallback={<FeaturedArtistsSkeleton />}>
                 <FeaturedArtists />
               </Suspense>
 
-              <LinkBtn withArrow href={paths.catalog}>
+              <LinkBtn withArrow href={paths.home.sub.catalog.path}>
                 Ver catálogo completo
               </LinkBtn>
             </section>
@@ -79,7 +80,6 @@ export default async function Home() {
           {/*   </div> */}
           {/* </article> */}
         </section>
-        <DoodleLine color='text-primary' loopCount={4} />
       </main>
     </>
   )

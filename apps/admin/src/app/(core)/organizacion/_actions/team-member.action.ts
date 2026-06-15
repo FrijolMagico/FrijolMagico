@@ -8,7 +8,8 @@ const { organizationMember } = core
 
 import { requireAuth } from '@/shared/lib/auth/utils'
 import { updateTag } from 'next/cache'
-import { TEAM_CACHE_TAG, ORGANIZATION_ID } from '../_constants'
+import { TEAM_CACHE_TAG } from '@frijolmagico/cache-tags'
+import { ORGANIZATION_ID } from '../_constants'
 
 import { ActionState } from '@/shared/types/actions'
 import {

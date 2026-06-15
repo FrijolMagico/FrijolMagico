@@ -8,7 +8,7 @@ import {
   createPaginatedResponse,
   type PaginatedResponse
 } from '@/shared/types/pagination'
-import { BAND_DELETED_CACHE_TAG } from '../_constants'
+import { BAND_DELETED_CACHE_TAG } from '@frijolmagico/cache-tags'
 import { bandQueryParamsSchema } from '../_schemas/query-params.schema'
 import type { DeletedBandRow } from '../_types/band'
 

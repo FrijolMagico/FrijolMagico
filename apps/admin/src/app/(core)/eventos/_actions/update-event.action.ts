@@ -11,7 +11,7 @@ import {
   eventUpdateSchema
 } from '../_schemas/event.schema'
 import type { ActionState } from '@/shared/types/actions'
-import { EVENT_CACHE_TAG } from '../_constants'
+import { EVENT_CACHE_TAG } from '@frijolmagico/cache-tags'
 
 const { event } = events
 

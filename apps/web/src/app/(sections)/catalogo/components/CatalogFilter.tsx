@@ -38,7 +38,7 @@ export const CatalogFilter = ({
     if (onClear) onClear(filterKey)
   }
 
-  // Close dropdown on outside click or Escape
+  // Close dropdown on outside click, Escape, or scroll
   useEffect(() => {
     if (!isOpen) return
     function handleClick(event: Event) {
@@ -55,13 +55,18 @@ export const CatalogFilter = ({
         onToggle(filterKey)
       }
     }
+    function handleScroll() {
+      onToggle(filterKey)
+    }
     document.addEventListener('mousedown', handleClick)
     document.addEventListener('touchstart', handleClick)
     document.addEventListener('keydown', handleKey)
+    document.addEventListener('scroll', handleScroll, { passive: true })
     return () => {
       document.removeEventListener('mousedown', handleClick)
       document.removeEventListener('touchstart', handleClick)
       document.removeEventListener('keydown', handleKey)
+      document.removeEventListener('scroll', handleScroll)
     }
   }, [isOpen, onToggle, filterKey])
 

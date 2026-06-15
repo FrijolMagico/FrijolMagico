@@ -1,23 +1,15 @@
 import { create } from 'zustand'
-import type { CatalogArtist } from '../types/catalog'
 
 interface CatalogPanelState {
-  selectedArtist: CatalogArtist | null
   isArtistPanelOpen: boolean
-  setSelectedArtist: (artist: CatalogArtist | null) => void
+  artistSlug: string | null
   setArtistPanelOpen: (open: boolean) => void
+  setArtistSlug: (slug: string | null) => void
 }
 
 export const useCatalogPanelStore = create<CatalogPanelState>((set) => ({
-  selectedArtist: null,
   isArtistPanelOpen: false,
-  setSelectedArtist: (artist) => set({ selectedArtist: artist }),
-  setArtistPanelOpen: (open) => {
-    set({ isArtistPanelOpen: open })
-    if (!open) {
-      setTimeout(() => {
-        set({ selectedArtist: null })
-      }, 300)
-    }
-  }
+  artistSlug: null,
+  setArtistPanelOpen: (open) => set({ isArtistPanelOpen: open }),
+  setArtistSlug: (slug) => set({ artistSlug: slug })
 }))

@@ -6,7 +6,7 @@ import { db } from '@frijolmagico/database/orm'
 import { participations } from '@frijolmagico/database/schema'
 import { asc } from 'drizzle-orm'
 
-import { ACTIVITY_TYPES_CACHE_TAG } from '@/core/eventos/participaciones/_constants/cache-tags'
+import { ACTIVITY_TYPES_CACHE_TAG } from '@frijolmagico/cache-tags'
 
 const { activityType } = participations
 

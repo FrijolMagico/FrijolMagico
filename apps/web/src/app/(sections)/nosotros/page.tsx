@@ -2,8 +2,6 @@ import Image from 'next/image'
 
 import { Header } from '@/components/Header'
 import siteData from '@/data/site.json'
-import { ViewTransition } from 'react'
-import { SectionHomeButton } from '@/components/SectionsHomeButton'
 import { ErrorSection } from '@/components/ErrorSection'
 import { Grid } from '@/components/Grid'
 import { GridItem } from '@/components/GridItem'
@@ -23,9 +21,6 @@ export default async function NosotrosPage() {
 
   return (
     <>
-      <ViewTransition name='transition-logo'>
-        <SectionHomeButton />
-      </ViewTransition>
       <Header
         title={about.title}
         subTitle={about.subtitle}

@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import {
-  Fragment_Mono,
   Josefin_Sans,
   Noto_Sans,
   Roboto_Mono,
@@ -18,6 +17,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 
 import { cn } from '@/utils/cn'
+import { ContextBar } from '@/components/context-bar/ContextBar'
 import { Footer } from '@/components/Footer'
 
 const SITE = siteData
@@ -79,21 +79,14 @@ export const metadata: Metadata = {
     title: SITE.title,
     description: SITE.description,
     url: SITE.url,
-    images: [
-      {
-        url: SITE.image
-      }
-    ]
+    type: 'website',
+    siteName: SITE.title,
+    locale: `${SITE.lang}_CL`
   },
   twitter: {
     title: SITE.title,
     description: SITE.description,
-    card: 'summary_large_image',
-    images: [
-      {
-        url: SITE.image
-      }
-    ]
+    card: 'summary_large_image'
   },
   icons: {
     icon: SITE.favicon
@@ -109,7 +102,7 @@ export default function RootLayout({
     <html lang={SITE.lang}>
       <body
         className={cn(
-          'bg-background font-rubik relative flex size-full min-h-dvh flex-col antialiased',
+          'bg-background font-rubik relative flex h-full min-h-screen w-full flex-col pt-12 antialiased',
           josefinSans.variable,
           notoSans.variable,
           superFortress.variable,
@@ -123,8 +116,16 @@ export default function RootLayout({
         <SpeedInsights />
         <Analytics />
         <Background />
+        <a
+          href='#main-content'
+          className='focus:bg-accent sr-only focus:not-sr-only focus:fixed focus:top-14 focus:left-1/2 focus:z-50 focus:-translate-x-1/2 focus:rounded-lg focus:px-4 focus:py-2 focus:text-white focus:shadow-lg focus:outline-none'
+        >
+          Saltar al contenido principal
+        </a>
         {SITE.top_bar.active && <TopBarInfo />}
+        <div id='main-content' tabIndex={-1} className='outline-none' />
         {children}
+        <ContextBar />
         <Footer />
       </body>
     </html>

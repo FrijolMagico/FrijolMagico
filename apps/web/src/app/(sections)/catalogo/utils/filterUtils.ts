@@ -2,14 +2,6 @@ import { normalizeString } from '@frijolmagico/utils/string'
 import { CatalogArtist } from '../types/catalog'
 import { CatalogFilterValues } from '../types/filters'
 
-export const parseParamArray = (param?: string | null) =>
-  param && param.length > 0
-    ? param.split(',').filter(Boolean).map(normalizeString)
-    : []
-
-export const dedupeArray = (arr: string[]) =>
-  Array.from(new Set(arr.map(normalizeString)))
-
 // Keys that can be used for filtering (string fields only)
 type FilterableKey = 'city' | 'country' | 'category'
 

@@ -8,8 +8,8 @@ import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { and, eq, isNotNull } from 'drizzle-orm'
 import { requireAuth } from '@/shared/lib/auth/utils'
+import { ARTIST_CACHE_TAG } from '@frijolmagico/cache-tags'
 import type { ActionState } from '@/shared/types/actions'
-import { ARTIST_CACHE_TAG } from '../_constants'
 
 export async function restoreArtistaAction(id: number): Promise<ActionState> {
   try {

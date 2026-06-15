@@ -9,7 +9,7 @@ import { ActionState } from '@/shared/types/actions'
 import {
   getEditionParticipationsCacheTag,
   getParticipationExhibitionsCacheTag
-} from '../../_constants/cache-tags'
+} from '@frijolmagico/cache-tags'
 import { findOrCreateEditionParticipation } from '../_lib/find-or-create-edition-participation'
 import {
   type ExhibitionInsertInput,

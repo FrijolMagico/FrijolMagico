@@ -7,7 +7,8 @@ import { db } from '@frijolmagico/database/orm'
 import { core } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/shared/lib/auth/utils'
 
-import { ORGANIZATION_CACHE_TAG, ORGANIZATION_ID } from '../_constants'
+import { ORGANIZATION_CACHE_TAG } from '@frijolmagico/cache-tags'
+import { ORGANIZATION_ID } from '../_constants'
 import {
   OrganizationFormInput,
   organizationFormSchema,

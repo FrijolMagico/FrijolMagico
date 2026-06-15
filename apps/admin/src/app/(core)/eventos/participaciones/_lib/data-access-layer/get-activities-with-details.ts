@@ -6,7 +6,7 @@ import { db } from '@frijolmagico/database/orm'
 import { participations } from '@frijolmagico/database/schema'
 import { asc, eq, inArray } from 'drizzle-orm'
 import type { ActivityDetail } from '@/core/eventos/participaciones/_schemas/activity.schema'
-import { getParticipationActivitiesCacheTag } from '@/core/eventos/participaciones/_constants/cache-tags'
+import { getParticipationActivitiesCacheTag } from '@frijolmagico/cache-tags'
 import { ActivityWithDetail } from '../../_types/activity.types'
 
 const { participationActivity, activity } = participations

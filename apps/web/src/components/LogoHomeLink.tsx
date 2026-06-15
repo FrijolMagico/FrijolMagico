@@ -10,13 +10,13 @@ interface LogoHomeLinkProps {
 export const LogoHomeLink = ({ className }: LogoHomeLinkProps) => {
   return (
     <Link
-      href={paths.home}
+      href={paths.home.path}
       target='_self'
       aria-label='Ir a la página de inicio'
       className={cn('group relative m-auto block size-fit', className)}
     >
       <Image
-        src='/images/frijol.png'
+        src='https://cdn.frijolmagico.cl/asoc/logos/icono_color.png'
         loading='eager'
         alt='Logo Frijol Mágico'
         width={120}

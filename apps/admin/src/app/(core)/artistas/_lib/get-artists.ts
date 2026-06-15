@@ -11,7 +11,8 @@ import {
 } from '@/shared/types/pagination'
 import { parseRRSS } from '@/shared/lib/rrss'
 
-import { ARTIST_CACHE_TAG, type ARTIST_STATUS } from '../_constants'
+import { ARTIST_CACHE_TAG } from '@frijolmagico/cache-tags'
+import { type ARTIST_STATUS } from '../_constants'
 import {
   artistQueryParamsSchema,
   type ArtistQueryParams

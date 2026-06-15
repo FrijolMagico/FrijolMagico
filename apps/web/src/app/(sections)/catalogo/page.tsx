@@ -3,7 +3,6 @@ import { Header } from '@/components/Header'
 import { CatalogList } from './components/CatalogList'
 import { ErrorSection } from '@/components/ErrorSection'
 import siteData from '@/data/site.json'
-import { ViewTransition } from 'react'
 import { Suspense } from 'react'
 import {
   CatalogCardLoader,
@@ -12,9 +11,9 @@ import {
 import { CatalogSearchSection } from './components/CatalogSearchSection'
 import { CatalogFiltersInitializer } from './components/CatalogFiltersInitializer'
 import { getCatalogData } from './lib/getCatalogData'
-import { SectionHomeButton } from '@/components/SectionsHomeButton'
 import { Metadata } from 'next'
 import { TrackPageView } from '@/components/analytics/TrackPageView'
+import { paths } from '@/config/paths'
 
 const { catalog } = siteData
 
@@ -28,12 +27,12 @@ export default async function CatalogPage() {
 
   return (
     <>
-      <TrackPageView sectionName='Catálogo' sectionPath='/catalogo' />
-      <ViewTransition name='transition-logo'>
-        <SectionHomeButton />
-      </ViewTransition>
+      <TrackPageView
+        sectionName={paths.home.sub.catalog.label}
+        sectionPath={paths.home.sub.catalog.path}
+      />
       <Header title={catalog.title} description={catalog.description} />
-      <main className='container mx-auto w-full px-4 py-8'>
+      <main className='container mx-auto w-full flex-1 px-4 pt-8 pb-16'>
         {/* Search and Filter Section */}
         <CatalogFiltersInitializer />
         {error ? (

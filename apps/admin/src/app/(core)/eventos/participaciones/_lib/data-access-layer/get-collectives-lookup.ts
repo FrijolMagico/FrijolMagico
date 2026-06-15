@@ -6,7 +6,7 @@ import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { asc } from 'drizzle-orm'
 
-import { COLLECTIVES_CACHE_TAG } from '@/core/eventos/participaciones/_constants/cache-tags'
+import { COLLECTIVES_CACHE_TAG } from '@frijolmagico/cache-tags'
 import type { CollectiveLookup } from '@/core/eventos/participaciones/_types/participations.types'
 
 const { collective } = artist

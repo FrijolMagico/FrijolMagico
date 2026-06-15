@@ -6,7 +6,7 @@ import { db } from '@frijolmagico/database/orm'
 import { participations } from '@frijolmagico/database/schema'
 import { asc } from 'drizzle-orm'
 
-import { ADMISSION_MODES_CACHE_TAG } from '@/core/eventos/participaciones/_constants/cache-tags'
+import { ADMISSION_MODES_CACHE_TAG } from '@frijolmagico/cache-tags'
 
 const { admissionMode } = participations
 

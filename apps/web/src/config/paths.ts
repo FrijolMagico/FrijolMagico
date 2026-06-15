@@ -4,23 +4,29 @@
  */
 
 export const paths = {
-  home: '/',
-  catalog: '/catalogo',
-  apply: '/convocatoria',
-  about: '/nosotros',
-  festival: {
-    base: '/festivales',
-    2025: {
-      base: '/festivales/2025',
-      apply: '/festivales/2025/aplicar',
-      schedule: '/festivales/2025/programacion',
-      ilustracion: '/festivales/2025/ilustracion',
-      manualidades: '/festivales/2025/manualidades',
-      narrativagrafica: '/festivales/2025/narrativagrafica'
+  home: {
+    path: '/',
+    label: 'Inicio',
+    sub: {
+      catalog: {
+        path: '/catalogo',
+        label: 'Catálogo',
+        sub: {
+          path: (slug: string) => `/catalogo/${slug}`,
+          label: (name: string) => name
+        }
+      },
+      about: { path: '/nosotros', label: 'Nosotros' },
+      festival: {
+        path: '/festivales',
+        label: 'Festivales'
+      }
     }
   }
 } as const
 
 // Helper types for type safety
 type ValueOf<T> = T[keyof T]
-export type AppPath = ValueOf<typeof paths> | ValueOf<typeof paths.festival>
+export type AppPath =
+  | ValueOf<typeof paths.home.sub>
+  | (typeof paths.home.sub.catalog.sub extends { path: infer P } ? P : never)

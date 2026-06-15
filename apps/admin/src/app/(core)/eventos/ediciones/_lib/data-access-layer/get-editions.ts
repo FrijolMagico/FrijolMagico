@@ -8,7 +8,7 @@ import {
   createPaginatedResponse,
   type PaginatedResponse
 } from '@/shared/types/pagination'
-import { EDITION_CACHE_TAG } from '@/core/eventos/ediciones/_constants'
+import { EDITION_CACHE_TAG } from '@frijolmagico/cache-tags'
 import {
   editionQueryParamsSchema,
   type EditionsQueryParams

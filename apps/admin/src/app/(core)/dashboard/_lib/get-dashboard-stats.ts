@@ -9,10 +9,12 @@ import {
   participations
 } from '@frijolmagico/database/schema'
 import { isNotDeleted } from '@frijolmagico/database/filters'
-
-import { ARTIST_CACHE_TAG } from '@/core/artistas/_constants'
-import { CATALOG_CACHE_TAG } from '@/core/artistas/catalogo/_constants'
-import { EVENT_CACHE_TAG } from '@/core/eventos/_constants'
+import {
+  ARTIST_CACHE_TAG,
+  CATALOG_CACHE_TAG,
+  EVENT_CACHE_TAG,
+  EDITION_CACHE_TAG
+} from '@frijolmagico/cache-tags'
 
 import type {
   DashboardArtistStats,
@@ -23,7 +25,6 @@ import type {
   TopArtistEntry
 } from '../_types'
 import { FESTIVAL_EVENT_ID } from '../_constants'
-import { EDITION_CACHE_TAG } from '../../eventos/ediciones/_constants'
 
 const { artist: artistTable, artistStatus, catalogArtist } = artist
 const { eventEdition } = events

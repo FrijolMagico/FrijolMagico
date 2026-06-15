@@ -9,4 +9,34 @@
   --font-rubik-bubbles: var(--font-rubik-bubbles);
   --font-roboto-mono: var(--font-roboto-mono);
   --font-canarina: var(--font-canarina);
+
+  --animate-orb-drift: orb-drift 24s cubic-bezier(0.2, 0, 0.8, 1) infinite;
+
+  @keyframes orb-drift {
+
+    0%,
+    100% {
+      transform: translate(50%, 0) scale(1);
+    }
+
+    17% {
+      transform: translate(130%, -45%) scale(0.9);
+    }
+
+    33% {
+      transform: translate(100%, 0%) scale(0.7);
+    }
+
+    50% {
+      transform: translate(50%, -25%) scale(1);
+    }
+
+    67% {
+      transform: translate(-20%, 0%) scale(0.8);
+    }
+
+    83% {
+      transform: translate(-10%, -35%) scale(1);
+    }
+  }
 }
