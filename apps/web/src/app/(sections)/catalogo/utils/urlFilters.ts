@@ -46,3 +46,33 @@ export function updateURLParams(filters: CatalogFilterValues) {
   const url = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`
   window.history.replaceState(null, '', url)
 }
+
+const PAGE_PARAM = 'pagina'
+
+/**
+ * Reads the current page number from the URL query string.
+ * Returns 1 if no param is present or if the value is invalid.
+ */
+export function getPageFromURL(): number {
+  if (typeof window === 'undefined') return 1
+  const params = new URLSearchParams(window.location.search)
+  const page = parseInt(params.get(PAGE_PARAM) || '1', 10)
+  return page > 0 ? page : 1
+}
+
+/**
+ * Updates the browser URL with the given page number.
+ * Removes the param when on page 1 (default state).
+ * Preserves any existing filter/search params.
+ */
+export function updatePageURL(page: number) {
+  if (typeof window === 'undefined') return
+  const params = new URLSearchParams(window.location.search)
+  if (page <= 1) {
+    params.delete(PAGE_PARAM)
+  } else {
+    params.set(PAGE_PARAM, page.toString())
+  }
+  const url = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`
+  window.history.replaceState(null, '', url)
+}

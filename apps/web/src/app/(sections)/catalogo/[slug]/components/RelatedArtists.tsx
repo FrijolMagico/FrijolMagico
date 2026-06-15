@@ -21,7 +21,7 @@ export const RelatedArtists = ({
         Artistas Relacionados
       </h2>
 
-      <ul className='mx-auto grid w-fit grid-cols-1 items-end gap-6 sm:grid-cols-4'>
+      <ul className='mx-auto grid w-fit grid-cols-1 items-end gap-6 md:grid-cols-2 lg:grid-cols-4'>
         {related.map((relatedArtist) => (
           <li key={relatedArtist.id}>
             <ArtistCard
