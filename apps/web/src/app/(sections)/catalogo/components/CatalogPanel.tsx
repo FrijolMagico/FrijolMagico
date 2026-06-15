@@ -10,6 +10,7 @@ import { useAnalytics } from '@/components/analytics/useAnalytics'
 import { cn } from '@/utils/cn'
 
 import type { CatalogArtist } from '../types/catalog'
+import { paths } from '@/config/paths'
 
 const getArtistSlugFromURL = () => {
   if (typeof window === 'undefined') return null
@@ -28,12 +29,8 @@ export const CatalogPanel = ({
   const setArtistPanelOpen = useCatalogPanelStore(
     (state) => state.setArtistPanelOpen
   )
-  const storeSlug = useCatalogPanelStore(
-    (state) => state.artistSlug
-  )
-  const setArtistSlug = useCatalogPanelStore(
-    (state) => state.setArtistSlug
-  )
+  const storeSlug = useCatalogPanelStore((state) => state.artistSlug)
+  const setArtistSlug = useCatalogPanelStore((state) => state.setArtistSlug)
 
   const [isVisible, setIsVisible] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
@@ -170,7 +167,7 @@ export const CatalogPanel = ({
           {selectedArtist.slug && (
             <div className='border-border/20 bg-background sticky bottom-0 mt-6 border-t pt-4'>
               <Link
-                href={`/catalogo/${selectedArtist.slug}`}
+                href={paths.home.sub.catalog.sub.path(selectedArtist.slug)}
                 transitionTypes={['artist-detail']}
                 aria-label={`Ver perfil completo de ${selectedArtist.name}`}
                 className='bg-primary text-background hover:bg-primary/90 block w-full cursor-pointer rounded-lg px-4 py-3 text-center text-sm font-semibold transition-colors'

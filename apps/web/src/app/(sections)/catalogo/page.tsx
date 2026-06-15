@@ -11,9 +11,9 @@ import {
 import { CatalogSearchSection } from './components/CatalogSearchSection'
 import { CatalogFiltersInitializer } from './components/CatalogFiltersInitializer'
 import { getCatalogData } from './lib/getCatalogData'
-import { SectionHomeButton } from '@/components/SectionsHomeButton'
 import { Metadata } from 'next'
 import { TrackPageView } from '@/components/analytics/TrackPageView'
+import { paths } from '@/config/paths'
 
 const { catalog } = siteData
 
@@ -27,8 +27,10 @@ export default async function CatalogPage() {
 
   return (
     <>
-      <TrackPageView sectionName='Catálogo' sectionPath='/catalogo' />
-      <SectionHomeButton />
+      <TrackPageView
+        sectionName={paths.home.sub.catalog.label}
+        sectionPath={paths.home.sub.catalog.path}
+      />
       <Header title={catalog.title} description={catalog.description} />
       <main className='container mx-auto w-full flex-1 px-4 pt-8 pb-16'>
         {/* Search and Filter Section */}

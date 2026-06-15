@@ -1,8 +1,6 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Image from 'next/image'
-import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
 
 import { getArtistBySlug } from '../lib/getArtistBySlug'
 import { getCatalogData } from '../lib/getCatalogData'
@@ -11,7 +9,6 @@ import { ArtistTimelineVisual } from './components/ArtistTimelineVisual'
 import { ArtistCollectiveGrid } from './components/ArtistCollectiveGrid'
 import { RelatedArtists } from './components/RelatedArtists'
 import { TrackPageView } from '@/components/analytics/TrackPageView'
-import { SectionHomeButton } from '@/components/SectionsHomeButton'
 import { ArtistAvatarTransition } from '@/components/transitions/ArtistAvatarTransition'
 import { ArtistNameTransition } from '@/components/transitions/ArtistNameTransition'
 
@@ -75,16 +72,7 @@ export default async function ArtistPage({
         sectionName={`Catálogo - ${artist.name}`}
         sectionPath={`/catalogo/${slug}`}
       />
-      <SectionHomeButton />
       <article className='container mx-auto max-w-4xl px-4 py-16'>
-        <Link
-          href='/catalogo'
-          className='bg-background border-primary/20 text-primary hover:bg-primary/10 hover:border-primary mb-10 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-all'
-        >
-          <ArrowLeft size={16} />
-          Volver al catálogo
-        </Link>
-
         <div className='flex flex-col gap-8 md:flex-row'>
           <aside className='md:sticky md:top-24 md:self-start'>
             <ArtistAvatarTransition slug={slug}>

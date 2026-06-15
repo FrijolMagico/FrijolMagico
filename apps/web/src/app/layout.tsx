@@ -17,6 +17,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 
 import { cn } from '@/utils/cn'
+import { ContextBar } from '@/components/context-bar/ContextBar'
 import { Footer } from '@/components/Footer'
 
 const SITE = siteData
@@ -115,8 +116,16 @@ export default function RootLayout({
         <SpeedInsights />
         <Analytics />
         <Background />
+        <a
+          href='#main-content'
+          className='focus:bg-accent sr-only focus:not-sr-only focus:fixed focus:top-14 focus:left-1/2 focus:z-50 focus:-translate-x-1/2 focus:rounded-lg focus:px-4 focus:py-2 focus:text-white focus:shadow-lg focus:outline-none'
+        >
+          Saltar al contenido principal
+        </a>
         {SITE.top_bar.active && <TopBarInfo />}
+        <div id='main-content' tabIndex={-1} className='outline-none' />
         {children}
+        <ContextBar />
         <Footer />
       </body>
     </html>

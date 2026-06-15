@@ -4,9 +4,9 @@ import { cn } from '@/utils/cn'
 import Image from 'next/image'
 
 const navItems = [
-  { prefix: 'Historia', name: 'Festivales', href: paths.festival.base },
-  { prefix: 'Asociación Cultural', name: 'Nosotros', href: paths.about },
-  { prefix: 'Artistas', name: 'Catálogo', href: paths.catalog }
+  { prefix: 'Historia', name: 'Festivales', href: paths.home.sub.festival.path },
+  { prefix: 'Asociación Cultural', name: 'Nosotros', href: paths.home.sub.about.path },
+  { prefix: 'Artistas', name: 'Catálogo', href: paths.home.sub.catalog.path }
 ]
 
 export function HeroSection() {

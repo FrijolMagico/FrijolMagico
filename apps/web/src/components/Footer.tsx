@@ -17,10 +17,10 @@ import { LinkBtn } from './LinkBtn'
 const FISSURE_VIEWBOX_HEIGHT = 400
 
 const navLinks = [
-  { name: 'Inicio', href: paths.home },
-  { name: 'Festivales', href: paths.festival.base },
-  { name: 'Catálogo', href: paths.catalog },
-  { name: 'Nosotros', href: paths.about }
+  { name: 'Inicio', href: paths.home.path },
+  { name: 'Festivales', href: paths.home.sub.festival.path },
+  { name: 'Catálogo', href: paths.home.sub.catalog.path },
+  { name: 'Nosotros', href: paths.home.sub.about.path }
 ]
 
 const socialLinks = [

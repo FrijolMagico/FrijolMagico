@@ -2,7 +2,6 @@ import Image from 'next/image'
 
 import { Header } from '@/components/Header'
 import siteData from '@/data/site.json'
-import { SectionHomeButton } from '@/components/SectionsHomeButton'
 import { ErrorSection } from '@/components/ErrorSection'
 import { Grid } from '@/components/Grid'
 import { GridItem } from '@/components/GridItem'
@@ -22,7 +21,6 @@ export default async function NosotrosPage() {
 
   return (
     <>
-      <SectionHomeButton />
       <Header
         title={about.title}
         subTitle={about.subtitle}

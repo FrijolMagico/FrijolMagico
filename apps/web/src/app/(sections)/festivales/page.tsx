@@ -4,7 +4,6 @@ import siteData from '@/data/site.json'
 import { getFestivalesData } from './lib/getFestivalesData'
 import { FestivalesTimeline } from './components/FestivalesTimeline'
 import { TrackPageView } from '@/components/analytics/TrackPageView'
-import { SectionHomeButton } from '@/components/SectionsHomeButton'
 
 const festivals = siteData.festivals
 
@@ -14,7 +13,6 @@ export default async function FestivalesPage() {
   return (
     <>
       <TrackPageView sectionName='Festivales' sectionPath='/festivales' />
-      <SectionHomeButton />
       <Header
         title={festivals.title}
         subTitle={festivals.subtitle}

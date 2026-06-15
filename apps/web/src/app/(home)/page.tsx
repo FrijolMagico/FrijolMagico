@@ -58,7 +58,7 @@ export default async function Home() {
                 <FeaturedArtists />
               </Suspense>
 
-              <LinkBtn withArrow href={paths.catalog}>
+              <LinkBtn withArrow href={paths.home.sub.catalog.path}>
                 Ver catálogo completo
               </LinkBtn>
             </section>
