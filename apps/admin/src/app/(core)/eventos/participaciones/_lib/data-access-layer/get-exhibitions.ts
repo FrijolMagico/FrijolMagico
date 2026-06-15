@@ -6,7 +6,7 @@ import { db } from '@frijolmagico/database/orm'
 import { participations } from '@frijolmagico/database/schema'
 import { asc, inArray } from 'drizzle-orm'
 import type { Exhibition } from '@/core/eventos/participaciones/_schemas/exhibition.schema'
-import { getParticipationExhibitionsCacheTag } from '../../_constants/cache-tags'
+import { getParticipationExhibitionsCacheTag } from '@frijolmagico/cache-tags'
 import {
   DisciplineId,
   EntryModeId

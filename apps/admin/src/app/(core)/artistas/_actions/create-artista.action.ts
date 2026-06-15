@@ -5,12 +5,12 @@ import { updateTag } from 'next/cache'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/shared/lib/auth/utils'
+import { ARTIST_CACHE_TAG } from '@frijolmagico/cache-tags'
 import {
   artistInsertSchema,
   ArtistInsertInput
 } from '../_schemas/artista.schema'
 import type { ActionState } from '@/shared/types/actions'
-import { ARTIST_CACHE_TAG } from '../_constants'
 
 export async function createArtistaAction(
   _prevState: ActionState,

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { db } from '@frijolmagico/database/orm'
 
+import { FEATURED_ARTISTS_CACHE_TAG } from '@frijolmagico/cache-tags'
+
 import { rotateFeaturedArtists } from '@/app/(cron)/_lib/rotate-featured-artists'
 import { revalidateWebCache } from '@/shared/lib/web-invalidation'
 import { sendCronitorPing } from '@/app/(cron)/_lib/send-cronitor-ping'
@@ -40,7 +42,7 @@ export async function GET(request: Request) {
     }
 
     const invalidationResult = await revalidateWebCache({
-      tag: 'home:featured-artists',
+      tag: FEATURED_ARTISTS_CACHE_TAG,
       path: '/'
     })
 

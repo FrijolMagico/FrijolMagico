@@ -3,7 +3,7 @@ import { db } from '@frijolmagico/database/orm'
 import { events } from '@frijolmagico/database/schema'
 import { eq, asc } from 'drizzle-orm'
 import { cacheTag } from 'next/cache'
-import { EVENT_CACHE_TAG } from '@/core/eventos/_constants'
+import { EVENT_CACHE_TAG } from '@frijolmagico/cache-tags'
 import type { Event } from '@/core/eventos/_schemas/event.schema'
 import { ORGANIZATION_ID } from '@/core/organizacion/_constants'
 

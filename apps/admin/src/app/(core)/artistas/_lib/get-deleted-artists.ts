@@ -7,7 +7,8 @@ import { artist } from '@frijolmagico/database/schema'
 
 import { parseRRSS } from '@/shared/lib/rrss'
 
-import { ARTIST_CACHE_TAG, type ARTIST_STATUS } from '../_constants'
+import { ARTIST_CACHE_TAG } from '@frijolmagico/cache-tags'
+import { type ARTIST_STATUS } from '../_constants'
 import type { ArtistListItem } from '../_types/artist'
 
 const { artist: artistTable } = artist

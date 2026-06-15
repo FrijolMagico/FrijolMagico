@@ -10,7 +10,7 @@ let mockFetch: ReturnType<typeof mock>
 
 beforeEach(() => {
   process.env.WEB_REVALIDATION_URL =
-    'https://web.test/api/revalidate/featured-artists'
+    'https://web.test/api/revalidate'
   process.env.REVALIDATION_SECRET = 'test-secret-123'
 
   mockFetch = mock(() =>
@@ -32,7 +32,7 @@ afterEach(() => {
 describe('buildWebInvalidationUrl', () => {
   test('uses WEB_REVALIDATION_URL env var when no explicit URL given', () => {
     const url = buildWebInvalidationUrl()
-    expect(url).toBe('https://web.test/api/revalidate/featured-artists')
+    expect(url).toBe('https://web.test/api/revalidate')
   })
 
   test('uses explicit URL over env var', () => {
@@ -45,14 +45,14 @@ describe('buildWebInvalidationUrl', () => {
   test('appends tag query param with URL encoding', () => {
     const url = buildWebInvalidationUrl({ tag: 'home:featured-artists' })
     expect(url).toBe(
-      'https://web.test/api/revalidate/featured-artists?tag=home%3Afeatured-artists'
+      'https://web.test/api/revalidate?tag=home%3Afeatured-artists'
     )
   })
 
   test('appends path query param with URL encoding', () => {
     const url = buildWebInvalidationUrl({ path: '/' })
     expect(url).toBe(
-      'https://web.test/api/revalidate/featured-artists?path=%2F'
+      'https://web.test/api/revalidate?path=%2F'
     )
   })
 
@@ -62,7 +62,7 @@ describe('buildWebInvalidationUrl', () => {
       path: '/'
     })
     expect(url).toBe(
-      'https://web.test/api/revalidate/featured-artists?tag=home%3Afeatured-artists&path=%2F'
+      'https://web.test/api/revalidate?tag=home%3Afeatured-artists&path=%2F'
     )
   })
 
@@ -86,14 +86,14 @@ describe('buildWebInvalidationUrl', () => {
 // ---------------------------------------------------------------------------
 
 describe('revalidateWebCache', () => {
-  test('sends GET request with Bearer token to correct URL', async () => {
+  test('sends POST request with Bearer token to correct URL', async () => {
     const result = await revalidateWebCache()
 
     expect(mockFetch).toHaveBeenCalledTimes(1)
 
     const [url, options] = mockFetch.mock.calls[0] as [string, RequestInit]
-    expect(url).toBe('https://web.test/api/revalidate/featured-artists')
-    expect(options.method).toBe('GET')
+    expect(url).toBe('https://web.test/api/revalidate')
+    expect(options.method).toBe('POST')
     expect(options.headers).toEqual(
       expect.objectContaining({
         Authorization: 'Bearer test-secret-123'

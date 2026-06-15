@@ -7,7 +7,7 @@ import { artist } from '@frijolmagico/database/schema'
 import { isNotDeleted } from '@frijolmagico/database/filters'
 import { asc, eq } from 'drizzle-orm'
 
-import { ARTIST_CACHE_TAG } from '@/core/artistas/_constants'
+import { ARTIST_CACHE_TAG } from '@frijolmagico/cache-tags'
 import type { ArtistLookup } from '@/core/eventos/participaciones/_types/participations.types'
 
 const { artist: artistTable, artistStatus } = artist

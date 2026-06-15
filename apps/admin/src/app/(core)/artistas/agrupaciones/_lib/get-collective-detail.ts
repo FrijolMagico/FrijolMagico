@@ -4,11 +4,11 @@ import { cacheTag } from 'next/cache'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { and, asc, count, eq, inArray, isNull } from 'drizzle-orm'
-import { ARTIST_CACHE_TAG } from '@/app/(core)/artistas/_constants'
 import {
-  AVAILABLE_ARTISTS_PRELOAD_THRESHOLD,
+  ARTIST_CACHE_TAG,
   getCollectiveMembersCacheTag
-} from '../_constants'
+} from '@frijolmagico/cache-tags'
+import { AVAILABLE_ARTISTS_PRELOAD_THRESHOLD } from '../_constants'
 import type {
   ArtistOption,
   CollectiveDetailResult,

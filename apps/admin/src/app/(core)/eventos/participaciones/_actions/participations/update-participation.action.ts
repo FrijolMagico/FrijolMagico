@@ -11,7 +11,7 @@ import {
   editionParticipationUpdateSchema,
   type ParticipationUpdateInput
 } from '../../_schemas/edition-participation.schema'
-import { getEditionParticipationsCacheTag } from '../../_constants/cache-tags'
+import { getEditionParticipationsCacheTag } from '@frijolmagico/cache-tags'
 
 const { editionParticipation } = participations
 

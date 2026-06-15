@@ -6,11 +6,14 @@ import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { eq, sql } from 'drizzle-orm'
 import { requireAuth } from '@/shared/lib/auth/utils'
+import {
+  ARTIST_CACHE_TAG,
+  ARTIST_HISTORY_CACHE_TAG
+} from '@frijolmagico/cache-tags'
 import { artistUpdateSchema } from '../_schemas/artista.schema'
 import { artistHistoryInsertSchema } from '../_schemas/history.schema'
 import type { ArtistUpdateFormInput, Artist } from '../_schemas/artista.schema'
 import type { ActionState } from '@/shared/types/actions'
-import { ARTIST_CACHE_TAG, ARTIST_HISTORY_CACHE_TAG } from '../_constants'
 
 const HISTORIAL_FIELDS = [
   'pseudonimo',

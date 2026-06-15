@@ -6,7 +6,7 @@ import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { asc, isNull } from 'drizzle-orm'
 
-import { BAND_ACTIVE_CACHE_TAG } from '@/core/artistas/bandas/_constants'
+import { BAND_ACTIVE_CACHE_TAG } from '@frijolmagico/cache-tags'
 
 import type { BandLookup } from '@/core/eventos/participaciones/_types/participations.types'
 

@@ -3,7 +3,7 @@ import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { asc } from 'drizzle-orm'
 
-import { ARTIST_HISTORY_CACHE_TAG } from '../_constants'
+import { ARTIST_HISTORY_CACHE_TAG } from '@frijolmagico/cache-tags'
 import { ArtistHistory } from '../_schemas/history.schema'
 
 export async function getHistoryData(): Promise<ArtistHistory[]> {

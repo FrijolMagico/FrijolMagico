@@ -7,7 +7,7 @@ import { db } from '@frijolmagico/database/orm'
 import { events } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import type { ActionState } from '@/shared/types/actions'
-import { EVENT_CACHE_TAG } from '../_constants'
+import { EVENT_CACHE_TAG } from '@frijolmagico/cache-tags'
 
 const { event } = events
 

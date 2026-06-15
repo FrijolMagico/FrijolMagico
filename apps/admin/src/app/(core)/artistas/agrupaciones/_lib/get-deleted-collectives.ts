@@ -8,7 +8,7 @@ import {
   createPaginatedResponse,
   type PaginatedResponse
 } from '@/shared/types/pagination'
-import { COLLECTIVE_DELETED_CACHE_TAG } from '../_constants'
+import { COLLECTIVE_DELETED_CACHE_TAG } from '@frijolmagico/cache-tags'
 import {
   collectiveQueryParamsSchema,
   type CollectiveQueryParams

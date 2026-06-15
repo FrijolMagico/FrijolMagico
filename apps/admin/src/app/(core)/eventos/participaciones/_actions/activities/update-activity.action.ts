@@ -7,7 +7,7 @@ import { db } from '@frijolmagico/database/orm'
 import { participations } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import type { ActionState } from '@/shared/types/actions'
-import { getParticipationActivitiesCacheTag } from '../../_constants/cache-tags'
+import { getParticipationActivitiesCacheTag } from '@frijolmagico/cache-tags'
 import {
   activityUpdateSchema,
   type ActivityUpdateInput

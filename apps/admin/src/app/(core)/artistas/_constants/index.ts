@@ -1,6 +1,3 @@
-export const ARTIST_CACHE_TAG = 'admin:artist'
-export const ARTIST_HISTORY_CACHE_TAG = 'admin:artist:history'
-
 export const CREATE_ARTIST_FORM_ID = 'create-artist-form'
 export const UPDATE_ARTIST_FORM_ID = 'update-artist-form'
 

@@ -28,6 +28,13 @@ describe('catalog server actions — web invalidation contracts', () => {
     expect(source).toContain('@/shared/lib/web-invalidation')
   })
 
+  test('update-catalog-field.action imports CATALOG_CACHE_TAG from shared package', () => {
+    const source = readFileSync(UPDATE_FIELD_PATH, 'utf8')
+
+    expect(source).toContain('CATALOG_CACHE_TAG')
+    expect(source).toContain("from '@frijolmagico/cache-tags'")
+  })
+
   test('update-catalog-field.action calls void revalidateWebCache with path', () => {
     const source = readFileSync(UPDATE_FIELD_PATH, 'utf8')
 
@@ -43,6 +50,13 @@ describe('catalog server actions — web invalidation contracts', () => {
     expect(source).toContain('@/shared/lib/web-invalidation')
   })
 
+  test('update-catalog.action imports CATALOG_CACHE_TAG from shared package', () => {
+    const source = readFileSync(UPDATE_CATALOG_PATH, 'utf8')
+
+    expect(source).toContain('CATALOG_CACHE_TAG')
+    expect(source).toContain("from '@frijolmagico/cache-tags'")
+  })
+
   test('update-catalog.action calls void revalidateWebCache with path', () => {
     const source = readFileSync(UPDATE_CATALOG_PATH, 'utf8')
 
@@ -55,6 +69,13 @@ describe('catalog server actions — web invalidation contracts', () => {
 
     expect(source).toContain('revalidateWebCache')
     expect(source).toContain('@/shared/lib/web-invalidation')
+  })
+
+  test('delete-catalog.action imports CATALOG_CACHE_TAG from shared package', () => {
+    const source = readFileSync(DELETE_CATALOG_PATH, 'utf8')
+
+    expect(source).toContain('CATALOG_CACHE_TAG')
+    expect(source).toContain("from '@frijolmagico/cache-tags'")
   })
 
   test('delete-catalog.action calls void revalidateWebCache with path', () => {

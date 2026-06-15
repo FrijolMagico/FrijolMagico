@@ -168,7 +168,7 @@ describe.skipIf(!modulesLoaded)('get-catalog-data DAL', () => {
       destacado: null
     })
 
-    expect(getCacheTags()).toEqual(['admin:catalog:artists', 'admin:artist'])
+    expect(getCacheTags()).toEqual(['catalogo:artistas', 'artistas'])
     expect(result.data[0]?.artist).toMatchObject({
       id: 7,
       pseudonimo: 'Luna Roja',
@@ -226,7 +226,7 @@ describe.skipIf(!modulesLoaded)('get-catalog-data DAL', () => {
         nombre: 'María Soto'
       }
     ])
-    expect(getCacheTags()).toEqual(['admin:catalog:artists', 'admin:artist'])
+    expect(getCacheTags()).toEqual(['catalogo:artistas', 'artistas'])
     expect(
       Object.keys((dbMock.calls[0]?.args[0] ?? {}) as Record<string, unknown>)
     ).toEqual(['id', 'pseudonimo', 'nombre'])

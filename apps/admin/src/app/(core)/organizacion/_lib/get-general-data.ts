@@ -4,11 +4,8 @@ import { db } from '@frijolmagico/database/orm'
 import { core } from '@frijolmagico/database/schema'
 import { eq } from 'drizzle-orm'
 
-import {
-  ORGANIZATION_CACHE_TAG,
-  ORGANIZATION_ID,
-  TEAM_CACHE_TAG
-} from '../_constants'
+import { ORGANIZATION_CACHE_TAG, TEAM_CACHE_TAG } from '@frijolmagico/cache-tags'
+import { ORGANIZATION_ID } from '../_constants'
 
 import { Organization, TeamMember } from '../_schemas/organizacion.schema'
 

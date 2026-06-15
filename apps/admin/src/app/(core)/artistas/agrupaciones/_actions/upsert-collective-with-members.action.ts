@@ -6,13 +6,13 @@ import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { and, eq, sql } from 'drizzle-orm'
 import { requireAuth } from '@/shared/lib/auth/utils'
-import type { ActionState } from '@/shared/types/actions'
 import {
   COLLECTIVE_ACTIVE_CACHE_TAG,
   COLLECTIVE_CACHE_TAG,
   COLLECTIVE_DELETED_CACHE_TAG,
   getCollectiveMembersCacheTag
-} from '../_constants'
+} from '@frijolmagico/cache-tags'
+import type { ActionState } from '@/shared/types/actions'
 import {
   upsertCollectivePayloadSchema,
   type UpsertCollectivePayloadInput

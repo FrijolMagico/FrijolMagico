@@ -6,9 +6,12 @@ import { max } from 'drizzle-orm'
 import { generateKeyBetween } from 'fractional-indexing'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
+import {
+  CATALOG_CACHE_TAG,
+  FEATURED_ARTISTS_CACHE_TAG,
+} from '@frijolmagico/cache-tags'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import type { ActionState } from '@/shared/types/actions'
-import { CATALOG_CACHE_TAG } from '../_constants'
 import {
   type CatalogCreateFormInput,
   catalogInsertSchema,
@@ -86,8 +89,16 @@ export async function createCatalogAction(
 
     updateTag(CATALOG_CACHE_TAG)
     revalidateWebCache({
+      tag: CATALOG_CACHE_TAG,
       path: '/catalogo'
     })
+
+    if ('destacado' in parsed.data && parsed.data.destacado) {
+      void revalidateWebCache({
+        tag: FEATURED_ARTISTS_CACHE_TAG,
+        path: '/',
+      })
+    }
 
     return { success: true }
   } catch (error) {
