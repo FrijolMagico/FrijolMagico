@@ -63,37 +63,47 @@ export const Footer = () => {
                     instancias que ayuden a potenciar su trabajo.
                   </p>
                 </section>
-                <nav className='text-background/80 flex items-center justify-center gap-12'>
-                  <div className='space-y-2'>
-                    <h4 className='wavy-underline text-background uppercase'>
-                      Síguenos
-                    </h4>
-                    <ul>
-                      {socialLinks.map((link) => (
-                        <li key={link.name}>
-                          <LinkBtn
-                            withArrow
-                            href={link.href}
-                            className='text-sm uppercase'
-                          >
-                            {link.name}
-                          </LinkBtn>
-                        </li>
-                      ))}
-                    </ul>
+                <nav className='mt-4 flex w-fit flex-col items-center'>
+                  <div className='text-background/80 flex items-center justify-center gap-12'>
+                    <div className='space-y-2'>
+                      <h4 className='wavy-underline text-background uppercase'>
+                        Síguenos
+                      </h4>
+                      <ul>
+                        {socialLinks.map((link) => (
+                          <li key={link.name}>
+                            <LinkBtn
+                              withArrow
+                              href={link.href}
+                              className='text-sm uppercase'
+                            >
+                              {link.name}
+                            </LinkBtn>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className='space-y-2'>
+                      <h4 className='wavy-underline text-background uppercase'>
+                        Navegar
+                      </h4>
+                      <ul>
+                        {navLinks.map((link) => (
+                          <li key={link.name}>
+                            <LinkBtn href={link.href}>{link.name}</LinkBtn>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
-                  <div className='space-y-2'>
-                    <h4 className='wavy-underline text-background uppercase'>
-                      Navegar
-                    </h4>
-                    <ul>
-                      {navLinks.map((link) => (
-                        <li key={link.name}>
-                          <LinkBtn href={link.href}>{link.name}</LinkBtn>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+
+                  <a
+                    aria-label=''
+                    className='font-roboto-mono text-background/80 mt-2 text-xs underline-offset-2 hover:underline'
+                    href='mailto:contacto@frijolmagico.cl'
+                  >
+                    contacto@frijolmagico.cl
+                  </a>
                 </nav>
               </div>
               <div className='border-background/20 text-background/50 font-roboto-mono mt-auto grid h-fit border-t py-4 text-center text-xs md:grid-cols-3 md:text-left'>
