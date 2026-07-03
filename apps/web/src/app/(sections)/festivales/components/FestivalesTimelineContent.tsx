@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 import { FestivalTimelineCard } from './FestivalTimelineCard'
 import { TimelineConnector } from './TimelineConnector'
 import { FestivalsSidebarNav } from './FestivalsSidebarNav'
@@ -93,13 +95,18 @@ export const FestivalesTimelineContent = ({
                   )}
                 >
                   {!isLeft ? (
-                    <FestivalTimelineCard
-                      festival={festival}
-                      alignment='right'
-                      festivalId={festivalId}
-                      isActive={isActive}
-                      priority={isFirstCard}
-                    />
+                    <Link
+                      href={`/festivales/${festival.evento.edicion_slug}`}
+                      className='focus-visible:ring-primary relative w-full max-w-160 rounded-3xl outline-none transition-all focus-visible:ring-2 focus-visible:ring-offset-2'
+                    >
+                      <FestivalTimelineCard
+                        festival={festival}
+                        alignment='right'
+                        festivalId={festivalId}
+                        isActive={isActive}
+                        priority={isFirstCard}
+                      />
+                    </Link>
                   ) : !isLast ? (
                     <TimelineConnector color={connectorColor} toLeft />
                   ) : null}
@@ -113,13 +120,18 @@ export const FestivalesTimelineContent = ({
                   )}
                 >
                   {isLeft ? (
-                    <FestivalTimelineCard
-                      festival={festival}
-                      alignment='left'
-                      festivalId={festivalId}
-                      isActive={isActive}
-                      priority={isFirstCard}
-                    />
+                    <Link
+                      href={`/festivales/${festival.evento.edicion_slug}`}
+                      className='focus-visible:ring-primary relative w-full max-w-160 rounded-3xl outline-none transition-all focus-visible:ring-2 focus-visible:ring-offset-2'
+                    >
+                      <FestivalTimelineCard
+                        festival={festival}
+                        alignment='left'
+                        festivalId={festivalId}
+                        isActive={isActive}
+                        priority={isFirstCard}
+                      />
+                    </Link>
                   ) : !isLast ? (
                     <TimelineConnector color={connectorColor} />
                   ) : null}
@@ -127,12 +139,17 @@ export const FestivalesTimelineContent = ({
 
                 {/* Mobile: Card centrada debajo del circulo */}
                 <div className='flex justify-center pb-12 lg:hidden'>
-                  <FestivalTimelineCard
-                    festival={festival}
-                    festivalId={festivalId}
-                    isActive={isActive}
-                    priority={isFirstCard}
-                  />
+                  <Link
+                    href={`/festivales/${festival.evento.edicion_slug}`}
+                    className='focus-visible:ring-primary relative w-full max-w-160 rounded-3xl outline-none transition-all focus-visible:ring-2 focus-visible:ring-offset-2'
+                  >
+                    <FestivalTimelineCard
+                      festival={festival}
+                      festivalId={festivalId}
+                      isActive={isActive}
+                      priority={isFirstCard}
+                    />
+                  </Link>
                 </div>
               </section>
             )
