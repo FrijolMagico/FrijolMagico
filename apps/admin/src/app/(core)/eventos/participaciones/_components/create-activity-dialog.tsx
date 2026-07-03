@@ -335,8 +335,8 @@ export function CreateActivityDialog({
               control={methods.control}
               render={({ field }) => (
                 <Select
-                  value={field.value}
-                  onValueChange={(val) => field.onChange(val)}
+                  value={String(field.value ?? '')}
+                  onValueChange={(val) => field.onChange(Number(val))}
                   disabled={isSubmitting}
                 >
                   <SelectTrigger>
