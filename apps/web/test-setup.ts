@@ -11,3 +11,6 @@ for (const key of Object.keys(window)) {
 
 globalThis.window = window as unknown as Window & typeof globalThis
 globalThis.document = window.document as unknown as Document
+globalThis.requestAnimationFrame =
+  globalThis.requestAnimationFrame ??
+  ((callback: FrameRequestCallback) => setTimeout(callback, 16) as unknown as number)
