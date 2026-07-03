@@ -16,14 +16,14 @@ export const FestivalDetailPoster = ({
   editionName,
   priority
 }: FestivalDetailPosterProps) => (
-  <figure className='relatie relative aspect-auto h-auto w-full'>
+  <figure className='relative aspect-auto h-auto w-full'>
     {posterUrl ? (
       <Image
         src={posterUrl}
         alt={`Afiche ${eventName} ${editionName}`}
         width={370}
         height={523}
-        className='aspect-auto w-full rounded-xl object-cover'
+        className='aspect-auto h-auto w-full rounded-xl object-cover'
         priority={priority}
         sizes='(max-width: 768px) 320px, 370'
       />

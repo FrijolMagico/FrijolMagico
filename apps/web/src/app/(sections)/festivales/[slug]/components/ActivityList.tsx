@@ -51,8 +51,8 @@ export const ActivityList = ({ actividades }: ActivityListProps) => {
         {Object.entries(grouped)
           .sort(([a], [b]) => (TYPE_ORDER[a] ?? 99) - (TYPE_ORDER[b] ?? 99))
           .map(([tipo, group]) => (
-            <section key={tipo}>
-              <h3 className='text-accent mb-3 font-mono text-2xl font-bold'>
+            <section key={tipo} className='flex-1'>
+              <h3 className='text-accent mb-3 text-center font-mono text-2xl font-bold md:text-start'>
                 {TYPE_LABELS[tipo] ?? tipo}
               </h3>
               <ul className={cn(tipo === 'musica' ? 'space-y-2' : 'space-y-3')}>
