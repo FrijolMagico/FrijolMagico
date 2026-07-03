@@ -12,10 +12,7 @@ export function usePosterDominantColor() {
       const parent = ref.current?.parentElement
       if (!parent) return null
 
-      const article = parent.querySelector('article')
-      if (!article) return null
-
-      const img = article.querySelector('img')
+      const img = parent.querySelector('img')
       if (!img || !(img instanceof HTMLImageElement)) return null
 
       if (img.complete) {
