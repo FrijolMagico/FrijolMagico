@@ -1,5 +1,3 @@
-import Link from 'next/link'
-
 import { FestivalTimelineCard } from './FestivalTimelineCard'
 import { TimelineConnector } from './TimelineConnector'
 import { FestivalsSidebarNav } from './FestivalsSidebarNav'
@@ -46,7 +44,7 @@ export const FestivalesTimelineContent = ({
           <div className='relative grid gap-8 lg:grid-cols-[40rem_40rem]'>
             {/* Superior indicator */}
             <div className='flex flex-col items-center'>
-              <div className='bg-secondary/10 text-secondary relative mx-auto flex size-32 flex-col items-center justify-center rounded-full'>
+              <div className='bg-primary/10 text-primary relative mx-auto flex size-32 flex-col items-center justify-center rounded-full'>
                 <span className='font-josefin landing-0 block text-3xl font-black'>
                   2015
                 </span>
@@ -64,7 +62,7 @@ export const FestivalesTimelineContent = ({
                   fill='none'
                   strokeWidth={6}
                   strokeDasharray='20,10'
-                  className='stroke-secondary'
+                  className='stroke-primary'
                   d='M 10 0 L 10 200'
                 />
               </svg>
@@ -95,10 +93,7 @@ export const FestivalesTimelineContent = ({
                   )}
                 >
                   {!isLeft ? (
-                    <Link
-                      href={`/festivales/${festival.evento.edicion_slug}`}
-                      className='focus-visible:ring-primary relative w-full max-w-160 rounded-3xl outline-none transition-all focus-visible:ring-2 focus-visible:ring-offset-2'
-                    >
+                    <div className='relative w-full max-w-160'>
                       <FestivalTimelineCard
                         festival={festival}
                         alignment='right'
@@ -106,7 +101,7 @@ export const FestivalesTimelineContent = ({
                         isActive={isActive}
                         priority={isFirstCard}
                       />
-                    </Link>
+                    </div>
                   ) : !isLast ? (
                     <TimelineConnector color={connectorColor} toLeft />
                   ) : null}
@@ -120,10 +115,7 @@ export const FestivalesTimelineContent = ({
                   )}
                 >
                   {isLeft ? (
-                    <Link
-                      href={`/festivales/${festival.evento.edicion_slug}`}
-                      className='focus-visible:ring-primary relative w-full max-w-160 rounded-3xl outline-none transition-all focus-visible:ring-2 focus-visible:ring-offset-2'
-                    >
+                    <div className='relative w-full max-w-160'>
                       <FestivalTimelineCard
                         festival={festival}
                         alignment='left'
@@ -131,7 +123,7 @@ export const FestivalesTimelineContent = ({
                         isActive={isActive}
                         priority={isFirstCard}
                       />
-                    </Link>
+                    </div>
                   ) : !isLast ? (
                     <TimelineConnector color={connectorColor} />
                   ) : null}
@@ -139,17 +131,14 @@ export const FestivalesTimelineContent = ({
 
                 {/* Mobile: Card centrada debajo del circulo */}
                 <div className='flex justify-center pb-12 lg:hidden'>
-                  <Link
-                    href={`/festivales/${festival.evento.edicion_slug}`}
-                    className='focus-visible:ring-primary relative w-full max-w-160 rounded-3xl outline-none transition-all focus-visible:ring-2 focus-visible:ring-offset-2'
-                  >
+                  <div className='relative w-full max-w-160'>
                     <FestivalTimelineCard
                       festival={festival}
                       festivalId={festivalId}
                       isActive={isActive}
                       priority={isFirstCard}
                     />
-                  </Link>
+                  </div>
                 </div>
               </section>
             )
@@ -167,11 +156,11 @@ export const FestivalesTimelineContent = ({
                   fill='none'
                   strokeWidth={6}
                   strokeDasharray='20,10'
-                  className='stroke-primary'
+                  className='stroke-secondary'
                   d='M 10 0 L 10 200'
                 />
               </svg>
-              <div className='bg-primary/10 text-primary relative mx-auto flex size-32 flex-col items-center justify-center rounded-full'>
+              <div className='bg-secondary/10 text-secondary relative mx-auto flex size-32 flex-col items-center justify-center rounded-full'>
                 <span className='font-josefin landing-0 block text-3xl font-black'>
                   2026
                 </span>

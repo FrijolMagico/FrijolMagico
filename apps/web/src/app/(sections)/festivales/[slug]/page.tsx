@@ -5,8 +5,10 @@ import { TrackPageView } from '@/components/analytics/TrackPageView'
 
 import { getFestivalBySlug } from './lib/getFestivalBySlug'
 import { getFestivalSlugs } from './lib/getFestivalSlugs'
+import { getAdjacentFestivals } from './lib/getAdjacentFestivals'
 
 import { FestivalDetailContent } from './components/FestivalDetailContent'
+import { FestivalNavigator } from './components/FestivalNavigator'
 
 export async function generateStaticParams() {
   const slugs = await getFestivalSlugs()
@@ -54,6 +56,7 @@ export default async function FestivalDetailPage({
   if (!slug) notFound()
 
   const detail = await getFestivalBySlug(slug)
+  const adjacent = await getAdjacentFestivals(slug)
 
   if (!detail) notFound()
 
@@ -64,6 +67,7 @@ export default async function FestivalDetailPage({
         sectionPath={`/festivales/${slug}`}
       />
       <FestivalDetailContent detail={detail} />
+      <FestivalNavigator prev={adjacent.prev} next={adjacent.next} />
     </>
   )
 }

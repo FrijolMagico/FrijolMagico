@@ -50,26 +50,23 @@ const mockFestivales = [
 ]
 
 describe('FestivalesTimelineContent', () => {
-  test('wraps each card in a link to the edition detail page', () => {
+  test('each card has a "Ver más" link to the edition detail page', () => {
     render(<FestivalesTimelineContent festivales={mockFestivales} activeId={null} />)
 
-    const links = screen.getAllByTestId('card-link')
-    const uniqueHrefs = [...new Set(links.map((link) => link.getAttribute('href')))]
+    const links = screen.getAllByRole('link')
+    const hrefs = links.map((link) => link.getAttribute('href'))
 
-    expect(uniqueHrefs).toContain('/festivales/edicion-xv-1')
-    expect(uniqueHrefs).toContain('/festivales/edicion-3-2')
+    expect(hrefs).toContain('/festivales/edicion-xv-1')
+    expect(hrefs).toContain('/festivales/edicion-3-2')
   })
 
-  test('card and link have interactive hover and focus classes', () => {
+  test('cards have interactive hover classes via named group', () => {
     render(<FestivalesTimelineContent festivales={mockFestivales} activeId={null} />)
 
     const articles = screen.getAllByRole('article')
     const firstArticle = articles[0]
-    const firstLink = screen.getAllByTestId('card-link')[0]
 
-    expect(firstArticle?.className).toContain('cursor-pointer')
-    expect(firstArticle?.className).toContain('hover:scale-[1.01]')
-    expect(firstArticle?.className).toContain('hover:shadow-xl')
-    expect(firstLink?.className).toContain('focus-visible:ring-2')
+    expect(firstArticle?.className).toContain('group-hover/card:scale-[1.01]')
+    expect(firstArticle?.className).toContain('group-hover/card:shadow-xl')
   })
 })
