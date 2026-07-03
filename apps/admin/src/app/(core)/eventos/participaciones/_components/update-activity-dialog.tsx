@@ -297,8 +297,8 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
               control={methods.control}
               render={({ field }) => (
                 <Select
-                  value={field.value}
-                  onValueChange={(val) => field.onChange(val)}
+                  value={String(field.value ?? '')}
+                  onValueChange={(val) => field.onChange(Number(val))}
                   disabled={isSubmitting}
                 >
                   <SelectTrigger>
@@ -453,19 +453,6 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
             )}
           </Field>
 
-          <Field>
-            <FieldLabel htmlFor={`activity-notes-${activity.id}`}>
-              Notas
-            </FieldLabel>
-            <Textarea
-              id={`activity-notes-${activity.id}`}
-              {...methods.register('notas')}
-              disabled={isSubmitting}
-              rows={2}
-              placeholder='Notas...'
-            />
-            {errors.notas && <FieldError>{errors.notas.message}</FieldError>}
-          </Field>
         </FieldGroup>
       </form>
     </EntityFormDialog>
