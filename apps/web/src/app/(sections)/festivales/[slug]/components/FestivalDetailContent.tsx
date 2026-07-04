@@ -63,6 +63,8 @@ export const FestivalDetailContent = async ({
           {detail.actividades.length > 0 && (
             <ActivityList actividades={detail.actividades} />
           )}
+
+          <FestivalNavigator slug={detail.slug} />
         </div>
       </div>
     </article>
