@@ -1,3 +1,6 @@
+import Link from 'next/link'
+import { ArrowRightIcon } from 'lucide-react'
+
 import { cn } from '@/utils/cn'
 import { getDaysDisplay, getLocation } from '../utils/timelineUtils'
 
@@ -45,12 +48,12 @@ export const FestivalTimelineCard = ({
   const disciplineColors = ['bg-secondary', 'bg-primary', 'bg-accent']
 
   return (
-    <div className='relative w-full max-w-160'>
+    <div className='group/card relative w-full max-w-160'>
       <article
         id={festivalId}
         data-festival-id={festivalId}
         className={cn(
-          'group bg-background outline-primary/20 flex flex-col overflow-hidden rounded-3xl shadow-lg outline transition-all duration-300 outline-dashed hover:shadow-xl',
+          'group relative z-10 bg-background outline-primary/20 flex flex-col rounded-3xl shadow-lg outline transition-all duration-300 outline-dashed group-hover/card:scale-[1.01] group-hover/card:shadow-xl',
           alignment === 'right' ? 'md:flex-row-reverse' : 'md:flex-row'
         )}
       >
@@ -102,6 +105,19 @@ export const FestivalTimelineCard = ({
           isActive={isActive}
           priority={priority}
         />
+
+        {/* Bottom link button */}
+        <Link
+          href={`/festivales/${festival.evento.edicion_slug}`}
+          className='group/btn absolute -bottom-4 left-1/2 z-20 -translate-x-1/2'
+        >
+          {/* Plain bg effect — same pattern as ArtistCard */}
+          <div className='absolute -z-10 size-full translate-x-1.5 translate-y-1.5 rounded-lg bg-primary transition-transform duration-300 group-hover/btn:translate-x-0 group-hover/btn:translate-y-0' />
+          <span className='relative flex items-center gap-2 rounded-lg border-2 border-primary bg-background px-6 py-2 font-semibold text-primary transition-colors duration-200 group-hover/btn:bg-primary group-hover/btn:text-background'>
+            Ver más
+            <ArrowRightIcon className='size-4 transition-transform duration-200 group-hover/btn:-rotate-45' />
+          </span>
+        </Link>
       </article>
 
       <FestivalTimelineCardBacklight isActive={isActive} />

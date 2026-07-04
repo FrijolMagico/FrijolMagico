@@ -10,6 +10,7 @@ export function getFestivalesMock(): FestivalEdicion[] {
         slug: 'frijol-magico',
         edicion: 'XV',
         edicion_nombre: 'Un Nuevo Germinar',
+        edicion_slug: 'edicion-xv-1',
         poster_url:
           'https://cdn.frijolmagico.cl/festivales/frijol-magico/afiche-xv.webp',
         dias: [
@@ -56,6 +57,7 @@ export function getFestivalesMock(): FestivalEdicion[] {
         slug: 'ilustra-benders',
         edicion: '3',
         edicion_nombre: 'Season 3',
+        edicion_slug: 'edicion-3-2',
         poster_url:
           'https://cdn.frijolmagico.cl/festivales/ilustra-benders/afiche-3.webp',
         dias: [
@@ -90,6 +92,7 @@ export function getFestivalesMock(): FestivalEdicion[] {
         slug: 'frijol-magico',
         edicion: 'XIV',
         edicion_nombre: null,
+        edicion_slug: 'edicion-xiv-1',
         poster_url:
           'https://cdn.frijolmagico.cl/festivales/frijol-magico/afiche-xiv.webp',
         dias: [
@@ -126,6 +129,7 @@ export function getFestivalesMock(): FestivalEdicion[] {
         slug: 'ilustra-benders',
         edicion: '2',
         edicion_nombre: 'Season 2',
+        edicion_slug: 'edicion-2-2',
         poster_url:
           'https://cdn.frijolmagico.cl/festivales/ilustra-benders/afiche-2.webp',
         dias: [
@@ -160,6 +164,7 @@ export function getFestivalesMock(): FestivalEdicion[] {
         slug: 'frijol-magico',
         edicion: 'XIII',
         edicion_nombre: null,
+        edicion_slug: 'edicion-xiii-1',
         poster_url:
           'https://cdn.frijolmagico.cl/festivales/frijol-magico/afiche-xiii.webp',
         dias: [
@@ -196,6 +201,7 @@ export function getFestivalesMock(): FestivalEdicion[] {
         slug: 'ilustra-benders',
         edicion: '1',
         edicion_nombre: null,
+        edicion_slug: 'edicion-1-2',
         poster_url:
           'https://cdn.frijolmagico.cl/festivales/ilustra-benders/afiche-1.webp',
         dias: [
@@ -230,6 +236,7 @@ export function getFestivalesMock(): FestivalEdicion[] {
         slug: 'frijol-magico',
         edicion: 'XII',
         edicion_nombre: null,
+        edicion_slug: 'edicion-xii-1',
         poster_url:
           'https://cdn.frijolmagico.cl/festivales/frijol-magico/afiche-xii.webp',
         dias: [
@@ -265,6 +272,7 @@ export function getFestivalesMock(): FestivalEdicion[] {
         slug: 'frijol-magico',
         edicion: 'XI',
         edicion_nombre: 'Edición Virtual',
+        edicion_slug: 'edicion-xi-1',
         poster_url:
           'https://cdn.frijolmagico.cl/festivales/frijol-magico/afiche-xi.webp',
         dias: [
@@ -311,6 +319,7 @@ export function getFestivalesMock(): FestivalEdicion[] {
         slug: 'frijol-magico',
         edicion: 'X',
         edicion_nombre: 'Décimo Aniversario',
+        edicion_slug: 'edicion-x-1',
         poster_url:
           'https://cdn.frijolmagico.cl/festivales/frijol-magico/afiche-x.webp',
         dias: [

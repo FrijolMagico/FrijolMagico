@@ -1,0 +1,49 @@
+import { ParticipantByDiscipline } from './ParticipantByDiscipline'
+
+import type { FestivalParticipant } from '../../types/festival'
+
+interface ParticipantListProps {
+  participantes: FestivalParticipant[]
+}
+
+export const ParticipantList = ({ participantes }: ParticipantListProps) => {
+  if (participantes.length === 0) {
+    return (
+      <section>
+        <h2 className='text-primary mb-6 w-full text-4xl font-bold'>
+          Participantes
+        </h2>
+        <p className='text-foreground/60'>Sin participantes registrados aún</p>
+      </section>
+    )
+  }
+
+  const grouped = participantes.reduce<Record<string, FestivalParticipant[]>>(
+    (acc, participant) => {
+      const key = participant.disciplina_slug
+      if (!acc[key]) {
+        acc[key] = []
+      }
+      acc[key].push(participant)
+      return acc
+    },
+    {}
+  )
+
+  return (
+    <section>
+      <h2 className='text-primary mb-6 w-full text-center text-4xl font-bold md:text-start'>
+        Participantes
+      </h2>
+      <div className='flex flex-wrap gap-6'>
+        {Object.entries(grouped).map(([disciplineLabel, group]) => (
+          <ParticipantByDiscipline
+            key={disciplineLabel}
+            disciplineLabel={disciplineLabel}
+            participants={group}
+          />
+        ))}
+      </div>
+    </section>
+  )
+}

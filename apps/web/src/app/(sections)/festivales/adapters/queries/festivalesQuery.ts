@@ -5,6 +5,7 @@ export const FESTIVALES_QUERY = `SELECT json_object(
         'slug', e.slug,
         'edicion', ee.numero_edicion,
         'edicion_nombre', ee.nombre,
+        'edicion_slug', ee.slug,
         'poster_url', ee.poster_url,
         'dias', COALESCE((
             SELECT json_group_array(

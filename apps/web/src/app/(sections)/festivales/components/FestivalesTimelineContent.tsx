@@ -44,7 +44,7 @@ export const FestivalesTimelineContent = ({
           <div className='relative grid gap-8 lg:grid-cols-[40rem_40rem]'>
             {/* Superior indicator */}
             <div className='flex flex-col items-center'>
-              <div className='bg-secondary/10 text-secondary relative mx-auto flex size-32 flex-col items-center justify-center rounded-full'>
+              <div className='bg-primary/10 text-primary relative mx-auto flex size-32 flex-col items-center justify-center rounded-full'>
                 <span className='font-josefin landing-0 block text-3xl font-black'>
                   2015
                 </span>
@@ -62,7 +62,7 @@ export const FestivalesTimelineContent = ({
                   fill='none'
                   strokeWidth={6}
                   strokeDasharray='20,10'
-                  className='stroke-secondary'
+                  className='stroke-primary'
                   d='M 10 0 L 10 200'
                 />
               </svg>
@@ -93,13 +93,15 @@ export const FestivalesTimelineContent = ({
                   )}
                 >
                   {!isLeft ? (
-                    <FestivalTimelineCard
-                      festival={festival}
-                      alignment='right'
-                      festivalId={festivalId}
-                      isActive={isActive}
-                      priority={isFirstCard}
-                    />
+                    <div className='relative w-full max-w-160'>
+                      <FestivalTimelineCard
+                        festival={festival}
+                        alignment='right'
+                        festivalId={festivalId}
+                        isActive={isActive}
+                        priority={isFirstCard}
+                      />
+                    </div>
                   ) : !isLast ? (
                     <TimelineConnector color={connectorColor} toLeft />
                   ) : null}
@@ -113,13 +115,15 @@ export const FestivalesTimelineContent = ({
                   )}
                 >
                   {isLeft ? (
-                    <FestivalTimelineCard
-                      festival={festival}
-                      alignment='left'
-                      festivalId={festivalId}
-                      isActive={isActive}
-                      priority={isFirstCard}
-                    />
+                    <div className='relative w-full max-w-160'>
+                      <FestivalTimelineCard
+                        festival={festival}
+                        alignment='left'
+                        festivalId={festivalId}
+                        isActive={isActive}
+                        priority={isFirstCard}
+                      />
+                    </div>
                   ) : !isLast ? (
                     <TimelineConnector color={connectorColor} />
                   ) : null}
@@ -127,12 +131,14 @@ export const FestivalesTimelineContent = ({
 
                 {/* Mobile: Card centrada debajo del circulo */}
                 <div className='flex justify-center pb-12 lg:hidden'>
-                  <FestivalTimelineCard
-                    festival={festival}
-                    festivalId={festivalId}
-                    isActive={isActive}
-                    priority={isFirstCard}
-                  />
+                  <div className='relative w-full max-w-160'>
+                    <FestivalTimelineCard
+                      festival={festival}
+                      festivalId={festivalId}
+                      isActive={isActive}
+                      priority={isFirstCard}
+                    />
+                  </div>
                 </div>
               </section>
             )
@@ -150,11 +156,11 @@ export const FestivalesTimelineContent = ({
                   fill='none'
                   strokeWidth={6}
                   strokeDasharray='20,10'
-                  className='stroke-primary'
+                  className='stroke-secondary'
                   d='M 10 0 L 10 200'
                 />
               </svg>
-              <div className='bg-primary/10 text-primary relative mx-auto flex size-32 flex-col items-center justify-center rounded-full'>
+              <div className='bg-secondary/10 text-secondary relative mx-auto flex size-32 flex-col items-center justify-center rounded-full'>
                 <span className='font-josefin landing-0 block text-3xl font-black'>
                   2026
                 </span>
