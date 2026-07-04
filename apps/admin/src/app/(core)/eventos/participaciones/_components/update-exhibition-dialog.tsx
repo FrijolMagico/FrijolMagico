@@ -141,6 +141,7 @@ export function UpdateExhibitionDialog({ edition }: ExhibitionEditorFormProps) {
 
     toast.success('Cambios guardados')
     methods.reset(values)
+    closeUpdateDialogs()
   }
 
   const isBanned = ARTIST_STATUS.CANCELLED === entity.artist?.statusId

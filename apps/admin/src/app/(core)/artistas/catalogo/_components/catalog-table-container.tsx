@@ -4,20 +4,32 @@ import type { CatalogListItem } from '../_types/catalog-list-item'
 import { CatalogTable } from './catalog-table'
 
 interface CatalogTableContainerProps {
-  catalog: CatalogListItem[]
+  items: CatalogListItem[]
+  showDeleted: boolean
+  onDelete: (id: number) => void
+  onRestore: (id: number) => void
   onClearFilters: () => void
+  isPending: boolean
   canReorder?: boolean
 }
 
 export function CatalogTableContainer({
-  catalog,
+  items,
+  showDeleted,
+  onDelete,
+  onRestore,
   onClearFilters,
+  isPending,
   canReorder = true
 }: CatalogTableContainerProps) {
   return (
     <CatalogTable
-      items={catalog}
+      items={items}
+      showDeleted={showDeleted}
+      onDelete={onDelete}
+      onRestore={onRestore}
       onClearFilters={onClearFilters}
+      isPending={isPending}
       canReorder={canReorder}
     />
   )

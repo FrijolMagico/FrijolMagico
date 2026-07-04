@@ -78,6 +78,8 @@ export const useParticipationsStore = create<ParticipationsStore>((set) => ({
         entity: null,
         exhibition: null
       },
+      isUpdateActivityDialogOpen: false,
+      isUpdateExhibitionDialogOpen: false,
       isRemoveExhibitionDialogOpen: false
     }),
 

@@ -219,6 +219,7 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
 
     toast.success('Cambios guardados')
     methods.reset(values)
+    closeUpdateDialogs()
   }
 
   const detailId = activity.detail?.id

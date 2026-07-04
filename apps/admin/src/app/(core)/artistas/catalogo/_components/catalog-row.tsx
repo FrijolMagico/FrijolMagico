@@ -15,10 +15,18 @@ import { toast } from 'sonner'
 interface CatalogRowProps {
   catalog: CatalogListItem
   sortable?: boolean
-  onDelete: (id: number) => void
+  isDeletedView?: boolean
+  onDelete: () => void
+  onRestore: () => void
+  isPending?: boolean
 }
 
-export function CatalogRow({ catalog, onDelete }: CatalogRowProps) {
+export function CatalogRow({
+  catalog,
+  isDeletedView = false,
+  onDelete,
+  onRestore
+}: CatalogRowProps) {
   const openUpdateCatalogDialog = useCatalogDialog(
     (s) => s.openUpdateCatalogDialog
   )
@@ -28,22 +36,6 @@ export function CatalogRow({ catalog, onDelete }: CatalogRowProps) {
     activo: catalog.activo,
     destacado: catalog.destacado
   })
-
-  // const {
-  //   attributes,
-  //   listeners,
-  //   setNodeRef,
-  //   transform,
-  //   transition,
-  //   isDragging
-  // } = useSortable({ id: catalog.id, disabled: !sortable })
-
-  // const style = {
-  //   transform: CSS.Transform.toString(transform),
-  //   transition,
-  //   opacity: isDragging ? 0.5 : 1,
-  //   zIndex: isDragging ? 50 : 'auto'
-  // }
 
   const handleToggleActivo = (checked: boolean) => {
     startTransition(async () => {
@@ -69,16 +61,10 @@ export function CatalogRow({ catalog, onDelete }: CatalogRowProps) {
     })
   }
 
-  const handleDelete = () => {
-    onDelete(catalog.id)
-  }
-
-  // ref={setNodeRef}
-  // style={style}
   return (
     <TableRow
       className={cn('group relative min-h-18.25 transition-colors', {
-        // 'bg-accent shadow-lg': isDragging
+        'opacity-60': isDeletedView
       })}
     >
       <TableCell className='w-12'>
@@ -105,42 +91,56 @@ export function CatalogRow({ catalog, onDelete }: CatalogRowProps) {
         </div>
       </TableCell>
 
-      <TableCell>
-        <div className='flex items-center gap-2'>
-          <Switch
-            checked={optimisticFields.destacado}
-            onCheckedChange={handleToggleDestacado}
-          />
-          {optimisticFields.destacado && (
-            <IconStar className='fill-warning text-warning h-4 w-4' />
-          )}
-        </div>
-      </TableCell>
+      {isDeletedView ? (
+        <TableCell>
+          <span className='text-muted-foreground text-sm'>Eliminado</span>
+        </TableCell>
+      ) : (
+        <>
+          <TableCell>
+            <div className='flex items-center gap-2'>
+              <Switch
+                checked={optimisticFields.destacado}
+                onCheckedChange={handleToggleDestacado}
+              />
+              {optimisticFields.destacado && (
+                <IconStar className='fill-warning text-warning h-4 w-4' />
+              )}
+            </div>
+          </TableCell>
 
-      <TableCell>
-        <div className='flex items-center gap-2'>
-          <Switch
-            checked={optimisticFields.activo}
-            onCheckedChange={handleToggleActivo}
-          />
-          {optimisticFields.activo ? (
-            <IconCheck className='h-4 w-4 text-green-600 dark:text-green-500' />
-          ) : (
-            <IconX className='text-destructive h-4 w-4' />
-          )}
-        </div>
-      </TableCell>
+          <TableCell>
+            <div className='flex items-center gap-2'>
+              <Switch
+                checked={optimisticFields.activo}
+                onCheckedChange={handleToggleActivo}
+              />
+              {optimisticFields.activo ? (
+                <IconCheck className='h-4 w-4 text-green-600 dark:text-green-500' />
+              ) : (
+                <IconX className='text-destructive h-4 w-4' />
+              )}
+            </div>
+          </TableCell>
+        </>
+      )}
 
       <TableCell>
         <ActionMenuButton
-          actions={[
-            {
-              label: 'Editar',
-              onClick: () => openUpdateCatalogDialog(catalog, catalog.artist)
-            }
-          ]}
-          isDeleted={false}
-          onDelete={handleDelete}
+          actions={
+            isDeletedView
+              ? []
+              : [
+                  {
+                    label: 'Editar',
+                    onClick: () =>
+                      openUpdateCatalogDialog(catalog, catalog.artist)
+                  }
+                ]
+          }
+          isDeleted={isDeletedView}
+          onDelete={onDelete}
+          onRestore={onRestore}
         />
       </TableCell>
     </TableRow>
