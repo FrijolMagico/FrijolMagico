@@ -30,6 +30,7 @@ import {
 } from '../_constants/participations.constants'
 import { updateParticipationAction } from '../_actions/participations/update-participation.action'
 import { updateActivityAction } from '../_actions/activities/update-activity.action'
+import { createActivityDetailAction } from '../_actions/activities/create-activity-detail.action'
 import { updateActivityDetailAction } from '../_actions/activities/update-activity-detail.action'
 import { executeUpdatePlan } from '../_lib/execute-update-plan'
 import {
@@ -148,41 +149,67 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
             puntaje: values.puntaje
           })
       },
-      ...(activity.detail
-        ? [
-            {
-              label: 'el detalle de actividad',
-              initial: {
-                id: activity.detail.id,
-                titulo: activity.detail.titulo ?? '',
-                descripcion: activity.detail.descripcion ?? '',
-                duracionMinutos: activity.detail.duracionMinutos ?? null,
-                cupos: activity.detail.cupos ?? null,
-                horaInicio: activity.detail.horaInicio ?? '',
-                ubicacion: activity.detail.ubicacion ?? ''
-              },
-              current: {
-                id: activity.detail.id,
-                titulo: values.detail.titulo ?? '',
-                descripcion: values.detail.descripcion ?? '',
-                duracionMinutos: values.detail.duracionMinutos ?? null,
-                cupos: values.detail.cupos ?? null,
-                horaInicio: values.detail.horaInicio ?? '',
-                ubicacion: values.detail.ubicacion ?? ''
-              },
-              execute: () =>
-                updateActivityDetailAction(activity.participacionId!, {
-                  id: activity.detail!.id,
-                  titulo: values.detail.titulo,
-                  descripcion: values.detail.descripcion,
-                  duracionMinutos: values.detail.duracionMinutos,
-                  cupos: values.detail.cupos,
-                  horaInicio: values.detail.horaInicio,
-                  ubicacion: values.detail.ubicacion
-                })
+      {
+        label: 'el detalle de actividad',
+        initial: activity.detail
+          ? {
+              id: activity.detail.id,
+              titulo: activity.detail.titulo ?? '',
+              descripcion: activity.detail.descripcion ?? '',
+              duracionMinutos: activity.detail.duracionMinutos ?? null,
+              cupos: activity.detail.cupos ?? null,
+              horaInicio: activity.detail.horaInicio ?? '',
+              ubicacion: activity.detail.ubicacion ?? ''
             }
-          ]
-        : [])
+          : {
+              participacionActividadId: activity.id,
+              titulo: '',
+              descripcion: '',
+              duracionMinutos: null,
+              cupos: null,
+              horaInicio: '',
+              ubicacion: ''
+            },
+        current: activity.detail
+          ? {
+              id: activity.detail.id,
+              titulo: values.detail.titulo ?? '',
+              descripcion: values.detail.descripcion ?? '',
+              duracionMinutos: values.detail.duracionMinutos ?? null,
+              cupos: values.detail.cupos ?? null,
+              horaInicio: values.detail.horaInicio ?? '',
+              ubicacion: values.detail.ubicacion ?? ''
+            }
+          : {
+              participacionActividadId: activity.id,
+              titulo: values.detail.titulo ?? '',
+              descripcion: values.detail.descripcion ?? '',
+              duracionMinutos: values.detail.duracionMinutos ?? null,
+              cupos: values.detail.cupos ?? null,
+              horaInicio: values.detail.horaInicio ?? '',
+              ubicacion: values.detail.ubicacion ?? ''
+            },
+        execute: () =>
+          activity.detail
+            ? updateActivityDetailAction(activity.participacionId!, {
+                id: activity.detail.id,
+                titulo: values.detail.titulo,
+                descripcion: values.detail.descripcion,
+                duracionMinutos: values.detail.duracionMinutos,
+                cupos: values.detail.cupos,
+                horaInicio: values.detail.horaInicio,
+                ubicacion: values.detail.ubicacion
+              })
+            : createActivityDetailAction(activity.participacionId!, {
+                participacionActividadId: activity.id,
+                titulo: values.detail.titulo,
+                descripcion: values.detail.descripcion,
+                duracionMinutos: values.detail.duracionMinutos,
+                cupos: values.detail.cupos,
+                horaInicio: values.detail.horaInicio,
+                ubicacion: values.detail.ubicacion
+              })
+      }
     ])
 
     if (!result.success) {
