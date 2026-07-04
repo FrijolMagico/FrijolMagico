@@ -1,11 +1,22 @@
-import { afterEach, describe, expect, test } from 'bun:test'
+import { afterEach, describe, expect, mock, test } from 'bun:test'
+import type { ReactNode } from 'react'
 import { cleanup, render, screen } from '@testing-library/react'
 
 import { FestivalDetailContent } from './FestivalDetailContent'
 
-afterEach(cleanup)
-
 import type { FestivalDetail } from '../../types/festival'
+
+mock.module('next/link', () => ({
+  default: ({ href, children }: { href: string; children: ReactNode }) => (
+    <a href={href}>{children}</a>
+  )
+}))
+
+mock.module('./FestivalNavigator', () => ({
+  FestivalNavigator: async () => null
+}))
+
+afterEach(cleanup)
 
 const baseDetail: FestivalDetail = {
   edition_id: 10,
@@ -44,9 +55,16 @@ const baseDetail: FestivalDetail = {
   ]
 }
 
+// Helper: call async component as a function and render the returned JSX
+async function renderAsync(
+  element: Promise<JSX.Element> | JSX.Element
+): Promise<ReturnType<typeof render>> {
+  return render(await element)
+}
+
 describe('FestivalDetailContent', () => {
-  test('renders event name, edition and dates', () => {
-    render(<FestivalDetailContent detail={baseDetail} />)
+  test('renders event name, edition and dates', async () => {
+    await renderAsync(FestivalDetailContent({ detail: baseDetail }))
 
     expect(
       screen.getByRole('heading', { name: /Festival Frijol Mágico/i })
@@ -55,8 +73,8 @@ describe('FestivalDetailContent', () => {
     expect(screen.getByText('3 de octubre de 2025')).toBeDefined()
   })
 
-  test('renders participants and activities sections', () => {
-    render(<FestivalDetailContent detail={baseDetail} />)
+  test('renders participants and activities sections', async () => {
+    await renderAsync(FestivalDetailContent({ detail: baseDetail }))
 
     expect(screen.getByText('Participantes')).toBeDefined()
     expect(screen.getByText('Actividades')).toBeDefined()
@@ -64,15 +82,14 @@ describe('FestivalDetailContent', () => {
     expect(screen.getByText('Taller de Acuarela')).toBeDefined()
   })
 
-  test('renders fallback edition name when edicion_nombre is null', () => {
+  test('renders fallback edition name when edicion_nombre is null', async () => {
     const detail: FestivalDetail = {
       ...baseDetail,
       edicion_nombre: null
     }
 
-    render(<FestivalDetailContent detail={detail} />)
+    await renderAsync(FestivalDetailContent({ detail }))
 
-    // The edition number is rendered as part of the main heading
     const heading = screen.getByRole('heading', { level: 1 })
     expect(heading.textContent).toContain('XV')
     expect(heading.textContent).toContain('Festival Frijol Mágico')

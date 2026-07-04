@@ -7,12 +7,13 @@ import { ActivityList } from './ActivityList'
 import { getDaysDisplay, getLocation } from '../../utils/timelineUtils'
 
 import type { FestivalDetail } from '../../types/festival'
+import { FestivalNavigator } from './FestivalNavigator'
 
 interface FestivalDetailContentProps {
   detail: FestivalDetail
 }
 
-export const FestivalDetailContent = ({
+export const FestivalDetailContent = async ({
   detail
 }: FestivalDetailContentProps) => {
   const { evento, edicion_nombre, numero_edicion, poster_url, dias } = detail

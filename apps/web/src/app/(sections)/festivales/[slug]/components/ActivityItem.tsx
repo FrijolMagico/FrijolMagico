@@ -23,7 +23,7 @@ export const ActivityItem = ({ activity }: ActivityItemProps) => {
     .join(' — ')
 
   return (
-    <article className='bg-background border-primary group relative max-w-xs rounded-lg border'>
+    <article className='bg-background border-primary group relative max-w-xs min-w-[16rem] rounded-lg border'>
       <div className='bg-primary absolute -z-10 size-full translate-x-1.5 translate-y-1.5 rounded-lg duration-300 group-hover:translate-0' />
 
       {details ? (

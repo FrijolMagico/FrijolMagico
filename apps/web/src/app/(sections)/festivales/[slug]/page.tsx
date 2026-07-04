@@ -56,7 +56,6 @@ export default async function FestivalDetailPage({
   if (!slug) notFound()
 
   const detail = await getFestivalBySlug(slug)
-  const adjacent = await getAdjacentFestivals(slug)
 
   if (!detail) notFound()
 
@@ -67,7 +66,6 @@ export default async function FestivalDetailPage({
         sectionPath={`/festivales/${slug}`}
       />
       <FestivalDetailContent detail={detail} />
-      <FestivalNavigator prev={adjacent.prev} next={adjacent.next} />
     </>
   )
 }
