@@ -1,6 +1,7 @@
 import { SearchParamsProps } from '@/shared/types/search-params'
 import { CatalogContainer } from './_components/catalog-container'
 import { getCatalogData, getArtistsNotInCatalog } from './_lib/get-catalog-data'
+import { getDeletedCatalog } from './_lib/get-deleted-catalog'
 import { loadCatalogQueryParams } from './_lib/search-params'
 
 export default async function CatalogArtistsPage({
@@ -8,10 +9,12 @@ export default async function CatalogArtistsPage({
 }: SearchParamsProps) {
   const params = await loadCatalogQueryParams(searchParams)
 
-  const [{ data, ...pagination }, availableArtists] = await Promise.all([
-    getCatalogData(params),
-    getArtistsNotInCatalog()
-  ])
+  const [{ data, ...pagination }, availableArtists, deletedCatalog] =
+    await Promise.all([
+      getCatalogData(params),
+      getArtistsNotInCatalog(),
+      getDeletedCatalog()
+    ])
 
   return (
     <article className='h-full min-h-max space-y-6'>
@@ -26,6 +29,7 @@ export default async function CatalogArtistsPage({
 
       <CatalogContainer
         catalog={data}
+        deletedCatalog={deletedCatalog}
         availableArtists={availableArtists}
         pagination={pagination}
       />

@@ -5,7 +5,8 @@ export const catalogQueryParams = {
   ...searchParser,
   ...paginationParsers,
   activo: parseAsBoolean,
-  destacado: parseAsBoolean
+  destacado: parseAsBoolean,
+  mostrar_eliminados: parseAsBoolean.withDefault(false)
 }
 
 export const loadCatalogQueryParams = createLoader(catalogQueryParams)
