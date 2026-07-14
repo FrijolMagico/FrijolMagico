@@ -17,6 +17,7 @@ interface FissureBannerProps {
   className?: string
   contentClassName?: string
   height?: number
+  palette?: string
 }
 
 interface FissureEdgeLayoutProps {
@@ -59,7 +60,8 @@ export function FissureBanner({
   children,
   className,
   contentClassName,
-  height = DEFAULT_HEIGHT
+  height = DEFAULT_HEIGHT,
+  palette = 'base'
 }: FissureBannerProps) {
   const baseId = useId().replace(/:/g, '')
   const bottomMaskId = `${baseId}-bottom-mask`
@@ -83,6 +85,7 @@ export function FissureBanner({
           style={maskStyle}
         >
           <div
+            data-palette={palette}
             className={cn(
               'relative z-0 flex h-full w-full items-center justify-center',
               contentClassName
