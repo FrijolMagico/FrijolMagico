@@ -1,4 +1,5 @@
 import { Button } from '@/shared/components/ui/button'
+import { EditionPublicationSwitch } from '../../_components/edition-publication-switch'
 import { IconChevronDown } from '@tabler/icons-react'
 import { EditionLookup } from '../_types/participations.types'
 import {
@@ -39,38 +40,41 @@ export function ParticipationsEditionSelector({
   )
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button variant='outline'>
-            {currentLabel}
-            <IconChevronDown className='ml-2 shrink-0' />
-          </Button>
-        }
-      />
-      <DropdownMenuContent>
-        <DropdownMenuGroup>
-          {Object.entries(editionsByEvent).map(([eventName, editions]) => (
-            <DropdownMenuSub key={eventName}>
-              <DropdownMenuSubTrigger>{eventName}</DropdownMenuSubTrigger>
-              <DropdownMenuPortal>
-                <DropdownMenuSubContent>
-                  {editions.map((edition) => (
-                    <DropdownMenuItem
-                      key={edition.id}
-                      onClick={() =>
-                        setFilters({ edicion: edition.slug ?? '' })
-                      }
-                    >
-                      {edition.editionNumber}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuPortal>
-            </DropdownMenuSub>
-          ))}
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className='flex flex-wrap items-center gap-3'>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button variant='outline'>
+              {currentLabel}
+              <IconChevronDown className='ml-2 shrink-0' />
+            </Button>
+          }
+        />
+        <DropdownMenuContent>
+          <DropdownMenuGroup>
+            {Object.entries(editionsByEvent).map(([eventName, editions]) => (
+              <DropdownMenuSub key={eventName}>
+                <DropdownMenuSubTrigger>{eventName}</DropdownMenuSubTrigger>
+                <DropdownMenuPortal>
+                  <DropdownMenuSubContent>
+                    {editions.map((edition) => (
+                      <DropdownMenuItem
+                        key={edition.id}
+                        onClick={() =>
+                          setFilters({ edicion: edition.slug ?? '' })
+                        }
+                      >
+                        {edition.editionNumber}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuPortal>
+              </DropdownMenuSub>
+            ))}
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <EditionPublicationSwitch edition={currentEdition} />
+    </div>
   )
 }

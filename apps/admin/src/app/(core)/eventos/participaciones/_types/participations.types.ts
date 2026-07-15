@@ -17,6 +17,7 @@ export interface EditionLookup {
   editionNumber: string
   slug: string | null
   eventName: string
+  published: boolean
 }
 
 export interface ArtistLookup {
