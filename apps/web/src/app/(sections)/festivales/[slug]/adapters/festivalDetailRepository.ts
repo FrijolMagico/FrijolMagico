@@ -17,23 +17,27 @@ export async function festivalDetailRepository(
   const source = getDataSource({ prod: 'database' })
 
   if (source === 'local' || source === 'database') {
-    const { data, error } = await executeQuery<RawFestivalDetail>(
-      FESTIVAL_DETAIL_QUERY,
-      [slug]
-    )
+    try {
+      const { data, error } = await executeQuery<RawFestivalDetail>(
+        FESTIVAL_DETAIL_QUERY,
+        [slug]
+      )
 
-    if (!error && data && data.length > 0) {
-      const raw = JSON.parse(data[0].resultado) as FestivalDetail
+      if (!error && data && data.length > 0) {
+        const raw = JSON.parse(data[0].resultado) as FestivalDetail
 
-      if (raw.slug) {
-        return mapFestivalDetail(raw)
+        if (raw.slug) {
+          return mapFestivalDetail(raw)
+        }
       }
+    } catch {
+      console.warn('⚠️ Unable to load festival detail from database')
+      return null
     }
 
-    console.warn(
-      '⚠️ Database query failed for festival detail, falling back to mock data'
-    )
+    console.warn('⚠️ Unable to load festival detail from database')
+    return null
   }
 
-  return getFestivalDetailMock(slug) ?? null
+  return source === 'mock' ? (getFestivalDetailMock(slug) ?? null) : null
 }
