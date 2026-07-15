@@ -5,10 +5,8 @@ import { TrackPageView } from '@/components/analytics/TrackPageView'
 
 import { getFestivalBySlug } from './lib/getFestivalBySlug'
 import { getFestivalSlugs } from './lib/getFestivalSlugs'
-import { getAdjacentFestivals } from './lib/getAdjacentFestivals'
 
 import { FestivalDetailContent } from './components/FestivalDetailContent'
-import { FestivalNavigator } from './components/FestivalNavigator'
 
 export async function generateStaticParams() {
   const slugs = await getFestivalSlugs()

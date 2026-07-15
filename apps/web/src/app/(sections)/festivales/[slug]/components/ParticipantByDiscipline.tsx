@@ -15,9 +15,9 @@ export const ParticipantByDiscipline = ({
     <h3 className='text-accent mb-3 font-mono text-2xl font-bold'>
       {disciplineLabel}
     </h3>
-    <ul className='flex w-full flex-col flex-wrap space-y-1 md:max-h-[80dvh] lg:max-h-[50dvh]'>
+    <ul className='w-full columns-1 space-y-1 md:columns-2 md:gap-x-8'>
       {participants.map((participant) => (
-        <li key={participant.pseudonimo} className='md:mr-8'>
+        <li key={participant.pseudonimo} className='break-inside-avoid'>
           <ParticipantItem
             pseudonimo={participant.pseudonimo}
             catalogoSlug={participant.catalogo_slug}
