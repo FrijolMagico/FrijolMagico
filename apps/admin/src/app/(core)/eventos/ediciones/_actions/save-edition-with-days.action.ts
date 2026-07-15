@@ -14,7 +14,7 @@ import {
   type EdicionWithDaysInput
 } from '../_schemas/edition-composite.schema'
 
-const { eventEdition, eventEditionDay } = events
+const { event, eventEdition, eventEditionDay } = events
 
 export async function saveEditionWithDaysAction(
   _prevState: ActionState<void>,
@@ -37,7 +37,13 @@ export async function saveEditionWithDaysAction(
 
     const { id, eventoId, numeroEdicion, nombre, posterUrl, days } = parsed.data
 
-    const slug = toSlug(`edicion-${numeroEdicion}-${eventoId}`)
+    const [evento] = await db
+      .select({ slug: event.slug })
+      .from(event)
+      .where(eq(event.id, eventoId))
+      .limit(1)
+
+    const slug = toSlug(`${evento?.slug ?? 'edicion'}-${numeroEdicion}`)
 
     await db.transaction(async (tx) => {
       let edicionId = id
