@@ -9,6 +9,7 @@ WITH edition_ranked AS (
   FROM evento_edicion ee
   JOIN evento e ON e.id = ee.evento_id
   JOIN evento_edicion_dia eed ON eed.evento_edicion_id = ee.id
+  WHERE ee.published = 1
   GROUP BY ee.id
 ),
 current_pos AS (
