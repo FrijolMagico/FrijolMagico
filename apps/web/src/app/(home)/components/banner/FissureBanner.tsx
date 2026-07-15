@@ -17,6 +17,7 @@ interface FissureBannerProps {
   className?: string
   contentClassName?: string
   height?: number
+  mobileHeight?: number
   palette?: string
 }
 
@@ -56,13 +57,13 @@ function FissureClickBlocker({
   )
 }
 
-export function FissureBanner({
+function FissureBannerLayout({
   children,
   className,
   contentClassName,
-  height = DEFAULT_HEIGHT,
-  palette = 'base'
-}: FissureBannerProps) {
+  height,
+  palette
+}: FissureBannerProps & { height: number; palette: string }) {
   const baseId = useId().replace(/:/g, '')
   const bottomMaskId = `${baseId}-bottom-mask`
   const bottomBlurId = `${baseId}-bottom-blur`
@@ -121,5 +122,52 @@ export function FissureBanner({
         />
       </div>
     </header>
+  )
+}
+
+export function FissureBanner({
+  children,
+  className,
+  contentClassName,
+  height = DEFAULT_HEIGHT,
+  mobileHeight,
+  palette = 'base'
+}: FissureBannerProps) {
+  if (mobileHeight === undefined) {
+    return (
+      <FissureBannerLayout
+        className={className}
+        contentClassName={contentClassName}
+        height={height}
+        palette={palette}
+      >
+        {children}
+      </FissureBannerLayout>
+    )
+  }
+
+  return (
+    <>
+      <div className='hidden md:block'>
+        <FissureBannerLayout
+          className={className}
+          contentClassName={contentClassName}
+          height={height}
+          palette={palette}
+        >
+          {children}
+        </FissureBannerLayout>
+      </div>
+      <div className='md:hidden'>
+        <FissureBannerLayout
+          className={className}
+          contentClassName={contentClassName}
+          height={mobileHeight}
+          palette={palette}
+        >
+          {children}
+        </FissureBannerLayout>
+      </div>
+    </>
   )
 }

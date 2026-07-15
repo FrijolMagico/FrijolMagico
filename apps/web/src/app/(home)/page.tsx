@@ -17,7 +17,7 @@ export default async function Home() {
         <HeroSection />
 
         <div className='pt-6'>
-          <FissureBanner height={640}>
+          <FissureBanner height={640} mobileHeight={280}>
             <NewFestivalBanner />
           </FissureBanner>
         </div>
