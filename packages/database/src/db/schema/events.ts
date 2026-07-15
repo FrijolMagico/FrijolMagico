@@ -5,7 +5,8 @@ import {
   integer,
   real,
   index,
-  uniqueIndex
+  uniqueIndex,
+  check
 } from 'drizzle-orm/sqlite-core'
 
 import { discipline, place, organization } from './core'
@@ -53,6 +54,7 @@ export const eventEdition = sqliteTable(
     numeroEdicion: text('numero_edicion').notNull(),
     slug: text('slug'),
     posterUrl: text('poster_url'),
+    published: integer('published', { mode: 'boolean' }).notNull().default(false),
     createdAt: text('created_at')
       .notNull()
       .default(sql`CURRENT_TIMESTAMP`),
@@ -67,7 +69,8 @@ export const eventEdition = sqliteTable(
     ),
     uniqueIndex('idx_event_edition_slug').on(table.eventoId, table.slug),
     index('idx_event_edition_evento').on(table.eventoId),
-    index('idx_evento_edicion_created_at').on(table.createdAt)
+    index('idx_evento_edicion_created_at').on(table.createdAt),
+    check('chk_evento_edicion_published', sql`${table.published} IN (0, 1)`)
   ]
 )
 

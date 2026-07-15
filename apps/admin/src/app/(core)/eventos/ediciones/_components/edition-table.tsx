@@ -35,7 +35,7 @@ export function EditionTable({
           <TableHead>Fecha</TableHead>
           <TableHead>Lugar</TableHead>
           <TableHead>Modalidad</TableHead>
-          <TableHead className='w-26' />
+          <TableHead className='w-36'>Publicación</TableHead>
           <TableHead>Acciones</TableHead>
         </TableRow>
       </TableHeader>

@@ -71,7 +71,7 @@ describe('festivalDetailRepository', () => {
       error: null
     })
 
-    const result = await festivalDetailRepository('edicion-999-999')
+    const result = await festivalDetailRepository('edicion-xv-1')
 
     expect(result).toBeNull()
   })

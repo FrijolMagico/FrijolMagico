@@ -62,7 +62,8 @@ export async function getEditions(
         nombre: eventEdition.nombre,
         numeroEdicion: eventEdition.numeroEdicion,
         slug: eventEdition.slug,
-        posterUrl: eventEdition.posterUrl
+        posterUrl: eventEdition.posterUrl,
+        published: eventEdition.published
       })
       .from(eventEdition)
       .where(whereClause)

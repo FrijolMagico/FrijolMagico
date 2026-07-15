@@ -145,28 +145,61 @@ export const FestivalesTimelineContent = ({
           })}
 
           <div className='relative grid gap-8 lg:grid-cols-[40rem_40rem]'>
-            <div aria-hidden className='block size-full'></div>
-            <div className='flex flex-col items-center'>
-              <svg
-                className='h-30'
-                viewBox={`0 0 20 120`}
-                preserveAspectRatio='none'
-              >
-                <path
-                  fill='none'
-                  strokeWidth={6}
-                  strokeDasharray='20,10'
-                  className='stroke-secondary'
-                  d='M 10 0 L 10 200'
-                />
-              </svg>
-              <div className='bg-secondary/10 text-secondary relative mx-auto flex size-32 flex-col items-center justify-center rounded-full'>
-                <span className='font-josefin landing-0 block text-3xl font-black'>
-                  2026
-                </span>
-                <span className='block text-center leading-0'>y más...</span>
-              </div>
-            </div>
+            {festivales.length % 2 === 0 ? (
+              <>
+                <div aria-hidden className='block size-full'></div>
+                <div className='flex flex-col items-center'>
+                  <svg
+                    className='h-30'
+                    viewBox={`0 0 20 120`}
+                    preserveAspectRatio='none'
+                  >
+                    <path
+                      fill='none'
+                      strokeWidth={6}
+                      strokeDasharray='20,10'
+                      className='stroke-secondary'
+                      d='M 10 0 L 10 200'
+                    />
+                  </svg>
+                  <div className='bg-secondary/10 text-secondary relative mx-auto flex size-32 flex-col items-center justify-center rounded-full'>
+                    <span className='font-josefin landing-0 block text-3xl font-black'>
+                      2026
+                    </span>
+                    <span className='block text-center leading-0'>
+                      y más...
+                    </span>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className='flex flex-col items-center'>
+                  <svg
+                    className='h-30'
+                    viewBox={`0 0 20 120`}
+                    preserveAspectRatio='none'
+                  >
+                    <path
+                      fill='none'
+                      strokeWidth={6}
+                      strokeDasharray='20,10'
+                      className='stroke-secondary'
+                      d='M 10 0 L 10 200'
+                    />
+                  </svg>
+                  <div className='bg-secondary/10 text-secondary relative mx-auto flex size-32 flex-col items-center justify-center rounded-full'>
+                    <span className='font-josefin landing-0 block text-3xl font-black'>
+                      2026
+                    </span>
+                    <span className='block text-center leading-0'>
+                      y más...
+                    </span>
+                  </div>
+                </div>
+                <div aria-hidden className='block size-full'></div>
+              </>
+            )}
           </div>
         </div>
       </div>

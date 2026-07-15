@@ -21,6 +21,7 @@ import type { EventoLookup } from '../_types'
 import { PosterPreview } from './poster-preview'
 import { PosterThumbnail } from './poster-thumbnail'
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog'
+import { EditionPublicationSwitch } from '../../_components/edition-publication-switch'
 
 type Modality = NonNullable<EditionDay['modalidad']>
 
@@ -184,7 +185,9 @@ export function EditionRow({ edition, days, places, events }: EditionRowProps) {
         )}
       </TableCell>
 
-      <TableCell className='w-26' />
+      <TableCell className='w-36'>
+        <EditionPublicationSwitch edition={edition} />
+      </TableCell>
 
       <TableCell className='w-24'>
         <ActionMenuButton

@@ -8,5 +8,6 @@ describe('FESTIVAL_DETAIL_QUERY', () => {
     expect(FESTIVAL_DETAIL_QUERY).toContain("'participantes'")
     expect(FESTIVAL_DETAIL_QUERY).toContain("'actividades'")
     expect(FESTIVAL_DETAIL_QUERY).toContain('WHERE ee.slug = ?')
+    expect(FESTIVAL_DETAIL_QUERY).toContain('AND ee.published = 1')
   })
 })

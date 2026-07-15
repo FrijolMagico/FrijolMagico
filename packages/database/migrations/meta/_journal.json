@@ -127,6 +127,13 @@
       "when": 1774155269564,
       "tag": "0017_add-indices-and-remove-phone-index",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1784062397124,
+      "tag": "0018_add_edition_publication",
+      "breakpoints": true
     }
   ]
 }
