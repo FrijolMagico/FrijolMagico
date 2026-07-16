@@ -42,6 +42,7 @@ declare module '@/data/site.json' {
       button: {
         active: boolean
         text: string
+        href: string
       }
     }
     catalog: {

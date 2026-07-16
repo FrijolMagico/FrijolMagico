@@ -17,6 +17,8 @@ interface FissureBannerProps {
   className?: string
   contentClassName?: string
   height?: number
+  mobileHeight?: number
+  palette?: string
 }
 
 interface FissureEdgeLayoutProps {
@@ -55,12 +57,13 @@ function FissureClickBlocker({
   )
 }
 
-export function FissureBanner({
+function FissureBannerLayout({
   children,
   className,
   contentClassName,
-  height = DEFAULT_HEIGHT
-}: FissureBannerProps) {
+  height,
+  palette
+}: FissureBannerProps & { height: number; palette: string }) {
   const baseId = useId().replace(/:/g, '')
   const bottomMaskId = `${baseId}-bottom-mask`
   const bottomBlurId = `${baseId}-bottom-blur`
@@ -83,6 +86,7 @@ export function FissureBanner({
           style={maskStyle}
         >
           <div
+            data-palette={palette}
             className={cn(
               'relative z-0 flex h-full w-full items-center justify-center',
               contentClassName
@@ -118,5 +122,52 @@ export function FissureBanner({
         />
       </div>
     </header>
+  )
+}
+
+export function FissureBanner({
+  children,
+  className,
+  contentClassName,
+  height = DEFAULT_HEIGHT,
+  mobileHeight,
+  palette = 'base'
+}: FissureBannerProps) {
+  if (mobileHeight === undefined) {
+    return (
+      <FissureBannerLayout
+        className={className}
+        contentClassName={contentClassName}
+        height={height}
+        palette={palette}
+      >
+        {children}
+      </FissureBannerLayout>
+    )
+  }
+
+  return (
+    <>
+      <div className='hidden md:block'>
+        <FissureBannerLayout
+          className={className}
+          contentClassName={contentClassName}
+          height={height}
+          palette={palette}
+        >
+          {children}
+        </FissureBannerLayout>
+      </div>
+      <div className='md:hidden'>
+        <FissureBannerLayout
+          className={className}
+          contentClassName={contentClassName}
+          height={mobileHeight}
+          palette={palette}
+        >
+          {children}
+        </FissureBannerLayout>
+      </div>
+    </>
   )
 }

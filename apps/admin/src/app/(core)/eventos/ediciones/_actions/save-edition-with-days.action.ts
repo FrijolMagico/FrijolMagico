@@ -7,8 +7,12 @@ import { db } from '@frijolmagico/database/orm'
 import { events } from '@frijolmagico/database/schema'
 import { toSlug } from '@/shared/lib/utils'
 import { requireAuth } from '@/shared/lib/auth/utils'
+import { revalidateWebCache } from '@/shared/lib/web-invalidation'
 import type { ActionState } from '@/shared/types/actions'
-import { EDITION_CACHE_TAG, EDITION_DAY_CACHE_TAG } from '@frijolmagico/cache-tags'
+import {
+  EDITION_CACHE_TAG,
+  EDITION_DAY_CACHE_TAG
+} from '@frijolmagico/cache-tags'
 import {
   edicionWithDaysSchema,
   type EdicionWithDaysInput
@@ -115,6 +119,13 @@ export async function saveEditionWithDaysAction(
 
     updateTag(EDITION_CACHE_TAG)
     updateTag(EDITION_DAY_CACHE_TAG)
+    try {
+      await revalidateWebCache({ tag: EDITION_CACHE_TAG })
+    } catch {
+      console.error('[save-edition] Web cache sync failed', {
+        tag: EDITION_CACHE_TAG
+      })
+    }
 
     return { success: true }
   } catch (error) {

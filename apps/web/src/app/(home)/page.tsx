@@ -1,12 +1,12 @@
-import { ApplyBanner } from './components/ApplyBanner'
-import { FissureBanner } from './components/FissureBanner'
+import { FissureBanner } from './components/banner/FissureBanner'
 import { HeroSection } from './components/HeroSection'
 import { LinkBtn } from '@/components/LinkBtn'
 import { paths } from '@/config/paths'
-import bannerData from '@/data/banner_data.json'
 import { Suspense } from 'react'
 import { FeaturedArtists } from './components/FeaturedArtists'
 import { FeaturedArtistsSkeleton } from './components/FeaturedArtistsSkeleton'
+import { Banner } from './components/banner'
+import { PodcastBanner } from './components/banner/PodcastBanner'
 
 export default async function Home() {
   return (
@@ -18,24 +18,10 @@ export default async function Home() {
         <HeroSection />
 
         <div className='pt-6'>
-          <FissureBanner height={500}>
-            <ApplyBanner
-              title={bannerData.title}
-              description={bannerData.description}
-              buttons={{
-                bases: {
-                  text: bannerData.left_button.text,
-                  href: bannerData.left_button.url,
-                  target: '_blank'
-                },
-                apply: {
-                  text: bannerData.right_button.text,
-                  href: bannerData.right_button.url,
-                  target: '_blank'
-                }
-              }}
-              palette='ffm-xvi'
-            />
+          <FissureBanner height={640} mobileHeight={280}>
+            <Suspense fallback={<PodcastBanner />}>
+              <Banner />
+            </Suspense>
           </FissureBanner>
         </div>
         <section className='mx-auto h-full max-w-6xl space-y-20 px-6'>
