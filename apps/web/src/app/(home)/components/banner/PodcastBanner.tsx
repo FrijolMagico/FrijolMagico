@@ -8,20 +8,20 @@ export function PodcastBanner() {
       {/* Animated background orbs */}
       <div className='bg-palette-primary pointer-events-none absolute top-0 right-0 left-0 z-0 mx-auto aspect-square w-1/2 rounded-full blur-[100px]' />
 
-      <div className='relative z-10 w-screen max-w-lg space-y-4'>
+      <div className='relative z-10 w-screen max-w-lg space-y-3 md:space-y-4'>
         <div className='flex justify-center gap-2'>
           <span className='wavy-underline font-roboto-mono text-palette-background block text-center text-sm lowercase'>
             Nuevos
           </span>
-          <h2 className='text-palette-secondary text-center text-xl font-bold tracking-wider uppercase'>
+          <h2 className='text-palette-secondary text-center text-lg font-bold tracking-wider uppercase md:text-xl'>
             Capitulos
           </h2>
         </div>
-        <p className='text-palette-background font-canarina -mt-4 text-center text-4xl leading-none font-bold tracking-wider lg:text-6xl'>
+        <p className='text-palette-background font-canarina -mt-4 text-center text-3xl leading-none font-bold tracking-wider md:text-6xl'>
           Semilla Ilustrada
         </p>
 
-        <p className='text-palette-secondary -mt-3 text-center leading-tight'>
+        <p className='text-palette-secondary -mt-3 text-center text-xs leading-tight md:text-base'>
           Escucha nuestro podcast y descubre historias, entrevistas y
           reflexiones sobre el mundo de la ilustración y el arte visual.
         </p>
