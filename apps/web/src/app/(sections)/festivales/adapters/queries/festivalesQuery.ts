@@ -69,6 +69,7 @@ export const FESTIVALES_QUERY = `SELECT json_object(
 ) as resultado
 FROM evento e
 JOIN evento_edicion ee ON e.id = ee.evento_id
+WHERE ee.published = 1
 ORDER BY (
     SELECT MIN(eed.fecha)
     FROM evento_edicion_dia eed

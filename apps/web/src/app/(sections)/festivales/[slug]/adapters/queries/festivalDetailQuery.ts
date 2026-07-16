@@ -68,4 +68,5 @@ export const FESTIVAL_DETAIL_QUERY = `SELECT json_object(
 ) as resultado
 FROM evento e
 JOIN evento_edicion ee ON e.id = ee.evento_id
-WHERE ee.slug = ?`
+WHERE ee.slug = ?
+  AND ee.published = 1`

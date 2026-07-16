@@ -20,7 +20,8 @@ export async function getEditionsLookup(): Promise<EditionLookup[]> {
       id: eventEdition.id,
       editionNumber: eventEdition.numeroEdicion,
       slug: eventEdition.slug,
-      eventName: event.nombre
+      eventName: event.nombre,
+      published: eventEdition.published
     })
     .from(eventEdition)
     .innerJoin(event, eq(eventEdition.eventoId, event.id))

@@ -2,10 +2,17 @@ import { beforeEach, describe, expect, mock, test } from 'bun:test'
 
 import { executeQueryMock } from '@/test-utils/mockDatabase'
 
+const getDataSourceMock = mock(() => 'database' as 'database' | 'mock')
+
+mock.module('@/infra/config/dataSourceConfig', () => ({
+  getDataSource: getDataSourceMock
+}))
+
 import { festivalDetailRepository } from './festivalDetailRepository'
 
 beforeEach(() => {
   executeQueryMock.mockReset()
+  getDataSourceMock.mockReturnValue('database')
 })
 
 const baseRawResult = {
@@ -36,6 +43,15 @@ describe('festivalDetailRepository', () => {
     expect(executeQueryMock).not.toHaveBeenCalled()
   })
 
+  test('returns mock detail only when mock source is selected', async () => {
+    getDataSourceMock.mockReturnValue('mock')
+
+    const result = await festivalDetailRepository('edicion-xv-1')
+
+    expect(result?.slug).toBe('edicion-xv-1')
+    expect(executeQueryMock).not.toHaveBeenCalled()
+  })
+
   test('returns mapped detail when query returns a row', async () => {
     executeQueryMock.mockResolvedValueOnce({
       data: [baseRawResult],
@@ -55,13 +71,13 @@ describe('festivalDetailRepository', () => {
       error: null
     })
 
-    const result = await festivalDetailRepository('edicion-999-999')
+    const result = await festivalDetailRepository('edicion-xv-1')
 
     expect(result).toBeNull()
   })
 
   test('returns null and logs error when query fails', async () => {
-    const consoleSpy = mock((..._args: unknown[]) => {})
+    const consoleSpy = mock(() => {})
     globalThis.console.warn = consoleSpy
 
     executeQueryMock.mockResolvedValueOnce({
@@ -69,9 +85,31 @@ describe('festivalDetailRepository', () => {
       error: new Error('DB error')
     })
 
-    const result = await festivalDetailRepository('edicion-15-1')
+    const result = await festivalDetailRepository('edicion-xv-1')
 
     expect(result).toBeNull()
     expect(consoleSpy).toHaveBeenCalled()
+  })
+
+  test('returns null for malformed query payloads', async () => {
+    executeQueryMock.mockResolvedValueOnce({
+      data: [{ resultado: '{invalid json' }],
+      error: null
+    })
+
+    const result = await festivalDetailRepository('edicion-15-1')
+
+    expect(result).toBeNull()
+  })
+
+  test('returns null when mapping an incomplete payload fails', async () => {
+    executeQueryMock.mockResolvedValueOnce({
+      data: [{ resultado: JSON.stringify({ slug: 'edicion-15-1' }) }],
+      error: null
+    })
+
+    const result = await festivalDetailRepository('edicion-15-1')
+
+    expect(result).toBeNull()
   })
 })
