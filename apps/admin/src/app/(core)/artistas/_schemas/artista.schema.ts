@@ -64,8 +64,14 @@ export const artistUpdateFormSchema = artistUpdateSchema
   })
   .omit({ id: true })
 
+// Create form schema — create fields + rrss as object (without JSON transform)
+export const artistCreateFormSchema = artistInsertSchema.extend({
+  rrss: rrssSchema,
+}).omit({ slug: true })
+
 export type Artist = z.infer<typeof artistSelectSchema>
 export type ArtistInsertInput = z.infer<typeof artistInsertSchema>
 export type ArtistUpdateInput = z.infer<typeof artistUpdateSchema>
 export type HistorialFlags = z.infer<typeof historialFlagsSchema>
 export type ArtistUpdateFormInput = z.infer<typeof artistUpdateFormSchema>
+export type ArtistCreateFormInput = z.infer<typeof artistCreateFormSchema>
