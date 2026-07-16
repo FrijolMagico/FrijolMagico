@@ -10,7 +10,8 @@ import { toSlug } from '@/shared/lib/utils'
 import { useArtistDialog } from '../_store/artist-dialog-store'
 import { createArtistaAction } from '../_actions/create-artista.action'
 import {
-  ArtistCreateFormInput,
+  type ArtistCreateFormInput,
+  type ArtistInsertInput,
   artistCreateFormSchema
 } from '../_schemas/artista.schema'
 import { CREATE_ARTIST_FORM_ID } from '../_constants'
@@ -23,7 +24,7 @@ export function CreateArtistDialog() {
     (s) => s.toggleCreateArtistDialog
   )
 
-  const methods = useForm<ArtistCreateFormInput>({
+  const methods = useForm({
     resolver: zodResolver(artistCreateFormSchema),
     defaultValues: {
       nombre: null,
@@ -52,7 +53,7 @@ export function CreateArtistDialog() {
         {
           ...data,
           slug
-        }
+        } as ArtistInsertInput & { slug: string }
       )
 
       if (!result.success) {
