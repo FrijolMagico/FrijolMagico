@@ -41,6 +41,7 @@ import {
   SelectValue
 } from '@/shared/components/ui/select'
 import { Separator } from '@/shared/components/ui/separator'
+import { Button } from '@/shared/components/ui/button'
 
 interface UpdateActivityDialogProps {
   edition: {
@@ -56,6 +57,9 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
     (s) => s.isUpdateActivityDialogOpen
   )
   const closeUpdateDialogs = useParticipationsStore((s) => s.closeUpdateDialogs)
+  const setRemoveActivityDialogOpen = useParticipationsStore(
+    (s) => s.setRemoveActivityDialogOpen
+  )
 
   const { entity, activity } = selectedActivity ?? {}
 
@@ -239,6 +243,16 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
       title={`Editar actividad: ${entityTitle} en ${edition.eventName} ${edition.editionNumber}`}
       description='Modifica los detalles de esta actividad.'
       className='sm:max-w-3xl'
+      footerStart={
+        <Button
+          type='button'
+          variant='destructive'
+          className='w-fit max-w-full'
+          onClick={() => setRemoveActivityDialogOpen(true)}
+        >
+          Eliminar actividad
+        </Button>
+      }
       submit={{
         type: 'submit',
         label: 'Guardar cambios',
@@ -480,7 +494,6 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
               <FieldError>{errors.detail.ubicacion.message}</FieldError>
             )}
           </Field>
-
         </FieldGroup>
       </form>
     </EntityFormDialog>
