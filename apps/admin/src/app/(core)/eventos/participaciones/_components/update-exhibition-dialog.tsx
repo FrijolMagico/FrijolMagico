@@ -17,6 +17,7 @@ import {
   SelectValue
 } from '@/shared/components/ui/select'
 import { Textarea } from '@/shared/components/ui/textarea'
+import { Button } from '@/shared/components/ui/button'
 import {
   ExhibitionFormInput,
   exhibitionFormSchema
@@ -53,6 +54,9 @@ export function UpdateExhibitionDialog({ edition }: ExhibitionEditorFormProps) {
     (s) => s.isUpdateExhibitionDialogOpen
   )
   const closeUpdateDialogs = useParticipationsStore((s) => s.closeUpdateDialogs)
+  const setRemoveExhibitionDialogOpen = useParticipationsStore(
+    (s) => s.setRemoveExhibitionDialogOpen
+  )
 
   const methods = useForm<ExhibitionFormInput>({
     resolver: zodResolver(exhibitionFormSchema),
@@ -156,6 +160,16 @@ export function UpdateExhibitionDialog({ edition }: ExhibitionEditorFormProps) {
       }}
       title={`Editar expositor: ${entityTitle} en ${edition.eventName} ${edition.editionNumber}`}
       description='Modifica los detalles de esta exhibición.'
+      footerStart={
+        <Button
+          type='button'
+          variant='destructive'
+          className='w-fit max-w-full'
+          onClick={() => setRemoveExhibitionDialogOpen(true)}
+        >
+          Quitar como expositor
+        </Button>
+      }
       submit={{
         type: 'submit',
         label: 'Guardar cambios',

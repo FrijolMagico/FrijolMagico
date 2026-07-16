@@ -47,6 +47,7 @@ interface EntityFormDialogProps {
     label?: string
     disabled?: boolean
   }
+  footerStart?: ReactNode
   submit?: DialogSubmitProps
 }
 
@@ -58,6 +59,7 @@ export function EntityFormDialog({
   children,
   triggerLabel,
   close,
+  footerStart,
   submit,
   isDirty,
   className
@@ -87,15 +89,23 @@ export function EntityFormDialog({
         {children}
 
         {submit && (
-          <DialogFooter>
-            <DialogClose
-              render={
-                <Button variant='outline' disabled={close?.disabled}>
-                  {close?.label ?? 'Cerrar'}
-                </Button>
-              }
-            />
-            {submit && (
+          <DialogFooter
+            className={cn(
+              footerStart &&
+                'flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-start'
+            )}
+          >
+            {footerStart && (
+              <div className='w-fit max-w-full'>{footerStart}</div>
+            )}
+            <div className='flex flex-wrap justify-end gap-2 sm:ml-auto'>
+              <DialogClose
+                render={
+                  <Button variant='outline' disabled={close?.disabled}>
+                    {close?.label ?? 'Cerrar'}
+                  </Button>
+                }
+              />
               <Button
                 type={submit.type === 'button' ? 'button' : 'submit'}
                 form={submit.type === 'submit' ? submit.form : undefined}
@@ -108,7 +118,7 @@ export function EntityFormDialog({
                     ? 'Guardando...'
                     : 'Guardar'}
               </Button>
-            )}
+            </div>
           </DialogFooter>
         )}
       </DialogContent>

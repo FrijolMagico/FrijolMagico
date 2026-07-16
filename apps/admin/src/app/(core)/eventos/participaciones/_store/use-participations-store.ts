@@ -11,6 +11,7 @@ interface ParticipationsStore {
   isUpdateExhibitionDialogOpen: boolean
   isUpdateActivityDialogOpen: boolean
   isRemoveExhibitionDialogOpen: boolean
+  isRemoveActivityDialogOpen: boolean
 
   selectedExhibition: {
     entity: ParticipantEntity | null
@@ -30,6 +31,7 @@ interface ParticipationsStore {
   toggleCreateActivityDialogOpen: (open: boolean) => void
   closeUpdateDialogs: () => void
   setRemoveExhibitionDialogOpen: (open: boolean) => void
+  setRemoveActivityDialogOpen: (open: boolean) => void
 }
 
 export const useParticipationsStore = create<ParticipationsStore>((set) => ({
@@ -38,6 +40,7 @@ export const useParticipationsStore = create<ParticipationsStore>((set) => ({
   isCreateActivityDialogOpen: false,
   isUpdateActivityDialogOpen: false,
   isRemoveExhibitionDialogOpen: false,
+  isRemoveActivityDialogOpen: false,
 
   selectedExhibition: {
     entity: null,
@@ -63,6 +66,7 @@ export const useParticipationsStore = create<ParticipationsStore>((set) => ({
         activity: participant.activity || null
       },
       isRemoveExhibitionDialogOpen: false,
+      isRemoveActivityDialogOpen: false,
       isUpdateExhibitionDialogOpen: isExhibitionSelected,
       isUpdateActivityDialogOpen: !isExhibitionSelected
     })
@@ -80,7 +84,8 @@ export const useParticipationsStore = create<ParticipationsStore>((set) => ({
       },
       isUpdateActivityDialogOpen: false,
       isUpdateExhibitionDialogOpen: false,
-      isRemoveExhibitionDialogOpen: false
+      isRemoveExhibitionDialogOpen: false,
+      isRemoveActivityDialogOpen: false
     }),
 
   toggleCreateExhibitionDialogOpen: (open) =>
@@ -90,5 +95,8 @@ export const useParticipationsStore = create<ParticipationsStore>((set) => ({
     set({ isCreateActivityDialogOpen: open }),
 
   setRemoveExhibitionDialogOpen: (open) =>
-    set({ isRemoveExhibitionDialogOpen: open })
+    set({ isRemoveExhibitionDialogOpen: open }),
+
+  setRemoveActivityDialogOpen: (open) =>
+    set({ isRemoveActivityDialogOpen: open })
 }))
