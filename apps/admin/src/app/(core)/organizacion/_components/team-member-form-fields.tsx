@@ -84,6 +84,9 @@ export function TeamMemberFormFields() {
           <RRSSManager values={field.value} onChange={field.onChange} />
         )}
       />
+      {errors.rrss && (
+        <FieldError>Revisa las URLs de las redes sociales</FieldError>
+      )}
     </FieldGroup>
   )
 }

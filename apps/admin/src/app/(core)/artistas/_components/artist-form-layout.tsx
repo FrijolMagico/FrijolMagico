@@ -168,6 +168,9 @@ export function ArtistFormLayout({ check }: ArtistFormLayoutProps) {
           <RRSSManager values={field.value} onChange={field.onChange} />
         )}
       />
+      {errors.rrss && (
+        <FieldError>Revisa las URLs de las redes sociales</FieldError>
+      )}
     </FieldGroup>
   )
 }
