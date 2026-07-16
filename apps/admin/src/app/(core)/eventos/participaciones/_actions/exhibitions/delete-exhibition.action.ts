@@ -6,23 +6,37 @@ import { db } from '@frijolmagico/database/orm'
 import { participations } from '@frijolmagico/database/schema'
 import { eq } from 'drizzle-orm'
 import { requireAuth } from '@/shared/lib/auth/utils'
-import { ActionState } from '@/shared/types/actions'
+import type { ActionState } from '@/shared/types/actions'
 import {
   getEditionParticipationsCacheTag,
   getParticipationExhibitionsCacheTag
 } from '@frijolmagico/cache-tags'
+import { deleteOrphanedEditionParticipation } from '../participations/delete-orphaned-edition-participation'
 
-const { participationExhibition, editionParticipation } = participations
+const { participationExhibition } = participations
+
+interface DeleteExhibitionInput {
+  id: number
+}
+
+interface DeleteAssignmentResult {
+  alreadyAbsent: boolean
+  participationDeleted: boolean
+}
+
+function hasValidId(id: number | undefined): id is number {
+  return typeof id === 'number' && Number.isInteger(id) && id > 0
+}
 
 export async function deleteExhibitionAction(
   _prevState: ActionState,
-  data: { id: number }
-): Promise<ActionState> {
+  data: DeleteExhibitionInput
+): Promise<ActionState<DeleteAssignmentResult>> {
   try {
     await requireAuth()
 
     const id = data.id
-    if (!id) {
+    if (!hasValidId(id)) {
       return {
         success: false,
         errors: [{ entityType: 'participacion', message: 'ID requerido' }]
@@ -31,54 +45,45 @@ export async function deleteExhibitionAction(
 
     let participationId: number | null = null
     let editionId: number | null = null
+    let alreadyAbsent = false
+    let participationDeleted = false
 
     await db.transaction(async (tx) => {
-      // 1. Get the exhibition record to find its parent participation
-      const expo = await tx.query.participationExhibition.findFirst({
-        where: (t, { eq }) => eq(t.id, id),
-        with: {
-          participacion: {
-            columns: {
-              edicionId: true
-            }
-          }
-        }
+      const exhibition = await tx.query.participationExhibition.findFirst({
+        where: (table, { eq }) => eq(table.id, id),
+        with: { participacion: { columns: { edicionId: true } } }
       })
 
-      if (!expo) throw new Error('Expositor no encontrado')
+      if (exhibition) {
+        participationId = exhibition.participacionId
+        editionId = exhibition.participacion?.edicionId ?? null
+        if (editionId === null) throw new Error('Participación no encontrada')
 
-      const currentParticipationId = expo.participacionId
-
-      participationId = currentParticipationId
-      editionId = expo.participacion?.edicionId ?? null
-
-      // 2. Delete the exhibition record
-      await tx
-        .delete(participationExhibition)
-        .where(eq(participationExhibition.id, id))
-
-      // 3. Check if the parent participation has any other linked records (like activities)
-      const linkedActivities = await tx.query.participationActivity.findMany({
-        where: (t, { eq }) => eq(t.participacionId, currentParticipationId)
-      })
-
-      // If no other activities exist for this artist/edition, delete the master participation record
-      if (linkedActivities.length === 0) {
         await tx
-          .delete(editionParticipation)
-          .where(eq(editionParticipation.id, currentParticipationId))
+          .delete(participationExhibition)
+          .where(eq(participationExhibition.id, id))
+        participationDeleted = await deleteOrphanedEditionParticipation(
+          tx,
+          participationId
+        )
+        return
       }
+
+      alreadyAbsent = true
     })
 
-    if (editionId !== null) {
-      updateTag(getEditionParticipationsCacheTag(editionId))
+    if (alreadyAbsent) {
+      return { success: true, data: { alreadyAbsent, participationDeleted } }
     }
 
-    if (participationId !== null) {
-      updateTag(getParticipationExhibitionsCacheTag(participationId))
+    if (editionId === null || participationId === null) {
+      throw new Error('Participación no encontrada')
     }
 
-    return { success: true }
+    updateTag(getEditionParticipationsCacheTag(editionId))
+    updateTag(getParticipationExhibitionsCacheTag(participationId))
+
+    return { success: true, data: { alreadyAbsent, participationDeleted } }
   } catch (error) {
     console.error('[deleteExhibitionAction]', error)
     return {

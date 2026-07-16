@@ -18,6 +18,7 @@ interface DeleteParticipationDialogsProps {
   onRemoveActivityOpenChange: (open: boolean) => void
   onConfirmRemoveExhibition: () => void
   onConfirmRemoveActivity: () => void
+  isPending: boolean
 }
 
 export function DeleteParticipationDialogs({
@@ -26,7 +27,8 @@ export function DeleteParticipationDialogs({
   onRemoveExhibitionOpenChange,
   onRemoveActivityOpenChange,
   onConfirmRemoveExhibition,
-  onConfirmRemoveActivity
+  onConfirmRemoveActivity,
+  isPending
 }: DeleteParticipationDialogsProps) {
   return (
     <>
@@ -42,9 +44,12 @@ export function DeleteParticipationDialogs({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={onConfirmRemoveExhibition}>
-              Quitar
+            <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isPending}
+              onClick={onConfirmRemoveExhibition}
+            >
+              {isPending ? 'Quitando...' : 'Quitar'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -62,9 +67,12 @@ export function DeleteParticipationDialogs({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={onConfirmRemoveActivity}>
-              Eliminar
+            <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isPending}
+              onClick={onConfirmRemoveActivity}
+            >
+              {isPending ? 'Eliminando...' : 'Eliminar'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
