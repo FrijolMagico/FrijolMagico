@@ -10,14 +10,13 @@ import { toSlug } from '@/shared/lib/utils'
 import { useArtistDialog } from '../_store/artist-dialog-store'
 import { createArtistaAction } from '../_actions/create-artista.action'
 import {
-  ArtistInsertInput,
-  artistInsertSchema
+  type ArtistCreateFormInput,
+  type ArtistInsertInput,
+  artistCreateFormSchema
 } from '../_schemas/artista.schema'
 import { CREATE_ARTIST_FORM_ID } from '../_constants'
 
 import { ArtistFormLayout } from './artist-form-layout'
-
-type CreateArtistFormData = Omit<ArtistInsertInput, 'slug'>
 
 export function CreateArtistDialog() {
   const isCreateArtistOpen = useArtistDialog((s) => s.isCreateArtistOpen)
@@ -26,7 +25,7 @@ export function CreateArtistDialog() {
   )
 
   const methods = useForm({
-    resolver: zodResolver(artistInsertSchema.omit({ slug: true })),
+    resolver: zodResolver(artistCreateFormSchema),
     defaultValues: {
       nombre: null,
       pseudonimo: '',
@@ -45,7 +44,7 @@ export function CreateArtistDialog() {
     control: methods.control
   })
 
-  const onSubmit = async (data: CreateArtistFormData) => {
+  const onSubmit = async (data: ArtistCreateFormInput) => {
     let success = false
     try {
       const slug = toSlug(data.pseudonimo)
@@ -54,7 +53,7 @@ export function CreateArtistDialog() {
         {
           ...data,
           slug
-        }
+        } as ArtistInsertInput & { slug: string }
       )
 
       if (!result.success) {
