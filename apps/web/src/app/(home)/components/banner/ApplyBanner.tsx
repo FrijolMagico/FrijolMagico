@@ -16,21 +16,16 @@ interface ApplyBannerProps {
       target?: string
     }
   }
-  palette?: string
 }
 
 export function ApplyBanner({
   type = 'Convocatoria',
   title,
   description,
-  buttons,
-  palette = 'base'
+  buttons
 }: ApplyBannerProps) {
   return (
-    <section
-      data-palette={palette}
-      className='bg-palette-outline relative flex h-full w-full items-center justify-center overflow-hidden px-2'
-    >
+    <section className='bg-palette-outline relative flex h-full w-full items-center justify-center overflow-hidden px-2'>
       {/* Animated background orbs */}
       <div className='bg-palette-background pointer-events-none absolute top-0 right-0 left-0 z-0 mx-auto aspect-square w-1/2 rounded-full blur-[100px]' />
 

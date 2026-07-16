@@ -22,13 +22,12 @@
 
 [data-palette='ffm-xv'] {
   /* Base XV festival palette */
-  --color-ffm-xv-white: oklch(97.024% 0.01501 37.542);
-  --color-ffm-xv-green: oklch(0.4866 0.1317 149.67);
-  --color-ffm-xv-orange: oklch(59.331% 0.10329 14.304);
-  --color-ffm-xv-yellow: #ffecd0;
-  --color-ffm-xv-pink: oklch(80.637% 0.11154 33.77);
-  --color-ffm-xv-purple: #b80063;
-  --color-ffm-xv-strong-yellow: #fe9a00;
+  --theme-palette-foreground: oklch(97.024% 0.01501 37.542);
+  --theme-palette-accent: oklch(0.4866 0.1317 149.67);
+  --theme-palette-outline: oklch(59.331% 0.10329 14.304);
+  --theme-palette-secondary: #fe9a00;
+  --theme-palette-background: oklch(80.637% 0.11154 33.77);
+  --theme-palette-primary: #b80063;
 }
 
 [data-palette='ffm-xvi'] {
