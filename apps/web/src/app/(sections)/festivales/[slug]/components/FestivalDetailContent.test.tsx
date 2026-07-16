@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, mock, test } from 'bun:test'
-import type { ReactNode } from 'react'
+import type { JSX, ReactNode } from 'react'
 import { cleanup, render, screen } from '@testing-library/react'
 
 import { FestivalDetailContent } from './FestivalDetailContent'

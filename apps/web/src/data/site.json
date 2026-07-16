@@ -17,10 +17,11 @@
   },
   "top_bar": {
     "active": true,
-    "text": "🌱 **Convocatoria:** _Festival Frijol Mágico 2026_",
+    "text": "🌱 **Festival Frijol Mágico 2026:** _9 y 10 de Octubre, Mall VIVO Coquimbo_",
     "button": {
-      "active": true,
-      "text": "Postula aquí! 👈"
+      "active": false,
+      "text": "Más info 👈",
+      "href": "/festivales/frijol-magico-xvi"
     }
   },
   "next_festival": {

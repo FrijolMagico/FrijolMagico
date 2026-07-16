@@ -5,7 +5,8 @@ import { paths } from '@/config/paths'
 import { Suspense } from 'react'
 import { FeaturedArtists } from './components/FeaturedArtists'
 import { FeaturedArtistsSkeleton } from './components/FeaturedArtistsSkeleton'
-import { NewFestivalBanner } from './components/banner/NewFestivalBanner'
+import { Banner } from './components/banner'
+import { PodcastBanner } from './components/banner/PodcastBanner'
 
 export default async function Home() {
   return (
@@ -18,7 +19,9 @@ export default async function Home() {
 
         <div className='pt-6'>
           <FissureBanner height={640} mobileHeight={280}>
-            <NewFestivalBanner />
+            <Suspense fallback={<PodcastBanner />}>
+              <Banner />
+            </Suspense>
           </FissureBanner>
         </div>
         <section className='mx-auto h-full max-w-6xl space-y-20 px-6'>

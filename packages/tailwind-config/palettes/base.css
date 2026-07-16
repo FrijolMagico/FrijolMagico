@@ -7,6 +7,7 @@
   --color-accent: #ff9165;
   --color-link: #c096b5;
   --color-border: oklch(0.2178 0 0);
+  --color-shadow: #003c91;
 
   /* Component-level palette tokens linked to dynamic CSS variables */
   --color-palette-foreground: var(--theme-palette-foreground,
@@ -18,16 +19,30 @@
       var(--color-secondary));
   --color-palette-accent: var(--theme-palette-accent, var(--color-accent));
   --color-palette-outline: var(--theme-palette-outline, var(--color-accent));
+  --color-palette-link: var(--theme-palette-link, var(--color-link));
+  --color-palette-shadow: var(--theme-palette-shadow, var(--color-shadow));
+}
+
+[data-palette='base'] {
+  --theme-palette-background: var(--color-background);
+  --theme-palette-foreground: var(--color-foreground);
+  --theme-palette-primary: var(--color-primary);
+  --theme-palette-secondary: var(--color-secondary);
+  --theme-palette-outline: var(--color-border);
+  --theme-palette-accent: var(--color-accent);
+  --theme-palette-link: var(--color-link);
+  --theme-palette-shadow: var(--color-shadow);
+
 }
 
 [data-palette='ffm-xv'] {
   /* Base XV festival palette */
   --theme-palette-foreground: oklch(97.024% 0.01501 37.542);
   --theme-palette-accent: oklch(0.4866 0.1317 149.67);
-  --theme-palette-outline: oklch(59.331% 0.10329 14.304);
   --theme-palette-secondary: #fe9a00;
   --theme-palette-background: oklch(80.637% 0.11154 33.77);
   --theme-palette-primary: #b80063;
+  --theme-palette-outline: oklch(59.331% 0.10329 14.304);
 }
 
 [data-palette='ffm-xvi'] {
@@ -35,8 +50,8 @@
   --theme-palette-foreground: #ffffff;
   --theme-palette-primary: #e664cd;
   --theme-palette-secondary: #a0c85a;
-  --theme-palette-outline: #003c91;
   --theme-palette-accent: #a0c85a;
+  --theme-palette-outline: #003c91;
 }
 
 @utility wavy-underline {

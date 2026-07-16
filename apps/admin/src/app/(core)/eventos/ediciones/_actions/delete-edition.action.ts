@@ -7,7 +7,11 @@ import { db } from '@frijolmagico/database/orm'
 import { events } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import type { ActionState } from '@/shared/types/actions'
-import { EDITION_CACHE_TAG, EDITION_DAY_CACHE_TAG } from '@frijolmagico/cache-tags'
+import { revalidateWebCache } from '@/shared/lib/web-invalidation'
+import {
+  EDITION_CACHE_TAG,
+  EDITION_DAY_CACHE_TAG
+} from '@frijolmagico/cache-tags'
 
 const { eventEdition } = events
 
@@ -29,6 +33,13 @@ export async function deleteEditionAction(
 
   updateTag(EDITION_CACHE_TAG)
   updateTag(EDITION_DAY_CACHE_TAG)
+  try {
+    await revalidateWebCache({ tag: EDITION_CACHE_TAG })
+  } catch {
+    console.error('[delete-edition] Web cache sync failed', {
+      tag: EDITION_CACHE_TAG
+    })
+  }
 
   return { success: true }
 }

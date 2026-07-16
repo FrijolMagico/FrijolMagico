@@ -2,14 +2,23 @@
 
 import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
-import siteData from '@/data/site.json'
 import { cn } from '@/utils/cn'
-import bannerData from '@/data/banner_data.json'
 import { useScrollHide } from '@/hooks/useScrollHide'
 
-const { top_bar } = siteData
+export interface TopBarData {
+  text: string
+  button: {
+    active: boolean
+    text: string
+    href?: string
+  }
+}
 
-export const TopBarInfo = () => {
+interface TopBarInfoClientProps {
+  data: TopBarData
+}
+
+export const TopBarInfoClient = ({ data }: TopBarInfoClientProps) => {
   const visible = useScrollHide(100)
 
   return (
@@ -20,28 +29,30 @@ export const TopBarInfo = () => {
         !visible && '-translate-y-full'
       )}
     >
-      <div className='flex flex-nowrap space-x-4'>
+      <div className='flex flex-nowrap space-x-4 py-1.5'>
         <h2 className='2md:max-w-fit 2md:leading-normal w-full text-center leading-none text-white'>
           <ReactMarkdown
             components={{
               p: ({ children }) => <>{children}</>
             }}
           >
-            {top_bar.text}
+            {data.text}
           </ReactMarkdown>
         </h2>
       </div>
-      <Link
-        href={top_bar.button.active ? bannerData.right_button.url : '#'}
-        className={cn(
-          'bg-accent background-size-[150%] rounded-lg bg-linear-to-r px-4 py-0.5 font-bold text-white transition-[background-position] duration-200 hover:bg-right',
-          top_bar.button.active
-            ? 'cursor-pointer'
-            : 'cursor-not-allowed opacity-75'
-        )}
-      >
-        {top_bar.button.text}
-      </Link>
+      {data.button.active && (
+        <Link
+          href={data.button.active ? (data.button.href ?? '#') : '#'}
+          className={cn(
+            'bg-accent background-size-[150%] rounded-lg bg-linear-to-r px-4 py-0.5 font-bold text-white transition-[background-position] duration-200 hover:bg-right',
+            data.button.active
+              ? 'cursor-pointer'
+              : 'cursor-not-allowed opacity-75'
+          )}
+        >
+          {data.button.text}
+        </Link>
+      )}
     </section>
   )
 }

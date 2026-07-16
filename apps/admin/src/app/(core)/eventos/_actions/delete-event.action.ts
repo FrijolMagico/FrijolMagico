@@ -8,6 +8,7 @@ import { events } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import type { ActionState } from '@/shared/types/actions'
 import { EVENT_CACHE_TAG } from '@frijolmagico/cache-tags'
+import { revalidateWebCache } from '@/shared/lib/web-invalidation'
 
 const { event } = events
 
@@ -25,6 +26,13 @@ export async function deleteEventAction(id: number): Promise<ActionState> {
     await db.delete(event).where(eq(event.id, id))
 
     updateTag(EVENT_CACHE_TAG)
+    try {
+      await revalidateWebCache({ tag: EVENT_CACHE_TAG })
+    } catch {
+      console.error('[event-crud] Web cache sync failed', {
+        tag: EVENT_CACHE_TAG
+      })
+    }
     return { success: true }
   } catch (error) {
     return {
