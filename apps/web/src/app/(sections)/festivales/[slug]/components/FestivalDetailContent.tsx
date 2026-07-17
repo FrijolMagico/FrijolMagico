@@ -2,6 +2,8 @@ import { Calendar, MapPin } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { FestivalDetailPoster } from './FestivalDetailPoster'
+import { FestivalNameTransition } from '@/components/transitions/FestivalNameTransition'
+import { FestivalPosterTransition } from '@/components/transitions/FestivalPosterTransition'
 import { ParticipantList } from './ParticipantList'
 import { ActivityList } from './ActivityList'
 
@@ -36,10 +38,19 @@ export const FestivalDetailContent = ({
         className='mb-8'
         data-festival-entry={animationMode === 'active' ? 'header' : undefined}
       >
-        <h1 className='text-palette-primary text-4xl leading-none font-black tracking-tight md:text-5xl'>
-          <span className='text-palette-secondary'>{numero_edicion}</span>{' '}
-          {evento.nombre}
-        </h1>
+        {animationMode === 'active' ? (
+          <h1 className='text-palette-primary text-4xl leading-none font-black tracking-tight md:text-5xl'>
+            <span className='text-palette-secondary'>{numero_edicion}</span>{' '}
+            {evento.nombre}
+          </h1>
+        ) : (
+          <FestivalNameTransition slug={detail.slug}>
+            <h1 className='text-palette-primary text-4xl leading-none font-black tracking-tight md:text-5xl'>
+              <span className='text-palette-secondary'>{numero_edicion}</span>{' '}
+              {evento.nombre}
+            </h1>
+          </FestivalNameTransition>
+        )}
         {edicion_nombre && (
           <p className='text-palette-accent text-xl font-semibold'>
             {edicion_nombre}
@@ -64,13 +75,25 @@ export const FestivalDetailContent = ({
 
       <div className='grid gap-10 md:grid-cols-8 lg:gap-20'>
         <aside className='md:sticky md:top-24 md:col-span-3 md:self-start'>
-          <FestivalDetailPoster
-            posterUrl={poster_url}
-            eventName={evento.nombre}
-            editionName={numero_edicion}
-            priority
-            animationMode={animationMode}
-          />
+          {animationMode === 'active' ? (
+            <FestivalDetailPoster
+              posterUrl={poster_url}
+              eventName={evento.nombre}
+              editionName={numero_edicion}
+              priority
+              animationMode={animationMode}
+            />
+          ) : (
+            <FestivalPosterTransition slug={detail.slug}>
+              <FestivalDetailPoster
+                posterUrl={poster_url}
+                eventName={evento.nombre}
+                editionName={numero_edicion}
+                priority
+                animationMode={animationMode}
+              />
+            </FestivalPosterTransition>
+          )}
         </aside>
 
         <div className='min-w-0 space-y-8 md:col-span-5'>
