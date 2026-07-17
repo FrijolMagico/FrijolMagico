@@ -22,8 +22,8 @@ export const FestivalDisciplinesList = ({
   <dl className='flex flex-1 flex-col justify-center gap-1'>
     {disciplines.length > 0 ? (
       disciplines.map(({ label, count }, index) => (
-        <div className='flex items-center justify-between' key={label}>
-          <dt className='text-foreground/60 group/item flex items-center gap-2 text-xs font-bold uppercase'>
+        <div className='flex items-center justify-between gap-4' key={label}>
+          <dt className='text-foreground/60 group/item flex items-center gap-2 text-xs font-medium'>
             <span
               className={cn(
                 'h-1.5 w-1.5 shrink-0 rounded-full transition-transform group-hover/item:scale-125',
@@ -33,7 +33,7 @@ export const FestivalDisciplinesList = ({
             />
             {label}
           </dt>
-          <dd className='text-foreground -mt-1 ml-3.5 inline-block text-sm font-black'>
+          <dd className='text-foreground inline-block text-xs font-bold'>
             {count}
           </dd>
         </div>

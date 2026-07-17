@@ -18,10 +18,10 @@ export const ParticipantList = ({
           animationMode === 'active' ? 'participants' : undefined
         }
       >
-        <h2 className='text-palette-primary mb-6 w-full text-4xl font-bold'>
+        <h2 className='text-palette-primary mb-6 w-full text-center text-4xl font-bold md:text-start'>
           Participantes
         </h2>
-        <p className='text-palette-foreground/60'>
+        <p className='text-palette-foreground/60 w-full text-center md:w-auto md:text-start'>
           Sin participantes registrados aún
         </p>
       </section>

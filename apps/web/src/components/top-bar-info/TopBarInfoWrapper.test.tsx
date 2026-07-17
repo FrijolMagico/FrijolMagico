@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, mock, test } from 'bun:test'
-import { render } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
+import { cleanup, render } from '@testing-library/react'
 import type { ReactNode } from 'react'
 
 import { executeQueryMock } from '@/test-utils/mockDatabase'
@@ -15,6 +15,8 @@ mock.module('next/link', () => ({
 mock.module('next/cache', () => ({
   cacheTag: mock(() => {})
 }))
+
+afterEach(cleanup)
 
 beforeEach(() => {
   executeQueryMock.mockReset()

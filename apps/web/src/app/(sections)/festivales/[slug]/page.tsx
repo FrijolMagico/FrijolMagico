@@ -85,18 +85,20 @@ export default async function FestivalDetailPage({
         sectionName={`Festivales - ${detail.evento.nombre}`}
         sectionPath={`/festivales/${slug}`}
       />
-      {isActiveFestival ? (
-        <ActiveFestivalDetailAnimation slug={detail.slug}>
-          <FestivalDetailContent
-            palette={`ffm-${detail.numero_edicion.toLowerCase()}`}
-            detail={detail}
-            navigator={navigator}
-            animationMode='active'
-          />
-        </ActiveFestivalDetailAnimation>
-      ) : (
-        <FestivalDetailContent detail={detail} navigator={navigator} />
-      )}
+      <main>
+        {isActiveFestival ? (
+          <ActiveFestivalDetailAnimation slug={detail.slug}>
+            <FestivalDetailContent
+              palette={`ffm-${detail.numero_edicion.toLowerCase()}`}
+              detail={detail}
+              navigator={navigator}
+              animationMode='active'
+            />
+          </ActiveFestivalDetailAnimation>
+        ) : (
+          <FestivalDetailContent detail={detail} navigator={navigator} />
+        )}
+      </main>
     </>
   )
 }
