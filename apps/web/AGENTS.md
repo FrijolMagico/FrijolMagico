@@ -119,8 +119,12 @@ Order: React/Next → External → Workspace → Internal (`@/`) → Relative �
 
 ## Data Source Config
 
-Uses root `DATA_SOURCE` env:
+Uses `DATA_SOURCE` env:
 
-- `mock`: Google Sheets mock data
-- `local`: Local SQLite via Turso
-- `database`: Production database
+| Value | Behavior |
+|---|---|
+| Not set | Intelligent defaults (mock for CMS, local.db for database) |
+| `local` | Local SQLite via Turso. Some repos fall back to mock on query failure (internal fallback, not a mode) |
+| `real` | Production data sources in development |
+
+> **Production (Vercel):** `DATA_SOURCE` is ignored. `VERCEL_ENV` is the sole source of truth. Always uses real data sources.
