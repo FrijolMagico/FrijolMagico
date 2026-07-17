@@ -8,15 +8,20 @@ interface FestivalDetailPosterProps {
   eventName: string
   editionName: string
   priority: boolean
+  animationMode?: 'active'
 }
 
 export const FestivalDetailPoster = ({
   posterUrl,
   eventName,
   editionName,
-  priority
+  priority,
+  animationMode
 }: FestivalDetailPosterProps) => (
-  <figure className='relative aspect-auto h-auto w-full'>
+  <figure
+    className='relative aspect-auto h-auto w-full'
+    data-festival-entry={animationMode === 'active' ? 'poster' : undefined}
+  >
     {posterUrl ? (
       <Image
         src={posterUrl}
@@ -30,15 +35,15 @@ export const FestivalDetailPoster = ({
     ) : (
       <div
         className={cn(
-          'from-secondary to-accent flex size-full flex-col items-center justify-center',
-          'border-primary rounded-xl border-2 bg-linear-to-br p-4 text-center shadow-xl'
+          'from-palette-secondary to-palette-accent flex size-full flex-col items-center justify-center',
+          'border-palette-primary rounded-xl border-2 bg-linear-to-br p-4 text-center shadow-xl'
         )}
       >
-        <span className='text-background text-3xl leading-none font-black drop-shadow-lg md:text-5xl'>
+        <span className='text-palette-background text-3xl leading-none font-black drop-shadow-lg md:text-5xl'>
           {eventName}
         </span>
         {editionName && (
-          <span className='text-background mt-2 text-xl font-semibold md:text-2xl'>
+          <span className='text-palette-background mt-2 text-xl font-semibold md:text-2xl'>
             {editionName}
           </span>
         )}

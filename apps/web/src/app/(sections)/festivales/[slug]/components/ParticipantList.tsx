@@ -4,16 +4,26 @@ import type { FestivalParticipant } from '../../types/festival'
 
 interface ParticipantListProps {
   participantes: FestivalParticipant[]
+  animationMode?: 'active'
 }
 
-export const ParticipantList = ({ participantes }: ParticipantListProps) => {
+export const ParticipantList = ({
+  participantes,
+  animationMode
+}: ParticipantListProps) => {
   if (participantes.length === 0) {
     return (
-      <section>
-        <h2 className='text-primary mb-6 w-full text-4xl font-bold'>
+      <section
+        data-festival-entry={
+          animationMode === 'active' ? 'participants' : undefined
+        }
+      >
+        <h2 className='text-palette-primary mb-6 w-full text-4xl font-bold'>
           Participantes
         </h2>
-        <p className='text-foreground/60'>Sin participantes registrados aún</p>
+        <p className='text-palette-foreground/60'>
+          Sin participantes registrados aún
+        </p>
       </section>
     )
   }
@@ -31,8 +41,12 @@ export const ParticipantList = ({ participantes }: ParticipantListProps) => {
   )
 
   return (
-    <section>
-      <h2 className='text-primary mb-6 w-full text-center text-4xl font-bold md:text-start'>
+    <section
+      data-festival-entry={
+        animationMode === 'active' ? 'participants' : undefined
+      }
+    >
+      <h2 className='text-palette-primary mb-6 w-full text-center text-4xl font-bold md:text-start'>
         Participantes
       </h2>
       <div className='flex flex-wrap gap-6'>
@@ -41,6 +55,7 @@ export const ParticipantList = ({ participantes }: ParticipantListProps) => {
             key={disciplineLabel}
             disciplineLabel={disciplineLabel}
             participants={group}
+            animationMode={animationMode}
           />
         ))}
       </div>

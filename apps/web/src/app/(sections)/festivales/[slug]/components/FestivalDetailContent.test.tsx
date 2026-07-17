@@ -1,3 +1,5 @@
+import '../../../../../../test-setup'
+
 import { afterEach, describe, expect, mock, test } from 'bun:test'
 import type { JSX, ReactNode } from 'react'
 import { cleanup, render, screen } from '@testing-library/react'
@@ -7,13 +9,15 @@ import { FestivalDetailContent } from './FestivalDetailContent'
 import type { FestivalDetail } from '../../types/festival'
 
 mock.module('next/link', () => ({
-  default: ({ href, children }: { href: string; children: ReactNode }) => (
-    <a href={href}>{children}</a>
+  default: ({
+    href,
+    children,
+    ...props
+  }: { href: string; children: ReactNode } & Record<string, unknown>) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
   )
-}))
-
-mock.module('./FestivalNavigator', () => ({
-  FestivalNavigator: async () => null
 }))
 
 afterEach(cleanup)
@@ -38,7 +42,8 @@ const baseDetail: FestivalDetail = {
     {
       pseudonimo: 'Artista Ejemplo',
       disciplina_slug: 'Ilustración',
-      catalogo_slug: 'artista-ejemplo'
+      catalogo_slug: 'artista-ejemplo',
+      rrss: null
     }
   ],
   actividades: [
@@ -93,5 +98,63 @@ describe('FestivalDetailContent', () => {
     const heading = screen.getByRole('heading', { level: 1 })
     expect(heading.textContent).toContain('XV')
     expect(heading.textContent).toContain('Festival Frijol Mágico')
+  })
+
+  test('leaves inactive content and activities without animation markers', async () => {
+    const { container } = await renderAsync(
+      FestivalDetailContent({ detail: baseDetail })
+    )
+
+    expect(container.querySelector('[data-festival-entry]')).toBeNull()
+    expect(container.querySelector('[data-spoiler-category]')).toBeNull()
+    expect(container.querySelector('[data-spoiler-item]')).toBeNull()
+    expect(container.querySelector('[data-spoiler-redaction]')).toBeNull()
+    expect(container.querySelector('[data-spoiler-global-toggle]')).toBeNull()
+  })
+
+  test('places the navigator slot after participant and activity content in the right column', async () => {
+    const { container } = await renderAsync(
+      FestivalDetailContent({
+        detail: baseDetail,
+        navigator: (
+          <nav aria-label='Navegación entre ediciones'>Otras ediciones</nav>
+        )
+      })
+    )
+
+    const leftColumn = container.querySelector('aside')
+    const rightColumn = container.querySelector('.md\\:col-span-5')
+    const navigator = screen.getByRole('navigation', {
+      name: 'Navegación entre ediciones'
+    })
+
+    expect(leftColumn?.contains(navigator)).toBe(false)
+    expect(rightColumn?.contains(navigator)).toBe(true)
+    expect(rightColumn?.lastElementChild?.contains(navigator)).toBe(true)
+  })
+
+  test('adds spoiler and entry markers only in active animation mode', async () => {
+    const { container } = await renderAsync(
+      FestivalDetailContent({ detail: baseDetail, animationMode: 'active' })
+    )
+
+    expect(
+      container.querySelector("[data-festival-entry='header']")
+    ).not.toBeNull()
+    expect(
+      container.querySelector("[data-festival-entry='poster']")
+    ).not.toBeNull()
+    expect(
+      container.querySelector("[data-festival-entry='participants']")
+    ).not.toBeNull()
+    expect(container.querySelector('[data-spoiler-category]')).not.toBeNull()
+    expect(container.querySelector('[data-spoiler-item]')).not.toBeNull()
+    expect(container.querySelector('[data-spoiler-text]')).not.toBeNull()
+    expect(container.querySelector('[data-spoiler-redaction]')).not.toBeNull()
+    expect(
+      container
+        .querySelector('[data-spoiler-item]')
+        ?.getAttribute('data-category-id')
+    ).toBe('Ilustración')
   })
 })

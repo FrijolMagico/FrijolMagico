@@ -1,4 +1,5 @@
 import { Calendar, MapPin } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 import { FestivalDetailPoster } from './FestivalDetailPoster'
 import { ParticipantList } from './ParticipantList'
@@ -7,14 +8,19 @@ import { ActivityList } from './ActivityList'
 import { getDaysDisplay, getLocation } from '../../utils/timelineUtils'
 
 import type { FestivalDetail } from '../../types/festival'
-import { FestivalNavigator } from './FestivalNavigator'
 
 interface FestivalDetailContentProps {
   detail: FestivalDetail
+  navigator?: ReactNode
+  animationMode?: 'active'
+  palette?: string
 }
 
-export const FestivalDetailContent = async ({
-  detail
+export const FestivalDetailContent = ({
+  detail,
+  navigator,
+  animationMode,
+  palette = 'base'
 }: FestivalDetailContentProps) => {
   const { evento, edicion_nombre, numero_edicion, poster_url, dias } = detail
 
@@ -22,25 +28,33 @@ export const FestivalDetailContent = async ({
   const locationDisplay = getLocation(dias)
 
   return (
-    <article className='container mx-auto max-w-6xl px-4 pt-16 pb-32'>
-      <header className='mb-8'>
-        <h1 className='text-primary text-4xl leading-none font-black tracking-tight md:text-5xl'>
-          <span className='text-secondary'>{numero_edicion}</span>{' '}
+    <article
+      data-palette={palette}
+      className='container mx-auto max-w-6xl px-4 pt-16 pb-32'
+    >
+      <header
+        className='mb-8'
+        data-festival-entry={animationMode === 'active' ? 'header' : undefined}
+      >
+        <h1 className='text-palette-primary text-4xl leading-none font-black tracking-tight md:text-5xl'>
+          <span className='text-palette-secondary'>{numero_edicion}</span>{' '}
           {evento.nombre}
         </h1>
         {edicion_nombre && (
-          <p className='text-accent text-xl font-semibold'>{edicion_nombre}</p>
+          <p className='text-palette-accent text-xl font-semibold'>
+            {edicion_nombre}
+          </p>
         )}
 
         <div className='mt-4 space-y-2'>
           {daysDisplay && (
-            <div className='text-foreground/70 flex items-center gap-2'>
+            <div className='text-palette-foreground/70 flex items-center gap-2'>
               <Calendar className='size-5' aria-hidden='true' />
               <span>{daysDisplay}</span>
             </div>
           )}
           {locationDisplay && (
-            <div className='text-foreground/70 flex items-center gap-2'>
+            <div className='text-palette-foreground/70 flex items-center gap-2'>
               <MapPin className='size-5' aria-hidden='true' />
               <span>{locationDisplay}</span>
             </div>
@@ -55,16 +69,19 @@ export const FestivalDetailContent = async ({
             eventName={evento.nombre}
             editionName={numero_edicion}
             priority
+            animationMode={animationMode}
           />
         </aside>
 
         <div className='min-w-0 space-y-8 md:col-span-5'>
-          <ParticipantList participantes={detail.participantes} />
+          <ParticipantList
+            participantes={detail.participantes}
+            animationMode={animationMode}
+          />
           {detail.actividades.length > 0 && (
             <ActivityList actividades={detail.actividades} />
           )}
-
-          <FestivalNavigator slug={detail.slug} />
+          {navigator && <div className='pt-10'>{navigator}</div>}
         </div>
       </div>
     </article>
