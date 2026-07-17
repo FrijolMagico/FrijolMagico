@@ -57,8 +57,8 @@ export const FestivalTimelineCard = ({
         id={festivalId}
         data-festival-id={festivalId}
         className={cn(
-          'group bg-background outline-primary/20 relative z-10 flex flex-col rounded-3xl shadow-lg outline transition-all duration-300 outline-dashed group-hover/card:scale-[1.01] group-hover/card:shadow-xl',
-          alignment === 'right' ? 'md:flex-row-reverse' : 'md:flex-row'
+          'group bg-background outline-primary/20 relative z-10 flex flex-col rounded-3xl shadow-lg outline transition-all duration-300 outline-dashed group-hover/card:scale-[1.01] group-hover/card:shadow-xl md:flex-row',
+          alignment === 'right' && 'lg:flex-row-reverse'
         )}
       >
         {/* Left Panel: Info */}

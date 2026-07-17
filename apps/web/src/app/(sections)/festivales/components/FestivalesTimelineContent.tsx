@@ -85,63 +85,43 @@ export const FestivalesTimelineContent = ({
                 className='relative grid grid-cols-1 gap-8 lg:grid-cols-[40rem_40rem]'
                 aria-label={`${festival.evento.nombre} - Edición ${festival.evento.edicion}`}
               >
-                {/* Columna izquierda - Card si index impar */}
                 <div
                   className={cn(
-                    'hidden justify-center lg:flex lg:items-center',
-                    !isLast && ''
+                    'flex justify-center pb-12 lg:row-start-1 lg:items-center lg:pb-0',
+                    isLeft
+                      ? 'lg:col-start-2 lg:justify-end'
+                      : 'lg:col-start-1'
                   )}
+                  data-card-placement={isLeft ? 'right' : 'left'}
                 >
-                  {!isLeft ? (
-                    <div className='relative w-full max-w-160'>
-                      <FestivalTimelineCard
-                        festival={festival}
-                        alignment='right'
-                        festivalId={festivalId}
-                        isActive={isActive}
-                        priority={isFirstCard}
-                        enableViewTransition
-                      />
-                    </div>
-                  ) : !isLast ? (
-                    <TimelineConnector color={connectorColor} toLeft />
-                  ) : null}
-                </div>
-
-                {/* Columna derecha - Card si index par */}
-                <div
-                  className={cn(
-                    'hidden lg:flex lg:items-center lg:justify-end',
-                    !isLast && ''
-                  )}
-                >
-                  {isLeft ? (
-                    <div className='relative w-full max-w-160'>
-                      <FestivalTimelineCard
-                        festival={festival}
-                        alignment='left'
-                        festivalId={festivalId}
-                        isActive={isActive}
-                        priority={isFirstCard}
-                        enableViewTransition
-                      />
-                    </div>
-                  ) : !isLast ? (
-                    <TimelineConnector color={connectorColor} />
-                  ) : null}
-                </div>
-
-                {/* Mobile: Card centrada debajo del circulo */}
-                <div className='flex justify-center pb-12 lg:hidden'>
                   <div className='relative w-full max-w-160'>
                     <FestivalTimelineCard
                       festival={festival}
+                      alignment={isLeft ? 'left' : 'right'}
                       festivalId={festivalId}
                       isActive={isActive}
                       priority={isFirstCard}
+                      enableViewTransition
                     />
                   </div>
                 </div>
+
+                {!isLast ? (
+                  <div
+                    className={cn(
+                      'hidden lg:row-start-1 lg:flex lg:items-center',
+                      isLeft
+                        ? 'lg:col-start-1'
+                        : 'lg:col-start-2 lg:justify-end'
+                    )}
+                    data-connector-placement={isLeft ? 'left' : 'right'}
+                  >
+                    <TimelineConnector
+                      color={connectorColor}
+                      toLeft={isLeft}
+                    />
+                  </div>
+                ) : null}
               </section>
             )
           })}
