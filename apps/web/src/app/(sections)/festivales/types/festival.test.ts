@@ -24,16 +24,20 @@ describe('Festival types', () => {
     expect(evento.edicion_slug).toBe('edicion-15-1')
   })
 
-  test('FestivalParticipant shape supports catalog and non-catalog participants', () => {
+  test('FestivalParticipant shape supports catalog, non-catalog, and rrss participants', () => {
     const participant: FestivalParticipant = {
       pseudonimo: 'Artista Ejemplo',
       disciplina_slug: 'ilustracion',
-      catalogo_slug: 'artista-ejemplo'
+      catalogo_slug: 'artista-ejemplo',
+      rrss: null,
+      avatar_url: 'https://cdn.frijolmagico.cl/artistas/artista-ejemplo/avatar.webp'
     }
-
+        
     expect(participant.pseudonimo).toBe('Artista Ejemplo')
     expect(participant.disciplina_slug).toBe('ilustracion')
     expect(participant.catalogo_slug).toBe('artista-ejemplo')
+    expect(participant.rrss).toBeNull()
+    expect(participant.avatar_url).toBe('https://cdn.frijolmagico.cl/artistas/artista-ejemplo/avatar.webp')
   })
 
   test('FestivalActivity shape includes scheduling and type fields', () => {

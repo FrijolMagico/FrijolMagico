@@ -1,6 +1,10 @@
 import { getDisciplineLabel } from '@/app/(sections)/adapters/mappers/disciplineMapper'
+import { getAvatarUrl } from '@frijolmagico/utils/cdn'
 
-import type { FestivalDetail, FestivalParticipant } from '../../../types/festival'
+import type {
+  FestivalDetail,
+  FestivalParticipant
+} from '../../../types/festival'
 
 const mapParticipant = (
   participant: FestivalParticipant
@@ -15,7 +19,10 @@ const mapParticipant = (
 
   return {
     ...participant,
-    disciplina_slug: disciplinaLabel
+    disciplina_slug: disciplinaLabel,
+    avatar_url: participant.catalogo_slug
+      ? getAvatarUrl(participant.avatar_url ?? null)
+      : null
   }
 }
 
