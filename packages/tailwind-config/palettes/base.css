@@ -46,12 +46,14 @@
 }
 
 [data-palette='ffm-xvi'] {
-  --theme-palette-background: #0073b8;
-  --theme-palette-foreground: #ffffff;
+  --theme-palette-background: #ffffff;
+  --theme-palette-foreground: #003c91;
   --theme-palette-primary: #e664cd;
-  --theme-palette-secondary: #a0c85a;
+  --theme-palette-secondary: #0073b8;
   --theme-palette-accent: #a0c85a;
   --theme-palette-outline: #003c91;
+  --theme-palette-link: #e664cd;
+  --theme-palette-shadow: #003c91;
 }
 
 @utility wavy-underline {

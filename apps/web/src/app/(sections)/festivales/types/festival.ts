@@ -46,6 +46,8 @@ export interface FestivalParticipant {
   pseudonimo: string
   disciplina_slug: string
   catalogo_slug: string | null
+  rrss: string | null
+  avatar_url?: string | null
 }
 
 export interface FestivalActivity {

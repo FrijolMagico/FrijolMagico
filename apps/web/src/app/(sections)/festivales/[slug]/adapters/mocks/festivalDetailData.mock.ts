@@ -38,22 +38,29 @@ const mockDetails: Record<string, FestivalDetail> = {
       {
         pseudonimo: 'Akane Ilustración',
         disciplina_slug: 'ilustracion',
-        catalogo_slug: 'akane-ilustracion'
+        catalogo_slug: 'akane-ilustracion',
+        rrss: null,
+        avatar_url: 'https://cdn.frijolmagico.cl/artistas/akane-ilustracion/avatar.webp'
       },
       {
         pseudonimo: 'Sol Dibujante',
         disciplina_slug: 'ilustracion',
-        catalogo_slug: 'sol-dibujante'
+        catalogo_slug: 'sol-dibujante',
+        rrss: null,
+        avatar_url: 'https://cdn.frijolmagico.cl/artistas/sol-dibujante/avatar.webp'
       },
       {
         pseudonimo: 'Manos Que Tejen',
         disciplina_slug: 'manualidades',
-        catalogo_slug: null
+        catalogo_slug: null,
+        rrss: JSON.stringify({ instagram: 'https://instagram.com/manosquetejen' })
       },
       {
         pseudonimo: 'Cósmica Cómics',
         disciplina_slug: 'narrativa-grafica',
-        catalogo_slug: 'cosmica-comics'
+        catalogo_slug: 'cosmica-comics',
+        rrss: null,
+        avatar_url: 'https://cdn.frijolmagico.cl/artistas/cosmica-comics/avatar.webp'
       }
     ],
     actividades: [
@@ -106,12 +113,15 @@ const mockDetails: Record<string, FestivalDetail> = {
       {
         pseudonimo: 'Líneas Nocturnas',
         disciplina_slug: 'ilustracion',
-        catalogo_slug: 'lineas-nocturnas'
+        catalogo_slug: 'lineas-nocturnas',
+        rrss: null,
+        avatar_url: 'https://cdn.frijolmagico.cl/artistas/lineas-nocturnas/avatar.webp'
       },
       {
         pseudonimo: 'Trazo Suelto',
         disciplina_slug: 'ilustracion',
-        catalogo_slug: null
+        catalogo_slug: null,
+        rrss: JSON.stringify({ instagram: 'https://instagram.com/trazosuelto' })
       }
     ],
     actividades: [

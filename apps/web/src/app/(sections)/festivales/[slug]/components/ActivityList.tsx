@@ -44,7 +44,7 @@ export const ActivityList = ({ actividades }: ActivityListProps) => {
 
   return (
     <section>
-      <h2 className='text-primary mb-6 w-full text-center text-4xl font-bold md:text-start'>
+      <h2 className='text-palette-primary mb-6 w-full text-center text-4xl font-bold md:text-start'>
         Actividades
       </h2>
       <div className='flex flex-wrap gap-12 space-y-8'>
@@ -52,7 +52,7 @@ export const ActivityList = ({ actividades }: ActivityListProps) => {
           .sort(([a], [b]) => (TYPE_ORDER[a] ?? 99) - (TYPE_ORDER[b] ?? 99))
           .map(([tipo, group]) => (
             <section key={tipo} className='flex-1'>
-              <h3 className='text-accent mb-3 text-center font-mono text-2xl font-bold md:text-start'>
+              <h3 className='text-palette-accent mb-3 text-center font-mono text-2xl font-bold md:text-start'>
                 {TYPE_LABELS[tipo] ?? tipo}
               </h3>
               <ul className={cn(tipo === 'musica' ? 'space-y-2' : 'space-y-3')}>

@@ -24,12 +24,14 @@ const baseRaw = {
     {
       pseudonimo: 'Artista Ejemplo',
       disciplina_slug: 'ilustracion',
-      catalogo_slug: 'artista-ejemplo'
+      catalogo_slug: 'artista-ejemplo',
+      rrss: null
     },
     {
       pseudonimo: 'Colectivo X',
       disciplina_slug: 'manualidades',
-      catalogo_slug: null
+      catalogo_slug: null,
+      rrss: JSON.stringify({ instagram: 'https://instagram.com/colectivox' })
     }
   ],
   actividades: [

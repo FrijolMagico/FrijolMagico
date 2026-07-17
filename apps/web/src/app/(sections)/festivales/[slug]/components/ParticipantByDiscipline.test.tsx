@@ -18,8 +18,8 @@ describe('ParticipantByDiscipline', () => {
       <ParticipantByDiscipline
         disciplineLabel='Ilustración'
         participants={[
-          { pseudonimo: 'Artista A', disciplina_slug: 'Ilustración', catalogo_slug: 'a' },
-          { pseudonimo: 'Artista B', disciplina_slug: 'Ilustración', catalogo_slug: null }
+          { pseudonimo: 'Artista A', disciplina_slug: 'Ilustración', catalogo_slug: 'a', rrss: null },
+          { pseudonimo: 'Artista B', disciplina_slug: 'Ilustración', catalogo_slug: null, rrss: null }
         ]}
       />
     )

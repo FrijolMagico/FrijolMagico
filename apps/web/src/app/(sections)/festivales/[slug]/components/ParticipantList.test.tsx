@@ -20,17 +20,20 @@ describe('ParticipantList', () => {
           {
             pseudonimo: 'Artista A',
             disciplina_slug: 'Ilustración',
-            catalogo_slug: null
+            catalogo_slug: null,
+            rrss: null
           },
           {
             pseudonimo: 'Artista B',
             disciplina_slug: 'Ilustración',
-            catalogo_slug: null
+            catalogo_slug: null,
+            rrss: null
           },
           {
             pseudonimo: 'Artista C',
             disciplina_slug: 'Manualidades',
-            catalogo_slug: null
+            catalogo_slug: null,
+            rrss: null
           }
         ]}
       />

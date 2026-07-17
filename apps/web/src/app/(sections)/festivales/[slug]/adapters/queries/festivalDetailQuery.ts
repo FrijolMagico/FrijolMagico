@@ -27,7 +27,15 @@ export const FESTIVAL_DETAIL_QUERY = `SELECT json_object(
     SELECT json_group_array(json_object(
       'pseudonimo', COALESCE(a.pseudonimo, ag.nombre, b.name),
       'disciplina_slug', d.slug,
-      'catalogo_slug', CASE WHEN ca.id IS NOT NULL THEN a.slug ELSE NULL END
+'catalogo_slug', CASE WHEN ca.id IS NOT NULL THEN a.slug ELSE NULL END,
+          'rrss', a.rrss,
+          'avatar_url', CASE WHEN ca.id IS NOT NULL THEN (
+            SELECT ai.imagen_url
+            FROM artista_imagen ai
+            WHERE ai.artista_id = a.id AND ai.tipo = 'avatar'
+            ORDER BY ai.orden ASC
+            LIMIT 1
+          ) ELSE NULL END
     ))
     FROM participacion_edicion ped
     JOIN participacion_exposicion pexp ON pexp.participacion_id = ped.id
