@@ -1,5 +1,5 @@
-import { describe, expect, mock, test } from 'bun:test'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, mock, test } from 'bun:test'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import type { ReactNode } from 'react'
 
 import { parsePathname, getSections, type BreadcrumbSegment } from '@/utils/paths'
@@ -11,6 +11,8 @@ mock.module('next/link', () => ({
     <a href={href}>{children}</a>
   )
 }))
+
+afterEach(cleanup)
 
 // ── parsePathname ──
 

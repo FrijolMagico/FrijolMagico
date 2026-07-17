@@ -16,8 +16,8 @@ export const TimelineConnector = ({
   dashArray = '20,10',
   curveRadius = 24,
   color = 'stroke-accent',
-  width = 640,
-  height = 400
+  width = 500,
+  height = 340
 }: TimelineConnectorProps) => {
   const pathData =
     toLeft === false

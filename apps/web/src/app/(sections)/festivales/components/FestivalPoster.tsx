@@ -16,7 +16,7 @@ export const FestivalPoster = ({
   isActive,
   priority = false
 }: FestivalPosterProps) => (
-  <div className='bg-foreground/5 relative aspect-283/400 w-full shrink-0 overflow-hidden rounded-3xl md:w-72'>
+  <div className='bg-foreground/5 relative aspect-283/400 w-full shrink-0 overflow-hidden rounded-3xl md:w-60'>
     {posterUrl ? (
       <>
         <Image

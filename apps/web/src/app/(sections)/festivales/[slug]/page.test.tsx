@@ -107,25 +107,32 @@ describe('FestivalDetailPage', () => {
     const page = await FestivalDetailPage({
       params: Promise.resolve({ slug: baseDetail.slug })
     })
-    const children = page.props.children as unknown as Array<{
+    const mainChildren = page.props.children as unknown as Array<{
       type: unknown
       props: { children?: unknown }
     }>
 
-    expect(children[1].type).toBe(ActiveFestivalDetailAnimation)
-    expect((children[1].props.children as { type: unknown }).type).toBe(
-      FestivalDetailContent
-    )
-    const navigator = (
-      children[1].props.children as {
-        props: {
-          navigator: { type: unknown; props: { children: { type: unknown } } }
-        }
+    expect(mainChildren[1].type).toBe('main')
+
+    const animation = mainChildren[1].props.children as {
+      type: unknown
+      props: { children: unknown }
+    }
+
+    expect(animation.type).toBe(ActiveFestivalDetailAnimation)
+
+    const content = animation.props.children as {
+      type: unknown
+      props: {
+        navigator: { type: unknown; props: { children: { type: unknown } } }
       }
-    ).props.navigator
+    }
+
+    expect(content.type).toBe(FestivalDetailContent)
+
+    const navigator = content.props.navigator
     expect(navigator.type).toBe(Suspense)
     expect(navigator.props.children.type).toBe(FestivalNavigator)
-    expect(children).toHaveLength(2)
   })
 
   test('does not import FestivalNavigator from client modules', async () => {
@@ -156,9 +163,18 @@ describe('FestivalDetailPage', () => {
     const page = await FestivalDetailPage({
       params: Promise.resolve({ slug: baseDetail.slug })
     })
-    const children = page.props.children as unknown as Array<{ type: unknown }>
+    const mainChildren = page.props.children as unknown as Array<{
+      type: unknown
+      props: { children?: unknown }
+    }>
 
-    expect(children[1].type).toBe(FestivalDetailContent)
+    const children = mainChildren[1].props.children as {
+      type: unknown
+    }
+
+    expect(mainChildren[1].type).toBe('main')
+
+    expect(children.type).toBe(FestivalDetailContent)
   })
 
   test('keeps a thrown active lookup static', async () => {
@@ -172,8 +188,13 @@ describe('FestivalDetailPage', () => {
     const page = await FestivalDetailPage({
       params: Promise.resolve({ slug: baseDetail.slug })
     })
-    const children = page.props.children as unknown as Array<{ type: unknown }>
+    const mainChildren = page.props.children as unknown as Array<{
+      type: unknown
+      props: { children?: unknown }
+    }>
+    const child = mainChildren[1].props.children as { type: unknown }
 
-    expect(children[1].type).toBe(FestivalDetailContent)
+    expect(mainChildren[1].type).toBe('main')
+    expect(child.type).toBe(FestivalDetailContent)
   })
 })
