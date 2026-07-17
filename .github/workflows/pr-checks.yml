@@ -22,11 +22,12 @@ jobs:
 
       - name: Create mock database
         run: |
-          touch packages/database/mock.local.db
-          TURSO_DATABASE_URL=file:./mock.local.db bun run --filter=@frijolmagico/database migrate
+          MOCK_DB="${GITHUB_WORKSPACE}/packages/database/mock.local.db"
+          touch "$MOCK_DB"
+          TURSO_DATABASE_URL="file:${MOCK_DB}" bun run --filter=@frijolmagico/database migrate
 
       - name: Build
-        run: TURSO_DATABASE_URL=file:./packages/database/mock.local.db bun run build
+        run: TURSO_DATABASE_URL="file:${GITHUB_WORKSPACE}/packages/database/mock.local.db" bun run build
         env:
           DATA_SOURCE: local
 
