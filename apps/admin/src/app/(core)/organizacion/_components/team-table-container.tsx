@@ -1,3 +1,5 @@
+import { revalidateTag } from 'next/cache'
+import { redirect } from 'next/navigation'
 import {
   Table,
   TableBody,
@@ -9,6 +11,13 @@ import {
 import { EmptyState } from '@/shared/components/empty-state'
 import { getTeamData } from '../_lib/get-general-data'
 import { TeamTable } from './team-table'
+import { TEAM_CACHE_TAG } from '@frijolmagico/cache-tags'
+
+async function retryTeam() {
+  'use server'
+  revalidateTag(TEAM_CACHE_TAG, 'max')
+  redirect('/organizacion')
+}
 
 export async function TeamTableContainer() {
   const team = await getTeamData()
@@ -18,10 +27,7 @@ export async function TeamTableContainer() {
       <EmptyState
         title='Error al cargar los miembros del equipo'
         description='No se pudo cargar la información de los miembros del equipo.'
-        action={{
-          label: 'Intentar otra vez',
-          onClick: async () => await getTeamData()
-        }}
+        action={{ label: 'Intentar otra vez', action: retryTeam }}
       />
     )
   }
