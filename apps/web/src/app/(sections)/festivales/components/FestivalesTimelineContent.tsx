@@ -100,6 +100,7 @@ export const FestivalesTimelineContent = ({
                         festivalId={festivalId}
                         isActive={isActive}
                         priority={isFirstCard}
+                        enableViewTransition
                       />
                     </div>
                   ) : !isLast ? (
@@ -122,6 +123,7 @@ export const FestivalesTimelineContent = ({
                         festivalId={festivalId}
                         isActive={isActive}
                         priority={isFirstCard}
+                        enableViewTransition
                       />
                     </div>
                   ) : !isLast ? (
