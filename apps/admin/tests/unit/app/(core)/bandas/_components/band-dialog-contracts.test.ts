@@ -1,12 +1,11 @@
 import { describe, expect, test } from 'bun:test'
 import { readFileSync } from 'node:fs'
 
-const CREATE_DIALOG_PATH =
-  '/home/strocs/dev/FrijolMagico/apps/admin/src/app/(core)/artistas/bandas/_components/band-create-dialog.tsx'
-const UPDATE_DIALOG_PATH =
-  '/home/strocs/dev/FrijolMagico/apps/admin/src/app/(core)/artistas/bandas/_components/band-update-dialog.tsx'
-const CONTAINER_PATH =
-  '/home/strocs/dev/FrijolMagico/apps/admin/src/app/(core)/artistas/bandas/_components/band-list-container.tsx'
+const SRC = process.cwd() + '/src'
+
+const CREATE_DIALOG_PATH = SRC + '/app/(core)/artistas/bandas/_components/band-create-dialog.tsx'
+const UPDATE_DIALOG_PATH = SRC + '/app/(core)/artistas/bandas/_components/band-update-dialog.tsx'
+const CONTAINER_PATH = SRC + '/app/(core)/artistas/bandas/_components/band-list-container.tsx'
 
 function readSource(path: string) {
   return readFileSync(path, 'utf8')

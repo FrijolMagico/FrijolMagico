@@ -1,8 +1,9 @@
 import { describe, expect, test } from 'bun:test'
 import { readFileSync } from 'node:fs'
 
-const DIALOG_PATH =
-  '/home/strocs/dev/FrijolMagico/apps/admin/src/app/(core)/eventos/participaciones/_components/update-activity-dialog.tsx'
+const SRC = process.cwd() + '/src'
+
+const DIALOG_PATH = SRC + '/app/(core)/eventos/participaciones/_components/update-activity-dialog.tsx'
 
 describe('update activity dialog detail persistence contracts', () => {
   test('imports the create detail action alongside the update action', () => {
