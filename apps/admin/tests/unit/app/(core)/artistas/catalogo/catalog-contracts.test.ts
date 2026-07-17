@@ -25,7 +25,7 @@ describe('catalog source contracts', () => {
     expect(tableSource).toContain('key={item.id}')
     expect(tableSource).toContain('catalog={item}')
     expect(tableSource).toContain('sortable={canReorder}')
-    expect(tableSource).toContain('onDelete={handleCatalogItemDelete}')
+    expect(tableSource).toContain('onDelete={() => onDelete(item.id)}')
     expect(rowSource).toContain('const artist = catalog.artist')
     expect(rowSource).toContain(
       'openUpdateCatalogDialog(catalog, catalog.artist)'

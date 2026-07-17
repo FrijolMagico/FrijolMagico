@@ -20,10 +20,17 @@ bun run dev:real               # Dev with DATA_SOURCE=real
 bun run build                  # Production build
 bun run lint                   # ESLint all apps
 bun run lint:fix               # ESLint with auto-fix
+bun run test                   # Run all workspace tests through Turbo
 bun run format                 # Prettier format
 bun run type-check             # TypeScript check
 bun run db:migrate             # Run DB migrations
 ```
+
+## Testing
+
+- Never run `bun test` from the repository root.
+- Run the full suite from the repository root with `bun run test`.
+- Run scoped tests from the repository root with `bun run test --filter=@frijolmagico/<workspace>` so Turbo preserves the workspace context.
 
 ## Code Style
 

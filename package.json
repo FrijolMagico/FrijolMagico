@@ -7,6 +7,7 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
+    "test": "turbo run test",
     "type-check": "turbo run type-check",
     "db:migrate": "turbo run migrate --filter @frijolmagico/database",
     "format": "prettier --write \"**/*.{ts,tsx,md}\" --ignore-path .gitignore"
