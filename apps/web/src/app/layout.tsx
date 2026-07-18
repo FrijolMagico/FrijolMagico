@@ -19,7 +19,6 @@ import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 
 import { cn } from '@/utils/cn'
-import { ContextBar } from '@/components/context-bar/ContextBar'
 import { Footer } from '@/components/Footer'
 
 const SITE = siteData
@@ -129,7 +128,6 @@ export default function RootLayout({
         </Suspense>
         <div id='main-content' tabIndex={-1} className='outline-none' />
         {children}
-        <ContextBar />
         <Footer />
       </body>
     </html>

@@ -1,5 +1,6 @@
 import { Header } from '@/components/Header'
 import { LogoHomeLink } from '@/components/LogoHomeLink'
+import { ContextBar } from '@/components/context-bar/ContextBar'
 
 export default function NotFound() {
   return (
@@ -16,6 +17,7 @@ export default function NotFound() {
         </p>
         <LogoHomeLink />
       </main>
+      <ContextBar mode='minimal' />
     </>
   )
 }
