@@ -1,49 +1,33 @@
-# AGENTS.md - Web App
-
-Main website (frijolmagico.cl) - Port 3000
-
-**Generated**: 2026-02-11
-**Mode**: Update
-
 ## Tech Stack
-
 - **Framework:** Next.js 16 (App Router) with Turbopack
 - **UI:** React 19, TypeScript (strict), Tailwind CSS v4
 - **Animation:** GSAP with ScrollTrigger
 - **State:** Zustand
-- **CMS:** Google Sheets via `google-spreadsheet`
 - **Analytics:** Vercel Analytics, Google Analytics
-
 ## Commands
-
 ```bash
 bun run dev                    # Next.js dev with Turbopack
 bun run build                  # Production build
 bun run lint                   # ESLint
 bun run lint:fix               # ESLint --fix
 bun run type-check             # tsc --noEmit
+bun run test                   # Run all tests through Turbo
 ```
-
 ## Architecture
-
 ### App Router Structure
-
 ```
 src/app/
 ├── (home)/                    # Home page with bento grid
 ├── (sections)/                # Route groups
 │   ├── catalogo/              # Artist catalog
 │   ├── festivales/            # Festival pages
-│   │   └── (edicion)/2025/    # Edition-based routing
+│   │   └── [edicion-slug]/    # Edition-based routing
 │   └── nosotros/              # About page
 ├── layout.tsx
 └── not-found.tsx
 ```
-
 ### Section Pattern
-
 Each section follows a consistent structure:
-
 ```
 (sections)/[section]/
 ├── adapters/                  # Data repositories
@@ -59,72 +43,37 @@ Each section follows a consistent structure:
 ├── layout.tsx
 └── page.tsx
 ```
-
 ### Data Flow
-
 1. **Repository Pattern:** `adapters/[name]Repository.ts` handles data source logic
-2. **Data Sources:** CMS (Google Sheets), Database (Turso), or Mock (dev)
+2. **Data Sources:** Database (Turso), or local.db/Mock (dev)
 3. **Mappers:** Transform raw data to domain models in `adapters/mappers/`
 4. **Config:** `infra/config/dataSourceConfig.ts` controls source selection
-
-### Key Features
-
-- **Catalog:** Artist database with filtering, search, panel view
-- **Festivales:** Edition-based festival pages with timeline, schedule
-- **CMS Integration:** Google Sheets as headless CMS via `infra/services/googleSpreadsheetAdapter.ts`
-
-### Animation
-
-- GSAP ScrollTrigger for scroll-based animations
-- `useGSAP()` hook in client components
-- Avoid direct DOM manipulation; use refs
-
 ### Component Pattern
-
-Server component wrapper → Client component:
-
+Server component wrapper → Client component when need data from db:
 ```typescript
 // Server component (no 'use client')
 export const FestivalesTimeline = ({ data }) => {
+  const data = getData() // Fetch data from the lib dal -> repo
   return <FestivalesTimelineClient data={data} />
 }
-
 // Client component
 'use client'
 export const FestivalesTimelineClient = ({ data }) => {
   // interactive logic
 }
 ```
-
+Be extremly atomic with client components.
 ### Components
-
 - **Shared:** `src/components/` - Header, Footer, Grid, UI primitives
 - **Section-local:** `app/(sections)/[section]/components/`
 - **Pattern:** PascalCase, named exports, props destructured in signature
-
+- **Client Components:** Only when interactivity is needed. Use `use client` directive.
+- **Atomization**: Break down components to the smallest reusable pieces. Avoid large monolithic components.
 ## Imports
-
 Order: React/Next → External → Workspace → Internal (`@/`) → Relative → Type imports
-
 ### State Management
-
 - Zustand stores in `store/` directories
 - Example: `useCatalogFiltersStore.ts`, `useCatalogPanelStore.ts`
-
 ### Styling
-
 - Tailwind CSS v4 with `tailwind-variants` (`tv()`)
 - `cn()` utility for conditional classes
-- Custom colors: `fm-orange`, `fm-green`, `fm-black`, `fm-white`
-
-## Data Source Config
-
-Uses `DATA_SOURCE` env:
-
-| Value | Behavior |
-|---|---|
-| Not set | Intelligent defaults (mock for CMS, local.db for database) |
-| `local` | Local SQLite via Turso. Some repos fall back to mock on query failure (internal fallback, not a mode) |
-| `real` | Production data sources in development |
-
-> **Production (Vercel):** `DATA_SOURCE` is ignored. `VERCEL_ENV` is the sole source of truth. Always uses real data sources.
