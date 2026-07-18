@@ -1,6 +1,11 @@
-import { beforeEach, describe, expect, test } from 'bun:test'
+import { beforeEach, describe, expect, mock, test } from 'bun:test'
 
 import { executeQueryMock } from '@/test-utils/mockDatabase'
+
+// Aislar dataSourceConfig: evitar fuga de mock.module desde otros tests
+mock.module('@/infra/config/dataSourceConfig', () => ({
+  getDataSource: () => 'local'
+}))
 
 import { getFestivalSlugs } from './getFestivalSlugs'
 
