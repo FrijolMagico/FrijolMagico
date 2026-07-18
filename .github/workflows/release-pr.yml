@@ -92,7 +92,7 @@ jobs:
               state: 'open',
             });
 
-            const title = `Release ${new Date().toISOString().split('T')[0]}`;
+            const title = `Release ${new Date().toLocaleDateString('en-CA', { timeZone: 'America/Santiago' })}`;
 
             if (existing.length > 0) {
               await github.rest.pulls.update({
