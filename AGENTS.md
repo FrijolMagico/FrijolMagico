@@ -5,6 +5,10 @@ Monorepo configuration for agentic coding assistants.
 **Generated**: 2026-02-11
 **Mode**: Update
 
+## Git Workflow
+
+Feature PRs → `dev` (squash merge). Release PR `dev→main` se auto-genera — merge a main cierra issues automáticamente.
+
 ## Monorepo Structure
 
 - **Turborepo** + Bun workspaces (`apps/*`, `packages/*`)
@@ -50,9 +54,13 @@ bun run db:migrate             # Run DB migrations
 
 `DATA_SOURCE` env controls dev data:
 
-- Not set: Intelligent defaults (mock for CMS, local DB for database)
-- `real`: Production data sources
-- `local`: Local SQLite
+| Value | Behavior |
+|---|---|
+| Not set | Intelligent defaults (mock for CMS, local DB for database) |
+| `local` | Local SQLite. Some repos fall back to mock on query failure (internal fallback) |
+| `real` | Production data sources |
+
+> **Production (Vercel):** `DATA_SOURCE` is ignored. `VERCEL_ENV` is the sole source of truth. Always uses real data sources.
 
 ## App-Specific Agents
 

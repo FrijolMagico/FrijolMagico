@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
 import { readFileSync } from 'node:fs'
 
-const DELETE_ACTION_PATH =
-  '/home/strocs/dev/FrijolMagico/apps/admin/src/app/(core)/artistas/bandas/_actions/delete-banda.action.ts'
-const RESTORE_ACTION_PATH =
-  '/home/strocs/dev/FrijolMagico/apps/admin/src/app/(core)/artistas/bandas/_actions/restore-banda.action.ts'
+const SRC = process.cwd() + '/src'
+
+const DELETE_ACTION_PATH = SRC + '/app/(core)/artistas/bandas/_actions/delete-banda.action.ts'
+const RESTORE_ACTION_PATH = SRC + '/app/(core)/artistas/bandas/_actions/restore-banda.action.ts'
 
 const updateTag = mock(() => {})
 const requireAuth = mock(async () => ({ user: { id: '1' } }))

@@ -1,12 +1,11 @@
 import { describe, expect, test } from 'bun:test'
 import { readFileSync } from 'node:fs'
 
-const PAGE_PATH =
-  '/home/strocs/dev/FrijolMagico/apps/admin/src/app/(core)/artistas/catalogo/page.tsx'
-const TABLE_PATH =
-  '/home/strocs/dev/FrijolMagico/apps/admin/src/app/(core)/artistas/catalogo/_components/catalog-table.tsx'
-const ROW_PATH =
-  '/home/strocs/dev/FrijolMagico/apps/admin/src/app/(core)/artistas/catalogo/_components/catalog-row.tsx'
+const SRC = process.cwd() + '/src'
+
+const PAGE_PATH = SRC + '/app/(core)/artistas/catalogo/page.tsx'
+const TABLE_PATH = SRC + '/app/(core)/artistas/catalogo/_components/catalog-table.tsx'
+const ROW_PATH = SRC + '/app/(core)/artistas/catalogo/_components/catalog-row.tsx'
 
 describe('catalog source contracts', () => {
   test('page loads eligible artists from catalog DAL instead of getAllArtists', () => {

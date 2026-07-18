@@ -1,10 +1,10 @@
 import { describe, expect, test } from 'bun:test'
 import { readFileSync } from 'node:fs'
 
-const DAL_DIR =
-  '/home/strocs/dev/FrijolMagico/apps/admin/src/app/(core)/eventos/participaciones/_lib/data-access-layer'
-const PAGE_PATH =
-  '/home/strocs/dev/FrijolMagico/apps/admin/src/app/(core)/eventos/participaciones/page.tsx'
+const SRC = process.cwd() + '/src'
+
+const DAL_DIR = SRC + '/app/(core)/eventos/participaciones/_lib/data-access-layer'
+const PAGE_PATH = SRC + '/app/(core)/eventos/participaciones/page.tsx'
 
 const PAGINATION_PATH = DAL_DIR + '/get-participations.ts'
 const EXHIBITIONS_PATH = DAL_DIR + '/get-exhibitions.ts'

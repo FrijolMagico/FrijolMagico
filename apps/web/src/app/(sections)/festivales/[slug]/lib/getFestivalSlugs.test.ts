@@ -1,6 +1,11 @@
-import { beforeEach, describe, expect, test } from 'bun:test'
+import { beforeEach, describe, expect, mock, test } from 'bun:test'
 
 import { executeQueryMock } from '@/test-utils/mockDatabase'
+
+// Aislar dataSourceConfig: evitar fuga de mock.module desde otros tests
+mock.module('@/infra/config/dataSourceConfig', () => ({
+  getDataSource: () => 'local'
+}))
 
 import { getFestivalSlugs } from './getFestivalSlugs'
 
@@ -31,7 +36,7 @@ describe('getFestivalSlugs', () => {
     expect(slugs).toEqual(['edicion-15-1'])
   })
 
-  test('returns empty array when query fails (no mock fallback)', async () => {
+  test('falls back to mock slugs when local DB query fails', async () => {
     executeQueryMock.mockResolvedValueOnce({
       data: [],
       error: new Error('DB error')
@@ -39,10 +44,10 @@ describe('getFestivalSlugs', () => {
 
     const slugs = await getFestivalSlugs()
 
-    expect(slugs).toEqual([])
+    expect(slugs).toEqual(['edicion-xv-1', 'edicion-3-2'])
   })
 
-  test('returns empty array when query returns no rows (no mock fallback)', async () => {
+  test('falls back to mock slugs when local DB returns no rows', async () => {
     executeQueryMock.mockResolvedValueOnce({
       data: [],
       error: null
@@ -50,6 +55,6 @@ describe('getFestivalSlugs', () => {
 
     const slugs = await getFestivalSlugs()
 
-    expect(slugs).toEqual([])
+    expect(slugs).toEqual(['edicion-xv-1', 'edicion-3-2'])
   })
 })

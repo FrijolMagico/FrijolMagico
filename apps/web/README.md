@@ -78,15 +78,21 @@ Key variable categories:
 - **Turso Database**: `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`
 - **Google Sheets**: `GOOGLE_API_KEY`, sheet IDs for catalog and festivals
 - **Analytics**: `NEXT_PUBLIC_GA_MEASUREMENT_ID`
-- **Data Source**: `DATA_SOURCE` (controls mock/real data in development)
+- **Data Source**: `DATA_SOURCE` (controls data source in development)
 
 ## Data Sources
 
 The app supports multiple data sources controlled by `DATA_SOURCE`:
 
-- **Default**: Intelligent defaults (mock for CMS in dev, local DB for database queries)
-- **DATA_SOURCE=real**: Always use production data
-- **DATA_SOURCE=local**: Use local SQLite file
+| Value | Behavior |
+|---|---|
+| Not set | Intelligent defaults: mock for CMS, `local.db` for database |
+| `local` | Local SQLite via Turso. Some repos fall back to mock on query failure |
+| `real` | Production data sources in development |
+
+> **⚠️ Production (Vercel):** `DATA_SOURCE` is ignored. `VERCEL_ENV` is the sole source of truth. Always uses real data sources.
+>
+> Mock data is an **internal fallback** only — it activates automatically when `local` source is selected but the database is unavailable. It is never a `DATA_SOURCE` value.
 
 ## Section Pattern
 
