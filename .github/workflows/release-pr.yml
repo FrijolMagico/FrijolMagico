@@ -1,0 +1,114 @@
+name: Release PR (dev → main)
+
+on:
+  push:
+    branches: [dev]
+
+jobs:
+  release-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+
+            // --- 1. Find PRs merged to dev since last dev→main merge ---
+            const { data: compare } = await github.rest.repos.compareCommits({
+              owner, repo,
+              base: 'main',
+              head: 'dev',
+            });
+
+            // No new commits on dev since last main merge → skip
+            if (compare.ahead_by === 0) {
+              console.log('dev está al día con main — no hay cambios nuevos');
+              return;
+            }
+
+            const mergeBaseDate = (
+              await github.rest.git.getCommit({
+                owner, repo,
+                commit_sha: compare.merge_base_commit.sha,
+              })
+            ).data.author.date;
+
+            const { data: search } = await github.rest.search.issuesAndPullRequests({
+              q: `repo:${owner}/${repo} base:dev is:pr is:merged merged:>=${mergeBaseDate}`,
+              sort: 'updated',
+              per_page: 50,
+            });
+
+            if (search.total_count === 0) {
+              console.log('No hay PRs mergeados a dev desde el último release — skip');
+              return;
+            }
+
+            // --- 2. Build release body ---
+            let body = '# Release PR: dev → main\n\n';
+            body += '## 📋 Changes included\n\n';
+            const issueRefs = [];
+
+            for (const item of search.items) {
+              const { data: pr } = await github.rest.pulls.get({
+                owner, repo,
+                pull_number: item.number,
+              });
+
+              body += `- **#${pr.number}** — ${pr.title}\n`;
+
+              const matches = pr.body?.matchAll(
+                /\b(?:close|fix|resolve)[sd]?\s+#(\d+)\b/gi
+              );
+              if (matches) {
+                for (const m of matches) {
+                  // Normalize: "fixes #123" → "Fixes #123"
+                  const norm =
+                    m[0].charAt(0).toUpperCase() +
+                    m[0].slice(1).toLowerCase();
+                  if (!issueRefs.includes(norm)) issueRefs.push(norm);
+                }
+              }
+            }
+
+            if (issueRefs.length > 0) {
+              body += '\n## ✅ Issues closed\n\n';
+              body += issueRefs.join(', ');
+            }
+
+            // --- 3. Create or update PR dev → main ---
+            const { data: existing } = await github.rest.pulls.list({
+              owner, repo,
+              head: 'dev',
+              base: 'main',
+              state: 'open',
+            });
+
+            const title = `Release ${new Date().toLocaleDateString('en-CA', { timeZone: 'America/Santiago' })}`;
+
+            if (existing.length > 0) {
+              await github.rest.pulls.update({
+                owner, repo,
+                pull_number: existing[0].number,
+                title,
+                body,
+              });
+              console.log(`✅ Release PR actualizado: #${existing[0].number}`);
+            } else {
+              const { data: newPR } = await github.rest.pulls.create({
+                owner, repo,
+                head: 'dev',
+                base: 'main',
+                title,
+                body,
+              });
+              console.log(`✅ Release PR creado: #${newPR.number}`);
+            }

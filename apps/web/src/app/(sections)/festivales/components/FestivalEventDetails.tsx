@@ -9,23 +9,25 @@ export const FestivalEventDetails = ({
   daysDisplay,
   locationDisplay
 }: FestivalEventDetailsProps) => (
-  <dl className='space-y-2'>
+  <dl className='space-y-.5'>
     {daysDisplay && (
       <div className='text-foreground/70 flex items-center gap-3'>
-        <Calendar className='size-4 shrink-0' aria-hidden='true' />
+        <Calendar className='size-3 shrink-0' aria-hidden='true' />
         <div>
           <dt className='sr-only'>Fechas del evento</dt>
-          <dd className='text-sm leading-none font-semibold'>{daysDisplay}</dd>
+          <dd className='font-roboto-mono text-xs tracking-tighter'>
+            {daysDisplay}
+          </dd>
         </div>
       </div>
     )}
 
     {locationDisplay && (
       <div className='text-foreground/70 flex items-center gap-3'>
-        <MapPin className='size-4 shrink-0' aria-hidden='true' />
+        <MapPin className='size-3 shrink-0' aria-hidden='true' />
         <div>
           <dt className='sr-only'>Ubicación</dt>
-          <dd className='text-sm leading-none font-medium'>
+          <dd className='font-roboto-mono text-xs tracking-tighter'>
             {locationDisplay}
           </dd>
         </div>

@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Suspense } from 'react'
 
 import { TrackPageView } from '@/components/analytics/TrackPageView'
+import { ContextBar } from '@/components/context-bar/ContextBar'
 import { getActiveFestival } from '@/data/data-access-layer/festivals/getActiveFestival'
 
 import { getFestivalBySlug } from './lib/getFestivalBySlug'
@@ -85,18 +86,21 @@ export default async function FestivalDetailPage({
         sectionName={`Festivales - ${detail.evento.nombre}`}
         sectionPath={`/festivales/${slug}`}
       />
-      {isActiveFestival ? (
-        <ActiveFestivalDetailAnimation slug={detail.slug}>
-          <FestivalDetailContent
-            palette={`ffm-${detail.numero_edicion.toLowerCase()}`}
-            detail={detail}
-            navigator={navigator}
-            animationMode='active'
-          />
-        </ActiveFestivalDetailAnimation>
-      ) : (
-        <FestivalDetailContent detail={detail} navigator={navigator} />
-      )}
+      <main>
+        {isActiveFestival ? (
+          <ActiveFestivalDetailAnimation slug={detail.slug}>
+            <FestivalDetailContent
+              palette={`ffm-${detail.numero_edicion.toLowerCase()}`}
+              detail={detail}
+              navigator={navigator}
+              animationMode='active'
+            />
+          </ActiveFestivalDetailAnimation>
+        ) : (
+          <FestivalDetailContent detail={detail} navigator={navigator} />
+        )}
+      </main>
+      <ContextBar />
     </>
   )
 }

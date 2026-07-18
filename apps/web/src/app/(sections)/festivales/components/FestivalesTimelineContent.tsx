@@ -32,16 +32,16 @@ export const FestivalesTimelineContent = ({
   }))
 
   return (
-    <div className='relative mx-auto px-4 py-24'>
-      <div className='lg:grid lg:grid-cols-[16rem_1fr] lg:gap-12'>
+    <main className='relative mx-auto px-4 py-24'>
+      <div className='max-w-340 min-[1360px]:landscape:grid min-[1360px]:landscape:grid-cols-[16rem_1fr] min-[1360px]:landscape:gap-12'>
         {/* Sidebar - CLIENT component */}
-        <aside className='hidden pt-61 lg:block'>
+        <aside className='hidden pt-61 min-[1360px]:landscape:block'>
           <FestivalsSidebarNav items={navItems} />
         </aside>
 
         {/* Timeline items */}
-        <div className='relative flex flex-col items-center'>
-          <div className='relative grid gap-8 lg:grid-cols-[40rem_40rem]'>
+        <div className='relative flex min-w-0 flex-col items-center'>
+          <div className='relative grid w-full min-w-0 gap-8 min-[1360px]:landscape:grid-cols-2'>
             {/* Superior indicator */}
             <div className='flex flex-col items-center'>
               <div className='bg-primary/10 text-primary relative mx-auto flex size-32 flex-col items-center justify-center rounded-full'>
@@ -82,71 +82,48 @@ export const FestivalesTimelineContent = ({
             return (
               <section
                 key={`${festival.evento.slug}-${festival.evento.edicion}`}
-                className='relative grid grid-cols-1 gap-8 lg:grid-cols-[40rem_40rem]'
+                className='relative grid w-full min-w-0 grid-cols-1 gap-8 min-[1360px]:landscape:grid-cols-2'
                 aria-label={`${festival.evento.nombre} - Edición ${festival.evento.edicion}`}
               >
-                {/* Columna izquierda - Card si index impar */}
                 <div
                   className={cn(
-                    'hidden justify-center lg:flex lg:items-center',
-                    !isLast && ''
+                    'flex min-w-0 justify-center pb-12 min-[1360px]:landscape:row-start-1 min-[1360px]:landscape:items-center min-[1360px]:landscape:pb-0',
+                    isLeft
+                      ? 'min-[1360px]:landscape:col-start-2 min-[1360px]:landscape:justify-end'
+                      : 'min-[1360px]:landscape:col-start-1'
                   )}
+                  data-card-placement={isLeft ? 'right' : 'left'}
                 >
-                  {!isLeft ? (
-                    <div className='relative w-full max-w-160'>
-                      <FestivalTimelineCard
-                        festival={festival}
-                        alignment='right'
-                        festivalId={festivalId}
-                        isActive={isActive}
-                        priority={isFirstCard}
-                        enableViewTransition
-                      />
-                    </div>
-                  ) : !isLast ? (
-                    <TimelineConnector color={connectorColor} toLeft />
-                  ) : null}
-                </div>
-
-                {/* Columna derecha - Card si index par */}
-                <div
-                  className={cn(
-                    'hidden lg:flex lg:items-center lg:justify-end',
-                    !isLast && ''
-                  )}
-                >
-                  {isLeft ? (
-                    <div className='relative w-full max-w-160'>
-                      <FestivalTimelineCard
-                        festival={festival}
-                        alignment='left'
-                        festivalId={festivalId}
-                        isActive={isActive}
-                        priority={isFirstCard}
-                        enableViewTransition
-                      />
-                    </div>
-                  ) : !isLast ? (
-                    <TimelineConnector color={connectorColor} />
-                  ) : null}
-                </div>
-
-                {/* Mobile: Card centrada debajo del circulo */}
-                <div className='flex justify-center pb-12 lg:hidden'>
-                  <div className='relative w-full max-w-160'>
+                  <div className='relative w-full max-w-160 min-w-0'>
                     <FestivalTimelineCard
                       festival={festival}
+                      alignment={isLeft ? 'left' : 'right'}
                       festivalId={festivalId}
                       isActive={isActive}
                       priority={isFirstCard}
+                      enableViewTransition
                     />
                   </div>
                 </div>
+
+                {!isLast ? (
+                  <div
+                    className={cn(
+                      'hidden min-[1360px]:landscape:row-start-1 min-[1360px]:landscape:flex min-[1360px]:landscape:items-center',
+                      isLeft
+                        ? 'min-[1360px]:landscape:col-start-1'
+                        : 'min-[1360px]:landscape:col-start-2 min-[1360px]:landscape:justify-end'
+                    )}
+                    data-connector-placement={isLeft ? 'left' : 'right'}
+                  >
+                    <TimelineConnector color={connectorColor} toLeft={isLeft} />
+                  </div>
+                ) : null}
               </section>
             )
           })}
 
-          <div className='relative grid gap-8 lg:grid-cols-[40rem_40rem]'>
+          <div className='relative grid w-full min-w-0 gap-8 min-[1360px]:landscape:grid-cols-2'>
             {festivales.length % 2 === 0 ? (
               <>
                 <div aria-hidden className='block size-full'></div>
@@ -205,6 +182,6 @@ export const FestivalesTimelineContent = ({
           </div>
         </div>
       </div>
-    </div>
+    </main>
   )
 }

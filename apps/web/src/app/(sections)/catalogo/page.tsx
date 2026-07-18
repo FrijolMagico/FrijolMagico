@@ -14,6 +14,7 @@ import { getCatalogData } from './lib/getCatalogData'
 import { Metadata } from 'next'
 import { TrackPageView } from '@/components/analytics/TrackPageView'
 import { paths } from '@/config/paths'
+import { ContextBar } from '@/components/context-bar/ContextBar'
 
 const { catalog } = siteData
 
@@ -49,6 +50,7 @@ export default async function CatalogPage() {
         )}
       </main>
       <CatalogPanel catalogData={data || []} />
+      <ContextBar />
     </>
   )
 }

@@ -30,6 +30,7 @@
     "seed": "bun run --env-file .env.local turso db shell $TURSO_DATABASE_NAME < seed/seed.sql",
     "dev": "turso dev --db-file local.db",
     "lint": "eslint .",
+    "test": "bun test",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {

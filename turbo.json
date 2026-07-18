@@ -47,6 +47,11 @@
       "outputs": []
     },
 
+    "test": {
+      "cache": false,
+      "outputs": []
+    },
+
     "type-check": {
       "dependsOn": ["^build"],
       "outputs": []

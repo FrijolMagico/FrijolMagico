@@ -1,8 +1,9 @@
 import { describe, expect, test } from 'bun:test'
 import { readFileSync } from 'node:fs'
 
-const ACTIONS_DIR =
-  '/home/strocs/dev/FrijolMagico/apps/admin/src/app/(core)/eventos/participaciones/_actions'
+const SRC = process.cwd() + '/src'
+
+const ACTIONS_DIR = SRC + '/app/(core)/eventos/participaciones/_actions'
 
 const HELPER_PATH = `${ACTIONS_DIR}/_lib/find-or-create-edition-participation.ts`
 const CREATE_ACTIVITY_PATH = `${ACTIONS_DIR}/activities/create-activity.action.ts`

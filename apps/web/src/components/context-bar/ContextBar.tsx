@@ -16,7 +16,18 @@ import { paths } from '@/config/paths'
 export { parsePathname, getSections }
 export type { BreadcrumbSegment, SectionEntry } from '@/utils/paths'
 
-export function ContextBar() {
+const CONTEXT_BAR_MODE = {
+  NORMAL: 'normal',
+  MINIMAL: 'minimal'
+} as const
+
+type ContextBarMode = (typeof CONTEXT_BAR_MODE)[keyof typeof CONTEXT_BAR_MODE]
+
+interface ContextBarProps {
+  mode?: ContextBarMode
+}
+
+export function ContextBar({ mode = CONTEXT_BAR_MODE.NORMAL }: ContextBarProps) {
   const rawPathname = usePathname()
   const pathname = rawPathname ?? '/'
   const visible = useScrollHide(100)
@@ -28,6 +39,8 @@ export function ContextBar() {
     return href && pathname.startsWith(href)
   })?.path as string | undefined
   const isHomepage = pathname === '/'
+  const showBreadcrumbControls =
+    mode === CONTEXT_BAR_MODE.NORMAL && !isHomepage && segments.length > 0
 
   const backHref =
     segments.length > 1 ? segments[segments.length - 2].href : '/'
@@ -58,7 +71,7 @@ export function ContextBar() {
         </Link>
 
         <div className='flex items-center justify-center gap-1'>
-          {!isHomepage && segments.length > 0 && (
+          {showBreadcrumbControls && (
             <Link
               href={backHref}
               aria-label='Volver'
@@ -68,7 +81,7 @@ export function ContextBar() {
             </Link>
           )}
 
-          {!isHomepage && segments.length > 0 && (
+          {showBreadcrumbControls && (
             <ContextBreadcrumb segments={segments} />
           )}
         </div>

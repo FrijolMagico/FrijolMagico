@@ -6,7 +6,11 @@ interface EmptyStateProps {
   description: string
   action?: {
     label: string
+    /** Server Action: se renderiza como <form>. Compatible con Server Components. */
+    action?: () => Promise<void>
+    /** Event handler: solo funciona desde Client Components. */
     onClick?: () => void
+    /** Link de navegación. */
     href?: string
   }
 }
@@ -20,12 +24,18 @@ export function EmptyState({ title, description, action }: EmptyStateProps) {
       <h3 className='text-foreground mb-2 text-lg font-semibold'>{title}</h3>
       <p className='text-muted-foreground mb-6 max-w-sm'>{description}</p>
       {action && (
-        <Button
-          onClick={action.onClick}
-          render={action.href ? <a href={action.href} /> : undefined}
-        >
-          {action.label}
-        </Button>
+        action.action ? (
+          <form action={action.action}>
+            <Button type='submit'>{action.label}</Button>
+          </form>
+        ) : (
+          <Button
+            onClick={action.onClick}
+            render={action.href ? <a href={action.href} /> : undefined}
+          >
+            {action.label}
+          </Button>
+        )
       )}
     </div>
   )

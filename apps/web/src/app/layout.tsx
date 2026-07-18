@@ -19,7 +19,6 @@ import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 
 import { cn } from '@/utils/cn'
-import { ContextBar } from '@/components/context-bar/ContextBar'
 import { Footer } from '@/components/Footer'
 
 const SITE = siteData
@@ -104,7 +103,7 @@ export default function RootLayout({
     <html lang={SITE.lang}>
       <body
         className={cn(
-          'bg-background font-rubik relative flex h-full min-h-screen w-full flex-col pt-12 antialiased',
+          'bg-background font-rubik relative flex h-full min-h-screen w-full flex-col pt-12 antialiased [&>main]:flex-1',
           josefinSans.variable,
           notoSans.variable,
           superFortress.variable,
@@ -129,7 +128,6 @@ export default function RootLayout({
         </Suspense>
         <div id='main-content' tabIndex={-1} className='outline-none' />
         {children}
-        <ContextBar />
         <Footer />
       </body>
     </html>

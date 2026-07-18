@@ -1,16 +1,43 @@
-import { describe, expect, mock, test } from 'bun:test'
-import { fireEvent, render, screen } from '@testing-library/react'
-import type { ReactNode } from 'react'
+import { afterEach, describe, expect, mock, test } from 'bun:test'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { createElement } from 'react'
+import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
 import { parsePathname, getSections, type BreadcrumbSegment } from '@/utils/paths'
+import { ContextBar } from './ContextBar'
 import { ContextBreadcrumb } from './ContextBreadcrumb'
 import { ContextDropdown } from './ContextDropdown'
 
+let pathname = '/'
+
 mock.module('next/link', () => ({
-  default: ({ href, children }: { href: string; children: ReactNode }) => (
-    <a href={href}>{children}</a>
+  default: ({
+    href,
+    children,
+    ...props
+  }: AnchorHTMLAttributes<HTMLAnchorElement> & {
+    href: string
+    children: ReactNode
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
   )
 }))
+
+mock.module('next/image', () => ({
+  default: ({ alt }: { alt: string }) => createElement('img', { alt })
+}))
+
+mock.module('next/navigation', () => ({
+  usePathname: () => pathname
+}))
+
+mock.module('@/hooks/useScrollHide', () => ({
+  useScrollHide: () => true
+}))
+
+afterEach(cleanup)
 
 // ── parsePathname ──
 
@@ -55,6 +82,48 @@ describe('parsePathname', () => {
     expect(parsePathname('/ruta-desconocida')).toEqual([
       { label: 'Ruta Desconocida', href: '/ruta-desconocida', current: true }
     ])
+  })
+})
+
+// ── ContextBar ──
+
+describe('ContextBar', () => {
+  test.each([
+    '/ruta-desconocida',
+    '/catalogo/artista-inexistente',
+    '/festivales/edicion-inexistente'
+  ])('minimal mode omits path-derived controls for %s', (invalidPath) => {
+    pathname = invalidPath
+    const { container } = render(<ContextBar mode='minimal' />)
+
+    expect(screen.getByRole('link', { name: 'Inicio' })).toBeDefined()
+    expect(screen.getByRole('button', { name: /secciones/i })).toBeDefined()
+    expect(screen.queryByRole('link', { name: 'Volver' })).toBeNull()
+    expect(container.querySelector('[aria-current]')).toBeNull()
+    expect(container.textContent).not.toContain('Ruta Desconocida')
+    expect(container.textContent).not.toContain('Artista Inexistente')
+    expect(container.textContent).not.toContain('Edicion Inexistente')
+  })
+
+  test('normal mode retains breadcrumbs for a valid dynamic route', () => {
+    pathname = '/catalogo/canela'
+    const { container } = render(<ContextBar />)
+
+    expect(screen.getByRole('link', { name: 'Volver' })).toBeDefined()
+    expect(screen.getByRole('link', { name: 'Catálogo' })).toBeDefined()
+    expect(container.querySelector('[aria-current="page"]')?.textContent).toBe(
+      'Canela'
+    )
+  })
+
+  test('homepage retains its minimal presentation', () => {
+    pathname = '/'
+    const { container } = render(<ContextBar />)
+
+    expect(screen.getByRole('link', { name: 'Inicio' })).toBeDefined()
+    expect(screen.getByRole('button', { name: /secciones/i })).toBeDefined()
+    expect(screen.queryByRole('link', { name: 'Volver' })).toBeNull()
+    expect(container.querySelector('[aria-current]')).toBeNull()
   })
 })
 
@@ -110,7 +179,7 @@ describe('ContextDropdown', () => {
     expect(button.getAttribute('aria-expanded')).toBe('true')
     expect(screen.getByRole('menu')).toBeDefined()
 
-    const items = screen.getAllByRole('link')
+    const items = screen.getAllByRole('menuitem')
     expect(items).toHaveLength(mockSections.length)
 
     fireEvent.click(button)
@@ -125,10 +194,10 @@ describe('ContextDropdown', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /secciones/i }))
 
-    const activeItem = screen.getByRole('link', { name: 'Festivales' })
+    const activeItem = screen.getByRole('menuitem', { name: 'Festivales' })
     expect(activeItem.querySelector('svg')).not.toBeNull()
 
-    const inactiveItem = screen.getByRole('link', { name: 'Catálogo' })
+    const inactiveItem = screen.getByRole('menuitem', { name: 'Catálogo' })
     expect(inactiveItem.querySelector('svg')).toBeNull()
   })
 

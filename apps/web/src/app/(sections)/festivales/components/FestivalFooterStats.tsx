@@ -1,5 +1,5 @@
 import { cn } from '@/utils/cn'
-import { Ticket, Music, LucideIcon } from 'lucide-react'
+import { Mic, Music, Paintbrush, type LucideIcon } from 'lucide-react'
 
 interface FestivalFooterStatsProps {
   talleresCount: number
@@ -10,24 +10,25 @@ export const FestivalFooterStats = ({
   talleresCount,
   musicaCount
 }: FestivalFooterStatsProps) => (
-  <div className='flex items-center justify-end gap-3'>
+  <div className='flex items-center gap-3'>
     {talleresCount > 0 && (
       <FestivalFooterStatItem
-        icon={Ticket}
+        icon={Mic}
         label='Talleres'
         count={talleresCount}
         color={{
-          bg: 'bg-accent/10',
+          bg: 'bg-accent/5',
           icon: 'text-accent'
         }}
       />
     )}
+
     {musicaCount > 0 && (
       <FestivalFooterStatItem
         icon={Music}
-        label='Música'
+        label='Bandas'
         count={musicaCount}
-        color={{ bg: 'bg-secondary/10', icon: 'text-secondary' }}
+        color={{ bg: 'bg-secondary/5', icon: 'text-secondary' }}
       />
     )}
   </div>
@@ -51,21 +52,17 @@ export const FestivalFooterStatItem = ({
 }: FestivalFooterStatItemProps) => (
   <div
     className={cn(
-      'border-background/20 flex max-w-42 flex-1 items-center gap-3 rounded-2xl border px-3 py-2 transition-colors',
+      'border-foreground/10 group/category relative mx-auto flex-1 rounded-2xl border border-dashed px-3 py-2 transition-colors',
       color.bg
     )}
   >
-    <div className='bg-background flex-shrink-0 rounded-full p-2 shadow-sm'>
-      <Icon className={`h-3.5 w-3.5 ${color.icon}`} aria-hidden='true' />
+    <div className='bg-primary text-background absolute -top-2/5 right-0 left-0 mx-auto w-fit rounded-full px-2 py-1 text-xs leading-none opacity-0 transition-opacity duration-200 group-hover/category:opacity-100'>
+      {label}
     </div>
-    <div className='flex min-w-0 flex-col'>
+    <div className='mx-auto flex w-fit flex-1 shrink-0 items-center gap-3'>
+      <Icon className={`h-3.5 w-3.5 ${color.icon}`} aria-hidden='true' />
       <dt className='sr-only'>{label}</dt>
-      <dd className='text-foreground text-lg leading-none font-black'>
-        {count}
-      </dd>
-      <span className='text-foreground/50 text-xs font-bold tracking-wider uppercase'>
-        {label}
-      </span>
+      <dd className='text-foreground leading-none font-bold'>{count}</dd>
     </div>
   </div>
 )

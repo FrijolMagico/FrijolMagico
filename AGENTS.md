@@ -5,6 +5,10 @@ Monorepo configuration for agentic coding assistants.
 **Generated**: 2026-02-11
 **Mode**: Update
 
+## Git Workflow
+
+Feature PRs → `dev` (squash merge). Release PR `dev→main` se auto-genera — merge a main cierra issues automáticamente.
+
 ## Monorepo Structure
 
 - **Turborepo** + Bun workspaces (`apps/*`, `packages/*`)
@@ -20,10 +24,17 @@ bun run dev:real               # Dev with DATA_SOURCE=real
 bun run build                  # Production build
 bun run lint                   # ESLint all apps
 bun run lint:fix               # ESLint with auto-fix
+bun run test                   # Run all workspace tests through Turbo
 bun run format                 # Prettier format
 bun run type-check             # TypeScript check
 bun run db:migrate             # Run DB migrations
 ```
+
+## Testing
+
+- Never run `bun test` from the repository root.
+- Run the full suite from the repository root with `bun run test`.
+- Run scoped tests from the repository root with `bun run test --filter=@frijolmagico/<workspace>` so Turbo preserves the workspace context.
 
 ## Code Style
 
@@ -43,9 +54,13 @@ bun run db:migrate             # Run DB migrations
 
 `DATA_SOURCE` env controls dev data:
 
-- Not set: Intelligent defaults (mock for CMS, local DB for database)
-- `real`: Production data sources
-- `local`: Local SQLite
+| Value | Behavior |
+|---|---|
+| Not set | Intelligent defaults (mock for CMS, local DB for database) |
+| `local` | Local SQLite. Some repos fall back to mock on query failure (internal fallback) |
+| `real` | Production data sources |
+
+> **Production (Vercel):** `DATA_SOURCE` is ignored. `VERCEL_ENV` is the sole source of truth. Always uses real data sources.
 
 ## App-Specific Agents
 
