@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Suspense } from 'react'
 
 import { TrackPageView } from '@/components/analytics/TrackPageView'
+import { ContextBar } from '@/components/context-bar/ContextBar'
 import { getActiveFestival } from '@/data/data-access-layer/festivals/getActiveFestival'
 
 import { getFestivalBySlug } from './lib/getFestivalBySlug'
@@ -99,6 +100,7 @@ export default async function FestivalDetailPage({
           <FestivalDetailContent detail={detail} navigator={navigator} />
         )}
       </main>
+      <ContextBar />
     </>
   )
 }

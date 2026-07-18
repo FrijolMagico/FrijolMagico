@@ -5,6 +5,7 @@ import siteData from '@/data/site.json'
 import { ErrorSection } from '@/components/ErrorSection'
 import { Grid } from '@/components/Grid'
 import { GridItem } from '@/components/GridItem'
+import { ContextBar } from '@/components/context-bar/ContextBar'
 import { getAboutData } from './lib/getAboutData'
 
 import type { Metadata } from 'next'
@@ -118,6 +119,7 @@ export default async function NosotrosPage() {
           </Grid>
         )}
       </main>
+      <ContextBar />
     </>
   )
 }

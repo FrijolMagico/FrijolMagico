@@ -7,6 +7,7 @@ import { FeaturedArtists } from './components/FeaturedArtists'
 import { FeaturedArtistsSkeleton } from './components/FeaturedArtistsSkeleton'
 import { Banner } from './components/banner'
 import { PodcastBanner } from './components/banner/PodcastBanner'
+import { ContextBar } from '@/components/context-bar/ContextBar'
 
 export default async function Home() {
   return (
@@ -67,6 +68,7 @@ export default async function Home() {
           {/* </article> */}
         </section>
       </main>
+      <ContextBar />
     </>
   )
 }
