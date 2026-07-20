@@ -73,6 +73,7 @@ export const artistImage = sqliteTable(
       .notNull()
       .references(() => artist.id),
     imagenUrl: text('imagen_url').notNull(),
+    artistAvatarVersion: text('imagen_version'),
     tipo: text('tipo', { enum: ['avatar', 'galeria'] }).notNull(),
     orden: integer('orden').notNull().default(1),
     metadata: text('metadata'),
