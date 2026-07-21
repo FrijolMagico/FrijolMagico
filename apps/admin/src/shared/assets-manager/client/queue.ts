@@ -44,6 +44,21 @@ export interface AssetQueueOperations {
   persist: (job: AssetQueueJob) => Promise<void>
 }
 
+export interface AssetQueueRetryOptions {
+  maxRetries?: number
+  baseDelay?: number
+  timeout?: number
+}
+
+type RetryStep = NonNullable<AssetQueueJob['failedStep']>
+
+interface RetryReservation {
+  token: string
+  entityId: string
+  generation: number
+  step: RetryStep
+}
+
 const TERMINAL = new Set<AssetQueueStatus>([
   ASSET_QUEUE_STATUS.COMPLETED,
   ASSET_QUEUE_STATUS.FAILED,
@@ -66,6 +81,8 @@ export interface AssetQueue {
   completeUpload: (jobId: string) => void
   completePersistence: (jobId: string) => void
   fail: (jobId: string, error: string) => void
+  retryUpload: (jobId: string) => Promise<void>
+  retryPersistence: (jobId: string) => Promise<void>
   cancel: (jobId: string) => void
   remove: (jobId: string) => void
   subscribe: (listener: Listener) => () => void
@@ -78,12 +95,18 @@ export interface AssetQueue {
 
 export function createAssetQueue(
   createId: () => string = () => crypto.randomUUID(),
-  _operations?: AssetQueueOperations
+  operations?: Partial<AssetQueueOperations>,
+  retryOptions: AssetQueueRetryOptions = {}
 ): AssetQueue {
-  void _operations // stored for external retry orchestration (#97)
   let snapshot: AssetQueueSnapshot = { jobs: [], activeJobId: null }
   const knownJobIds = new Set<string>()
   const listeners = new Set<Listener>()
+  const retries = new Map<string, number>()
+  const reservations = new Map<string, RetryReservation>()
+  const generations = new Map<string, number>()
+  const maxRetries = Math.max(0, retryOptions.maxRetries ?? 3)
+  const baseDelay = Math.max(0, retryOptions.baseDelay ?? 250)
+  const timeout = Math.max(1, retryOptions.timeout ?? 30_000)
 
   const notify = () => {
     for (const listener of listeners) listener()
@@ -101,6 +124,122 @@ export function createAssetQueue(
     job.preview?.release()
   }
 
+  const retryKey = (jobId: string, step: RetryStep) => `${jobId}:${step}`
+  const wait = (delay: number) => new Promise<void>((resolve) => setTimeout(resolve, delay))
+
+  const isReserved = (
+    jobId: string,
+    reservation: RetryReservation,
+    status: AssetQueueStatus,
+    failedStep?: RetryStep
+  ) => {
+    const job = jobFor(jobId)
+    return (
+      reservations.get(jobId)?.token === reservation.token &&
+      generations.get(reservation.entityId) === reservation.generation &&
+      job?.status === status &&
+      (failedStep === undefined || job.failedStep === failedStep) &&
+      snapshot.activeJobId === (status === ASSET_QUEUE_STATUS.FAILED ? null : jobId)
+    )
+  }
+
+  const retry = async (jobId: string, step: RetryStep) => {
+    const operation = operations?.[step === 'upload' ? 'upload' : 'persist']
+    const job = jobFor(jobId)
+    const key = retryKey(jobId, step)
+    if (
+      !operation ||
+      !job ||
+      job.status !== ASSET_QUEUE_STATUS.FAILED ||
+      job.failedStep !== step ||
+      snapshot.activeJobId !== null ||
+      reservations.has(jobId) ||
+      (retries.get(key) ?? 0) >= maxRetries
+    )
+      return
+
+    const reservation: RetryReservation = {
+      token: createId(),
+      entityId: job.entityId,
+      generation: generations.get(job.entityId) ?? 0,
+      step
+    }
+    reservations.set(jobId, reservation)
+    retries.set(key, (retries.get(key) ?? 0) + 1)
+    await wait(baseDelay * 2 ** ((retries.get(key) ?? 1) - 1))
+    if (!isReserved(jobId, reservation, ASSET_QUEUE_STATUS.FAILED, step)) return
+
+    const activeStatus = step === 'upload'
+      ? ASSET_QUEUE_STATUS.UPLOADING
+      : ASSET_QUEUE_STATUS.PERSISTING
+    snapshot = {
+      activeJobId: jobId,
+      jobs: snapshot.jobs.map((current) =>
+        current.jobId === jobId ? { ...current, status: activeStatus } : current
+      )
+    }
+    notify()
+
+    let timeoutId: ReturnType<typeof setTimeout> | undefined
+    try {
+      await Promise.race([
+        operation(cloneJob(jobFor(jobId)!)),
+        new Promise<never>((_, reject) => {
+          timeoutId = setTimeout(() => reject(new Error('Retry timed out')), timeout)
+        })
+      ])
+      if (!isReserved(jobId, reservation, activeStatus)) return
+      const current = jobFor(jobId)!
+      if (step === 'upload') {
+        snapshot = {
+          activeJobId: jobId,
+          jobs: snapshot.jobs.map((candidate) =>
+            candidate.jobId === jobId
+              ? {
+                  ...candidate,
+                  status: ASSET_QUEUE_STATUS.PERSISTING,
+                  sentBytes: candidate.totalBytes
+                }
+              : candidate
+          )
+        }
+      } else {
+        release(current)
+        snapshot = {
+          activeJobId: null,
+          jobs: snapshot.jobs.map((candidate) =>
+            candidate.jobId === jobId
+              ? { ...candidate, status: ASSET_QUEUE_STATUS.COMPLETED, preview: null }
+              : candidate
+          )
+        }
+      }
+      notify()
+    } catch (error) {
+      if (isReserved(jobId, reservation, activeStatus)) {
+        snapshot = {
+          activeJobId: null,
+          jobs: snapshot.jobs.map((candidate) =>
+            candidate.jobId === jobId
+              ? {
+                  ...candidate,
+                  status: ASSET_QUEUE_STATUS.FAILED,
+                  error: error instanceof Error ? error.message : 'Retry failed',
+                  failedStep: step
+                }
+              : candidate
+          )
+        }
+        notify()
+      }
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId)
+      if (reservations.get(jobId)?.token === reservation.token) {
+        reservations.delete(jobId)
+      }
+    }
+  }
+
   // Unified guard: returns the job or undefined. Throws when the jobId was
   // never created (prevents programming errors). Silently returns undefined
   // when the job was removed (allows late-callback immunity).
@@ -113,6 +252,10 @@ export function createAssetQueue(
 
   return {
     enqueue(target, entityId, preparedAsset, preview) {
+      generations.set(entityId, (generations.get(entityId) ?? 0) + 1)
+      for (const [jobId, reservation] of reservations) {
+        if (reservation.entityId === entityId) reservations.delete(jobId)
+      }
       // Generation race — auto-cancel any non-terminal job with same entityId
       const existing = snapshot.jobs.find(
         (j) => j.entityId === entityId && !TERMINAL.has(j.status)
@@ -244,6 +387,14 @@ export function createAssetQueue(
         )
       }
       notify()
+    },
+
+    retryUpload(jobId) {
+      return retry(jobId, 'upload')
+    },
+
+    retryPersistence(jobId) {
+      return retry(jobId, 'persist')
     },
 
     cancel(jobId) {

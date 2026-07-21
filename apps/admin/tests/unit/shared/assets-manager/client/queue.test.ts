@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test'
+import { describe, expect, mock, test } from 'bun:test'
 
 import { ASSET_TARGET } from '../../../../../src/shared/assets-manager/client/contracts'
 import type { LocalPreviewHandle } from '../../../../../src/shared/assets-manager/client/contracts'
@@ -6,7 +6,10 @@ import {
   createAssetQueue,
   ASSET_QUEUE_STATUS
 } from '../../../../../src/shared/assets-manager/client/queue'
-import type { AssetQueueJob } from '../../../../../src/shared/assets-manager/client/queue'
+import type {
+  AssetQueueJob,
+  AssetQueueOperations
+} from '../../../../../src/shared/assets-manager/client/queue'
 
 const preparedAsset = {
   blob: new Blob(['data'], { type: 'image/webp' }),
@@ -15,8 +18,22 @@ const preparedAsset = {
   mimeType: 'image/webp' as const
 }
 
-function createQueue() {
-  return createAssetQueue(() => crypto.randomUUID())
+function createQueue(
+  operations?: Partial<AssetQueueOperations>,
+  retryOptions?: { baseDelay?: number; timeout?: number; maxRetries?: number }
+) {
+  return createAssetQueue(() => crypto.randomUUID(), operations, retryOptions)
+}
+
+function failedJob(
+  queue: ReturnType<typeof createQueue>,
+  step: 'upload' | 'persist' = 'upload'
+) {
+  const job = queue.enqueue(ASSET_TARGET.EDITION_POSTER, crypto.randomUUID(), preparedAsset)
+  queue.startUpload(job.jobId)
+  if (step === 'persist') queue.completeUpload(job.jobId)
+  queue.fail(job.jobId, 'failed')
+  return job
 }
 
 const preview: LocalPreviewHandle = {
@@ -559,5 +576,91 @@ describe('active job', () => {
 
     queue.completePersistence(job.jobId)
     expect(queue.getSnapshot().activeJobId).toBeNull()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 13. Retry orchestration
+// ---------------------------------------------------------------------------
+describe('retry orchestration', () => {
+  test('retries only the failed operation after restoring its state', async () => {
+    let queue = createQueue()
+    const upload = mock(async () => {
+      expect(queue.getSnapshot().jobs[0]?.status).toBe(ASSET_QUEUE_STATUS.UPLOADING)
+    })
+    const persist = mock(async () => {
+      expect(queue.getSnapshot().jobs[0]?.status).toBe(ASSET_QUEUE_STATUS.PERSISTING)
+    })
+    queue = createQueue({ upload, persist }, { baseDelay: 0 })
+
+    const uploadJob = failedJob(queue)
+    await queue.retryUpload(uploadJob.jobId)
+    expect(upload).toHaveBeenCalledTimes(1)
+    expect(persist).not.toHaveBeenCalled()
+    queue.completePersistence(uploadJob.jobId)
+
+    const persistJob = failedJob(queue, 'persist')
+    await queue.retryPersistence(persistJob.jobId)
+    expect(persist).toHaveBeenCalledTimes(1)
+    expect(upload).toHaveBeenCalledTimes(1)
+  })
+
+  test('preserves failed jobs for invalid retries, occupied slots, and exhausted attempts', async () => {
+    const upload = mock(async () => {})
+    const queue = createQueue({ upload }, { baseDelay: 0, maxRetries: 1 })
+    const job = failedJob(queue)
+    const before = queue.getSnapshot()
+
+    await queue.retryPersistence(job.jobId)
+    await queue.retryUpload('missing')
+    expect(queue.getSnapshot()).toEqual(before)
+
+    const active = queue.enqueue(ASSET_TARGET.EDITION_POSTER, 'active', preparedAsset)
+    queue.startUpload(active.jobId)
+    await queue.retryUpload(job.jobId)
+    queue.fail(active.jobId, 'active failed')
+    expect(upload).not.toHaveBeenCalled()
+
+    await queue.retryUpload(job.jobId)
+    queue.fail(job.jobId, 'again')
+    const exhausted = queue.getSnapshot()
+    await queue.retryUpload(job.jobId)
+    expect(queue.getSnapshot()).toEqual(exhausted)
+    expect(upload).toHaveBeenCalledTimes(1)
+  })
+
+  test('invalidates a pending retry when the same entity is replaced', async () => {
+    const upload = mock(async () => {})
+    const queue = createQueue({ upload }, { baseDelay: 10 })
+    const job = failedJob(queue)
+    const retry = queue.retryUpload(job.jobId)
+    queue.enqueue(ASSET_TARGET.EDITION_POSTER, job.entityId, preparedAsset)
+    await retry
+
+    expect(upload).not.toHaveBeenCalled()
+    expect(queue.getSnapshot().jobs[0]?.status).toBe(ASSET_QUEUE_STATUS.FAILED)
+  })
+
+  test('fails timed-out or rejected retries and ignores late completion and replacement', async () => {
+    let resolveUpload!: () => void
+    const pending = new Promise<void>((resolve) => { resolveUpload = resolve })
+    const queue = createQueue(
+      { upload: mock(() => pending), persist: async () => { throw new Error('nope') } },
+      { baseDelay: 0, timeout: 5 }
+    )
+    const job = failedJob(queue)
+    await queue.retryUpload(job.jobId)
+    expect(queue.getSnapshot().jobs[0]?.failedStep).toBe('upload')
+
+    resolveUpload()
+    await Bun.sleep(0)
+    expect(queue.getSnapshot().jobs[0]?.status).toBe(ASSET_QUEUE_STATUS.FAILED)
+
+    const persistenceJob = failedJob(queue, 'persist')
+    await queue.retryPersistence(persistenceJob.jobId)
+    expect(queue.getSnapshot().jobs[1]?.failedStep).toBe('persist')
+
+    const replacement = queue.enqueue(ASSET_TARGET.EDITION_POSTER, job.entityId, preparedAsset)
+    expect(replacement.status).toBe(ASSET_QUEUE_STATUS.ENQUEUED)
   })
 })
