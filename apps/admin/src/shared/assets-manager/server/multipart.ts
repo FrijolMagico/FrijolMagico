@@ -1,4 +1,5 @@
 import type { AssetTarget } from '../client/contracts'
+import type { ManagedAssetReference } from '../managed-asset-reference'
 
 import { ValidationError } from './validation-error'
 
@@ -13,6 +14,14 @@ export interface AssetUploadPayload {
   preparedHeight: number
 }
 
+export interface AssetReplacementPayload extends AssetUploadPayload {
+  currentRef: ManagedAssetReference
+}
+
+interface RequiredReplacementOptions {
+  requireCurrentReference: true
+}
+
 function parseAssetTarget(value: string): AssetTarget {
   if (value !== 'artist-avatar' && value !== 'edition-poster') {
     throw new ValidationError(`Invalid asset target: ${value}`, 'assetTarget')
@@ -23,12 +32,23 @@ function parseAssetTarget(value: string): AssetTarget {
 function parsePositiveInt(value: string, field: string): number {
   const num = Number(value)
   if (!Number.isInteger(num) || num <= 0) {
-    throw new ValidationError(`Invalid ${field}: must be a positive integer`, field)
+    throw new ValidationError(
+      `Invalid ${field}: must be a positive integer`,
+      field
+    )
   }
   return num
 }
 
-export async function parseAssetUpload(request: Request): Promise<AssetUploadPayload> {
+export function parseAssetUpload(
+  request: Request,
+  options: RequiredReplacementOptions
+): Promise<AssetReplacementPayload>
+export function parseAssetUpload(request: Request): Promise<AssetUploadPayload>
+export async function parseAssetUpload(
+  request: Request,
+  options?: RequiredReplacementOptions
+): Promise<AssetUploadPayload | AssetReplacementPayload> {
   const contentLength = request.headers.get('content-length')
 
   if (contentLength) {
@@ -36,7 +56,7 @@ export async function parseAssetUpload(request: Request): Promise<AssetUploadPay
     if (!Number.isFinite(size) || size > MAX_CONTENT_LENGTH) {
       throw new ValidationError(
         `Request size exceeds maximum allowed size of ${MAX_CONTENT_LENGTH} bytes`,
-        'content-length',
+        'content-length'
       )
     }
   }
@@ -50,7 +70,10 @@ export async function parseAssetUpload(request: Request): Promise<AssetUploadPay
 
   const assetTargetRaw = formData.get('assetTarget')
   if (typeof assetTargetRaw !== 'string' || !assetTargetRaw) {
-    throw new ValidationError('Missing or invalid assetTarget field', 'assetTarget')
+    throw new ValidationError(
+      'Missing or invalid assetTarget field',
+      'assetTarget'
+    )
   }
   const target = parseAssetTarget(assetTargetRaw)
 
@@ -70,22 +93,51 @@ export async function parseAssetUpload(request: Request): Promise<AssetUploadPay
 
   const preparedWidthRaw = formData.get('preparedWidth')
   if (typeof preparedWidthRaw !== 'string') {
-    throw new ValidationError('Missing or invalid preparedWidth field', 'preparedWidth')
+    throw new ValidationError(
+      'Missing or invalid preparedWidth field',
+      'preparedWidth'
+    )
   }
   const preparedWidth = parsePositiveInt(preparedWidthRaw, 'preparedWidth')
 
   const preparedHeightRaw = formData.get('preparedHeight')
   if (typeof preparedHeightRaw !== 'string') {
-    throw new ValidationError('Missing or invalid preparedHeight field', 'preparedHeight')
+    throw new ValidationError(
+      'Missing or invalid preparedHeight field',
+      'preparedHeight'
+    )
   }
   const preparedHeight = parsePositiveInt(preparedHeightRaw, 'preparedHeight')
 
-  return {
+  const payload: AssetUploadPayload = {
     target,
     entityId,
     blob,
     mimeType: 'image/webp',
     preparedWidth,
-    preparedHeight,
-  } as AssetUploadPayload
+    preparedHeight
+  }
+
+  if (!options?.requireCurrentReference) {
+    return payload
+  }
+
+  const currentPath = formData.get('currentPath')
+  const currentVersion = formData.get('currentVersion')
+  if (
+    typeof currentPath !== 'string' ||
+    !currentPath ||
+    typeof currentVersion !== 'string' ||
+    !currentVersion
+  ) {
+    throw new ValidationError(
+      'Missing or invalid currentPath/currentVersion fields',
+      'currentReference'
+    )
+  }
+
+  return {
+    ...payload,
+    currentRef: { path: currentPath, version: currentVersion }
+  }
 }

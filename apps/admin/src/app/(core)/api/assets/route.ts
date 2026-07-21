@@ -5,7 +5,10 @@ import { NextResponse } from 'next/server'
 import { getSession } from '@/shared/lib/auth/utils'
 import { parseAssetUpload } from '@/shared/assets-manager/server/multipart'
 import { validatePreparedSize } from '@/shared/assets-manager/server/validation'
-import { R2Adapter, createR2Config } from '@/shared/assets-manager/server/r2-adapter'
+import {
+  R2Adapter,
+  createR2Config
+} from '@/shared/assets-manager/server/r2-adapter'
 import { ValidationError } from '@/shared/assets-manager/server/validation-error'
 import { AssetStoreError } from '@/shared/assets-manager/server/asset-store-error'
 
@@ -24,14 +27,18 @@ export async function POST(request: Request) {
   try {
     const payload = await parseAssetUpload(request)
 
-    validatePreparedSize(payload.target, payload.preparedWidth, payload.preparedHeight)
+    validatePreparedSize(
+      payload.target,
+      payload.preparedWidth,
+      payload.preparedHeight
+    )
 
     const store = getStore()
     const ref = await store.uploadAsset(
       payload.target,
       payload.entityId,
       payload.blob,
-      payload.mimeType,
+      payload.mimeType
     )
 
     return NextResponse.json(ref, { status: 200 })
@@ -39,17 +46,23 @@ export async function POST(request: Request) {
     if (error instanceof ValidationError) {
       return NextResponse.json(
         { error: error.message, field: error.field },
-        { status: 400 },
+        { status: 400 }
       )
     }
 
     if (error instanceof AssetStoreError) {
       console.error('[assets] AssetStore error:', error)
-      return NextResponse.json({ error: 'Failed to process asset' }, { status: 500 })
+      return NextResponse.json(
+        { error: 'Failed to process asset' },
+        { status: 500 }
+      )
     }
 
     console.error('[assets] Unexpected error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
 }
 
@@ -61,25 +74,23 @@ export async function PUT(request: Request) {
   }
 
   try {
-    const payload = await parseAssetUpload(request)
+    const payload = await parseAssetUpload(request, {
+      requireCurrentReference: true
+    })
 
-    validatePreparedSize(payload.target, payload.preparedWidth, payload.preparedHeight)
-
-    const formData = await request.formData()
-    const currentPathRaw = formData.get('currentPath')
-    const currentVersionRaw = formData.get('currentVersion')
-    const currentRef = {
-      path: typeof currentPathRaw === 'string' ? currentPathRaw : null,
-      version: typeof currentVersionRaw === 'string' ? currentVersionRaw : null,
-    }
+    validatePreparedSize(
+      payload.target,
+      payload.preparedWidth,
+      payload.preparedHeight
+    )
 
     const store = getStore()
     const ref = await store.replaceAsset(
       payload.target,
       payload.entityId,
-      currentRef,
+      payload.currentRef,
       payload.blob,
-      payload.mimeType,
+      payload.mimeType
     )
 
     return NextResponse.json(ref, { status: 200 })
@@ -87,17 +98,23 @@ export async function PUT(request: Request) {
     if (error instanceof ValidationError) {
       return NextResponse.json(
         { error: error.message, field: error.field },
-        { status: 400 },
+        { status: 400 }
       )
     }
 
     if (error instanceof AssetStoreError) {
       console.error('[assets] AssetStore error:', error)
-      return NextResponse.json({ error: 'Failed to process asset' }, { status: 500 })
+      return NextResponse.json(
+        { error: 'Failed to process asset' },
+        { status: 500 }
+      )
     }
 
     console.error('[assets] Unexpected error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
 }
 
@@ -116,7 +133,7 @@ export async function DELETE(request: Request) {
     if (!path || !version) {
       return NextResponse.json(
         { error: 'Missing required query parameters: path, version' },
-        { status: 400 },
+        { status: 400 }
       )
     }
 
@@ -128,10 +145,16 @@ export async function DELETE(request: Request) {
   } catch (error) {
     if (error instanceof AssetStoreError) {
       console.error('[assets] AssetStore error:', error)
-      return NextResponse.json({ error: 'Failed to delete asset' }, { status: 500 })
+      return NextResponse.json(
+        { error: 'Failed to delete asset' },
+        { status: 500 }
+      )
     }
 
     console.error('[assets] Unexpected error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
 }
