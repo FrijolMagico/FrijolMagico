@@ -83,3 +83,4 @@ skills-lock.json
 .pi/
 .sdd/
 mock.local.db
+.codegraph/
