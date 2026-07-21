@@ -21,7 +21,7 @@ function createMockRequest(overrides: {
 
   return {
     headers: new Headers(headers),
-    formData: mock(async () => formData),
+    formData: mock(async () => formData)
   } as unknown as Request
 }
 
@@ -34,8 +34,8 @@ describe('parseAssetUpload', () => {
         entityId: 'artist-123',
         blob: new Blob(['fake-webp'], { type: 'image/webp' }),
         preparedWidth: '800',
-        preparedHeight: '800',
-      },
+        preparedHeight: '800'
+      }
     })
 
     const result = await parseAssetUpload(request)
@@ -55,8 +55,8 @@ describe('parseAssetUpload', () => {
         entityId: 'edition-456',
         blob: new Blob(['fake-webp'], { type: 'image/webp' }),
         preparedWidth: '800',
-        preparedHeight: '600',
-      },
+        preparedHeight: '600'
+      }
     })
 
     const result = await parseAssetUpload(request)
@@ -67,9 +67,65 @@ describe('parseAssetUpload', () => {
     expect(result.preparedHeight).toBe(600)
   })
 
+  it('parses a complete required replacement reference', async () => {
+    const request = createMockRequest({
+      fields: {
+        assetTarget: 'artist-avatar',
+        entityId: 'artist-123',
+        blob: new Blob(['fake-webp'], { type: 'image/webp' }),
+        preparedWidth: '800',
+        preparedHeight: '800',
+        currentPath: 'artist-avatar/artist-123/current.webp',
+        currentVersion: 'current-version'
+      }
+    })
+
+    const result = await parseAssetUpload(request, {
+      requireCurrentReference: true
+    })
+
+    expect(result.currentRef).toEqual({
+      path: 'artist-avatar/artist-123/current.webp',
+      version: 'current-version'
+    })
+  })
+
+  it('rejects a missing required replacement reference', async () => {
+    const request = createMockRequest({
+      fields: {
+        assetTarget: 'artist-avatar',
+        entityId: 'artist-123',
+        blob: new Blob(['fake-webp'], { type: 'image/webp' }),
+        preparedWidth: '800',
+        preparedHeight: '800'
+      }
+    })
+
+    expect(
+      parseAssetUpload(request, { requireCurrentReference: true })
+    ).rejects.toThrow(ValidationError)
+  })
+
+  it('rejects a partial required replacement reference', async () => {
+    const request = createMockRequest({
+      fields: {
+        assetTarget: 'artist-avatar',
+        entityId: 'artist-123',
+        blob: new Blob(['fake-webp'], { type: 'image/webp' }),
+        preparedWidth: '800',
+        preparedHeight: '800',
+        currentVersion: 'current-version'
+      }
+    })
+
+    expect(
+      parseAssetUpload(request, { requireCurrentReference: true })
+    ).rejects.toThrow(ValidationError)
+  })
+
   it('rejects payload exceeding content-length limit', async () => {
     const request = createMockRequest({
-      contentLength: String(2 * 1024 * 1024), // 2 MiB > 1.25 MiB
+      contentLength: String(2 * 1024 * 1024) // 2 MiB > 1.25 MiB
     })
 
     expect(parseAssetUpload(request)).rejects.toThrow(ValidationError)
@@ -82,8 +138,8 @@ describe('parseAssetUpload', () => {
         entityId: 'x',
         blob: new Blob(['test'], { type: 'image/webp' }),
         preparedWidth: '800',
-        preparedHeight: '800',
-      },
+        preparedHeight: '800'
+      }
     })
 
     expect(parseAssetUpload(request)).rejects.toThrow(ValidationError)
@@ -95,8 +151,8 @@ describe('parseAssetUpload', () => {
         assetTarget: 'artist-avatar',
         blob: new Blob(['test'], { type: 'image/webp' }),
         preparedWidth: '800',
-        preparedHeight: '800',
-      },
+        preparedHeight: '800'
+      }
     })
 
     expect(parseAssetUpload(request)).rejects.toThrow(ValidationError)
@@ -108,8 +164,8 @@ describe('parseAssetUpload', () => {
         assetTarget: 'artist-avatar',
         entityId: 'x',
         preparedWidth: '800',
-        preparedHeight: '800',
-      },
+        preparedHeight: '800'
+      }
     })
 
     expect(parseAssetUpload(request)).rejects.toThrow(ValidationError)
@@ -122,8 +178,8 @@ describe('parseAssetUpload', () => {
         entityId: 'x',
         blob: new Blob(['test'], { type: 'image/webp' }),
         preparedWidth: '0',
-        preparedHeight: '800',
-      },
+        preparedHeight: '800'
+      }
     })
 
     expect(parseAssetUpload(request)).rejects.toThrow(ValidationError)
