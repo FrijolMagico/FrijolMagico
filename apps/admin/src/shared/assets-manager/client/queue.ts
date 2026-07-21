@@ -175,7 +175,9 @@ export function createAssetQueue(
     snapshot = {
       activeJobId: jobId,
       jobs: snapshot.jobs.map((current) =>
-        current.jobId === jobId ? { ...current, status: activeStatus } : current
+        current.jobId === jobId
+          ? { ...current, status: activeStatus, error: null, failedStep: null }
+          : current
       )
     }
     notify()
@@ -209,7 +211,7 @@ export function createAssetQueue(
           activeJobId: null,
           jobs: snapshot.jobs.map((candidate) =>
             candidate.jobId === jobId
-              ? { ...candidate, status: ASSET_QUEUE_STATUS.COMPLETED, preview: null }
+              ? { ...candidate, status: ASSET_QUEUE_STATUS.COMPLETED, preview: null, error: null, failedStep: null }
               : candidate
           )
         }
