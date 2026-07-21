@@ -663,4 +663,41 @@ describe('retry orchestration', () => {
     const replacement = queue.enqueue(ASSET_TARGET.EDITION_POSTER, job.entityId, preparedAsset)
     expect(replacement.status).toBe(ASSET_QUEUE_STATUS.ENQUEUED)
   })
+
+  test('clears residual error and failedStep after a successful upload retry', async () => {
+    const queue = createQueue(
+      { upload: mock(async () => {}) },
+      { baseDelay: 0 }
+    )
+    const job = failedJob(queue)
+    expect(queue.getSnapshot().jobs[0]?.error).toBe('failed')
+    expect(queue.getSnapshot().jobs[0]?.failedStep).toBe('upload')
+
+    await queue.retryUpload(job.jobId)
+    // After the upload retry, the retry function transitions to PERSISTING internally;
+    // the caller must complete persistence externally.
+    queue.completePersistence(job.jobId)
+
+    const final = queue.getSnapshot().jobs[0]
+    expect(final?.status).toBe(ASSET_QUEUE_STATUS.COMPLETED)
+    expect(final?.error).toBeNull()
+    expect(final?.failedStep).toBeNull()
+  })
+
+  test('clears residual error and failedStep after a successful persist retry', async () => {
+    const queue = createQueue(
+      { persist: mock(async () => {}) },
+      { baseDelay: 0 }
+    )
+    const job = failedJob(queue, 'persist')
+    expect(queue.getSnapshot().jobs[0]?.error).toBe('failed')
+    expect(queue.getSnapshot().jobs[0]?.failedStep).toBe('persist')
+
+    await queue.retryPersistence(job.jobId)
+
+    const final = queue.getSnapshot().jobs[0]
+    expect(final?.status).toBe(ASSET_QUEUE_STATUS.COMPLETED)
+    expect(final?.error).toBeNull()
+    expect(final?.failedStep).toBeNull()
+  })
 })
