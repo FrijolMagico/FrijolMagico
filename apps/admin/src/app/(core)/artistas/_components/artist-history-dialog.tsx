@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import {
   IconMail,
   IconUser,
@@ -222,6 +223,7 @@ function ArtistHistoryDialogContent({
     }
 
     setIsSaving(false)
+    toast.success('Elemento de historial agregado exitosamente')
     closeDialog()
     router.refresh()
   }
