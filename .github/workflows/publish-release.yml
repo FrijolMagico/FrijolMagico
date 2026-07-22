@@ -1,0 +1,258 @@
+name: Publish Release
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: publish-release-main
+  cancel-in-progress: false
+
+jobs:
+  publish-release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      # ----------------------------------------------------------------------
+      # 1. Crear token temporal de la GitHub App
+      # ----------------------------------------------------------------------
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-issues: write
+          permission-pull-requests: read
+
+      # ----------------------------------------------------------------------
+      # 2. Checkout exacto del commit que llegó a main
+      # ----------------------------------------------------------------------
+      - name: Checkout released commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # ----------------------------------------------------------------------
+      # 3. Crear tag, GitHub Release y actualizar labels
+      # ----------------------------------------------------------------------
+      - name: Publish release
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const fs = require('node:fs');
+
+            const { owner, repo } = context.repo;
+
+            async function ensureLabel(name, color, description) {
+              try {
+                await github.rest.issues.getLabel({
+                  owner,
+                  repo,
+                  name,
+                });
+              } catch (error) {
+                if (error.status !== 404) {
+                  throw error;
+                }
+
+                await github.rest.issues.createLabel({
+                  owner,
+                  repo,
+                  name,
+                  color,
+                  description,
+                });
+              }
+            }
+
+            const packageJson = JSON.parse(
+              fs.readFileSync('package.json', 'utf8')
+            );
+
+            const version = packageJson.version;
+
+            if (
+              typeof version !== 'string' ||
+              !/^\d+\.\d+\.\d+$/.test(version)
+            ) {
+              throw new Error(
+                `Versión inválida en package.json: ${version}`
+              );
+            }
+
+            const tagName = `v${version}`;
+
+            // ----------------------------------------------------------------
+            // 1. Comprobar si la release ya fue publicada
+            // ----------------------------------------------------------------
+            let tagExists = false;
+
+            try {
+              await github.rest.git.getRef({
+                owner,
+                repo,
+                ref: `tags/${tagName}`,
+              });
+
+              tagExists = true;
+            } catch (error) {
+              if (error.status !== 404) {
+                throw error;
+              }
+            }
+
+            if (tagExists) {
+              console.log(
+                `${tagName} ya existe. No se vuelve a publicar.`
+              );
+              return;
+            }
+
+            // ----------------------------------------------------------------
+            // 2. Obtener los PR incluidos en esta release
+            // ----------------------------------------------------------------
+            const releasePendingItems = await github.paginate(
+              github.rest.search.issuesAndPullRequests,
+              {
+                q: [
+                  `repo:${owner}/${repo}`,
+                  'is:pr',
+                  'label:release-pending',
+                ].join(' '),
+                sort: 'updated',
+                order: 'asc',
+                per_page: 100,
+              }
+            );
+
+            /*
+             * Medida de seguridad:
+             *
+             * Un cambio normal en main que no contenga una release pendiente
+             * no debe producir automáticamente una versión nueva.
+             */
+            if (releasePendingItems.length === 0) {
+              console.log(
+                'No existen PR con release-pending. Se omite la publicación.'
+              );
+              return;
+            }
+
+            const includedPullRequests = [];
+
+            for (const item of releasePendingItems) {
+              const { data: pullRequest } =
+                await github.rest.pulls.get({
+                  owner,
+                  repo,
+                  pull_number: item.number,
+                });
+
+              includedPullRequests.push(pullRequest);
+            }
+
+            // ----------------------------------------------------------------
+            // 3. Crear tag sobre el SHA exacto que llegó a main
+            // ----------------------------------------------------------------
+            await github.rest.git.createRef({
+              owner,
+              repo,
+              ref: `refs/tags/${tagName}`,
+              sha: context.sha,
+            });
+
+            console.log(
+              `Tag ${tagName} creado sobre ${context.sha}.`
+            );
+
+            // ----------------------------------------------------------------
+            // 4. Construir notas de release
+            // ----------------------------------------------------------------
+            let releaseBody = '';
+            releaseBody += `## Changes\n\n`;
+
+            for (const pullRequest of includedPullRequests) {
+              releaseBody +=
+                `- #${pullRequest.number} — ` +
+                `${pullRequest.title} ` +
+                `(@${pullRequest.user.login})\n`;
+            }
+
+            releaseBody += '\n';
+            releaseBody += `Commit: \`${context.sha}\`\n`;
+
+            // ----------------------------------------------------------------
+            // 5. Crear GitHub Release
+            // ----------------------------------------------------------------
+            await github.rest.repos.createRelease({
+              owner,
+              repo,
+              tag_name: tagName,
+              target_commitish: context.sha,
+              name: tagName,
+              body: releaseBody,
+              draft: false,
+              prerelease: false,
+              generate_release_notes: false,
+            });
+
+            console.log(`GitHub Release ${tagName} creada.`);
+
+            // ----------------------------------------------------------------
+            // 6. Actualizar estados de los PR
+            // ----------------------------------------------------------------
+            await ensureLabel(
+              'release-pending',
+              'FBCA04',
+              'Included in the current release PR but not yet published'
+            );
+
+            await ensureLabel(
+              'released',
+              '0E8A16',
+              'Published as part of an official release'
+            );
+
+            for (const pullRequest of includedPullRequests) {
+              try {
+                await github.rest.issues.removeLabel({
+                  owner,
+                  repo,
+                  issue_number: pullRequest.number,
+                  name: 'release-pending',
+                });
+              } catch (error) {
+                if (error.status !== 404) {
+                  throw error;
+                }
+              }
+
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: pullRequest.number,
+                labels: ['released'],
+              });
+
+              console.log(
+                `PR #${pullRequest.number}: release-pending → released`
+              );
+            }
+
+            console.log(
+              `Release ${tagName} publicada correctamente.`
+            );
