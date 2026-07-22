@@ -8,7 +8,7 @@ jobs:
   release-pr:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
       issues: read
     steps:
@@ -16,9 +16,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       - uses: actions/github-script@v7
         with:
           script: |
+            const { execSync } = require('child_process');
             const { owner, repo } = context.repo;
 
             // --- 1. Find PRs merged to dev since last dev→main merge ---
@@ -52,10 +57,11 @@ jobs:
               return;
             }
 
-            // --- 2. Build release body ---
+            // --- 2. Build release body + determine bump level ---
             let body = '# Release PR: dev → main\n\n';
             body += '## 📋 Changes included\n\n';
             const issueRefs = [];
+            let level = 'patch';
 
             for (const item of search.items) {
               const { data: pr } = await github.rest.pulls.get({
@@ -64,6 +70,19 @@ jobs:
               });
 
               body += `- **#${pr.number}** — ${pr.title}\n`;
+
+              // Determine bump level from labels and title
+              const labels = pr.labels.map((l) => l.name);
+              if (labels.includes('major') || pr.title.includes('!:')) {
+                level = 'major';
+              } else if (
+                level !== 'major' &&
+                (labels.includes('minor') ||
+                  pr.title.startsWith('feat:') ||
+                  pr.title.startsWith('feat('))
+              ) {
+                level = 'minor';
+              }
 
               const matches = pr.body?.matchAll(
                 /\b(?:close|fix|resolve)[sd]?\s+#(\d+)\b/gi
@@ -84,7 +103,53 @@ jobs:
               body += issueRefs.join(', ');
             }
 
-            // --- 3. Create or update PR dev → main ---
+            // --- 3. Version bump (with no-op guard) ---
+            let version;
+            let skipBump = false;
+
+            // No-op guard: check if latest tag is ancestor of HEAD
+            try {
+              const latestTag = execSync('git describe --tags --abbrev=0')
+                .toString()
+                .trim();
+              execSync(`git merge-base --is-ancestor ${latestTag} HEAD`, {
+                stdio: 'ignore',
+              });
+              skipBump = true;
+              console.log(
+                `No-op guard: tag ${latestTag} is ancestor of HEAD — skipping bump`
+              );
+            } catch (_e) {
+              // Tag doesn't exist or is not ancestor → proceed with bump
+            }
+
+            if (!skipBump) {
+              const versionOutput = execSync(
+                `npm version --no-git-tag-version ${level}`
+              )
+                .toString()
+                .trim();
+              version = versionOutput.replace(/^v?/, '');
+              execSync('git add package.json', { stdio: 'pipe' });
+              execSync(`git commit -m "chore(release): bump to v${version}"`, {
+                stdio: 'pipe',
+              });
+              execSync(`git tag v${version}`, { stdio: 'pipe' });
+              console.log(`✅ Versión bumpada a v${version} (${level})`);
+
+              // Add version header to body
+              body = `## 🏷️ Version\n\n**v${version}** (_${level}_ bump)\n\n---\n\n${body}`;
+            } else {
+              // Read current version from package.json
+              const pkgRaw = execSync(
+                'node -p "JSON.parse(require(\'fs\').readFileSync(\'package.json\',\'utf8\')).version"'
+              )
+                .toString()
+                .trim();
+              version = pkgRaw;
+            }
+
+            // --- 4. Create or update PR dev → main ---
             const { data: existing } = await github.rest.pulls.list({
               owner, repo,
               head: 'dev',
@@ -92,7 +157,10 @@ jobs:
               state: 'open',
             });
 
-            const title = `Release ${new Date().toLocaleDateString('en-CA', { timeZone: 'America/Santiago' })}`;
+            const date = new Date().toLocaleDateString('en-CA', {
+              timeZone: 'America/Santiago',
+            });
+            const title = `Release v${version} — ${date}`;
 
             if (existing.length > 0) {
               await github.rest.pulls.update({
