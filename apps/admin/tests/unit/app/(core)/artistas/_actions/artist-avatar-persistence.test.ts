@@ -2,7 +2,9 @@ import { beforeEach, describe, expect, mock, test } from 'bun:test'
 
 const updateTag = mock(() => {})
 const cacheTag = mock(() => {})
+const getSession = mock(async () => ({ user: { id: 'admin-1' } }))
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
+const getUser = mock(async () => ({ id: 'admin-1' }))
 
 interface AvatarRecord {
   id: number
@@ -166,7 +168,11 @@ let currentDb: Record<string, unknown> = {}
 mock.module('server-only', () => ({}))
 mock.module('next/cache', () => ({ cacheTag, updateTag }))
 mock.module('next/cache.js', () => ({ cacheTag, updateTag }))
-mock.module('@/shared/lib/auth/utils', () => ({ requireAuth }))
+mock.module('@/shared/lib/auth/utils', () => ({
+  getSession,
+  requireAuth,
+  getUser
+}))
 mock.module('@frijolmagico/database/orm', () => ({
   db: new Proxy(
     {},

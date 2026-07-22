@@ -7,6 +7,8 @@ interface MockSession {
 }
 
 const mockGetSession = mock(async (): Promise<MockSession | null> => null)
+const mockRequireAuth = mock(async (): Promise<MockSession | null> => null)
+const mockGetUser = mock(async (): Promise<MockSession['user'] | null> => null)
 const mockUploadAsset = mock(async () => ({
   path: 'artist-avatar/abc/ver.webp',
   version: 'ver'
@@ -43,7 +45,9 @@ function createUploadRequest(replacement: ReplacementFields): Request {
 }
 
 mock.module('@/shared/lib/auth/utils', () => ({
-  getSession: mockGetSession
+  getSession: mockGetSession,
+  requireAuth: mockRequireAuth,
+  getUser: mockGetUser
 }))
 
 mock.module('@/shared/assets-manager/server/r2-adapter', () => ({
