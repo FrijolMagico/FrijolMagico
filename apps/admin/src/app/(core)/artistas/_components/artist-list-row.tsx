@@ -38,7 +38,11 @@ export function ArtistListRow({
   )
 
   const handleOpenHistory = () =>
-    openArtistHistoryDialog(history, { pseudonimo: artistData.pseudonimo })
+    openArtistHistoryDialog(
+      history,
+      { pseudonimo: artistData.pseudonimo },
+      artistData.id
+    )
 
   const handleOpenEdit = () => openUpdateArtistDialog(artistData)
 
