@@ -1,5 +1,6 @@
 ## Git Workflow
 Feature PRs → `dev` (squash merge). Release PR `dev→main` se auto-genera — merge a main cierra issues automáticamente.
+- **Version labels:** Etiquetá cada PR con `major`, `minor` o `patch` — el release CI lo usa para determinar el bump.
 ## Monorepo Structure
 - **Turborepo** + Bun workspaces (`apps/*`, `packages/*`)
 - **Apps:** `web` (port 3000), `admin` (port 3001)

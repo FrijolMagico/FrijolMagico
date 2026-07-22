@@ -10,7 +10,8 @@
     "./css": "./src/css.ts",
     "./shallow-diff": "./src/shallow-diff.ts",
     "./rrss": "./src/rrss.ts",
-    "./cdn": "./src/cdn.ts"
+    "./cdn": "./src/cdn.ts",
+    "./version": "./src/version.ts"
   },
   "files": [
     "./src/cn.ts",
@@ -19,7 +20,8 @@
     "./src/css.ts",
     "./src/shallow-diff.ts",
     "./src/rrss.ts",
-    "./src/cdn.ts"
+    "./src/cdn.ts",
+    "./src/version.ts"
   ],
   "scripts": {
     "test": "bun test"
