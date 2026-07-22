@@ -9,6 +9,7 @@ interface ArtistDialogStore {
   isArtistHistoryOpen: boolean
 
   selectedArtist: Artist | null
+  selectedArtistId: number | null
   selectedArtistHistory:
     | (History & Pick<ArtistWithHistory, 'pseudonimo'>)
     | null
@@ -18,7 +19,8 @@ interface ArtistDialogStore {
   closeUpdateArtistDialog: () => void
   openArtistHistoryDialog: (
     history: History,
-    artist: Pick<ArtistWithHistory, 'pseudonimo'>
+    artist: Pick<ArtistWithHistory, 'pseudonimo'>,
+    artistId: number
   ) => void
   closeArtistHistoryDialog: () => void
 }
@@ -28,6 +30,7 @@ export const useArtistDialog = create<ArtistDialogStore>((set) => ({
   isUpdateArtistOpen: false,
   isArtistHistoryOpen: false,
   selectedArtist: null,
+  selectedArtistId: null,
   selectedArtistHistory: null,
 
   toggleCreateArtistDialog: (open) => set({ isCreateArtistOpen: open }),
@@ -42,14 +45,19 @@ export const useArtistDialog = create<ArtistDialogStore>((set) => ({
       isUpdateArtistOpen: false,
       selectedArtist: null
     }),
-  openArtistHistoryDialog: (history, artist) =>
+  openArtistHistoryDialog: (history, artist, artistId) =>
     set({
       isArtistHistoryOpen: true,
+      selectedArtistId: artistId,
       selectedArtistHistory: {
         ...history,
         pseudonimo: artist.pseudonimo
       }
     }),
   closeArtistHistoryDialog: () =>
-    set({ isArtistHistoryOpen: false, selectedArtistHistory: null })
+    set({
+      isArtistHistoryOpen: false,
+      selectedArtistId: null,
+      selectedArtistHistory: null
+    })
 }))
