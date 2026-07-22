@@ -110,6 +110,8 @@ jobs:
               .toString()
               .trim();
             version = versionOutput.replace(/^v?/, '');
+            execSync('git config user.name "github-actions[bot]"', { stdio: 'pipe' });
+            execSync('git config user.email "github-actions[bot]@users.noreply.github.com"', { stdio: 'pipe' });
             execSync('git add package.json', { stdio: 'pipe' });
             execSync(`git commit -m "chore(release): bump to v${version}"`, {
               stdio: 'pipe',
