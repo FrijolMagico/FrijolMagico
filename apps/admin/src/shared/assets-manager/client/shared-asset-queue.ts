@@ -2,7 +2,11 @@ import {
   createAssetQueueStore,
   type AssetQueueStore
 } from './asset-queue-store'
-import { createAssetQueue, type AssetQueue } from './queue'
+import {
+  createAssetQueue,
+  type AssetQueue,
+  type AssetQueueOperations
+} from './queue'
 
 /**
  * The shared store deliberately omits `destroy`: its lifetime belongs to the
@@ -15,8 +19,24 @@ export interface SharedAssetQueueRuntime {
   readonly store: SharedAssetQueueStore
 }
 
-const queue = createAssetQueue()
+const queueOperations: AssetQueueOperations = {
+  upload: async () => {
+    throw new Error('Shared asset operation runtime is not initialized')
+  },
+  persist: async () => {
+    throw new Error('Shared asset operation runtime is not initialized')
+  }
+}
+
+const queue = createAssetQueue(undefined, queueOperations)
 const queueStore = createAssetQueueStore(queue)
+
+export function setSharedAssetQueueOperations(
+  operations: AssetQueueOperations
+): void {
+  queueOperations.upload = operations.upload
+  queueOperations.persist = operations.persist
+}
 
 const store: SharedAssetQueueStore = Object.freeze({
   getState: queueStore.getState,
