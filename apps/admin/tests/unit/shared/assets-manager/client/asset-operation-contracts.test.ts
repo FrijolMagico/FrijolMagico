@@ -4,14 +4,18 @@ import { ASSET_TARGET } from '../../../../../src/shared/assets-manager/client/co
 import { createAssetOperationIdentity } from '../../../../../src/shared/assets-manager/client/asset-operation-identity'
 import { createAssetOperationPolicyRegistry } from '../../../../../src/shared/assets-manager/client/asset-operation-policy-registry'
 import type {
+  AssetOperationCleanupInput,
   AssetOperationContext,
   AssetOperationPersistResult,
   AssetOperationPolicy,
+  AssetOperationUploadInput,
   PersistInput
 } from '../../../../../src/shared/assets-manager/client/asset-operation-contracts'
+import type { PreparedAsset } from '../../../../../src/shared/assets-manager/client/contracts'
 
 interface AvatarUpload {
   path: string
+  bytes: number
 }
 
 interface AvatarPersisted {
@@ -24,6 +28,7 @@ interface AvatarCleanup {
 
 interface PosterUpload {
   path: string
+  bytes: number
 }
 
 interface PosterPersisted {
@@ -44,9 +49,19 @@ const context: AssetOperationContext = {
   reportProgress: () => {}
 }
 
+const preparedAsset: PreparedAsset = {
+  blob: new Blob(['prepared-avatar'], { type: 'image/webp' }),
+  width: 800,
+  height: 800,
+  mimeType: 'image/webp'
+}
+
+let cleanedAvatarPath = ''
+
 const avatarPolicy = {
-  upload: async (_input: AssetOperationContext): Promise<AvatarUpload> => ({
-    path: 'avatars/entity-1.webp'
+  upload: async (input: AssetOperationUploadInput): Promise<AvatarUpload> => ({
+    path: `avatars/${input.context.entityId}.webp`,
+    bytes: input.preparedAsset.blob.size
   }),
   persist: async (
     input: PersistInput<AvatarUpload>
@@ -55,14 +70,16 @@ const avatarPolicy = {
     cleanup: { path: input.upload.path }
   }),
   cleanup: async (
-    _input: AssetOperationContext,
-    _value: AvatarCleanup
-  ): Promise<void> => {}
+    input: AssetOperationCleanupInput<AvatarCleanup>
+  ): Promise<void> => {
+    cleanedAvatarPath = input.value.path
+  }
 } satisfies AssetOperationPolicy<AvatarUpload, AvatarPersisted, AvatarCleanup>
 
 const posterPolicy = {
-  upload: async (_input: AssetOperationContext): Promise<PosterUpload> => ({
-    path: 'posters/entity-1-v2.webp'
+  upload: async (input: AssetOperationUploadInput): Promise<PosterUpload> => ({
+    path: `posters/${input.context.entityId}-v2.webp`,
+    bytes: input.preparedAsset.blob.size
   }),
   persist: async (
     input: PersistInput<PosterUpload>
@@ -71,8 +88,7 @@ const posterPolicy = {
     cleanup: { path: input.upload.path, version: 2 }
   }),
   cleanup: async (
-    _input: AssetOperationContext,
-    _value: PosterCleanup
+    _input: AssetOperationCleanupInput<PosterCleanup>
   ): Promise<void> => {}
 } satisfies AssetOperationPolicy<PosterUpload, PosterPersisted, PosterCleanup>
 
@@ -170,4 +186,40 @@ test('keeps the typed persistence result tied to upload and cleanup values', () 
   expect(result.persisted.assetId).toBe('asset-1')
   expect(result.cleanup.path).toBe('avatars/entity-1.webp')
   expect(context.signal).toBeInstanceOf(AbortSignal)
+})
+
+test('passes prepared assets to upload and cleanup inputs to policy hooks', async () => {
+  const upload = await avatarPolicy.upload({ context, preparedAsset })
+
+  expect(upload.path).toBe('avatars/entity-1.webp')
+  expect(upload.bytes).toBe(preparedAsset.blob.size)
+
+  await avatarPolicy.cleanup({
+    context,
+    value: { path: upload.path }
+  })
+
+  expect(cleanedAvatarPath).toBe(upload.path)
+})
+
+test('passes a different prepared asset through the poster policy input', async () => {
+  const posterContext: AssetOperationContext = {
+    ...context,
+    target: ASSET_TARGET.EDITION_POSTER,
+    entityId: 'entity-2'
+  }
+  const posterAsset: PreparedAsset = {
+    blob: new Blob(['prepared-poster'], { type: 'image/webp' }),
+    width: 800,
+    height: 600,
+    mimeType: 'image/webp'
+  }
+
+  const upload = await posterPolicy.upload({
+    context: posterContext,
+    preparedAsset: posterAsset
+  })
+
+  expect(upload.path).toBe('posters/entity-2-v2.webp')
+  expect(upload.bytes).toBe(posterAsset.blob.size)
 })

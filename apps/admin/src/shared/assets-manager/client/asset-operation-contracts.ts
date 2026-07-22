@@ -1,4 +1,4 @@
-import type { AssetTarget } from './contracts'
+import type { AssetTarget, PreparedAsset } from './contracts'
 
 export interface AssetOperationContext {
   jobId: string
@@ -8,6 +8,13 @@ export interface AssetOperationContext {
   signal: AbortSignal
   reportProgress: (sentBytes: number) => void
 }
+
+export interface UploadInput {
+  context: AssetOperationContext
+  preparedAsset: PreparedAsset
+}
+
+export type AssetOperationUploadInput = UploadInput
 
 export type AssetOperationUploadResult<TUpload> = TUpload
 
@@ -31,14 +38,11 @@ export interface AssetOperationCleanupInput<TCleanup> {
 export type AssetOperationCleanupResult = void
 
 export interface AssetOperationPolicy<TUpload, TPersist, TCleanup> {
-  upload: (
-    context: AssetOperationContext
-  ) => Promise<AssetOperationUploadResult<TUpload>>
+  upload: (input: UploadInput) => Promise<AssetOperationUploadResult<TUpload>>
   persist: (
     input: PersistInput<TUpload>
   ) => Promise<AssetOperationPersistResult<TPersist, TCleanup>>
   cleanup: (
-    context: AssetOperationContext,
-    value: TCleanup
+    input: AssetOperationCleanupInput<TCleanup>
   ) => Promise<AssetOperationCleanupResult>
 }
