@@ -7,6 +7,7 @@ import {
   PanelSidebarUser,
   PanelSidebarUserSkeleton
 } from './panel-sidebar-user'
+import { PanelSidebarVersion } from './panel-sidebar-version'
 
 import { getUser } from '@/shared/lib/auth/utils'
 import { redirect } from 'next/navigation'
@@ -20,23 +21,26 @@ export async function PanelSidebarFooter() {
   }
 
   return (
-    <Suspense fallback={<PanelSidebarUserSkeleton />}>
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <SidebarMenuButton size='lg' className='cursor-pointer'>
-                  <PanelSidebarUser user={user} />
-                  <IconSelector />
-                </SidebarMenuButton>
-              }
-            />
+    <>
+      <Suspense fallback={<PanelSidebarUserSkeleton />}>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <SidebarMenuButton size='lg' className='cursor-pointer'>
+                    <PanelSidebarUser user={user} />
+                    <IconSelector />
+                  </SidebarMenuButton>
+                }
+              />
 
-            <PanelSidebarUserDropdown user={user} />
-          </DropdownMenu>
-        </SidebarMenuItem>
-      </SidebarMenu>
-    </Suspense>
+              <PanelSidebarUserDropdown user={user} />
+            </DropdownMenu>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </Suspense>
+      <PanelSidebarVersion />
+    </>
   )
 }
