@@ -8,14 +8,18 @@ import { requireAuth } from '@/shared/lib/auth/utils'
 import { ARTIST_CACHE_TAG } from '@frijolmagico/cache-tags'
 import {
   artistInsertSchema,
-  ArtistInsertInput
+  type ArtistInsertInput
 } from '../_schemas/artista.schema'
 import type { ActionState } from '@/shared/types/actions'
 
+export interface CreateArtistActionData {
+  id: number
+}
+
 export async function createArtistaAction(
-  _prevState: ActionState,
+  _prevState: ActionState<CreateArtistActionData>,
   data: ArtistInsertInput & { slug: string }
-): Promise<ActionState> {
+): Promise<ActionState<CreateArtistActionData>> {
   try {
     await requireAuth()
 
@@ -31,11 +35,22 @@ export async function createArtistaAction(
       }
     }
 
-    await db.insert(artist.artist).values(parsed.data)
+    const [createdArtist] = await db
+      .insert(artist.artist)
+      .values(parsed.data)
+      .returning({ id: artist.artist.id })
 
-    updateTag(ARTIST_CACHE_TAG)
+    if (!createdArtist) {
+      throw new Error('No se pudo obtener el ID del artista creado')
+    }
 
-    return { success: true }
+    try {
+      updateTag(ARTIST_CACHE_TAG)
+    } catch {
+      // The database mutation has already committed; cache invalidation is best-effort.
+    }
+
+    return { success: true, data: { id: createdArtist.id } }
   } catch (error) {
     return {
       success: false,
