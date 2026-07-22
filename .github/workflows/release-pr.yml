@@ -10,7 +10,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      issues: read
+      issues: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -39,15 +39,8 @@ jobs:
               return;
             }
 
-            const mergeBaseDate = (
-              await github.rest.git.getCommit({
-                owner, repo,
-                commit_sha: compare.merge_base_commit.sha,
-              })
-            ).data.author.date;
-
             const { data: search } = await github.rest.search.issuesAndPullRequests({
-              q: `repo:${owner}/${repo} base:dev is:pr is:merged merged:>=${mergeBaseDate}`,
+              q: `repo:${owner}/${repo} base:dev is:pr is:merged -label:released`,
               sort: 'updated',
               per_page: 50,
             });
@@ -96,6 +89,13 @@ jobs:
                   if (!issueRefs.includes(norm)) issueRefs.push(norm);
                 }
               }
+
+              // Marcar PR como liberado
+              await github.rest.issues.addLabels({
+                owner, repo,
+                issue_number: pr.number,
+                labels: ['released'],
+              });
             }
 
             if (issueRefs.length > 0) {
@@ -103,51 +103,22 @@ jobs:
               body += issueRefs.join(', ');
             }
 
-            // --- 3. Version bump (with no-op guard) ---
-            let version;
-            let skipBump = false;
+            // --- 3. Version bump ---
+            const versionOutput = execSync(
+              `npm version --no-git-tag-version ${level}`
+            )
+              .toString()
+              .trim();
+            version = versionOutput.replace(/^v?/, '');
+            execSync('git add package.json', { stdio: 'pipe' });
+            execSync(`git commit -m "chore(release): bump to v${version}"`, {
+              stdio: 'pipe',
+            });
+            execSync(`git tag v${version}`, { stdio: 'pipe' });
+            console.log(`✅ Versión bumpada a v${version} (${level})`);
 
-            // No-op guard: check if latest tag is ancestor of HEAD
-            try {
-              const latestTag = execSync('git describe --tags --abbrev=0')
-                .toString()
-                .trim();
-              execSync(`git merge-base --is-ancestor ${latestTag} HEAD`, {
-                stdio: 'ignore',
-              });
-              skipBump = true;
-              console.log(
-                `No-op guard: tag ${latestTag} is ancestor of HEAD — skipping bump`
-              );
-            } catch (_e) {
-              // Tag doesn't exist or is not ancestor → proceed with bump
-            }
-
-            if (!skipBump) {
-              const versionOutput = execSync(
-                `npm version --no-git-tag-version ${level}`
-              )
-                .toString()
-                .trim();
-              version = versionOutput.replace(/^v?/, '');
-              execSync('git add package.json', { stdio: 'pipe' });
-              execSync(`git commit -m "chore(release): bump to v${version}"`, {
-                stdio: 'pipe',
-              });
-              execSync(`git tag v${version}`, { stdio: 'pipe' });
-              console.log(`✅ Versión bumpada a v${version} (${level})`);
-
-              // Add version header to body
-              body = `## 🏷️ Version\n\n**v${version}** (_${level}_ bump)\n\n---\n\n${body}`;
-            } else {
-              // Read current version from package.json
-              const pkgRaw = execSync(
-                'node -p "JSON.parse(require(\'fs\').readFileSync(\'package.json\',\'utf8\')).version"'
-              )
-                .toString()
-                .trim();
-              version = pkgRaw;
-            }
+            // Add version header to body
+            body = `## 🏷️ Version\n\n**v${version}** (_${level}_ bump)\n\n---\n\n${body}`;
 
             // --- 4. Create or update PR dev → main ---
             const { data: existing } = await github.rest.pulls.list({
