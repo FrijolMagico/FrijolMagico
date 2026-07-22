@@ -1,8 +1,13 @@
 'use client'
 
-import Image from 'next/image'
+import { getImageProps } from 'next/image'
 import Link from 'next/link'
 import { useCallback, useState } from 'react'
+
+const DESKTOP_SRC =
+  'https://cdn.frijolmagico.cl/festivales/frijol-magico/xvi/banner-xvi-1920x640.webp?v=2'
+const COMPACT_SRC =
+  'https://cdn.frijolmagico.cl/festivales/frijol-magico/xvi/banner-xvi-820x820.webp'
 
 interface ActiveFestivalBannerProps {
   festivalSlug: string
@@ -80,6 +85,29 @@ export function ActiveFestivalBanner({
     }
   }, [])
 
+  const common = {
+    alt: 'Banner Festival Frijol Mágico XVI',
+    sizes: '100vw',
+    quality: 100,
+    loading: 'eager' as const
+  }
+
+  const {
+    props: { srcSet: desktopSrcSet }
+  } = getImageProps({
+    ...common,
+    width: 1920,
+    height: 640,
+    src: DESKTOP_SRC
+  })
+
+  const { props: compactImgProps } = getImageProps({
+    ...common,
+    width: 820,
+    height: 820,
+    src: COMPACT_SRC
+  })
+
   const mobileActiveClasses = isAtViewportMidpoint
     ? 'max-lg:scale-105 max-lg:blur-sm'
     : ''
@@ -91,14 +119,18 @@ export function ActiveFestivalBanner({
       data-banner-trigger
       className='group relative h-full px-2 md:w-full'
     >
-      <Link href={href} className=''>
-        <Image
-          src='/sections/banner/banner-xvi.png'
-          width={1920}
-          height={640}
-          alt='Banner Festival Frijol Mágico XVI'
-          className={`h-full w-full object-cover transition-[scale,filter] duration-500 group-hover:scale-105 group-hover:blur-sm motion-reduce:transition-none ${mobileActiveClasses}`}
-        />
+      <Link href={href} className='block h-full w-full'>
+        <picture className='block h-full w-full'>
+          <source
+            media='(min-width: 821px) and (orientation: landscape)'
+            srcSet={desktopSrcSet}
+          />
+          <img
+            {...compactImgProps}
+            fetchPriority='high'
+            className={`h-full w-full object-cover transition-[scale,filter] duration-500 group-hover:scale-105 group-hover:blur-sm motion-reduce:transition-none ${mobileActiveClasses}`}
+          />
+        </picture>
       </Link>
 
       <div

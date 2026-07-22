@@ -6,7 +6,6 @@ import { Suspense } from 'react'
 import { FeaturedArtists } from './components/FeaturedArtists'
 import { FeaturedArtistsSkeleton } from './components/FeaturedArtistsSkeleton'
 import { Banner } from './components/banner'
-import { PodcastBanner } from './components/banner/PodcastBanner'
 import { ContextBar } from '@/components/context-bar/ContextBar'
 
 export default async function Home() {
@@ -14,15 +13,13 @@ export default async function Home() {
     <>
       <main
         data-palette='base'
-        className='mx-auto h-full w-full space-y-12 overflow-x-hidden py-12'
+        className='mx-auto h-full w-full space-y-12 overflow-x-hidden pt-24 md:py-12'
       >
         <HeroSection />
 
         <div className='pt-6'>
-          <FissureBanner height={640} mobileHeight={280}>
-            <Suspense fallback={<PodcastBanner />}>
-              <Banner />
-            </Suspense>
+          <FissureBanner landscapeHeight={640} compactHeight={840}>
+            <Banner />
           </FissureBanner>
         </div>
         <section className='mx-auto h-full max-w-6xl space-y-20 px-6'>
