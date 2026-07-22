@@ -14,9 +14,16 @@ mock.module('@/config/paths', () => ({
     home: {
       path: '/',
       sub: {
-        festival: { path: '/festivales' },
-        catalog: { path: '/catalogo' },
-        about: { path: '/nosotros' }
+        festival: { path: '/festivales', label: 'Festivales' },
+        catalog: {
+          path: '/catalogo',
+          label: 'Catálogo',
+          sub: {
+            path: (slug: string) => `/catalogo/${slug}`,
+            label: (name: string) => name
+          }
+        },
+        about: { path: '/nosotros', label: 'Nosotros' }
       }
     }
   }
