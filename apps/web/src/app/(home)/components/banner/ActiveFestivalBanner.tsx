@@ -1,6 +1,5 @@
 'use client'
 
-import { baseUrl } from '@/utils/baseUrl'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useCallback, useState } from 'react'
@@ -14,7 +13,7 @@ export function ActiveFestivalBanner({
 }: ActiveFestivalBannerProps) {
   const [isAtViewportMidpoint, setIsAtViewportMidpoint] = useState(false)
 
-  const href = `${baseUrl}/festivales/${festivalSlug}`
+  const href = `/festivales/${festivalSlug}`
 
   const bannerRef = useCallback((node: HTMLElement | null) => {
     if (node === null || !('IntersectionObserver' in window)) {
