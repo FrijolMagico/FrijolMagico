@@ -82,6 +82,66 @@ function policy(
   }
 }
 
+type LatePersistence = { persisted: string; cleanup: string }
+function latePersistencePolicy(
+  pending: Promise<LatePersistence>,
+  cleanups: string[]
+) {
+  let first = true
+  return policy([], {
+    persist: () => {
+      if (first) {
+        first = false
+        return pending
+      }
+      return Promise.resolve({ persisted: 'saved', cleanup: null })
+    },
+    cleanup: async ({ value }) => {
+      if (value) cleanups.push(value)
+    }
+  })
+}
+async function runLatePersistenceScenario(
+  action: 'cancel' | 'remove' | 'replace'
+) {
+  const { runtime, queue } = createHarness()
+  const pending = deferred<LatePersistence>()
+  const cleanups: string[] = []
+  runtime.register(
+    ASSET_TARGET.ARTIST_AVATAR,
+    latePersistencePolicy(pending.promise, cleanups)
+  )
+  const entityId = action === 'replace' ? 'replaced' : action
+  const first = runtime.enqueue(
+    ASSET_TARGET.ARTIST_AVATAR,
+    entityId,
+    preparedAsset
+  )
+  await waitUntil(
+    () => queue.getSnapshot().jobs[0]?.status === 'persisting',
+    queue.subscribe
+  )
+  if (action === 'replace') {
+    const replacement = runtime.enqueue(ASSET_TARGET.ARTIST_AVATAR, entityId, {
+      ...preparedAsset,
+      width: 900
+    })
+    pending.resolve({ persisted: 'late', cleanup: 'old-asset' })
+    await settled(queue, replacement.jobId)
+    expect(queue.getSnapshot().jobs.map((job) => job.status)).toEqual([
+      'cancelled',
+      'completed'
+    ])
+  } else {
+    runtime[action](first.jobId)
+    pending.resolve({ persisted: 'late', cleanup: 'old-asset' })
+    await Bun.sleep(0)
+    if (action === 'cancel')
+      expect(queue.getSnapshot().jobs[0]?.status).toBe('cancelled')
+    else expect(queue.getSnapshot().jobs).toHaveLength(0)
+  }
+  await runtime.retryCleanup(first.jobId)
+}
 const settled = (queue: ReturnType<typeof createAssetQueue>, jobId: string) =>
   waitUntil(
     () =>
@@ -115,6 +175,29 @@ describe('asset operation runtime', () => {
     expect(events).toHaveLength(3)
   })
 
+  test('keeps a failed job retryable when cancel is requested', async () => {
+    const { runtime, queue } = createHarness()
+    let uploads = 0
+    runtime.register(
+      ASSET_TARGET.ARTIST_AVATAR,
+      policy([], {
+        upload: async () => {
+          uploads++
+          if (uploads === 1) throw new Error('upload failed')
+          return 'uploaded'
+        }
+      })
+    )
+    const job = runtime.enqueue(
+      ASSET_TARGET.ARTIST_AVATAR,
+      'failed-cancel',
+      preparedAsset
+    )
+    await settled(queue, job.jobId)
+    expect(() => runtime.cancel(job.jobId)).not.toThrow()
+    await runtime.retryUpload(job.jobId)
+    expect(queue.getSnapshot().jobs[0]?.status).toBe('completed')
+  })
   test('keeps equal IDs independent across targets and aborts a replaced target before its generation advances', async () => {
     const { runtime, queue } = createHarness()
     const firstUpload = deferred<string>()
@@ -285,17 +368,27 @@ describe('asset operation runtime', () => {
     expect(queue.getSnapshot().jobs[1]?.status).toBe('completed')
   })
 
+  test('guards active cancel, remove, and replacement from late persistence results', async () => {
+    await runLatePersistenceScenario('cancel')
+    await runLatePersistenceScenario('remove')
+    await runLatePersistenceScenario('replace')
+  })
   test('keeps cleanup failures observable and non-fatal', async () => {
     const { runtime, queue } = createHarness()
     const failures: string[] = []
+    let cleanupAttempts = 0
     runtime.register(
       ASSET_TARGET.ARTIST_AVATAR,
       policy([], {
         cleanup: async () => {
-          throw new Error('cleanup unavailable')
+          cleanupAttempts++
+          if (cleanupAttempts === 1) throw new Error('cleanup unavailable')
         }
       })
     )
+    runtime.subscribeCleanupFailures(() => {
+      throw new Error('listener failed')
+    })
     runtime.subscribeCleanupFailures((failure) => failures.push(failure.error))
 
     const job = runtime.enqueue(
@@ -308,9 +401,10 @@ describe('asset operation runtime', () => {
       () => runtime.getCleanupFailures().length === 1,
       (listener) => runtime.subscribeCleanupFailures(listener)
     )
+    await runtime.retryCleanup(job.jobId)
 
     expect(queue.getSnapshot().jobs[0]?.status).toBe('completed')
     expect(failures).toEqual(['cleanup unavailable'])
-    expect(runtime.getCleanupFailures()[0]?.jobId).toBe(job.jobId)
+    expect(cleanupAttempts).toBe(2)
   })
 })

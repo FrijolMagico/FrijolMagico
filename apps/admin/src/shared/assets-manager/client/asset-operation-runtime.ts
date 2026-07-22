@@ -35,6 +35,7 @@ export interface AssetOperationRuntime {
   remove: AssetQueue['remove']
   retryUpload: AssetQueue['retryUpload']
   retryPersistence: AssetQueue['retryPersistence']
+  retryCleanup: (jobId: string) => Promise<void>
   getCleanupFailures: () => readonly AssetCleanupFailure[]
   subscribeCleanupFailures: (
     listener: (failure: AssetCleanupFailure) => void
@@ -44,7 +45,7 @@ export interface AssetOperationRuntime {
 type RuntimePolicy = AssetOperationPolicy<unknown, unknown, unknown>
 
 interface JobContext {
-  operation: Omit<AssetOperationContext, 'signal' | 'reportProgress'>
+  metadata: Omit<AssetOperationContext, 'signal' | 'reportProgress'>
   identity: AssetOperationIdentity
   policy: RuntimePolicy
   generation: number
@@ -70,6 +71,7 @@ export function createAssetOperationRuntime(
 ): AssetOperationRuntime {
   const policies = createAssetOperationPolicyRegistry()
   const contexts = new Map<string, JobContext>()
+  const pendingCleanups = new Map<string, JobContext>()
   const generations = new Map<string, number>()
   const cleanupFailures: AssetCleanupFailure[] = []
   const cleanupListeners = new Set<(failure: AssetCleanupFailure) => void>()
@@ -77,13 +79,25 @@ export function createAssetOperationRuntime(
 
   const jobFor = (jobId: string) =>
     queue.getSnapshot().jobs.find((job) => job.jobId === jobId) ?? null
+  // Context, generation, and attempt guards keep late callbacks off newer jobs.
   const current = (context: JobContext) =>
-    contexts.get(context.operation.jobId) === context &&
+    contexts.get(context.metadata.jobId) === context &&
     !context.invalidated &&
     generations.get(context.identity.queueEntityId) === context.generation
   const terminal = (job: AssetQueueJob | null) =>
     job?.status === ASSET_QUEUE_STATUS.COMPLETED ||
     job?.status === ASSET_QUEUE_STATUS.CANCELLED
+
+  const rememberPendingCleanup = (context: JobContext) => {
+    const { jobId } = context.metadata
+    pendingCleanups.delete(jobId)
+    pendingCleanups.set(jobId, context)
+    while (pendingCleanups.size > MAX_CLEANUP_FAILURES) {
+      const oldestJobId = pendingCleanups.keys().next().value
+      if (oldestJobId === undefined) break
+      pendingCleanups.delete(oldestJobId)
+    }
+  }
 
   const runBounded = async <T>(
     context: JobContext,
@@ -111,13 +125,13 @@ export function createAssetOperationRuntime(
   }
 
   const failIfActive = (context: JobContext, error: unknown) => {
-    const job = jobFor(context.operation.jobId)
+    const job = jobFor(context.metadata.jobId)
     if (
       current(context) &&
       (job?.status === ASSET_QUEUE_STATUS.UPLOADING ||
         job?.status === ASSET_QUEUE_STATUS.PERSISTING)
     ) {
-      queue.fail(context.operation.jobId, errorMessage(error))
+      queue.fail(context.metadata.jobId, errorMessage(error))
     }
   }
 
@@ -139,16 +153,16 @@ export function createAssetOperationRuntime(
     signal: AbortSignal,
     attempt: number
   ): AssetOperationContext => ({
-    ...context.operation,
+    ...context.metadata,
     signal,
     reportProgress: (sentBytes) => {
-      const job = jobFor(context.operation.jobId)
+      const job = jobFor(context.metadata.jobId)
       if (
         current(context) &&
         context.uploadAttempt === attempt &&
         job?.status === ASSET_QUEUE_STATUS.UPLOADING
       ) {
-        queue.setProgress(context.operation.jobId, sentBytes)
+        queue.setProgress(context.metadata.jobId, sentBytes)
       }
     }
   })
@@ -175,17 +189,24 @@ export function createAssetOperationRuntime(
     if (!context || !current(context) || !context.hasUploadResult)
       throw new Error('Missing upload result for persistence')
     const attempt = ++context.persistenceAttempt
-    const result = await runBounded(context, (signal) =>
-      context.policy.persist({
-        context: operationContext(context, signal, context.uploadAttempt),
-        upload: context.uploadResult
-      })
-    )
-    if (current(context) && context.persistenceAttempt === attempt) {
-      context.cleanupResult = result.cleanup
-      context.hasCleanupResult =
-        result.cleanup !== null && result.cleanup !== undefined
-    }
+    // Abort stops waiting, not an already committed external persistence effect.
+    // A policy that never resolves or returns no cleanup value cannot be reconciled generically.
+    const persistence = (signal: AbortSignal) =>
+      context.policy
+        .persist({
+          context: operationContext(context, signal, context.uploadAttempt),
+          upload: context.uploadResult
+        })
+        .then((result) => {
+          if (context.persistenceAttempt === attempt) {
+            context.cleanupResult = result.cleanup
+            context.hasCleanupResult =
+              result.cleanup !== null && result.cleanup !== undefined
+            if (context.hasCleanupResult) rememberPendingCleanup(context)
+          }
+          return result
+        })
+    await runBounded(context, persistence)
   }
 
   const cleanup = async (context: JobContext) => {
@@ -199,35 +220,43 @@ export function createAssetOperationRuntime(
           value
         })
       )
+      pendingCleanups.delete(context.metadata.jobId)
     } catch (error) {
+      context.hasCleanupResult = true
+      rememberPendingCleanup(context)
       const failure: AssetCleanupFailure = {
-        ...context.operation,
+        ...context.metadata,
         error: errorMessage(error)
       }
       cleanupFailures.push(failure)
       if (cleanupFailures.length > MAX_CLEANUP_FAILURES) cleanupFailures.shift()
-      for (const listener of cleanupListeners) listener(failure)
+      for (const listener of cleanupListeners) {
+        try {
+          listener(failure)
+        } catch (listenerError) {
+          console.error('Asset cleanup failure listener failed', listenerError)
+        }
+      }
     }
   }
 
   const finalize = (context: JobContext) => {
-    if (terminal(jobFor(context.operation.jobId)))
-      contexts.delete(context.operation.jobId)
+    if (terminal(jobFor(context.metadata.jobId)))
+      contexts.delete(context.metadata.jobId)
   }
 
   const persistAndCleanup = async (context: JobContext) => {
     try {
-      const job = jobFor(context.operation.jobId)
+      const job = jobFor(context.metadata.jobId)
       if (!current(context) || job?.status !== ASSET_QUEUE_STATUS.PERSISTING)
         return
       await persist(job)
       if (
         !current(context) ||
-        jobFor(context.operation.jobId)?.status !==
-          ASSET_QUEUE_STATUS.PERSISTING
+        jobFor(context.metadata.jobId)?.status !== ASSET_QUEUE_STATUS.PERSISTING
       )
         return
-      queue.completePersistence(context.operation.jobId)
+      queue.completePersistence(context.metadata.jobId)
       await cleanup(context)
       finalize(context)
     } catch (error) {
@@ -237,7 +266,7 @@ export function createAssetOperationRuntime(
 
   const execute = async (context: JobContext) => {
     await waitForTurn(context)
-    const job = jobFor(context.operation.jobId)
+    const job = jobFor(context.metadata.jobId)
     if (!current(context) || job?.status !== ASSET_QUEUE_STATUS.ENQUEUED) return
     try {
       queue.startUpload(job.jobId)
@@ -280,7 +309,7 @@ export function createAssetOperationRuntime(
         ) {
           context.invalidated = true
           context.controller?.abort()
-          contexts.delete(context.operation.jobId)
+          contexts.delete(context.metadata.jobId)
         }
       }
       const generation = (generations.get(identity.queueEntityId) ?? 0) + 1
@@ -292,7 +321,7 @@ export function createAssetOperationRuntime(
         preview
       )
       const context: JobContext = {
-        operation: {
+        metadata: {
           jobId: job.jobId,
           target,
           entityId,
@@ -317,14 +346,17 @@ export function createAssetOperationRuntime(
     cancel: (jobId) => {
       const context = contexts.get(jobId)
       const job = jobFor(jobId)
-      if (!job || terminal(job)) return
+      if (!job || terminal(job) || job.status === ASSET_QUEUE_STATUS.FAILED)
+        return
       context?.controller?.abort()
       if (context) context.invalidated = true
       queue.cancel(jobId)
       contexts.delete(jobId)
     },
     remove: (jobId) => {
-      contexts.get(jobId)?.controller?.abort()
+      const context = contexts.get(jobId)
+      context?.controller?.abort()
+      if (context) context.invalidated = true
       contexts.delete(jobId)
       queue.remove(jobId)
     },
@@ -333,6 +365,7 @@ export function createAssetOperationRuntime(
         const context = contexts.get(jobId)
         if (!context || !current(context)) return
         await waitForTurn(context)
+        if (!current(context)) return
         await queue.retryUpload(jobId)
         if (jobFor(jobId)?.status === ASSET_QUEUE_STATUS.PERSISTING)
           await persistAndCleanup(context)
@@ -342,11 +375,18 @@ export function createAssetOperationRuntime(
         const context = contexts.get(jobId)
         if (!context || !current(context)) return
         await waitForTurn(context)
+        if (!current(context)) return
         await queue.retryPersistence(jobId)
         if (jobFor(jobId)?.status === ASSET_QUEUE_STATUS.COMPLETED) {
           await cleanup(context)
           finalize(context)
         }
+      }),
+    retryCleanup: (jobId) =>
+      schedule(async () => {
+        const context = pendingCleanups.get(jobId)
+        if (!context) return
+        await cleanup(context)
       }),
     getCleanupFailures: () =>
       cleanupFailures.map((failure) => ({ ...failure })),
