@@ -39,12 +39,18 @@ const database = drizzle(client, {
   }
 })
 const updateTag = mock(() => {})
+const getSession = mock(async () => ({ user: { id: '1' } }))
 const requireAuth = mock(async () => ({ user: { id: '1' } }))
+const getUser = mock(async () => ({ id: '1' }))
 
 mock.module('server-only', () => ({}))
 mock.module('next/cache', () => ({ updateTag }))
 mock.module('@frijolmagico/database/orm', () => ({ db: database }))
-mock.module('@/shared/lib/auth/utils', () => ({ requireAuth }))
+mock.module('@/shared/lib/auth/utils', () => ({
+  getSession,
+  requireAuth,
+  getUser
+}))
 
 const { deleteActivityAction } =
   await import('@/core/eventos/participaciones/_actions/activities/delete-activity.action')

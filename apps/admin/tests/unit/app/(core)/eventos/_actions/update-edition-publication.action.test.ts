@@ -2,7 +2,9 @@ import { beforeEach, describe, expect, mock, test } from 'bun:test'
 
 const updateTag = mock(() => {})
 const revalidateWebCache = mock(() => Promise.resolve({ revalidated: true }))
+const getSession = mock(async () => ({ user: { id: '1' } }))
 const requireAuth = mock(async () => ({ user: { id: '1' } }))
+const getUser = mock(async () => ({ id: '1' }))
 
 type UpdateState = {
   values: unknown[]
@@ -34,7 +36,11 @@ let currentDb = createDbMock().db
 
 mock.module('server-only', () => ({}))
 mock.module('next/cache', () => ({ updateTag }))
-mock.module('@/shared/lib/auth/utils', () => ({ requireAuth }))
+mock.module('@/shared/lib/auth/utils', () => ({
+  getSession,
+  requireAuth,
+  getUser
+}))
 mock.module('@/shared/lib/web-invalidation', () => ({ revalidateWebCache }))
 mock.module('@frijolmagico/database/orm', () => ({
   db: new Proxy(
@@ -45,9 +51,8 @@ mock.module('@frijolmagico/database/orm', () => ({
   )
 }))
 
-const { updateEditionPublicationAction } = await import(
-  '@/core/eventos/_actions/update-edition-publication.action'
-)
+const { updateEditionPublicationAction } =
+  await import('@/core/eventos/_actions/update-edition-publication.action')
 
 describe('updateEditionPublicationAction', () => {
   beforeEach(() => {
@@ -101,7 +106,8 @@ describe('updateEditionPublicationAction', () => {
     })
     revalidateWebCache.mockImplementation(() => {
       remoteCalls += 1
-      if (remoteCalls === 2) return Promise.reject(new Error('remote cache unavailable'))
+      if (remoteCalls === 2)
+        return Promise.reject(new Error('remote cache unavailable'))
       return new Promise<{ revalidated: boolean }>((resolve) =>
         resolvers.push(() => resolve({ revalidated: true }))
       )
