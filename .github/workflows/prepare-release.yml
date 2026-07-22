@@ -253,14 +253,35 @@ jobs:
              *
              * Solo se excluyen los PR que ya llegaron a una release publicada.
              */
-            const releaseCandidates = await searchPullRequests(
-              [
-                `repo:${owner}/${repo}`,
-                'is:pr',
-                'is:merged',
-                'base:dev',
-                '-label:released',
-              ].join(' ')
+
+            const closedPullRequests = await github.paginate(
+              github.rest.pulls.list,
+              {
+                owner,
+                repo,
+                state: 'closed',
+                base: 'dev',
+                sort: 'created',
+                direction: 'asc',
+                per_page: 100,
+              }
+            );
+
+            const releaseCandidates = closedPullRequests.filter(
+              (pullRequest) => {
+                if (!pullRequest.merged_at) {
+                  return false;
+                }
+
+                const labels = pullRequest.labels.map(
+                  (label) =>
+                    typeof label === 'string'
+                      ? label
+                      : label.name
+                );
+
+                return !labels.includes('released');
+              }
             );
 
             if (releaseCandidates.length === 0) {
