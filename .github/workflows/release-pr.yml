@@ -21,10 +21,19 @@ jobs:
           bun-version: latest
 
       - uses: actions/github-script@v7
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           script: |
             const { execSync } = require('child_process');
             const { owner, repo } = context.repo;
+
+            // --- 0. Loop protection ---
+            const lastCommitMsg = execSync('git log -1 --pretty=%B').toString().trim();
+            if (lastCommitMsg.startsWith('chore(release):')) {
+              console.log('Detected release commit, skipping to prevent loop.');
+              return;
+            }
 
             // --- 1. Find PRs merged to dev since last dev→main merge ---
             const { data: compare } = await github.rest.repos.compareCommits({
@@ -118,6 +127,12 @@ jobs:
             });
             execSync(`git tag v${version}`, { stdio: 'pipe' });
             console.log(`✅ Versión bumpada a v${version} (${level})`);
+
+            // --- Push changes back to dev ---
+            execSync(`git remote set-url origin https://x-access-token:${process.env.GITHUB_TOKEN}@github.com/${owner}/${repo}.git`, { stdio: 'pipe' });
+            execSync('git push origin dev', { stdio: 'pipe' });
+            execSync('git push origin --tags', { stdio: 'pipe' });
+            console.log('✅ Cambios y tags subidos a dev');
 
             // Add version header to body
             body = `## 🏷️ Version\n\n**v${version}** (_${level}_ bump)\n\n---\n\n${body}`;
