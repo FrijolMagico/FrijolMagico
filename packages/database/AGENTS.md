@@ -1,9 +1,6 @@
-# AGENTS.md - Database Package
+# Database Package
 
 Drizzle ORM + Turso (libSQL) database package.
-
-**Generated**: 2026-02-11
-**Mode**: Update
 
 ## Tech Stack
 
@@ -15,22 +12,25 @@ Drizzle ORM + Turso (libSQL) database package.
 ## Commands
 
 ```bash
-# Run from packages/database/ or root with filter
-bun run migrate             # Run pending migrations
-bun run new <name>          # Create new migration
-bun run seed                # Run seed.sql
-bun run lint                   # ESLint
-bun run type-check             # TypeScript check
+bun run migrate
+bun run new <name>
+bun run seed
+bun run lint
+bun run type-check
 ```
+
+- **migrate/seed:** Destructive. See Security in root AGENTS.md.
 
 ## Architecture
 
 ### Package Exports
 
 ```typescript
-import { db } from '@frijolmagico/database/orm' // Drizzle ORM client
-import { executeQuery } from '@frijolmagico/database/client' // Raw SQL client
-import { schema } from '@frijolmagico/database/schema' // Schema exports
+import { db } from '@frijolmagico/database/orm'
+import { executeQuery } from '@frijolmagico/database/client'
+import { schema } from '@frijolmagico/database/schema'
+import { isNotDeleted } from '@frijolmagico/database/filters'
+import { loadSql } from '@frijolmagico/database/sql'
 ```
 
 ### Directory Structure
@@ -39,6 +39,8 @@ import { schema } from '@frijolmagico/database/schema' // Schema exports
 src/
 ├── client.ts                  # Raw SQL client (Turso/libSQL)
 ├── drizzle.ts                 # Drizzle ORM client
+├── filters.ts                 # Soft-delete filter helpers (isNotDeleted)
+├── sql.ts                     # Load colocated .sql files (loadSql)
 └── db/
     ├── schema/                # Table definitions
     │   ├── core.ts            # Organization, lugar, disciplina
@@ -66,62 +68,18 @@ seed/
 
 ### Dual Client Pattern
 
-**1. Drizzle ORM Client** (`src/drizzle.ts`)
-
-- Type-safe queries with TypeScript
-- Relations support
-- Use for: Complex queries, type safety, relational data
-
-```typescript
-import { db } from '@frijolmagico/database/orm'
-import { artista } from '@frijolmagico/database/schema'
-
-const artistas = await db.select().from(artista)
-```
-
-**2. Raw SQL Client** (`src/client.ts`)
-
-- Direct SQL execution
-- Custom queries, JSON aggregation
-- Use for: Complex aggregations, JSON results, custom SQL
-
-```typescript
-import { executeQuery } from '@frijolmagico/database/client'
-
-const { data, error } = await executeQuery<ArtistResult>(
-  'SELECT json_object(...) FROM artista WHERE ...',
-  []
-)
-```
+- **Drizzle ORM:** type-safe relational.
+- **Raw SQL:** JSON aggregation, complex queries.
 
 ## Schema Definition
 
-Tables defined with `drizzle-orm/sqlite-core`:
-
-```typescript
-import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core'
-
-export const artista = sqliteTable(
-  'artista',
-  {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    pseudonimo: text('pseudonimo').notNull().unique()
-    // ...
-  },
-  (table) => [index('idx_artista_estado').on(table.estadoId)]
-)
-```
+Tables via `drizzle-orm/sqlite-core`.
 
 ## Migrations
 
-- **Tool:** drizzle-kit
-- **Config:** `drizzle.config.ts`
-- **Output:** `migrations/` directory
-- **Dialect:** Turso (SQLite)
-
-Custom SQL migrations supported. Use `--> statement-breakpoint` between statements.
-
-> **IMPORTANT:** All statements in a migration must be separated by `--> statement-breakpoint`. Do not use separate code blocks or empty lines between statements. This ensures the migration runs as a single atomic unit.
+- **Tool:** drizzle-kit → `migrations/`
+- **Statement separator:** `--> statement-breakpoint` between SQL statements
+- **No blank lines** between statements in a single migration
 
 ## Environment Variables
 
@@ -132,8 +90,4 @@ TURSO_AUTH_TOKEN=your-auth-token           # Required for remote
 
 ## Data Files (Reference)
 
-The `data/` directory contains reference SQL for schema design:
-
-- Numbered sequentially (001, 002, ...)
-- Not executed by migrations
-- Use as reference for custom migrations
+Sequential (001, 002…). Not migrations. Reference only.
