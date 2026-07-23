@@ -28,7 +28,7 @@ jobs:
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
           permission-contents: write
           permission-issues: write
-          permission-pull-requests: read
+          permission-pull-requests: write
 
       # ----------------------------------------------------------------------
       # 2. Checkout exacto del commit que llegó a main
