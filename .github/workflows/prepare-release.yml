@@ -495,6 +495,21 @@ jobs:
                 `(@${pullRequest.user.login})\n`;
             }
 
+            /*
+             * Structured metadata consumed by publish-release.
+             *
+             * These HTML comments are invisible in the rendered PR, but provide a
+             * deterministic mapping between this Release PR and the Pull Requests
+             * included in the release.
+             */
+            releaseBody += '\n<!-- release-prs:start -->\n';
+            
+            for (const pullRequest of includedPullRequests) {
+              releaseBody += `#${pullRequest.number}\n`;
+            }
+            
+            releaseBody += '<!-- release-prs:end -->\n';
+
             if (issueReferences.size > 0) {
                 releaseBody += '\n## ✅ Issues resolved\n\n';
 
