@@ -95,20 +95,39 @@ jobs:
             }
 
             /**
-             * Extracts the structured list of included pull request numbers
+             * Extracts the hidden structured list of included pull request numbers
              * from the Release PR body.
+             *
+             * Supported formats:
+             *
+             * <!-- release-prs:127,130,131 -->
              */
             function extractStructuredPullRequestNumbers(body) {
-              const match = body.match(
-                /<!-- release-prs:start -->([\s\S]*?)<!-- release-prs:end -->/
+              const inlineMatch = body.match(
+                /<!--\s*release-prs:([\d,\s]+)\s*-->/
               );
 
-              if (!match) {
+              if (inlineMatch) {
+                return inlineMatch[1]
+                  .split(',')
+                  .map((value) => Number(value.trim()))
+                  .filter(
+                    (number) =>
+                      Number.isInteger(number) &&
+                      number > 0
+                  );
+              }
+
+              const blockMatch = body.match(
+                /<!--\s*release-prs:start\s*-->([\s\S]*?)<!--\s*release-prs:end\s*-->/
+              );
+
+              if (!blockMatch) {
                 return [];
               }
 
               return [
-                ...match[1].matchAll(/^\s*#(\d+)\s*$/gm),
+                ...blockMatch[1].matchAll(/^\s*#(\d+)\s*$/gm),
               ].map((entry) => Number(entry[1]));
             }
 

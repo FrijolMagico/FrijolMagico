@@ -502,13 +502,12 @@ jobs:
              * deterministic mapping between this Release PR and the Pull Requests
              * included in the release.
              */
-            releaseBody += '\n<!-- release-prs:start -->\n';
+            const includedPullRequestNumbers = includedPullRequests
+              .map((pullRequest) => pullRequest.number)
+              .join(',');
             
-            for (const pullRequest of includedPullRequests) {
-              releaseBody += `#${pullRequest.number}\n`;
-            }
-            
-            releaseBody += '<!-- release-prs:end -->\n';
+            releaseBody +=
+              `\n<!-- release-prs:${includedPullRequestNumbers} -->\n`;
 
             if (issueReferences.size > 0) {
                 releaseBody += '\n## ✅ Issues resolved\n\n';
