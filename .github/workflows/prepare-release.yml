@@ -1,0 +1,625 @@
+name: Prepare Release PR (dev → main)
+
+on:
+  push:
+    branches:
+      - dev
+
+concurrency:
+  group: prepare-release-dev
+  cancel-in-progress: false
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+
+    # El GITHUB_TOKEN incorporado solo tendrá lectura.
+    # Las escrituras se realizan con el token temporal de la GitHub App.
+    permissions:
+      contents: read
+
+    steps:
+      # ----------------------------------------------------------------------
+      # 1. Generar installation token temporal de la GitHub App
+      # ----------------------------------------------------------------------
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+          # El token queda limitado explícitamente a estos permisos.
+          permission-contents: write
+          permission-pull-requests: write
+          permission-issues: write
+
+      # ----------------------------------------------------------------------
+      # 2. Obtener el ID numérico del usuario bot de la GitHub App
+      # ----------------------------------------------------------------------
+      - name: Get GitHub App bot user ID
+        id: app-user
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+        run: |
+          USER_ID="$(gh api "/users/${APP_SLUG}[bot]" --jq '.id')"
+          echo "user-id=${USER_ID}" >> "$GITHUB_OUTPUT"
+
+      # ----------------------------------------------------------------------
+      # 3. Checkout de dev autenticado con la GitHub App
+      # ----------------------------------------------------------------------
+      - name: Checkout dev
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      # ----------------------------------------------------------------------
+      # 4. Instalar Bun y las dependencias del proyecto
+      # ----------------------------------------------------------------------
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # ----------------------------------------------------------------------
+      # 5. Calcular versión, actualizar dev y mantener el Release PR
+      # ----------------------------------------------------------------------
+      - name: Prepare release
+        uses: actions/github-script@v7
+        env:
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          APP_USER_ID: ${{ steps.app-user.outputs.user-id }}
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const { execFileSync } = require('node:child_process');
+
+            /*
+             * Load the dependency installed in the workspace.
+             *
+             * Use an absolute path to avoid depending on how
+             * actions/github-script resolves its own modules.
+             */
+            const semver = require(
+              path.join(process.env.GITHUB_WORKSPACE, 'node_modules', 'semver')
+            );
+
+            const { owner, repo } = context.repo;
+
+            /**
+             * Execute a command directly, without interpolating it via shell.
+             */
+            function run(command, args = []) {
+              return execFileSync(command, args, {
+                encoding: 'utf8',
+                stdio: ['ignore', 'pipe', 'pipe'],
+              }).trim();
+            }
+
+            /**
+             * Create a label when it does not exist yet.
+             */
+            async function ensureLabel(name, color, description) {
+              try {
+                await github.rest.issues.getLabel({
+                  owner,
+                  repo,
+                  name,
+                });
+              } catch (error) {
+                if (error.status !== 404) {
+                  throw error;
+                }
+
+                await github.rest.issues.createLabel({
+                  owner,
+                  repo,
+                  name,
+                  color,
+                  description,
+                });
+
+                console.log(`Label creado: ${name}`);
+              }
+            }
+
+            /**
+             * Return the release level with the highest precedence.
+             */
+            function getHigherReleaseLevel(currentLevel, candidateLevel) {
+              const precedence = {
+                patch: 1,
+                minor: 2,
+                major: 3,
+              };
+
+              return precedence[candidateLevel] > precedence[currentLevel]
+                ? candidateLevel
+                : currentLevel;
+            }
+
+            /**
+             * Determine the SemVer bump required by a PR.
+             *
+             * Major:
+             * - label "major"
+             * - feat!: / fix!: / refactor(scope)!:
+             * - BREAKING CHANGE in the body
+             *
+             * Minor:
+             * - label "minor"
+             * - feat: / feat(scope):
+             *
+             * Patch:
+             * - any other change
+             */
+            function determinePullRequestLevel(pullRequest) {
+              const labels = pullRequest.labels.map((label) => label.name);
+              const title = pullRequest.title.trim();
+              const body = pullRequest.body ?? '';
+
+              const hasBreakingTitle =
+                /^[a-z]+(?:\([^)]+\))?!:/i.test(title);
+
+              const hasBreakingBody =
+                /(^|\n)BREAKING[ -]CHANGE\s*:/i.test(body);
+
+              if (
+                labels.includes('major') ||
+                hasBreakingTitle ||
+                hasBreakingBody
+              ) {
+                return 'major';
+              }
+
+              const hasFeatureTitle =
+                /^feat(?:\([^)]+\))?:/i.test(title);
+
+              if (labels.includes('minor') || hasFeatureTitle) {
+                return 'minor';
+              }
+
+              return 'patch';
+            }
+
+            // ----------------------------------------------------------------
+            // 0. Protection against second automatic execution
+            // ----------------------------------------------------------------
+            const lastCommitMessage = run('git', [
+              'log',
+              '-1',
+              '--pretty=%B',
+            ]);
+
+            /*
+             * A push made with a GitHub App can re-trigger workflows.
+             * The commit generated by this same workflow must stop here.
+             */
+            if (lastCommitMessage.startsWith('chore(release):')) {
+              console.log(
+                'Automatic release commit detected. Execution omitted.'
+              );
+              return;
+            }
+
+            // ----------------------------------------------------------------
+            // 1. Verify dev is ahead of main
+            // ----------------------------------------------------------------
+            const { data: comparison } =
+              await github.rest.repos.compareCommits({
+                owner,
+                repo,
+                base: 'main',
+                head: 'dev',
+              });
+
+            if (comparison.ahead_by === 0) {
+              console.log(
+                'dev no contiene cambios nuevos respecto de main.'
+              );
+              return;
+            }
+
+            // ----------------------------------------------------------------
+            // 2. Collect all PRs not yet published
+            // ----------------------------------------------------------------
+            /*
+             * PRs with release-pending are not excluded because they must
+             * continue appearing when rebuilding the Release PR.
+             *
+             * Only PRs that have already reached a published release are
+             * excluded.
+             */
+
+            const closedPullRequests = await github.paginate(
+              github.rest.pulls.list,
+              {
+                owner,
+                repo,
+                state: 'closed',
+                base: 'dev',
+                sort: 'created',
+                direction: 'asc',
+                per_page: 100,
+              }
+            );
+
+            const releaseCandidates = closedPullRequests.filter(
+              (pullRequest) => {
+                if (!pullRequest.merged_at) {
+                  return false;
+                }
+
+                const labels = pullRequest.labels.map(
+                  (label) =>
+                    typeof label === 'string'
+                      ? label
+                      : label.name
+                );
+
+                return !labels.includes('released');
+              }
+            );
+
+            if (releaseCandidates.length === 0) {
+              console.log(
+                'No existen PR fusionados a dev pendientes de release.'
+              );
+              return;
+            }
+
+            // ----------------------------------------------------------------
+            // 3. Get full information and determine accumulated bump
+            // ----------------------------------------------------------------
+            const includedPullRequests = [];
+            const issueReferences = new Set();
+
+            let releaseLevel = 'patch';
+
+            for (const candidate of releaseCandidates) {
+              const { data: pullRequest } =
+                await github.rest.pulls.get({
+                  owner,
+                  repo,
+                  pull_number: candidate.number,
+                });
+
+              includedPullRequests.push(pullRequest);
+
+              const pullRequestLevel =
+                determinePullRequestLevel(pullRequest);
+
+              releaseLevel = getHigherReleaseLevel(
+                releaseLevel,
+                pullRequestLevel
+              );
+
+              const closingKeywordPattern =
+                /\b(?:close|fix|resolve)[sd]?\s*:?\s+#(\d+)\b/gi;
+
+              for (
+                const match of pullRequest.body?.matchAll(closingKeywordPattern) ?? []
+              ) {
+                issueReferences.add(Number(match[1]));
+              }
+            }
+
+            // ----------------------------------------------------------------
+            // 4. Read official version from main
+            // ----------------------------------------------------------------
+            const mainPackageRaw = run('git', [
+              'show',
+              'origin/main:package.json',
+            ]);
+
+            const mainPackage = JSON.parse(mainPackageRaw);
+            const baseVersion = mainPackage.version;
+
+            if (!semver.valid(baseVersion)) {
+              throw new Error(
+                `The published version "${baseVersion}" is not a valid SemVer.`
+              );
+            }
+
+            /*
+             * Apply the highest level bump on top of the last published
+             * version.
+             *
+             * Example:
+             *
+             * main: 1.2.0
+             * patch + minor + patch
+             * result: 1.3.0
+             */
+            const nextVersion = semver.inc(
+              baseVersion,
+              releaseLevel
+            );
+
+            if (!nextVersion) {
+              throw new Error(
+                `Unable to apply a ${releaseLevel} bump over ${baseVersion}.`
+              );
+            }
+
+            // ----------------------------------------------------------------
+            // 5. Validate and update package.json in dev
+            // ----------------------------------------------------------------
+            const packagePath = path.join(
+              process.env.GITHUB_WORKSPACE,
+              'package.json'
+            );
+
+            const devPackage = JSON.parse(
+              fs.readFileSync(packagePath, 'utf8')
+            );
+
+            const currentDevVersion = devPackage.version;
+
+            if (!semver.valid(currentDevVersion)) {
+              throw new Error(
+                `La versión de dev "${currentDevVersion}" no es un SemVer válido.`
+              );
+            }
+
+            /*
+             * dev should never have a version lower than the one currently
+             * published in main.
+             */
+            if (semver.lt(currentDevVersion, baseVersion)) {
+              throw new Error(
+                `Inconsistent state: dev has ${currentDevVersion}, ` +
+                `but main already contains ${baseVersion}.`
+              );
+            }
+
+            /*
+             * Also, do not silently reduce a higher provisional version.
+             *
+             * Example problem:
+             *
+             * dev: 2.0.0
+             * calculated version: 1.4.0
+             */
+            if (semver.gt(currentDevVersion, nextVersion)) {
+              throw new Error(
+                `The current dev version (${currentDevVersion}) is greater ` +
+                `than the calculated version (${nextVersion}).`
+              );
+            }
+
+            if (currentDevVersion !== nextVersion) {
+              devPackage.version = nextVersion;
+
+              fs.writeFileSync(
+                packagePath,
+                `${JSON.stringify(devPackage, null, 2)}\n`
+              );
+
+              console.log(
+                `Versión provisional actualizada: ` +
+                `${currentDevVersion} → ${nextVersion}`
+              );
+            } else {
+              console.log(
+                `package.json ya contiene la versión correcta: ${nextVersion}`
+              );
+            }
+
+            console.log([
+              '',
+              'Release calculation',
+              '-------------------',
+              `Published version : ${baseVersion}`,
+              `Current dev       : ${currentDevVersion}`,
+              `Release bump      : ${releaseLevel}`,
+              `Next version      : ${nextVersion}`,
+              '',
+            ].join('\n'));
+
+            // ----------------------------------------------------------------
+            // 6. Create provisional commit and push to dev
+            // ----------------------------------------------------------------
+            const packageStatus = run('git', [
+              'status',
+              '--porcelain',
+              '--',
+              'package.json',
+            ]);
+
+            if (packageStatus) {
+              run('git', [
+                'config',
+                'user.name',
+                `${process.env.APP_SLUG}[bot]`,
+              ]);
+
+              run('git', [
+                'config',
+                'user.email',
+                `${process.env.APP_USER_ID}+${process.env.APP_SLUG}[bot]@users.noreply.github.com`,
+              ]);
+
+              run('git', ['add', 'package.json']);
+
+              run('git', [
+                'commit',
+                '-m',
+                `chore(release): prepare v${nextVersion}`,
+              ]);
+
+              /*
+               * actions/checkout configured origin with the GitHub App 
+               * installation token.
+               *
+               * The App needs "Always allow" bypass in the dev ruleset.
+               */
+              run('git', [
+                'push',
+                'origin',
+                'HEAD:dev',
+              ]);
+
+              console.log(
+                `Commit de versión v${nextVersion} enviado a dev.`
+              );
+            } else {
+              console.log(
+                'No es necesario crear un nuevo commit de versión.'
+              );
+            }
+
+            // ----------------------------------------------------------------
+            // 7. Build the complete body of the Release PR
+            // ----------------------------------------------------------------
+            let releaseBody = '';
+
+            releaseBody += '## 🏷️ Version\n\n';
+            releaseBody += `**v${nextVersion}** — ${releaseLevel} bump\n\n`;
+            releaseBody += `Current version: **v${baseVersion}**\n\n`;
+            releaseBody += '---\n\n';
+            releaseBody += '## 📋 Changes included\n\n';
+
+            for (const pullRequest of includedPullRequests) {
+              releaseBody +=
+                `- #${pullRequest.number} — ` +
+                `${pullRequest.title} ` +
+                `(@${pullRequest.user.login})\n`;
+            }
+
+            if (issueReferences.size > 0) {
+                releaseBody += '\n## ✅ Issues resolved\n\n';
+
+                const sortedIssueNumbers = [...issueReferences]
+                .sort((a, b) => a - b);
+
+                for (const issueNumber of sortedIssueNumbers) {
+                  releaseBody += `Fixes #${issueNumber}\n`;
+                }
+            }
+
+            // ----------------------------------------------------------------
+            // 8. Find the open Release PR
+            // ----------------------------------------------------------------
+            const { data: existingReleasePullRequests } =
+              await github.rest.pulls.list({
+                owner,
+                repo,
+                head: `${owner}:dev`,
+                base: 'main',
+                state: 'open',
+                per_page: 10,
+              });
+
+            /*
+             * The architecture expects only one open dev -> main PR.
+             */
+            if (existingReleasePullRequests.length > 1) {
+              throw new Error(
+                'More than one open PR from dev to main exists.'
+              );
+            }
+
+            const date = new Date().toLocaleDateString('en-CA', {
+              timeZone: 'America/Santiago',
+            });
+
+            const releaseTitle =
+              `Release v${nextVersion} — ${date}`;
+
+            let releasePullRequest;
+
+            // ----------------------------------------------------------------
+            // 9. Create or update the Release PR
+            // ----------------------------------------------------------------
+            if (existingReleasePullRequests.length === 1) {
+              const { data: updatedPullRequest } =
+                await github.rest.pulls.update({
+                  owner,
+                  repo,
+                  pull_number:
+                    existingReleasePullRequests[0].number,
+                  title: releaseTitle,
+                  body: releaseBody,
+                });
+
+              releasePullRequest = updatedPullRequest;
+
+              console.log(
+                `Release PR actualizado: #${releasePullRequest.number}`
+              );
+            } else {
+              const { data: createdPullRequest } =
+                await github.rest.pulls.create({
+                  owner,
+                  repo,
+                  head: 'dev',
+                  base: 'main',
+                  title: releaseTitle,
+                  body: releaseBody,
+                });
+
+              releasePullRequest = createdPullRequest;
+
+              console.log(
+                `Release PR creado: #${releasePullRequest.number}`
+              );
+            }
+
+            // ----------------------------------------------------------------
+            // 10. Create control labels when they don't exist
+            // ----------------------------------------------------------------
+            await ensureLabel(
+              'release-pending',
+              'FBCA04',
+              'Included in the current release PR but not yet published'
+            );
+
+            await ensureLabel(
+              'released',
+              '0E8A16',
+              'Published as part of an official release'
+            );
+
+            // ----------------------------------------------------------------
+            // 11. Mark included PRs as release-pending
+            // ----------------------------------------------------------------
+            /*
+             * This happens after successfully creating or updating the
+             * Release PR.
+             *
+             * If commit, push, or PR creation fails before this, labels
+             * aren't modified and PRs can be recovered in the next
+             * execution.
+             */
+            for (const pullRequest of includedPullRequests) {
+              const labels = pullRequest.labels.map(
+                (label) => label.name
+              );
+
+              if (!labels.includes('release-pending')) {
+                await github.rest.issues.addLabels({
+                  owner,
+                  repo,
+                  issue_number: pullRequest.number,
+                  labels: ['release-pending'],
+                });
+
+                console.log(
+                  `PR #${pullRequest.number} marcado como release-pending.`
+                );
+              }
+            }
+
+            console.log(
+              `Release v${nextVersion} preparada correctamente ` +
+              `en PR #${releasePullRequest.number}.`
+            );
