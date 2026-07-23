@@ -93,6 +93,13 @@ export const artistImage = sqliteTable(
 
 /**
  * Artist History - Change history of artists
+ *
+ * NOTE: The actual DB table has a CHECK constraint
+ * `chk_artista_historial_has_data` — at least one of the data fields
+ * (pseudonimo, correo, rrss, ciudad, pais) must be non-null. Drizzle schema
+ * doesn't support CHECK constraints, so this is enforced only at the DB level.
+ * Any code that sets fields to NULL must handle this (either DELETE the row
+ * when clearing the last field, or ensure another field remains set).
  */
 export const artistHistory = sqliteTable(
   'artista_historial',
