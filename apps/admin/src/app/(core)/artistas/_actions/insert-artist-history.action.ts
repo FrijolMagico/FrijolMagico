@@ -18,7 +18,7 @@ const insertHistoryFormSchema = z.object({
   ciudad: z.string().min(1).nullable().optional(),
   pais: z.string().min(1).nullable().optional(),
   rrss: z
-    .record(z.string().min(1), z.array(z.string().url()))
+    .record(z.string().min(1), z.string().url())
     .nullable()
     .optional()
 })
@@ -30,62 +30,82 @@ export async function insertArtistHistoryItemAction(
 ): Promise<ActionState> {
   await requireAuth()
 
-  const parsed = insertHistoryFormSchema.safeParse(data)
-  if (!parsed.success) {
-    return {
-      success: false,
-      errors: parsed.error.issues.map((issue) => ({
-        entityType: 'artista',
-        message: issue.message
-      }))
+  try {
+    const parsed = insertHistoryFormSchema.safeParse(data)
+    if (!parsed.success) {
+      return {
+        success: false,
+        errors: parsed.error.issues.map((issue) => ({
+          entityType: 'artista',
+          message: issue.message
+        }))
+      }
     }
-  }
 
-  const { rrss, ...textFields } = parsed.data
+    const { rrss, ...textFields } = parsed.data
 
-  const dbInsertData: Record<string, unknown> = {
-    artistaId: parsed.data.artistaId,
-    notas: null
-  }
-
-  // Map text fields
-  for (const field of ['pseudonimo', 'correo', 'ciudad', 'pais'] as const) {
-    if (textFields[field]) {
-      dbInsertData[field] = textFields[field]
+    const dbInsertData: Record<string, unknown> = {
+      artistaId: parsed.data.artistaId,
+      notas: null
     }
-  }
 
-  // Handle rrss: stringify object to JSON string for DB
-  if (rrss && typeof rrss === 'object' && Object.keys(rrss).length > 0) {
-    dbInsertData.rrss = JSON.stringify(rrss)
-  }
-
-  const historialParsed = artistHistoryInsertSchema.safeParse(dbInsertData)
-  if (!historialParsed.success) {
-    return {
-      success: false,
-      errors: historialParsed.error.issues.map((issue) => ({
-        entityType: 'artista',
-        message: issue.message
-      }))
+    // Map text fields
+    for (const field of ['pseudonimo', 'correo', 'ciudad', 'pais'] as const) {
+      if (textFields[field]) {
+        dbInsertData[field] = textFields[field]
+      }
     }
-  }
 
-  await db.transaction(async (tx) => {
-    const [maxResult] = await tx
-      .select({
-        maxOrden: sql<number>`COALESCE(MAX(${artist.artistHistory.orden}), 0)`
-      })
-      .from(artist.artistHistory)
-      .where(eq(artist.artistHistory.artistaId, parsed.data.artistaId))
+    // Handle rrss: stringify object to JSON string for DB
+    if (rrss && typeof rrss === 'object' && Object.keys(rrss).length > 0) {
+      dbInsertData.rrss = JSON.stringify(rrss)
+    }
 
-    await tx.insert(artist.artistHistory).values({
-      ...historialParsed.data,
-      orden: (maxResult?.maxOrden ?? 0) + 1
+    const historialParsed = artistHistoryInsertSchema.safeParse(dbInsertData)
+    if (!historialParsed.success) {
+      return {
+        success: false,
+        errors: historialParsed.error.issues.map((issue) => ({
+          entityType: 'artista',
+          message: issue.message
+        }))
+      }
+    }
+
+    let insertedId = 0
+
+    await db.transaction(async (tx) => {
+      const [maxResult] = await tx
+        .select({
+          maxOrden: sql<number>`COALESCE(MAX(${artist.artistHistory.orden}), 0)`
+        })
+        .from(artist.artistHistory)
+        .where(eq(artist.artistHistory.artistaId, parsed.data.artistaId))
+
+      const [inserted] = await tx
+        .insert(artist.artistHistory)
+        .values({
+          ...historialParsed.data,
+          orden: (maxResult?.maxOrden ?? 0) + 1
+        })
+        .returning({ id: artist.artistHistory.id })
+
+      insertedId = inserted!.id
     })
-  })
 
-  updateTag(ARTIST_HISTORY_CACHE_TAG)
+    updateTag(ARTIST_HISTORY_CACHE_TAG)
 
-  return { success: true }
+    return { success: true, data: { historyId: insertedId } }
+  } catch (error) {
+    console.error('insertArtistHistoryItemAction failed:', error)
+    return {
+      success: false,
+      errors: [
+        {
+          entityType: 'artista',
+          message: `Error al insertar el historial: ${(error as Error).message}`
+        }
+      ]
+    }
+  }
 }
