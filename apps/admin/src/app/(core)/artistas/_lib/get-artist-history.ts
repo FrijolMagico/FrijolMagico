@@ -28,6 +28,16 @@ export async function getHistoryData(): Promise<ArtistHistory[]> {
 
   return results.map((row) => ({
     ...row,
-    rrss: row.rrss ? JSON.parse(row.rrss) : null
+    rrss: row.rrss
+      // Normalise legacy rrss JSON — some rows may store single strings instead of
+      // arrays (pre-schema-fix inserts). Wrapping guarantees downstream always gets arrays.
+      ? Object.entries(JSON.parse(row.rrss)).reduce(
+          (acc, [key, value]) => {
+            acc[key] = Array.isArray(value) ? value : [value]
+            return acc
+          },
+          {} as Record<string, string[]>
+        )
+      : null
   }))
 }

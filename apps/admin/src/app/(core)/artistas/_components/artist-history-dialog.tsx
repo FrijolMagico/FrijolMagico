@@ -1,35 +1,34 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
 import {
   IconMail,
   IconUser,
   IconMapPin,
   IconLink,
-  IconPlus
+  IconPlus,
+  IconX,
 } from '@tabler/icons-react'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
 } from '@/shared/components/ui/dialog'
 import { Badge } from '@/shared/components/ui/badge'
 import { Separator } from '@/shared/components/ui/separator'
 import { Input } from '@/shared/components/ui/input'
 import { Button } from '@/shared/components/ui/button'
 import { useArtistDialog } from '../_store/artist-dialog-store'
-import { insertArtistHistoryItemAction } from '../_actions/insert-artist-history.action'
-import type { InsertHistoryFormInput } from '../_actions/insert-artist-history.action'
+import { useArtistHistory } from '../_hooks/use-artist-history'
+import type { HistoryFieldEntry } from '../_lib/aggregate-history'
 
 interface HistoryConceptProps {
   icon: React.ComponentType<{ className?: string }>
   title: string
-  items: string[]
-  showAdd?: boolean
+  items: HistoryFieldEntry[]
   fieldName?: string
+  onDelete?: (entry: HistoryFieldEntry) => void
+  showAdd?: boolean
   setPendingField?: (name: string, value: string) => void
   toggleAdd?: () => void
   pendingValue?: string
@@ -40,10 +39,11 @@ function HistoryConcept({
   title,
   items,
   showAdd,
+  onDelete,
   fieldName,
   setPendingField,
   toggleAdd,
-  pendingValue
+  pendingValue,
 }: HistoryConceptProps) {
   return (
     <div className='space-y-1.5'>
@@ -65,9 +65,23 @@ function HistoryConcept({
       </div>
       {items.length > 0 && (
         <div className='flex flex-wrap gap-1.5 pl-5'>
-          {items.map((item, idx) => (
-            <Badge key={idx} variant='secondary' className='text-xs font-normal'>
-              {item}
+          {items.map((entry) => (
+            <Badge
+              key={`${entry.historyId}-${entry.value}`}
+              variant='secondary'
+              className='flex items-center gap-1 pr-1 text-xs font-normal'
+            >
+              {entry.value}
+              {onDelete && (
+                <button
+                  type='button'
+                  onClick={() => onDelete(entry)}
+                  aria-label={`Eliminar ${title.toLowerCase()}: ${entry.value}`}
+                  className='text-muted-foreground hover:text-destructive'
+                >
+                  <IconX className='h-3 w-3' />
+                </button>
+              )}
             </Badge>
           ))}
         </div>
@@ -75,6 +89,7 @@ function HistoryConcept({
       {showAdd && fieldName && setPendingField && (
         <div className='pl-5'>
           <Input
+            autoFocus
             value={pendingValue ?? ''}
             onChange={(e) => setPendingField(fieldName, e.target.value)}
           />
@@ -88,14 +103,16 @@ function HistoryRrssConcept({
   items,
   showAdd,
   toggleAdd,
+  onDelete,
   rrssPlatform,
   rrssUrl,
   onPlatformChange,
-  onUrlChange
+  onUrlChange,
 }: {
-  items: Record<string, string[]>
+  items: Record<string, HistoryFieldEntry[]>
   showAdd?: boolean
   toggleAdd?: () => void
+  onDelete?: (entry: HistoryFieldEntry) => void
   rrssPlatform?: string
   rrssUrl?: string
   onPlatformChange?: (v: string) => void
@@ -123,22 +140,36 @@ function HistoryRrssConcept({
       </div>
       {hasItems && (
         <div className='flex flex-col gap-1.5 pl-5'>
-          {Object.entries(items).map(([platform, urls]) => (
+          {Object.entries(items).map(([platform, entries]) => (
             <div key={platform} className='bg-muted/30 rounded-md p-2 text-xs'>
               <span className='text-muted-foreground font-medium capitalize'>
                 {platform}:
               </span>
               <div className='mt-1 flex flex-col gap-0.5 pl-2'>
-                {urls.map((url) => (
-                  <a
-                    key={url}
-                    href={url}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='text-primary truncate hover:underline'
+                {entries.map((entry) => (
+                  <div
+                    key={`${entry.historyId}-${entry.value}`}
+                    className='flex items-center gap-1'
                   >
-                    {url}
-                  </a>
+                    <a
+                      href={entry.value}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      className='text-primary truncate hover:underline'
+                    >
+                      {entry.value}
+                    </a>
+                    {onDelete && (
+                      <button
+                        type='button'
+                        onClick={() => onDelete(entry)}
+                        aria-label={`Eliminar enlace de ${platform}`}
+                        className='text-muted-foreground hover:text-destructive shrink-0'
+                      >
+                        <IconX className='h-3 w-3' />
+                      </button>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
@@ -148,6 +179,7 @@ function HistoryRrssConcept({
       {showAdd && (
         <div className='flex flex-col gap-2 pl-5'>
           <Input
+            autoFocus
             placeholder='Plataforma'
             value={rrssPlatform ?? ''}
             onChange={(e) => onPlatformChange?.(e.target.value)}
@@ -166,73 +198,31 @@ function HistoryRrssConcept({
 function ArtistHistoryDialogContent({
   history,
   artistId,
-  closeDialog
 }: {
-  history: NonNullable<ReturnType<typeof useArtistDialog.getState>['selectedArtistHistory']>
+  history: NonNullable<
+    ReturnType<typeof useArtistDialog.getState>['selectedArtistHistory']
+  >
   artistId: number
-  closeDialog: () => void
 }) {
-  const router = useRouter()
-
-  const [pendingFields, setPendingFields] = useState<Record<string, string>>({})
-  const [rrssOpen, setRrssOpen] = useState(false)
-  const [rrssPlatform, setRrssPlatform] = useState('')
-  const [rrssUrl, setRrssUrl] = useState('')
-  const [isSaving, setIsSaving] = useState(false)
-  const [saveError, setSaveError] = useState<string | null>(null)
-
-  const setPendingField = (name: string, value: string) => {
-    setPendingFields((prev) => ({ ...prev, [name]: value }))
-  }
-
-  const hasPendingItems =
-    Object.values(pendingFields).some((v) => v.trim().length > 0) ||
-    (rrssPlatform.trim().length > 0 && rrssUrl.trim().length > 0)
-
-  const handleSave = async () => {
-    setIsSaving(true)
-    setSaveError(null)
-
-    const data: InsertHistoryFormInput = {
-      artistaId: artistId
-    }
-
-    for (const key of ['pseudonimo', 'correo', 'ciudad', 'pais'] as const) {
-      const value = pendingFields[key]
-      if (value?.trim()) {
-        data[key] = value.trim()
-      }
-    }
-
-    if (rrssPlatform.trim() && rrssUrl.trim()) {
-      data.rrss = {
-        [rrssPlatform.trim().toLowerCase()]: [rrssUrl.trim()]
-      }
-    }
-
-    const result = await insertArtistHistoryItemAction(data)
-
-    if (!result.success) {
-      const firstError =
-        result.errors && result.errors.length > 0
-          ? result.errors[0].message
-          : 'Error al guardar'
-      setSaveError(firstError)
-      setIsSaving(false)
-      return
-    }
-
-    setIsSaving(false)
-    toast.success('Elemento de historial agregado exitosamente')
-    closeDialog()
-    router.refresh()
-  }
+  const {
+    optimisticHistory,
+    form,
+    saveError,
+    setPendingField,
+    openRrssAdd,
+    setRrssPlatform,
+    setRrssUrl,
+    hasPendingItems,
+    handleSave,
+    handleDelete,
+    handleDeleteRrss,
+  } = useArtistHistory(history, artistId)
 
   return (
     <DialogContent className='max-w-xl'>
       <DialogHeader>
         <DialogTitle>
-          Historial de {history.pseudonimo || 'Artista'}
+          Historial de {optimisticHistory.pseudonimo || 'Artista'}
         </DialogTitle>
       </DialogHeader>
 
@@ -240,75 +230,87 @@ function ArtistHistoryDialogContent({
         <HistoryConcept
           icon={IconUser}
           title='Pseudónimos'
-          items={history.pseudonimos}
-          showAdd={'pseudonimo' in pendingFields}
+          items={optimisticHistory.pseudonimos}
+          onDelete={handleDelete}
+          showAdd={'pseudonimo' in form.pendingFields}
           fieldName='pseudonimo'
           setPendingField={setPendingField}
           toggleAdd={() => setPendingField('pseudonimo', '')}
-          pendingValue={pendingFields['pseudonimo']}
+          pendingValue={form.pendingFields['pseudonimo']}
         />
 
-        {history.correos.length > 0 && <Separator className='opacity-50' />}
+        {optimisticHistory.correos.length > 0 && (
+          <Separator className='opacity-50' />
+        )}
         <HistoryConcept
           icon={IconMail}
           title='Correos'
-          items={history.correos}
-          showAdd={'correo' in pendingFields}
+          items={optimisticHistory.correos}
+          onDelete={handleDelete}
+          showAdd={'correo' in form.pendingFields}
           fieldName='correo'
           setPendingField={setPendingField}
           toggleAdd={() => setPendingField('correo', '')}
-          pendingValue={pendingFields['correo']}
+          pendingValue={form.pendingFields['correo']}
         />
 
-        {(history.ciudades.length > 0 || history.paises.length > 0) && (
+        {(optimisticHistory.ciudades.length > 0 ||
+          optimisticHistory.paises.length > 0) && (
           <Separator className='opacity-50' />
         )}
         <HistoryConcept
           icon={IconMapPin}
           title='Ubicaciones'
-          items={[...history.ciudades, ...history.paises].filter(Boolean)}
-          showAdd={'ciudad' in pendingFields || 'pais' in pendingFields}
+          items={[...optimisticHistory.ciudades, ...optimisticHistory.paises]}
+          onDelete={handleDelete}
+          showAdd={
+            'ciudad' in form.pendingFields || 'pais' in form.pendingFields
+          }
           toggleAdd={() => {
             setPendingField('ciudad', '')
             setPendingField('pais', '')
           }}
         />
-        {('ciudad' in pendingFields || 'pais' in pendingFields) && (
+        {('ciudad' in form.pendingFields || 'pais' in form.pendingFields) && (
           <div className='flex flex-col gap-2 pl-5'>
             <Input
+              autoFocus
               placeholder='Ciudad'
-              value={pendingFields['ciudad'] ?? ''}
+              value={form.pendingFields['ciudad'] ?? ''}
               onChange={(e) => setPendingField('ciudad', e.target.value)}
             />
             <Input
               placeholder='País'
-              value={pendingFields['pais'] ?? ''}
+              value={form.pendingFields['pais'] ?? ''}
               onChange={(e) => setPendingField('pais', e.target.value)}
             />
           </div>
         )}
 
-        {Object.keys(history.rrss).length > 0 && (
+        {Object.keys(optimisticHistory.rrss).length > 0 && (
           <Separator className='opacity-50' />
         )}
         <HistoryRrssConcept
-          items={history.rrss}
-          showAdd={rrssOpen}
-          toggleAdd={() => setRrssOpen(true)}
-          rrssPlatform={rrssPlatform}
-          rrssUrl={rrssUrl}
+          items={optimisticHistory.rrss}
+          onDelete={handleDeleteRrss}
+          showAdd={form.rrssOpen}
+          toggleAdd={openRrssAdd}
+          rrssPlatform={form.rrssPlatform}
+          rrssUrl={form.rrssUrl}
           onPlatformChange={setRrssPlatform}
           onUrlChange={setRrssUrl}
         />
 
         {hasPendingItems && (
-          <div className='pt-2'>
-            <Button onClick={handleSave} disabled={isSaving}>
-              {isSaving ? 'Guardando...' : 'Guardar cambios'}
-            </Button>
-            {saveError && (
-              <p className='mt-2 text-sm text-red-500'>{saveError}</p>
-            )}
+          <div className='flex justify-end pt-2'>
+            <div>
+              <Button onClick={handleSave}>Guardar cambios</Button>
+              {saveError && (
+                <p className='mt-2 text-sm text-right text-red-500'>
+                  {saveError}
+                </p>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -333,7 +335,6 @@ export function ArtistHistoryDialog() {
         key={artistId}
         history={history}
         artistId={artistId}
-        closeDialog={closeHistoryDialog}
       />
     </Dialog>
   )
