@@ -1,6 +1,6 @@
 import { SearchParamsProps } from '@/shared/types/search-params'
 import { ArtistListContainer } from './_components/artist-list-container'
-import { agrupateHistory } from './_lib/aggregate-history'
+import { aggregateHistoryRecords } from './_lib/aggregate-history'
 import { getHistoryData } from './_lib/get-artist-history'
 import { getDeletedArtists } from './_lib/get-deleted-artists'
 import { getArtistFilterOptions, getArtists } from './_lib/get-artists'
@@ -18,7 +18,7 @@ export default async function ArtistsListPage({
       getHistoryData(),
       getArtistFilterOptions()
     ])
-  const historyData = agrupateHistory(history)
+  const historyData = aggregateHistoryRecords(history)
 
   const enrichedArtist = data.map((artist) => ({
     ...artist,

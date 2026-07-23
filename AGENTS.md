@@ -1,4 +1,5 @@
 ## Git Workflow
+- **No PR directo a `main`.** Solo `dev→main` vía release PR.
 - **Commits:** conventional commits (`type(scope): description`). No AI attribution.
 - **No direct dev commits.** Branch per scope. PR to `dev`.
 - **Feature PRs** → `dev` (squash merge).
