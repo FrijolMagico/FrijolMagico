@@ -57,6 +57,9 @@ jobs:
 
             const { owner, repo } = context.repo;
 
+            /**
+             * Crea un label si aún no existe.
+             */
             async function ensureLabel(name, color, description) {
               try {
                 await github.rest.issues.getLabel({
@@ -76,9 +79,29 @@ jobs:
                   color,
                   description,
                 });
+
+                console.log(`Label creado: ${name}`);
               }
             }
 
+            /**
+             * Normaliza los labels devueltos por la API.
+             */
+            function getLabelNames(pullRequest) {
+              return pullRequest.labels
+                .map((label) => {
+                  if (typeof label === 'string') {
+                    return label;
+                  }
+
+                  return label.name;
+                })
+                .filter(Boolean);
+            }
+
+            // ----------------------------------------------------------------
+            // 1. Leer y validar la versión publicada en package.json
+            // ----------------------------------------------------------------
             const packageJson = JSON.parse(
               fs.readFileSync('package.json', 'utf8')
             );
@@ -97,93 +120,172 @@ jobs:
             const tagName = `v${version}`;
 
             // ----------------------------------------------------------------
-            // 1. Comprobar si la release ya fue publicada
+            // 2. Obtener PR mergeados a dev con release-pending
             // ----------------------------------------------------------------
-            let tagExists = false;
+            /*
+             * Se usa pulls.list en lugar de GitHub Search para evitar depender
+             * de la actualización eventual del índice de búsqueda.
+             */
+            const closedPullRequests = await github.paginate(
+              github.rest.pulls.list,
+              {
+                owner,
+                repo,
+                state: 'closed',
+                base: 'dev',
+                sort: 'created',
+                direction: 'asc',
+                per_page: 100,
+              }
+            );
+
+            const includedPullRequests = closedPullRequests.filter(
+              (pullRequest) => {
+                if (!pullRequest.merged_at) {
+                  return false;
+                }
+
+                const labels = getLabelNames(pullRequest);
+
+                return labels.includes('release-pending');
+              }
+            );
+
+            console.log(
+              `PR con release-pending encontradas: ` +
+              `${includedPullRequests.length}`
+            );
+
+            if (includedPullRequests.length > 0) {
+              console.log(
+                includedPullRequests.map((pullRequest) => ({
+                  number: pullRequest.number,
+                  title: pullRequest.title,
+                  labels: getLabelNames(pullRequest),
+                }))
+              );
+            }
+
+            // ----------------------------------------------------------------
+            // 3. Comprobar si existe el tag
+            // ----------------------------------------------------------------
+            let existingTag = null;
 
             try {
-              await github.rest.git.getRef({
+              const { data } = await github.rest.git.getRef({
                 owner,
                 repo,
                 ref: `tags/${tagName}`,
               });
 
-              tagExists = true;
+              existingTag = data;
             } catch (error) {
               if (error.status !== 404) {
                 throw error;
               }
             }
 
-            if (tagExists) {
-              console.log(
-                `${tagName} ya existe. No se vuelve a publicar.`
-              );
-              return;
-            }
-
             // ----------------------------------------------------------------
-            // 2. Obtener los PR incluidos en esta release
+            // 4. Comprobar si existe la GitHub Release
             // ----------------------------------------------------------------
-            const releasePendingItems = await github.paginate(
-              github.rest.search.issuesAndPullRequests,
-              {
-                q: [
-                  `repo:${owner}/${repo}`,
-                  'is:pr',
-                  'label:release-pending',
-                ].join(' '),
-                sort: 'updated',
-                order: 'asc',
-                per_page: 100,
-              }
-            );
+            let existingRelease = null;
 
-            /*
-             * Medida de seguridad:
-             *
-             * Un cambio normal en main que no contenga una release pendiente
-             * no debe producir automáticamente una versión nueva.
-             */
-            if (releasePendingItems.length === 0) {
-              console.log(
-                'No existen PR con release-pending. Se omite la publicación.'
-              );
-              return;
-            }
-
-            const includedPullRequests = [];
-
-            for (const item of releasePendingItems) {
-              const { data: pullRequest } =
-                await github.rest.pulls.get({
+            try {
+              const { data } =
+                await github.rest.repos.getReleaseByTag({
                   owner,
                   repo,
-                  pull_number: item.number,
+                  tag: tagName,
                 });
 
-              includedPullRequests.push(pullRequest);
+              existingRelease = data;
+            } catch (error) {
+              if (error.status !== 404) {
+                throw error;
+              }
+            }
+
+            /*
+             * Si no hay PR pendientes y tampoco existe un estado parcial de
+             * publicación, este push a main no corresponde a una release.
+             */
+            if (
+              includedPullRequests.length === 0 &&
+              !existingTag &&
+              !existingRelease
+            ) {
+              console.log(
+                'No existen PR con release-pending. ' +
+                'Se omite la publicación.'
+              );
+
+              return;
+            }
+
+            /*
+             * Si ya existe tanto el tag como la release y no quedan labels
+             * pendientes, la publicación ya se completó anteriormente.
+             */
+            if (
+              includedPullRequests.length === 0 &&
+              existingTag &&
+              existingRelease
+            ) {
+              console.log(
+                `Release ${tagName} ya está completamente publicada.`
+              );
+
+              return;
             }
 
             // ----------------------------------------------------------------
-            // 3. Crear tag sobre el SHA exacto que llegó a main
+            // 5. Crear o validar el tag
             // ----------------------------------------------------------------
-            await github.rest.git.createRef({
-              owner,
-              repo,
-              ref: `refs/tags/${tagName}`,
-              sha: context.sha,
-            });
+            if (!existingTag) {
+              await github.rest.git.createRef({
+                owner,
+                repo,
+                ref: `refs/tags/${tagName}`,
+                sha: context.sha,
+              });
 
-            console.log(
-              `Tag ${tagName} creado sobre ${context.sha}.`
-            );
+              console.log(
+                `Tag ${tagName} creado sobre ${context.sha}.`
+              );
+            } else {
+              /*
+               * Un lightweight tag apunta directamente a un commit.
+               *
+               * Si en el futuro se crean annotated tags, object.type será
+               * "tag" y será necesario resolver el objeto tag adicionalmente.
+               */
+              const tagObject = existingTag.object;
+
+              if (tagObject.type !== 'commit') {
+                throw new Error(
+                  `El tag ${tagName} no es un lightweight tag. ` +
+                  `Tipo encontrado: ${tagObject.type}.`
+                );
+              }
+
+              if (tagObject.sha !== context.sha) {
+                throw new Error(
+                  `El tag ${tagName} ya existe, pero apunta a ` +
+                  `${tagObject.sha} en lugar de ${context.sha}.`
+                );
+              }
+
+              console.log(
+                `Tag ${tagName} ya existe sobre el SHA correcto.`
+              );
+            }
 
             // ----------------------------------------------------------------
-            // 4. Construir notas de release
+            // 6. Construir las notas de release
             // ----------------------------------------------------------------
             let releaseBody = '';
-            releaseBody += `## Changes\n\n`;
+
+            releaseBody += '## Changes\n\n';
 
             for (const pullRequest of includedPullRequests) {
               releaseBody +=
@@ -192,28 +294,44 @@ jobs:
                 `(@${pullRequest.user.login})\n`;
             }
 
+            /*
+             * En una recuperación parcial podría ocurrir que el tag ya exista,
+             * la release aún no exista y los PR todavía tengan release-pending.
+             * En ese caso se reconstruyen normalmente las notas.
+             */
             releaseBody += '\n';
             releaseBody += `Commit: \`${context.sha}\`\n`;
 
             // ----------------------------------------------------------------
-            // 5. Crear GitHub Release
+            // 7. Crear la GitHub Release si falta
             // ----------------------------------------------------------------
-            await github.rest.repos.createRelease({
-              owner,
-              repo,
-              tag_name: tagName,
-              target_commitish: context.sha,
-              name: tagName,
-              body: releaseBody,
-              draft: false,
-              prerelease: false,
-              generate_release_notes: false,
-            });
+            if (!existingRelease) {
+              const { data: createdRelease } =
+                await github.rest.repos.createRelease({
+                  owner,
+                  repo,
+                  tag_name: tagName,
+                  target_commitish: context.sha,
+                  name: tagName,
+                  body: releaseBody,
+                  draft: false,
+                  prerelease: false,
+                  generate_release_notes: false,
+                });
 
-            console.log(`GitHub Release ${tagName} creada.`);
+              existingRelease = createdRelease;
+
+              console.log(
+                `GitHub Release ${tagName} creada.`
+              );
+            } else {
+              console.log(
+                `GitHub Release ${tagName} ya existe.`
+              );
+            }
 
             // ----------------------------------------------------------------
-            // 6. Actualizar estados de los PR
+            // 8. Garantizar que los labels de control existan
             // ----------------------------------------------------------------
             await ensureLabel(
               'release-pending',
@@ -227,29 +345,62 @@ jobs:
               'Published as part of an official release'
             );
 
+            // ----------------------------------------------------------------
+            // 9. Actualizar estados de los PR
+            // ----------------------------------------------------------------
+            /*
+             * Este bloque se ejecuta aunque el tag y la GitHub Release ya
+             * existan. Así se recuperan ejecuciones parciales.
+             */
             for (const pullRequest of includedPullRequests) {
-              try {
-                await github.rest.issues.removeLabel({
-                  owner,
-                  repo,
-                  issue_number: pullRequest.number,
-                  name: 'release-pending',
-                });
-              } catch (error) {
-                if (error.status !== 404) {
-                  throw error;
+              const labels = getLabelNames(pullRequest);
+
+              if (labels.includes('release-pending')) {
+                try {
+                  await github.rest.issues.removeLabel({
+                    owner,
+                    repo,
+                    issue_number: pullRequest.number,
+                    name: 'release-pending',
+                  });
+
+                  console.log(
+                    `PR #${pullRequest.number}: ` +
+                    '`release-pending` eliminado.'
+                  );
+                } catch (error) {
+                  /*
+                   * El label pudo haber sido retirado concurrentemente o
+                   * manualmente. Un 404 no debe impedir aplicar released.
+                   */
+                  if (error.status !== 404) {
+                    throw error;
+                  }
+
+                  console.log(
+                    `PR #${pullRequest.number}: ` +
+                    '`release-pending` ya no estaba presente.'
+                  );
                 }
               }
 
-              await github.rest.issues.addLabels({
-                owner,
-                repo,
-                issue_number: pullRequest.number,
-                labels: ['released'],
-              });
+              if (!labels.includes('released')) {
+                await github.rest.issues.addLabels({
+                  owner,
+                  repo,
+                  issue_number: pullRequest.number,
+                  labels: ['released'],
+                });
+
+                console.log(
+                  `PR #${pullRequest.number}: ` +
+                  '`released` agregado.'
+                );
+              }
 
               console.log(
-                `PR #${pullRequest.number}: release-pending → released`
+                `PR #${pullRequest.number}: ` +
+                'release-pending → released'
               );
             }
 
