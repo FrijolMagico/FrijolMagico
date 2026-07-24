@@ -181,7 +181,15 @@ export async function getArtistsNotInCatalog(): Promise<
     .select({
       id: artistTable.id,
       pseudonimo: artistTable.pseudonimo,
-      nombre: artistTable.nombre
+      nombre: artistTable.nombre,
+      avatarUrl: sql<string | null>`
+        (SELECT ${artistImage.imagenUrl}
+         FROM ${artistImage}
+         WHERE ${artistImage.artistaId} = ${artistTable.id}
+           AND ${artistImage.tipo} = 'avatar'
+           AND ${isNotDeleted(artistImage.deletedAt)}
+         LIMIT 1)
+      `
     })
     .from(artistTable)
     .where(

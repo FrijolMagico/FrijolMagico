@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, expect, mock, test } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
 import { act, createElement, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 
@@ -32,7 +32,8 @@ mock.module('@/core/artistas/catalogo/_hooks/use-avatar-controller', () => ({
       },
       cancel() {},
       retry: async () => {},
-      reset() {}
+      reset() {},
+      syncAvatar() {}
     }
   }
 }))
@@ -146,7 +147,35 @@ afterEach(() => {
   root = null
 })
 
-test('drives file selection into upload progress markup', async () => {
+  test('4.10 regression: default autoEnqueue=true still calls enqueue (UpdateCatalogDialog compat)', async () => {
+    const container = document.createElement('main')
+    document.body.appendChild(container)
+    root = createRoot(container as unknown as Element)
+
+    await act(async () => {
+      root?.render(
+        <ArtistAvatarSection
+          artistId='artist-1'
+          currentAvatar={{ path: 'avatar.webp', version: 'v1' }}
+          // No autoEnqueue prop — defaults to true, same as UpdateCatalogDialog usage
+        />
+      )
+    })
+
+    const input = nodesByTag(container, 'input')[0]
+    Object.defineProperty(input, 'files', {
+      value: [{ name: 'new-avatar.webp', type: 'image/webp', size: 100 }]
+    })
+
+    await act(async () => {
+      reactProps(input).onChange?.({ currentTarget: input })
+    })
+
+    expect(selectFileCallCount).toBe(1)
+    expect(enqueueCallCount).toBe(1)
+  })
+
+  test('drives file selection into upload progress markup', async () => {
   const container = document.createElement('main')
   document.body.appendChild(container)
   root = createRoot(container as unknown as Element)
@@ -225,4 +254,90 @@ test('invokes removal only after both confirmation steps', async () => {
     reactProps(confirmButton!).onClick?.()
   })
   expect(removeCalls).toBe(1)
+})
+
+test('autoEnqueue=false prevents enqueue after selectFile', async () => {
+  const container = document.createElement('main')
+  document.body.appendChild(container)
+  root = createRoot(container as unknown as Element)
+
+  await act(async () => {
+    root?.render(
+      <ArtistAvatarSection
+        artistId='artist-1'
+        currentAvatar={{ path: 'avatar.webp', version: 'v1' }}
+        autoEnqueue={false}
+      />
+    )
+  })
+
+  const input = nodesByTag(container, 'input')[0]
+  Object.defineProperty(input, 'files', {
+    value: [{ name: 'new-avatar.webp', type: 'image/webp', size: 100 }]
+  })
+
+  await act(async () => {
+    reactProps(input).onChange?.({ currentTarget: input })
+  })
+
+  // selectFile was called
+  expect(selectFileCallCount).toBe(1)
+  // enqueue was NOT called (autoEnqueue=false)
+  expect(enqueueCallCount).toBe(0)
+})
+
+describe('external controller prop', () => {
+  test('uses external controller state instead of internal', async () => {
+    const container = document.createElement('main')
+    document.body.appendChild(container)
+    root = createRoot(container as unknown as Element)
+
+    const externalSelectFile = mock(async () => ({ phase: 'ready' as const }))
+    const externalEnqueue = mock(async () => {})
+    const externalCancel = mock(() => {})
+
+    await act(async () => {
+      root?.render(
+        <ArtistAvatarSection
+          artistId='artist-1'
+          currentAvatar={{ path: 'avatar.webp', version: 'v1' }}
+          autoEnqueue={false}
+          controller={{
+            state: {
+              phase: 'idle' as const,
+              preview: null,
+              currentAvatar: { path: 'ext-avatar.png', version: 'v1' },
+              job: null,
+              error: null
+            },
+            selectFile: externalSelectFile,
+            enqueue: externalEnqueue,
+            cancel: externalCancel,
+            retry: async () => {}
+          }}
+        />
+      )
+    })
+
+    // External controller state should be used — verify the avatar shows
+    const img = container.textContent
+    expect(img).not.toContain('Sin avatar')
+
+    // Trigger file selection on the input
+    const input = nodesByTag(container, 'input')[0]
+    Object.defineProperty(input, 'files', {
+      value: [{ name: 'ext-upload.webp', type: 'image/webp', size: 100 }]
+    })
+
+    await act(async () => {
+      reactProps(input).onChange?.({ currentTarget: input })
+    })
+
+    // External selectFile was called (not internal)
+    expect(externalSelectFile).toHaveBeenCalledTimes(1)
+    // Internal selectFile was NOT called (external controller used)
+    expect(selectFileCallCount).toBe(0)
+    // enqueue was NOT called (autoEnqueue=false)
+    expect(externalEnqueue).toHaveBeenCalledTimes(0)
+  })
 })

@@ -204,13 +204,60 @@ describe.skipIf(!modulesLoaded)('get-catalog-data DAL', () => {
     expect(dbMock.calls).toHaveLength(2)
   })
 
+  test('getArtistsNotInCatalog returns avatarUrl when artist has avatar', async () => {
+    const dbMock = createDbMock([
+      [
+        {
+          id: 3,
+          pseudonimo: 'Bosque Azul',
+          nombre: 'María Soto',
+          avatarUrl: 'avatars/bosque.png'
+        }
+      ],
+      []
+    ])
+    currentDb = dbMock.db
+
+    const result = await getArtistsNotInCatalog()
+
+    expect(result).toHaveLength(1)
+    expect(result[0]).toMatchObject({
+      id: 3,
+      avatarUrl: 'avatars/bosque.png'
+    })
+    expect(
+      Object.keys((dbMock.calls[0]?.args[0] ?? {}) as Record<string, unknown>)
+    ).toEqual(['id', 'pseudonimo', 'nombre', 'avatarUrl'])
+  })
+
+  test('getArtistsNotInCatalog returns null avatarUrl for artist without avatar', async () => {
+    const dbMock = createDbMock([
+      [
+        {
+          id: 5,
+          pseudonimo: 'Sin Avatar',
+          nombre: null,
+          avatarUrl: null
+        }
+      ],
+      []
+    ])
+    currentDb = dbMock.db
+
+    const result = await getArtistsNotInCatalog()
+
+    expect(result).toHaveLength(1)
+    expect(result[0].avatarUrl).toBeNull()
+  })
+
   test('getArtistsNotInCatalog uses a minimal anti-join query and dual cache tags', async () => {
     const dbMock = createDbMock([
       [
         {
           id: 3,
           pseudonimo: 'Bosque Azul',
-          nombre: 'María Soto'
+          nombre: 'María Soto',
+          avatarUrl: 'avatars/bosque.png'
         }
       ],
       []
@@ -223,13 +270,14 @@ describe.skipIf(!modulesLoaded)('get-catalog-data DAL', () => {
       {
         id: 3,
         pseudonimo: 'Bosque Azul',
-        nombre: 'María Soto'
+        nombre: 'María Soto',
+        avatarUrl: 'avatars/bosque.png'
       }
     ])
     expect(getCacheTags()).toEqual(['catalogo:artistas', 'artistas'])
     expect(
       Object.keys((dbMock.calls[0]?.args[0] ?? {}) as Record<string, unknown>)
-    ).toEqual(['id', 'pseudonimo', 'nombre'])
+    ).toEqual(['id', 'pseudonimo', 'nombre', 'avatarUrl'])
     expect(dbMock.calls).toHaveLength(2)
     expect(
       Object.keys((dbMock.calls[1]?.args[0] ?? {}) as Record<string, unknown>)

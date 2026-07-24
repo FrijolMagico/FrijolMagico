@@ -137,4 +137,63 @@ describe('useAvatarController', () => {
     controller.reset()
     expect(controller.getSnapshot().phase).toBe(AVATAR_CONTROLLER_PHASE.IDLE)
   })
+
+  describe('syncAvatar', () => {
+    test('updates currentAvatar when phase is idle', () => {
+      const { controller } = createHarness()
+      expect(controller.getSnapshot().phase).toBe(AVATAR_CONTROLLER_PHASE.IDLE)
+      expect(controller.getSnapshot().currentAvatar).toBeNull()
+
+      controller.syncAvatar({ path: 'avatars/test.png', version: null })
+
+      expect(controller.getSnapshot().currentAvatar).toEqual({
+        path: 'avatars/test.png',
+        version: null
+      })
+    })
+
+    test('updates currentAvatar when phase is uploading', async () => {
+      const { controller } = createHarness()
+      await controller.selectFile(file)
+      expect(controller.getSnapshot().phase).toBe(AVATAR_CONTROLLER_PHASE.READY)
+
+      await controller.enqueue('artist-1')
+      expect(controller.getSnapshot().phase).toBe(
+        AVATAR_CONTROLLER_PHASE.UPLOADING
+      )
+
+      controller.syncAvatar({ path: 'new-avatar.png', version: 'v2' })
+
+      expect(controller.getSnapshot().currentAvatar).toEqual({
+        path: 'new-avatar.png',
+        version: 'v2'
+      })
+    })
+
+    test('does NOT update currentAvatar when phase is ready (preserves prepared preview)', async () => {
+      const { controller } = createHarness()
+      await controller.selectFile(file)
+      expect(controller.getSnapshot().phase).toBe(AVATAR_CONTROLLER_PHASE.READY)
+      expect(controller.getSnapshot().currentAvatar).toBeNull()
+
+      controller.syncAvatar({ path: 'should-not-update.png', version: null })
+
+      // currentAvatar stays null because phase===ready prevents update
+      expect(controller.getSnapshot().currentAvatar).toBeNull()
+    })
+
+    test('accepts null avatar (clears currentAvatar when idle)', () => {
+      const { controller } = createHarness()
+      // Set an initial avatar
+      controller.syncAvatar({ path: 'avatars/initial.png', version: 'v1' })
+      expect(controller.getSnapshot().currentAvatar).toEqual({
+        path: 'avatars/initial.png',
+        version: 'v1'
+      })
+
+      // Clear it
+      controller.syncAvatar(null)
+      expect(controller.getSnapshot().currentAvatar).toBeNull()
+    })
+  })
 })

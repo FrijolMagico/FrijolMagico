@@ -76,6 +76,7 @@ interface AvatarController {
   cancel: () => void
   retry: () => Promise<void>
   reset: () => void
+  syncAvatar: (avatar: ManagedAssetReference | null) => void
 }
 
 export function createAvatarController(
@@ -230,6 +231,11 @@ export function createAvatarController(
         job: null,
         error: null
       })
+    },
+    syncAvatar(avatar: ManagedAssetReference | null) {
+      if (snapshot.phase !== AVATAR_CONTROLLER_PHASE.READY) {
+        update({ currentAvatar: avatar })
+      }
     }
   }
 

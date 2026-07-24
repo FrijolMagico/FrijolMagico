@@ -15,15 +15,27 @@ import {
   AlertDialogTitle
 } from '@/shared/components/ui/alert-dialog'
 import type { ManagedAssetReference } from '@/shared/assets-manager/managed-asset-reference'
+import type { AvatarControllerState } from '../_hooks/use-avatar-controller'
+import type { PreparationResult } from '@/shared/assets-manager/client/preparation'
 
 import { useAvatarController } from '../_hooks/use-avatar-controller'
 
 const ACCEPTED_AVATAR_TYPES = 'image/jpeg,image/png,image/webp'
 
+export interface ExternalAvatarController {
+  state: AvatarControllerState
+  selectFile: (file: File) => Promise<PreparationResult>
+  enqueue: (entityId: string | number) => Promise<void>
+  cancel: () => void
+  retry: () => Promise<void>
+}
+
 export interface ArtistAvatarSectionProps {
   artistId: string | number | null
   currentAvatar?: ManagedAssetReference | null
   onRemove?: (artistId: string | number) => void | Promise<void>
+  autoEnqueue?: boolean
+  controller?: ExternalAvatarController
 }
 
 function progressFor(sentBytes: number, totalBytes: number): number {
@@ -33,9 +45,12 @@ function progressFor(sentBytes: number, totalBytes: number): number {
 export function ArtistAvatarSection({
   artistId,
   currentAvatar = null,
-  onRemove
+  onRemove,
+  autoEnqueue = true,
+  controller: externalController
 }: ArtistAvatarSectionProps) {
-  const controller = useAvatarController({ initialAvatar: currentAvatar })
+  const internalController = useAvatarController({ initialAvatar: currentAvatar })
+  const controller = externalController ?? internalController
   const [confirmationStep, setConfirmationStep] = useState<1 | 2 | null>(null)
   const previewUrl =
     controller.state.preview?.url ??
@@ -56,7 +71,7 @@ export function ArtistAvatarSection({
     event.currentTarget.value = ''
     if (!file) return
     void controller.selectFile(file).then((result) => {
-      if (result.phase === 'ready' && artistId !== null)
+      if (result.phase === 'ready' && artistId !== null && autoEnqueue)
         void controller.enqueue(artistId)
     })
   }
