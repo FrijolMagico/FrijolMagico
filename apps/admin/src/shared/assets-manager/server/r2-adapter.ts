@@ -54,7 +54,6 @@ export class R2Adapter implements AssetStore {
     target: AssetTarget,
     entityId: string,
     blob: Blob,
-    _mimeType: string,
   ): Promise<ManagedAssetReference> {
     const version = crypto.randomUUID()
     const key = deriveObjectKey(target, entityId, version)
@@ -67,7 +66,7 @@ export class R2Adapter implements AssetStore {
           Bucket: this.bucketName,
           Key: key,
           Body: buffer,
-          ContentType: 'image/webp',
+          ContentType: blob.type,
         }),
       )
 
@@ -85,9 +84,8 @@ export class R2Adapter implements AssetStore {
     entityId: string,
     currentRef: ManagedAssetReference,
     blob: Blob,
-    mimeType: string,
   ): Promise<ManagedAssetReference> {
-    const ref = await this.uploadAsset(target, entityId, blob, mimeType)
+    const ref = await this.uploadAsset(target, entityId, blob)
 
     if (currentRef.path) {
       try {

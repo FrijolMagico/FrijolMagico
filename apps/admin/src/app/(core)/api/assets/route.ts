@@ -38,7 +38,6 @@ export async function POST(request: Request) {
       payload.target,
       payload.entityId,
       payload.blob,
-      payload.mimeType
     )
 
     return NextResponse.json(ref, { status: 200 })
@@ -90,7 +89,6 @@ export async function PUT(request: Request) {
       payload.entityId,
       payload.currentRef,
       payload.blob,
-      payload.mimeType
     )
 
     return NextResponse.json(ref, { status: 200 })

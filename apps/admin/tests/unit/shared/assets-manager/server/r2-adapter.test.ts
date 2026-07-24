@@ -26,7 +26,7 @@ describe('R2Adapter', () => {
       const adapter = new R2Adapter(mockConfig)
       const blob = new Blob(['fake-image'], { type: 'image/webp' })
 
-      const result = await adapter.uploadAsset('artist-avatar', 'artist-123', blob, 'image/webp')
+      const result = await adapter.uploadAsset('artist-avatar', 'artist-123', blob)
 
       expect(result.path).toContain('artist-avatar/artist-123/')
       expect(result.path).toMatch(/\.webp$/)
@@ -43,7 +43,7 @@ describe('R2Adapter', () => {
       mockSend.mockRejectedValueOnce(new Error('S3 error'))
 
       await expect(
-        adapter.uploadAsset('artist-avatar', 'artist-123', blob, 'image/webp'),
+        adapter.uploadAsset('artist-avatar', 'artist-123', blob),
       ).rejects.toThrow(AssetStoreError)
     })
   })
@@ -91,7 +91,6 @@ describe('R2Adapter', () => {
         'edition-789',
         { path: 'old/path.webp', version: 'v1' },
         blob,
-        'image/webp',
       )
 
       expect(result.path).toContain('edition-poster/edition-789/')

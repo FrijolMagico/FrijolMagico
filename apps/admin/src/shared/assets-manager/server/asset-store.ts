@@ -10,7 +10,6 @@ export interface AssetStore {
     target: AssetTarget,
     entityId: string,
     blob: Blob,
-    mimeType: string,
   ): Promise<ManagedAssetReference>
 
   replaceAsset(
@@ -18,7 +17,6 @@ export interface AssetStore {
     entityId: string,
     currentRef: ManagedAssetReference,
     blob: Blob,
-    mimeType: string,
   ): Promise<ManagedAssetReference>
 
   deleteAsset(
