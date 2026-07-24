@@ -17,7 +17,7 @@ import {
   AVATAR_CONTROLLER_PHASE,
   createAvatarController,
   type AvatarControllerOptions
-} from '@/core/artistas/_hooks/use-avatar-controller'
+} from '@/core/artistas/catalogo/_hooks/use-avatar-controller'
 
 const file = new File(['source'], 'avatar.png', { type: 'image/png' })
 const codec: AssetCodec = {

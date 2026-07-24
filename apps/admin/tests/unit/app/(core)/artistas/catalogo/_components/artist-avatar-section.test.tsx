@@ -9,7 +9,7 @@ const hookState = {
 let selectFileCallCount = 0
 let enqueueCallCount = 0
 
-mock.module('@/core/artistas/_hooks/use-avatar-controller', () => ({
+mock.module('@/core/artistas/catalogo/_hooks/use-avatar-controller', () => ({
   useAvatarController: () => {
     const [, rerender] = useState(0)
     return {
@@ -129,7 +129,7 @@ globalThis.HTMLIFrameElement = TestNode as unknown as typeof HTMLIFrameElement
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 
 const { ArtistAvatarSection } =
-  await import('@/core/artistas/_components/artist-avatar-section')
+  await import('@/core/artistas/catalogo/_components/artist-avatar-section')
 
 let root: ReturnType<typeof createRoot> | null = null
 

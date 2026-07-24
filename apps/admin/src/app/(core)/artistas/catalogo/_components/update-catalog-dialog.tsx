@@ -9,7 +9,7 @@ import { Button } from '@/shared/components/ui/button'
 import { Switch } from '@/shared/components/ui/switch'
 import { Label } from '@/shared/components/ui/label'
 import { Textarea } from '@/shared/components/ui/textarea'
-import { ArtistAvatar } from './artist-avatar'
+import { ArtistAvatarSection } from './artist-avatar-section'
 import { Field, FieldGroup, FieldLabel } from '@/shared/components/ui/field'
 import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
 
@@ -92,10 +92,13 @@ export function UpdateCatalogDialog() {
         <form id={UPDATE_CATALOG_FORM_ID} onSubmit={handleSubmit(onSubmit)}>
           <div className='space-y-6'>
             <div className='flex items-center gap-6'>
-              <ArtistAvatar
-                src={catalog.avatarUrl}
-                alt={artist.pseudonimo}
-                size='2xl'
+              <ArtistAvatarSection
+                artistId={artist.id}
+                currentAvatar={
+                  catalog.avatarUrl
+                    ? { path: catalog.avatarUrl, version: null }
+                    : null
+                }
               />
               <div className='flex-1'>
                 <div className='flex items-center gap-2'>
