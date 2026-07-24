@@ -125,7 +125,6 @@ describe('PUT /api/assets', () => {
       'abc',
       { path: 'artist-avatar/abc/ver.webp', version: 'ver' },
       expect.any(Blob),
-      'image/webp'
     )
   })
 
