@@ -23,12 +23,12 @@
     "./src/cdn.ts",
     "./src/version.ts"
   ],
-  "scripts": {
-    "test": "bun test"
-  },
   "dependencies": {
     "clsx": "^2.1.1",
     "tailwind-merge": "^3.5.0"
+  },
+  "scripts": {
+    "test": "bun test"
   },
   "devDependencies": {
     "@frijolmagico/eslint-config": "workspace:*",
