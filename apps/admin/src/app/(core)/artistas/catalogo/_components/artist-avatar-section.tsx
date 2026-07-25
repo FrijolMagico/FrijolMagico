@@ -49,7 +49,9 @@ export function ArtistAvatarSection({
   autoEnqueue = true,
   controller: externalController
 }: ArtistAvatarSectionProps) {
-  const internalController = useAvatarController({ initialAvatar: currentAvatar })
+  const internalController = useAvatarController({
+    initialAvatar: currentAvatar
+  })
   const controller = externalController ?? internalController
   const [confirmationStep, setConfirmationStep] = useState<1 | 2 | null>(null)
   const previewUrl =
@@ -90,29 +92,26 @@ export function ArtistAvatarSection({
       className='flex flex-col gap-4'
     >
       <h2 id='artist-avatar-section-title' className='text-sm font-medium'>
-        Avatar del artista
+        Avatar del artista <span className='text-destructive ml-1'>*</span>
       </h2>
-      <div className='flex items-center gap-4'>
-        <div className='bg-muted flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-full'>
+      <div className='flex flex-col items-center gap-4'>
+        <label
+          htmlFor='artist-avatar-file'
+          className='bg-muted border-border hover:border-primary focus-within:border-primary flex size-24 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-dashed text-center transition-colors'
+        >
           {previewUrl ? (
             <Image
-              src={previewUrl}
+              src={new URL(previewUrl).toString()}
               alt='Vista previa del avatar'
               width={96}
               height={96}
-              unoptimized
               className='size-full object-cover'
             />
           ) : (
-            <span className='text-muted-foreground text-xs'>Sin avatar</span>
+            <span className='text-muted-foreground text-xs'>
+              Seleccionar avatar
+            </span>
           )}
-        </div>
-        <label
-          htmlFor='artist-avatar-file'
-          className='border-border hover:border-primary focus-within:border-primary flex min-h-24 flex-1 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed px-4 py-3 text-center transition-colors'
-        >
-          <span className='text-sm font-medium'>Seleccionar imagen</span>
-          <span className='text-muted-foreground text-xs'>JPG, PNG o WebP</span>
           <input
             id='artist-avatar-file'
             type='file'
@@ -122,6 +121,9 @@ export function ArtistAvatarSection({
             className='sr-only'
           />
         </label>
+        {!previewUrl && (
+          <span className='text-muted-foreground text-xs'>JPG, PNG o WebP</span>
+        )}
       </div>
       {(controller.state.phase === 'uploading' ||
         controller.state.phase === 'completed') &&

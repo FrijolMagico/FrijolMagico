@@ -64,7 +64,7 @@ export function CreateCatalogDialog({
   const artistaId = useWatch({ name: 'artistaId', control })
 
   const selectedArtist = artistaId
-    ? availableArtists.find((a) => a.id === artistaId) ?? null
+    ? (availableArtists.find((a) => a.id === artistaId) ?? null)
     : null
 
   const controller = useAvatarController()
@@ -84,6 +84,7 @@ export function CreateCatalogDialog({
       }
       toggleDialog(false)
     }
+    toggleDialog(open)
   }
 
   const onSubmit = async (data: CatalogCreateFormInput) => {
@@ -148,9 +149,7 @@ export function CreateCatalogDialog({
           <div className='flex items-center gap-6'>
             <ArtistAvatarSection
               artistId={artistaId}
-              currentAvatar={
-                controller.state.currentAvatar ?? currentAvatar
-              }
+              currentAvatar={controller.state.currentAvatar ?? currentAvatar}
               autoEnqueue={false}
               controller={{
                 state: controller.state,
@@ -181,10 +180,11 @@ export function CreateCatalogDialog({
                           onChange(val?.value ?? 0)
                           // Sync avatar when artist is selected
                           const artist = val?.value
-                            ? availableArtists.find(
+                            ? (availableArtists.find(
                                 (a) => a.id === val.value
-                              ) ?? null
+                              ) ?? null)
                             : null
+
                           controller.syncAvatar(
                             artist?.avatarUrl
                               ? {

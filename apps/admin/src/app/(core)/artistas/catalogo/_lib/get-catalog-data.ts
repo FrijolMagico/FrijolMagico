@@ -177,19 +177,11 @@ export async function getArtistsNotInCatalog(): Promise<
   cacheTag(CATALOG_CACHE_TAG)
   cacheTag(ARTIST_CACHE_TAG)
 
-  return db
+  const artists = await db
     .select({
       id: artistTable.id,
       pseudonimo: artistTable.pseudonimo,
-      nombre: artistTable.nombre,
-      avatarUrl: sql<string | null>`
-        (SELECT ${artistImage.imagenUrl}
-         FROM ${artistImage}
-         WHERE ${artistImage.artistaId} = ${artistTable.id}
-           AND ${artistImage.tipo} = 'avatar'
-           AND ${isNotDeleted(artistImage.deletedAt)}
-         LIMIT 1)
-      `
+      nombre: artistTable.nombre
     })
     .from(artistTable)
     .where(
@@ -209,4 +201,36 @@ export async function getArtistsNotInCatalog(): Promise<
       )
     )
     .orderBy(asc(artistTable.pseudonimo), asc(artistTable.nombre))
+
+  const artistIds = artists.map((a) => a.id)
+  const avatars =
+    artistIds.length > 0
+      ? await db
+          .select({
+            artistaId: artistImage.artistaId,
+            imagenUrl:
+              sql<string>`MIN(${artistImage.imagenUrl})`.as('imagen_url')
+          })
+          .from(artistImage)
+          .where(
+            and(
+              inArray(artistImage.artistaId, artistIds),
+              eq(artistImage.tipo, 'avatar'),
+              isNotDeleted(artistImage.deletedAt)
+            )
+          )
+          .groupBy(artistImage.artistaId)
+      : []
+
+  const avatarMap = new Map<number, string>()
+  for (const avatar of avatars) {
+    avatarMap.set(avatar.artistaId, avatar.imagenUrl)
+  }
+
+  return artists.map((artist) => ({
+    id: artist.id,
+    pseudonimo: artist.pseudonimo,
+    nombre: artist.nombre,
+    avatarUrl: avatarMap.get(artist.id) ?? null
+  }))
 }

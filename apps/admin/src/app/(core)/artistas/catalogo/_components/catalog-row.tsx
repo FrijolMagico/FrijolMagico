@@ -11,12 +11,7 @@ import { updateCatalogFieldAction } from '../_actions/update-catalog-field.actio
 import { useCatalogDialog } from '../_store/catalog-dialog-store'
 import type { CatalogListItem } from '../_types/catalog-list-item'
 import { toast } from 'sonner'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from '@/shared/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
 
 interface CatalogRowProps {
   catalog: CatalogListItem
@@ -85,25 +80,23 @@ export function CatalogRow({
             size='sm'
           />
         ) : (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <div>
-                    <ArtistAvatar
-                      src={catalog.avatarUrl}
-                      alt={artist.pseudonimo}
-                      size='sm'
-                      status='missing'
-                    />
-                  </div>
-                }
-              />
-              <TooltipContent side='right'>
-                Debe subir un avatar antes de activar la entrada
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <div>
+                  <ArtistAvatar
+                    src={catalog.avatarUrl}
+                    alt={artist.pseudonimo}
+                    size='sm'
+                    status='missing'
+                  />
+                </div>
+              }
+            />
+            <TooltipContent side='right'>
+              Debe subir un avatar antes de activar la entrada
+            </TooltipContent>
+          </Tooltip>
         )}
       </TableCell>
 
@@ -142,7 +135,7 @@ export function CatalogRow({
           </TableCell>
 
           <TableCell>
-            <div className='flex items-center gap-2'>
+            <div className='flex items-center gap-2' data-testid='switch-activo-cell'>
               <Switch
                 checked={displayActive}
                 onCheckedChange={handleToggleActivo}
