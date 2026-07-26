@@ -1,11 +1,4 @@
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  mock,
-  test
-} from 'bun:test'
+import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
 import { act, createElement } from 'react'
 import { createRoot } from 'react-dom/client'
 
@@ -30,11 +23,12 @@ mock.module('@/core/artistas/catalogo/_store/catalog-dialog-store', () => ({
 
 // ── Mock the avatar controller ──────────────────────────────────────
 let controllerPhase = 'idle'
+let submissionEvents: string[] = []
 let controllerCurrentAvatar: { path: string; version: string | null } | null =
   null
 let controllerError: string | null = null
 const mockSelectFile = mock(async () => ({ phase: 'ready' as const }))
-const mockEnqueue = mock(async () => {})
+const mockEnqueue = mock(async () => submissionEvents.push('enqueue'))
 const mockCancel = mock(() => {})
 const mockRetry = mock(async () => {})
 const mockSyncAvatar = mock(
@@ -48,50 +42,44 @@ const mockSyncAvatar = mock(
   }
 )
 
-mock.module(
-  '@/core/artistas/catalogo/_hooks/use-avatar-controller',
-  () => ({
-    useAvatarController: () => ({
-      state: {
-        phase: controllerPhase,
-        preview: null,
-        currentAvatar: controllerCurrentAvatar,
-        job: null,
-        error: controllerError
-      },
-      selectFile: mockSelectFile,
-      enqueue: mockEnqueue,
-      cancel: mockCancel,
-      retry: mockRetry,
-      reset: mock(() => {}),
-      syncAvatar: mockSyncAvatar,
-      getSnapshot: () => ({
-        phase: controllerPhase,
-        preview: null,
-        currentAvatar: controllerCurrentAvatar,
-        job: null,
-        error: controllerError
-      }),
-      subscribe: () => () => {}
-    })
+mock.module('@/core/artistas/catalogo/_hooks/use-avatar-controller', () => ({
+  useAvatarController: () => ({
+    state: {
+      phase: controllerPhase,
+      preview: null,
+      currentAvatar: controllerCurrentAvatar,
+      job: null,
+      error: controllerError
+    },
+    selectFile: mockSelectFile,
+    enqueue: mockEnqueue,
+    cancel: mockCancel,
+    retry: mockRetry,
+    reset: mock(() => {}),
+    syncAvatar: mockSyncAvatar,
+    getSnapshot: () => ({
+      phase: controllerPhase,
+      preview: null,
+      currentAvatar: controllerCurrentAvatar,
+      job: null,
+      error: controllerError
+    }),
+    subscribe: () => () => {}
   })
-)
+}))
 
 // ── Mock the server action ──────────────────────────────────────────
 let actionResult = { success: true }
 const mockCreateCatalogAction = mock(
-  async (
-    _prevState: { success: boolean },
-    _data: Record<string, unknown>
-  ) => actionResult
+  async (_prevState: { success: boolean }, _data: Record<string, unknown>) => {
+    if (actionResult.success) submissionEvents.push('catalog-complete')
+    return actionResult
+  }
 )
 
-mock.module(
-  '@/core/artistas/catalogo/_actions/create-catalog.action',
-  () => ({
-    createCatalogAction: mockCreateCatalogAction
-  })
-)
+mock.module('@/core/artistas/catalogo/_actions/create-catalog.action', () => ({
+  createCatalogAction: mockCreateCatalogAction
+}))
 
 // ── Mock shadcn/ui dialog ───────────────────────────────────────────
 let onOpenChangeCallback: ((open: boolean) => void) | null = null
@@ -107,7 +95,9 @@ mock.module('@/shared/components/ui/dialog', () => ({
     onOpenChange: (open: boolean) => void
   }) => {
     onOpenChangeCallback = onOpenChange
-    return open ? createElement('div', { 'data-testid': 'dialog' }, children) : null
+    return open
+      ? createElement('div', { 'data-testid': 'dialog' }, children)
+      : null
   },
   DialogContent: ({ children }: { children: unknown }) =>
     createElement('div', { 'data-testid': 'dialog-content' }, children),
@@ -142,8 +132,7 @@ mock.module('@/shared/components/ui/combobox', () => ({
     items: Array<{ label: string; value: number }>
   }) => {
     // Store onValueChange for triggering from tests
-    ;(globalThis as Record<string, unknown>).__comboboxOnChange =
-      onValueChange
+    ;(globalThis as Record<string, unknown>).__comboboxOnChange = onValueChange
     return createElement(
       'div',
       { 'data-testid': 'combobox' },
@@ -186,20 +175,34 @@ mock.module('@/shared/components/ui/field', () => ({
     createElement('div', { 'data-testid': 'field' }, children),
   FieldError: ({ children }: { children: unknown }) =>
     createElement('div', { 'data-testid': 'field-error' }, children),
-  FieldGroup: ({ children, className }: { children: unknown; className?: string }) =>
+  FieldGroup: ({
+    children,
+    className
+  }: {
+    children: unknown
+    className?: string
+  }) =>
     createElement('div', { 'data-testid': 'field-group', className }, children),
-  FieldLabel: ({ children, htmlFor }: { children: unknown; htmlFor?: string }) =>
-    createElement('label', { htmlFor }, children)
+  FieldLabel: ({
+    children,
+    htmlFor
+  }: {
+    children: unknown
+    htmlFor?: string
+  }) => createElement('label', { htmlFor }, children)
 }))
 
 mock.module('@/shared/components/ui/textarea', () => ({
-  Textarea: (props: Record<string, unknown>) =>
-    createElement('textarea', props)
+  Textarea: (props: Record<string, unknown>) => createElement('textarea', props)
 }))
 
 mock.module('@/shared/components/controller-switch', () => ({
   ControllerSwitch: ({ label }: { label: string }) =>
-    createElement('div', { 'data-testid': `switch-${label?.toLowerCase()}` }, label)
+    createElement(
+      'div',
+      { 'data-testid': `switch-${label?.toLowerCase()}` },
+      label
+    )
 }))
 
 mock.module('@/shared/components/ui/button', () => ({
@@ -311,13 +314,17 @@ globalThis.HTMLIFrameElement = TestNode as unknown as typeof HTMLIFrameElement
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 
 // ── The component ───────────────────────────────────────────────────
-const { CreateCatalogDialog } = await import(
-  '@/core/artistas/catalogo/_components/create-catalog-dialog'
-)
+const { CreateCatalogDialog } =
+  await import('@/core/artistas/catalogo/_components/create-catalog-dialog')
 
 const availableArtists = [
   { id: 1, pseudonimo: 'Luna Roja', nombre: 'Ana Pérez' },
-  { id: 2, pseudonimo: 'Bosque Azul', nombre: 'María Soto', avatarUrl: 'avatars/bosque.png' }
+  {
+    id: 2,
+    pseudonimo: 'Bosque Azul',
+    nombre: 'María Soto',
+    avatarUrl: 'avatars/bosque.png'
+  }
 ]
 
 // ── Helper to render ────────────────────────────────────────────────
@@ -329,6 +336,7 @@ beforeEach(() => {
   controllerPhase = 'idle'
   controllerCurrentAvatar = null
   controllerError = null
+  submissionEvents = []
   actionResult = { success: true }
   mockSelectFile.mockClear()
   mockEnqueue.mockClear()
@@ -355,9 +363,7 @@ afterEach(() => {
 describe('CreateCatalogDialog avatar integration', () => {
   test('R3: select artist with avatar displays existing avatar', async () => {
     await act(async () => {
-      root?.render(
-        createElement(CreateCatalogDialog, { availableArtists })
-      )
+      root?.render(createElement(CreateCatalogDialog, { availableArtists }))
     })
 
     // Trigger combobox selection for artist with avatarUrl
@@ -378,9 +384,7 @@ describe('CreateCatalogDialog avatar integration', () => {
 
   test('R3: select artist without avatar does not call syncAvatar', async () => {
     await act(async () => {
-      root?.render(
-        createElement(CreateCatalogDialog, { availableArtists })
-      )
+      root?.render(createElement(CreateCatalogDialog, { availableArtists }))
     })
 
     const comboBoxItems = nodesByTag(container, 'button').filter(
@@ -398,9 +402,7 @@ describe('CreateCatalogDialog avatar integration', () => {
 
   test('R4+R5: submit success calls enqueue', async () => {
     await act(async () => {
-      root?.render(
-        createElement(CreateCatalogDialog, { availableArtists })
-      )
+      root?.render(createElement(CreateCatalogDialog, { availableArtists }))
     })
 
     // Find and click submit button
@@ -418,9 +420,7 @@ describe('CreateCatalogDialog avatar integration', () => {
     actionResult = { success: true }
 
     await act(async () => {
-      root?.render(
-        createElement(CreateCatalogDialog, { availableArtists })
-      )
+      root?.render(createElement(CreateCatalogDialog, { availableArtists }))
     })
 
     // Select artist (needed for form validity)
@@ -445,6 +445,7 @@ describe('CreateCatalogDialog avatar integration', () => {
     expect(mockCreateCatalogAction).toHaveBeenCalled()
     // enqueue should have been called on success
     expect(mockEnqueue).toHaveBeenCalled()
+    expect(submissionEvents).toEqual(['catalog-complete', 'enqueue'])
     // cancel should NOT have been called (suppressCancelRef guarded against it)
     expect(mockCancel).not.toHaveBeenCalled()
   })
@@ -453,9 +454,7 @@ describe('CreateCatalogDialog avatar integration', () => {
     actionResult = { success: false }
 
     await act(async () => {
-      root?.render(
-        createElement(CreateCatalogDialog, { availableArtists })
-      )
+      root?.render(createElement(CreateCatalogDialog, { availableArtists }))
     })
 
     // Select artist
@@ -483,9 +482,7 @@ describe('CreateCatalogDialog avatar integration', () => {
     controllerPhase = 'uploading'
 
     await act(async () => {
-      root?.render(
-        createElement(CreateCatalogDialog, { availableArtists })
-      )
+      root?.render(createElement(CreateCatalogDialog, { availableArtists }))
     })
 
     // Close dialog via onOpenChange
@@ -499,9 +496,7 @@ describe('CreateCatalogDialog avatar integration', () => {
 
   test('R8: submit disabled when no artist and no avatar', async () => {
     await act(async () => {
-      root?.render(
-        createElement(CreateCatalogDialog, { availableArtists })
-      )
+      root?.render(createElement(CreateCatalogDialog, { availableArtists }))
     })
 
     // With no artist selected and no avatar, submit should be disabled
@@ -518,9 +513,7 @@ describe('CreateCatalogDialog avatar integration', () => {
     controllerCurrentAvatar = null
 
     await act(async () => {
-      root?.render(
-        createElement(CreateCatalogDialog, { availableArtists })
-      )
+      root?.render(createElement(CreateCatalogDialog, { availableArtists }))
     })
 
     // Controller phase is 'ready' (file prepared)

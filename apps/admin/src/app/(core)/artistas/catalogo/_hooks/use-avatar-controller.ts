@@ -2,6 +2,8 @@
 
 import { useState, useSyncExternalStore } from 'react'
 
+import { ensureArtistAvatarPolicy } from '../_lib/artist-avatar-production-composition'
+
 import { createBrowserImageCodec } from '@/shared/assets-manager/client/browser-image-codec'
 import {
   getSharedAssetOperationRuntime,
@@ -27,6 +29,8 @@ import {
   type AssetQueueStatus
 } from '@/shared/assets-manager/client/queue'
 import type { ManagedAssetReference } from '@/shared/assets-manager/managed-asset-reference'
+
+ensureArtistAvatarPolicy()
 
 const AVATAR_CONTROLLER_PHASE = {
   IDLE: 'idle',

@@ -30,6 +30,13 @@ export interface AssetOperationRuntime {
     target: AssetTarget,
     policy: AssetOperationPolicy<TUpload, TPersist, TCleanup>
   ): void
+  ensure<TUpload, TPersist, TCleanup>(
+    target: AssetTarget,
+    policy: AssetOperationPolicy<TUpload, TPersist, TCleanup>
+  ): void
+  resolve<TUpload, TPersist, TCleanup>(
+    target: AssetTarget
+  ): AssetOperationPolicy<TUpload, TPersist, TCleanup> | undefined
   enqueue: AssetQueue['enqueue']
   cancel: AssetQueue['cancel']
   remove: AssetQueue['remove']
@@ -298,6 +305,12 @@ export function createAssetOperationRuntime(
       target: AssetTarget,
       policy: AssetOperationPolicy<TUpload, TPersist, TCleanup>
     ) => policies.register(target, policy),
+    ensure: <TUpload, TPersist, TCleanup>(
+      target: AssetTarget,
+      policy: AssetOperationPolicy<TUpload, TPersist, TCleanup>
+    ) => policies.ensure(target, policy),
+    resolve: <TUpload, TPersist, TCleanup>(target: AssetTarget) =>
+      policies.resolve<TUpload, TPersist, TCleanup>(target),
     enqueue: (target, entityId, preparedAsset, preview) => {
       const policy = policies.resolve<unknown, unknown, unknown>(target)
       if (!policy) throw new Error('No asset operation policy registered')
