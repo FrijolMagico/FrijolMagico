@@ -55,6 +55,14 @@ function createHarness(
   return { controller: createAvatarController(options), runtime, store }
 }
 
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((next) => {
+    resolve = next
+  })
+  return { promise, resolve }
+}
+
 async function prepareAndEnqueue(
   controller: ReturnType<typeof createAvatarController>
 ) {
@@ -123,6 +131,32 @@ describe('useAvatarController', () => {
     expect(controller.getSnapshot().phase).toBe(
       AVATAR_CONTROLLER_PHASE.COMPLETED
     )
+  })
+
+  test('preflights avatar admission before attempting a duplicate enqueue', async () => {
+    const upload = deferred<string>()
+    let admissions = 0
+    const { controller, runtime, store } = createHarness({
+      admitEnqueue: ({ snapshot, entityId }) => {
+        admissions++
+        if (snapshot.jobs.some((job) => job.entityId === entityId))
+          throw new Error('Avatar upload is already queued for this artist')
+      },
+      upload: async () => upload.promise
+    })
+    const duplicate = createAvatarController({ codec, runtime, store })
+
+    await controller.selectFile(file)
+    await controller.enqueue('artist-1')
+    await duplicate.selectFile(file)
+    await duplicate.enqueue('artist-1')
+
+    expect(admissions).toBe(3)
+    expect(duplicate.getSnapshot().phase).toBe(AVATAR_CONTROLLER_PHASE.FAILED)
+    expect(duplicate.getSnapshot().error).toBe(
+      'Avatar upload is already queued for this artist'
+    )
+    upload.resolve('uploaded')
   })
 
   test('cancel and reset release local preparation without owning queue FSM', async () => {

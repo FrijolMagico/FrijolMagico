@@ -9,40 +9,16 @@ interface MockSession {
 const mockGetSession = mock(async (): Promise<MockSession | null> => null)
 const mockRequireAuth = mock(async (): Promise<MockSession | null> => null)
 const mockGetUser = mock(async (): Promise<MockSession['user'] | null> => null)
-const mockUploadAsset = mock(async () => ({
-  path: 'artist-avatar/abc/ver.webp',
-  version: 'ver'
-}))
-const mockReplaceAsset = mock(async () => ({
-  path: 'artist-avatar/abc/ver2.webp',
-  version: 'ver2'
-}))
-const mockDeleteAsset = mock(async () => {})
-
-interface ReplacementFields {
-  currentPath?: string
-  currentVersion?: string
-}
-
-function createUploadRequest(replacement: ReplacementFields): Request {
-  const formData = new FormData()
-  formData.append('assetTarget', 'artist-avatar')
-  formData.append('entityId', 'abc')
-  formData.append('blob', new Blob(['fake-webp'], { type: 'image/webp' }))
-  formData.append('preparedWidth', '800')
-  formData.append('preparedHeight', '800')
-  if (replacement.currentPath) {
-    formData.append('currentPath', replacement.currentPath)
+const mockUploadArtistAvatarAction = mock(async () => ({
+  success: true,
+  data: {
+    id: 7,
+    artistaId: 42,
+    path: 'artistas/artista-de-prueba/avatar-1710000000000.webp',
+    version: '1710000000000',
+    oldAsset: null
   }
-  if (replacement.currentVersion) {
-    formData.append('currentVersion', replacement.currentVersion)
-  }
-
-  return new Request('http://localhost/api/assets', {
-    method: 'PUT',
-    body: formData
-  })
-}
+}))
 
 mock.module('@/shared/lib/auth/utils', () => ({
   getSession: mockGetSession,
@@ -50,21 +26,15 @@ mock.module('@/shared/lib/auth/utils', () => ({
   getUser: mockGetUser
 }))
 
-mock.module('@/shared/assets-manager/server/r2-adapter', () => ({
-  R2Adapter: mock(() => ({
-    uploadAsset: mockUploadAsset,
-    replaceAsset: mockReplaceAsset,
-    deleteAsset: mockDeleteAsset
-  })),
-  createR2Config: mock(() => ({
-    endpoint: 'https://mock.r2.dev',
-    bucketName: 'test-bucket',
-    accessKeyId: 'test-key',
-    secretAccessKey: 'test-secret'
-  }))
+mock.module('@/core/artistas/_actions/upload-artist-avatar.action', () => ({
+  uploadArtistAvatarAction: mockUploadArtistAvatarAction
 }))
 
 describe('POST /api/assets', () => {
+  beforeEach(() => {
+    mockUploadArtistAvatarAction.mockClear()
+  })
+
   it('returns 401 when not authenticated', async () => {
     mockGetSession.mockResolvedValueOnce(null)
 
@@ -89,90 +59,37 @@ describe('POST /api/assets', () => {
 
     expect(response.status).toBe(400)
   })
-})
 
-describe('PUT /api/assets', () => {
-  beforeEach(() => {
-    mockReplaceAsset.mockClear()
-  })
-
-  it('returns 401 when not authenticated', async () => {
-    mockGetSession.mockResolvedValueOnce(null)
-
-    const { PUT } = await import('@/app/(core)/api/assets/route')
-    const request = new Request('http://localhost/api/assets', {
-      method: 'PUT'
-    })
-    const response = await PUT(request)
-
-    expect(response.status).toBe(401)
-  })
-
-  it('replaces an asset from one multipart request', async () => {
+  it('delegates an artist avatar upload using only prepared client input', async () => {
     mockGetSession.mockResolvedValueOnce({ user: { id: '1' } })
+    const formData = new FormData()
+    const blob = new Blob(['fake-webp'], { type: 'image/webp' })
+    formData.append('assetTarget', 'artist-avatar')
+    formData.append('entityId', '42')
+    formData.append('blob', blob)
+    formData.append('preparedWidth', '800')
+    formData.append('preparedHeight', '800')
+    formData.append('path', 'untrusted/path.webp')
+    formData.append('version', 'untrusted-version')
 
-    const { PUT } = await import('@/app/(core)/api/assets/route')
-    const response = await PUT(
-      createUploadRequest({
-        currentPath: 'artist-avatar/abc/ver.webp',
-        currentVersion: 'ver'
-      })
+    const { POST } = await import('@/app/(core)/api/assets/route')
+    const response = await POST(
+      new Request('http://localhost/api/assets', { method: 'POST', body: formData })
     )
 
     expect(response.status).toBe(200)
-    expect(mockReplaceAsset).toHaveBeenCalledWith(
-      'artist-avatar',
-      'abc',
-      { path: 'artist-avatar/abc/ver.webp', version: 'ver' },
-      expect.any(Blob),
-    )
-  })
-
-  it('returns 400 when the current asset reference is missing', async () => {
-    mockGetSession.mockResolvedValueOnce({ user: { id: '1' } })
-
-    const { PUT } = await import('@/app/(core)/api/assets/route')
-    const response = await PUT(createUploadRequest({}))
-
-    expect(response.status).toBe(400)
-    expect(mockReplaceAsset).not.toHaveBeenCalled()
-  })
-
-  it('returns 400 when the current asset reference is partial', async () => {
-    mockGetSession.mockResolvedValueOnce({ user: { id: '1' } })
-
-    const { PUT } = await import('@/app/(core)/api/assets/route')
-    const response = await PUT(
-      createUploadRequest({ currentPath: 'artist-avatar/abc/ver.webp' })
-    )
-
-    expect(response.status).toBe(400)
-    expect(mockReplaceAsset).not.toHaveBeenCalled()
-  })
-})
-
-describe('DELETE /api/assets', () => {
-  it('returns 401 when not authenticated', async () => {
-    mockGetSession.mockResolvedValueOnce(null)
-
-    const { DELETE } = await import('@/app/(core)/api/assets/route')
-    const request = new Request('http://localhost/api/assets', {
-      method: 'DELETE'
+    expect(mockUploadArtistAvatarAction).toHaveBeenCalledWith({
+      artistaId: 42,
+      blob: expect.any(Blob),
+      width: 800,
+      height: 800
     })
-    const response = await DELETE(request)
-
-    expect(response.status).toBe(401)
-  })
-
-  it('returns 400 when path and version are missing', async () => {
-    mockGetSession.mockResolvedValueOnce({ user: { id: '1' } })
-
-    const { DELETE } = await import('@/app/(core)/api/assets/route')
-    const request = new Request('http://localhost/api/assets', {
-      method: 'DELETE'
+    await expect(response.json()).resolves.toEqual({
+      id: 7,
+      artistaId: 42,
+      path: 'artistas/artista-de-prueba/avatar-1710000000000.webp',
+      version: '1710000000000',
+      oldAsset: null
     })
-    const response = await DELETE(request)
-
-    expect(response.status).toBe(400)
   })
 })

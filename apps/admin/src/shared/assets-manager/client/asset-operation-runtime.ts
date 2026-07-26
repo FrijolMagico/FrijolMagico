@@ -37,6 +37,7 @@ export interface AssetOperationRuntime {
   resolve<TUpload, TPersist, TCleanup>(
     target: AssetTarget
   ): AssetOperationPolicy<TUpload, TPersist, TCleanup> | undefined
+  canEnqueue: (target: AssetTarget, entityId: string) => void
   enqueue: AssetQueue['enqueue']
   cancel: AssetQueue['cancel']
   remove: AssetQueue['remove']
@@ -142,17 +143,15 @@ export function createAssetOperationRuntime(
     }
   }
 
-  const waitForTurn = async (context: JobContext) => {
-    while (current(context) && queue.getSnapshot().activeJobId !== null) {
-      await new Promise<void>((resolve) => {
-        const unsubscribe = queue.subscribe(() => {
-          if (!current(context) || queue.getSnapshot().activeJobId === null) {
-            unsubscribe()
-            resolve()
-          }
-        })
+  const waitForQueueIdle = async () => {
+    if (queue.getSnapshot().activeJobId === null) return
+    await new Promise<void>((resolve) => {
+      const unsubscribe = queue.subscribe(() => {
+        if (queue.getSnapshot().activeJobId !== null) return
+        unsubscribe()
+        resolve()
       })
-    }
+    })
   }
 
   const operationContext = (
@@ -272,7 +271,6 @@ export function createAssetOperationRuntime(
   }
 
   const execute = async (context: JobContext) => {
-    await waitForTurn(context)
     const job = jobFor(context.metadata.jobId)
     if (!current(context) || job?.status !== ASSET_QUEUE_STATUS.ENQUEUED) return
     try {
@@ -300,6 +298,13 @@ export function createAssetOperationRuntime(
 
   bindQueueOperations({ upload, persist })
 
+  const admitEnqueue = (target: AssetTarget, entityId: string) => {
+    const policy = policies.resolve<unknown, unknown, unknown>(target)
+    if (!policy) throw new Error('No asset operation policy registered')
+    policy.admitEnqueue?.({ target, entityId, snapshot: queue.getSnapshot() })
+    return policy
+  }
+
   const runtime: AssetOperationRuntime = {
     register: <TUpload, TPersist, TCleanup>(
       target: AssetTarget,
@@ -311,9 +316,9 @@ export function createAssetOperationRuntime(
     ) => policies.ensure(target, policy),
     resolve: <TUpload, TPersist, TCleanup>(target: AssetTarget) =>
       policies.resolve<TUpload, TPersist, TCleanup>(target),
+    canEnqueue: admitEnqueue,
     enqueue: (target, entityId, preparedAsset, preview) => {
-      const policy = policies.resolve<unknown, unknown, unknown>(target)
-      if (!policy) throw new Error('No asset operation policy registered')
+      const policy = admitEnqueue(target, entityId)
       const identity = createAssetOperationIdentity(target, entityId)
       for (const context of contexts.values()) {
         if (
@@ -329,7 +334,7 @@ export function createAssetOperationRuntime(
       generations.set(identity.queueEntityId, generation)
       const job = queue.enqueue(
         target,
-        identity.queueEntityId,
+        entityId,
         preparedAsset,
         preview
       )
@@ -373,34 +378,39 @@ export function createAssetOperationRuntime(
       contexts.delete(jobId)
       queue.remove(jobId)
     },
-    retryUpload: (jobId) =>
-      schedule(async () => {
-        const context = contexts.get(jobId)
-        if (!context || !current(context)) return
-        await waitForTurn(context)
+    retryUpload: (jobId) => {
+      const context = contexts.get(jobId)
+      if (!context) return Promise.resolve()
+      return schedule(async () => {
+        if (!current(context)) return
+        await waitForQueueIdle()
         if (!current(context)) return
         await queue.retryUpload(jobId)
         if (jobFor(jobId)?.status === ASSET_QUEUE_STATUS.PERSISTING)
           await persistAndCleanup(context)
-      }),
-    retryPersistence: (jobId) =>
-      schedule(async () => {
-        const context = contexts.get(jobId)
-        if (!context || !current(context)) return
-        await waitForTurn(context)
+      })
+    },
+    retryPersistence: (jobId) => {
+      const context = contexts.get(jobId)
+      if (!context) return Promise.resolve()
+      return schedule(async () => {
+        if (!current(context)) return
+        await waitForQueueIdle()
         if (!current(context)) return
         await queue.retryPersistence(jobId)
         if (jobFor(jobId)?.status === ASSET_QUEUE_STATUS.COMPLETED) {
           await cleanup(context)
           finalize(context)
         }
-      }),
-    retryCleanup: (jobId) =>
-      schedule(async () => {
-        const context = pendingCleanups.get(jobId)
-        if (!context) return
+      })
+    },
+    retryCleanup: (jobId) => {
+      const context = pendingCleanups.get(jobId)
+      if (!context) return Promise.resolve()
+      return schedule(async () => {
         await cleanup(context)
-      }),
+      })
+    },
     getCleanupFailures: () =>
       cleanupFailures.map((failure) => ({ ...failure })),
     subscribeCleanupFailures: (listener) => {

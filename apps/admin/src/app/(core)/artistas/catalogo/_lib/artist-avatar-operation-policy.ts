@@ -1,48 +1,35 @@
 import type {
-  UploadArtistAvatarData,
-  UploadArtistAvatarInput
+  UploadArtistAvatarData
 } from '../../_actions/upload-artist-avatar.action'
-import type { AssetOperationPolicy } from '@/shared/assets-manager/client/asset-operation-contracts'
+import type {
+  AssetEnqueueAdmissionInput,
+  AssetOperationPolicy
+} from '@/shared/assets-manager/client/asset-operation-contracts'
 import type { AssetOperationRuntime } from '@/shared/assets-manager/client/asset-operation-runtime'
-import { ASSET_TARGET } from '@/shared/assets-manager/client/contracts'
-import type { ActionState } from '@/shared/types/actions'
-
-interface UploadedAssetReference {
-  path: string
-  version: string
-}
+import {
+  ASSET_TARGET
+} from '@/shared/assets-manager/client/contracts'
+import {
+  ASSET_QUEUE_STATUS,
+  type AssetQueueStatus
+} from '@/shared/assets-manager/client/queue'
 
 interface AssetFetch {
   (input: string, init: RequestInit): Promise<Response>
 }
 
-interface ArtistAvatarPersist {
-  (input: UploadArtistAvatarInput): Promise<ActionState<UploadArtistAvatarData>>
-}
-
 interface ArtistAvatarPolicyDependencies {
   fetch: AssetFetch
-  persist: ArtistAvatarPersist
 }
 
-/**
- * The lazy import preserves the server-action reference for Next.js, whose
- * bundler transforms `import()` calls to server actions. The `server-only`
- * guard is compile-time and stripped from server bundles; Bun's mock is a
- * test-environment limitation, not a production risk.
- */
-async function persistArtistAvatar(
-  input: UploadArtistAvatarInput
-): Promise<ActionState<UploadArtistAvatarData>> {
-  const { uploadArtistAvatarAction } =
-    await import('../../_actions/upload-artist-avatar.action')
-  return uploadArtistAvatarAction(input)
-}
-
-function isAssetReference(value: unknown): value is UploadedAssetReference {
+function isPersistedAvatar(value: unknown): value is UploadArtistAvatarData {
   return (
     typeof value === 'object' &&
     value !== null &&
+    'id' in value &&
+    typeof value.id === 'number' &&
+    'artistaId' in value &&
+    typeof value.artistaId === 'number' &&
     'path' in value &&
     typeof value.path === 'string' &&
     value.path.length > 0 &&
@@ -52,10 +39,32 @@ function isAssetReference(value: unknown): value is UploadedAssetReference {
   )
 }
 
+const TERMINAL_QUEUE_STATUSES: ReadonlySet<AssetQueueStatus> = new Set([
+  ASSET_QUEUE_STATUS.COMPLETED,
+  ASSET_QUEUE_STATUS.FAILED,
+  ASSET_QUEUE_STATUS.CANCELLED
+])
+
+export function admitArtistAvatarEnqueue({
+  target,
+  entityId,
+  snapshot
+}: AssetEnqueueAdmissionInput): void {
+  if (target !== ASSET_TARGET.ARTIST_AVATAR) return
+  const existing = snapshot.jobs.some(
+    (job) =>
+      job.target === ASSET_TARGET.ARTIST_AVATAR &&
+      job.entityId === entityId &&
+      !TERMINAL_QUEUE_STATUSES.has(job.status)
+  )
+  if (existing) throw new Error('Avatar upload is already queued for this artist')
+}
+
 export function createArtistAvatarOperationPolicy(
   dependencies: ArtistAvatarPolicyDependencies
-): AssetOperationPolicy<UploadedAssetReference, UploadArtistAvatarData, null> {
+): AssetOperationPolicy<UploadArtistAvatarData, UploadArtistAvatarData, null> {
   return {
+    admitEnqueue: admitArtistAvatarEnqueue,
     async upload({ context, preparedAsset }) {
       const formData = new FormData()
       formData.append('assetTarget', ASSET_TARGET.ARTIST_AVATAR)
@@ -72,29 +81,19 @@ export function createArtistAvatarOperationPolicy(
       if (!response.ok) throw new Error('Asset upload failed')
 
       const result: unknown = await response.json()
-      if (!isAssetReference(result))
+      if (!isPersistedAvatar(result))
         throw new Error('Invalid asset upload response')
       return result
     },
-    async persist({ context, upload }) {
-      const result = await dependencies.persist({
-        artistaId: Number(context.entityId),
-        path: upload.path,
-        version: upload.version
-      })
-      if (!result.success || !result.data)
-        throw new Error(
-          result.errors?.[0]?.message ?? 'Asset persistence failed'
-        )
-      return { persisted: result.data, cleanup: null }
+    async persist({ upload }) {
+      return { persisted: upload, cleanup: null }
     },
     async cleanup() {}
   }
 }
 
 export const artistAvatarPolicy = createArtistAvatarOperationPolicy({
-  fetch: (input, init) => globalThis.fetch(input, init),
-  persist: persistArtistAvatar
+  fetch: (input, init) => globalThis.fetch(input, init)
 })
 
 export function bootstrapArtistAvatarPolicy(

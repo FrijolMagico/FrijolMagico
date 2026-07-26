@@ -184,6 +184,7 @@ export function createAvatarController(
         return
       }
       try {
+        runtime.canEnqueue(ASSET_TARGET.ARTIST_AVATAR, String(entityId))
         const job = runtime.enqueue(
           ASSET_TARGET.ARTIST_AVATAR,
           String(entityId),

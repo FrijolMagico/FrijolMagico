@@ -11,12 +11,21 @@ import { artist } from '@frijolmagico/database/schema'
 import { ARTIST_CACHE_TAG } from '@frijolmagico/cache-tags'
 import type { ManagedAssetReference } from '@/shared/assets-manager/managed-asset-reference'
 import { requireAuth } from '@/shared/lib/auth/utils'
+import {
+  R2Adapter,
+  createR2Config
+} from '@/shared/assets-manager/server/r2-adapter'
 import type { ActionState } from '@/shared/types/actions'
 
 const uploadArtistAvatarSchema = z.object({
   artistaId: z.number().int().positive(),
-  path: z.string().min(1),
-  version: z.string().min(1)
+  blob: z.instanceof(Blob).refine((blob) => blob.type === 'image/webp', {
+    message: 'El avatar debe estar en formato WebP'
+  }),
+  width: z.number().int().positive(),
+  height: z.number().int().positive()
+}).refine((input) => input.width === 800 && input.height === 800, {
+  message: 'El avatar preparado debe medir exactamente 800×800 px'
 })
 
 export type UploadArtistAvatarInput = z.infer<typeof uploadArtistAvatarSchema>
@@ -27,6 +36,19 @@ export interface UploadArtistAvatarData {
   path: string
   version: string | null
   oldAsset: ManagedAssetReference | null
+}
+
+function getStore(): R2Adapter {
+  return new R2Adapter(createR2Config())
+}
+
+async function getArtistSlug(artistaId: number): Promise<string | null> {
+  const [artistRecord] = await db
+    .select({ slug: artist.artist.slug })
+    .from(artist.artist)
+    .where(eq(artist.artist.id, artistaId))
+
+  return artistRecord?.slug ?? null
 }
 
 export async function uploadArtistAvatarAction(
@@ -46,7 +68,17 @@ export async function uploadArtistAvatarAction(
       }
     }
 
-    const avatar = await db.transaction(async (tx) => {
+    const slug = await getArtistSlug(parsed.data.artistaId)
+    if (!slug) throw new Error('No se encontró el artista para el avatar')
+
+    const version = String(Date.now())
+    const path = `artistas/${slug}/avatar-${version}.webp`
+    const store = getStore()
+    await store.putObject(path, parsed.data.blob)
+
+    let avatar: UploadArtistAvatarData
+    try {
+      avatar = await db.transaction(async (tx) => {
       const [oldAvatar] = await tx
         .update(artist.artistImage)
         .set({ deletedAt: sql`CURRENT_TIMESTAMP` })
@@ -66,8 +98,8 @@ export async function uploadArtistAvatarAction(
         .insert(artist.artistImage)
         .values({
           artistaId: parsed.data.artistaId,
-          imagenUrl: parsed.data.path,
-          artistAvatarVersion: parsed.data.version,
+          imagenUrl: path,
+          artistAvatarVersion: version,
           tipo: 'avatar',
           orden: 1
         })
@@ -87,6 +119,14 @@ export async function uploadArtistAvatarAction(
         oldAsset: oldAvatar ?? null
       }
     })
+    } catch (error) {
+      try {
+        await store.deleteObject(path)
+      } catch {
+        // The persistence failure remains authoritative when provisional cleanup fails.
+      }
+      throw error
+    }
 
     try {
       updateTag(ARTIST_CACHE_TAG)
