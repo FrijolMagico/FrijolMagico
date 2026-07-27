@@ -24,7 +24,7 @@ import { schema } from '@frijolmagico/database/schema' // Schema exports
 ## Project Structure
 
 ```
-src/
+src/                           # Source code
 ├── client.ts                  # Raw SQL client (Turso/libSQL)
 ├── drizzle.ts                 # Drizzle ORM client
 └── db/
@@ -41,18 +41,58 @@ src/
 migrations/                    # Drizzle Kit migrations
 data/                          # Reference SQL files
 seed/                          # Seed data
+scripts/                       # Automation scripts
+├── seed.ts                    # Create local.dev.db from scratch
 ```
 
 ## Commands
 
 ```bash
-# Run from packages/database/ or via root
-bun run migrate             # Run pending migrations
-bun run new <name>          # Create new migration
-bun run seed                # Run seed.sql
+# Run from packages/database/
+
+# Desarrollar con datos curados (seed)
+bun run seed                # Crea local.dev.db: schema + datos mínimos realistas
+bun run dev                 # turso dev --db-file local.dev.db
+
+# Desarrollar con datos reales (dump de Turso)
+bun run prod                # turso dev --db-file local.db (requiere dump previo)
+
+# Migraciones (para deploy a Turso remoto)
+bun run migrate             # Aplica migrations pendientes contra Turso Cloud
+bun run new <name>          # Crea migration custom nueva
+
+# Utilidades
 bun run lint                # ESLint
 bun run type-check          # TypeScript check
 ```
+
+### Workflows
+
+#### Desarrollo con datos curados (default)
+
+```bash
+# 1. Crear DB con datos de desarrollo (2 artistas, 1 evento, participaciones)
+bun run seed
+
+# 2. Iniciar servidor local
+bun run dev
+
+# La app apunta a http://127.0.0.1:8080 (local.dev.db)
+```
+
+#### Desarrollo con datos reales (dump de producción)
+
+```bash
+# 1. Dump de Turso remoto a archivo local
+#    (documentado en db/shell de Turso CLI)
+
+# 2. Iniciar servidor local con dump
+bun run prod
+```
+
+> ⚠️ `local.dev.db` y `local.db` son archivos separados. `bun run seed` solo
+> modifica `local.dev.db`. El dump de prod va a `local.db` y nunca es pisado
+> por el seed.
 
 ## Usage
 
@@ -146,9 +186,12 @@ cp .env.example .env.local
 
 Key variables:
 
-- `TURSO_DATABASE_URL` - Database URL (remote or file:local.db)
-- `TURSO_AUTH_TOKEN` - Auth token for remote databases
-- `TURSO_DATABASE_NAME` - Database name for CLI commands
+- `TURSO_DATABASE_URL` - URL de Turso Cloud (para deploy via `migrate`)
+- `TURSO_AUTH_TOKEN` - Token de autenticación para Turso Cloud
+- `TURSO_DATABASE_NAME` - Nombre de la DB en Turso Cloud (para CLI)
+
+  > Para desarrollo local (`seed` + `dev`/`prod`) no se necesita ninguna variable.
+  > El seed usa `file:local.dev.db` directo y `turso dev` no requiere configuración.
 
 ## Dual Client Pattern
 

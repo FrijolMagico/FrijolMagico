@@ -27,8 +27,9 @@
   "scripts": {
     "migrate": "bun run --env-file .env.local drizzle-kit migrate --config drizzle.config.ts",
     "new": "bun run --env-file .env.local drizzle-kit generate --custom --name",
-    "seed": "bun run --env-file .env.local turso db shell $TURSO_DATABASE_NAME < seed/seed.sql",
-    "dev": "turso dev --db-file local.db",
+    "seed": "bun run scripts/seed.ts",
+    "dev": "turso dev --db-file local.dev.db",
+    "prod": "turso dev --db-file local.db",
     "lint": "eslint .",
     "test": "bun test",
     "type-check": "tsc --noEmit"
