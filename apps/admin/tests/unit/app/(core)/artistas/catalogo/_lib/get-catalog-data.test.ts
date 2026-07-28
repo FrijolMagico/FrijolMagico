@@ -157,8 +157,10 @@ describe.skipIf(!modulesLoaded)('get-catalog-data DAL', () => {
       ],
       [
         {
+          id: 1,
           artistaId: 7,
           imagenUrl: 'avatars/luna.png',
+          version: 'v1',
           orden: 1
         }
       ],
@@ -185,6 +187,11 @@ describe.skipIf(!modulesLoaded)('get-catalog-data DAL', () => {
       rrss: { instagram: ['@luna'] }
     })
     expect(result.data[0]?.avatarUrl).toContain('avatars/luna.png')
+    expect(result.data[0]?.activeAvatar).toEqual({
+      id: 1,
+      path: 'avatars/luna.png',
+      version: 'v1'
+    })
 
     const avatarWhereValues = flattenPrimitiveValues(
       dbMock.calls[1]?.whereArgs ?? []

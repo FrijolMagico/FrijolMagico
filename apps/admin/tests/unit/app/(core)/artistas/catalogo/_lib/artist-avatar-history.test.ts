@@ -6,7 +6,7 @@ import {
 } from '@/core/artistas/catalogo/_lib/artist-avatar-history'
 
 describe('artist avatar history', () => {
-  test('places the active avatar first and retains legacy deleted rows', () => {
+  test('orders deleted avatar history newest-first with a stable id tie-breaker', () => {
     const history = orderAvatarHistory([
       {
         id: 3,
@@ -22,9 +22,9 @@ describe('artist avatar history', () => {
       },
       {
         id: 1,
-        path: 'artistas/current/avatar.webp',
-        version: 'current',
-        deletedAt: null
+        path: 'artistas/newest/avatar.webp',
+        version: 'newest',
+        deletedAt: '2026-01-04'
       }
     ])
 
@@ -37,7 +37,7 @@ describe('artist avatar history', () => {
     })
   })
 
-  test('uses the latest deleted avatar when no active avatar exists and wraps navigation', () => {
+  test('does not wrap history navigation beyond either boundary', () => {
     const history = orderAvatarHistory([
       {
         id: 3,
@@ -54,7 +54,7 @@ describe('artist avatar history', () => {
     ])
 
     expect(history.map((avatar) => avatar.id)).toEqual([2, 3])
-    expect(getAvatarHistoryItem(history, -1)?.id).toBe(3)
-    expect(getAvatarHistoryItem(history, 2)?.id).toBe(2)
+    expect(getAvatarHistoryItem(history, -1)).toBeNull()
+    expect(getAvatarHistoryItem(history, 2)).toBeNull()
   })
 })

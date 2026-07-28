@@ -23,8 +23,5 @@ export function getAvatarHistoryItem(
   avatars: ArtistAvatarHistoryItem[],
   index: number
 ): ArtistAvatarHistoryItem | null {
-  if (avatars.length === 0) return null
-  const normalizedIndex =
-    ((index % avatars.length) + avatars.length) % avatars.length
-  return avatars[normalizedIndex] ?? null
+  return avatars[index] ?? null
 }

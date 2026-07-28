@@ -74,7 +74,10 @@ describe('POST /api/assets', () => {
 
     const { POST } = await import('@/app/(core)/api/assets/route')
     const response = await POST(
-      new Request('http://localhost/api/assets', { method: 'POST', body: formData })
+      new Request('http://localhost/api/assets', {
+        method: 'POST',
+        body: formData
+      })
     )
 
     expect(response.status).toBe(200)
@@ -82,7 +85,8 @@ describe('POST /api/assets', () => {
       artistaId: 42,
       blob: expect.any(Blob),
       width: 800,
-      height: 800
+      height: 800,
+      expectedActive: null
     })
     await expect(response.json()).resolves.toEqual({
       id: 7,

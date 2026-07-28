@@ -1,14 +1,11 @@
 import 'server-only'
 
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, isNotNull } from 'drizzle-orm'
 
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 
-import {
-  orderAvatarHistory,
-  type ArtistAvatarHistoryItem
-} from '../catalogo/_lib/artist-avatar-history'
+import type { ArtistAvatarHistoryItem } from '../catalogo/_lib/artist-avatar-history'
 
 export async function getArtistAvatarHistory(
   artistaId: number
@@ -24,10 +21,11 @@ export async function getArtistAvatarHistory(
     .where(
       and(
         eq(artist.artistImage.artistaId, artistaId),
-        eq(artist.artistImage.tipo, 'avatar')
+        eq(artist.artistImage.tipo, 'avatar'),
+        isNotNull(artist.artistImage.deletedAt)
       )
     )
     .orderBy(desc(artist.artistImage.deletedAt), desc(artist.artistImage.id))
 
-  return orderAvatarHistory(avatars)
+  return avatars
 }

@@ -1,14 +1,10 @@
-import type {
-  UploadArtistAvatarData
-} from '../../_actions/upload-artist-avatar.action'
+import type { UploadArtistAvatarData } from '../../_actions/upload-artist-avatar.action'
 import type {
   AssetEnqueueAdmissionInput,
   AssetOperationPolicy
 } from '@/shared/assets-manager/client/asset-operation-contracts'
 import type { AssetOperationRuntime } from '@/shared/assets-manager/client/asset-operation-runtime'
-import {
-  ASSET_TARGET
-} from '@/shared/assets-manager/client/contracts'
+import { ASSET_TARGET } from '@/shared/assets-manager/client/contracts'
 import {
   ASSET_QUEUE_STATUS,
   type AssetQueueStatus
@@ -20,6 +16,7 @@ interface AssetFetch {
 
 interface ArtistAvatarPolicyDependencies {
   fetch: AssetFetch
+  expectedActive?: { id: number; path: string; version: string | null } | null
 }
 
 function isPersistedAvatar(value: unknown): value is UploadArtistAvatarData {
@@ -57,7 +54,8 @@ export function admitArtistAvatarEnqueue({
       job.entityId === entityId &&
       !TERMINAL_QUEUE_STATUSES.has(job.status)
   )
-  if (existing) throw new Error('Avatar upload is already queued for this artist')
+  if (existing)
+    throw new Error('Avatar upload is already queued for this artist')
 }
 
 export function createArtistAvatarOperationPolicy(
@@ -72,6 +70,17 @@ export function createArtistAvatarOperationPolicy(
       formData.append('blob', preparedAsset.blob, 'avatar.webp')
       formData.append('preparedWidth', String(preparedAsset.width))
       formData.append('preparedHeight', String(preparedAsset.height))
+      if (dependencies.expectedActive) {
+        formData.append(
+          'expectedActiveId',
+          String(dependencies.expectedActive.id)
+        )
+        formData.append('expectedActivePath', dependencies.expectedActive.path)
+        formData.append(
+          'expectedActiveVersion',
+          dependencies.expectedActive.version ?? ''
+        )
+      }
 
       const response = await dependencies.fetch('/api/assets', {
         method: 'POST',

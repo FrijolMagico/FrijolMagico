@@ -18,14 +18,18 @@ export async function POST(request: Request) {
     const payload = await parseAssetUpload(request)
 
     if (payload.target !== 'artist-avatar') {
-      return NextResponse.json({ error: 'Unsupported asset target' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Unsupported asset target' },
+        { status: 400 }
+      )
     }
 
     const result = await uploadArtistAvatarAction({
       artistaId: Number(payload.entityId),
       blob: payload.blob,
       width: payload.preparedWidth,
-      height: payload.preparedHeight
+      height: payload.preparedHeight,
+      expectedActive: payload.expectedActive
     })
     if (!result.success || !result.data) {
       return NextResponse.json(
