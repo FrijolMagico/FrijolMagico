@@ -174,52 +174,52 @@ VALUES (15, 2, 'Catalina Linaa', 'Cat Linaa Art', 'cat-linaa-art', '19500135-6',
 -- =============================================================================
 -- Los paths son relativos → getAvatarUrl() los resuelve con CDN_URL.
 -- Los archivos .webp deben existir en el bucket dev en estos paths.
--- Versiones: artistas 1-2 → t0, t1; posters → t2, t3; artistas 3-15 → t4 a t16.
+-- Version fija: 123456789.
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (1, 1, 'artistas/anima-red/avatar-1700000000000.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '1700000000000');
+VALUES (1, 1, 'artistas/anima-red/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (2, 2, 'artistas/shobian/avatar-1700000000001.webp', 'avatar', 1, '{"width":800,"height":800,"size":59264,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '1700000000001');
+VALUES (2, 2, 'artistas/shobian/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":59264,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (3, 3, 'artistas/acekuros/avatar-1700000000004.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '1700000000004');
+VALUES (3, 3, 'artistas/acekuros/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (4, 4, 'artistas/aderezo/avatar-1700000000005.webp', 'avatar', 1, '{"width":800,"height":800,"size":59264,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '1700000000005');
+VALUES (4, 4, 'artistas/aderezo/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":59264,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (5, 5, 'artistas/alkimia/avatar-1700000000006.webp', 'avatar', 1, '{"width":800,"height":800,"size":89436,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '1700000000006');
+VALUES (5, 5, 'artistas/alkimia/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":89436,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (6, 6, 'artistas/arcanista-draws/avatar-1700000000007.webp', 'avatar', 1, '{"width":800,"height":800,"size":107548,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '1700000000007');
+VALUES (6, 6, 'artistas/arcanista-draws/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":107548,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (7, 7, 'artistas/astro-glitter/avatar-1700000000008.webp', 'avatar', 1, '{"width":800,"height":800,"size":70512,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '1700000000008');
+VALUES (7, 7, 'artistas/astro-glitter/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":70512,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (8, 8, 'artistas/bekzar/avatar-1700000000009.webp', 'avatar', 1, '{"width":800,"height":800,"size":37958,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '1700000000009');
+VALUES (8, 8, 'artistas/bekzar/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":37958,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (9, 9, 'artistas/blanquis/avatar-1700000000010.webp', 'avatar', 1, '{"width":800,"height":800,"size":137494,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '1700000000010');
+VALUES (9, 9, 'artistas/blanquis/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":137494,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (10, 10, 'artistas/bolbaran-comics/avatar-1700000000011.webp', 'avatar', 1, '{"width":800,"height":800,"size":110228,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '1700000000011');
+VALUES (10, 10, 'artistas/bolbaran-comics/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":110228,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (11, 11, 'artistas/camellia-liz/avatar-1700000000012.webp', 'avatar', 1, '{"width":800,"height":800,"size":52510,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '1700000000012');
+VALUES (11, 11, 'artistas/camellia-liz/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":52510,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (12, 12, 'artistas/camila-guaman/avatar-1700000000013.webp', 'avatar', 1, '{"width":800,"height":800,"size":71800,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '1700000000013');
+VALUES (12, 12, 'artistas/camila-guaman/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":71800,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (13, 13, 'artistas/canela/avatar-1700000000014.webp', 'avatar', 1, '{"width":800,"height":800,"size":116490,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '1700000000014');
+VALUES (13, 13, 'artistas/canela/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":116490,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (14, 14, 'artistas/carvajal-ilustraciones/avatar-1700000000015.webp', 'avatar', 1, '{"width":800,"height":800,"size":48586,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '1700000000015');
+VALUES (14, 14, 'artistas/carvajal-ilustraciones/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":48586,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (15, 15, 'artistas/cat-linaa-art/avatar-1700000000016.webp', 'avatar', 1, '{"width":800,"height":800,"size":54396,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '1700000000016');
+VALUES (15, 15, 'artistas/cat-linaa-art/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":54396,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
 
 -- =============================================================================
 -- ARTISTA HISTORIAL
@@ -316,10 +316,10 @@ VALUES (1, 1, 'Festival Frijol Mágico', 'frijol-magico', 'Frijol Mágico es un 
 -- URL absoluta. Migrar la query/mapper para resolver con composeAssetUrl().
 
 INSERT INTO evento_edicion (id, evento_id, nombre, numero_edicion, slug, poster_url, poster_path, poster_version, published, created_at, updated_at)
-VALUES (1, 1, NULL, 'I', 'frijol-magico-i', 'festivales/frijol-magico/frijol-magico-i/afiche.webp', 'festivales/frijol-magico/frijol-magico-i/afiche.webp', '1700000000002', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
+VALUES (1, 1, NULL, 'I', 'frijol-magico-i', 'festivales/frijol-magico/frijol-magico-i/afiche-123456789.webp', 'festivales/frijol-magico/frijol-magico-i/afiche-123456789.webp', '123456789', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
 
 INSERT INTO evento_edicion (id, evento_id, nombre, numero_edicion, slug, poster_url, poster_path, poster_version, published, created_at, updated_at)
-VALUES (2, 1, 'Día del Libro', 'II', 'frijol-magico-ii', 'festivales/frijol-magico/frijol-magico-ii/afiche.webp', 'festivales/frijol-magico/frijol-magico-ii/afiche.webp', '1700000000003', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
+VALUES (2, 1, 'Día del Libro', 'II', 'frijol-magico-ii', 'festivales/frijol-magico/frijol-magico-ii/afiche-123456789.webp', 'festivales/frijol-magico/frijol-magico-ii/afiche-123456789.webp', '123456789', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
 
 -- =============================================================================
 -- EVENTO EDICION DIAS
@@ -330,6 +330,23 @@ VALUES (1, 1, 1, '2017-02-25', '14:00', '20:00', 'presencial', '2026-01-20 03:38
 
 INSERT INTO evento_edicion_dia (id, evento_edicion_id, lugar_id, fecha, hora_inicio, hora_fin, modalidad, created_at, updated_at)
 VALUES (2, 2, 2, '2017-04-22', '12:00', '20:30', 'presencial', '2026-01-20 03:38:59', '2026-01-20 03:38:59');
+
+-- =============================================================================
+-- AGRUPACION
+-- =============================================================================
+
+INSERT INTO agrupacion (id, nombre, descripcion, correo, activo, created_at, updated_at)
+VALUES (1, 'Dúo Dreamscape', 'Colectivo de ilustración formado por Ánima Rojas y Shobian, colaborando en proyectos de narrativa visual y arte conceptual.', NULL, 1, '2026-01-20 03:39:17', '2026-01-20 03:39:17');
+
+-- =============================================================================
+-- AGRUPACION ARTISTA
+-- =============================================================================
+
+INSERT INTO agrupacion_artista (agrupacion_id, artista_id, rol, activo, created_at)
+VALUES (1, 1, 'Ilustradora principal', 1, '2026-03-21 18:44:27');
+
+INSERT INTO agrupacion_artista (agrupacion_id, artista_id, rol, activo, created_at)
+VALUES (1, 2, 'Diseñadora gráfica', 1, '2026-03-21 18:44:55');
 
 -- =============================================================================
 -- PARTICIPACION EDICION
@@ -348,12 +365,13 @@ VALUES (3, 2, 1, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56')
 -- =============================================================================
 -- PARTICIPACION EXPOSICION
 -- =============================================================================
+-- Edición I: artista 1 → ilustración, artista 2 → narrativa-gráfica
 
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (1, 1, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:56', '2026-03-05 23:48:56');
 
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
-VALUES (2, 2, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '2026-03-05 23:48:56');
+VALUES (2, 2, 2, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '2026-03-05 23:48:56');
 
 -- =============================================================================
 -- PARTICIPACION ACTIVIDAD
@@ -368,6 +386,106 @@ VALUES (1, 1, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026
 
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
 VALUES (1, 1, 'Encuadernación plegada, libros origami', 'Es un modo sencillo, llamativo y novedoso de publicar, hacer libros objeto con propuestas tanto visuales como literarias.', 60, '18:00', NULL, 12, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+
+-- =============================================================================
+-- AGRUPACION: PARTICIPACION + ACTIVIDADES
+-- =============================================================================
+
+-- Dúo Dreamscape participa en Edición II (ilustración)
+INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
+VALUES (4, 2, NULL, 1, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
+
+INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
+VALUES (3, 4, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:57', '2026-03-05 23:48:57');
+
+-- =============================================================================
+-- EDICIÓN I: COMPLETAR CATEGORÍAS + ACTIVIDADES
+-- =============================================================================
+-- Faltaba: manualidades. Se la asigna a Artista 3 (Ace Kuros).
+-- Faltaba: charla. Se la asigna a Artista 2 (Shobian).
+
+-- Artista 3 (Ace Kuros) en Edición I → manualidades
+INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
+VALUES (5, 1, 3, NULL, NULL, NULL, '2026-01-20 03:39:15', '2026-03-05 23:48:56');
+
+INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
+VALUES (4, 5, 3, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:57', '2026-03-05 23:48:57');
+
+-- Artista 2 (Shobian) da charla en Edición I
+INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
+VALUES (2, 2, 2, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
+
+INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
+VALUES (2, 2, 'Proceso creativo: del boceto al arte final', 'Recorrido por el proceso de ilustración digital de Shobian, desde la idea inicial hasta la obra terminada, incluyendo técnicas de texturizado análogo.', 45, '16:00', NULL, 20, '2026-07-04 04:18:41', '2026-07-04 04:18:41');
+
+-- =============================================================================
+-- EDICIÓN II: COMPLETAR CATEGORÍAS + ACTIVIDADES
+-- =============================================================================
+-- Faltaba: artista 1 sin exposicion, manualidades, taller, charla.
+-- Se asigna: artista 1 → narrativa-gráfica + taller, artista 2 → manualidades + charla.
+
+-- Artista 1 (Ánima Rojas) en Edición II → narrativa-gráfica + taller
+INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
+VALUES (5, 3, 2, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:57', '2026-03-05 23:48:57');
+
+INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
+VALUES (3, 3, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
+
+INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
+VALUES (3, 3, 'Acuarela experimental: texturas y narrativa', 'Taller práctico de acuarela donde los asistentes explorarán técnicas de creación de texturas y su aplicación en la narrativa visual.', 90, '15:00', NULL, 15, '2026-07-04 04:18:42', '2026-07-04 04:18:42');
+
+-- Artista 2 (Shobian) en Edición II → manualidades + charla
+INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
+VALUES (6, 2, 2, NULL, NULL, NULL, '2026-01-20 03:39:15', '2026-03-05 23:48:56');
+
+INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
+VALUES (6, 6, 3, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:57', '2026-03-05 23:48:57');
+
+INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
+VALUES (4, 6, 2, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
+
+INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
+VALUES (4, 4, 'Diseño de personajes con identidad local', 'Charla sobre cómo construir personajes que reflejen la identidad y el territorio de la Región de Coquimbo, usando referentes locales y técnicas de diseño gráfico.', 50, '17:30', NULL, 30, '2026-07-04 04:18:43', '2026-07-04 04:18:43');
+
+-- =============================================================================
+-- BANDAS (5 ficticias)
+-- =============================================================================
+
+INSERT INTO banda (id, nombre, descripcion, correo, activo, created_at, updated_at)
+VALUES (1, 'Los Colores del Viento', 'Fusión latinoamericana que mezcla ritmos folclóricos con sonidos contemporáneos. Su música explora la relación entre el color y el sonido en el paisaje norteño.', 'colores.viento@email.com', 1, '2026-07-04 04:18:44', '2026-07-04 04:18:44');
+
+INSERT INTO banda (id, nombre, descripcion, correo, activo, created_at, updated_at)
+VALUES (2, 'Río Interior', 'Rock alternativo con letras que abordan la introspección y el viaje interior. Su sonido combina guitarras eléctricas con texturas electrónicas sutiles.', 'rio.interior@email.com', 1, '2026-07-04 04:18:45', '2026-07-04 04:18:45');
+
+INSERT INTO banda (id, nombre, descripcion, correo, activo, created_at, updated_at)
+VALUES (3, 'Sonic Horizon', 'Electrónica experimental que fusiona sintetizadores analógicos con sampling de campo. Paisajes sonoros que evocan el horizonte del Valle de Elqui.', 'sonic.horizon@email.com', 1, '2026-07-04 04:18:46', '2026-07-04 04:18:46');
+
+INSERT INTO banda (id, nombre, descripcion, correo, activo, created_at, updated_at)
+VALUES (4, 'La Ronda de los Pájaros', 'Folk contemporáneo con influencias de la música tradicional chilena. Canciones que narran historias del territorio y sus habitantes.', 'ronda.pajaros@email.com', 1, '2026-07-04 04:18:47', '2026-07-04 04:18:47');
+
+INSERT INTO banda (id, nombre, descripcion, correo, activo, created_at, updated_at)
+VALUES (5, 'Marea de Papel', 'Indie pop con atmósferas acústicas y letras que exploran la creatividad, el proceso artístico y la vida en la costa. Su nombre evoca la fragilidad y fuerza del papel frente al mar.', 'marea.papel@email.com', 1, '2026-07-04 04:18:48', '2026-07-04 04:18:48');
+
+-- =============================================================================
+-- BANDAS: PARTICIPACIONES
+-- =============================================================================
+-- Edición I: Los Colores del Viento + Río Interior
+-- Edición II: Sonic Horizon + La Ronda de los Pájaros + Marea de Papel
+
+INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
+VALUES (7, 1, NULL, NULL, 1, NULL, '2026-01-20 03:39:15', '2026-03-05 23:48:56');
+
+INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
+VALUES (8, 1, NULL, NULL, 2, NULL, '2026-01-20 03:39:15', '2026-03-05 23:48:56');
+
+INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
+VALUES (9, 2, NULL, NULL, 3, NULL, '2026-01-20 03:39:15', '2026-03-05 23:48:56');
+
+INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
+VALUES (10, 2, NULL, NULL, 4, NULL, '2026-01-20 03:39:15', '2026-03-05 23:48:56');
+
+INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
+VALUES (11, 2, NULL, NULL, 5, NULL, '2026-01-20 03:39:15', '2026-03-05 23:48:56');
 
 -- =============================================================================
 -- FIN DEL SEED
