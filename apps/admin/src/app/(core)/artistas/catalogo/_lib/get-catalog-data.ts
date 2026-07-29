@@ -164,17 +164,11 @@ export async function getCatalogData(
     .innerJoin(artistTable, eq(artistTable.id, catalogArtist.artistaId))
     .where(whereClause)
 
-  return createPaginatedResponse(
-    results.map((row) => ({
-      ...row,
-      avatarUrl: getAvatarUrl(row.activeAvatar?.path ?? null)
-    })),
-    {
-      total: totalResult[0]?.total ?? 0,
-      page: query.page,
-      pageSize: query.limit
-    }
-  )
+  return createPaginatedResponse(results, {
+    total: totalResult[0]?.total ?? 0,
+    page: query.page,
+    pageSize: query.limit
+  })
 }
 
 export async function getArtistsNotInCatalog(): Promise<

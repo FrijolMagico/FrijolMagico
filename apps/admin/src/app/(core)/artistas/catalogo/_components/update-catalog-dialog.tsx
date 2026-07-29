@@ -44,7 +44,7 @@ export function UpdateCatalogDialog() {
   } = useForm<CatalogUpdateFormInput>({
     resolver: zodResolver(catalogUpdateFormSchema),
     values: {
-      avatarUrl: catalog?.avatarUrl ?? '',
+      avatarUrl: catalog?.activeAvatar?.path ?? '',
       descripcion: catalog?.descripcion ?? '',
       activo: catalog?.activo ?? true,
       destacado: catalog?.destacado ?? false
@@ -96,8 +96,8 @@ export function UpdateCatalogDialog() {
               <ArtistAvatarSection
                 artistId={artist.id}
                 currentAvatar={
-                  catalog.avatarUrl
-                    ? { path: catalog.avatarUrl, version: null }
+                  catalog.activeAvatar?.path
+                    ? { path: catalog.activeAvatar.path, version: null }
                     : null
                 }
               />

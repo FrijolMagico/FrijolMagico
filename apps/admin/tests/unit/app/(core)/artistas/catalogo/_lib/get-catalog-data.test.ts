@@ -186,7 +186,6 @@ describe.skipIf(!modulesLoaded)('get-catalog-data DAL', () => {
       pais: 'Chile',
       rrss: { instagram: ['@luna'] }
     })
-    expect(result.data[0]?.avatarUrl).toContain('avatars/luna.png')
     expect(result.data[0]?.activeAvatar).toEqual({
       id: 1,
       path: expect.stringContaining('avatars/luna.png'),

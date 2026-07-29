@@ -15,7 +15,6 @@ export const activeAvatarSchema = z.object({
 
 export const catalogSelectSchema = createSelectSchema(artist.catalogArtist)
   .extend({
-    avatarUrl: z.url().nullable().optional(),
     activeAvatar: activeAvatarSchema.nullable().optional()
   })
   .omit({
@@ -32,11 +31,11 @@ export const catalogInsertSchema = createInsertSchema(artist.catalogArtist, {
     avatarUrl: z.url().nullable().optional()
   })
   .omit({
-    id: true,
-    createdAt: true,
-    updatedAt: true,
-    deletedAt: true
-  })
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  deletedAt: true
+})
 
 export const catalogUpdateSchema = createUpdateSchema(artist.catalogArtist, {
   id: z.number()

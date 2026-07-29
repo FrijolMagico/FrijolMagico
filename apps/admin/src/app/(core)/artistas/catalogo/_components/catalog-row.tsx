@@ -32,7 +32,7 @@ export function CatalogRow({
     (s) => s.openUpdateCatalogDialog
   )
   const artist = catalog.artist
-  const hasAvatar = catalog.avatarUrl != null
+  const hasAvatar = catalog.activeAvatar != null
 
   const [optimisticFields, setOptimisticFields] = useOptimistic({
     activo: catalog.activo,
@@ -75,7 +75,7 @@ export function CatalogRow({
       <TableCell className='w-12'>
         {hasAvatar ? (
           <ArtistAvatar
-            src={catalog.avatarUrl}
+            src={catalog.activeAvatar?.path ?? null}
             alt={artist.pseudonimo}
             size='sm'
           />
@@ -85,7 +85,7 @@ export function CatalogRow({
               render={
                 <div>
                   <ArtistAvatar
-                    src={catalog.avatarUrl}
+                    src={catalog.activeAvatar?.path ?? null}
                     alt={artist.pseudonimo}
                     size='sm'
                     status='missing'

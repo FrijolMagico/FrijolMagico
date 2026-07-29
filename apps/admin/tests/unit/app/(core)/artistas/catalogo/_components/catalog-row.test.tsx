@@ -205,6 +205,7 @@ function createMockCatalog(overrides: Record<string, unknown> = {}) {
     descripcion: null,
     deletedAt: null,
     avatarUrl: null,
+    activeAvatar: null,
     artist: {
       id: 1,
       pseudonimo: 'Test Artist',
@@ -314,6 +315,11 @@ describe('CatalogRow — Avatar Business Rule', () => {
   test('4. Has avatar: active switch is enabled (normal behavior)', async () => {
     const catalog = createMockCatalog({
       avatarUrl: 'http://cdn.test/avatar.webp',
+      activeAvatar: {
+        id: 1,
+        path: 'http://cdn.test/avatar.webp',
+        version: 'v1'
+      },
       activo: true
     })
     await renderCatalogRow(catalog)
@@ -380,7 +386,12 @@ describe('CatalogRow — Avatar Business Rule', () => {
 
   test('7. Has avatar: normal ArtistAvatar renders (no alert, no tooltip)', async () => {
     const catalog = createMockCatalog({
-      avatarUrl: 'http://cdn.test/avatar.webp'
+      avatarUrl: 'http://cdn.test/avatar.webp',
+      activeAvatar: {
+        id: 1,
+        path: 'http://cdn.test/avatar.webp',
+        version: 'v1'
+      }
     })
     await renderCatalogRow(catalog)
 
