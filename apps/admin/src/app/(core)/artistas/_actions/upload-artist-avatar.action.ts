@@ -16,7 +16,10 @@ import {
   createR2Config
 } from '@/shared/assets-manager/server/r2-adapter'
 import type { ActionState } from '@/shared/types/actions'
-import type { ExpectedActiveAvatar } from '../catalogo/_lib/avatar-history-contracts'
+import {
+  AVATAR_CONFLICT,
+  type ExpectedActiveAvatar
+} from '../catalogo/_lib/avatar-history-contracts'
 
 const uploadArtistAvatarSchema = z
   .object({
@@ -90,6 +93,14 @@ export async function uploadArtistAvatarAction(
     let avatar: UploadArtistAvatarData
     try {
       avatar = await db.transaction(async (tx) => {
+        if (parsed.data.expectedActive === null) {
+          const [currentAvatar] = await tx
+            .select({ id: artist.artistImage.id })
+            .from(artist.artistImage)
+            .where(activeAvatarWhere(parsed.data.artistaId, undefined))
+            .limit(1)
+          if (currentAvatar) throw new Error(AVATAR_CONFLICT)
+        }
         const [oldAvatar] = await tx
           .update(artist.artistImage)
           .set({ deletedAt: sql`CURRENT_TIMESTAMP` })
@@ -101,7 +112,8 @@ export async function uploadArtistAvatarAction(
             version: artist.artistImage.artistAvatarVersion
           })
 
-        if (parsed.data.expectedActive && !oldAvatar) {
+        if (parsed.data.expectedActive !== undefined &&
+          parsed.data.expectedActive !== null && !oldAvatar) {
           throw new Error('AVATAR_CONFLICT')
         }
 
@@ -135,6 +147,7 @@ export async function uploadArtistAvatarAction(
         await store.deleteObject(path)
       } catch {
         // The persistence failure remains authoritative when provisional cleanup fails.
+        //TECH DEBT: Record failed R2 cleanup and remove orphaned assets with a monthly cron.
       }
       throw error
     }
@@ -151,7 +164,10 @@ export async function uploadArtistAvatarAction(
       success: false,
       errors: [
         {
-          entityType: 'artist-avatar',
+          entityType:
+            error instanceof Error && error.message === AVATAR_CONFLICT
+              ? AVATAR_CONFLICT
+              : 'artist-avatar',
           message: error instanceof Error ? error.message : 'Error desconocido'
         }
       ]

@@ -13,7 +13,7 @@ export interface AssetUploadPayload {
   mimeType: 'image/webp'
   preparedWidth: number
   preparedHeight: number
-  expectedActive: ExpectedActiveAvatar | null
+  expectedActive: ExpectedActiveAvatar | null | undefined
 }
 
 export interface AssetReplacementPayload extends AssetUploadPayload {
@@ -145,11 +145,16 @@ export async function parseAssetUpload(
   }
 }
 
-function parseExpectedActive(formData: FormData): ExpectedActiveAvatar | null {
+function parseExpectedActive(
+  formData: FormData
+): ExpectedActiveAvatar | null | undefined {
   const id = formData.get('expectedActiveId')
   const path = formData.get('expectedActivePath')
   const version = formData.get('expectedActiveVersion')
-  if (id === null && path === null && version === null) return null
+  const expectedNone = formData.get('expectedActiveNone')
+  if (expectedNone === 'true' && id === null && path === null && version === null)
+    return null
+  if (id === null && path === null && version === null) return undefined
   if (
     typeof id !== 'string' ||
     typeof path !== 'string' ||

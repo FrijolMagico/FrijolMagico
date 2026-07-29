@@ -1,6 +1,7 @@
 'use client'
 
 import { useSyncExternalStore, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 
 import type { SharedAssetQueueStore } from '@/shared/assets-manager/client/shared-asset-queue'
 import { getSharedAssetQueueStore } from '@/shared/assets-manager/client/shared-asset-queue'
@@ -57,6 +58,7 @@ export function QueueFloatBar({
   store = getSharedAssetQueueStore(),
   cancellingJobId: controlledCancelling,
 }: QueueFloatBarProps) {
+  const router = useRouter()
   const subscribe = useCallback(
     (onStoreChange: () => void) =>
       store.subscribe(onStoreChange as (state: AssetQueueSnapshot) => void),
@@ -136,12 +138,7 @@ export function QueueFloatBar({
     if (activeJob.status === ASSET_QUEUE_STATUS.FAILED) {
       return renderFailed(activeJob, {
         onCancel: () => {
-          setInternalCancelling(activeJob.jobId)
-          try {
-            store.cancel(activeJob.jobId)
-          } catch {
-            setInternalCancelling(null)
-          }
+          store.remove(activeJob.jobId)
         },
         onRetry: () => {
           if (activeJob.failedStep === 'upload') {
@@ -150,6 +147,7 @@ export function QueueFloatBar({
             store.retryPersistence(activeJob.jobId).catch(console.error)
           }
         },
+        onRefresh: router.refresh,
       })
     }
   }
@@ -162,12 +160,7 @@ export function QueueFloatBar({
   if (lastFailed) {
     return renderFailed(lastFailed, {
       onCancel: () => {
-        setInternalCancelling(lastFailed.jobId)
-        try {
-          store.cancel(lastFailed.jobId)
-        } catch {
-          setInternalCancelling(null)
-        }
+        store.remove(lastFailed.jobId)
       },
       onRetry: () => {
         if (lastFailed.failedStep === 'upload') {
@@ -176,6 +169,7 @@ export function QueueFloatBar({
           store.retryPersistence(lastFailed.jobId).catch(console.error)
         }
       },
+      onRefresh: router.refresh,
     })
   }
 
@@ -261,9 +255,31 @@ function renderEnqueued(job: AssetQueueJob, onCancel: () => void) {
 interface FailedHandlers {
   onCancel: () => void
   onRetry: () => void
+  onRefresh: () => void
 }
 
 function renderFailed(job: AssetQueueJob, handlers: FailedHandlers) {
+  if (job.error === 'AVATAR_CONFLICT') {
+    return (
+      <div
+        className={cn(
+          'fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2',
+          'items-center gap-3 rounded-lg border bg-background',
+          'px-4 py-3 shadow-lg',
+        )}
+      >
+        <span className='text-sm text-destructive'>
+          El avatar cambió en otra sesión.
+        </span>
+        <Button variant='secondary' size='sm' onClick={handlers.onRefresh}>
+          Actualizar
+        </Button>
+        <Button variant='outline' size='sm' onClick={handlers.onCancel}>
+          Cancelar
+        </Button>
+      </div>
+    )
+  }
   return (
     <div
       className={cn(

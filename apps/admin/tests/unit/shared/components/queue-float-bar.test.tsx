@@ -6,6 +6,13 @@ import type { SharedAssetQueueStore } from '@/shared/assets-manager/client/share
 import type { AssetQueueSnapshot, AssetQueueJob } from '@/shared/assets-manager/client/queue'
 import { ASSET_QUEUE_STATUS } from '@/shared/assets-manager/client/queue'
 
+const refresh = mock(() => {})
+
+mock.module('next/navigation', () => ({
+  useRouter: () => ({ refresh }),
+  redirect: mock(() => {}),
+}))
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -49,6 +56,7 @@ function createMockStore(
       return () => listeners.delete(listener)
     },
     cancel: mock(() => {}),
+    remove: mock(() => {}),
     retryUpload: mock(() => Promise.resolve()),
     retryPersistence: mock(() => Promise.resolve()),
   }
@@ -180,6 +188,27 @@ describe('QueueFloatBar', () => {
     expect(markup).toContain('DB error')
     expect(markup).toContain('Reintentar')
     expect(markup).toContain('Cancelar')
+  })
+
+  test('3c: identifies an avatar conflict and offers Refresh instead of retrying', async () => {
+    const { QueueFloatBar } = await import(
+      '@/shared/components/queue-float-bar'
+    )
+    const job = createJob({
+      status: ASSET_QUEUE_STATUS.FAILED,
+      error: 'AVATAR_CONFLICT',
+      failedStep: 'persist',
+    })
+    const mockStore = createMockStore({ jobs: [job], activeJobId: null })
+
+    const markup = renderToStaticMarkup(
+      createElement(QueueFloatBar, { store: mockStore }),
+    )
+
+    expect(markup).toContain('El avatar cambió en otra sesión.')
+    expect(markup).toContain('Actualizar')
+    expect(markup).toContain('Cancelar')
+    expect(markup).not.toContain('Reintentar')
   })
 
   // 4 — cancelling state

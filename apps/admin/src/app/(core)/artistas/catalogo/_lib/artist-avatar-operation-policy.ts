@@ -1,6 +1,8 @@
 import type { UploadArtistAvatarData } from '../../_actions/upload-artist-avatar.action'
+import type { ExpectedActiveAvatar } from './avatar-history-contracts'
 import type {
   AssetEnqueueAdmissionInput,
+  AssetOperationContext,
   AssetOperationPolicy
 } from '@/shared/assets-manager/client/asset-operation-contracts'
 import type { AssetOperationRuntime } from '@/shared/assets-manager/client/asset-operation-runtime'
@@ -16,7 +18,28 @@ interface AssetFetch {
 
 interface ArtistAvatarPolicyDependencies {
   fetch: AssetFetch
-  expectedActive?: { id: number; path: string; version: string | null } | null
+}
+
+function expectedActiveFromContext(
+  context: AssetOperationContext
+): ExpectedActiveAvatar | null | undefined {
+  const input = context.input
+  if (input === undefined) return undefined
+  if (input === null) return null
+  if (
+    typeof input !== 'object' ||
+    input === null ||
+    !('id' in input) ||
+    !('path' in input) ||
+    !('version' in input) ||
+    typeof input.id !== 'number' ||
+    typeof input.path !== 'string' ||
+    (typeof input.version !== 'string' && input.version !== null)
+  )
+    return undefined
+
+  const { id, path, version } = input
+  return { id, path, version }
 }
 
 function isPersistedAvatar(value: unknown): value is UploadArtistAvatarData {
@@ -64,21 +87,24 @@ export function createArtistAvatarOperationPolicy(
   return {
     admitEnqueue: admitArtistAvatarEnqueue,
     async upload({ context, preparedAsset }) {
+      const expectedActive = expectedActiveFromContext(context)
       const formData = new FormData()
       formData.append('assetTarget', ASSET_TARGET.ARTIST_AVATAR)
       formData.append('entityId', context.entityId)
       formData.append('blob', preparedAsset.blob, 'avatar.webp')
       formData.append('preparedWidth', String(preparedAsset.width))
       formData.append('preparedHeight', String(preparedAsset.height))
-      if (dependencies.expectedActive) {
+      if (expectedActive === null) {
+        formData.append('expectedActiveNone', 'true')
+      } else if (expectedActive) {
         formData.append(
           'expectedActiveId',
-          String(dependencies.expectedActive.id)
+          String(expectedActive.id)
         )
-        formData.append('expectedActivePath', dependencies.expectedActive.path)
+        formData.append('expectedActivePath', expectedActive.path)
         formData.append(
           'expectedActiveVersion',
-          dependencies.expectedActive.version ?? ''
+          expectedActive.version ?? ''
         )
       }
 
@@ -87,7 +113,17 @@ export function createArtistAvatarOperationPolicy(
         body: formData,
         signal: context.signal
       })
-      if (!response.ok) throw new Error('Asset upload failed')
+      if (!response.ok) {
+        const error: unknown = await response.json().catch(() => null)
+        if (
+          typeof error === 'object' &&
+          error !== null &&
+          'error' in error &&
+          error.error === 'AVATAR_CONFLICT'
+        )
+          throw new Error('AVATAR_CONFLICT')
+        throw new Error('Asset upload failed')
+      }
 
       const result: unknown = await response.json()
       if (!isPersistedAvatar(result))

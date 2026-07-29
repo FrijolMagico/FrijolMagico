@@ -12,6 +12,7 @@ export interface AssetOperationContext {
   target: AssetTarget
   entityId: string
   correlationId: string
+  input?: unknown
   signal: AbortSignal
   reportProgress: (sentBytes: number) => void
 }

@@ -317,7 +317,7 @@ export function createAssetOperationRuntime(
     resolve: <TUpload, TPersist, TCleanup>(target: AssetTarget) =>
       policies.resolve<TUpload, TPersist, TCleanup>(target),
     canEnqueue: admitEnqueue,
-    enqueue: (target, entityId, preparedAsset, preview) => {
+    enqueue: (target, entityId, preparedAsset, preview, input) => {
       const policy = admitEnqueue(target, entityId)
       const identity = createAssetOperationIdentity(target, entityId)
       for (const context of contexts.values()) {
@@ -336,14 +336,16 @@ export function createAssetOperationRuntime(
         target,
         entityId,
         preparedAsset,
-        preview
+        preview,
+        input
       )
       const context: JobContext = {
         metadata: {
           jobId: job.jobId,
           target,
           entityId,
-          correlationId: createCorrelationId()
+          correlationId: createCorrelationId(),
+          input: job.input
         },
         identity,
         policy,

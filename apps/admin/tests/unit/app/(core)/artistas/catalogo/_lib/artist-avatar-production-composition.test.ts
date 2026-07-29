@@ -89,6 +89,9 @@ describe('artist avatar production composition', () => {
     expect(capture.body?.get('entityId')).toBe('42')
     expect(capture.body?.get('preparedWidth')).toBe('800')
     expect(capture.body?.get('preparedHeight')).toBe('800')
+    expect(capture.body?.get('expectedActiveId')).toBeNull()
+    expect(capture.body?.get('expectedActivePath')).toBeNull()
+    expect(capture.body?.get('expectedActiveVersion')).toBeNull()
     const multipartBlob = capture.body?.get('blob')
     expect(multipartBlob).toBeInstanceOf(Blob)
     expect(multipartBlob instanceof Blob ? multipartBlob.type : null).toBe(
@@ -107,6 +110,53 @@ describe('artist avatar production composition', () => {
       },
       cleanup: null
     })
+  })
+
+  test('sends the queued active-avatar baseline with the deferred upload', async () => {
+    const expectedActive = {
+      id: 8,
+      path: 'artistas/artista-de-prueba/avatar-v1.webp',
+      version: 'v1'
+    }
+    const capture: { body: FormData | null } = { body: null }
+    const policy = createArtistAvatarOperationPolicy({
+      fetch: async (_input, init) => {
+        capture.body = init.body as FormData
+        return Response.json({
+          id: 9,
+          artistaId: 42,
+          path: 'artistas/artista-de-prueba/avatar-v2.webp',
+          version: 'v2',
+          oldAsset: null
+        })
+      }
+    })
+
+    await policy.upload({
+      context: { ...context, input: expectedActive },
+      preparedAsset
+    })
+
+    expect(capture.body?.get('expectedActiveId')).toBe('8')
+    expect(capture.body?.get('expectedActivePath')).toBe(expectedActive.path)
+    expect(capture.body?.get('expectedActiveVersion')).toBe(expectedActive.version)
+  })
+
+  test('preserves a typed avatar conflict from the upload route', async () => {
+    const policy = createArtistAvatarOperationPolicy({
+      fetch: async () =>
+        new Response(JSON.stringify({ error: 'AVATAR_CONFLICT' }), {
+          status: 409,
+          headers: { 'content-type': 'application/json' }
+        })
+    })
+
+    await expect(
+      policy.upload({
+        context,
+        preparedAsset
+      })
+    ).rejects.toThrow('AVATAR_CONFLICT')
   })
 
   test('rejects non-OK and malformed upload responses without persisting', async () => {
