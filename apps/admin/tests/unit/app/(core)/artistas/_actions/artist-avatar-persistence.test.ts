@@ -117,42 +117,6 @@ function createUploadDb(
   }
 }
 
-function createRemoveDb(state: DbState, returnedAvatar: AvatarRecord | null) {
-  const transaction = {
-    update: () => {
-      state.events.push('update')
-      return {
-        set: (value: unknown) => {
-          state.events.push('set')
-          state.updateValues.push(value)
-          return {
-            where: (..._args: unknown[]) => {
-              state.events.push('where')
-              return {
-                returning: async () => {
-                  state.events.push('returning')
-                  return returnedAvatar
-                    ? [toAvatarReference(returnedAvatar)]
-                    : []
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  return {
-    transaction: async (callback: (tx: unknown) => Promise<unknown>) => {
-      state.events.push('transaction:start')
-      const result = await callback(transaction)
-      state.events.push('transaction:commit')
-      return result
-    }
-  }
-}
-
 function createReadDb(state: DbState, rows: AvatarRecord[]) {
   return {
     select: () => ({
@@ -205,8 +169,6 @@ const { createArtistaAction } =
   await import('@/core/artistas/_actions/create-artista.action')
 const { uploadArtistAvatarAction } =
   await import('@/core/artistas/_actions/upload-artist-avatar.action')
-const { removeArtistAvatarAction } =
-  await import('@/core/artistas/_actions/remove-artist-avatar.action')
 const { getArtistAvatar } =
   await import('@/core/artistas/_lib/get-artist-avatar')
 
@@ -351,7 +313,10 @@ describe('artist avatar persistence', () => {
       success: true,
       data: {
         ...toAvatarReference(replacement),
-        oldAsset: { path: avatar.imagenUrl, version: avatar.artistAvatarVersion }
+        oldAsset: {
+          path: avatar.imagenUrl,
+          version: avatar.artistAvatarVersion
+        }
       }
     })
   })
@@ -399,96 +364,30 @@ describe('artist avatar persistence', () => {
     expect(state.events).toEqual(['transaction:start'])
   })
 
-  test('soft-deletes the matching active avatar before returning cleanup data', async () => {
+  test('returns the typed conflict and compensates the upload when the active avatar changed after save', async () => {
     const state = createState()
-    currentDb = createRemoveDb(state, avatar)
+    currentDb = createUploadDb(state, avatar)
 
     await expect(
-      removeArtistAvatarAction({
+      uploadArtistAvatarAction({
         artistaId: 12,
-        path: avatar.imagenUrl,
-        version: avatar.artistAvatarVersion
-      })
-    ).resolves.toEqual({
-      success: true,
-      data: {
-        deleted: true,
-        asset: {
+        blob: new Blob(['prepared'], { type: 'image/webp' }),
+        width: 800,
+        height: 800,
+        expectedActive: {
+          id: 8,
           path: avatar.imagenUrl,
           version: avatar.artistAvatarVersion
         }
-      }
-    })
-    expect(state.events).toEqual([
-      'transaction:start',
-      'update',
-      'set',
-      'where',
-      'returning',
-      'transaction:commit'
-    ])
-  })
-
-  test('returns a conflict and skips cache invalidation when no active avatar matches', async () => {
-    const state = createState()
-    currentDb = createRemoveDb(state, null)
-
-    await expect(
-      removeArtistAvatarAction({
-        artistaId: 12,
-        path: 'artist-avatar/12/stale.webp',
-        version: 'stale'
       })
     ).resolves.toEqual({
       success: false,
-      errors: [
-        {
-          entityType: 'artist-avatar',
-          message: 'No se encontró un avatar activo coincidente para eliminar'
-        }
-      ]
+      errors: [{ entityType: 'AVATAR_CONFLICT', message: 'AVATAR_CONFLICT' }]
     })
-    expect(updateTag).not.toHaveBeenCalled()
-  })
-
-  test('rejects an invalid removal reference without opening a transaction', async () => {
-    const state = createState()
-    currentDb = createRemoveDb(state, avatar)
-
-    const result = await removeArtistAvatarAction({
-      artistaId: 12,
-      path: '',
-      version: 'v1'
-    })
-
-    expect(result.success).toBe(false)
-    expect(state.events).toHaveLength(0)
-    expect(updateTag).not.toHaveBeenCalled()
-  })
-
-  test('keeps the committed removal success when cache invalidation throws', async () => {
-    const state = createState()
-    currentDb = createRemoveDb(state, avatar)
-    updateTag.mockImplementation(() => {
-      throw new Error('cache unavailable')
-    })
-
-    await expect(
-      removeArtistAvatarAction({
-        artistaId: 12,
-        path: avatar.imagenUrl,
-        version: avatar.artistAvatarVersion
-      })
-    ).resolves.toEqual({
-      success: true,
-      data: {
-        deleted: true,
-        asset: {
-          path: avatar.imagenUrl,
-          version: avatar.artistAvatarVersion
-        }
-      }
-    })
+    expect(state.inserts).toHaveLength(0)
+    expect(deleteObject).toHaveBeenCalledWith(
+      'artistas/artista-de-prueba/avatar-1710000000000.webp'
+    )
   })
 
   test('returns the active avatar projection', async () => {
