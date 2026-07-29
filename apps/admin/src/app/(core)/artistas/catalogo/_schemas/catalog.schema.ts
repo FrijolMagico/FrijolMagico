@@ -31,11 +31,11 @@ export const catalogInsertSchema = createInsertSchema(artist.catalogArtist, {
     avatarUrl: z.url().nullable().optional()
   })
   .omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-  deletedAt: true
-})
+    id: true,
+    createdAt: true,
+    updatedAt: true,
+    deletedAt: true
+  })
 
 export const catalogUpdateSchema = createUpdateSchema(artist.catalogArtist, {
   id: z.number()
