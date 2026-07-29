@@ -4,6 +4,7 @@ import { and, desc, eq, isNotNull } from 'drizzle-orm'
 
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
+import { getAvatarUrl } from '@frijolmagico/utils/cdn'
 
 import type { ArtistAvatarHistoryItem } from '../catalogo/_lib/artist-avatar-history'
 
@@ -27,5 +28,8 @@ export async function getArtistAvatarHistory(
     )
     .orderBy(desc(artist.artistImage.deletedAt), desc(artist.artistImage.id))
 
-  return avatars
+  return avatars.map((avatar) => ({
+    ...avatar,
+    path: getAvatarUrl(avatar.path)
+  }))
 }

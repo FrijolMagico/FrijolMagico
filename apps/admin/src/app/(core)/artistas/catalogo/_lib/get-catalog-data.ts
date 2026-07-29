@@ -5,8 +5,8 @@ import { and, asc, count, eq, inArray, notExists, sql } from 'drizzle-orm'
 import { isNotDeleted } from '@frijolmagico/database/filters'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
+import { getAvatarUrl } from '@frijolmagico/utils/cdn'
 
-import { getAvatarUrl } from '@/shared/lib/cdn'
 import {
   createPaginatedResponse,
   type PaginatedResponse
@@ -146,7 +146,7 @@ export async function getCatalogData(
     if (!avatarMap.has(avatar.artistaId)) {
       avatarMap.set(avatar.artistaId, {
         id: avatar.id,
-        path: avatar.imagenUrl,
+        path: getAvatarUrl(avatar.imagenUrl),
         version: avatar.version
       })
     }
@@ -232,7 +232,7 @@ export async function getArtistsNotInCatalog(): Promise<
 
   const avatarMap = new Map<number, string>()
   for (const avatar of avatars) {
-    avatarMap.set(avatar.artistaId, avatar.imagenUrl)
+    avatarMap.set(avatar.artistaId, getAvatarUrl(avatar.imagenUrl))
   }
 
   return artists.map((artist) => ({

@@ -61,7 +61,7 @@ INSERT OR IGNORE INTO tipo_actividad (slug, descripcion) VALUES (
 --
 -- Assets paths:
 --   - Avatares: rutas RELATIVAS en imagen_url + imagen_version (managed format)
---     → getAvatarUrl(path) resuelve concatenando CDN_URL env var
+--     → getAvatarUrl(path) resuelve concatenando R2_PUBLIC_URL env var
 --     → Formato: artistas/{slug}/avatar-{version}.webp
 --   - Posters: poster_url = poster_path como ruta relativa + poster_version
 --     → Formato: festivales/{event-slug}/{edition-slug}/afiche.webp
@@ -70,8 +70,8 @@ INSERT OR IGNORE INTO tipo_actividad (slug, descripcion) VALUES (
 --       poster_path + poster_version via composeAssetUrl().
 --
 -- IMPORTANTE:
---   CDN_URL en .env.local debe apuntar al bucket de desarrollo
---   (ej: CDN_URL="https://dev-cdn.frijolmagico.cl").
+--   R2_PUBLIC_URL en .env.local debe apuntar al bucket de desarrollo
+--   (ej: R2_PUBLIC_URL="https://cdn-dev.frijolmagico.cl").
 --   Los assets de prueba (.webp) deben existir en el bucket dev en los paths
 --   indicados abajo. Si no existen, las imágenes mostrarán placeholder.
 --   Para generar los assets de prueba, ejecutar bun run assets:dev:upload.
@@ -172,7 +172,7 @@ VALUES (15, 2, 'Catalina Linaa', 'Cat Linaa Art', 'cat-linaa-art', '19500135-6',
 -- =============================================================================
 -- ARTISTA IMAGEN (Avatares — managed format con version timestamp)
 -- =============================================================================
--- Los paths son relativos → getAvatarUrl() los resuelve con CDN_URL.
+-- Los paths son relativos → getAvatarUrl() los resuelve con R2_PUBLIC_URL.
 -- Los archivos .webp deben existir en el bucket dev en estos paths.
 -- Version fija: 123456789.
 
@@ -486,6 +486,120 @@ VALUES (10, 2, NULL, NULL, 4, NULL, '2026-01-20 03:39:15', '2026-03-05 23:48:56'
 
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (11, 2, NULL, NULL, 5, NULL, '2026-01-20 03:39:15', '2026-03-05 23:48:56');
+
+-- =============================================================================
+-- ARTISTAS FUERA DE CATÁLOGO (sin imagen, sin catálogo, con participaciones)
+-- =============================================================================
+-- Estos 5 artistas tienen participaciones en ambas ediciones pero NO están en
+-- el catálogo (catalogo_artista) NI tienen imágenes (artista_imagen).
+-- Sirven para testear flujos donde un artista participó pero no está en cartelera.
+-- =============================================================================
+
+INSERT INTO artista (id, estado_id, nombre, pseudonimo, slug, rut, correo, rrss, ciudad, pais, telefono, created_at, updated_at, deleted_at)
+VALUES (16, 2, 'Carlos Muñoz Toro', 'Fuego Lento', 'fuego-lento', '19500136-7', 'fuego.lento@email.com', '{"instagram":"https://www.instagram.com/fuego.lento/"}', 'La Serena', 'Chile', NULL, '2026-01-20 03:39:05', '2026-03-05 23:48:49', NULL);
+
+INSERT INTO artista (id, estado_id, nombre, pseudonimo, slug, rut, correo, rrss, ciudad, pais, telefono, created_at, updated_at, deleted_at)
+VALUES (17, 2, 'Daniela Rojas Silva', 'Tinta Negra', 'tinta-negra', '19500137-8', 'tinta.negra@email.com', '{"instagram":"https://www.instagram.com/tinta.negra/"}', 'Coquimbo', 'Chile', NULL, '2026-01-20 03:39:05', '2026-03-05 23:48:49', NULL);
+
+INSERT INTO artista (id, estado_id, nombre, pseudonimo, slug, rut, correo, rrss, ciudad, pais, telefono, created_at, updated_at, deleted_at)
+VALUES (18, 2, 'Valentina Vega Astorga', 'Luna Cósmica', 'luna-cosmica', '19500138-9', 'luna.cosmica@email.com', '{"instagram":"https://www.instagram.com/luna.cosmica/"}', 'La Serena', 'Chile', NULL, '2026-01-20 03:39:05', '2026-03-05 23:48:49', NULL);
+
+INSERT INTO artista (id, estado_id, nombre, pseudonimo, slug, rut, correo, rrss, ciudad, pais, telefono, created_at, updated_at, deleted_at)
+VALUES (19, 2, 'Felipe Araya Cortés', 'Rizoma Estudio', 'rizoma-estudio', '19500139-0', 'rizoma.estudio@email.com', '{"instagram":"https://www.instagram.com/rizoma.estudio/"}', 'Coquimbo', 'Chile', NULL, '2026-01-20 03:39:05', '2026-03-05 23:48:49', NULL);
+
+INSERT INTO artista (id, estado_id, nombre, pseudonimo, slug, rut, correo, rrss, ciudad, pais, telefono, created_at, updated_at, deleted_at)
+VALUES (20, 2, 'Javiera Pizarro Navarro', 'Viento del Valle', 'viento-del-valle', '19500140-1', 'viento.del.valle@email.com', '{"instagram":"https://www.instagram.com/viento.del.valle/"}', 'La Serena', 'Chile', NULL, '2026-01-20 03:39:05', '2026-03-05 23:48:49', NULL);
+
+-- =============================================================================
+-- ARTISTAS FUERA DE CATÁLOGO: HISTORIAL (entrada mínima)
+-- =============================================================================
+
+INSERT INTO artista_historial (id, artista_id, pseudonimo, correo, rrss, ciudad, pais, orden, created_at, notas) VALUES (17, 16, NULL, 'fuego.lento@email.com', NULL, NULL, NULL, 1, '2026-01-20 03:39:14', 'Correo original');
+INSERT INTO artista_historial (id, artista_id, pseudonimo, correo, rrss, ciudad, pais, orden, created_at, notas) VALUES (18, 17, NULL, 'tinta.negra@email.com', NULL, NULL, NULL, 1, '2026-01-20 03:39:14', 'Correo original');
+INSERT INTO artista_historial (id, artista_id, pseudonimo, correo, rrss, ciudad, pais, orden, created_at, notas) VALUES (19, 18, NULL, 'luna.cosmica@email.com', NULL, NULL, NULL, 1, '2026-01-20 03:39:14', 'Correo original');
+INSERT INTO artista_historial (id, artista_id, pseudonimo, correo, rrss, ciudad, pais, orden, created_at, notas) VALUES (20, 19, NULL, 'rizoma.estudio@email.com', NULL, NULL, NULL, 1, '2026-01-20 03:39:14', 'Correo original');
+INSERT INTO artista_historial (id, artista_id, pseudonimo, correo, rrss, ciudad, pais, orden, created_at, notas) VALUES (21, 20, NULL, 'viento.del.valle@email.com', NULL, NULL, NULL, 1, '2026-01-20 03:39:14', 'Correo original');
+
+-- =============================================================================
+-- ARTISTAS FUERA DE CATÁLOGO: PARTICIPACIONES
+-- =============================================================================
+-- Cada artista participa en AMBAS ediciones.
+-- Se distribuyen entre las 4 disciplinas y 3 modos de ingreso.
+
+-- Artista 16 — Fuego Lento: Ed I → fotografía (invitación + taller), Ed II → fotografía (selección)
+INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
+VALUES (12, 1, 16, NULL, NULL, 'Fuera de catálogo — fotografía', '2026-01-20 03:39:15', '2026-03-05 23:48:56');
+INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
+VALUES (7, 12, 4, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:57', '2026-03-05 23:48:57');
+INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
+VALUES (5, 12, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
+INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
+VALUES (5, 5, 'Fotografía experimental con luz natural', 'Taller de técnicas fotográficas usando solo luz natural, explorando sombras, texturas y composición en exteriores.', 90, '15:30', NULL, 12, '2026-07-04 04:18:44', '2026-07-04 04:18:44');
+
+INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
+VALUES (13, 2, 16, NULL, NULL, 'Fuera de catálogo — fotografía', '2026-01-20 03:39:15', '2026-03-05 23:48:56');
+INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
+VALUES (8, 13, 4, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:57', '2026-03-05 23:48:57');
+
+-- Artista 17 — Tinta Negra: Ed I → ilustración (selección), Ed II → narrativa-gráfica (selección + charla)
+INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
+VALUES (14, 1, 17, NULL, NULL, 'Fuera de catálogo — ilustración', '2026-01-20 03:39:15', '2026-03-05 23:48:56');
+INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
+VALUES (9, 14, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:57', '2026-03-05 23:48:57');
+
+INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
+VALUES (15, 2, 17, NULL, NULL, 'Fuera de catálogo — narrativa gráfica', '2026-01-20 03:39:15', '2026-03-05 23:48:56');
+INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
+VALUES (10, 15, 2, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:57', '2026-03-05 23:48:57');
+INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
+VALUES (6, 15, 2, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
+INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
+VALUES (6, 6, 'Ilustración y narrativa: construyendo mundos gráficos', 'Charla sobre el proceso de creación de mundos visuales a través de la ilustración secuencial, desde el storyboard hasta la pieza final.', 45, '16:30', NULL, 25, '2026-07-04 04:18:45', '2026-07-04 04:18:45');
+
+-- Artista 18 — Luna Cósmica: Ed I → manualidades (suplencia), Ed II → ilustración (invitación)
+INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
+VALUES (16, 1, 18, NULL, NULL, 'Fuera de catálogo — manualidades', '2026-01-20 03:39:15', '2026-03-05 23:48:56');
+INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
+VALUES (11, 16, 3, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:57', '2026-03-05 23:48:57');
+
+INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
+VALUES (17, 2, 18, NULL, NULL, 'Fuera de catálogo — ilustración', '2026-01-20 03:39:15', '2026-03-05 23:48:56');
+INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
+VALUES (12, 17, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:57', '2026-03-05 23:48:57');
+
+-- Artista 19 — Rizoma Estudio: Ed I → narrativa-gráfica (selección + taller), Ed II → narrativa-gráfica (selección + charla)
+INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
+VALUES (18, 1, 19, NULL, NULL, 'Fuera de catálogo — narrativa gráfica', '2026-01-20 03:39:15', '2026-03-05 23:48:56');
+INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
+VALUES (13, 18, 2, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:57', '2026-03-05 23:48:57');
+INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
+VALUES (7, 18, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
+INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
+VALUES (7, 7, 'Taller de fanzine experimental', 'Taller práctico donde cada participante crea su propio fanzine usando técnicas mixtas de collage, dibujo y narrativa visual.', 120, '14:00', NULL, 15, '2026-07-04 04:18:46', '2026-07-04 04:18:46');
+
+INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
+VALUES (19, 2, 19, NULL, NULL, 'Fuera de catálogo — narrativa gráfica', '2026-01-20 03:39:15', '2026-03-05 23:48:56');
+INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
+VALUES (14, 19, 2, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:57', '2026-03-05 23:48:57');
+INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
+VALUES (8, 19, 2, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
+INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
+VALUES (8, 8, 'Storytelling visual para redes sociales', 'Charla sobre cómo construir narrativas visuales efectivas para plataformas digitales, con ejemplos de proyectos locales y estrategias de contenido.', 50, '18:00', NULL, 30, '2026-07-04 04:18:47', '2026-07-04 04:18:47');
+
+-- Artista 20 — Viento del Valle: Ed I → fotografía (selección), Ed II → manualidades (invitación + taller)
+INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
+VALUES (20, 1, 20, NULL, NULL, 'Fuera de catálogo — fotografía', '2026-01-20 03:39:15', '2026-03-05 23:48:56');
+INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
+VALUES (15, 20, 4, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:57', '2026-03-05 23:48:57');
+
+INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
+VALUES (21, 2, 20, NULL, NULL, 'Fuera de catálogo — manualidades', '2026-01-20 03:39:15', '2026-03-05 23:48:56');
+INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
+VALUES (16, 21, 3, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:57', '2026-03-05 23:48:57');
+INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
+VALUES (9, 21, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
+INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
+VALUES (9, 9, 'Taller de papelería artesanal', 'Taller donde los asistentes aprenderán técnicas básicas de encuadernación, plegado de papel y creación de libretas artesanales con materiales reciclados.', 90, '14:30', NULL, 15, '2026-07-04 04:18:48', '2026-07-04 04:18:48');
 
 -- =============================================================================
 -- FIN DEL SEED
