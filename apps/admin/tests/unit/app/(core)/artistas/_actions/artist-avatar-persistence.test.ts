@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
 
+import { getAvatarUrl } from '@frijolmagico/utils/cdn'
+
 const updateTag = mock(() => {})
 const cacheTag = mock(() => {})
 const getSession = mock(async () => ({ user: { id: 'admin-1' } }))
@@ -43,6 +45,14 @@ function toAvatarReference(avatar: AvatarRecord) {
     id: avatar.id,
     artistaId: avatar.artistaId,
     path: avatar.imagenUrl,
+    version: avatar.artistAvatarVersion
+  }
+}
+
+function toActiveAvatarReference(avatar: AvatarRecord) {
+  return {
+    id: avatar.id,
+    path: getAvatarUrl(avatar.imagenUrl),
     version: avatar.artistAvatarVersion
   }
 }
@@ -395,7 +405,7 @@ describe('artist avatar persistence', () => {
     currentDb = createReadDb(state, [avatar])
 
     await expect(getArtistAvatar(12)).resolves.toEqual(
-      toAvatarReference(avatar)
+      toActiveAvatarReference(avatar)
     )
     expect(cacheTag).toHaveBeenCalledTimes(1)
   })
@@ -413,7 +423,7 @@ describe('artist avatar persistence', () => {
     currentDb = createReadDb(state, [newestAvatar, avatar])
 
     await expect(getArtistAvatar(12)).resolves.toEqual(
-      toAvatarReference(newestAvatar)
+      toActiveAvatarReference(newestAvatar)
     )
     expect(state.orderByArgs).toHaveLength(2)
     expect(state.limit).toBe(1)

@@ -81,6 +81,14 @@ mock.module('@/core/artistas/catalogo/_actions/create-catalog.action', () => ({
   createCatalogAction: mockCreateCatalogAction
 }))
 
+const mockGetArtistAvatarAction = mock(async (artistId: number) =>
+  artistId === 2 ? { id: 10, path: 'avatars/bosque.png', version: 'v1' } : null
+)
+
+mock.module('@/core/artistas/_actions/get-artist-avatar.action', () => ({
+  getArtistAvatarAction: mockGetArtistAvatarAction
+}))
+
 // ── Mock shadcn/ui dialog ───────────────────────────────────────────
 let onOpenChangeCallback: ((open: boolean) => void) | null = null
 
@@ -322,8 +330,7 @@ const availableArtists = [
   {
     id: 2,
     pseudonimo: 'Bosque Azul',
-    nombre: 'María Soto',
-    avatarUrl: 'avatars/bosque.png'
+    nombre: 'María Soto'
   }
 ]
 
@@ -366,7 +373,7 @@ describe('CreateCatalogDialog avatar integration', () => {
       root?.render(createElement(CreateCatalogDialog, { availableArtists }))
     })
 
-    // Trigger combobox selection for artist with avatarUrl
+    // Trigger combobox selection and load the avatar lazily
     const comboBoxItems = nodesByTag(container, 'button').filter(
       (b) => b.textContent === 'Bosque Azul'
     )
@@ -376,10 +383,7 @@ describe('CreateCatalogDialog avatar integration', () => {
       reactProps(comboBoxItems[0]).onClick?.()
     })
 
-    // syncAvatar should have been called with the artist's avatarUrl
-    expect(mockSyncAvatar).toHaveBeenCalledWith(
-      expect.objectContaining({ path: 'avatars/bosque.png' })
-    )
+    expect(mockGetArtistAvatarAction).toHaveBeenCalledWith(2)
   })
 
   test('R3: select artist without avatar does not call syncAvatar', async () => {
@@ -396,7 +400,6 @@ describe('CreateCatalogDialog avatar integration', () => {
       reactProps(comboBoxItems[0]).onClick?.()
     })
 
-    // syncAvatar should have been called with null (no avatarUrl)
     expect(mockSyncAvatar).toHaveBeenCalledWith(null)
   })
 

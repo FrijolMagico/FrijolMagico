@@ -216,49 +216,30 @@ describe.skipIf(!modulesLoaded)('get-catalog-data DAL', () => {
     expect(dbMock.calls).toHaveLength(2)
   })
 
-  test('getArtistsNotInCatalog returns avatarUrl when artist has avatar', async () => {
+  test('getArtistsNotInCatalog returns identity only without an avatar query', async () => {
     const dbMock = createDbMock([
       [
         { id: 3, pseudonimo: 'Bosque Azul', nombre: 'María Soto' },
         { id: 5, pseudonimo: 'Pintacaritas', nombre: 'Pablo Zamora' }
-      ],
-      [{ artistaId: 3, imagenUrl: 'avatars/bosque.png' }]
+      ]
     ])
     currentDb = dbMock.db
 
     const result = await getArtistsNotInCatalog()
 
     expect(result).toHaveLength(2)
-    expect(result[0]).toMatchObject({
-      id: 3,
-      avatarUrl: expect.stringContaining('avatars/bosque.png')
-    })
-    expect(result[1]).toMatchObject({
-      id: 5,
-      avatarUrl: null
-    })
+    expect(result).toEqual([
+      { id: 3, pseudonimo: 'Bosque Azul', nombre: 'María Soto' },
+      { id: 5, pseudonimo: 'Pintacaritas', nombre: 'Pablo Zamora' }
+    ])
     expect(
       Object.keys((dbMock.calls[0]?.args[0] ?? {}) as Record<string, unknown>)
     ).toEqual(['id', 'pseudonimo', 'nombre'])
   })
 
-  test('getArtistsNotInCatalog returns null avatarUrl for artist without avatar', async () => {
-    const dbMock = createDbMock([
-      [{ id: 5, pseudonimo: 'Sin Avatar', nombre: null }],
-      []
-    ])
-    currentDb = dbMock.db
-
-    const result = await getArtistsNotInCatalog()
-
-    expect(result).toHaveLength(1)
-    expect(result[0].avatarUrl).toBeNull()
-  })
-
   test('getArtistsNotInCatalog uses a minimal anti-join query and dual cache tags', async () => {
     const dbMock = createDbMock([
-      [{ id: 3, pseudonimo: 'Bosque Azul', nombre: 'María Soto' }],
-      [{ artistaId: 3, imagenUrl: 'avatars/bosque.png' }]
+      [{ id: 3, pseudonimo: 'Bosque Azul', nombre: 'María Soto' }]
     ])
     currentDb = dbMock.db
 
@@ -268,20 +249,13 @@ describe.skipIf(!modulesLoaded)('get-catalog-data DAL', () => {
       {
         id: 3,
         pseudonimo: 'Bosque Azul',
-        nombre: 'María Soto',
-        avatarUrl: expect.stringContaining('avatars/bosque.png')
+        nombre: 'María Soto'
       }
     ])
     expect(getCacheTags()).toEqual(['catalogo:artistas', 'artistas'])
     expect(
       Object.keys((dbMock.calls[0]?.args[0] ?? {}) as Record<string, unknown>)
     ).toEqual(['id', 'pseudonimo', 'nombre'])
-    expect(dbMock.calls).toHaveLength(3)
-    expect(
-      Object.keys((dbMock.calls[1]?.args[0] ?? {}) as Record<string, unknown>)
-    ).toEqual(['id'])
-    expect(
-      Object.keys((dbMock.calls[2]?.args[0] ?? {}) as Record<string, unknown>)
-    ).toEqual(['artistaId', 'imagenUrl'])
+    expect(dbMock.calls).toHaveLength(2)
   })
 })

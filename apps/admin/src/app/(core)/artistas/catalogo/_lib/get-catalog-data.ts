@@ -203,36 +203,5 @@ export async function getArtistsNotInCatalog(): Promise<
     )
     .orderBy(asc(artistTable.pseudonimo), asc(artistTable.nombre))
 
-  const artistIds = artists.map((a) => a.id)
-  const avatars =
-    artistIds.length > 0
-      ? await db
-          .select({
-            artistaId: artistImage.artistaId,
-            imagenUrl: sql<string>`MIN(${artistImage.imagenUrl})`.as(
-              'imagen_url'
-            )
-          })
-          .from(artistImage)
-          .where(
-            and(
-              inArray(artistImage.artistaId, artistIds),
-              eq(artistImage.tipo, 'avatar'),
-              isNotDeleted(artistImage.deletedAt)
-            )
-          )
-          .groupBy(artistImage.artistaId)
-      : []
-
-  const avatarMap = new Map<number, string>()
-  for (const avatar of avatars) {
-    avatarMap.set(avatar.artistaId, getAvatarUrl(avatar.imagenUrl))
-  }
-
-  return artists.map((artist) => ({
-    id: artist.id,
-    pseudonimo: artist.pseudonimo,
-    nombre: artist.nombre,
-    avatarUrl: avatarMap.get(artist.id) ?? null
-  }))
+  return artists
 }
