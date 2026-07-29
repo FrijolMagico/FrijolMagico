@@ -55,8 +55,7 @@ export function CreateCatalogDialog({
       artistaId: 0,
       descripcion: null,
       destacado: false,
-      activo: true,
-      avatarUrl: null
+      activo: true
     },
     mode: 'onChange'
   })

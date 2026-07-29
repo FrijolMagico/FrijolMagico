@@ -82,7 +82,8 @@ export async function updateCatalogAction(
 
       const currentAvatar: ActiveAvatar | null = current ?? null
       if (
-        !isExpectedActiveAvatar(expectedActive ?? currentAvatar, currentAvatar)
+        expectedActive !== undefined &&
+        !isExpectedActiveAvatar(expectedActive, currentAvatar)
       ) {
         return null
       }

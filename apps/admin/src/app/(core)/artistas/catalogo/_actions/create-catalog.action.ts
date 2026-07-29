@@ -8,7 +8,7 @@ import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import {
   CATALOG_CACHE_TAG,
-  FEATURED_ARTISTS_CACHE_TAG,
+  FEATURED_ARTISTS_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import type { ActionState } from '@/shared/types/actions'
@@ -17,10 +17,6 @@ import {
   catalogInsertSchema,
   type CatalogInsertInput
 } from '../_schemas/catalog.schema'
-import {
-  ArtistImagenInsertInput,
-  artistImagenInsertSchema
-} from '../../_schemas/image.schema'
 import { revalidateWebCache } from '@/shared/lib/web-invalidation'
 
 export async function createCatalogAction(
@@ -54,30 +50,7 @@ export async function createCatalogAction(
       }
     }
 
-    const { avatarUrl, artistaId, ...catalog } = parsed.data
-
-    if (avatarUrl && artistaId) {
-      const imagePayload: ArtistImagenInsertInput = {
-        tipo: 'avatar',
-        imagenUrl: avatarUrl,
-        artistaId
-      }
-
-      const parsedImagePayload =
-        artistImagenInsertSchema.safeParse(imagePayload)
-
-      if (!parsedImagePayload.success) {
-        return {
-          success: false,
-          errors: parsedImagePayload.error.issues.map((issue) => ({
-            entityType: 'catalogo_imagen',
-            message: issue.message
-          }))
-        }
-      }
-
-      await db.insert(artist.artistImage).values(parsedImagePayload.data)
-    }
+    const { artistaId, ...catalog } = parsed.data
 
     await db.insert(artist.catalogArtist).values({
       ...catalog,
@@ -96,7 +69,7 @@ export async function createCatalogAction(
     if ('destacado' in parsed.data && parsed.data.destacado) {
       void revalidateWebCache({
         tag: FEATURED_ARTISTS_CACHE_TAG,
-        path: '/',
+        path: '/'
       })
     }
 
