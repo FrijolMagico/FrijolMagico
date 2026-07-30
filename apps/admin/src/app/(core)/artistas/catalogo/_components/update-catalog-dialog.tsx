@@ -28,6 +28,7 @@ import {
 import { resolveAvatarIntent } from '../_lib/artist-avatar-history'
 import { useAvatarController } from '../_hooks/use-avatar-controller'
 import { useArtistAvatarHistory } from '../_hooks/use-artist-avatar-history'
+import { useCatalogAvatarPending } from '../_lib/catalog-avatar-queue-state'
 import { UpdateArtistDialog } from '../../_components/update-artist-dialog'
 import { useArtistDialog } from '../../_store/artist-dialog-store'
 import { UPDATE_CATALOG_FORM_ID } from '../_constants'
@@ -56,6 +57,7 @@ function UpdateCatalogDialogForm({
     artistId: artist.id,
     activeAvatar: catalog.activeAvatar ?? null
   })
+  const hasPendingAvatar = useCatalogAvatarPending(artist.id)
   const {
     control,
     handleSubmit,
@@ -243,6 +245,7 @@ function UpdateCatalogDialogForm({
                     <Switch
                       checked={field.value}
                       onCheckedChange={field.onChange}
+                      disabled={hasPendingAvatar}
                     />
                   )}
                 />

@@ -21,6 +21,10 @@ interface ArtistAvatarPolicyDependencies {
   fetch: AssetFetch
 }
 
+export interface ArtistAvatarUploadResult {
+  receipt: string
+}
+
 function expectedActiveFromContext(
   context: AssetOperationContext
 ): ExpectedActiveAvatar | null | undefined {
@@ -60,6 +64,16 @@ function isPersistedAvatar(value: unknown): value is UploadArtistAvatarData {
   )
 }
 
+function isUploadResult(value: unknown): value is ArtistAvatarUploadResult {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'receipt' in value &&
+    typeof value.receipt === 'string' &&
+    value.receipt.length > 0
+  )
+}
+
 const TERMINAL_QUEUE_STATUSES: ReadonlySet<AssetQueueStatus> = new Set([
   ASSET_QUEUE_STATUS.COMPLETED,
   ASSET_QUEUE_STATUS.FAILED,
@@ -84,7 +98,11 @@ export function admitArtistAvatarEnqueue({
 
 export function createArtistAvatarOperationPolicy(
   dependencies: ArtistAvatarPolicyDependencies
-): AssetOperationPolicy<UploadArtistAvatarData, UploadArtistAvatarData, null> {
+): AssetOperationPolicy<
+  ArtistAvatarUploadResult,
+  UploadArtistAvatarData,
+  null
+> {
   return {
     admitEnqueue: admitArtistAvatarEnqueue,
     async upload({ context, preparedAsset }) {
@@ -136,14 +154,43 @@ export function createArtistAvatarOperationPolicy(
       }
 
       const result: unknown = await response.json()
-      if (!isPersistedAvatar(result))
+      if (!isUploadResult(result))
         throw new Error('Invalid asset upload response')
       return result
     },
-    async persist({ upload }) {
-      return { persisted: upload, cleanup: null }
+    async persist({ context, upload }) {
+      const response = await dependencies.fetch('/api/assets/persist', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ receipt: upload.receipt }),
+        signal: context.signal
+      })
+      if (!response.ok) {
+        const error: unknown = await response.json().catch(() => null)
+        if (
+          typeof error === 'object' &&
+          error !== null &&
+          'error' in error &&
+          (error.error === 'AVATAR_CONFLICT' ||
+            error.error === 'INVALID_RECEIPT')
+        )
+          throw new Error(error.error)
+        throw new Error('Asset persistence failed')
+      }
+      const persisted: unknown = await response.json()
+      if (!isPersistedAvatar(persisted))
+        throw new Error('Invalid asset persistence response')
+      return { persisted, cleanup: null }
     },
-    async cleanup() {}
+    async cleanup() {},
+    async discardUpload({ context, upload }) {
+      await dependencies.fetch('/api/assets/discard', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ receipt: upload.receipt }),
+        signal: context.signal
+      })
+    }
   }
 }
 

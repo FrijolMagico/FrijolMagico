@@ -11,9 +11,7 @@ import { act, createElement } from 'react'
 import { createRoot } from 'react-dom/client'
 
 // ── Mock the server action ───────────────────────────────────────────
-const mockUpdateCatalogFieldAction = mock(
-  async () => ({ success: true })
-)
+const mockUpdateCatalogFieldAction = mock(async () => ({ success: true }))
 
 mock.module(
   '@/core/artistas/catalogo/_actions/update-catalog-field.action',
@@ -26,6 +24,11 @@ mock.module(
 mock.module('@/core/artistas/catalogo/_store/catalog-dialog-store', () => ({
   useCatalogDialog: () => mock(() => {})
 }))
+
+mock.module(
+  '@/core/artistas/catalogo/_hooks/use-catalog-avatar-completion-refresh',
+  () => ({ useCatalogAvatarCompletionRefresh: () => {} })
+)
 
 // ── Mock sonner ──────────────────────────────────────────────────────
 mock.module('sonner', () => ({
@@ -139,9 +142,7 @@ function nodesByTag(root: TestNode, tagName: string): TestNode[] {
   ])
 }
 
-function reactProps(
-  node: TestNode
-): Record<string, (event?: unknown) => void> {
+function reactProps(node: TestNode): Record<string, (event?: unknown) => void> {
   const key = Object.getOwnPropertyNames(node).find((name) =>
     name.startsWith('__reactProps$')
   )
@@ -187,12 +188,10 @@ class MockImage {
 globalThis.Image = MockImage as unknown as typeof Image
 
 // ── Components ──────────────────────────────────────────────────────
-const { ArtistAvatar } = await import(
-  '@/core/artistas/catalogo/_components/artist-avatar'
-)
-const { CatalogRow } = await import(
-  '@/core/artistas/catalogo/_components/catalog-row'
-)
+const { ArtistAvatar } =
+  await import('@/core/artistas/catalogo/_components/artist-avatar')
+const { CatalogRow } =
+  await import('@/core/artistas/catalogo/_components/catalog-row')
 
 // ── Fixtures ─────────────────────────────────────────────────────────
 function createMockCatalog(overrides: Record<string, unknown> = {}) {
@@ -335,6 +334,31 @@ describe('CatalogRow — Avatar Business Rule', () => {
     expect(checkIcons.length).toBeGreaterThan(0)
   })
 
+  test('4b. Exact pending avatar: locks only Active while featured remains editable', async () => {
+    const catalog = createMockCatalog({
+      activeAvatar: {
+        id: 1,
+        path: 'http://cdn.test/avatar.webp',
+        version: 'v1'
+      }
+    })
+    await act(async () => {
+      root?.render(
+        createElement(CatalogRow, {
+          catalog: catalog as never,
+          hasPendingAvatar: true,
+          onDelete: mock(() => {}),
+          onRestore: mock(() => {})
+        })
+      )
+    })
+
+    const switches = nodesByAttribute(container, 'data-slot', 'switch')
+    expect(switches).toHaveLength(2)
+    expect(switches[0]?.attributes.has('data-disabled')).toBe(false)
+    expect(getActivoSwitch(container)?.attributes.get('data-disabled')).toBe('')
+  })
+
   test('5. Missing avatar: handleToggleActivo is guarded', async () => {
     const catalog = createMockCatalog({ avatarUrl: null })
     await renderCatalogRow(catalog)
@@ -396,7 +420,11 @@ describe('CatalogRow — Avatar Business Rule', () => {
     await renderCatalogRow(catalog)
 
     // No alert icon
-    const alertIcons = nodesByAttribute(container, 'data-icon', 'alert-triangle')
+    const alertIcons = nodesByAttribute(
+      container,
+      'data-icon',
+      'alert-triangle'
+    )
     expect(alertIcons.length).toBe(0)
 
     // Tooltip content should NOT be present in the tree
