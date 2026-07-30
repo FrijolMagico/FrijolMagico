@@ -69,7 +69,10 @@ mock.module('@/core/artistas/catalogo/_hooks/use-avatar-controller', () => ({
 }))
 
 // ── Mock the server action ──────────────────────────────────────────
-let actionResult = { success: true }
+let actionResult: {
+  success: boolean
+  data?: { catalogId: number; artistId: number; requestedActive: boolean }
+} = { success: true }
 const mockCreateCatalogAction = mock(
   async (_prevState: { success: boolean }, _data: Record<string, unknown>) => {
     if (actionResult.success) submissionEvents.push('catalog-complete')
@@ -420,7 +423,10 @@ describe('CreateCatalogDialog avatar integration', () => {
   })
 
   test('R5+4.8: enqueue called on successful create; cancel NOT called after programmatic close', async () => {
-    actionResult = { success: true }
+    actionResult = {
+      success: true,
+      data: { catalogId: 9, artistId: 88, requestedActive: true }
+    }
 
     await act(async () => {
       root?.render(createElement(CreateCatalogDialog, { availableArtists }))
@@ -447,7 +453,9 @@ describe('CreateCatalogDialog avatar integration', () => {
 
     expect(mockCreateCatalogAction).toHaveBeenCalled()
     // enqueue should have been called on success
-    expect(mockEnqueue).toHaveBeenCalled()
+    expect(mockEnqueue).toHaveBeenCalledWith(88, {
+      activation: { catalogId: 9, requestedActive: true }
+    })
     expect(submissionEvents).toEqual(['catalog-complete', 'enqueue'])
     // cancel should NOT have been called (suppressCancelRef guarded against it)
     expect(mockCancel).not.toHaveBeenCalled()

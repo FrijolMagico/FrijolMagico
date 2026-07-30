@@ -1,5 +1,6 @@
 import type { UploadArtistAvatarData } from '../../_actions/upload-artist-avatar.action'
 import type { ExpectedActiveAvatar } from './avatar-history-contracts'
+import type { AvatarActivationInput } from '../_hooks/use-avatar-controller'
 import type {
   AssetEnqueueAdmissionInput,
   AssetOperationContext,
@@ -87,7 +88,15 @@ export function createArtistAvatarOperationPolicy(
   return {
     admitEnqueue: admitArtistAvatarEnqueue,
     async upload({ context, preparedAsset }) {
-      const expectedActive = expectedActiveFromContext(context)
+      const input = context.input as
+        | ExpectedActiveAvatar
+        | AvatarActivationInput
+        | null
+        | undefined
+      const expectedActive =
+        input && 'activation' in input
+          ? undefined
+          : expectedActiveFromContext(context)
       const formData = new FormData()
       formData.append('assetTarget', ASSET_TARGET.ARTIST_AVATAR)
       formData.append('entityId', context.entityId)
@@ -97,14 +106,15 @@ export function createArtistAvatarOperationPolicy(
       if (expectedActive === null) {
         formData.append('expectedActiveNone', 'true')
       } else if (expectedActive) {
-        formData.append(
-          'expectedActiveId',
-          String(expectedActive.id)
-        )
+        formData.append('expectedActiveId', String(expectedActive.id))
         formData.append('expectedActivePath', expectedActive.path)
+        formData.append('expectedActiveVersion', expectedActive.version ?? '')
+      }
+      if (input && 'activation' in input) {
+        formData.append('catalogId', String(input.activation.catalogId))
         formData.append(
-          'expectedActiveVersion',
-          expectedActive.version ?? ''
+          'requestedActive',
+          String(input.activation.requestedActive)
         )
       }
 

@@ -96,10 +96,17 @@ export function CreateCatalogDialog({
         return
       }
 
+      if (!result.data) {
+        toast.error('No se pudo identificar el artista creado')
+        return
+      }
+
       // Post-submit enqueue
-      const artistId = data.artistaId
+      const { artistId, catalogId, requestedActive } = result.data
       try {
-        await controller.enqueue(artistId)
+        await controller.enqueue(artistId, {
+          activation: { catalogId, requestedActive }
+        })
       } catch {
         // Enqueue failure handled by controller state — error+retry shown in ArtistAvatarSection
         // The catalog entry was already created

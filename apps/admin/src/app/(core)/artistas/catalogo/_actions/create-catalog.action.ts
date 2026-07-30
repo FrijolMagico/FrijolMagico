@@ -17,12 +17,18 @@ import {
   catalogInsertSchema,
   type CatalogInsertInput
 } from '../_schemas/catalog.schema'
-import { revalidateWebCache } from '@/shared/lib/web-invalidation'
+import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
+
+interface CreatedCatalog {
+  catalogId: number
+  artistId: number
+  requestedActive: boolean
+}
 
 export async function createCatalogAction(
-  _prevState: ActionState<{ id: number }>,
+  _prevState: ActionState<CreatedCatalog>,
   data: CatalogCreateFormInput
-): Promise<ActionState<{ id: number }>> {
+): Promise<ActionState<CreatedCatalog>> {
   try {
     await requireAuth()
 
@@ -52,28 +58,38 @@ export async function createCatalogAction(
 
     const { artistaId, ...catalog } = parsed.data
 
-    await db.insert(artist.catalogArtist).values({
-      ...catalog,
-      artistaId
-    })
+    const [createdCatalog] = await db
+      .insert(artist.catalogArtist)
+      .values({ ...catalog, artistaId, activo: false })
+      .returning({
+        id: artist.catalogArtist.id,
+        artistaId: artist.catalogArtist.artistaId
+      })
 
     // NOTE: Soft-deleted catalog rows still rely on the current unique `artistaId`
     // constraint. This change does not introduce restore-or-reinsert semantics.
 
     updateTag(CATALOG_CACHE_TAG)
-    revalidateWebCache({
+    void revalidateWebCacheBestEffort({
       tag: CATALOG_CACHE_TAG,
       path: '/catalogo'
     })
 
     if ('destacado' in parsed.data && parsed.data.destacado) {
-      void revalidateWebCache({
+      void revalidateWebCacheBestEffort({
         tag: FEATURED_ARTISTS_CACHE_TAG,
         path: '/'
       })
     }
 
-    return { success: true }
+    return {
+      success: true,
+      data: {
+        catalogId: createdCatalog.id,
+        artistId: createdCatalog.artistaId,
+        requestedActive: parsed.data.activo ?? false
+      }
+    }
   } catch (error) {
     return {
       success: false,

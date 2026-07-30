@@ -36,7 +36,9 @@ const uploadArtistAvatarSchema = z
         version: z.string().nullable()
       })
       .nullable()
-      .optional()
+      .optional(),
+    catalogId: z.number().int().positive().optional(),
+    requestedActive: z.boolean().optional()
   })
   .refine((input) => input.width === 800 && input.height === 800, {
     message: 'El avatar preparado debe medir exactamente 800×800 px'
@@ -112,8 +114,11 @@ export async function uploadArtistAvatarAction(
             version: artist.artistImage.artistAvatarVersion
           })
 
-        if (parsed.data.expectedActive !== undefined &&
-          parsed.data.expectedActive !== null && !oldAvatar) {
+        if (
+          parsed.data.expectedActive !== undefined &&
+          parsed.data.expectedActive !== null &&
+          !oldAvatar
+        ) {
           throw new Error('AVATAR_CONFLICT')
         }
 
@@ -135,6 +140,18 @@ export async function uploadArtistAvatarAction(
 
         if (!insertedAvatar) {
           throw new Error('No se pudo persistir el avatar del artista')
+        }
+
+        if (parsed.data.requestedActive && parsed.data.catalogId) {
+          await tx
+            .update(artist.catalogArtist)
+            .set({ activo: true })
+            .where(
+              and(
+                eq(artist.catalogArtist.id, parsed.data.catalogId),
+                eq(artist.catalogArtist.artistaId, parsed.data.artistaId)
+              )
+            )
         }
 
         return {
