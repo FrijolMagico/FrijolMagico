@@ -33,8 +33,10 @@ const discardArtistAvatarAction = mock(
     data: null
   })
 )
+const revalidateTag = mock(() => {})
 
 mock.module('server-only', () => ({}))
+mock.module('next/cache', () => ({ revalidateTag }))
 mock.module('@/shared/lib/auth/utils', () => ({ getSession }))
 mock.module('@/core/artistas/_actions/persist-artist-avatar.action', () => ({
   persistArtistAvatarAction
@@ -71,6 +73,7 @@ describe('asset persistence routes', () => {
     })
     discardArtistAvatarAction.mockReset()
     discardArtistAvatarAction.mockResolvedValue({ success: true, data: null })
+    revalidateTag.mockClear()
   })
 
   test('rejects unauthenticated persist and discard before calling actions', async () => {
@@ -100,6 +103,39 @@ describe('asset persistence routes', () => {
       oldAsset: null
     })
     expect(discardResponse.status).toBe(204)
+  })
+
+  test('expires catalog and artist tags after a successful persistence response', async () => {
+    const response = await persist(request('/api/assets/persist'))
+
+    expect(response.status).toBe(200)
+    expect(revalidateTag).toHaveBeenCalledWith('catalogo:artistas', {
+      expire: 0
+    })
+    expect(revalidateTag).toHaveBeenCalledWith('artistas', { expire: 0 })
+  })
+
+  test('keeps the committed persistence response when tag invalidation fails', async () => {
+    const consoleError = mock(() => {})
+    const originalError = console.error
+    console.error = consoleError as never
+    revalidateTag.mockImplementationOnce(() => {
+      throw new Error('cache unavailable')
+    })
+
+    const response = await persist(request('/api/assets/persist'))
+
+    expect(response.status).toBe(200)
+    await expect(response.json()).resolves.toMatchObject({ id: 7 })
+    expect(revalidateTag).toHaveBeenCalledWith('catalogo:artistas', {
+      expire: 0
+    })
+    expect(revalidateTag).toHaveBeenCalledWith('artistas', { expire: 0 })
+    expect(consoleError).toHaveBeenCalledWith(
+      '[assets/persist] Cache invalidation failed',
+      expect.any(Error)
+    )
+    console.error = originalError
   })
 
   test('preserves typed receipt and conflict failures from persistence', async () => {
