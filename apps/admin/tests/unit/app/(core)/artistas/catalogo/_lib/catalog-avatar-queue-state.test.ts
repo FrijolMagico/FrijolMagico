@@ -7,6 +7,7 @@ import type {
 import { ASSET_QUEUE_STATUS } from '@/shared/assets-manager/client/queue'
 import type { SharedAssetQueueStore } from '@/shared/assets-manager/client/shared-asset-queue'
 import {
+  createCatalogAvatarRecentCompletionBridge,
   createCatalogAvatarQueueObserver,
   findPendingArtistAvatarJob
 } from '@/core/artistas/catalogo/_lib/catalog-avatar-queue-state'
@@ -124,12 +125,18 @@ describe('catalog avatar queue state', () => {
         refreshes += 1
       }
     })
+    const bridge = createCatalogAvatarRecentCompletionBridge({ entityId: 42, store })
+    const stopBridge = bridge.subscribe(() => {})
 
     const completed = { ...pending, status: ASSET_QUEUE_STATUS.COMPLETED }
     update({ jobs: [completed], activeJobId: null })
     update({ jobs: [completed], activeJobId: null })
 
     expect(refreshes).toBe(1)
+    expect(bridge.getSnapshot()).toBe(true)
+    bridge.clear()
+    expect(bridge.getSnapshot()).toBe(false)
+    stopBridge()
     observer.destroy()
   })
 
@@ -163,4 +170,5 @@ describe('catalog avatar queue state', () => {
     expect(refreshes).toBe(0)
     observer.destroy()
   })
+
 })

@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 
 import { ASSET_QUEUE_STATUS } from '@/shared/assets-manager/client/queue'
 import type {
@@ -44,6 +44,41 @@ export interface CatalogAvatarQueueObserver {
   destroy: () => void
 }
 
+export function createCatalogAvatarRecentCompletionBridge(options: Pick<CatalogAvatarQueueObserverOptions, 'entityId' | 'store'>) {
+  const store = options.store ?? getSharedAssetQueueStore()
+  const listeners = new Set<() => void>()
+  let previousJobs = store.getState().jobs
+  let hasRecentCompletion = false
+  let unsubscribeStore: (() => void) | null = null
+  const observe = (snapshot: AssetQueueSnapshot) => {
+    if (snapshot.jobs.some((job) => {
+      const previous = previousJobs.find((candidate) => candidate.jobId === job.jobId)
+      return (
+        job.target === 'artist-avatar' &&
+        job.entityId === String(options.entityId) &&
+        previous?.status === ASSET_QUEUE_STATUS.PERSISTING &&
+        job.status === ASSET_QUEUE_STATUS.COMPLETED
+      )
+    })) {
+      hasRecentCompletion = true
+      listeners.forEach((listener) => listener())
+    }
+    previousJobs = snapshot.jobs
+  }
+  return {
+    clear: () => { hasRecentCompletion = false },
+    getSnapshot: () => hasRecentCompletion,
+    subscribe: (listener: () => void) => {
+      listeners.add(listener)
+      if (listeners.size === 1) unsubscribeStore = store.subscribe(observe)
+      return () => {
+        listeners.delete(listener)
+        if (listeners.size === 0) unsubscribeStore?.()
+      }
+    }
+  }
+}
+
 export function createCatalogAvatarQueueObserver(
   options: CatalogAvatarQueueObserverOptions
 ): CatalogAvatarQueueObserver {
@@ -86,4 +121,19 @@ export function useCatalogAvatarPending(
     () => findPendingArtistAvatarJob(store.getState(), entityId) !== null,
     () => false
   )
+}
+
+export function useCatalogAvatarRecentCompletion(
+  entityId: string | number,
+  hasActiveAvatar: boolean,
+  store: SharedAssetQueueStore = getSharedAssetQueueStore()
+): boolean {
+  const [bridge] = useState(() => createCatalogAvatarRecentCompletionBridge({ entityId, store }))
+  const hasRecentCompletion = useSyncExternalStore(
+    bridge.subscribe,
+    bridge.getSnapshot,
+    bridge.getSnapshot
+  )
+  if (hasActiveAvatar && hasRecentCompletion) bridge.clear()
+  return hasActiveAvatar ? false : hasRecentCompletion
 }

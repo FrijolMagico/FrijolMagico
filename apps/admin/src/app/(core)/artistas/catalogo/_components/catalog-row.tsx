@@ -9,7 +9,10 @@ import { cn } from '@/shared/lib/utils'
 import { ActionMenuButton } from '@/shared/components/action-menu-button'
 import { updateCatalogFieldAction } from '../_actions/update-catalog-field.action'
 import { useCatalogDialog } from '../_store/catalog-dialog-store'
-import { useCatalogAvatarPending } from '../_lib/catalog-avatar-queue-state'
+import {
+  useCatalogAvatarPending,
+  useCatalogAvatarRecentCompletion
+} from '../_lib/catalog-avatar-queue-state'
 import { useCatalogAvatarCompletionRefresh } from '../_hooks/use-catalog-avatar-completion-refresh'
 import type { CatalogListItem } from '../_types/catalog-list-item'
 import { toast } from 'sonner'
@@ -43,6 +46,10 @@ export function CatalogRow({
   const hasAvatar = catalog.activeAvatar != null
   const observedPendingAvatar = useCatalogAvatarPending(artist.id)
   const hasPendingAvatar = pendingAvatarOverride ?? observedPendingAvatar
+  const hasRecentCompletion = useCatalogAvatarRecentCompletion(
+    artist.id,
+    hasAvatar
+  )
   useCatalogAvatarCompletionRefresh(artist.id)
 
   const [optimisticFields, setOptimisticFields] = useOptimistic({
@@ -99,13 +106,19 @@ export function CatalogRow({
                     src={catalog.activeAvatar?.path ?? null}
                     alt={artist.pseudonimo}
                     size='sm'
-                    status='missing'
+                    status={
+                      hasRecentCompletion || hasPendingAvatar
+                        ? 'pending'
+                        : 'missing'
+                    }
                   />
                 </div>
               }
             />
             <TooltipContent side='right'>
-              Debe subir un avatar antes de activar la entrada
+              {hasPendingAvatar
+                ? 'El avatar se está preparando'
+                : 'Debe subir un avatar antes de activar la entrada'}
             </TooltipContent>
           </Tooltip>
         )}

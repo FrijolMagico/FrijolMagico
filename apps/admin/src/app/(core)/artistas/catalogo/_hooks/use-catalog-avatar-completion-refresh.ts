@@ -17,7 +17,9 @@ export function useCatalogAvatarCompletionRefresh(
       const observer = createCatalogAvatarQueueObserver({
         entityId,
         store,
-        onConfirmedPersistence: router.refresh
+        onConfirmedPersistence: () => {
+          router.refresh()
+        }
       })
       return observer.destroy
     },
