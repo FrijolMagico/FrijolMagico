@@ -1,4 +1,11 @@
 import type { AssetTarget, PreparedAsset } from './contracts'
+import type { AssetQueueSnapshot } from './queue'
+
+export interface AssetEnqueueAdmissionInput {
+  target: AssetTarget
+  entityId: string
+  snapshot: AssetQueueSnapshot
+}
 
 export interface AssetOperationContext {
   jobId: string
@@ -38,6 +45,7 @@ export interface AssetOperationCleanupInput<TCleanup> {
 export type AssetOperationCleanupResult = void
 
 export interface AssetOperationPolicy<TUpload, TPersist, TCleanup> {
+  admitEnqueue?: (input: AssetEnqueueAdmissionInput) => void
   upload: (input: UploadInput) => Promise<AssetOperationUploadResult<TUpload>>
   persist: (
     input: PersistInput<TUpload>

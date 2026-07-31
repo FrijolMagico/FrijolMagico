@@ -2,7 +2,7 @@
 
 import { useEventDialog } from '../_store/event-dialog-store'
 import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
-import { CREATE_EVENT_FORM_ID, UPDATE_EVENT_FORM_ID } from '../_constants'
+import { UPDATE_EVENT_FORM_ID } from '../_constants'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { type EventFormInput, eventFormSchema } from '../_schemas/event.schema'
 import { toast } from 'sonner'
@@ -81,7 +81,7 @@ export function UpdateEventDialog() {
         isSubmitting
       }}
     >
-      <form id={CREATE_EVENT_FORM_ID} onSubmit={handleSubmit(onSubmit)}>
+      <form id={UPDATE_EVENT_FORM_ID} onSubmit={handleSubmit(onSubmit)}>
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor='nombre'>

@@ -13,6 +13,13 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Block direct PRs to main
+        if: github.base_ref == 'main' && github.head_ref != 'dev'
+        run: |
+          echo "❌ PRs directo a main solo desde dev."
+          echo "Source: ${{ github.head_ref }} → main"
+          exit 1
+
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest

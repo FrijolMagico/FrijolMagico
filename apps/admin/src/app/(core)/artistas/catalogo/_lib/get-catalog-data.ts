@@ -5,8 +5,8 @@ import { and, asc, count, eq, inArray, notExists, sql } from 'drizzle-orm'
 import { isNotDeleted } from '@frijolmagico/database/filters'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
+import { getAvatarUrl } from '@frijolmagico/utils/cdn'
 
-import { getAvatarUrl } from '@/shared/lib/cdn'
 import {
   createPaginatedResponse,
   type PaginatedResponse
@@ -24,6 +24,7 @@ import type {
   CatalogAvailableArtist,
   CatalogListItem
 } from '../_types/catalog-list-item'
+import type { ActiveAvatar } from './avatar-history-contracts'
 
 const { catalogArtist, artistImage, artist: artistTable } = artist
 
@@ -123,8 +124,10 @@ export async function getCatalogData(
     artistIds.length > 0
       ? await db
           .select({
+            id: artistImage.id,
             artistaId: artistImage.artistaId,
             imagenUrl: artistImage.imagenUrl,
+            version: artistImage.artistAvatarVersion,
             orden: artistImage.orden
           })
           .from(artistImage)
@@ -138,17 +141,21 @@ export async function getCatalogData(
           .orderBy(asc(artistImage.orden))
       : []
 
-  const avatarMap = new Map<number, string>()
+  const avatarMap = new Map<number, ActiveAvatar>()
   for (const avatar of avatars) {
     if (!avatarMap.has(avatar.artistaId)) {
-      avatarMap.set(avatar.artistaId, avatar.imagenUrl)
+      avatarMap.set(avatar.artistaId, {
+        id: avatar.id,
+        path: getAvatarUrl(avatar.imagenUrl),
+        version: avatar.version
+      })
     }
   }
 
   const results = catalogResults.map((row) => ({
     ...row,
     artist: mapCatalogArtist(row.artist),
-    avatarUrl: avatarMap.get(row.artistaId) ?? null
+    activeAvatar: avatarMap.get(row.artistaId) ?? null
   }))
 
   const totalResult = await db
@@ -160,7 +167,7 @@ export async function getCatalogData(
   return createPaginatedResponse(
     results.map((row) => ({
       ...row,
-      avatarUrl: getAvatarUrl(row.avatarUrl)
+      avatarUrl: getAvatarUrl(row.activeAvatar?.path ?? null)
     })),
     {
       total: totalResult[0]?.total ?? 0,
@@ -177,7 +184,7 @@ export async function getArtistsNotInCatalog(): Promise<
   cacheTag(CATALOG_CACHE_TAG)
   cacheTag(ARTIST_CACHE_TAG)
 
-  return db
+  const artists = await db
     .select({
       id: artistTable.id,
       pseudonimo: artistTable.pseudonimo,
@@ -201,4 +208,37 @@ export async function getArtistsNotInCatalog(): Promise<
       )
     )
     .orderBy(asc(artistTable.pseudonimo), asc(artistTable.nombre))
+
+  const artistIds = artists.map((a) => a.id)
+  const avatars =
+    artistIds.length > 0
+      ? await db
+          .select({
+            artistaId: artistImage.artistaId,
+            imagenUrl: sql<string>`MIN(${artistImage.imagenUrl})`.as(
+              'imagen_url'
+            )
+          })
+          .from(artistImage)
+          .where(
+            and(
+              inArray(artistImage.artistaId, artistIds),
+              eq(artistImage.tipo, 'avatar'),
+              isNotDeleted(artistImage.deletedAt)
+            )
+          )
+          .groupBy(artistImage.artistaId)
+      : []
+
+  const avatarMap = new Map<number, string>()
+  for (const avatar of avatars) {
+    avatarMap.set(avatar.artistaId, getAvatarUrl(avatar.imagenUrl))
+  }
+
+  return artists.map((artist) => ({
+    id: artist.id,
+    pseudonimo: artist.pseudonimo,
+    nombre: artist.nombre,
+    avatarUrl: avatarMap.get(artist.id) ?? null
+  }))
 }
