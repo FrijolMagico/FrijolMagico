@@ -6,7 +6,11 @@ import { ASSET_TARGET } from '@/shared/assets-manager/client/contracts'
 import type { PreparedAsset } from '@/shared/assets-manager/client/contracts'
 import { ASSET_QUEUE_STATUS } from '@/shared/assets-manager/client/queue'
 
-import { createAvatarCancelObserver } from '@/core/artistas/catalogo/_hooks/use-avatar-cancel-observer'
+mock.module('server-only', () => ({}))
+
+const { createAvatarCancelObserver } = await import(
+  '@/core/artistas/catalogo/_hooks/use-avatar-cancel-observer'
+)
 
 // ---------------------------------------------------------------------------
 // Harness
