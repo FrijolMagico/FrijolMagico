@@ -25,6 +25,22 @@ interface CreatedCatalog {
   requestedActive: boolean
 }
 
+interface CreatedCatalogRow {
+  id: number
+  artistaId: number
+}
+
+function isCreatedCatalogRow(value: unknown): value is CreatedCatalogRow {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'id' in value &&
+    typeof value.id === 'number' &&
+    'artistaId' in value &&
+    typeof value.artistaId === 'number'
+  )
+}
+
 export async function createCatalogAction(
   _prevState: ActionState<CreatedCatalog>,
   data: CatalogCreateFormInput
@@ -66,10 +82,26 @@ export async function createCatalogAction(
         artistaId: artist.catalogArtist.artistaId
       })
 
+    if (!isCreatedCatalogRow(createdCatalog)) {
+      return {
+        success: false,
+        errors: [
+          {
+            entityType: 'catalogo',
+            message: 'No se pudo confirmar la creación del catálogo'
+          }
+        ]
+      }
+    }
+
     // NOTE: Soft-deleted catalog rows still rely on the current unique `artistaId`
     // constraint. This change does not introduce restore-or-reinsert semantics.
 
-    updateTag(CATALOG_CACHE_TAG)
+    try {
+      updateTag(CATALOG_CACHE_TAG)
+    } catch (error) {
+      console.error('Catalog cache invalidation failed', error)
+    }
     void revalidateWebCacheBestEffort({
       tag: CATALOG_CACHE_TAG,
       path: '/catalogo'

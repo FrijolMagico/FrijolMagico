@@ -109,6 +109,7 @@ export async function getDeletedCatalog(): Promise<CatalogListItem[]> {
     if (!avatarMap.has(avatar.artistaId)) {
       avatarMap.set(avatar.artistaId, {
         id: avatar.id,
+        // Full public path built server-side (same contract as getCatalogData).
         path: getAvatarUrl(avatar.imagenUrl),
         version: avatar.version
       })

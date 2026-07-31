@@ -35,6 +35,7 @@ export async function getArtistAvatar(
   return avatar
     ? {
         id: avatar.id,
+        // Full public path built server-side (same contract as getCatalogData).
         path: getAvatarUrl(avatar.path),
         version: avatar.version
       }

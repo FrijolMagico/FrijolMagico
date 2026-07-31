@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack --port 3001",
     "build": "next build",
-    "test": "bun test",
+    "test": "bun test --isolate",
     "start": "next start",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
