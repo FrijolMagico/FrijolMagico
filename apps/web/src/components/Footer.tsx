@@ -6,6 +6,8 @@ import siteData from '@/data/site.json'
 import { FissureEdgeDecoration } from '@/components/fissure/FissureEdgeDecoration'
 import { createFissureMaskStyle } from '@/components/fissure/mask'
 
+import { APP_VERSION } from '@frijolmagico/utils/version'
+
 import { BackToTop } from './BackToTop'
 import { LinkBtn } from './LinkBtn'
 
@@ -108,7 +110,7 @@ export const Footer = () => {
               </div>
               <div className='border-background/20 text-background/50 font-roboto-mono mt-auto grid h-fit border-t py-4 text-center text-xs md:grid-cols-3 md:text-left'>
                 <p>2026 | Asociación Cultural Frijol Mágico </p>
-                <p className='text-center'>v4.0.0</p>
+                <p className='text-center'>v{APP_VERSION}</p>
                 <p className='text-center md:text-right'>
                   Desarrollado por{' '}
                   <a target='_blank' href='https://github.com/Strocs'>

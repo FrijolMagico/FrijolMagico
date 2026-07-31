@@ -7,6 +7,7 @@ import {
   TableHeader,
   TableRow
 } from '@/shared/components/ui/table'
+import { TooltipProvider } from '@/shared/components/ui/tooltip'
 import { CatalogRow } from './catalog-row'
 import type { CatalogListItem } from '../_types/catalog-list-item'
 
@@ -29,6 +30,7 @@ export function CatalogTable({
   canReorder = true
 }: CatalogTableProps) {
   return (
+    <TooltipProvider>
     <Table>
       <TableHeader>
         <TableRow>
@@ -59,5 +61,6 @@ export function CatalogTable({
         ))}
       </TableBody>
     </Table>
+    </TooltipProvider>
   )
 }

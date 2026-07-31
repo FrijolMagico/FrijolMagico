@@ -1,4 +1,4 @@
-const CDN_URL = process.env.CDN_URL ?? 'https://cdn.frijolmagico.cl/'
+const CDN_URL = process.env.CDN_URL ?? 'https://cdn.frijolmagico.cl'
 
 export function getAvatarUrl(path: string | null): string {
   if (!path) return '/images/placeholder-avatar.svg'

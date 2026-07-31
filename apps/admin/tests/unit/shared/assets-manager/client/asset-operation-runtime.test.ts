@@ -249,6 +249,87 @@ describe('asset operation runtime', () => {
     ])
   })
 
+  test('serializes unrelated artists through one global execution tail', async () => {
+    const { runtime, queue } = createHarness(1_000)
+    const first = deferred<string>()
+    const started: string[] = []
+    runtime.register(
+      ASSET_TARGET.ARTIST_AVATAR,
+      policy([], {
+        upload: async ({ context }) => {
+          started.push(context.entityId)
+          if (context.entityId === 'artist-1') return first.promise
+          return 'uploaded'
+        },
+        persist: async () => ({ persisted: 'saved', cleanup: null })
+      })
+    )
+
+    const firstJob = runtime.enqueue(
+      ASSET_TARGET.ARTIST_AVATAR,
+      'artist-1',
+      preparedAsset
+    )
+    const secondJob = runtime.enqueue(
+      ASSET_TARGET.ARTIST_AVATAR,
+      'artist-2',
+      preparedAsset
+    )
+    await Bun.sleep(0)
+
+    expect(started).toEqual(['artist-1'])
+    first.resolve('uploaded')
+    await Promise.all([
+      settled(queue, firstJob.jobId),
+      settled(queue, secondJob.jobId)
+    ])
+    expect(queue.getSnapshot().jobs.map((job) => job.status)).toEqual([
+      'completed',
+      'completed'
+    ])
+    expect(started).toEqual(['artist-1', 'artist-2'])
+  })
+
+  test('uses a policy-owned admission callback without imposing target semantics', async () => {
+    const { runtime, queue } = createHarness()
+    runtime.register(ASSET_TARGET.ARTIST_AVATAR, {
+      ...policy([]),
+      admitEnqueue: ({ entityId, snapshot }) => {
+        if (
+          snapshot.jobs.some(
+            (job) =>
+              job.target === ASSET_TARGET.ARTIST_AVATAR &&
+              job.entityId === entityId &&
+              !['completed', 'failed', 'cancelled'].includes(job.status)
+          )
+        )
+          throw new Error('Avatar upload is already queued for this artist')
+      }
+    })
+    runtime.register(ASSET_TARGET.EDITION_POSTER, policy([]))
+
+    const avatar = runtime.enqueue(
+      ASSET_TARGET.ARTIST_AVATAR,
+      'artist-1',
+      preparedAsset
+    )
+
+    expect(() =>
+      runtime.enqueue(ASSET_TARGET.ARTIST_AVATAR, 'artist-1', preparedAsset)
+    ).toThrow('Avatar upload is already queued for this artist')
+    const poster = runtime.enqueue(
+      ASSET_TARGET.EDITION_POSTER,
+      'artist-1',
+      preparedAsset
+    )
+
+    await Promise.all([settled(queue, avatar.jobId), settled(queue, poster.jobId)])
+    expect(queue.getSnapshot().jobs.map((job) => job.status)).toEqual([
+      'completed',
+      'completed'
+    ])
+  })
+
   test('releases serialized work after timeout and ignores late upload results', async () => {
     const { runtime, queue } = createHarness(10)
     const hung = deferred<string>()
