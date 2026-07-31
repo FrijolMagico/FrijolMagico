@@ -10,7 +10,16 @@ import { Button } from '@/shared/components/ui/button'
 import { Switch } from '@/shared/components/ui/switch'
 import { Label } from '@/shared/components/ui/label'
 import { Textarea } from '@/shared/components/ui/textarea'
-import { Field, FieldGroup, FieldLabel } from '@/shared/components/ui/field'
+import {
+  Field,
+  FieldGroup,
+  FieldLabel
+} from '@/shared/components/ui/field'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/shared/components/ui/tooltip'
 import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
 
 import { ArtistAvatarSection } from './artist-avatar-section'
@@ -50,6 +59,7 @@ function UpdateCatalogDialogForm({
   const openUpdateArtistDialog = useArtistDialog(
     (state) => state.openUpdateArtistDialog
   )
+  const hasAvatar = catalog.activeAvatar !== null
   const controller = useAvatarController({
     initialAvatar: catalog.activeAvatar ?? null
   })
@@ -242,11 +252,22 @@ function UpdateCatalogDialogForm({
                   name='activo'
                   control={control}
                   render={({ field }) => (
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      disabled={hasPendingAvatar}
-                    />
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            disabled={hasPendingAvatar || !hasAvatar}
+                          />
+                        }
+                      />
+                      {!hasAvatar && (
+                        <TooltipContent side='top'>
+                          Debe subir un avatar antes de activar la entrada
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
                   )}
                 />
                 <Label>Activo</Label>

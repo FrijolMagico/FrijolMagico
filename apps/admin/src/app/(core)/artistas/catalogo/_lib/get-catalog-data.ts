@@ -146,6 +146,10 @@ export async function getCatalogData(
     if (!avatarMap.has(avatar.artistaId)) {
       avatarMap.set(avatar.artistaId, {
         id: avatar.id,
+        // Full public path built server-side (getAvatarUrl). The persistence
+        // boundaries compare full paths: the guard builds the same full path
+        // from `imagenUrl` and `persistArtistAvatarAction` reverts it with
+        // toRawAssetPath() for the SQL equality.
         path: getAvatarUrl(avatar.imagenUrl),
         version: avatar.version
       })

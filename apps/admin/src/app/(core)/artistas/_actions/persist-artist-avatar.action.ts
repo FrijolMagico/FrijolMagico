@@ -7,6 +7,7 @@ import { z } from 'zod'
 
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
+import { toRawAssetPath } from '@frijolmagico/utils/cdn'
 import {
   INVALID_RECEIPT,
   verifyArtistAvatarUploadReceipt
@@ -43,7 +44,9 @@ function activeAvatarWhere(
   return and(
     ...conditions,
     eq(artist.artistImage.id, expectedActive.id),
-    eq(artist.artistImage.imagenUrl, expectedActive.path),
+    // The receipt carries the full public path (built server-side); revert to
+    // the raw R2 key for a faithful equality against the stored `imagenUrl`.
+    eq(artist.artistImage.imagenUrl, toRawAssetPath(expectedActive.path)),
     expectedActive.version === null
       ? isNull(artist.artistImage.artistAvatarVersion)
       : eq(artist.artistImage.artistAvatarVersion, expectedActive.version)
