@@ -30,6 +30,7 @@ export interface AssetQueueJob {
   totalBytes: number
   error: string | null
   failedStep: 'upload' | 'persist' | null
+  input?: unknown
 }
 
 export interface AssetQueueSnapshot {
@@ -54,7 +55,7 @@ type RetryStep = NonNullable<AssetQueueJob['failedStep']>
 
 interface RetryReservation {
   token: string
-  entityId: string
+  generationKey: string
   generation: number
   step: RetryStep
 }
@@ -74,7 +75,8 @@ export interface AssetQueue {
     target: AssetTarget,
     entityId: string,
     preparedAsset: PreparedAsset,
-    preview?: LocalPreviewHandle
+    preview?: LocalPreviewHandle,
+    input?: unknown
   ) => AssetQueueJob
   startUpload: (jobId: string) => void
   setProgress: (jobId: string, sentBytes: number) => void
@@ -125,6 +127,8 @@ export function createAssetQueue(
   }
 
   const retryKey = (jobId: string, step: RetryStep) => `${jobId}:${step}`
+  const generationKeyFor = (target: AssetTarget, entityId: string) =>
+    `${target}\u0000${entityId}`
   const wait = (delay: number) => new Promise<void>((resolve) => setTimeout(resolve, delay))
 
   const isReserved = (
@@ -136,7 +140,7 @@ export function createAssetQueue(
     const job = jobFor(jobId)
     return (
       reservations.get(jobId)?.token === reservation.token &&
-      generations.get(reservation.entityId) === reservation.generation &&
+      generations.get(reservation.generationKey) === reservation.generation &&
       job?.status === status &&
       (failedStep === undefined || job.failedStep === failedStep) &&
       snapshot.activeJobId === (status === ASSET_QUEUE_STATUS.FAILED ? null : jobId)
@@ -160,8 +164,8 @@ export function createAssetQueue(
 
     const reservation: RetryReservation = {
       token: createId(),
-      entityId: job.entityId,
-      generation: generations.get(job.entityId) ?? 0,
+      generationKey: generationKeyFor(job.target, job.entityId),
+      generation: generations.get(generationKeyFor(job.target, job.entityId)) ?? 0,
       step
     }
     reservations.set(jobId, reservation)
@@ -253,14 +257,18 @@ export function createAssetQueue(
   }
 
   return {
-    enqueue(target, entityId, preparedAsset, preview) {
-      generations.set(entityId, (generations.get(entityId) ?? 0) + 1)
+    enqueue(target, entityId, preparedAsset, preview, input) {
+      const generationKey = generationKeyFor(target, entityId)
+      generations.set(generationKey, (generations.get(generationKey) ?? 0) + 1)
       for (const [jobId, reservation] of reservations) {
-        if (reservation.entityId === entityId) reservations.delete(jobId)
+        if (reservation.generationKey === generationKey) reservations.delete(jobId)
       }
-      // Generation race — auto-cancel any non-terminal job with same entityId
+      // Generation race — auto-cancel only a replacement for the same target/entity.
       const existing = snapshot.jobs.find(
-        (j) => j.entityId === entityId && !TERMINAL.has(j.status)
+        (j) =>
+          j.target === target &&
+          j.entityId === entityId &&
+          !TERMINAL.has(j.status)
       )
       if (existing) {
         release(existing)
@@ -287,7 +295,8 @@ export function createAssetQueue(
         sentBytes: 0,
         totalBytes: preparedAsset.blob.size,
         error: null,
-        failedStep: null
+        failedStep: null,
+        input
       }
       knownJobIds.add(job.jobId)
       snapshot = { ...snapshot, jobs: [...snapshot.jobs, job] }
@@ -300,7 +309,7 @@ export function createAssetQueue(
       if (
         !job ||
         job.status !== ASSET_QUEUE_STATUS.ENQUEUED ||
-        (snapshot.activeJobId !== null && snapshot.activeJobId !== jobId)
+        snapshot.activeJobId !== null
       )
         throw new Error('Illegal asset queue transition')
       snapshot = {

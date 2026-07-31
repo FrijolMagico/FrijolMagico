@@ -1,5 +1,6 @@
 import type { AssetTarget } from '../client/contracts'
 import type { ManagedAssetReference } from '../managed-asset-reference'
+import type { ExpectedActiveAvatar } from '@/core/artistas/catalogo/_lib/avatar-history-contracts'
 
 import { ValidationError } from './validation-error'
 
@@ -12,6 +13,9 @@ export interface AssetUploadPayload {
   mimeType: 'image/webp'
   preparedWidth: number
   preparedHeight: number
+  expectedActive: ExpectedActiveAvatar | null | undefined
+  catalogId?: number
+  requestedActive?: boolean
 }
 
 export interface AssetReplacementPayload extends AssetUploadPayload {
@@ -108,6 +112,8 @@ export async function parseAssetUpload(
     )
   }
   const preparedHeight = parsePositiveInt(preparedHeightRaw, 'preparedHeight')
+  const catalogIdRaw = formData.get('catalogId')
+  const requestedActiveRaw = formData.get('requestedActive')
 
   const payload: AssetUploadPayload = {
     target,
@@ -115,7 +121,18 @@ export async function parseAssetUpload(
     blob,
     mimeType: 'image/webp',
     preparedWidth,
-    preparedHeight
+    preparedHeight,
+    catalogId:
+      typeof catalogIdRaw === 'string'
+        ? parsePositiveInt(catalogIdRaw, 'catalogId')
+        : undefined,
+    requestedActive:
+      requestedActiveRaw === 'true'
+        ? true
+        : requestedActiveRaw === 'false'
+          ? false
+          : undefined,
+    expectedActive: parseExpectedActive(formData)
   }
 
   if (!options?.requireCurrentReference) {
@@ -140,4 +157,33 @@ export async function parseAssetUpload(
     ...payload,
     currentRef: { path: currentPath, version: currentVersion }
   }
+}
+
+function parseExpectedActive(
+  formData: FormData
+): ExpectedActiveAvatar | null | undefined {
+  const id = formData.get('expectedActiveId')
+  const path = formData.get('expectedActivePath')
+  const version = formData.get('expectedActiveVersion')
+  const expectedNone = formData.get('expectedActiveNone')
+  if (
+    expectedNone === 'true' &&
+    id === null &&
+    path === null &&
+    version === null
+  )
+    return null
+  if (id === null && path === null && version === null) return undefined
+  if (
+    typeof id !== 'string' ||
+    typeof path !== 'string' ||
+    typeof version !== 'string'
+  ) {
+    throw new ValidationError(
+      'Invalid expected active avatar',
+      'expectedActive'
+    )
+  }
+  const parsedId = parsePositiveInt(id, 'expectedActiveId')
+  return { id: parsedId, path, version: version || null }
 }

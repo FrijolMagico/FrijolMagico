@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
 
 const updateTag = mock(() => {})
+const getSession = mock(async () => ({ user: { id: '1' } }))
 const requireAuth = mock(async () => ({ user: { id: '1' } }))
+const getUser = mock(async () => ({ id: '1' }))
 
 type InsertState = {
   valuesArgs: unknown[]
@@ -28,7 +30,11 @@ let currentDb = createDbMock().db
 mock.module('server-only', () => ({}))
 mock.module('next/cache', () => ({ cacheTag: mock(() => {}), updateTag }))
 mock.module('next/cache.js', () => ({ cacheTag: mock(() => {}), updateTag }))
-mock.module('@/shared/lib/auth/utils', () => ({ requireAuth }))
+mock.module('@/shared/lib/auth/utils', () => ({
+  getSession,
+  requireAuth,
+  getUser
+}))
 mock.module('@frijolmagico/database/orm', () => ({
   db: new Proxy(
     {},
@@ -38,9 +44,8 @@ mock.module('@frijolmagico/database/orm', () => ({
   )
 }))
 
-const { createActivityDetailAction } = await import(
-  '@/core/eventos/participaciones/_actions/activities/create-activity-detail.action'
-)
+const { createActivityDetailAction } =
+  await import('@/core/eventos/participaciones/_actions/activities/create-activity-detail.action')
 
 describe('createActivityDetailAction', () => {
   beforeEach(() => {

@@ -1,4 +1,4 @@
-import { describe, it, expect, mock } from 'bun:test'
+import { describe, expect, it, mock } from 'bun:test'
 
 mock.module('server-only', () => ({}))
 
@@ -9,93 +9,84 @@ const mockDeleteObjectCommand = mock((args: unknown) => args)
 mock.module('@aws-sdk/client-s3', () => ({
   S3Client: mock(() => ({ send: mockSend })),
   PutObjectCommand: mockPutObjectCommand,
-  DeleteObjectCommand: mockDeleteObjectCommand,
+  DeleteObjectCommand: mockDeleteObjectCommand
 }))
 
 const mockConfig = {
   endpoint: 'https://mock.r2.dev',
   bucketName: 'test-bucket',
   accessKeyId: 'test-access-key',
-  secretAccessKey: 'test-secret-key',
+  secretAccessKey: 'test-secret-key'
 }
 
-describe('R2Adapter', () => {
-  describe('uploadAsset', () => {
-    it('returns ManagedAssetReference with path and version', async () => {
-      const { R2Adapter } = await import('@/shared/assets-manager/server/r2-adapter')
-      const adapter = new R2Adapter(mockConfig)
-      const blob = new Blob(['fake-image'], { type: 'image/webp' })
+describe('createR2Config', () => {
+  it('uses the complete R2_ACCOUNT_ID value as the endpoint', async () => {
+    const previous = { ...process.env }
+    process.env.R2_ACCOUNT_ID = 'https://account-123.r2.cloudflarestorage.com'
+    process.env.R2_BUCKET_NAME = 'test-bucket'
+    process.env.R2_ACCESS_KEY_ID = 'test-access-key'
+    process.env.R2_SECRET_ACCESS_KEY = 'test-secret-key'
 
-      const result = await adapter.uploadAsset('artist-avatar', 'artist-123', blob, 'image/webp')
-
-      expect(result.path).toContain('artist-avatar/artist-123/')
-      expect(result.path).toMatch(/\.webp$/)
-      expect(result.version).toBeTruthy()
-      expect(mockSend).toHaveBeenCalled()
-    })
-
-    it('throws AssetStoreError when S3 send fails', async () => {
-      const { R2Adapter } = await import('@/shared/assets-manager/server/r2-adapter')
-      const { AssetStoreError } = await import('@/shared/assets-manager/server/asset-store-error')
-      const adapter = new R2Adapter(mockConfig)
-      const blob = new Blob(['fake-image'], { type: 'image/webp' })
-
-      mockSend.mockRejectedValueOnce(new Error('S3 error'))
-
-      await expect(
-        adapter.uploadAsset('artist-avatar', 'artist-123', blob, 'image/webp'),
-      ).rejects.toThrow(AssetStoreError)
-    })
-  })
-
-  describe('deleteAsset', () => {
-    it('succeeds silently when reference has no path', async () => {
-      const { R2Adapter } = await import('@/shared/assets-manager/server/r2-adapter')
-      const adapter = new R2Adapter(mockConfig)
-
-      await expect(
-        adapter.deleteAsset('artist-avatar', 'artist-123', { path: null, version: null }),
-      ).resolves.toBeUndefined()
-    })
-
-    it('succeeds when path exists', async () => {
-      const { R2Adapter } = await import('@/shared/assets-manager/server/r2-adapter')
-      const adapter = new R2Adapter(mockConfig)
-
-      await expect(
-        adapter.deleteAsset('edition-poster', 'edition-456', { path: 'some/path.webp', version: 'v1' }),
-      ).resolves.toBeUndefined()
-    })
-
-    it('throws AssetStoreError when delete fails', async () => {
-      const { R2Adapter } = await import('@/shared/assets-manager/server/r2-adapter')
-      const { AssetStoreError } = await import('@/shared/assets-manager/server/asset-store-error')
-      const adapter = new R2Adapter(mockConfig)
-
-      mockSend.mockRejectedValueOnce(new Error('Delete failed'))
-
-      await expect(
-        adapter.deleteAsset('edition-poster', 'edition-456', { path: 'some/path.webp', version: 'v1' }),
-      ).rejects.toThrow(AssetStoreError)
-    })
-  })
-
-  describe('replaceAsset', () => {
-    it('uploads new asset and returns reference', async () => {
-      const { R2Adapter } = await import('@/shared/assets-manager/server/r2-adapter')
-      const adapter = new R2Adapter(mockConfig)
-      const blob = new Blob(['new-image'], { type: 'image/webp' })
-
-      const result = await adapter.replaceAsset(
-        'edition-poster',
-        'edition-789',
-        { path: 'old/path.webp', version: 'v1' },
-        blob,
-        'image/webp',
+    try {
+      const { createR2Config } = await import('@/shared/assets-manager/server/r2-adapter')
+      expect(createR2Config().endpoint).toBe(
+        'https://account-123.r2.cloudflarestorage.com'
       )
+    } finally {
+      process.env = previous
+    }
+  })
+})
 
-      expect(result.path).toContain('edition-poster/edition-789/')
-      expect(result.version).toBeTruthy()
+describe('R2Adapter', () => {
+  it('puts a blob at the trusted key verbatim', async () => {
+    const { R2Adapter } = await import('@/shared/assets-manager/server/r2-adapter')
+    const adapter = new R2Adapter(mockConfig)
+    const blob = new Blob(['fake-image'], { type: 'image/webp' })
+
+    await adapter.putObject('artistas/nina/avatar-1720000000000.webp', blob)
+
+    expect(mockPutObjectCommand).toHaveBeenLastCalledWith({
+      Bucket: 'test-bucket',
+      Key: 'artistas/nina/avatar-1720000000000.webp',
+      Body: Buffer.from('fake-image'),
+      ContentType: 'image/webp'
     })
+  })
+
+  it('preserves the upload failure cause', async () => {
+    const { R2Adapter } = await import('@/shared/assets-manager/server/r2-adapter')
+    const { AssetStoreError } = await import('@/shared/assets-manager/server/asset-store-error')
+    const adapter = new R2Adapter(mockConfig)
+    const cause = new Error('S3 error')
+    mockSend.mockRejectedValueOnce(cause)
+
+    await expect(
+      adapter.putObject('artistas/nina/avatar-1720000000000.webp', new Blob())
+    ).rejects.toMatchObject({ name: AssetStoreError.name, code: 'UPLOAD_FAILED', cause })
+  })
+
+  it('deletes only the supplied trusted key', async () => {
+    const { R2Adapter } = await import('@/shared/assets-manager/server/r2-adapter')
+    const adapter = new R2Adapter(mockConfig)
+
+    await adapter.deleteObject('artistas/nina/avatar-1720000000000.webp')
+
+    expect(mockDeleteObjectCommand).toHaveBeenLastCalledWith({
+      Bucket: 'test-bucket',
+      Key: 'artistas/nina/avatar-1720000000000.webp'
+    })
+  })
+
+  it('preserves the delete failure cause', async () => {
+    const { R2Adapter } = await import('@/shared/assets-manager/server/r2-adapter')
+    const { AssetStoreError } = await import('@/shared/assets-manager/server/asset-store-error')
+    const adapter = new R2Adapter(mockConfig)
+    const cause = new Error('Delete failed')
+    mockSend.mockRejectedValueOnce(cause)
+
+    await expect(
+      adapter.deleteObject('artistas/nina/avatar-1720000000000.webp')
+    ).rejects.toMatchObject({ name: AssetStoreError.name, code: 'DELETE_FAILED', cause })
   })
 })
