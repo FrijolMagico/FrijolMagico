@@ -1,3 +1,4 @@
 [test]
+# Per-file isolation is enforced via the test script (`bun test --isolate`) and the CI guard.
+# `isolate` is NOT a supported bunfig key (only the CLI flag `--isolate` works).
 preload = ["./test-setup.ts"]
-isolate = true
