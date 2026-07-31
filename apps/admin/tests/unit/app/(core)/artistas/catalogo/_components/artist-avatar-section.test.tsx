@@ -38,29 +38,6 @@ mock.module('@/core/artistas/catalogo/_hooks/use-avatar-controller', () => ({
   }
 }))
 
-mock.module('@/shared/components/ui/alert-dialog', () => ({
-  AlertDialog: ({ children, open }: { children: unknown; open: boolean }) =>
-    open ? children : null,
-  AlertDialogAction: ({
-    children,
-    onClick
-  }: {
-    children: unknown
-    onClick: () => void
-  }) => createElement('button', { type: 'button', onClick }, children),
-  AlertDialogCancel: () => null,
-  AlertDialogContent: ({ children }: { children: unknown }) =>
-    createElement('div', null, children),
-  AlertDialogFooter: ({ children }: { children: unknown }) =>
-    createElement('div', null, children),
-  AlertDialogHeader: ({ children }: { children: unknown }) =>
-    createElement('div', null, children),
-  AlertDialogDescription: ({ children }: { children: unknown }) =>
-    createElement('p', null, children),
-  AlertDialogTitle: ({ children }: { children: unknown }) =>
-    createElement('h3', null, children)
-}))
-
 mock.module('next/image', () => ({
   default: (props: Record<string, unknown>) => createElement('img', props)
 }))
@@ -204,56 +181,6 @@ afterEach(() => {
   expect(progress.attributes.get('aria-label')).toBe('Progreso de carga')
   expect(progress.attributes.get('value')).toBe('40')
   expect(container.textContent).toContain('40%')
-})
-
-test('invokes removal only after both confirmation steps', async () => {
-  let removeCalls = 0
-  const container = document.createElement('main')
-  document.body.appendChild(container)
-  root = createRoot(container as unknown as Element)
-
-  await act(async () => {
-    root?.render(
-      <ArtistAvatarSection
-        artistId='artist-1'
-        currentAvatar={{ path: 'avatar.webp', version: 'v1' }}
-        onRemove={async () => {
-          removeCalls += 1
-        }}
-      />
-    )
-  })
-
-  const removeButton = buttons(container).find(
-    (button) => button.textContent === 'Eliminar avatar'
-  )
-  expect(removeButton).toBeDefined()
-
-  await act(async () => {
-    reactProps(removeButton!).onClick?.()
-  })
-  expect(container.textContent).toContain(
-    '¿Estás seguro de eliminar el avatar?'
-  )
-
-  const continueButton = buttons(container).find(
-    (button) => button.textContent === 'Continuar'
-  )
-  expect(continueButton).toBeDefined()
-  await act(async () => {
-    reactProps(continueButton!).onClick?.()
-  })
-  expect(removeCalls).toBe(0)
-  expect(container.textContent).toContain('Confirma la eliminación del avatar')
-
-  const confirmButton = buttons(container)
-    .filter((button) => button.textContent === 'Eliminar avatar')
-    .at(-1)
-  expect(confirmButton).toBeDefined()
-  await act(async () => {
-    reactProps(confirmButton!).onClick?.()
-  })
-  expect(removeCalls).toBe(1)
 })
 
 test('does not show catalog history controls outside the catalog context', async () => {

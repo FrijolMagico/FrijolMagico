@@ -29,6 +29,7 @@ import {
   type AssetQueueStatus
 } from '@/shared/assets-manager/client/queue'
 import type { ManagedAssetReference } from '@/shared/assets-manager/managed-asset-reference'
+import type { ExpectedActiveAvatar } from '../_lib/avatar-history-contracts'
 
 ensureArtistAvatarPolicy()
 
@@ -76,11 +77,18 @@ interface AvatarController {
   getSnapshot: () => AvatarControllerState
   subscribe: (listener: () => void) => () => void
   selectFile: (file: File) => Promise<PreparationResult>
-  enqueue: (entityId: string | number) => Promise<void>
+  enqueue: (
+    entityId: string | number,
+    expectedActive?: ExpectedActiveAvatar | AvatarActivationInput | null
+  ) => Promise<void>
   cancel: () => void
   retry: () => Promise<void>
   reset: () => void
   syncAvatar: (avatar: ManagedAssetReference | null) => void
+}
+
+export interface AvatarActivationInput {
+  activation: { catalogId: number; requestedActive: boolean }
 }
 
 export function createAvatarController(
@@ -175,7 +183,7 @@ export function createAvatarController(
       }
       return result
     },
-    async enqueue(entityId) {
+    async enqueue(entityId, expectedActive) {
       if (!preparedAsset) {
         update({
           phase: AVATAR_CONTROLLER_PHASE.FAILED,
@@ -189,7 +197,8 @@ export function createAvatarController(
           ASSET_TARGET.ARTIST_AVATAR,
           String(entityId),
           preparedAsset,
-          preparedPreview ?? undefined
+          preparedPreview ?? undefined,
+          expectedActive
         )
         currentJobId = job.jobId
         preparedAsset = null

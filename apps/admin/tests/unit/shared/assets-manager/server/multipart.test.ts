@@ -45,6 +45,24 @@ describe('parseAssetUpload', () => {
     expect(result.mimeType).toBe('image/webp')
     expect(result.preparedWidth).toBe(800)
     expect(result.preparedHeight).toBe(800)
+    expect(result.expectedActive).toBeUndefined()
+  })
+
+  it('preserves an explicit expected-none guard', async () => {
+    const request = createMockRequest({
+      fields: {
+        assetTarget: 'artist-avatar',
+        entityId: 'artist-123',
+        blob: new Blob(['fake-webp'], { type: 'image/webp' }),
+        preparedWidth: '800',
+        preparedHeight: '800',
+        expectedActiveNone: 'true'
+      }
+    })
+
+    await expect(parseAssetUpload(request)).resolves.toMatchObject({
+      expectedActive: null
+    })
   })
 
   it('parses valid edition-poster upload', async () => {

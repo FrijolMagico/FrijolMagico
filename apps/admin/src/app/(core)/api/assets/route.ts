@@ -29,12 +29,15 @@ export async function POST(request: Request) {
       blob: payload.blob,
       width: payload.preparedWidth,
       height: payload.preparedHeight,
-      expectedActive: payload.expectedActive
+      expectedActive: payload.expectedActive,
+      catalogId: payload.catalogId,
+      requestedActive: payload.requestedActive
     })
     if (!result.success || !result.data) {
+      const error = result.errors?.[0]
       return NextResponse.json(
-        { error: result.errors?.[0]?.message ?? 'Failed to process asset' },
-        { status: 400 }
+        { error: error?.message ?? 'Failed to process asset' },
+        { status: error?.entityType === 'AVATAR_CONFLICT' ? 409 : 400 }
       )
     }
 

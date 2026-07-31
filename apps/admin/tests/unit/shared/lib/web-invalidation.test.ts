@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
 import {
   buildWebInvalidationUrl,
-  revalidateWebCache
+  revalidateWebCache,
+  revalidateWebCacheBestEffort
 } from '@/shared/lib/web-invalidation'
 
 const ORIGINAL_ENV = { ...process.env }
@@ -9,8 +10,7 @@ const ORIGINAL_ENV = { ...process.env }
 let mockFetch: ReturnType<typeof mock>
 
 beforeEach(() => {
-  process.env.WEB_REVALIDATION_URL =
-    'https://web.test/api/revalidate'
+  process.env.WEB_REVALIDATION_URL = 'https://web.test/api/revalidate'
   process.env.REVALIDATION_SECRET = 'test-secret-123'
 
   mockFetch = mock(() =>
@@ -51,9 +51,7 @@ describe('buildWebInvalidationUrl', () => {
 
   test('appends path query param with URL encoding', () => {
     const url = buildWebInvalidationUrl({ path: '/' })
-    expect(url).toBe(
-      'https://web.test/api/revalidate?path=%2F'
-    )
+    expect(url).toBe('https://web.test/api/revalidate?path=%2F')
   })
 
   test('appends both tag and path query params', () => {
@@ -206,5 +204,35 @@ describe('revalidateWebCache', () => {
     } catch {
       // expected
     }
+  })
+})
+
+describe('revalidateWebCacheBestEffort', () => {
+  test('logs an invalidation failure without rejecting', async () => {
+    const error = new Error('Network failure')
+    const logger = { error: mock(() => {}) }
+
+    await expect(
+      revalidateWebCacheBestEffort(
+        { tag: 'catalogo:artistas', path: '/catalogo' },
+        { revalidate: async () => Promise.reject(error), logger }
+      )
+    ).resolves.toBeUndefined()
+
+    expect(logger.error).toHaveBeenCalledWith(
+      'Web cache invalidation failed',
+      error
+    )
+  })
+
+  test('does not log when invalidation succeeds', async () => {
+    const logger = { error: mock(() => {}) }
+
+    await revalidateWebCacheBestEffort(
+      { tag: 'catalogo:artistas' },
+      { revalidate: async () => ({ revalidated: true }), logger }
+    )
+
+    expect(logger.error).not.toHaveBeenCalled()
   })
 })
