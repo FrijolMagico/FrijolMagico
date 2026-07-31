@@ -2,20 +2,26 @@ import { beforeEach, describe, expect, mock, test } from 'bun:test'
 
 const updateTag = mock(() => {})
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
+const getSession = mock(async () => ({ user: { id: 'admin-1' } }))
+const getUser = mock(async () => ({ id: 'admin-1' }))
 const revalidateWebCache = mock(async () => ({ revalidated: true }))
 const revalidateWebCacheBestEffort = mock(async () => {})
+const buildWebInvalidationUrl = mock(() => 'https://example.com/api/revalidate')
 const max = mock(() => 'max(orden)')
 let insertedValues: Record<string, unknown> | null = null
-let returningResult: unknown = [
-  { id: 9, artistaId: 42 }
-]
+let returningResult: unknown = [{ id: 9, artistaId: 42 }]
 
 mock.restore()
 mock.module('server-only', () => ({}))
 mock.module('next/cache', () => ({ updateTag }))
 mock.module('drizzle-orm', () => ({ max }))
-mock.module('@/shared/lib/auth/utils', () => ({ requireAuth }))
+mock.module('@/shared/lib/auth/utils', () => ({
+  getSession,
+  requireAuth,
+  getUser
+}))
 mock.module('@/shared/lib/web-invalidation', () => ({
+  buildWebInvalidationUrl,
   revalidateWebCache,
   revalidateWebCacheBestEffort
 }))

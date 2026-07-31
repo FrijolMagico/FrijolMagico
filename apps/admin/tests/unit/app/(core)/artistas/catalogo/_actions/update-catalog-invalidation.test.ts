@@ -4,7 +4,11 @@ import { getAvatarUrl } from '@frijolmagico/utils/cdn'
 
 const updateTag = mock(() => {})
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
+const getSession = mock(async () => ({ user: { id: 'admin-1' } }))
+const getUser = mock(async () => ({ id: 'admin-1' }))
 const revalidateWebCache = mock(async () => ({ revalidated: true }))
+const revalidateWebCacheBestEffort = mock(async () => {})
+const buildWebInvalidationUrl = mock(() => 'https://example.com/api/revalidate')
 
 let dbTransaction: (
   cb: (tx: unknown) => Promise<unknown>
@@ -12,8 +16,16 @@ let dbTransaction: (
 
 mock.module('server-only', () => ({}))
 mock.module('next/cache', () => ({ updateTag }))
-mock.module('@/shared/lib/auth/utils', () => ({ requireAuth }))
-mock.module('@/shared/lib/web-invalidation', () => ({ revalidateWebCache }))
+mock.module('@/shared/lib/auth/utils', () => ({
+  getSession,
+  requireAuth,
+  getUser
+}))
+mock.module('@/shared/lib/web-invalidation', () => ({
+  buildWebInvalidationUrl,
+  revalidateWebCache,
+  revalidateWebCacheBestEffort
+}))
 mock.module('@frijolmagico/database/orm', () => ({
   db: {
     transaction: (cb: (tx: unknown) => Promise<unknown>) => dbTransaction(cb)
@@ -123,10 +135,13 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     }
 
     await expect(
-      updateCatalogAction({ success: false }, {
-        ...validInput,
-        expectedActive: null
-      })
+      updateCatalogAction(
+        { success: false },
+        {
+          ...validInput,
+          expectedActive: null
+        }
+      )
     ).resolves.toEqual({
       success: false,
       errors: [{ entityType: 'AVATAR_CONFLICT', message: 'AVATAR_CONFLICT' }]
@@ -166,18 +181,21 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     }
 
     await expect(
-      updateCatalogAction({ success: false }, {
-        ...validInput,
-        // Full public path (server-built contract); the action rebuilds the
-        // same full path from the stored raw key before comparing.
-        expectedActive: {
-          id: 7,
-          path: getAvatarUrl('artistas/current.webp'),
-          version: 'v7'
-        },
-        intent: 'historical',
-        avatarId: 8
-      })
+      updateCatalogAction(
+        { success: false },
+        {
+          ...validInput,
+          // Full public path (server-built contract); the action rebuilds the
+          // same full path from the stored raw key before comparing.
+          expectedActive: {
+            id: 7,
+            path: getAvatarUrl('artistas/current.webp'),
+            version: 'v7'
+          },
+          intent: 'historical',
+          avatarId: 8
+        }
+      )
     ).resolves.toEqual({ success: true })
     expect(committed).toEqual({
       catalog: 'Descripción actualizada',
@@ -219,16 +237,19 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     }
 
     await expect(
-      updateCatalogAction({ success: false }, {
-        ...validInput,
-        expectedActive: {
-          id: 7,
-          path: getAvatarUrl('artistas/current.webp'),
-          version: 'v7'
-        },
-        intent: 'historical',
-        avatarId: 8
-      })
+      updateCatalogAction(
+        { success: false },
+        {
+          ...validInput,
+          expectedActive: {
+            id: 7,
+            path: getAvatarUrl('artistas/current.webp'),
+            version: 'v7'
+          },
+          intent: 'historical',
+          avatarId: 8
+        }
+      )
     ).resolves.toEqual({
       success: false,
       errors: [{ entityType: 'AVATAR_CONFLICT', message: 'AVATAR_CONFLICT' }]

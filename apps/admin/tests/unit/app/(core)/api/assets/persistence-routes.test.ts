@@ -10,34 +10,36 @@ interface MockSession {
 type PersistResult = ActionState<UploadArtistAvatarData>
 type DiscardResult = ActionState<null>
 
-const getSession = mock(
-  async (): Promise<MockSession | null> => ({
-    user: { id: 'admin-1' }
-  })
-)
-const persistArtistAvatarAction = mock(
-  async (): Promise<PersistResult> => ({
-    success: true,
-    data: {
-      id: 7,
-      artistaId: 42,
-      path: 'artistas/42/avatar-v1.webp',
-      version: 'v1',
-      oldAsset: null
-    }
-  })
-)
-const discardArtistAvatarAction = mock(
-  async (): Promise<DiscardResult> => ({
-    success: true,
-    data: null
-  })
-)
+const getSession = mock(async (): Promise<MockSession | null> => ({
+  user: { id: 'admin-1' }
+}))
+const requireAuth = mock(async (): Promise<MockSession | null> => ({
+  user: { id: 'admin-1' }
+}))
+const getUser = mock(async () => ({ id: 'admin-1' }))
+const persistArtistAvatarAction = mock(async (): Promise<PersistResult> => ({
+  success: true,
+  data: {
+    id: 7,
+    artistaId: 42,
+    path: 'artistas/42/avatar-v1.webp',
+    version: 'v1',
+    oldAsset: null
+  }
+}))
+const discardArtistAvatarAction = mock(async (): Promise<DiscardResult> => ({
+  success: true,
+  data: null
+}))
 const revalidateTag = mock(() => {})
 
 mock.module('server-only', () => ({}))
 mock.module('next/cache', () => ({ revalidateTag }))
-mock.module('@/shared/lib/auth/utils', () => ({ getSession }))
+mock.module('@/shared/lib/auth/utils', () => ({
+  getSession,
+  requireAuth,
+  getUser
+}))
 mock.module('@/core/artistas/_actions/persist-artist-avatar.action', () => ({
   persistArtistAvatarAction
 }))
