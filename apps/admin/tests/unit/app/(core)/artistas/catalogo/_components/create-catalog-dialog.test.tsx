@@ -69,7 +69,10 @@ mock.module('@/core/artistas/catalogo/_hooks/use-avatar-controller', () => ({
 }))
 
 // ── Mock the server action ──────────────────────────────────────────
-let actionResult = { success: true }
+let actionResult: {
+  success: boolean
+  data?: { catalogId: number; artistId: number; requestedActive: boolean }
+} = { success: true }
 const mockCreateCatalogAction = mock(
   async (_prevState: { success: boolean }, _data: Record<string, unknown>) => {
     if (actionResult.success) submissionEvents.push('catalog-complete')
@@ -79,6 +82,14 @@ const mockCreateCatalogAction = mock(
 
 mock.module('@/core/artistas/catalogo/_actions/create-catalog.action', () => ({
   createCatalogAction: mockCreateCatalogAction
+}))
+
+const mockGetArtistAvatarAction = mock(async (artistId: number) =>
+  artistId === 2 ? { id: 10, path: 'avatars/bosque.png', version: 'v1' } : null
+)
+
+mock.module('@/core/artistas/_actions/get-artist-avatar.action', () => ({
+  getArtistAvatarAction: mockGetArtistAvatarAction
 }))
 
 // ── Mock shadcn/ui dialog ───────────────────────────────────────────
@@ -322,8 +333,7 @@ const availableArtists = [
   {
     id: 2,
     pseudonimo: 'Bosque Azul',
-    nombre: 'María Soto',
-    avatarUrl: 'avatars/bosque.png'
+    nombre: 'María Soto'
   }
 ]
 
@@ -366,7 +376,7 @@ describe('CreateCatalogDialog avatar integration', () => {
       root?.render(createElement(CreateCatalogDialog, { availableArtists }))
     })
 
-    // Trigger combobox selection for artist with avatarUrl
+    // Trigger combobox selection and load the avatar lazily
     const comboBoxItems = nodesByTag(container, 'button').filter(
       (b) => b.textContent === 'Bosque Azul'
     )
@@ -376,10 +386,7 @@ describe('CreateCatalogDialog avatar integration', () => {
       reactProps(comboBoxItems[0]).onClick?.()
     })
 
-    // syncAvatar should have been called with the artist's avatarUrl
-    expect(mockSyncAvatar).toHaveBeenCalledWith(
-      expect.objectContaining({ path: 'avatars/bosque.png' })
-    )
+    expect(mockGetArtistAvatarAction).toHaveBeenCalledWith(2)
   })
 
   test('R3: select artist without avatar does not call syncAvatar', async () => {
@@ -396,7 +403,6 @@ describe('CreateCatalogDialog avatar integration', () => {
       reactProps(comboBoxItems[0]).onClick?.()
     })
 
-    // syncAvatar should have been called with null (no avatarUrl)
     expect(mockSyncAvatar).toHaveBeenCalledWith(null)
   })
 
@@ -417,7 +423,10 @@ describe('CreateCatalogDialog avatar integration', () => {
   })
 
   test('R5+4.8: enqueue called on successful create; cancel NOT called after programmatic close', async () => {
-    actionResult = { success: true }
+    actionResult = {
+      success: true,
+      data: { catalogId: 9, artistId: 88, requestedActive: true }
+    }
 
     await act(async () => {
       root?.render(createElement(CreateCatalogDialog, { availableArtists }))
@@ -444,7 +453,9 @@ describe('CreateCatalogDialog avatar integration', () => {
 
     expect(mockCreateCatalogAction).toHaveBeenCalled()
     // enqueue should have been called on success
-    expect(mockEnqueue).toHaveBeenCalled()
+    expect(mockEnqueue).toHaveBeenCalledWith(88, {
+      activation: { catalogId: 9, requestedActive: true }
+    })
     expect(submissionEvents).toEqual(['catalog-complete', 'enqueue'])
     // cancel should NOT have been called (suppressCancelRef guarded against it)
     expect(mockCancel).not.toHaveBeenCalled()

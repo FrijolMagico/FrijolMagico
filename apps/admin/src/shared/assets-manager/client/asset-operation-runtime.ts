@@ -251,6 +251,23 @@ export function createAssetOperationRuntime(
       contexts.delete(context.metadata.jobId)
   }
 
+  const discardUpload = (context: JobContext) => {
+    if (!context.hasUploadResult || !context.policy.discardUpload) return
+    const controller = new AbortController()
+    void context.policy
+      .discardUpload({
+        context: operationContext(
+          context,
+          controller.signal,
+          context.uploadAttempt
+        ),
+        upload: context.uploadResult
+      })
+      .catch(() => {
+        // Discard is intentionally best-effort; terminal queue state remains authoritative.
+      })
+  }
+
   const persistAndCleanup = async (context: JobContext) => {
     try {
       const job = jobFor(context.metadata.jobId)
@@ -325,6 +342,7 @@ export function createAssetOperationRuntime(
           context.identity.queueEntityId === identity.queueEntityId &&
           current(context)
         ) {
+          discardUpload(context)
           context.invalidated = true
           context.controller?.abort()
           contexts.delete(context.metadata.jobId)
@@ -332,13 +350,7 @@ export function createAssetOperationRuntime(
       }
       const generation = (generations.get(identity.queueEntityId) ?? 0) + 1
       generations.set(identity.queueEntityId, generation)
-      const job = queue.enqueue(
-        target,
-        entityId,
-        preparedAsset,
-        preview,
-        input
-      )
+      const job = queue.enqueue(target, entityId, preparedAsset, preview, input)
       const context: JobContext = {
         metadata: {
           jobId: job.jobId,
@@ -369,14 +381,20 @@ export function createAssetOperationRuntime(
       if (!job || terminal(job) || job.status === ASSET_QUEUE_STATUS.FAILED)
         return
       context?.controller?.abort()
-      if (context) context.invalidated = true
+      if (context) {
+        discardUpload(context)
+        context.invalidated = true
+      }
       queue.cancel(jobId)
       contexts.delete(jobId)
     },
     remove: (jobId) => {
       const context = contexts.get(jobId)
       context?.controller?.abort()
-      if (context) context.invalidated = true
+      if (context) {
+        discardUpload(context)
+        context.invalidated = true
+      }
       contexts.delete(jobId)
       queue.remove(jobId)
     },
