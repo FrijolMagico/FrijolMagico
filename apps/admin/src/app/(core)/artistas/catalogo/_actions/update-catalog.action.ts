@@ -11,6 +11,7 @@ import {
   CATALOG_CACHE_TAG,
   FEATURED_ARTISTS_CACHE_TAG
 } from '@frijolmagico/cache-tags'
+import { getAvatarUrl } from '@frijolmagico/utils/cdn'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import { revalidateWebCache } from '@/shared/lib/web-invalidation'
 import type { ActionState } from '@/shared/types/actions'
@@ -30,6 +31,21 @@ function conflict(): ActionState {
   return {
     success: false,
     errors: [{ entityType: AVATAR_CONFLICT, message: AVATAR_CONFLICT }]
+  }
+}
+
+const ACTIVO_REQUIRES_AVATAR = Symbol('activo-requires-avatar')
+
+function activoRequiresAvatar(): ActionState {
+  return {
+    success: false,
+    errors: [
+      {
+        entityType: 'catalogo',
+        message:
+          'No se puede activar una entrada sin avatar. Debe subir un avatar antes de activar la entrada.'
+      }
+    ]
   }
 }
 
@@ -80,9 +96,25 @@ export async function updateCatalogAction(
         )
         .limit(1)
 
-      const currentAvatar: ActiveAvatar | null = current ?? null
+      // Full-path comparison: the client snapshot carries the public CDN URL
+      // (built server-side by getCatalogData); rebuild the same full path
+      // from the stored raw key so the guard is a faithful equality.
+      const currentAvatar: ActiveAvatar | null = current
+        ? {
+            id: current.id,
+            path: getAvatarUrl(current.path),
+            version: current.version
+          }
+        : null
+      // Business rule (mirrors updateCatalogFieldAction): a catalog entry
+      // cannot be activated without an active avatar. The row toggle enforces
+      // this client-side; the dialog save must enforce it server-side too.
+      if (activo === true && currentAvatar === null) {
+        return ACTIVO_REQUIRES_AVATAR
+      }
       if (
-        !isExpectedActiveAvatar(expectedActive ?? currentAvatar, currentAvatar)
+        expectedActive !== undefined &&
+        !isExpectedActiveAvatar(expectedActive, currentAvatar)
       ) {
         return null
       }
@@ -127,6 +159,7 @@ export async function updateCatalogAction(
       }
       return true
     })
+    if (result === ACTIVO_REQUIRES_AVATAR) return activoRequiresAvatar()
     if (!result) return conflict()
   } catch {
     return conflict()

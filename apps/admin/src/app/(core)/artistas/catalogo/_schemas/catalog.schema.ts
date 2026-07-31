@@ -15,7 +15,6 @@ export const activeAvatarSchema = z.object({
 
 export const catalogSelectSchema = createSelectSchema(artist.catalogArtist)
   .extend({
-    avatarUrl: z.url().nullable().optional(),
     activeAvatar: activeAvatarSchema.nullable().optional()
   })
   .omit({
@@ -27,16 +26,12 @@ export const catalogInsertSchema = createInsertSchema(artist.catalogArtist, {
   artistaId: (s) =>
     s.min(1, { error: 'El artista es obligatorio' }).nonoptional(),
   orden: (s) => s.min(1, { error: 'El orden es obligatorio' })
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  deletedAt: true
 })
-  .extend({
-    avatarUrl: z.url().nullable().optional()
-  })
-  .omit({
-    id: true,
-    createdAt: true,
-    updatedAt: true,
-    deletedAt: true
-  })
 
 export const catalogUpdateSchema = createUpdateSchema(artist.catalogArtist, {
   id: z.number()
@@ -49,7 +44,6 @@ export const catalogUpdateSchema = createUpdateSchema(artist.catalogArtist, {
     artistaId: true
   })
   .extend({
-    avatarUrl: z.url().nullable(),
     expectedActive: activeAvatarSchema.nullable().optional(),
     intent: z
       .enum([

@@ -12,6 +12,7 @@ export interface AssetOperationContext {
   target: AssetTarget
   entityId: string
   correlationId: string
+  input?: unknown
   signal: AbortSignal
   reportProgress: (sentBytes: number) => void
 }
@@ -42,6 +43,11 @@ export interface AssetOperationCleanupInput<TCleanup> {
   value: TCleanup
 }
 
+export interface AssetOperationDiscardInput<TUpload> {
+  context: AssetOperationContext
+  upload: TUpload
+}
+
 export type AssetOperationCleanupResult = void
 
 export interface AssetOperationPolicy<TUpload, TPersist, TCleanup> {
@@ -53,4 +59,5 @@ export interface AssetOperationPolicy<TUpload, TPersist, TCleanup> {
   cleanup: (
     input: AssetOperationCleanupInput<TCleanup>
   ) => Promise<AssetOperationCleanupResult>
+  discardUpload?: (input: AssetOperationDiscardInput<TUpload>) => Promise<void>
 }

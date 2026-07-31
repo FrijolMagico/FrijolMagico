@@ -55,10 +55,10 @@ function createRuntime() {
 }
 
 describe('artist avatar production composition', () => {
-  test('uploads exact multipart data before persisting the returned reference', async () => {
+  test('uploads a receipt, then persists it through the separate server boundary', async () => {
     const capture: {
       url: string
-      body: FormData | null
+      body: BodyInit | null
       signal: AbortSignal | null | undefined
     } = {
       url: '',
@@ -68,8 +68,10 @@ describe('artist avatar production composition', () => {
     const policy = createArtistAvatarOperationPolicy({
       fetch: async (input, init) => {
         capture.url = input
-        capture.body = init.body as FormData
+        capture.body = init.body ?? null
         capture.signal = init.signal
+        if (input === '/api/assets')
+          return Response.json({ receipt: 'receipt-1' })
         return Response.json({
           id: 1,
           artistaId: 42,
@@ -83,13 +85,26 @@ describe('artist avatar production composition', () => {
     const upload = await policy.upload({ context, preparedAsset })
     const result = await policy.persist({ context, upload })
 
-    expect(capture.url).toBe('/api/assets')
+    expect(capture.url).toBe('/api/assets/persist')
     expect(capture.signal).toBe(context.signal)
-    expect(capture.body?.get('assetTarget')).toBe('artist-avatar')
-    expect(capture.body?.get('entityId')).toBe('42')
-    expect(capture.body?.get('preparedWidth')).toBe('800')
-    expect(capture.body?.get('preparedHeight')).toBe('800')
-    const multipartBlob = capture.body?.get('blob')
+    expect(capture.body).toBe(JSON.stringify({ receipt: 'receipt-1' }))
+    const uploadPolicy = createArtistAvatarOperationPolicy({
+      fetch: async (_input, init) => {
+        const body = init.body as FormData
+        const multipartBlob = body.get('blob')
+        expect(body.get('assetTarget')).toBe('artist-avatar')
+        expect(body.get('entityId')).toBe('42')
+        expect(body.get('preparedWidth')).toBe('800')
+        expect(body.get('preparedHeight')).toBe('800')
+        expect(multipartBlob).toBeInstanceOf(Blob)
+        expect(multipartBlob instanceof Blob ? multipartBlob.type : null).toBe(
+          'image/webp'
+        )
+        return Response.json({ receipt: 'receipt-1' })
+      }
+    })
+    const uploaded = await uploadPolicy.upload({ context, preparedAsset })
+    const multipartBlob = preparedAsset.blob
     expect(multipartBlob).toBeInstanceOf(Blob)
     expect(multipartBlob instanceof Blob ? multipartBlob.type : null).toBe(
       'image/webp'
@@ -97,6 +112,7 @@ describe('artist avatar production composition', () => {
     expect(multipartBlob instanceof Blob ? multipartBlob.size : null).toBe(
       preparedAsset.blob.size
     )
+    expect(uploaded).toEqual({ receipt: 'receipt-1' })
     expect(result).toEqual({
       persisted: {
         id: 1,
@@ -109,16 +125,59 @@ describe('artist avatar production composition', () => {
     })
   })
 
+  test('sends the queued active-avatar baseline with the deferred upload', async () => {
+    const expectedActive = {
+      id: 8,
+      path: 'artistas/artista-de-prueba/avatar-v1.webp',
+      version: 'v1'
+    }
+    const capture: { body: FormData | null } = { body: null }
+    const policy = createArtistAvatarOperationPolicy({
+      fetch: async (_input, init) => {
+        capture.body = init.body as FormData
+        return Response.json({ receipt: 'receipt-2' })
+      }
+    })
+
+    await policy.upload({
+      context: { ...context, input: expectedActive },
+      preparedAsset
+    })
+
+    expect(capture.body?.get('expectedActiveId')).toBe('8')
+    expect(capture.body?.get('expectedActivePath')).toBe(expectedActive.path)
+    expect(capture.body?.get('expectedActiveVersion')).toBe(
+      expectedActive.version
+    )
+  })
+
+  test('preserves a typed avatar conflict from the upload route', async () => {
+    const policy = createArtistAvatarOperationPolicy({
+      fetch: async () =>
+        new Response(JSON.stringify({ error: 'AVATAR_CONFLICT' }), {
+          status: 409,
+          headers: { 'content-type': 'application/json' }
+        })
+    })
+
+    await expect(
+      policy.upload({
+        context,
+        preparedAsset
+      })
+    ).rejects.toThrow('AVATAR_CONFLICT')
+  })
+
   test('rejects non-OK and malformed upload responses without persisting', async () => {
     const policy = createArtistAvatarOperationPolicy({
-      fetch: async () => Response.json({ path: '' }),
+      fetch: async () => Response.json({ path: '' })
     })
 
     await expect(policy.upload({ context, preparedAsset })).rejects.toThrow(
       'Invalid asset upload response'
     )
     const unavailable = createArtistAvatarOperationPolicy({
-      fetch: async () => new Response(null, { status: 503 }),
+      fetch: async () => new Response(null, { status: 503 })
     })
     await expect(
       unavailable.upload({ context, preparedAsset })
@@ -127,14 +186,16 @@ describe('artist avatar production composition', () => {
 
   test('treats the avatar-owned route response as the persisted result', async () => {
     const policy = createArtistAvatarOperationPolicy({
-      fetch: async () =>
-        Response.json({
-          id: 3,
-          artistaId: 42,
-          path: 'artistas/artista-de-prueba/avatar-1710000000000.webp',
-          version: '1710000000000',
-          oldAsset: null
-        })
+      fetch: async (input) =>
+        input === '/api/assets'
+          ? Response.json({ receipt: 'receipt-3' })
+          : Response.json({
+              id: 3,
+              artistaId: 42,
+              path: 'artistas/artista-de-prueba/avatar-1710000000000.webp',
+              version: '1710000000000',
+              oldAsset: null
+            })
     })
 
     const upload = await policy.upload({ context, preparedAsset })
@@ -150,6 +211,29 @@ describe('artist avatar production composition', () => {
       },
       cleanup: null
     })
+  })
+
+  test('preserves typed receipt failures and best-effort discard at the persistence boundary', async () => {
+    const requests: string[] = []
+    const policy = createArtistAvatarOperationPolicy({
+      fetch: async (input) => {
+        requests.push(input)
+        if (input === '/api/assets/persist')
+          return Response.json({ error: 'INVALID_RECEIPT' }, { status: 400 })
+        return new Response(null, { status: 503 })
+      }
+    })
+
+    await expect(
+      policy.persist({ context, upload: { receipt: 'receipt-discard' } })
+    ).rejects.toThrow('INVALID_RECEIPT')
+    await expect(
+      policy.discardUpload?.({
+        context,
+        upload: { receipt: 'receipt-discard' }
+      })
+    ).resolves.toBeUndefined()
+    expect(requests).toEqual(['/api/assets/persist', '/api/assets/discard'])
   })
 
   test('rejects a duplicate queued avatar for the same artist without blocking another artist', () => {
@@ -234,15 +318,18 @@ describe('artist avatar production composition', () => {
     mock.module('@/core/artistas/_actions/upload-artist-avatar.action', () => ({
       uploadArtistAvatarAction: async () => ({ success: true })
     }))
-    const fetchMock = async () => {
-      events.push('upload')
-      return Response.json({
-        id: 1,
-        artistaId: 42,
-        path: 'artistas/artista-de-prueba/avatar-1710000000000.webp',
-        version: '1710000000000',
-        oldAsset: null
-      })
+    const fetchMock = async (input: RequestInfo | URL) => {
+      const url = input.toString()
+      events.push(url === '/api/assets' ? 'upload' : 'persist')
+      return url === '/api/assets'
+        ? Response.json({ receipt: 'receipt-shared' })
+        : Response.json({
+            id: 1,
+            artistaId: 42,
+            path: 'artistas/artista-de-prueba/avatar-1710000000000.webp',
+            version: '1710000000000',
+            oldAsset: null
+          })
     }
     fetchMock.preconnect = originalFetch.preconnect
     globalThis.fetch = fetchMock
@@ -263,7 +350,7 @@ describe('artist avatar production composition', () => {
         })
       })
 
-      expect(events).toEqual(['upload'])
+      expect(events).toEqual(['upload', 'persist'])
       expect(controller.getSnapshot().job?.status).toBe('completed')
     } finally {
       globalThis.fetch = originalFetch

@@ -1,22 +1,14 @@
 'use client'
 
-import { useState, type ChangeEvent } from 'react'
+import type { ChangeEvent } from 'react'
 import Image from 'next/image'
+import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react'
 
-import { getAvatarUrl } from '@/shared/lib/cdn'
 import { Button } from '@/shared/components/ui/button'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from '@/shared/components/ui/alert-dialog'
 import type { ManagedAssetReference } from '@/shared/assets-manager/managed-asset-reference'
 import type { AvatarControllerState } from '../_hooks/use-avatar-controller'
 import type { PreparationResult } from '@/shared/assets-manager/client/preparation'
+import type { AvatarSequenceItem } from '../_lib/artist-avatar-history'
 
 import { useAvatarController } from '../_hooks/use-avatar-controller'
 
@@ -33,9 +25,12 @@ export interface ExternalAvatarController {
 export interface ArtistAvatarSectionProps {
   artistId: string | number | null
   currentAvatar?: ManagedAssetReference | null
-  onRemove?: (artistId: string | number) => void | Promise<void>
   autoEnqueue?: boolean
   controller?: ExternalAvatarController
+  avatars?: AvatarSequenceItem[]
+  selectedIndex?: number
+  onSelectIndex?: (index: number) => void
+  onPreparedUpload?: () => void
 }
 
 function progressFor(sentBytes: number, totalBytes: number): number {
@@ -45,20 +40,21 @@ function progressFor(sentBytes: number, totalBytes: number): number {
 export function ArtistAvatarSection({
   artistId,
   currentAvatar = null,
-  onRemove,
   autoEnqueue = true,
-  controller: externalController
+  controller: externalController,
+  avatars = [],
+  selectedIndex = 0,
+  onSelectIndex,
+  onPreparedUpload
 }: ArtistAvatarSectionProps) {
   const internalController = useAvatarController({
     initialAvatar: currentAvatar
   })
   const controller = externalController ?? internalController
-  const [confirmationStep, setConfirmationStep] = useState<1 | 2 | null>(null)
-  const previewUrl =
-    controller.state.preview?.url ??
-    (controller.state.currentAvatar?.path
-      ? getAvatarUrl(controller.state.currentAvatar.path)
-      : null)
+  const selectedAvatar = avatars[selectedIndex] ?? null
+  const selectedPath =
+    selectedAvatar?.path ?? controller.state.currentAvatar?.path
+  const previewUrl = controller.state.preview?.url ?? selectedPath
   const isBusy =
     controller.state.phase === 'preparing' ||
     controller.state.phase === 'uploading'
@@ -73,19 +69,11 @@ export function ArtistAvatarSection({
     event.currentTarget.value = ''
     if (!file) return
     void controller.selectFile(file).then((result) => {
-      if (result.phase === 'ready' && artistId !== null && autoEnqueue)
-        void controller.enqueue(artistId)
+      if (result.phase !== 'ready') return
+      onPreparedUpload?.()
+      if (artistId !== null && autoEnqueue) void controller.enqueue(artistId)
     })
   }
-  const confirmRemoval = () => {
-    if (confirmationStep === 1) {
-      setConfirmationStep(2)
-      return
-    }
-    if (artistId !== null && onRemove) void onRemove(artistId)
-    setConfirmationStep(null)
-  }
-
   return (
     <section
       aria-labelledby='artist-avatar-section-title'
@@ -95,32 +83,59 @@ export function ArtistAvatarSection({
         Avatar del artista <span className='text-destructive ml-1'>*</span>
       </h2>
       <div className='flex flex-col items-center gap-4'>
-        <label
-          htmlFor='artist-avatar-file'
-          className='bg-muted border-border hover:border-primary focus-within:border-primary flex size-24 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-dashed text-center transition-colors'
-        >
-          {previewUrl ? (
-            <Image
-              src={new URL(previewUrl).toString()}
-              alt='Vista previa del avatar'
-              width={96}
-              height={96}
-              className='size-full object-cover'
+        <div className='flex items-center gap-3'>
+          <Button
+            type='button'
+            variant='ghost'
+            size='icon'
+            aria-label='Avatar anterior'
+            disabled={selectedIndex <= 0}
+            onClick={() => onSelectIndex?.(selectedIndex - 1)}
+          >
+            <IconChevronLeft aria-hidden='true' />
+          </Button>
+          <label
+            htmlFor={`artist-avatar-file-${artistId ?? 'new'}`}
+            className='bg-muted border-border hover:border-primary focus-within:border-primary flex size-24 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-dashed text-center transition-colors'
+          >
+            {previewUrl ? (
+              <Image
+                src={previewUrl}
+                alt='Vista previa del avatar'
+                width={96}
+                height={96}
+                className='size-full object-cover'
+              />
+            ) : (
+              <span className='text-muted-foreground text-xs'>
+                Seleccionar avatar
+              </span>
+            )}
+            <input
+              id={`artist-avatar-file-${artistId ?? 'new'}`}
+              type='file'
+              accept={ACCEPTED_AVATAR_TYPES}
+              onChange={selectFile}
+              disabled={isBusy}
+              className='sr-only'
             />
-          ) : (
-            <span className='text-muted-foreground text-xs'>
-              Seleccionar avatar
-            </span>
-          )}
-          <input
-            id='artist-avatar-file'
-            type='file'
-            accept={ACCEPTED_AVATAR_TYPES}
-            onChange={selectFile}
-            disabled={isBusy}
-            className='sr-only'
-          />
-        </label>
+          </label>
+          <Button
+            type='button'
+            variant='ghost'
+            size='icon'
+            aria-label='Avatar siguiente'
+            disabled={selectedIndex >= avatars.length - 1}
+            onClick={() => onSelectIndex?.(selectedIndex + 1)}
+          >
+            <IconChevronRight aria-hidden='true' />
+          </Button>
+        </div>
+        {!previewUrl && selectedIndex === -1 && avatars.length > 0 && (
+          <span className='text-muted-foreground text-xs'>
+            Seleccione uno de los avatares antiguos o suba uno nuevo.
+          </span>
+        )}
         {!previewUrl && (
           <span className='text-muted-foreground text-xs'>JPG, PNG o WebP</span>
         )}
@@ -161,45 +176,6 @@ export function ArtistAvatarSection({
             </>
           )}
         </div>
-      )}
-      {controller.state.currentAvatar && (
-        <>
-          <Button
-            type='button'
-            variant='destructive'
-            size='sm'
-            onClick={() => setConfirmationStep(1)}
-          >
-            Eliminar avatar
-          </Button>
-          <AlertDialog
-            open={confirmationStep !== null}
-            onOpenChange={(open) => {
-              if (!open) setConfirmationStep(null)
-            }}
-          >
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>
-                  {confirmationStep === 1
-                    ? '¿Estás seguro de eliminar el avatar?'
-                    : 'Confirma la eliminación del avatar'}
-                </AlertDialogTitle>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction
-                  type='button'
-                  variant='destructive'
-                  onClick={confirmRemoval}
-                >
-                  {confirmationStep === 1 ? 'Continuar' : 'Eliminar avatar'}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-          <span className='sr-only'>¿Estás seguro de eliminar el avatar?</span>
-        </>
       )}
     </section>
   )
