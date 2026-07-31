@@ -1,9 +1,14 @@
-import { createHmac, timingSafeEqual } from 'node:crypto'
-
 import type { ExpectedActiveAvatar } from './avatar-history-contracts'
+import {
+  createProvisionalAssetReceipt,
+  INVALID_PROVISIONAL_ASSET_RECEIPT,
+  PROVISIONAL_ASSET_RECEIPT_TTL_MS,
+  type VerificationPurpose,
+  verifyProvisionalAssetReceipt
+} from '@/shared/assets-manager/server/provisional-asset-receipt'
 
-const RECEIPT_TTL_MS = 5 * 60 * 1_000
-const INVALID_RECEIPT = 'INVALID_RECEIPT'
+const RECEIPT_TTL_MS = PROVISIONAL_ASSET_RECEIPT_TTL_MS
+const INVALID_RECEIPT = INVALID_PROVISIONAL_ASSET_RECEIPT
 
 export interface ArtistAvatarUploadReceiptInput {
   subjectId: string
@@ -25,15 +30,7 @@ export interface VerifyArtistAvatarUploadReceiptInput {
   subjectId: string
   artistaId?: number
   now?: number
-  allowExpired?: boolean
-}
-
-function sign(payload: string, secret: string): string {
-  return createHmac('sha256', secret).update(payload).digest('base64url')
-}
-
-function invalidReceipt(): never {
-  throw new Error(INVALID_RECEIPT)
+  purpose?: VerificationPurpose
 }
 
 function isExpectedActive(value: unknown): value is ExpectedActiveAvatar {
@@ -80,45 +77,23 @@ export function createArtistAvatarUploadReceipt(
   secret: string,
   issuedAt = Date.now()
 ): string {
-  const payload = Buffer.from(
-    JSON.stringify({ ...input, issuedAt, expiresAt: issuedAt + RECEIPT_TTL_MS })
-  ).toString('base64url')
-  return `${payload}.${sign(payload, secret)}`
+  return createProvisionalAssetReceipt(input, { secret, issuedAt })
 }
 
 export function verifyArtistAvatarUploadReceipt(
   receipt: string,
   input: VerifyArtistAvatarUploadReceiptInput
 ): ArtistAvatarUploadReceiptClaims {
-  const [payload, signature, extra] = receipt.split('.')
-  if (!payload || !signature || extra) invalidReceipt()
-
-  const expectedSignature = sign(payload, input.secret)
-  const received = Buffer.from(signature)
-  const expected = Buffer.from(expectedSignature)
-  if (
-    received.length !== expected.length ||
-    !timingSafeEqual(received, expected)
-  )
-    invalidReceipt()
-
-  let decoded: unknown
-  try {
-    decoded = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'))
-  } catch {
-    invalidReceipt()
-  }
-  if (!isClaims(decoded)) invalidReceipt()
-
-  const now = input.now ?? Date.now()
-  if (
-    decoded.subjectId !== input.subjectId ||
-    (input.artistaId !== undefined && decoded.artistaId !== input.artistaId) ||
-    (!input.allowExpired && decoded.expiresAt < now)
-  )
-    invalidReceipt()
-
-  return decoded
+  const claims = verifyProvisionalAssetReceipt(receipt, {
+    secret: input.secret,
+    subjectId: input.subjectId,
+    now: input.now,
+    purpose: input.purpose,
+    validateClaims: isClaims
+  })
+  if (input.artistaId !== undefined && claims.artistaId !== input.artistaId)
+    throw new Error(INVALID_RECEIPT)
+  return claims
 }
 
 export { INVALID_RECEIPT, RECEIPT_TTL_MS }

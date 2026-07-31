@@ -2,13 +2,11 @@
 
 import 'server-only'
 
-import { updateTag } from 'next/cache'
 import { and, eq, isNull, sql } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
-import { ARTIST_CACHE_TAG } from '@frijolmagico/cache-tags'
 import {
   INVALID_RECEIPT,
   verifyArtistAvatarUploadReceipt
@@ -19,14 +17,17 @@ import {
 } from '../catalogo/_lib/avatar-history-contracts'
 import type { UploadArtistAvatarData } from './upload-artist-avatar.action'
 import { requireAuth } from '@/shared/lib/auth/utils'
+import { getAssetReceiptSecret } from '@/shared/assets-manager/server/asset-receipt-config'
 import type { ActionState } from '@/shared/types/actions'
 
 const schema = z.object({ receipt: z.string().min(1) })
 
 function receiptSecret(): string {
-  const secret = process.env.ASSET_RECEIPT_SECRET
-  if (!secret) throw new Error(INVALID_RECEIPT)
-  return secret
+  try {
+    return getAssetReceiptSecret()
+  } catch {
+    throw new Error(INVALID_RECEIPT)
+  }
 }
 
 function activeAvatarWhere(
@@ -151,9 +152,6 @@ export async function persistArtistAvatarAction(
       if (!recovered) throw error
       avatar = recovered
     }
-    try {
-      updateTag(ARTIST_CACHE_TAG)
-    } catch {}
     return { success: true, data: avatar }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Error desconocido'

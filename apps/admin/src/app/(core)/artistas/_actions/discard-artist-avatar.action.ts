@@ -14,6 +14,7 @@ import {
   verifyArtistAvatarUploadReceipt
 } from '../catalogo/_lib/artist-avatar-upload-receipt'
 import { requireAuth } from '@/shared/lib/auth/utils'
+import { getAssetReceiptSecret } from '@/shared/assets-manager/server/asset-receipt-config'
 import {
   R2Adapter,
   createR2Config
@@ -28,12 +29,11 @@ export async function discardArtistAvatarAction(
   try {
     const session = await requireAuth()
     const parsed = schema.safeParse(input)
-    if (!parsed.success || !process.env.ASSET_RECEIPT_SECRET)
-      throw new Error(INVALID_RECEIPT)
+    if (!parsed.success) throw new Error(INVALID_RECEIPT)
     const claims = verifyArtistAvatarUploadReceipt(parsed.data.receipt, {
-      secret: process.env.ASSET_RECEIPT_SECRET,
+      secret: getAssetReceiptSecret(),
       subjectId: session.user.id,
-      allowExpired: true
+      purpose: 'cleanup'
     })
     const [persisted] = await db
       .select({ id: artist.artistImage.id })

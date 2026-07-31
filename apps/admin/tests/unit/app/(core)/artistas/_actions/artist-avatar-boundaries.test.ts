@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, mock, test } from 'bun:test'
 
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
 const deleteObject = mock(async () => {})
-const updateTag = mock(() => {})
 
 interface AvatarRecord {
   id: number
@@ -39,7 +38,6 @@ const db = {
 }
 
 mock.module('server-only', () => ({}))
-mock.module('next/cache', () => ({ updateTag }))
 mock.module('@frijolmagico/database/orm', () => ({ db }))
 mock.module('@/shared/lib/auth/utils', () => ({ requireAuth }))
 mock.module('@/shared/assets-manager/server/r2-adapter', () => ({
@@ -79,7 +77,6 @@ describe('artist avatar persistence boundaries', () => {
     requireAuth.mockReset()
     requireAuth.mockResolvedValue({ user: { id: 'admin-1' } })
     deleteObject.mockClear()
-    updateTag.mockClear()
   })
 
   test('rejects forged and owner-mismatched persistence receipts before database mutation', async () => {
@@ -100,7 +97,18 @@ describe('artist avatar persistence boundaries', () => {
       errors: [{ entityType: 'INVALID_RECEIPT', message: 'INVALID_RECEIPT' }]
     })
     expect(transactionCalls).toBe(0)
-    expect(updateTag).not.toHaveBeenCalled()
+  })
+
+  test('maps a missing receipt secret to INVALID_RECEIPT before persistence mutation', async () => {
+    delete process.env.ASSET_RECEIPT_SECRET
+
+    await expect(
+      persistArtistAvatarAction({ receipt: receipt() })
+    ).resolves.toEqual({
+      success: false,
+      errors: [{ entityType: 'INVALID_RECEIPT', message: 'INVALID_RECEIPT' }]
+    })
+    expect(transactionCalls).toBe(0)
   })
 
   test('does not reach either boundary when action authentication is refused', async () => {
@@ -141,7 +149,6 @@ describe('artist avatar persistence boundaries', () => {
       }
     })
     expect(transactionCalls).toBe(0)
-    expect(updateTag).not.toHaveBeenCalled()
   })
 
   test('recovers a committed result after an ambiguous transaction response', async () => {
@@ -164,7 +171,6 @@ describe('artist avatar persistence boundaries', () => {
       }
     })
     expect(transactionCalls).toBe(1)
-    expect(updateTag).toHaveBeenCalledTimes(1)
   })
 
   test('accepts an authentic expired receipt only to discard an unpersisted provisional object', async () => {
@@ -191,12 +197,9 @@ describe('artist avatar persistence boundaries', () => {
     expect(deleteObject).not.toHaveBeenCalled()
   })
 
-  test('preserves conditional activation when best-effort cache invalidation fails', async () => {
+  test('preserves conditional activation at the persistence boundary', async () => {
     const updates: unknown[] = []
     rows = [[]]
-    updateTag.mockImplementationOnce(() => {
-      throw new Error('cache unavailable')
-    })
     transactionImplementation = (callback) =>
       callback({
         update: () => ({
@@ -231,7 +234,6 @@ describe('artist avatar persistence boundaries', () => {
     ).resolves.toMatchObject({ success: true, data: { id: 10 } })
 
     expect(updates).toContainEqual({ activo: true })
-    expect(updateTag).toHaveBeenCalledTimes(1)
   })
 
   test('preserves the active-avatar conflict policy at persistence', async () => {

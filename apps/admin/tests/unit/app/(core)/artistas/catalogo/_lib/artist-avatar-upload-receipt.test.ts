@@ -1,9 +1,11 @@
-import { describe, expect, test } from 'bun:test'
+import { describe, expect, mock, test } from 'bun:test'
 
-import {
+mock.module('server-only', () => ({}))
+
+const {
   createArtistAvatarUploadReceipt,
   verifyArtistAvatarUploadReceipt
-} from '@/core/artistas/catalogo/_lib/artist-avatar-upload-receipt'
+} = await import('@/core/artistas/catalogo/_lib/artist-avatar-upload-receipt')
 
 const secret = 'receipt-secret-for-tests'
 
@@ -90,5 +92,31 @@ describe('artist avatar upload receipt', () => {
         now: 301_001
       })
     ).toThrow('INVALID_RECEIPT')
+  })
+
+  test('permits an authentic expired receipt only through the cleanup purpose', () => {
+    const receipt = createArtistAvatarUploadReceipt(
+      {
+        subjectId: 'admin-1',
+        artistaId: 42,
+        path: 'artistas/test/avatar-v1.webp',
+        version: 'v1',
+        expectedActive: undefined,
+        catalogId: undefined,
+        requestedActive: undefined
+      },
+      secret,
+      1_000
+    )
+
+    expect(
+      verifyArtistAvatarUploadReceipt(receipt, {
+        secret,
+        subjectId: 'admin-1',
+        artistaId: 42,
+        now: 301_001,
+        purpose: 'cleanup'
+      })
+    ).toMatchObject({ artistaId: 42, path: 'artistas/test/avatar-v1.webp' })
   })
 })

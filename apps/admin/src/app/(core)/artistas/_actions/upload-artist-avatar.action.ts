@@ -10,6 +10,7 @@ import {
   R2Adapter,
   createR2Config
 } from '@/shared/assets-manager/server/r2-adapter'
+import { getAssetReceiptSecret } from '@/shared/assets-manager/server/asset-receipt-config'
 import type { ActionState } from '@/shared/types/actions'
 import type { ExpectedActiveAvatar } from '../catalogo/_lib/avatar-history-contracts'
 
@@ -54,12 +55,6 @@ function getStore(): R2Adapter {
   return new R2Adapter(createR2Config())
 }
 
-function receiptSecret(): string {
-  const secret = process.env.ASSET_RECEIPT_SECRET
-  if (!secret) throw new Error('ASSET_RECEIPT_SECRET is not configured')
-  return secret
-}
-
 export async function uploadArtistAvatarAction(
   input: UploadArtistAvatarInput
 ): Promise<ActionState<UploadArtistAvatarReceiptData>> {
@@ -92,7 +87,7 @@ export async function uploadArtistAvatarAction(
         catalogId: parsed.data.catalogId,
         requestedActive: parsed.data.requestedActive
       },
-      receiptSecret()
+      getAssetReceiptSecret()
     )
     return { success: true, data: { receipt } }
   } catch (error) {
