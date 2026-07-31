@@ -52,6 +52,8 @@ function toAvatarReference(avatar: AvatarRecord) {
 function toActiveAvatarReference(avatar: AvatarRecord) {
   return {
     id: avatar.id,
+    // Full public path built server-side; persistence boundaries revert it
+    // with toRawAssetPath() for the SQL equality against `imagenUrl`.
     path: getAvatarUrl(avatar.imagenUrl),
     version: avatar.artistAvatarVersion
   }

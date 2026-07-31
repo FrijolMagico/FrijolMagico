@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
 
+import { getAvatarUrl } from '@frijolmagico/utils/cdn'
+
 const updateTag = mock(() => {})
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
 const revalidateWebCache = mock(async () => ({ revalidated: true }))
@@ -25,7 +27,9 @@ const validInput = {
   id: 1,
   artistaId: 42,
   descripcion: 'Descripción actualizada',
-  activo: true,
+  // Inactive on purpose: these tests cover cache invalidation, not the
+  // avatar activation rule (activating without an avatar is rejected).
+  activo: false,
   destacado: false,
   avatarUrl: null
 }
@@ -129,7 +133,6 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     })
     expect(catalogChanged).toBe(false)
   })
-
   test('activates the selected historical avatar with the catalog save result', async () => {
     let selectCount = 0
     const committed = { catalog: 'original', activeAvatarId: 7 }
@@ -165,7 +168,13 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     await expect(
       updateCatalogAction({ success: false }, {
         ...validInput,
-        expectedActive: { id: 7, path: 'artistas/current.webp', version: 'v7' },
+        // Full public path (server-built contract); the action rebuilds the
+        // same full path from the stored raw key before comparing.
+        expectedActive: {
+          id: 7,
+          path: getAvatarUrl('artistas/current.webp'),
+          version: 'v7'
+        },
         intent: 'historical',
         avatarId: 8
       })
@@ -212,7 +221,11 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     await expect(
       updateCatalogAction({ success: false }, {
         ...validInput,
-        expectedActive: { id: 7, path: 'artistas/current.webp', version: 'v7' },
+        expectedActive: {
+          id: 7,
+          path: getAvatarUrl('artistas/current.webp'),
+          version: 'v7'
+        },
         intent: 'historical',
         avatarId: 8
       })

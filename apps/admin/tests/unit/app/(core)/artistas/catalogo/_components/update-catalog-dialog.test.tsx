@@ -1,8 +1,18 @@
-import { describe, expect, mock, test } from 'bun:test'
+import { afterEach, describe, expect, mock, test } from 'bun:test'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 
 let pendingAvatar = false
+
+// Mutable so tests can vary avatar presence (the activo switch locks without
+// an active avatar, mirroring the catalog row).
+let selectedCatalog: Record<string, unknown> = {
+  id: 1,
+  activo: true,
+  destacado: false,
+  descripcion: null,
+  activeAvatar: { id: 1, path: 'http://cdn.test/avatar.webp', version: 'v1' }
+}
 
 mock.module('next/navigation', () => ({ useRouter: () => ({ refresh: () => {} }) }))
 mock.module('sonner', () => ({ toast: { error: () => {}, success: () => {} } }))
@@ -11,7 +21,7 @@ mock.module('@/core/artistas/catalogo/_store/catalog-dialog-store', () => ({
   useCatalogDialog: (select: (state: Record<string, unknown>) => unknown) =>
     select({
       closeUpdateCatalogDialog: () => {},
-      selectedCatalog: { id: 1, activo: true, destacado: false, descripcion: null, activeAvatar: null },
+      selectedCatalog,
       selectedArtist: { id: 42, pseudonimo: 'Exact artist' }
     })
 }))
@@ -33,6 +43,16 @@ mock.module('react-hook-form', () => ({
 const { UpdateCatalogDialog } = await import('@/core/artistas/catalogo/_components/update-catalog-dialog')
 
 describe('UpdateCatalogDialog pending avatar lock', () => {
+  afterEach(() => {
+    selectedCatalog = {
+      id: 1,
+      activo: true,
+      destacado: false,
+      descripcion: null,
+      activeAvatar: { id: 1, path: 'http://cdn.test/avatar.webp', version: 'v1' }
+    }
+  })
+
   test('locks Active for the exact pending avatar job', () => {
     pendingAvatar = true
     const markup = renderToStaticMarkup(createElement(UpdateCatalogDialog))
@@ -47,6 +67,25 @@ describe('UpdateCatalogDialog pending avatar lock', () => {
   })
 
   test('does not lock Active for a nonmatching job', () => {
+    pendingAvatar = false
+    const markup = renderToStaticMarkup(createElement(UpdateCatalogDialog))
+    expect(markup).not.toContain('data-testid="active-switch" disabled=""')
+  })
+
+  test('locks Active when the catalog entry has no avatar', () => {
+    pendingAvatar = false
+    selectedCatalog = {
+      id: 1,
+      activo: false,
+      destacado: false,
+      descripcion: null,
+      activeAvatar: null
+    }
+    const markup = renderToStaticMarkup(createElement(UpdateCatalogDialog))
+    expect(markup).toContain('data-testid="active-switch" disabled=""')
+  })
+
+  test('releases Active when an avatar exists and no job is pending', () => {
     pendingAvatar = false
     const markup = renderToStaticMarkup(createElement(UpdateCatalogDialog))
     expect(markup).not.toContain('data-testid="active-switch" disabled=""')

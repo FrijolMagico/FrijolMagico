@@ -32,6 +32,18 @@ export function getAvatarUrl(path: string | null): string {
   return `${R2_PUBLIC_URL}/${path.replace(/^\//, '')}`
 }
 
+/**
+ * Inverse of `getAvatarUrl` for server-side comparison boundaries: strips the
+ * known public CDN base back to the raw R2 key stored in `imagenUrl`.
+ * Non-HTTP values (already-raw keys or foreign absolute URLs) pass through
+ * unchanged. Server-only consumers only (persistence boundaries).
+ */
+export function toRawAssetPath(path: string): string {
+  if (!path.startsWith('http')) return path
+  const base = R2_PUBLIC_URL.replace(/\/+$/, '')
+  return path.startsWith(`${base}/`) ? path.slice(base.length + 1) : path
+}
+
 // TODO: Implement poster URL resolution when CDN integration is ready
 export function getPosterUrl(path: string | null): string | null {
   if (!path) return null

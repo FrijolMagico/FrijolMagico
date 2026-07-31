@@ -188,6 +188,8 @@ describe.skipIf(!modulesLoaded)('get-catalog-data DAL', () => {
     })
     expect(result.data[0]?.activeAvatar).toEqual({
       id: 1,
+      // Full public path built server-side; the raw key must be embedded so
+      // persistence boundaries can revert it with toRawAssetPath().
       path: expect.stringContaining('avatars/luna.png'),
       version: 'v1'
     })
