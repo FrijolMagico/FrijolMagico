@@ -1,4 +1,4 @@
-import { IconAlertTriangle, IconUser } from '@tabler/icons-react'
+import { IconAlertTriangle, IconClock, IconUser } from '@tabler/icons-react'
 import {
   Avatar,
   AvatarFallback,
@@ -9,7 +9,7 @@ interface ArtistAvatarProps {
   src: string | null | undefined
   alt: string
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl'
-  status?: 'default' | 'missing'
+  status?: 'default' | 'missing' | 'pending'
   className?: string
 }
 
@@ -31,7 +31,11 @@ export function ArtistAvatar({
   return (
     <Avatar className={`${sizeClasses[size]} ${className || ''}`}>
       <AvatarImage src={src ?? undefined} alt={alt} />
-      {status === 'missing' ? (
+      {status === 'pending' ? (
+        <AvatarFallback className='bg-warning/20'>
+          <IconClock className='text-warning h-4 w-4' />
+        </AvatarFallback>
+      ) : status === 'missing' ? (
         <AvatarFallback className='bg-destructive/20'>
           <IconAlertTriangle className='text-destructive h-4 w-4' />
         </AvatarFallback>

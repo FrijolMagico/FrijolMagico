@@ -86,7 +86,7 @@ describe('POST /api/assets', () => {
       blob: expect.any(Blob),
       width: 800,
       height: 800,
-      expectedActive: null
+        expectedActive: undefined
     })
     await expect(response.json()).resolves.toEqual({
       id: 7,

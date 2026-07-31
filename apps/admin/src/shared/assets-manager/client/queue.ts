@@ -30,6 +30,7 @@ export interface AssetQueueJob {
   totalBytes: number
   error: string | null
   failedStep: 'upload' | 'persist' | null
+  input?: unknown
 }
 
 export interface AssetQueueSnapshot {
@@ -74,7 +75,8 @@ export interface AssetQueue {
     target: AssetTarget,
     entityId: string,
     preparedAsset: PreparedAsset,
-    preview?: LocalPreviewHandle
+    preview?: LocalPreviewHandle,
+    input?: unknown
   ) => AssetQueueJob
   startUpload: (jobId: string) => void
   setProgress: (jobId: string, sentBytes: number) => void
@@ -255,7 +257,7 @@ export function createAssetQueue(
   }
 
   return {
-    enqueue(target, entityId, preparedAsset, preview) {
+    enqueue(target, entityId, preparedAsset, preview, input) {
       const generationKey = generationKeyFor(target, entityId)
       generations.set(generationKey, (generations.get(generationKey) ?? 0) + 1)
       for (const [jobId, reservation] of reservations) {
@@ -293,7 +295,8 @@ export function createAssetQueue(
         sentBytes: 0,
         totalBytes: preparedAsset.blob.size,
         error: null,
-        failedStep: null
+        failedStep: null,
+        input
       }
       knownJobIds.add(job.jobId)
       snapshot = { ...snapshot, jobs: [...snapshot.jobs, job] }
