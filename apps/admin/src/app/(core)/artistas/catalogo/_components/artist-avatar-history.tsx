@@ -76,7 +76,7 @@ export function ArtistAvatarHistory({ artistId }: ArtistAvatarHistoryProps) {
             type='button'
             variant='ghost'
             size='sm'
-            onClick={() => setSelectedIndex(selectedIndex - 1)}
+            onClick={() => setSelectedIndex(Math.max(0, selectedIndex - 1))}
           >
             Anterior
           </Button>
@@ -85,7 +85,11 @@ export function ArtistAvatarHistory({ artistId }: ArtistAvatarHistoryProps) {
             type='button'
             variant='ghost'
             size='sm'
-            onClick={() => setSelectedIndex(selectedIndex + 1)}
+            onClick={() =>
+              setSelectedIndex(
+                Math.min(history.length - 1, selectedIndex + 1)
+              )
+            }
           >
             Siguiente
           </Button>

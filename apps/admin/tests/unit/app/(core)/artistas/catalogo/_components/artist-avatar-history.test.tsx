@@ -131,7 +131,7 @@ afterEach(() => {
 })
 
 describe('ArtistAvatarHistory', () => {
-  test('loads one artist on demand and wraps navigation from active to latest deleted', async () => {
+  test('clamps navigation boundaries instead of wrapping', async () => {
     getHistory.mockResolvedValue([
       { id: 9, path: 'avatars/active.webp', version: 'v9', deletedAt: null },
       {
@@ -156,13 +156,20 @@ describe('ArtistAvatarHistory', () => {
     await act(async () => {
       reactProps(buttonByText(container, 'Anterior')).onClick()
     })
+    expect(container.textContent).toContain('avatars/active.webp')
+    expect(container.textContent).not.toContain('Restaurar avatar')
+
+    await act(async () => {
+      reactProps(buttonByText(container, 'Siguiente')).onClick()
+    })
     expect(container.textContent).toContain('avatars/latest-deleted.webp')
     expect(container.textContent).toContain('Restaurar avatar')
 
     await act(async () => {
       reactProps(buttonByText(container, 'Siguiente')).onClick()
     })
-    expect(container.textContent).toContain('avatars/active.webp')
+    expect(container.textContent).toContain('avatars/latest-deleted.webp')
+    expect(container.textContent).toContain('Restaurar avatar')
   })
 
   test('requires confirmation before restoring and refreshes history after success', async () => {
