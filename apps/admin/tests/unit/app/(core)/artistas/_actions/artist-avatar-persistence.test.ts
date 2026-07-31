@@ -1,10 +1,13 @@
-import { beforeEach, describe, expect, mock, test } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
 
 const updateTag = mock(() => {})
 const cacheTag = mock(() => {})
 const getSession = mock(async () => ({ user: { id: 'admin-1' } }))
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
 const getUser = mock(async () => ({ id: 'admin-1' }))
+const putObject = mock(async () => {})
+const deleteObject = mock(async () => {})
+const originalDateNow = Date.now
 
 interface AvatarRecord {
   id: number
@@ -60,7 +63,8 @@ function createCreateDb(state: DbState, returned = [{ id: 42 }]) {
 function createUploadDb(
   state: DbState,
   returnedAvatar: AvatarRecord,
-  previousAvatar: AvatarRecord | null = null
+  previousAvatar: AvatarRecord | null = null,
+  persistenceError?: Error
 ) {
   const transaction = {
     update: () => {
@@ -98,8 +102,14 @@ function createUploadDb(
   }
 
   return {
+    select: () => ({
+      from: () => ({
+        where: async () => [{ id: 12, slug: 'artista-de-prueba' }]
+      })
+    }),
     transaction: async (callback: (tx: unknown) => Promise<unknown>) => {
       state.events.push('transaction:start')
+      if (persistenceError) throw persistenceError
       const result = await callback(transaction)
       state.events.push('transaction:commit')
       return result
@@ -181,6 +191,15 @@ mock.module('@frijolmagico/database/orm', () => ({
     }
   )
 }))
+mock.module('@/shared/assets-manager/server/r2-adapter', () => ({
+  R2Adapter: mock(() => ({ putObject, deleteObject })),
+  createR2Config: mock(() => ({
+    endpoint: 'https://mock.r2.dev',
+    bucketName: 'test-bucket',
+    accessKeyId: 'test-key',
+    secretAccessKey: 'test-secret'
+  }))
+}))
 
 const { createArtistaAction } =
   await import('@/core/artistas/_actions/create-artista.action')
@@ -218,6 +237,13 @@ describe('artist avatar persistence', () => {
     updateTag.mockClear()
     cacheTag.mockClear()
     requireAuth.mockClear()
+    putObject.mockClear()
+    deleteObject.mockClear()
+    Date.now = () => 1710000000000
+  })
+
+  afterEach(() => {
+    Date.now = originalDateNow
   })
 
   test('returns the persisted artist id', async () => {
@@ -262,21 +288,22 @@ describe('artist avatar persistence', () => {
     expect(state.inserts).toHaveLength(0)
   })
 
-  test('replaces the active avatar atomically', async () => {
+  test('replaces the active avatar atomically with a server-owned reference', async () => {
     const state = createState()
     const replacement = {
       ...avatar,
       id: 9,
-      imagenUrl: 'artist-avatar/12/v2.webp',
-      artistAvatarVersion: 'v2'
+      imagenUrl: 'artistas/artista-de-prueba/avatar-1710000000000.webp',
+      artistAvatarVersion: '1710000000000'
     }
     currentDb = createUploadDb(state, replacement, avatar)
 
     await expect(
       uploadArtistAvatarAction({
         artistaId: 12,
-        path: replacement.imagenUrl,
-        version: replacement.artistAvatarVersion
+        blob: new Blob(['prepared'], { type: 'image/webp' }),
+        width: 800,
+        height: 800
       })
     ).resolves.toEqual({
       success: true,
@@ -288,6 +315,10 @@ describe('artist avatar persistence', () => {
         }
       }
     })
+    expect(putObject).toHaveBeenCalledWith(
+      'artistas/artista-de-prueba/avatar-1710000000000.webp',
+      expect.any(Blob)
+    )
     expect(state.updates).toHaveLength(1)
     expect(state.inserts).toHaveLength(1)
     expect(state.events).toEqual([
@@ -299,56 +330,73 @@ describe('artist avatar persistence', () => {
     ])
   })
 
-  test('persists a first avatar without returning cleanup data', async () => {
+  test('owns the timestamped key and version instead of trusting client metadata', async () => {
     const state = createState()
-    currentDb = createUploadDb(state, avatar)
+    const replacement = {
+      ...avatar,
+      id: 9,
+      imagenUrl: 'artistas/artista-de-prueba/avatar-1710000000000.webp',
+      artistAvatarVersion: '1710000000000'
+    }
+    currentDb = createUploadDb(state, replacement, avatar)
 
     await expect(
       uploadArtistAvatarAction({
         artistaId: 12,
-        path: avatar.imagenUrl,
-        version: avatar.artistAvatarVersion
+        blob: new Blob(['prepared'], { type: 'image/webp' }),
+        width: 800,
+        height: 800
       })
     ).resolves.toEqual({
       success: true,
-      data: { ...toAvatarReference(avatar), oldAsset: null }
+      data: {
+        ...toAvatarReference(replacement),
+        oldAsset: { path: avatar.imagenUrl, version: avatar.artistAvatarVersion }
+      }
     })
   })
 
-  test('rejects an invalid avatar reference without changing the database', async () => {
+  test('rejects non-exact prepared dimensions without uploading or persisting', async () => {
     const state = createState()
     currentDb = createUploadDb(state, avatar)
 
     const result = await uploadArtistAvatarAction({
       artistaId: 12,
-      path: '',
-      version: 'v1'
+      blob: new Blob(['prepared'], { type: 'image/webp' }),
+      width: 799,
+      height: 800
     })
 
     expect(result.success).toBe(false)
     expect(state.updates).toHaveLength(0)
     expect(state.inserts).toHaveLength(0)
+    expect(putObject).not.toHaveBeenCalled()
   })
 
-  test('does not report a committed avatar as failed when cache invalidation throws', async () => {
+  test('compensates only the provisional uploaded key when persistence fails', async () => {
     const state = createState()
-    currentDb = createUploadDb(state, avatar)
-    updateTag.mockImplementation(() => {
-      throw new Error('cache unavailable')
-    })
+    currentDb = createUploadDb(
+      state,
+      avatar,
+      null,
+      new Error('database unavailable')
+    )
 
-    const result = await uploadArtistAvatarAction({
-      artistaId: 12,
-      path: avatar.imagenUrl,
-      version: avatar.artistAvatarVersion
+    await expect(
+      uploadArtistAvatarAction({
+        artistaId: 12,
+        blob: new Blob(['prepared'], { type: 'image/webp' }),
+        width: 800,
+        height: 800
+      })
+    ).resolves.toEqual({
+      success: false,
+      errors: [{ entityType: 'artist-avatar', message: 'database unavailable' }]
     })
-
-    expect(result).toEqual({
-      success: true,
-      data: { ...toAvatarReference(avatar), oldAsset: null }
-    })
-    expect(state.updates).toHaveLength(1)
-    expect(state.inserts).toHaveLength(1)
+    expect(deleteObject).toHaveBeenCalledWith(
+      'artistas/artista-de-prueba/avatar-1710000000000.webp'
+    )
+    expect(state.events).toEqual(['transaction:start'])
   })
 
   test('soft-deletes the matching active avatar before returning cleanup data', async () => {

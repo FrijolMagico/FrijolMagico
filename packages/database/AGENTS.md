@@ -12,14 +12,14 @@ Drizzle ORM + Turso (libSQL) database package.
 ## Commands
 
 ```bash
+bun run seed
+bun run dev
+bun run prod
 bun run migrate
 bun run new <name>
-bun run seed
 bun run lint
 bun run type-check
 ```
-
-- **migrate/seed:** Destructive. See Security in root AGENTS.md.
 
 ## Architecture
 
@@ -63,7 +63,10 @@ data/                          # Reference SQL files (not migrations)
 └── ...
 
 seed/
-└── seed.sql                   # Seed data
+├── seed.sql                   # Seed data (15 artists, 1 event, participations)
+│
+scripts/
+└── seed.ts                    # Script: make local.dev.db, run migrations, run seed.sql
 ```
 
 ### Dual Client Pattern
@@ -84,8 +87,9 @@ Tables via `drizzle-orm/sqlite-core`.
 ## Environment Variables
 
 ```bash
-TURSO_DATABASE_URL=https://[org].turso.io  # or file:local.db
-TURSO_AUTH_TOKEN=your-auth-token           # Required for remote
+TURSO_DATABASE_URL=
+TURSO_AUTH_TOKEN=
+TURSO_DATABASE_NAME=
 ```
 
 ## Data Files (Reference)

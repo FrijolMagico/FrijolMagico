@@ -1,14 +1,9 @@
 import 'server-only'
 
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
-import crypto from 'node:crypto'
-
-import type { AssetTarget } from '../client/contracts'
-import type { ManagedAssetReference } from '../managed-asset-reference'
 import type { AssetStore } from './asset-store'
 
 import { AssetStoreError } from './asset-store-error'
-import { deriveObjectKey } from './object-key'
 
 export interface R2Config {
   endpoint: string
@@ -18,7 +13,7 @@ export interface R2Config {
 }
 
 export function createR2Config(): R2Config {
-  const endpoint = process.env.R2_ENDPOINT
+  const endpoint = process.env.R2_ACCOUNT_ID
   const bucketName = process.env.R2_BUCKET_NAME
   const accessKeyId = process.env.R2_ACCESS_KEY_ID
   const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY
@@ -50,14 +45,7 @@ export class R2Adapter implements AssetStore {
     this.bucketName = config.bucketName
   }
 
-  async uploadAsset(
-    target: AssetTarget,
-    entityId: string,
-    blob: Blob,
-  ): Promise<ManagedAssetReference> {
-    const version = crypto.randomUUID()
-    const key = deriveObjectKey(target, entityId, version)
-
+  async putObject(key: string, blob: Blob): Promise<void> {
     const buffer = Buffer.from(await blob.arrayBuffer())
 
     try {
@@ -69,60 +57,28 @@ export class R2Adapter implements AssetStore {
           ContentType: blob.type,
         }),
       )
-
-      return { path: key, version }
     } catch (cause) {
       throw new AssetStoreError(
         `Failed to upload asset: ${(cause as Error).message}`,
         'UPLOAD_FAILED',
+        { cause },
       )
     }
   }
 
-  async replaceAsset(
-    target: AssetTarget,
-    entityId: string,
-    currentRef: ManagedAssetReference,
-    blob: Blob,
-  ): Promise<ManagedAssetReference> {
-    const ref = await this.uploadAsset(target, entityId, blob)
-
-    if (currentRef.path) {
-      try {
-        await this.client.send(
-          new DeleteObjectCommand({
-            Bucket: this.bucketName,
-            Key: currentRef.path,
-          }),
-        )
-      } catch {
-        // Old object deletion is best-effort; new upload succeeded
-      }
-    }
-
-    return ref
-  }
-
-  async deleteAsset(
-    _target: AssetTarget,
-    _entityId: string,
-    ref: ManagedAssetReference,
-  ): Promise<void> {
-    if (!ref.path) {
-      return
-    }
-
+  async deleteObject(key: string): Promise<void> {
     try {
       await this.client.send(
         new DeleteObjectCommand({
           Bucket: this.bucketName,
-          Key: ref.path,
+            Key: key,
         }),
       )
     } catch (cause) {
       throw new AssetStoreError(
         `Failed to delete asset: ${(cause as Error).message}`,
         'DELETE_FAILED',
+        { cause },
       )
     }
   }

@@ -157,8 +157,10 @@ describe.skipIf(!modulesLoaded)('get-catalog-data DAL', () => {
       ],
       [
         {
+          id: 1,
           artistaId: 7,
           imagenUrl: 'avatars/luna.png',
+          version: 'v1',
           orden: 1
         }
       ],
@@ -185,6 +187,11 @@ describe.skipIf(!modulesLoaded)('get-catalog-data DAL', () => {
       rrss: { instagram: ['@luna'] }
     })
     expect(result.data[0]?.avatarUrl).toContain('avatars/luna.png')
+    expect(result.data[0]?.activeAvatar).toEqual({
+      id: 1,
+      path: expect.stringContaining('avatars/luna.png'),
+      version: 'v1'
+    })
 
     const avatarWhereValues = flattenPrimitiveValues(
       dbMock.calls[1]?.whereArgs ?? []
@@ -225,7 +232,7 @@ describe.skipIf(!modulesLoaded)('get-catalog-data DAL', () => {
     expect(result).toHaveLength(2)
     expect(result[0]).toMatchObject({
       id: 3,
-      avatarUrl: 'avatars/bosque.png'
+      avatarUrl: expect.stringContaining('avatars/bosque.png')
     })
     expect(result[1]).toMatchObject({
       id: 5,
@@ -263,7 +270,7 @@ describe.skipIf(!modulesLoaded)('get-catalog-data DAL', () => {
         id: 3,
         pseudonimo: 'Bosque Azul',
         nombre: 'María Soto',
-        avatarUrl: 'avatars/bosque.png'
+        avatarUrl: expect.stringContaining('avatars/bosque.png')
       }
     ])
     expect(getCacheTags()).toEqual(['catalogo:artistas', 'artistas'])

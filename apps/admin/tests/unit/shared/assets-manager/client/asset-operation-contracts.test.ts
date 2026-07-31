@@ -133,6 +133,24 @@ test('rejects duplicate registration without replacing the original policy', () 
   ).toBe(avatarPolicy)
 })
 
+test('ensures the first policy without weakening duplicate registration errors', () => {
+  const registry = createAssetOperationPolicyRegistry()
+
+  registry.ensure(ASSET_TARGET.ARTIST_AVATAR, avatarPolicy)
+  registry.ensure(ASSET_TARGET.ARTIST_AVATAR, posterPolicy)
+
+  expect(
+    registry.resolve<AvatarUpload, AvatarPersisted, AvatarCleanup>(
+      ASSET_TARGET.ARTIST_AVATAR
+    )
+  ).toBe(avatarPolicy)
+  expect(() =>
+    registry.register(ASSET_TARGET.ARTIST_AVATAR, posterPolicy)
+  ).toThrow(
+    'Asset operation policy already registered for target: artist-avatar'
+  )
+})
+
 test('preserves the public entity ID while separating same-entity targets', () => {
   const avatarIdentity = createAssetOperationIdentity(
     ASSET_TARGET.ARTIST_AVATAR,

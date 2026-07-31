@@ -256,6 +256,23 @@ test('invokes removal only after both confirmation steps', async () => {
   expect(removeCalls).toBe(1)
 })
 
+test('does not show catalog history controls outside the catalog context', async () => {
+  const container = document.createElement('main')
+  document.body.appendChild(container)
+  root = createRoot(container as unknown as Element)
+
+  await act(async () => {
+    root?.render(
+      <ArtistAvatarSection
+        artistId='artist-1'
+        currentAvatar={{ path: 'avatar.webp', version: 'v1' }}
+      />
+    )
+  })
+
+  expect(container.textContent).not.toContain('Ver historial')
+})
+
 test('autoEnqueue=false prevents enqueue after selectFile', async () => {
   const container = document.createElement('main')
   document.body.appendChild(container)
