@@ -5,6 +5,7 @@ export interface CatalogAvailableArtist {
   id: number
   pseudonimo: string
   nombre: string | null
+  avatarUrl: string | null
 }
 
 export interface CatalogListItem extends Catalog {

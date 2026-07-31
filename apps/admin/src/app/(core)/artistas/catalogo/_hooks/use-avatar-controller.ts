@@ -2,6 +2,8 @@
 
 import { useState, useSyncExternalStore } from 'react'
 
+import { ensureArtistAvatarPolicy } from '../_lib/artist-avatar-production-composition'
+
 import { createBrowserImageCodec } from '@/shared/assets-manager/client/browser-image-codec'
 import {
   getSharedAssetOperationRuntime,
@@ -27,6 +29,8 @@ import {
   type AssetQueueStatus
 } from '@/shared/assets-manager/client/queue'
 import type { ManagedAssetReference } from '@/shared/assets-manager/managed-asset-reference'
+
+ensureArtistAvatarPolicy()
 
 const AVATAR_CONTROLLER_PHASE = {
   IDLE: 'idle',
@@ -76,6 +80,7 @@ interface AvatarController {
   cancel: () => void
   retry: () => Promise<void>
   reset: () => void
+  syncAvatar: (avatar: ManagedAssetReference | null) => void
 }
 
 export function createAvatarController(
@@ -179,6 +184,7 @@ export function createAvatarController(
         return
       }
       try {
+        runtime.canEnqueue(ASSET_TARGET.ARTIST_AVATAR, String(entityId))
         const job = runtime.enqueue(
           ASSET_TARGET.ARTIST_AVATAR,
           String(entityId),
@@ -230,6 +236,11 @@ export function createAvatarController(
         job: null,
         error: null
       })
+    },
+    syncAvatar(avatar: ManagedAssetReference | null) {
+      if (snapshot.phase !== AVATAR_CONTROLLER_PHASE.READY) {
+        update({ currentAvatar: avatar })
+      }
     }
   }
 

@@ -15,15 +15,27 @@ import {
   AlertDialogTitle
 } from '@/shared/components/ui/alert-dialog'
 import type { ManagedAssetReference } from '@/shared/assets-manager/managed-asset-reference'
+import type { AvatarControllerState } from '../_hooks/use-avatar-controller'
+import type { PreparationResult } from '@/shared/assets-manager/client/preparation'
 
 import { useAvatarController } from '../_hooks/use-avatar-controller'
 
 const ACCEPTED_AVATAR_TYPES = 'image/jpeg,image/png,image/webp'
 
+export interface ExternalAvatarController {
+  state: AvatarControllerState
+  selectFile: (file: File) => Promise<PreparationResult>
+  enqueue: (entityId: string | number) => Promise<void>
+  cancel: () => void
+  retry: () => Promise<void>
+}
+
 export interface ArtistAvatarSectionProps {
   artistId: string | number | null
   currentAvatar?: ManagedAssetReference | null
   onRemove?: (artistId: string | number) => void | Promise<void>
+  autoEnqueue?: boolean
+  controller?: ExternalAvatarController
 }
 
 function progressFor(sentBytes: number, totalBytes: number): number {
@@ -33,9 +45,14 @@ function progressFor(sentBytes: number, totalBytes: number): number {
 export function ArtistAvatarSection({
   artistId,
   currentAvatar = null,
-  onRemove
+  onRemove,
+  autoEnqueue = true,
+  controller: externalController
 }: ArtistAvatarSectionProps) {
-  const controller = useAvatarController({ initialAvatar: currentAvatar })
+  const internalController = useAvatarController({
+    initialAvatar: currentAvatar
+  })
+  const controller = externalController ?? internalController
   const [confirmationStep, setConfirmationStep] = useState<1 | 2 | null>(null)
   const previewUrl =
     controller.state.preview?.url ??
@@ -56,7 +73,7 @@ export function ArtistAvatarSection({
     event.currentTarget.value = ''
     if (!file) return
     void controller.selectFile(file).then((result) => {
-      if (result.phase === 'ready' && artistId !== null)
+      if (result.phase === 'ready' && artistId !== null && autoEnqueue)
         void controller.enqueue(artistId)
     })
   }
@@ -75,29 +92,26 @@ export function ArtistAvatarSection({
       className='flex flex-col gap-4'
     >
       <h2 id='artist-avatar-section-title' className='text-sm font-medium'>
-        Avatar del artista
+        Avatar del artista <span className='text-destructive ml-1'>*</span>
       </h2>
-      <div className='flex items-center gap-4'>
-        <div className='bg-muted flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-full'>
+      <div className='flex flex-col items-center gap-4'>
+        <label
+          htmlFor='artist-avatar-file'
+          className='bg-muted border-border hover:border-primary focus-within:border-primary flex size-24 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-dashed text-center transition-colors'
+        >
           {previewUrl ? (
             <Image
-              src={previewUrl}
+              src={new URL(previewUrl).toString()}
               alt='Vista previa del avatar'
               width={96}
               height={96}
-              unoptimized
               className='size-full object-cover'
             />
           ) : (
-            <span className='text-muted-foreground text-xs'>Sin avatar</span>
+            <span className='text-muted-foreground text-xs'>
+              Seleccionar avatar
+            </span>
           )}
-        </div>
-        <label
-          htmlFor='artist-avatar-file'
-          className='border-border hover:border-primary focus-within:border-primary flex min-h-24 flex-1 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed px-4 py-3 text-center transition-colors'
-        >
-          <span className='text-sm font-medium'>Seleccionar imagen</span>
-          <span className='text-muted-foreground text-xs'>JPG, PNG o WebP</span>
           <input
             id='artist-avatar-file'
             type='file'
@@ -107,6 +121,9 @@ export function ArtistAvatarSection({
             className='sr-only'
           />
         </label>
+        {!previewUrl && (
+          <span className='text-muted-foreground text-xs'>JPG, PNG o WebP</span>
+        )}
       </div>
       {(controller.state.phase === 'uploading' ||
         controller.state.phase === 'completed') &&
@@ -124,14 +141,24 @@ export function ArtistAvatarSection({
         <div role='alert' className='text-destructive text-sm'>
           {controller.state.error}
           {controller.state.phase === 'failed' && (
-            <Button
-              type='button'
-              variant='outline'
-              size='sm'
-              onClick={() => void controller.retry()}
-            >
-              Reintentar
-            </Button>
+            <>
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                onClick={() => void controller.retry()}
+              >
+                Reintentar
+              </Button>
+              <Button
+                type='button'
+                variant='ghost'
+                size='sm'
+                onClick={controller.cancel}
+              >
+                Descartar
+              </Button>
+            </>
           )}
         </div>
       )}

@@ -55,6 +55,14 @@ function createHarness(
   return { controller: createAvatarController(options), runtime, store }
 }
 
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((next) => {
+    resolve = next
+  })
+  return { promise, resolve }
+}
+
 async function prepareAndEnqueue(
   controller: ReturnType<typeof createAvatarController>
 ) {
@@ -125,6 +133,32 @@ describe('useAvatarController', () => {
     )
   })
 
+  test('preflights avatar admission before attempting a duplicate enqueue', async () => {
+    const upload = deferred<string>()
+    let admissions = 0
+    const { controller, runtime, store } = createHarness({
+      admitEnqueue: ({ snapshot, entityId }) => {
+        admissions++
+        if (snapshot.jobs.some((job) => job.entityId === entityId))
+          throw new Error('Avatar upload is already queued for this artist')
+      },
+      upload: async () => upload.promise
+    })
+    const duplicate = createAvatarController({ codec, runtime, store })
+
+    await controller.selectFile(file)
+    await controller.enqueue('artist-1')
+    await duplicate.selectFile(file)
+    await duplicate.enqueue('artist-1')
+
+    expect(admissions).toBe(3)
+    expect(duplicate.getSnapshot().phase).toBe(AVATAR_CONTROLLER_PHASE.FAILED)
+    expect(duplicate.getSnapshot().error).toBe(
+      'Avatar upload is already queued for this artist'
+    )
+    upload.resolve('uploaded')
+  })
+
   test('cancel and reset release local preparation without owning queue FSM', async () => {
     const { controller, runtime } = createHarness()
     await controller.selectFile(file)
@@ -136,5 +170,64 @@ describe('useAvatarController', () => {
 
     controller.reset()
     expect(controller.getSnapshot().phase).toBe(AVATAR_CONTROLLER_PHASE.IDLE)
+  })
+
+  describe('syncAvatar', () => {
+    test('updates currentAvatar when phase is idle', () => {
+      const { controller } = createHarness()
+      expect(controller.getSnapshot().phase).toBe(AVATAR_CONTROLLER_PHASE.IDLE)
+      expect(controller.getSnapshot().currentAvatar).toBeNull()
+
+      controller.syncAvatar({ path: 'avatars/test.png', version: null })
+
+      expect(controller.getSnapshot().currentAvatar).toEqual({
+        path: 'avatars/test.png',
+        version: null
+      })
+    })
+
+    test('updates currentAvatar when phase is uploading', async () => {
+      const { controller } = createHarness()
+      await controller.selectFile(file)
+      expect(controller.getSnapshot().phase).toBe(AVATAR_CONTROLLER_PHASE.READY)
+
+      await controller.enqueue('artist-1')
+      expect(controller.getSnapshot().phase).toBe(
+        AVATAR_CONTROLLER_PHASE.UPLOADING
+      )
+
+      controller.syncAvatar({ path: 'new-avatar.png', version: 'v2' })
+
+      expect(controller.getSnapshot().currentAvatar).toEqual({
+        path: 'new-avatar.png',
+        version: 'v2'
+      })
+    })
+
+    test('does NOT update currentAvatar when phase is ready (preserves prepared preview)', async () => {
+      const { controller } = createHarness()
+      await controller.selectFile(file)
+      expect(controller.getSnapshot().phase).toBe(AVATAR_CONTROLLER_PHASE.READY)
+      expect(controller.getSnapshot().currentAvatar).toBeNull()
+
+      controller.syncAvatar({ path: 'should-not-update.png', version: null })
+
+      // currentAvatar stays null because phase===ready prevents update
+      expect(controller.getSnapshot().currentAvatar).toBeNull()
+    })
+
+    test('accepts null avatar (clears currentAvatar when idle)', () => {
+      const { controller } = createHarness()
+      // Set an initial avatar
+      controller.syncAvatar({ path: 'avatars/initial.png', version: 'v1' })
+      expect(controller.getSnapshot().currentAvatar).toEqual({
+        path: 'avatars/initial.png',
+        version: 'v1'
+      })
+
+      // Clear it
+      controller.syncAvatar(null)
+      expect(controller.getSnapshot().currentAvatar).toBeNull()
+    })
   })
 })
