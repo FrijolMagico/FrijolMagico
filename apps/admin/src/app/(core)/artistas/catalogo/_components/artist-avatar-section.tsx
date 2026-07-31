@@ -141,14 +141,24 @@ export function ArtistAvatarSection({
         <div role='alert' className='text-destructive text-sm'>
           {controller.state.error}
           {controller.state.phase === 'failed' && (
-            <Button
-              type='button'
-              variant='outline'
-              size='sm'
-              onClick={() => void controller.retry()}
-            >
-              Reintentar
-            </Button>
+            <>
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                onClick={() => void controller.retry()}
+              >
+                Reintentar
+              </Button>
+              <Button
+                type='button'
+                variant='ghost'
+                size='sm'
+                onClick={controller.cancel}
+              >
+                Descartar
+              </Button>
+            </>
           )}
         </div>
       )}
