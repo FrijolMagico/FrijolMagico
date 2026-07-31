@@ -1,0 +1,43 @@
+name: Bug Report
+description: Report something broken
+labels: [bug, status:needs-review]
+
+body:
+  - type: checkboxes
+    attributes:
+      label: Pre-flight Checks
+      options:
+        - label: I searched existing issues and this is not a duplicate
+          required: true
+        - label: I understand this issue needs `status:approved` before a PR can be opened
+          required: true
+
+  - type: textarea
+    attributes:
+      label: Description
+      description: What went wrong and what was expected
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Steps to Reproduce
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. See error
+
+  - type: textarea
+    attributes:
+      label: Root Cause / Fix
+      description: Optional — if already identified
+
+  - type: textarea
+    attributes:
+      label: Relevant Files
+      placeholder: path/to/file.ts — description
+
+  - type: textarea
+    attributes:
+      label: Additional Context
+      description: Logs, screenshots, related issues

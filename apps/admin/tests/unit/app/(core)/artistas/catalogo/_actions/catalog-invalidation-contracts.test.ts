@@ -94,4 +94,12 @@ describe('catalog server actions — web invalidation contracts', () => {
     expect(updateCatalogSource).toContain('updateTag(CATALOG_CACHE_TAG)')
     expect(deleteCatalogSource).toContain('updateTag(CATALOG_CACHE_TAG)')
   })
+
+  test('update-catalog.action uses one transaction for catalog and historical avatar activation', () => {
+    const source = readFileSync(UPDATE_CATALOG_PATH, 'utf8')
+
+    expect(source).toContain('db.transaction')
+    expect(source).toContain('AVATAR_CONFLICT')
+    expect(source).toContain('intent === AVATAR_INTENT.HISTORICAL')
+  })
 })

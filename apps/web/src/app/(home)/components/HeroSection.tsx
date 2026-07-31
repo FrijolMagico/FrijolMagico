@@ -4,8 +4,16 @@ import { cn } from '@/utils/cn'
 import Image from 'next/image'
 
 const navItems = [
-  { prefix: 'Historia', name: 'Festivales', href: paths.home.sub.festival.path },
-  { prefix: 'Asociación Cultural', name: 'Nosotros', href: paths.home.sub.about.path },
+  {
+    prefix: 'Historia',
+    name: 'Festivales',
+    href: paths.home.sub.festival.path
+  },
+  {
+    prefix: 'Asociación Cultural',
+    name: 'Nosotros',
+    href: paths.home.sub.about.path
+  },
   { prefix: 'Artistas', name: 'Catálogo', href: paths.home.sub.catalog.path }
 ]
 
@@ -16,9 +24,10 @@ export function HeroSection() {
         <div className='relative w-fit lg:-mr-14'>
           <Image
             src='https://cdn.frijolmagico.cl/asoc/logos/logotipo_color.png'
-            alt=''
+            alt='Logotipo de la Asociación Cultural Frijol Mágico'
             width={1428}
             height={814}
+            priority
             className='mx-auto w-full lg:max-w-2xl'
             loading='eager'
           />

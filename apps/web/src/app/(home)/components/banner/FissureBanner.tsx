@@ -10,14 +10,15 @@ import {
 } from '@/components/fissure/constants'
 import { createFissureMaskStyle } from '@/components/fissure/mask'
 
-const DEFAULT_HEIGHT = 600
+const DEFAULT_LANDSCAPE_HEIGHT = 640
+const DEFAULT_COMPACT_HEIGHT = 840
 
 interface FissureBannerProps {
   children?: ReactNode
   className?: string
   contentClassName?: string
-  height?: number
-  mobileHeight?: number
+  landscapeHeight?: number
+  compactHeight?: number
   palette?: string
 }
 
@@ -62,8 +63,13 @@ function FissureBannerLayout({
   className,
   contentClassName,
   height,
-  palette
-}: FissureBannerProps & { height: number; palette: string }) {
+  palette,
+  aspectSquare
+}: FissureBannerProps & {
+  height: number
+  palette: string
+  aspectSquare?: boolean
+}) {
   const baseId = useId().replace(/:/g, '')
   const bottomMaskId = `${baseId}-bottom-mask`
   const bottomBlurId = `${baseId}-bottom-blur`
@@ -74,12 +80,19 @@ function FissureBannerLayout({
 
   return (
     <header
-      className={cn('relative w-full overflow-hidden', className)}
-      style={{ height }}
+      className={cn(
+        'relative w-full overflow-hidden',
+        aspectSquare && 'aspect-square',
+        className
+      )}
+      style={aspectSquare ? undefined : { height }}
     >
       <div
-        className='relative left-1/2 w-screen min-w-7xl -translate-x-1/2'
-        style={{ height }}
+        className={cn(
+          'relative left-1/2 w-screen min-w-7xl -translate-x-1/2',
+          aspectSquare && 'h-full'
+        )}
+        style={aspectSquare ? undefined : { height }}
       >
         <div
           className='bg-background absolute inset-0 overflow-hidden'
@@ -129,16 +142,16 @@ export function FissureBanner({
   children,
   className,
   contentClassName,
-  height = DEFAULT_HEIGHT,
-  mobileHeight,
+  landscapeHeight = DEFAULT_LANDSCAPE_HEIGHT,
+  compactHeight,
   palette = 'base'
 }: FissureBannerProps) {
-  if (mobileHeight === undefined) {
+  if (compactHeight === undefined) {
     return (
       <FissureBannerLayout
         className={className}
         contentClassName={contentClassName}
-        height={height}
+        height={landscapeHeight}
         palette={palette}
       >
         {children}
@@ -148,21 +161,22 @@ export function FissureBanner({
 
   return (
     <>
-      <div className='hidden md:block'>
+      <div className='max-[820px]:hidden portrait:hidden'>
         <FissureBannerLayout
           className={className}
           contentClassName={contentClassName}
-          height={height}
+          height={landscapeHeight}
           palette={palette}
         >
           {children}
         </FissureBannerLayout>
       </div>
-      <div className='md:hidden'>
+      <div className='hidden max-[820px]:block portrait:block'>
         <FissureBannerLayout
+          aspectSquare
           className={className}
           contentClassName={contentClassName}
-          height={mobileHeight}
+          height={compactHeight}
           palette={palette}
         >
           {children}
