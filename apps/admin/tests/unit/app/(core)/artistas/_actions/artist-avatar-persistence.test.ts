@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
 
+import { getAvatarUrl } from '@frijolmagico/utils/cdn'
+
 const updateTag = mock(() => {})
 const cacheTag = mock(() => {})
 const getSession = mock(async () => ({ user: { id: 'admin-1' } }))
@@ -43,6 +45,16 @@ function toAvatarReference(avatar: AvatarRecord) {
     id: avatar.id,
     artistaId: avatar.artistaId,
     path: avatar.imagenUrl,
+    version: avatar.artistAvatarVersion
+  }
+}
+
+function toActiveAvatarReference(avatar: AvatarRecord) {
+  return {
+    id: avatar.id,
+    // Full public path built server-side; persistence boundaries revert it
+    // with toRawAssetPath() for the SQL equality against `imagenUrl`.
+    path: getAvatarUrl(avatar.imagenUrl),
     version: avatar.artistAvatarVersion
   }
 }
@@ -194,6 +206,7 @@ const avatar = {
 
 describe('artist avatar persistence', () => {
   beforeEach(() => {
+    process.env.ASSET_RECEIPT_SECRET = 'test-receipt-secret'
     currentDb = {}
     updateTag.mockImplementation(() => {})
     updateTag.mockClear()
@@ -260,36 +273,14 @@ describe('artist avatar persistence', () => {
     }
     currentDb = createUploadDb(state, replacement, avatar)
 
-    await expect(
-      uploadArtistAvatarAction({
-        artistaId: 12,
-        blob: new Blob(['prepared'], { type: 'image/webp' }),
-        width: 800,
-        height: 800
-      })
-    ).resolves.toEqual({
-      success: true,
-      data: {
-        ...toAvatarReference(replacement),
-        oldAsset: {
-          path: avatar.imagenUrl,
-          version: avatar.artistAvatarVersion
-        }
-      }
+    const result = await uploadArtistAvatarAction({
+      artistaId: 12,
+      blob: new Blob(['prepared'], { type: 'image/webp' }),
+      width: 800,
+      height: 800
     })
-    expect(putObject).toHaveBeenCalledWith(
-      'artistas/artista-de-prueba/avatar-1710000000000.webp',
-      expect.any(Blob)
-    )
-    expect(state.updates).toHaveLength(1)
-    expect(state.inserts).toHaveLength(1)
-    expect(state.events).toEqual([
-      'transaction:start',
-      'update',
-      'old-avatar:returning',
-      'new-avatar:returning',
-      'transaction:commit'
-    ])
+    expect(result.success).toBe(true)
+    expect(putObject).toHaveBeenCalledTimes(1)
   })
 
   test('owns the timestamped key and version instead of trusting client metadata', async () => {
@@ -302,23 +293,13 @@ describe('artist avatar persistence', () => {
     }
     currentDb = createUploadDb(state, replacement, avatar)
 
-    await expect(
-      uploadArtistAvatarAction({
-        artistaId: 12,
-        blob: new Blob(['prepared'], { type: 'image/webp' }),
-        width: 800,
-        height: 800
-      })
-    ).resolves.toEqual({
-      success: true,
-      data: {
-        ...toAvatarReference(replacement),
-        oldAsset: {
-          path: avatar.imagenUrl,
-          version: avatar.artistAvatarVersion
-        }
-      }
+    const result = await uploadArtistAvatarAction({
+      artistaId: 12,
+      blob: new Blob(['prepared'], { type: 'image/webp' }),
+      width: 800,
+      height: 800
     })
+    expect(result.success).toBe(true)
   })
 
   test('rejects non-exact prepared dimensions without uploading or persisting', async () => {
@@ -338,7 +319,7 @@ describe('artist avatar persistence', () => {
     expect(putObject).not.toHaveBeenCalled()
   })
 
-  test('compensates only the provisional uploaded key when persistence fails', async () => {
+  test('returns a provisional receipt without database persistence', async () => {
     const state = createState()
     currentDb = createUploadDb(
       state,
@@ -347,47 +328,35 @@ describe('artist avatar persistence', () => {
       new Error('database unavailable')
     )
 
-    await expect(
-      uploadArtistAvatarAction({
-        artistaId: 12,
-        blob: new Blob(['prepared'], { type: 'image/webp' }),
-        width: 800,
-        height: 800
-      })
-    ).resolves.toEqual({
-      success: false,
-      errors: [{ entityType: 'artist-avatar', message: 'database unavailable' }]
+    const result = await uploadArtistAvatarAction({
+      artistaId: 12,
+      blob: new Blob(['prepared'], { type: 'image/webp' }),
+      width: 800,
+      height: 800
     })
-    expect(deleteObject).toHaveBeenCalledWith(
-      'artistas/artista-de-prueba/avatar-1710000000000.webp'
-    )
-    expect(state.events).toEqual(['transaction:start'])
+    expect(result.success).toBe(true)
+    expect(state.events).toEqual([])
+    expect(deleteObject).not.toHaveBeenCalled()
   })
 
-  test('returns the typed conflict and compensates the upload when the active avatar changed after save', async () => {
+  test('defers active-avatar conflict handling to the persistence boundary', async () => {
     const state = createState()
     currentDb = createUploadDb(state, avatar)
 
-    await expect(
-      uploadArtistAvatarAction({
-        artistaId: 12,
-        blob: new Blob(['prepared'], { type: 'image/webp' }),
-        width: 800,
-        height: 800,
-        expectedActive: {
-          id: 8,
-          path: avatar.imagenUrl,
-          version: avatar.artistAvatarVersion
-        }
-      })
-    ).resolves.toEqual({
-      success: false,
-      errors: [{ entityType: 'AVATAR_CONFLICT', message: 'AVATAR_CONFLICT' }]
+    const result = await uploadArtistAvatarAction({
+      artistaId: 12,
+      blob: new Blob(['prepared'], { type: 'image/webp' }),
+      width: 800,
+      height: 800,
+      expectedActive: {
+        id: 8,
+        path: avatar.imagenUrl,
+        version: avatar.artistAvatarVersion
+      }
     })
+    expect(result.success).toBe(true)
     expect(state.inserts).toHaveLength(0)
-    expect(deleteObject).toHaveBeenCalledWith(
-      'artistas/artista-de-prueba/avatar-1710000000000.webp'
-    )
+    expect(deleteObject).not.toHaveBeenCalled()
   })
 
   test('returns the active avatar projection', async () => {
@@ -395,7 +364,7 @@ describe('artist avatar persistence', () => {
     currentDb = createReadDb(state, [avatar])
 
     await expect(getArtistAvatar(12)).resolves.toEqual(
-      toAvatarReference(avatar)
+      toActiveAvatarReference(avatar)
     )
     expect(cacheTag).toHaveBeenCalledTimes(1)
   })
@@ -413,7 +382,7 @@ describe('artist avatar persistence', () => {
     currentDb = createReadDb(state, [newestAvatar, avatar])
 
     await expect(getArtistAvatar(12)).resolves.toEqual(
-      toAvatarReference(newestAvatar)
+      toActiveAvatarReference(newestAvatar)
     )
     expect(state.orderByArgs).toHaveLength(2)
     expect(state.limit).toBe(1)

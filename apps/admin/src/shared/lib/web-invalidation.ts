@@ -47,6 +47,15 @@ interface RevalidateWebCacheOptions {
   path?: string
 }
 
+interface WebInvalidationLogger {
+  error: (message: string, error: unknown) => void
+}
+
+interface BestEffortWebInvalidationDependencies {
+  revalidate?: (options: RevalidateWebCacheOptions) => Promise<unknown>
+  logger?: WebInvalidationLogger
+}
+
 export async function revalidateWebCache(
   options: RevalidateWebCacheOptions = {}
 ): Promise<WebInvalidationResult> {
@@ -88,4 +97,18 @@ export async function revalidateWebCache(
   }
 
   return result
+}
+
+export async function revalidateWebCacheBestEffort(
+  options: RevalidateWebCacheOptions,
+  dependencies: BestEffortWebInvalidationDependencies = {}
+): Promise<void> {
+  const revalidate = dependencies.revalidate ?? revalidateWebCache
+  const logger = dependencies.logger ?? console
+
+  try {
+    await revalidate(options)
+  } catch (error) {
+    logger.error('Web cache invalidation failed', error)
+  }
 }

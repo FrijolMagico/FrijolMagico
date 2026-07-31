@@ -79,12 +79,16 @@ interface AvatarController {
   selectFile: (file: File) => Promise<PreparationResult>
   enqueue: (
     entityId: string | number,
-    expectedActive?: ExpectedActiveAvatar | null
+    expectedActive?: ExpectedActiveAvatar | AvatarActivationInput | null
   ) => Promise<void>
   cancel: () => void
   retry: () => Promise<void>
   reset: () => void
   syncAvatar: (avatar: ManagedAssetReference | null) => void
+}
+
+export interface AvatarActivationInput {
+  activation: { catalogId: number; requestedActive: boolean }
 }
 
 export function createAvatarController(

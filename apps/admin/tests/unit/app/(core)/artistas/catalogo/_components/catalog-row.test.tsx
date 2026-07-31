@@ -11,9 +11,7 @@ import { act, createElement } from 'react'
 import { createRoot } from 'react-dom/client'
 
 // ── Mock the server action ───────────────────────────────────────────
-const mockUpdateCatalogFieldAction = mock(
-  async () => ({ success: true })
-)
+const mockUpdateCatalogFieldAction = mock(async () => ({ success: true }))
 
 mock.module(
   '@/core/artistas/catalogo/_actions/update-catalog-field.action',
@@ -25,6 +23,17 @@ mock.module(
 // ── Mock the Zustand store ───────────────────────────────────────────
 mock.module('@/core/artistas/catalogo/_store/catalog-dialog-store', () => ({
   useCatalogDialog: () => mock(() => {})
+}))
+
+mock.module(
+  '@/core/artistas/catalogo/_hooks/use-catalog-avatar-completion-refresh',
+  () => ({ useCatalogAvatarCompletionRefresh: () => {} })
+)
+
+let hasRecentCompletion = false
+mock.module('@/core/artistas/catalogo/_lib/catalog-avatar-queue-state', () => ({
+  useCatalogAvatarPending: () => false,
+  useCatalogAvatarRecentCompletion: () => hasRecentCompletion
 }))
 
 // ── Mock sonner ──────────────────────────────────────────────────────
@@ -39,8 +48,18 @@ mock.module('sonner', () => ({
 mock.module('@/shared/components/ui/tooltip', () => ({
   Tooltip: ({ children }: { children: unknown }) =>
     createElement('div', { 'data-testid': 'tooltip' }, children),
-  TooltipTrigger: ({ children }: { children: unknown }) =>
-    createElement('div', { 'data-testid': 'tooltip-trigger' }, children),
+  TooltipTrigger: ({
+    children,
+    render
+  }: {
+    children?: unknown
+    render?: unknown
+  }) =>
+    createElement(
+      'div',
+      { 'data-testid': 'tooltip-trigger' },
+      render ?? children
+    ),
   TooltipContent: ({ children }: { children: unknown }) =>
     createElement('div', { 'data-testid': 'tooltip-content' }, children),
   TooltipProvider: ({ children }: { children: unknown }) =>
@@ -77,6 +96,8 @@ mock.module('@tabler/icons-react', () => ({
     createElement('svg', { ...props, 'data-icon': 'star' }),
   IconCheck: (props: Record<string, unknown>) =>
     createElement('svg', { ...props, 'data-icon': 'check' }),
+  IconClock: (props: Record<string, unknown>) =>
+    createElement('svg', { ...props, 'data-icon': 'clock' }),
   IconX: (props: Record<string, unknown>) =>
     createElement('svg', { ...props, 'data-icon': 'x' }),
   IconDotsVertical: () => null,
@@ -139,9 +160,7 @@ function nodesByTag(root: TestNode, tagName: string): TestNode[] {
   ])
 }
 
-function reactProps(
-  node: TestNode
-): Record<string, (event?: unknown) => void> {
+function reactProps(node: TestNode): Record<string, (event?: unknown) => void> {
   const key = Object.getOwnPropertyNames(node).find((name) =>
     name.startsWith('__reactProps$')
   )
@@ -187,12 +206,10 @@ class MockImage {
 globalThis.Image = MockImage as unknown as typeof Image
 
 // ── Components ──────────────────────────────────────────────────────
-const { ArtistAvatar } = await import(
-  '@/core/artistas/catalogo/_components/artist-avatar'
-)
-const { CatalogRow } = await import(
-  '@/core/artistas/catalogo/_components/catalog-row'
-)
+const { ArtistAvatar } =
+  await import('@/core/artistas/catalogo/_components/artist-avatar')
+const { CatalogRow } =
+  await import('@/core/artistas/catalogo/_components/catalog-row')
 
 // ── Fixtures ─────────────────────────────────────────────────────────
 function createMockCatalog(overrides: Record<string, unknown> = {}) {
@@ -335,6 +352,77 @@ describe('CatalogRow — Avatar Business Rule', () => {
     expect(checkIcons.length).toBeGreaterThan(0)
   })
 
+  test('4b. Exact pending avatar: locks only Active while featured remains editable', async () => {
+    const catalog = createMockCatalog({
+      activeAvatar: {
+        id: 1,
+        path: 'http://cdn.test/avatar.webp',
+        version: 'v1'
+      }
+    })
+    await act(async () => {
+      root?.render(
+        createElement(CatalogRow, {
+          catalog: catalog as never,
+          hasPendingAvatar: true,
+          onDelete: mock(() => {}),
+          onRestore: mock(() => {})
+        })
+      )
+    })
+
+    const switches = nodesByAttribute(container, 'data-slot', 'switch')
+    expect(switches).toHaveLength(2)
+    expect(switches[0]?.attributes.has('data-disabled')).toBe(false)
+    expect(getActivoSwitch(container)?.attributes.get('data-disabled')).toBe('')
+  })
+
+  test('4c. Pending avatar: shows a waiting clock instead of a missing-avatar error', async () => {
+    const catalog = createMockCatalog({ activeAvatar: null })
+    await act(async () => {
+      root?.render(
+        createElement(CatalogRow, {
+          catalog: catalog as never,
+          hasPendingAvatar: true,
+          onDelete: mock(() => {}),
+          onRestore: mock(() => {})
+        })
+      )
+    })
+
+    expect(nodesByAttribute(container, 'data-icon', 'clock')).toHaveLength(1)
+    expect(
+      nodesByAttribute(container, 'data-icon', 'alert-triangle')
+    ).toHaveLength(0)
+    expect(container.textContent).toContain('El avatar se está preparando')
+  })
+
+  test('4d. Missing avatar without pending work: retains the missing-avatar error', async () => {
+    const catalog = createMockCatalog({ activeAvatar: null })
+    await renderCatalogRow(catalog)
+
+    expect(nodesByAttribute(container, 'data-icon', 'clock')).toHaveLength(0)
+    expect(
+      nodesByAttribute(container, 'data-icon', 'alert-triangle')
+    ).toHaveLength(1)
+  })
+
+  test('4e. Completed stale props keep the warning clock until a fresh avatar wins', async () => {
+    hasRecentCompletion = true
+    await renderCatalogRow(createMockCatalog({ activeAvatar: null }))
+    expect(nodesByAttribute(container, 'data-icon', 'clock')).toHaveLength(1)
+    expect(nodesByAttribute(container, 'data-icon', 'alert-triangle')).toHaveLength(0)
+
+    await renderCatalogRow(
+      createMockCatalog({
+        activeAvatar: { id: 1, path: 'avatar.webp', version: 'v1' }
+      })
+    )
+    expect(nodesByAttribute(container, 'data-icon', 'alert-triangle')).toHaveLength(0)
+    expect(nodesByAttribute(container, 'data-testid', 'tooltip-content')).toHaveLength(0)
+    hasRecentCompletion = false
+  })
+
   test('5. Missing avatar: handleToggleActivo is guarded', async () => {
     const catalog = createMockCatalog({ avatarUrl: null })
     await renderCatalogRow(catalog)
@@ -396,7 +484,11 @@ describe('CatalogRow — Avatar Business Rule', () => {
     await renderCatalogRow(catalog)
 
     // No alert icon
-    const alertIcons = nodesByAttribute(container, 'data-icon', 'alert-triangle')
+    const alertIcons = nodesByAttribute(
+      container,
+      'data-icon',
+      'alert-triangle'
+    )
     expect(alertIcons.length).toBe(0)
 
     // Tooltip content should NOT be present in the tree

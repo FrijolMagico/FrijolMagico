@@ -9,9 +9,18 @@ import { cn } from '@/shared/lib/utils'
 import { ActionMenuButton } from '@/shared/components/action-menu-button'
 import { updateCatalogFieldAction } from '../_actions/update-catalog-field.action'
 import { useCatalogDialog } from '../_store/catalog-dialog-store'
+import {
+  useCatalogAvatarPending,
+  useCatalogAvatarRecentCompletion
+} from '../_lib/catalog-avatar-queue-state'
+import { useCatalogAvatarCompletionRefresh } from '../_hooks/use-catalog-avatar-completion-refresh'
 import type { CatalogListItem } from '../_types/catalog-list-item'
 import { toast } from 'sonner'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/shared/components/ui/tooltip'
 
 interface CatalogRowProps {
   catalog: CatalogListItem
@@ -20,19 +29,28 @@ interface CatalogRowProps {
   onDelete: () => void
   onRestore: () => void
   isPending?: boolean
+  hasPendingAvatar?: boolean
 }
 
 export function CatalogRow({
   catalog,
   isDeletedView = false,
   onDelete,
-  onRestore
+  onRestore,
+  hasPendingAvatar: pendingAvatarOverride
 }: CatalogRowProps) {
   const openUpdateCatalogDialog = useCatalogDialog(
     (s) => s.openUpdateCatalogDialog
   )
   const artist = catalog.artist
   const hasAvatar = catalog.activeAvatar != null
+  const observedPendingAvatar = useCatalogAvatarPending(artist.id)
+  const hasPendingAvatar = pendingAvatarOverride ?? observedPendingAvatar
+  const hasRecentCompletion = useCatalogAvatarRecentCompletion(
+    artist.id,
+    hasAvatar
+  )
+  useCatalogAvatarCompletionRefresh(artist.id)
 
   const [optimisticFields, setOptimisticFields] = useOptimistic({
     activo: catalog.activo,
@@ -88,13 +106,19 @@ export function CatalogRow({
                     src={catalog.activeAvatar?.path ?? null}
                     alt={artist.pseudonimo}
                     size='sm'
-                    status='missing'
+                    status={
+                      hasRecentCompletion || hasPendingAvatar
+                        ? 'pending'
+                        : 'missing'
+                    }
                   />
                 </div>
               }
             />
             <TooltipContent side='right'>
-              Debe subir un avatar antes de activar la entrada
+              {hasPendingAvatar
+                ? 'El avatar se está preparando'
+                : 'Debe subir un avatar antes de activar la entrada'}
             </TooltipContent>
           </Tooltip>
         )}
@@ -135,11 +159,14 @@ export function CatalogRow({
           </TableCell>
 
           <TableCell>
-            <div className='flex items-center gap-2' data-testid='switch-activo-cell'>
+            <div
+              className='flex items-center gap-2'
+              data-testid='switch-activo-cell'
+            >
               <Switch
                 checked={displayActive}
                 onCheckedChange={handleToggleActivo}
-                disabled={!hasAvatar}
+                disabled={!hasAvatar || hasPendingAvatar}
               />
               {displayActive ? (
                 <IconCheck className='h-4 w-4 text-green-600 dark:text-green-500' />
