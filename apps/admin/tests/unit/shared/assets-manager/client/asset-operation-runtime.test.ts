@@ -153,6 +153,87 @@ const settled = (queue: ReturnType<typeof createAssetQueue>, jobId: string) =>
   )
 
 describe('asset operation runtime', () => {
+  test('best-effort discards an unconfirmed upload when it is cancelled', async () => {
+    const { runtime, queue } = createHarness()
+    const discarded: string[] = []
+    const persistence = deferred<{ persisted: string; cleanup: null }>()
+    runtime.register(ASSET_TARGET.ARTIST_AVATAR, {
+      ...policy([]),
+      persist: () => persistence.promise,
+      discardUpload: async ({ upload }) => {
+        discarded.push(upload)
+      }
+    })
+
+    const job = runtime.enqueue(
+      ASSET_TARGET.ARTIST_AVATAR,
+      'discarded-artist',
+      preparedAsset
+    )
+    await waitUntil(
+      () => queue.getSnapshot().jobs[0]?.status === 'persisting',
+      queue.subscribe
+    )
+
+    runtime.cancel(job.jobId)
+    await Bun.sleep(0)
+
+    expect(discarded).toEqual(['upload'])
+    expect(queue.getSnapshot().jobs[0]?.status).toBe('cancelled')
+  })
+
+  test('best-effort discards an unconfirmed upload when the same identity is replaced', async () => {
+    const { runtime, queue } = createHarness()
+    const discarded: string[] = []
+    const persistence = deferred<{ persisted: string; cleanup: null }>()
+    runtime.register(ASSET_TARGET.ARTIST_AVATAR, {
+      ...policy([]),
+      persist: () => persistence.promise,
+      discardUpload: async ({ upload }) => {
+        discarded.push(upload)
+      }
+    })
+
+    const original = runtime.enqueue(
+      ASSET_TARGET.ARTIST_AVATAR,
+      'replacement-artist',
+      preparedAsset
+    )
+    await waitUntil(
+      () => queue.getSnapshot().jobs[0]?.status === 'persisting',
+      queue.subscribe
+    )
+
+    runtime.enqueue(ASSET_TARGET.ARTIST_AVATAR, 'replacement-artist', {
+      ...preparedAsset,
+      width: 900
+    })
+    await Bun.sleep(0)
+
+    expect(discarded).toEqual(['upload'])
+    expect(queue.getSnapshot().jobs.find((job) => job.jobId === original.jobId)?.status).toBe('cancelled')
+  })
+
+  test('does not impose provisional discard behavior on a non-avatar policy', async () => {
+    const { runtime, queue } = createHarness()
+    const events: string[] = []
+    runtime.register(ASSET_TARGET.EDITION_POSTER, policy(events))
+
+    const job = runtime.enqueue(
+      ASSET_TARGET.EDITION_POSTER,
+      'edition-1',
+      preparedAsset
+    )
+    await settled(queue, job.jobId)
+
+    expect(queue.getSnapshot().jobs[0]?.status).toBe('completed')
+    expect(events).toEqual([
+      'upload:edition-poster:4',
+      'persist:upload',
+      'cleanup:cleanup'
+    ])
+  })
+
   test('passes prepared assets through upload, persists, then cleans once after completion', async () => {
     const { runtime, queue } = createHarness()
     const events: string[] = []
@@ -323,7 +404,10 @@ describe('asset operation runtime', () => {
       preparedAsset
     )
 
-    await Promise.all([settled(queue, avatar.jobId), settled(queue, poster.jobId)])
+    await Promise.all([
+      settled(queue, avatar.jobId),
+      settled(queue, poster.jobId)
+    ])
     expect(queue.getSnapshot().jobs.map((job) => job.status)).toEqual([
       'completed',
       'completed'

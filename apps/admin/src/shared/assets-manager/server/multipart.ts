@@ -14,6 +14,8 @@ export interface AssetUploadPayload {
   preparedWidth: number
   preparedHeight: number
   expectedActive: ExpectedActiveAvatar | null | undefined
+  catalogId?: number
+  requestedActive?: boolean
 }
 
 export interface AssetReplacementPayload extends AssetUploadPayload {
@@ -110,6 +112,8 @@ export async function parseAssetUpload(
     )
   }
   const preparedHeight = parsePositiveInt(preparedHeightRaw, 'preparedHeight')
+  const catalogIdRaw = formData.get('catalogId')
+  const requestedActiveRaw = formData.get('requestedActive')
 
   const payload: AssetUploadPayload = {
     target,
@@ -118,6 +122,16 @@ export async function parseAssetUpload(
     mimeType: 'image/webp',
     preparedWidth,
     preparedHeight,
+    catalogId:
+      typeof catalogIdRaw === 'string'
+        ? parsePositiveInt(catalogIdRaw, 'catalogId')
+        : undefined,
+    requestedActive:
+      requestedActiveRaw === 'true'
+        ? true
+        : requestedActiveRaw === 'false'
+          ? false
+          : undefined,
     expectedActive: parseExpectedActive(formData)
   }
 
@@ -152,7 +166,12 @@ function parseExpectedActive(
   const path = formData.get('expectedActivePath')
   const version = formData.get('expectedActiveVersion')
   const expectedNone = formData.get('expectedActiveNone')
-  if (expectedNone === 'true' && id === null && path === null && version === null)
+  if (
+    expectedNone === 'true' &&
+    id === null &&
+    path === null &&
+    version === null
+  )
     return null
   if (id === null && path === null && version === null) return undefined
   if (

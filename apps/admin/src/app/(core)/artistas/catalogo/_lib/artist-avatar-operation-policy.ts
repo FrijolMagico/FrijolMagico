@@ -1,5 +1,6 @@
 import type { UploadArtistAvatarData } from '../../_actions/upload-artist-avatar.action'
 import type { ExpectedActiveAvatar } from './avatar-history-contracts'
+import type { AvatarActivationInput } from '../_hooks/use-avatar-controller'
 import type {
   AssetEnqueueAdmissionInput,
   AssetOperationContext,
@@ -18,6 +19,10 @@ interface AssetFetch {
 
 interface ArtistAvatarPolicyDependencies {
   fetch: AssetFetch
+}
+
+export interface ArtistAvatarUploadResult {
+  receipt: string
 }
 
 function expectedActiveFromContext(
@@ -59,6 +64,16 @@ function isPersistedAvatar(value: unknown): value is UploadArtistAvatarData {
   )
 }
 
+function isUploadResult(value: unknown): value is ArtistAvatarUploadResult {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'receipt' in value &&
+    typeof value.receipt === 'string' &&
+    value.receipt.length > 0
+  )
+}
+
 const TERMINAL_QUEUE_STATUSES: ReadonlySet<AssetQueueStatus> = new Set([
   ASSET_QUEUE_STATUS.COMPLETED,
   ASSET_QUEUE_STATUS.FAILED,
@@ -83,11 +98,23 @@ export function admitArtistAvatarEnqueue({
 
 export function createArtistAvatarOperationPolicy(
   dependencies: ArtistAvatarPolicyDependencies
-): AssetOperationPolicy<UploadArtistAvatarData, UploadArtistAvatarData, null> {
+): AssetOperationPolicy<
+  ArtistAvatarUploadResult,
+  UploadArtistAvatarData,
+  null
+> {
   return {
     admitEnqueue: admitArtistAvatarEnqueue,
     async upload({ context, preparedAsset }) {
-      const expectedActive = expectedActiveFromContext(context)
+      const input = context.input as
+        | ExpectedActiveAvatar
+        | AvatarActivationInput
+        | null
+        | undefined
+      const expectedActive =
+        input && 'activation' in input
+          ? undefined
+          : expectedActiveFromContext(context)
       const formData = new FormData()
       formData.append('assetTarget', ASSET_TARGET.ARTIST_AVATAR)
       formData.append('entityId', context.entityId)
@@ -97,14 +124,15 @@ export function createArtistAvatarOperationPolicy(
       if (expectedActive === null) {
         formData.append('expectedActiveNone', 'true')
       } else if (expectedActive) {
-        formData.append(
-          'expectedActiveId',
-          String(expectedActive.id)
-        )
+        formData.append('expectedActiveId', String(expectedActive.id))
         formData.append('expectedActivePath', expectedActive.path)
+        formData.append('expectedActiveVersion', expectedActive.version ?? '')
+      }
+      if (input && 'activation' in input) {
+        formData.append('catalogId', String(input.activation.catalogId))
         formData.append(
-          'expectedActiveVersion',
-          expectedActive.version ?? ''
+          'requestedActive',
+          String(input.activation.requestedActive)
         )
       }
 
@@ -126,14 +154,43 @@ export function createArtistAvatarOperationPolicy(
       }
 
       const result: unknown = await response.json()
-      if (!isPersistedAvatar(result))
+      if (!isUploadResult(result))
         throw new Error('Invalid asset upload response')
       return result
     },
-    async persist({ upload }) {
-      return { persisted: upload, cleanup: null }
+    async persist({ context, upload }) {
+      const response = await dependencies.fetch('/api/assets/persist', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ receipt: upload.receipt }),
+        signal: context.signal
+      })
+      if (!response.ok) {
+        const error: unknown = await response.json().catch(() => null)
+        if (
+          typeof error === 'object' &&
+          error !== null &&
+          'error' in error &&
+          (error.error === 'AVATAR_CONFLICT' ||
+            error.error === 'INVALID_RECEIPT')
+        )
+          throw new Error(error.error)
+        throw new Error('Asset persistence failed')
+      }
+      const persisted: unknown = await response.json()
+      if (!isPersistedAvatar(persisted))
+        throw new Error('Invalid asset persistence response')
+      return { persisted, cleanup: null }
     },
-    async cleanup() {}
+    async cleanup() {},
+    async discardUpload({ context, upload }) {
+      await dependencies.fetch('/api/assets/discard', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ receipt: upload.receipt }),
+        signal: context.signal
+      })
+    }
   }
 }
 

@@ -17,12 +17,34 @@ import {
   catalogInsertSchema,
   type CatalogInsertInput
 } from '../_schemas/catalog.schema'
-import { revalidateWebCache } from '@/shared/lib/web-invalidation'
+import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
+
+interface CreatedCatalog {
+  catalogId: number
+  artistId: number
+  requestedActive: boolean
+}
+
+interface CreatedCatalogRow {
+  id: number
+  artistaId: number
+}
+
+function isCreatedCatalogRow(value: unknown): value is CreatedCatalogRow {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'id' in value &&
+    typeof value.id === 'number' &&
+    'artistaId' in value &&
+    typeof value.artistaId === 'number'
+  )
+}
 
 export async function createCatalogAction(
-  _prevState: ActionState<{ id: number }>,
+  _prevState: ActionState<CreatedCatalog>,
   data: CatalogCreateFormInput
-): Promise<ActionState<{ id: number }>> {
+): Promise<ActionState<CreatedCatalog>> {
   try {
     await requireAuth()
 
@@ -52,28 +74,54 @@ export async function createCatalogAction(
 
     const { artistaId, ...catalog } = parsed.data
 
-    await db.insert(artist.catalogArtist).values({
-      ...catalog,
-      artistaId
-    })
+    const [createdCatalog] = await db
+      .insert(artist.catalogArtist)
+      .values({ ...catalog, artistaId, activo: false })
+      .returning({
+        id: artist.catalogArtist.id,
+        artistaId: artist.catalogArtist.artistaId
+      })
+
+    if (!isCreatedCatalogRow(createdCatalog)) {
+      return {
+        success: false,
+        errors: [
+          {
+            entityType: 'catalogo',
+            message: 'No se pudo confirmar la creación del catálogo'
+          }
+        ]
+      }
+    }
 
     // NOTE: Soft-deleted catalog rows still rely on the current unique `artistaId`
     // constraint. This change does not introduce restore-or-reinsert semantics.
 
-    updateTag(CATALOG_CACHE_TAG)
-    revalidateWebCache({
+    try {
+      updateTag(CATALOG_CACHE_TAG)
+    } catch (error) {
+      console.error('Catalog cache invalidation failed', error)
+    }
+    void revalidateWebCacheBestEffort({
       tag: CATALOG_CACHE_TAG,
       path: '/catalogo'
     })
 
     if ('destacado' in parsed.data && parsed.data.destacado) {
-      void revalidateWebCache({
+      void revalidateWebCacheBestEffort({
         tag: FEATURED_ARTISTS_CACHE_TAG,
         path: '/'
       })
     }
 
-    return { success: true }
+    return {
+      success: true,
+      data: {
+        catalogId: createdCatalog.id,
+        artistId: createdCatalog.artistaId,
+        requestedActive: parsed.data.activo ?? false
+      }
+    }
   } catch (error) {
     return {
       success: false,
