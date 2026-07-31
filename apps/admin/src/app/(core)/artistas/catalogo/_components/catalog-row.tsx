@@ -11,6 +11,7 @@ import { updateCatalogFieldAction } from '../_actions/update-catalog-field.actio
 import { useCatalogDialog } from '../_store/catalog-dialog-store'
 import type { CatalogListItem } from '../_types/catalog-list-item'
 import { toast } from 'sonner'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
 
 interface CatalogRowProps {
   catalog: CatalogListItem
@@ -31,13 +32,17 @@ export function CatalogRow({
     (s) => s.openUpdateCatalogDialog
   )
   const artist = catalog.artist
+  const hasAvatar = catalog.avatarUrl != null
 
   const [optimisticFields, setOptimisticFields] = useOptimistic({
     activo: catalog.activo,
     destacado: catalog.destacado
   })
 
+  const displayActive = hasAvatar && optimisticFields.activo
+
   const handleToggleActivo = (checked: boolean) => {
+    if (!hasAvatar) return
     startTransition(async () => {
       setOptimisticFields((prev) => ({ ...prev, activo: checked }))
       try {
@@ -68,11 +73,31 @@ export function CatalogRow({
       })}
     >
       <TableCell className='w-12'>
-        <ArtistAvatar
-          src={catalog.avatarUrl}
-          alt={artist.pseudonimo}
-          size='sm'
-        />
+        {hasAvatar ? (
+          <ArtistAvatar
+            src={catalog.avatarUrl}
+            alt={artist.pseudonimo}
+            size='sm'
+          />
+        ) : (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <div>
+                  <ArtistAvatar
+                    src={catalog.avatarUrl}
+                    alt={artist.pseudonimo}
+                    size='sm'
+                    status='missing'
+                  />
+                </div>
+              }
+            />
+            <TooltipContent side='right'>
+              Debe subir un avatar antes de activar la entrada
+            </TooltipContent>
+          </Tooltip>
+        )}
       </TableCell>
 
       <TableCell className='flex-1'>
@@ -110,12 +135,13 @@ export function CatalogRow({
           </TableCell>
 
           <TableCell>
-            <div className='flex items-center gap-2'>
+            <div className='flex items-center gap-2' data-testid='switch-activo-cell'>
               <Switch
-                checked={optimisticFields.activo}
+                checked={displayActive}
                 onCheckedChange={handleToggleActivo}
+                disabled={!hasAvatar}
               />
-              {optimisticFields.activo ? (
+              {displayActive ? (
                 <IconCheck className='h-4 w-4 text-green-600 dark:text-green-500' />
               ) : (
                 <IconX className='text-destructive h-4 w-4' />

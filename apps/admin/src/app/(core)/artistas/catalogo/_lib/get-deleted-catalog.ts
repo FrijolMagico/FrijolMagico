@@ -5,8 +5,8 @@ import { and, asc, eq, inArray, isNotNull } from 'drizzle-orm'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { isNotDeleted } from '@frijolmagico/database/filters'
+import { getAvatarUrl } from '@frijolmagico/utils/cdn'
 
-import { getAvatarUrl } from '@/shared/lib/cdn'
 import { parseRRSS } from '@/shared/lib/rrss'
 
 import { ARTIST_CACHE_TAG, CATALOG_CACHE_TAG } from '@frijolmagico/cache-tags'

@@ -1,0 +1,547 @@
+name: Publish Release
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: publish-release-main
+  cancel-in-progress: false
+
+jobs:
+  publish-release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      # ----------------------------------------------------------------------
+      # 1. Generate a temporary GitHub App token
+      # ----------------------------------------------------------------------
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-issues: write
+          permission-pull-requests: write
+
+      # ----------------------------------------------------------------------
+      # 2. Check out the exact commit pushed to main
+      # ----------------------------------------------------------------------
+      - name: Checkout released commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      # ----------------------------------------------------------------------
+      # 3. Create the tag, GitHub Release, and update labels
+      # ----------------------------------------------------------------------
+      - name: Publish release
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const fs = require('node:fs');
+
+            const { owner, repo } = context.repo;
+
+            /**
+             * Creates a label when it does not exist yet.
+             */
+            async function ensureLabel(name, color, description) {
+              try {
+                await github.rest.issues.getLabel({
+                  owner,
+                  repo,
+                  name,
+                });
+              } catch (error) {
+                if (error.status !== 404) {
+                  throw error;
+                }
+
+                await github.rest.issues.createLabel({
+                  owner,
+                  repo,
+                  name,
+                  color,
+                  description,
+                });
+
+                console.log(`Label created: ${name}`);
+              }
+            }
+
+            /**
+             * Returns the label names assigned to a pull request.
+             */
+            function getLabelNames(pullRequest) {
+              return (pullRequest.labels ?? [])
+                .map((label) => {
+                  if (typeof label === 'string') {
+                    return label;
+                  }
+
+                  return label.name;
+                })
+                .filter(Boolean);
+            }
+
+            /**
+             * Extracts the hidden structured list of included pull request numbers
+             * from the Release PR body.
+             *
+             * Supported formats:
+             *
+             * <!-- release-prs:127,130,131 -->
+             */
+            function extractStructuredPullRequestNumbers(body) {
+              const inlineMatch = body.match(
+                /<!--\s*release-prs:([\d,\s]+)\s*-->/
+              );
+
+              if (inlineMatch) {
+                return inlineMatch[1]
+                  .split(',')
+                  .map((value) => Number(value.trim()))
+                  .filter(
+                    (number) =>
+                      Number.isInteger(number) &&
+                      number > 0
+                  );
+              }
+
+              const blockMatch = body.match(
+                /<!--\s*release-prs:start\s*-->([\s\S]*?)<!--\s*release-prs:end\s*-->/
+              );
+
+              if (!blockMatch) {
+                return [];
+              }
+
+              return [
+                ...blockMatch[1].matchAll(/^\s*#(\d+)\s*$/gm),
+              ].map((entry) => Number(entry[1]));
+            }
+
+            /**
+             * Provides compatibility with Release PRs created before the
+             * structured metadata markers were introduced.
+             *
+             * It extracts pull request numbers only from the visible section:
+             *
+             * ## Changes included
+             * - #123 — ...
+             *
+             * Parsing stops at the next heading, separator, or end of body.
+             */
+            function extractLegacyPullRequestNumbers(body) {
+              const sectionMatch = body.match(
+                /##\s+(?:📋\s*)?Changes included\s*\n([\s\S]*?)(?=\n##\s|\n---|\s*$)/i
+              );
+
+              if (!sectionMatch) {
+                return [];
+              }
+
+              return [
+                ...sectionMatch[1].matchAll(/^\s*-\s+#(\d+)\b/gm),
+              ].map((entry) => Number(entry[1]));
+            }
+
+            /**
+             * Removes duplicates and validates pull request numbers.
+             */
+            function normalizePullRequestNumbers(numbers) {
+              return [
+                ...new Set(
+                  numbers.filter(
+                    (number) =>
+                      Number.isInteger(number) &&
+                      number > 0
+                  )
+                ),
+              ];
+            }
+
+            // ----------------------------------------------------------------
+            // 1. Read and validate the version from package.json
+            // ----------------------------------------------------------------
+            const packageJson = JSON.parse(
+              fs.readFileSync('package.json', 'utf8')
+            );
+
+            const version = packageJson.version;
+
+            if (
+              typeof version !== 'string' ||
+              !/^\d+\.\d+\.\d+$/.test(version)
+            ) {
+              throw new Error(
+                `Invalid version in package.json: ${version}`
+              );
+            }
+
+            const tagName = `v${version}`;
+
+            console.log(
+              `Processing ${tagName} at ${context.sha}.`
+            );
+
+            // ----------------------------------------------------------------
+            // 2. Find the Release PR associated with the commit on main
+            // ----------------------------------------------------------------
+            /*
+             * GitHub returns the pull requests associated with the commit
+             * that introduced the change into the default branch.
+             */
+            const associatedPullRequests = await github.paginate(
+              github.rest.repos.listPullRequestsAssociatedWithCommit,
+              {
+                owner,
+                repo,
+                commit_sha: context.sha,
+                per_page: 100,
+              }
+            );
+
+            console.log(
+              `Pull requests associated with commit: ` +
+              `${associatedPullRequests.length}`
+            );
+
+            /*
+             * The matching pull request must specifically be the Release PR:
+             *
+             * dev → main
+             */
+            const releasePullRequests = associatedPullRequests.filter(
+              (pullRequest) =>
+                pullRequest.base?.ref === 'main' &&
+                pullRequest.head?.ref === 'dev' &&
+                pullRequest.merged_at
+            );
+
+            if (releasePullRequests.length === 0) {
+              console.log(
+                'The commit was not introduced by a dev → main Release PR. ' +
+                'Release publication skipped.'
+              );
+
+              return;
+            }
+
+            if (releasePullRequests.length > 1) {
+              throw new Error(
+                `Found ${releasePullRequests.length} Release PRs ` +
+                `associated with commit ${context.sha}.`
+              );
+            }
+
+            /*
+             * Fetch the pull request again to obtain its complete and current
+             * body.
+             */
+            const { data: releasePullRequest } =
+              await github.rest.pulls.get({
+                owner,
+                repo,
+                pull_number: releasePullRequests[0].number,
+              });
+
+            console.log(
+              `Release PR detected: #${releasePullRequest.number}`
+            );
+
+            // ----------------------------------------------------------------
+            // 3. Obtain the exact pull requests included in this version
+            // ----------------------------------------------------------------
+            const releasePullRequestBody =
+              releasePullRequest.body ?? '';
+
+            let includedPullRequestNumbers =
+              extractStructuredPullRequestNumbers(
+                releasePullRequestBody
+              );
+
+            if (includedPullRequestNumbers.length > 0) {
+              console.log(
+                'Structured pull request list found.'
+              );
+            } else {
+              /*
+               * This fallback allows releases created before the
+               * release-prs:start/end markers were introduced to be
+               * recovered safely.
+               */
+              includedPullRequestNumbers =
+                extractLegacyPullRequestNumbers(
+                  releasePullRequestBody
+                );
+
+              if (includedPullRequestNumbers.length > 0) {
+                console.log(
+                  'Using legacy "Changes included" section.'
+                );
+              }
+            }
+
+            includedPullRequestNumbers =
+              normalizePullRequestNumbers(
+                includedPullRequestNumbers
+              );
+
+            if (includedPullRequestNumbers.length === 0) {
+              throw new Error(
+                `Release PR #${releasePullRequest.number} does not contain ` +
+                'a valid list of included pull requests.'
+              );
+            }
+
+            console.log(
+              `Pull requests included in ${tagName}: ` +
+              includedPullRequestNumbers
+                .map((number) => `#${number}`)
+                .join(', ')
+            );
+
+            // ----------------------------------------------------------------
+            // 4. Fetch and validate every included pull request
+            // ----------------------------------------------------------------
+            const includedPullRequests = [];
+
+            for (
+              const pullRequestNumber of includedPullRequestNumbers
+            ) {
+              const { data: pullRequest } =
+                await github.rest.pulls.get({
+                  owner,
+                  repo,
+                  pull_number: pullRequestNumber,
+                });
+
+              /*
+               * Additional safeguard:
+               *
+               * Every entry in the Release PR must represent a pull request
+               * that was actually merged into dev.
+               */
+              if (!pullRequest.merged_at) {
+                throw new Error(
+                  `Pull request #${pullRequest.number} is not merged.`
+                );
+              }
+
+              if (pullRequest.base?.ref !== 'dev') {
+                throw new Error(
+                  `Pull request #${pullRequest.number} targets ` +
+                  `${pullRequest.base?.ref}, not dev.`
+                );
+              }
+
+              includedPullRequests.push(pullRequest);
+            }
+
+            // ----------------------------------------------------------------
+            // 5. Check whether the tag already exists
+            // ----------------------------------------------------------------
+            let existingTag = null;
+
+            try {
+              const { data } = await github.rest.git.getRef({
+                owner,
+                repo,
+                ref: `tags/${tagName}`,
+              });
+
+              existingTag = data;
+            } catch (error) {
+              if (error.status !== 404) {
+                throw error;
+              }
+            }
+
+            // ----------------------------------------------------------------
+            // 6. Check whether the GitHub Release already exists
+            // ----------------------------------------------------------------
+            let existingRelease = null;
+
+            try {
+              const { data } =
+                await github.rest.repos.getReleaseByTag({
+                  owner,
+                  repo,
+                  tag: tagName,
+                });
+
+              existingRelease = data;
+            } catch (error) {
+              if (error.status !== 404) {
+                throw error;
+              }
+            }
+
+            // ----------------------------------------------------------------
+            // 7. Create or validate the tag
+            // ----------------------------------------------------------------
+            if (!existingTag) {
+              await github.rest.git.createRef({
+                owner,
+                repo,
+                ref: `refs/tags/${tagName}`,
+                sha: context.sha,
+              });
+
+              console.log(
+                `Tag ${tagName} created at ${context.sha}.`
+              );
+            } else {
+              /*
+               * This workflow creates lightweight tags, which point directly
+               * to commit objects.
+               */
+              if (existingTag.object.type !== 'commit') {
+                throw new Error(
+                  `Tag ${tagName} is not a lightweight tag. ` +
+                  `Found object type: ${existingTag.object.type}.`
+                );
+              }
+
+              if (existingTag.object.sha !== context.sha) {
+                throw new Error(
+                  `Tag ${tagName} points to ` +
+                  `${existingTag.object.sha}, but this workflow run ` +
+                  `corresponds to ${context.sha}.`
+                );
+              }
+
+              console.log(
+                `Tag ${tagName} already exists at the correct SHA.`
+              );
+            }
+
+            // ----------------------------------------------------------------
+            // 8. Build the release notes
+            // ----------------------------------------------------------------
+            let releaseBody = '';
+
+            releaseBody += '## Changes\n\n';
+
+            for (const pullRequest of includedPullRequests) {
+              releaseBody +=
+                `- #${pullRequest.number} — ` +
+                `${pullRequest.title} ` +
+                `(@${pullRequest.user.login})\n`;
+            }
+
+            releaseBody += '\n';
+            releaseBody +=
+              `Release PR: #${releasePullRequest.number}\n\n`;
+            releaseBody +=
+              `Commit: \`${context.sha}\`\n`;
+
+            // ----------------------------------------------------------------
+            // 9. Create the GitHub Release when it is missing
+            // ----------------------------------------------------------------
+            if (!existingRelease) {
+              const { data: createdRelease } =
+                await github.rest.repos.createRelease({
+                  owner,
+                  repo,
+                  tag_name: tagName,
+                  target_commitish: context.sha,
+                  name: tagName,
+                  body: releaseBody,
+                  draft: false,
+                  prerelease: false,
+                  generate_release_notes: false,
+                });
+
+              existingRelease = createdRelease;
+
+              console.log(
+                `GitHub Release ${tagName} created.`
+              );
+            } else {
+              console.log(
+                `GitHub Release ${tagName} already exists.`
+              );
+            }
+
+            // ----------------------------------------------------------------
+            // 10. Ensure the release control labels exist
+            // ----------------------------------------------------------------
+            await ensureLabel(
+              'release-pending',
+              'FBCA04',
+              'Included in the current release PR but not yet published'
+            );
+
+            await ensureLabel(
+              'released',
+              '0E8A16',
+              'Published as part of an official release'
+            );
+
+            // ----------------------------------------------------------------
+            // 11. Update only the pull requests included in this version
+            // ----------------------------------------------------------------
+            for (const pullRequest of includedPullRequests) {
+              const labels = getLabelNames(pullRequest);
+
+              if (labels.includes('release-pending')) {
+                try {
+                  await github.rest.issues.removeLabel({
+                    owner,
+                    repo,
+                    issue_number: pullRequest.number,
+                    name: 'release-pending',
+                  });
+
+                  console.log(
+                    `Pull request #${pullRequest.number}: ` +
+                    '`release-pending` removed.'
+                  );
+                } catch (error) {
+                  if (error.status !== 404) {
+                    throw error;
+                  }
+
+                  console.log(
+                    `Pull request #${pullRequest.number}: ` +
+                    '`release-pending` was already absent.'
+                  );
+                }
+              }
+
+              if (!labels.includes('released')) {
+                await github.rest.issues.addLabels({
+                  owner,
+                  repo,
+                  issue_number: pullRequest.number,
+                  labels: ['released'],
+                });
+
+                console.log(
+                  `Pull request #${pullRequest.number}: ` +
+                  '`released` added.'
+                );
+              } else {
+                console.log(
+                  `Pull request #${pullRequest.number}: ` +
+                  '`released` was already present.'
+                );
+              }
+            }
+
+            console.log(
+              `Release ${tagName} published successfully from ` +
+              `Release PR #${releasePullRequest.number}.`
+            );
