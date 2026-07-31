@@ -12,6 +12,10 @@ export interface AssetOperationPolicyRegistry {
     target: AssetTarget,
     policy: AssetOperationPolicy<TUpload, TPersist, TCleanup>
   ): void
+  ensure<TUpload, TPersist, TCleanup>(
+    target: AssetTarget,
+    policy: AssetOperationPolicy<TUpload, TPersist, TCleanup>
+  ): void
   resolve<TUpload, TPersist, TCleanup>(
     target: AssetTarget
   ): RegisteredAssetOperationPolicy<TUpload, TPersist, TCleanup> | undefined
@@ -29,6 +33,10 @@ export function createAssetOperationPolicyRegistry(): AssetOperationPolicyRegist
       }
 
       policies.set(target, policy)
+    },
+
+    ensure(target, policy) {
+      if (!policies.has(target)) policies.set(target, policy)
     },
 
     resolve<TUpload, TPersist, TCleanup>(target: AssetTarget) {

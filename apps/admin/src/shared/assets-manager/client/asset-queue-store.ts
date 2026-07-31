@@ -1,6 +1,7 @@
 import { createStore } from 'zustand/vanilla'
 
 import type { AssetQueue, AssetQueueJob, AssetQueueSnapshot } from './queue'
+import { ASSET_QUEUE_STATUS } from './queue'
 
 export interface AssetQueueStore {
   /** Returns the current state snapshot. */
@@ -132,3 +133,15 @@ export const selectJobById =
   (jobId: string) =>
   (state: AssetQueueSnapshot): AssetQueueJob | null =>
     state.jobs.find((job) => job.jobId === jobId) ?? null
+
+export const selectActiveJob = (
+  state: AssetQueueSnapshot,
+): AssetQueueJob | null =>
+  state.activeJobId
+    ? state.jobs.find((job) => job.jobId === state.activeJobId) ?? null
+    : null
+
+export const selectNextEnqueuedJob = (
+  state: AssetQueueSnapshot,
+): AssetQueueJob | null =>
+  state.jobs.find((job) => job.status === ASSET_QUEUE_STATUS.ENQUEUED) ?? null

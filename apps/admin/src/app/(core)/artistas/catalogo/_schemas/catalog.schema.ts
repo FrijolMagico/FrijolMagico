@@ -5,10 +5,18 @@ import {
   createUpdateSchema
 } from 'drizzle-zod'
 import { artist } from '@frijolmagico/database/schema'
+import { AVATAR_INTENT } from '../_lib/avatar-history-contracts'
+
+export const activeAvatarSchema = z.object({
+  id: z.number().int().positive(),
+  path: z.string().min(1),
+  version: z.string().nullable()
+})
 
 export const catalogSelectSchema = createSelectSchema(artist.catalogArtist)
   .extend({
-    avatarUrl: z.url().nullable().optional()
+    avatarUrl: z.url().nullable().optional(),
+    activeAvatar: activeAvatarSchema.nullable().optional()
   })
   .omit({
     createdAt: true,
@@ -41,7 +49,16 @@ export const catalogUpdateSchema = createUpdateSchema(artist.catalogArtist, {
     artistaId: true
   })
   .extend({
-    avatarUrl: z.url().nullable()
+    avatarUrl: z.url().nullable(),
+    expectedActive: activeAvatarSchema.nullable().optional(),
+    intent: z
+      .enum([
+        AVATAR_INTENT.UNCHANGED,
+        AVATAR_INTENT.HISTORICAL,
+        AVATAR_INTENT.PREPARED_UPLOAD
+      ])
+      .optional(),
+    avatarId: z.number().int().positive().optional()
   })
 
 export const catalogFormSchema = catalogInsertSchema
