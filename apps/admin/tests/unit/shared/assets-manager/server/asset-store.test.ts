@@ -7,9 +7,8 @@ describe('assertAssetStore', () => {
     const { assertAssetStore } = await import('@/shared/assets-manager/server/asset-store')
 
     const store = {
-      uploadAsset: async () => ({ path: 'p', version: 'v' }),
-      replaceAsset: async () => ({ path: 'p', version: 'v' }),
-      deleteAsset: async () => {},
+      putObject: async (_key: string, _blob: Blob) => {},
+      deleteObject: async (_key: string) => {},
     }
 
     expect(() => assertAssetStore(store)).not.toThrow()
@@ -36,12 +35,12 @@ describe('assertAssetStore', () => {
     expect(() => assertAssetStore({})).toThrow(AssetStoreError)
   })
 
-  it('throws AssetStoreError for object missing deleteAsset', async () => {
+  it('throws AssetStoreError for object missing deleteObject', async () => {
     const { assertAssetStore } = await import('@/shared/assets-manager/server/asset-store')
     const { AssetStoreError } = await import('@/shared/assets-manager/server/asset-store-error')
 
     const invalid = {
-      uploadAsset: async () => ({ path: 'p', version: 'v' }),
+      putObject: async (_key: string, _blob: Blob) => {},
     }
 
     expect(() => assertAssetStore(invalid)).toThrow(AssetStoreError)
@@ -51,9 +50,8 @@ describe('assertAssetStore', () => {
     const { assertAssetStore } = await import('@/shared/assets-manager/server/asset-store')
 
     const minimal = {
-      uploadAsset: async () => ({ path: '/test', version: '1' }),
-      replaceAsset: async () => ({ path: '/test', version: '2' }),
-      deleteAsset: async () => {},
+      putObject: async (_key: string, _blob: Blob) => {},
+      deleteObject: async (_key: string) => {},
     }
 
     expect(() => assertAssetStore(minimal)).not.toThrow()

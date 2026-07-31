@@ -9,6 +9,7 @@ import { cn } from '@/shared/lib/utils'
 import { useArtistDialog } from '../_store/artist-dialog-store'
 import { ActionMenuButton } from '@/shared/components/action-menu-button'
 import { RRSSViewer } from '@/shared/components/rrss/rrss-viewer'
+import { EMPTY_HISTORY } from '../_lib/aggregate-history'
 import type { ArtistWithHistory } from '../_types/artist'
 import { STATUS_LABEL_MAP } from '../_constants'
 import { CopyToClipboard } from '@/shared/components/copy-to-clipboard'
@@ -38,7 +39,11 @@ export function ArtistListRow({
   )
 
   const handleOpenHistory = () =>
-    openArtistHistoryDialog(history, { pseudonimo: artistData.pseudonimo })
+    openArtistHistoryDialog(
+      history ?? EMPTY_HISTORY,
+      { pseudonimo: artistData.pseudonimo },
+      artistData.id
+    )
 
   const handleOpenEdit = () => openUpdateArtistDialog(artistData)
 
@@ -87,9 +92,8 @@ export function ArtistListRow({
                 onClick: handleOpenEdit
               },
               {
-                label: 'Historial',
-                onClick: handleOpenHistory,
-                hidden: !artist.history
+                label: artist.history ? 'Ver Historial' : 'Añadir Historial',
+                onClick: handleOpenHistory
               }
             ]}
             onDelete={onDelete}

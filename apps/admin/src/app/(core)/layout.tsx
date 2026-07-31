@@ -5,6 +5,8 @@ import { PanelSidebar } from '@/shared/components/sidebar'
 import { TooltipProvider } from '@/shared/components/ui/tooltip'
 import { AuthGuard } from './_components/auth-guard'
 import { NuqsAdapter } from 'nuqs/adapters/next'
+import { ErrorBoundary } from '@/shared/components/error-boundary'
+import { QueueFloatBar } from '@/shared/components/queue-float-bar'
 
 export default function AuthenticatedLayout({
   children
@@ -23,6 +25,9 @@ export default function AuthenticatedLayout({
                 <main className='bg-background w-full flex-1 p-6'>
                   <NuqsAdapter>{children}</NuqsAdapter>
                 </main>
+                <ErrorBoundary>
+                  <QueueFloatBar />
+                </ErrorBoundary>
               </div>
             </div>
           </SidebarProvider>
