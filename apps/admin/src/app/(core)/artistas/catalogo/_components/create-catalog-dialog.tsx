@@ -30,6 +30,7 @@ import type { CatalogAvailableArtist } from '../_types/catalog-list-item'
 import { useCatalogDialog } from '../_store/catalog-dialog-store'
 import { CREATE_CATALOG_FORM_ID } from '../_constants'
 import { useAvatarController } from '../_hooks/use-avatar-controller'
+import { useActiveArtistAvatar } from '../_hooks/use-active-artist-avatar'
 import { ArtistAvatarSection } from './artist-avatar-section'
 import type { ManagedAssetReference } from '@/shared/assets-manager/managed-asset-reference'
 
@@ -55,24 +56,20 @@ export function CreateCatalogDialog({
       artistaId: 0,
       descripcion: null,
       destacado: false,
-      activo: true,
-      avatarUrl: null
+      activo: true
     },
     mode: 'onChange'
   })
 
   const artistaId = useWatch({ name: 'artistaId', control })
 
-  const selectedArtist = artistaId
-    ? (availableArtists.find((a) => a.id === artistaId) ?? null)
-    : null
-
   const controller = useAvatarController()
+  const activeAvatar = useActiveArtistAvatar()
   const suppressCancelRef = useRef(false)
 
   // Avatar validation: satisfied if artist has existing avatar OR a file is ready
   const avatarSatisfied =
-    !!selectedArtist?.avatarUrl || controller.state.phase === 'ready'
+    !!activeAvatar.avatar || controller.state.phase === 'ready'
 
   const formValid = isDirty && isValid && avatarSatisfied
 
@@ -99,10 +96,17 @@ export function CreateCatalogDialog({
         return
       }
 
+      if (!result.data) {
+        toast.error('No se pudo identificar el artista creado')
+        return
+      }
+
       // Post-submit enqueue
-      const artistId = data.artistaId
+      const { artistId, catalogId, requestedActive } = result.data
       try {
-        await controller.enqueue(artistId)
+        await controller.enqueue(artistId, {
+          activation: { catalogId, requestedActive }
+        })
       } catch {
         // Enqueue failure handled by controller state — error+retry shown in ArtistAvatarSection
         // The catalog entry was already created
@@ -122,12 +126,11 @@ export function CreateCatalogDialog({
 
   const comboboxArtists = availableArtists.map((artist) => ({
     label: artist.pseudonimo,
-    value: artist.id,
-    avatarUrl: artist.avatarUrl
+    value: artist.id
   }))
 
-  const currentAvatar: ManagedAssetReference | null = selectedArtist?.avatarUrl
-    ? { path: selectedArtist.avatarUrl, version: null }
+  const currentAvatar: ManagedAssetReference | null = activeAvatar.avatar
+    ? { path: activeAvatar.avatar.path, version: activeAvatar.avatar.version }
     : null
 
   return (
@@ -178,21 +181,8 @@ export function CreateCatalogDialog({
                         value={selectedComboItem ?? null}
                         onValueChange={(val) => {
                           onChange(val?.value ?? 0)
-                          // Sync avatar when artist is selected
-                          const artist = val?.value
-                            ? (availableArtists.find(
-                                (a) => a.id === val.value
-                              ) ?? null)
-                            : null
-
-                          controller.syncAvatar(
-                            artist?.avatarUrl
-                              ? {
-                                  path: artist.avatarUrl,
-                                  version: null
-                                }
-                              : null
-                          )
+                          activeAvatar.load(val?.value ?? null)
+                          controller.syncAvatar(null)
                         }}
                         itemToStringLabel={(item) => item?.label ?? ''}
                       >
@@ -221,6 +211,14 @@ export function CreateCatalogDialog({
                   <FieldError>{errors.artistaId.message}</FieldError>
                 )}
               </Field>
+              {activeAvatar.isPending && (
+                <span role='status'>Cargando avatar...</span>
+              )}
+              {activeAvatar.error && (
+                <span role='alert' className='text-destructive text-sm'>
+                  {activeAvatar.error}
+                </span>
+              )}
             </div>
           </div>
 
