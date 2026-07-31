@@ -1,8 +1,13 @@
-import { describe, it, expect } from 'bun:test'
-import { optimisticReducer, FIELD_TO_STORE_KEY } from '@/core/artistas/_hooks/use-artist-history'
+import { describe, it, expect, mock } from 'bun:test'
 import type { ArtistHistoryView, OptimisticAction } from '@/core/artistas/_hooks/use-artist-history'
 import { EMPTY_HISTORY } from '@/core/artistas/_lib/aggregate-history'
 import type { HistoryFieldEntry } from '@/core/artistas/_lib/aggregate-history'
+
+mock.module('server-only', () => ({}))
+
+const { optimisticReducer, FIELD_TO_STORE_KEY } = await import(
+  '@/core/artistas/_hooks/use-artist-history'
+)
 
 const BASE_STATE: ArtistHistoryView = {
   ...EMPTY_HISTORY,
