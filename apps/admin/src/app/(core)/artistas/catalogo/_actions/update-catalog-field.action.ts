@@ -4,7 +4,7 @@ import 'server-only'
 import { updateTag } from 'next/cache'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
-import { eq } from 'drizzle-orm'
+import { and, eq, isNull } from 'drizzle-orm'
 import {
   CATALOG_CACHE_TAG,
   FEATURED_ARTISTS_CACHE_TAG
@@ -32,6 +32,42 @@ export async function updateCatalogFieldAction(
         entityType: 'catalogo',
         message: issue.message
       }))
+    }
+  }
+
+  // Server-side avatar guard: can't activate a catalog entry without an avatar
+  if (parsed.data.activo === true) {
+    const [row] = await db
+      .select({ artistaId: artist.catalogArtist.artistaId })
+      .from(artist.catalogArtist)
+      .where(eq(artist.catalogArtist.id, id))
+      .limit(1)
+
+    if (row) {
+      const [avatar] = await db
+        .select({ id: artist.artistImage.id })
+        .from(artist.artistImage)
+        .where(
+          and(
+            eq(artist.artistImage.artistaId, row.artistaId),
+            eq(artist.artistImage.tipo, 'avatar'),
+            isNull(artist.artistImage.deletedAt)
+          )
+        )
+        .limit(1)
+
+      if (!avatar) {
+        return {
+          success: false,
+          errors: [
+            {
+              entityType: 'catalogo',
+              message:
+                'No se puede activar una entrada sin avatar. Debe subir un avatar antes de activar la entrada.'
+            }
+          ]
+        }
+      }
     }
   }
 

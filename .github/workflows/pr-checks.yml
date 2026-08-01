@@ -45,3 +45,12 @@ jobs:
 
       - name: Test
         run: TURSO_DATABASE_URL="file:${GITHUB_WORKSPACE}/packages/database/mock.local.db" bun run test
+
+      - name: Enforce per-file test isolation
+        run: |
+          for pkg in apps/admin apps/web; do
+            grep -q '"test": "bun test --isolate"' "$pkg/package.json" || { echo "❌ $pkg test script must run bun test --isolate"; exit 1; }
+            if grep -qE '^\s*isolate\s*=\s*true' "$pkg/bunfig.toml"; then
+              echo "❌ $pkg bunfig.toml uses the unsupported 'isolate' key (use the CLI flag in the test script instead)"; exit 1
+            fi
+          done

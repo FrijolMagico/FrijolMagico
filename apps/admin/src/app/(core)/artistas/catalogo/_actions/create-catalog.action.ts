@@ -8,7 +8,7 @@ import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import {
   CATALOG_CACHE_TAG,
-  FEATURED_ARTISTS_CACHE_TAG,
+  FEATURED_ARTISTS_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import type { ActionState } from '@/shared/types/actions'
@@ -17,16 +17,34 @@ import {
   catalogInsertSchema,
   type CatalogInsertInput
 } from '../_schemas/catalog.schema'
-import {
-  ArtistImagenInsertInput,
-  artistImagenInsertSchema
-} from '../../_schemas/image.schema'
-import { revalidateWebCache } from '@/shared/lib/web-invalidation'
+import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
+
+interface CreatedCatalog {
+  catalogId: number
+  artistId: number
+  requestedActive: boolean
+}
+
+interface CreatedCatalogRow {
+  id: number
+  artistaId: number
+}
+
+function isCreatedCatalogRow(value: unknown): value is CreatedCatalogRow {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'id' in value &&
+    typeof value.id === 'number' &&
+    'artistaId' in value &&
+    typeof value.artistaId === 'number'
+  )
+}
 
 export async function createCatalogAction(
-  _prevState: ActionState<{ id: number }>,
+  _prevState: ActionState<CreatedCatalog>,
   data: CatalogCreateFormInput
-): Promise<ActionState<{ id: number }>> {
+): Promise<ActionState<CreatedCatalog>> {
   try {
     await requireAuth()
 
@@ -54,53 +72,56 @@ export async function createCatalogAction(
       }
     }
 
-    const { avatarUrl, artistaId, ...catalog } = parsed.data
+    const { artistaId, ...catalog } = parsed.data
 
-    if (avatarUrl && artistaId) {
-      const imagePayload: ArtistImagenInsertInput = {
-        tipo: 'avatar',
-        imagenUrl: avatarUrl,
-        artistaId
+    const [createdCatalog] = await db
+      .insert(artist.catalogArtist)
+      .values({ ...catalog, artistaId, activo: false })
+      .returning({
+        id: artist.catalogArtist.id,
+        artistaId: artist.catalogArtist.artistaId
+      })
+
+    if (!isCreatedCatalogRow(createdCatalog)) {
+      return {
+        success: false,
+        errors: [
+          {
+            entityType: 'catalogo',
+            message: 'No se pudo confirmar la creación del catálogo'
+          }
+        ]
       }
-
-      const parsedImagePayload =
-        artistImagenInsertSchema.safeParse(imagePayload)
-
-      if (!parsedImagePayload.success) {
-        return {
-          success: false,
-          errors: parsedImagePayload.error.issues.map((issue) => ({
-            entityType: 'catalogo_imagen',
-            message: issue.message
-          }))
-        }
-      }
-
-      await db.insert(artist.artistImage).values(parsedImagePayload.data)
     }
-
-    await db.insert(artist.catalogArtist).values({
-      ...catalog,
-      artistaId
-    })
 
     // NOTE: Soft-deleted catalog rows still rely on the current unique `artistaId`
     // constraint. This change does not introduce restore-or-reinsert semantics.
 
-    updateTag(CATALOG_CACHE_TAG)
-    revalidateWebCache({
+    try {
+      updateTag(CATALOG_CACHE_TAG)
+    } catch (error) {
+      console.error('Catalog cache invalidation failed', error)
+    }
+    void revalidateWebCacheBestEffort({
       tag: CATALOG_CACHE_TAG,
       path: '/catalogo'
     })
 
     if ('destacado' in parsed.data && parsed.data.destacado) {
-      void revalidateWebCache({
+      void revalidateWebCacheBestEffort({
         tag: FEATURED_ARTISTS_CACHE_TAG,
-        path: '/',
+        path: '/'
       })
     }
 
-    return { success: true }
+    return {
+      success: true,
+      data: {
+        catalogId: createdCatalog.id,
+        artistId: createdCatalog.artistaId,
+        requestedActive: parsed.data.activo ?? false
+      }
+    }
   } catch (error) {
     return {
       success: false,
