@@ -3,9 +3,11 @@ import { beforeEach, describe, expect, mock, test } from 'bun:test'
 import { executeQueryMock } from '@/test-utils/mockDatabase'
 
 const getDataSourceMock = mock(() => 'database' as 'database' | 'mock')
+const isMockModeMock = mock(() => false)
 
 mock.module('@/infra/config/dataSourceConfig', () => ({
-  getDataSource: getDataSourceMock
+  getDataSource: getDataSourceMock,
+  isMockMode: isMockModeMock
 }))
 
 import { festivalDetailRepository } from './festivalDetailRepository'

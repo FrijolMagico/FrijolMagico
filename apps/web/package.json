@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
-    "test": "bun test",
+    "test": "bun test --isolate",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {

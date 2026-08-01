@@ -2,29 +2,12 @@ import { z } from 'zod'
 
 import { getFirstRrssUrl } from '@frijolmagico/utils/rrss'
 import { getDisciplineLabel } from '@/app/(sections)/adapters/mappers/disciplineMapper'
+import { getAvatarUrl } from '@frijolmagico/utils/cdn'
 
 import {
   CatalogArtistFromDBSchema,
   EditionParticipationSchema
 } from './catalogDBSchema'
-
-const CDN_BASE_URL = process.env.CDN_URL ?? ''
-
-/**
- * Formatea la URL del avatar agregando el CDN base.
- * Si el avatar es null o es un placeholder local, retorna el path local.
- */
-const formatAvatarUrl = (avatar: string | null): string => {
-  if (!avatar) return '/sections/catalogo/images/artists/placeholder-avatar.svg'
-
-  // Si ya es una URL completa o es un placeholder local, no modificar
-  if (avatar.startsWith('http') || avatar.startsWith('/')) {
-    return avatar
-  }
-
-  // Agregar CDN base URL
-  return `${CDN_BASE_URL}/${avatar}`
-}
 
 /**
  * Schema para el colectivo en formato UI (compatibilidad con estructura anterior)
@@ -61,7 +44,7 @@ export const CatalogArtistSchema = CatalogArtistFromDBSchema.transform(
     bio: data.bio ?? '',
     orden: data.orden,
     destacado: data.destacado === 1,
-    avatar: formatAvatarUrl(data.avatar),
+    avatar: getAvatarUrl(data.avatar),
     category: data.category ? getDisciplineLabel(data.category) : null,
     collective: data.collective,
     editions: data.editions

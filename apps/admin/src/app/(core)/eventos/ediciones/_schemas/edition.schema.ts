@@ -12,7 +12,9 @@ export const editionSelectSchema = createSelectSchema(eventEdition, {
   eventoId: z.number().int().positive()
 }).omit({
   createdAt: true,
-  updatedAt: true
+  updatedAt: true,
+  editionPosterPath: true,
+  editionPosterVersion: true
 })
 
 export const edicionInsertSchema = createInsertSchema(eventEdition, {
