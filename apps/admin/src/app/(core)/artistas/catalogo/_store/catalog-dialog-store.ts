@@ -1,15 +1,15 @@
 import { create } from 'zustand'
 import type { Catalog } from '../_schemas/catalog.schema'
-import type { Artist } from '../../_schemas/artista.schema'
+import type { CatalogArtist } from '../_types/catalog-list-item'
 
 interface CatalogDialogState {
   isUpdateCatalogOpen: boolean
   isCreateCatalogOpen: boolean
 
   selectedCatalog: Catalog | null
-  selectedArtist: Artist | null
+  selectedArtist: CatalogArtist | null
 
-  openUpdateCatalogDialog: (catalog: Catalog, artist: Artist) => void
+  openUpdateCatalogDialog: (catalog: Catalog, artist: CatalogArtist) => void
   closeUpdateCatalogDialog: () => void
 
   toggleCreateCatalogDialog: (open: boolean) => void

@@ -9,6 +9,7 @@ const MAX_CONTENT_LENGTH = 1.25 * 1024 * 1024 // 1.25 MiB
 export interface AssetUploadPayload {
   target: AssetTarget
   entityId: string
+  slug?: string
   blob: Blob
   mimeType: 'image/webp'
   preparedWidth: number
@@ -86,6 +87,10 @@ export async function parseAssetUpload(
     throw new ValidationError('Missing or invalid entityId field', 'entityId')
   }
 
+  const slugRaw = formData.get('slug')
+  const slug =
+    typeof slugRaw === 'string' && slugRaw.length > 0 ? slugRaw : undefined
+
   const blob = formData.get('blob')
   if (!blob || !(blob instanceof Blob)) {
     throw new ValidationError('Missing or invalid blob field', 'blob')
@@ -118,6 +123,7 @@ export async function parseAssetUpload(
   const payload: AssetUploadPayload = {
     target,
     entityId,
+    slug,
     blob,
     mimeType: 'image/webp',
     preparedWidth,

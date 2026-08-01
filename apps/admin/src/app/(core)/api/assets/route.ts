@@ -26,6 +26,7 @@ export async function POST(request: Request) {
 
     const result = await uploadArtistAvatarAction({
       artistaId: Number(payload.entityId),
+      slug: payload.slug ?? '',
       blob: payload.blob,
       width: payload.preparedWidth,
       height: payload.preparedHeight,

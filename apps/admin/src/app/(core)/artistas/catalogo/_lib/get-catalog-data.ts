@@ -15,12 +15,12 @@ import { parseRRSS } from '@/shared/lib/rrss'
 
 import { ARTIST_CACHE_TAG, CATALOG_CACHE_TAG } from '@frijolmagico/cache-tags'
 import { type ARTIST_STATUS } from '../../_constants'
-import type { Artist } from '../../_schemas/artista.schema'
 import {
   catalogQueryParamsSchema,
   type CatalogQueryParams
 } from '../_schemas/query-params.schema'
 import type {
+  CatalogArtist,
   CatalogAvailableArtist,
   CatalogListItem
 } from '../_types/catalog-list-item'
@@ -39,6 +39,7 @@ interface CatalogArtistRow {
   pais: string | null
   estadoId: number
   rrss: string | null
+  slug: string
 }
 
 interface CatalogResultRow {
@@ -52,7 +53,7 @@ interface CatalogResultRow {
   artist: CatalogArtistRow
 }
 
-function mapCatalogArtist(row: CatalogArtistRow): Artist {
+function mapCatalogArtist(row: CatalogArtistRow): CatalogArtist {
   return {
     ...row,
     estadoId: row.estadoId as ARTIST_STATUS,
@@ -109,7 +110,8 @@ export async function getCatalogData(
         ciudad: artistTable.ciudad,
         pais: artistTable.pais,
         estadoId: artistTable.estadoId,
-        rrss: artistTable.rrss
+        rrss: artistTable.rrss,
+        slug: artistTable.slug
       }
     })
     .from(catalogArtist)
@@ -186,7 +188,8 @@ export async function getArtistsNotInCatalog(): Promise<
     .select({
       id: artistTable.id,
       pseudonimo: artistTable.pseudonimo,
-      nombre: artistTable.nombre
+      nombre: artistTable.nombre,
+      slug: artistTable.slug
     })
     .from(artistTable)
     .where(

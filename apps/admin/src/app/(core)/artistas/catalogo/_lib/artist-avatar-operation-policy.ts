@@ -1,6 +1,6 @@
 import type { UploadArtistAvatarData } from '../../_actions/upload-artist-avatar.action'
 import type { ExpectedActiveAvatar } from './avatar-history-contracts'
-import type { AvatarActivationInput } from '../_hooks/use-avatar-controller'
+import type { AvatarEnqueueInput } from '../_hooks/use-avatar-controller'
 import type {
   AssetEnqueueAdmissionInput,
   AssetOperationContext,
@@ -25,26 +25,33 @@ export interface ArtistAvatarUploadResult {
   receipt: string
 }
 
+function isExpectedActive(value: unknown): value is ExpectedActiveAvatar {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'id' in value &&
+    'path' in value &&
+    'version' in value &&
+    typeof value.id === 'number' &&
+    typeof value.path === 'string' &&
+    (typeof value.version === 'string' || value.version === null)
+  )
+}
+
 function expectedActiveFromContext(
   context: AssetOperationContext
 ): ExpectedActiveAvatar | null | undefined {
   const input = context.input
-  if (input === undefined) return undefined
   if (input === null) return null
   if (
     typeof input !== 'object' ||
-    input === null ||
-    !('id' in input) ||
-    !('path' in input) ||
-    !('version' in input) ||
-    typeof input.id !== 'number' ||
-    typeof input.path !== 'string' ||
-    (typeof input.version !== 'string' && input.version !== null)
+    input === undefined ||
+    !('expectedActive' in input)
   )
     return undefined
-
-  const { id, path, version } = input
-  return { id, path, version }
+  const expectedActive = input.expectedActive
+  if (expectedActive === null) return null
+  return isExpectedActive(expectedActive) ? expectedActive : undefined
 }
 
 function isPersistedAvatar(value: unknown): value is UploadArtistAvatarData {
@@ -106,18 +113,14 @@ export function createArtistAvatarOperationPolicy(
   return {
     admitEnqueue: admitArtistAvatarEnqueue,
     async upload({ context, preparedAsset }) {
-      const input = context.input as
-        | ExpectedActiveAvatar
-        | AvatarActivationInput
-        | null
-        | undefined
-      const expectedActive =
-        input && 'activation' in input
-          ? undefined
-          : expectedActiveFromContext(context)
+      const input = context.input as AvatarEnqueueInput | null | undefined
+      const expectedActive = input?.activation
+        ? undefined
+        : expectedActiveFromContext(context)
       const formData = new FormData()
       formData.append('assetTarget', ASSET_TARGET.ARTIST_AVATAR)
       formData.append('entityId', context.entityId)
+      if (input?.slug) formData.append('slug', input.slug)
       formData.append('blob', preparedAsset.blob, 'avatar.webp')
       formData.append('preparedWidth', String(preparedAsset.width))
       formData.append('preparedHeight', String(preparedAsset.height))
@@ -128,7 +131,7 @@ export function createArtistAvatarOperationPolicy(
         formData.append('expectedActivePath', expectedActive.path)
         formData.append('expectedActiveVersion', expectedActive.version ?? '')
       }
-      if (input && 'activation' in input) {
+      if (input?.activation) {
         formData.append('catalogId', String(input.activation.catalogId))
         formData.append(
           'requestedActive',

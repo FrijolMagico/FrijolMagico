@@ -17,6 +17,12 @@ import type { ExpectedActiveAvatar } from '../catalogo/_lib/avatar-history-contr
 const schema = z
   .object({
     artistaId: z.number().int().positive(),
+    slug: z
+      .string()
+      .min(1, { message: 'El slug del artista es obligatorio' })
+      .regex(/^[a-z0-9-]+$/, {
+        message: 'El slug del artista tiene un formato inválido'
+      }),
     blob: z.instanceof(Blob).refine((blob) => blob.type === 'image/webp', {
       message: 'El avatar debe estar en formato WebP'
     }),
@@ -71,8 +77,8 @@ export async function uploadArtistAvatarAction(
       }
     }
 
-    const version = crypto.randomUUID()
-    const path = `artistas/${parsed.data.artistaId}/avatar-${version}.webp`
+    const version = String(Date.now())
+    const path = `artistas/${parsed.data.slug}/avatar-${version}.webp`
     await getStore().putObject(path, parsed.data.blob)
     const receipt = createArtistAvatarUploadReceipt(
       {

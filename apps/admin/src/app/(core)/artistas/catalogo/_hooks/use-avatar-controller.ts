@@ -76,22 +76,24 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'No se pudo cargar el avatar'
 }
 
+export interface AvatarEnqueueInput {
+  slug: string
+  expectedActive?: ExpectedActiveAvatar | null
+  activation?: { catalogId: number; requestedActive: boolean }
+}
+
 interface AvatarController {
   getSnapshot: () => AvatarControllerState
   subscribe: (listener: () => void) => () => void
   selectFile: (file: File) => Promise<PreparationResult>
   enqueue: (
     entityId: string | number,
-    expectedActive?: ExpectedActiveAvatar | AvatarActivationInput | null
+    input?: AvatarEnqueueInput
   ) => Promise<void>
   cancel: () => void
   retry: () => Promise<void>
   reset: () => void
   syncAvatar: (avatar: ManagedAssetReference | null) => void
-}
-
-export interface AvatarActivationInput {
-  activation: { catalogId: number; requestedActive: boolean }
 }
 
 export function createAvatarController(
@@ -198,7 +200,7 @@ export function createAvatarController(
       }
       return prepareFromSource(lastSource)
     },
-    async enqueue(entityId, expectedActive) {
+    async enqueue(entityId, input) {
       if (!preparedAsset) {
         update({
           phase: AVATAR_CONTROLLER_PHASE.FAILED,
@@ -213,7 +215,7 @@ export function createAvatarController(
           String(entityId),
           preparedAsset,
           preparedPreview ?? undefined,
-          expectedActive
+          input
         )
         currentJobId = job.jobId
         preparedAsset = null
