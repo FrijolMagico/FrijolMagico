@@ -64,7 +64,8 @@ INSERT OR IGNORE INTO tipo_actividad (slug, descripcion) VALUES (
 --     → getAvatarUrl(path) resuelve concatenando R2_PUBLIC_URL env var
 --     → Formato: artistas/{slug}/avatar-{version}.webp
 --   - Posters: poster_url = poster_path como ruta relativa + poster_version
---     → Formato: festivales/{event-slug}/{edition-slug}/afiche.webp
+--     → Formato: festivales/{event-slug}/{edition-number}/afiche-{version}.webp
+--       (edition-number = numero_edicion en minúscula, ej: 'I' → 'i')
 --     ⚠️ El código actual (festivalDetailQuery) lee poster_url como URL absoluta.
 --       Para que funcione sin cambios, actualizar la query/mapper para resolver
 --       poster_path + poster_version via composeAssetUrl().
@@ -311,15 +312,16 @@ VALUES (1, 1, 'Festival Frijol Mágico', 'frijol-magico', 'Frijol Mágico es un 
 -- =============================================================================
 -- EVENTO EDICIONES
 -- =============================================================================
--- poster_path formato: festivales/{event-slug}/{edition-slug}/afiche.webp
+-- poster_path formato: festivales/{event-slug}/{edition-number}/afiche-{version}.webp
+-- (edition-number = numero_edicion en minúscula, ej: 'I' → 'i')
 -- poster_url = poster_path (relativo) — ⚠️ el código actual lee poster_url como
 -- URL absoluta. Migrar la query/mapper para resolver con composeAssetUrl().
 
 INSERT INTO evento_edicion (id, evento_id, nombre, numero_edicion, slug, poster_url, poster_path, poster_version, published, created_at, updated_at)
-VALUES (1, 1, NULL, 'I', 'frijol-magico-i', 'festivales/frijol-magico/frijol-magico-i/afiche-123456789.webp', 'festivales/frijol-magico/frijol-magico-i/afiche-123456789.webp', '123456789', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
+VALUES (1, 1, NULL, 'I', 'frijol-magico-i', 'festivales/frijol-magico/i/afiche-123456789.webp', 'festivales/frijol-magico/i/afiche-123456789.webp', '123456789', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
 
 INSERT INTO evento_edicion (id, evento_id, nombre, numero_edicion, slug, poster_url, poster_path, poster_version, published, created_at, updated_at)
-VALUES (2, 1, 'Día del Libro', 'II', 'frijol-magico-ii', 'festivales/frijol-magico/frijol-magico-ii/afiche-123456789.webp', 'festivales/frijol-magico/frijol-magico-ii/afiche-123456789.webp', '123456789', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
+VALUES (2, 1, 'Día del Libro', 'II', 'frijol-magico-ii', 'festivales/frijol-magico/ii/afiche-123456789.webp', 'festivales/frijol-magico/ii/afiche-123456789.webp', '123456789', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
 
 -- =============================================================================
 -- EVENTO EDICION DIAS
