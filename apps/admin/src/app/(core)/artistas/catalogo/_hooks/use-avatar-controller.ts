@@ -21,6 +21,8 @@ import {
 import {
   createPreparationController,
   type AssetCodec,
+  type AssetSource,
+  type PreparationErrorKind,
   type PreparationResult
 } from '@/shared/assets-manager/client/preparation'
 import {
@@ -52,6 +54,7 @@ export interface AvatarControllerState {
   currentAvatar: ManagedAssetReference | null
   job: AssetQueueJob | null
   error: string | null
+  errorKind: PreparationErrorKind | null
 }
 
 export interface AvatarControllerOptions {
@@ -103,12 +106,14 @@ export function createAvatarController(
   let currentJobId: string | null = null
   let preparedAsset: PreparedAsset | null = null
   let preparedPreview: LocalPreviewHandle | null = null
+  let lastSource: AssetSource | null = null
   let snapshot: AvatarControllerState = {
     phase: AVATAR_CONTROLLER_PHASE.IDLE,
     preview: null,
     currentAvatar: options.initialAvatar ?? null,
     job: null,
-    error: null
+    error: null,
+    errorKind: null
   }
 
   const notify = () => {
@@ -134,6 +139,38 @@ export function createAvatarController(
     preparedAsset = null
     preparedPreview = null
   }
+  const prepareFromSource = async (source: AssetSource) => {
+    update({
+      phase: AVATAR_CONTROLLER_PHASE.PREPARING,
+      error: null,
+      errorKind: null
+    })
+    const result = await preparation.prepare({
+      target: ASSET_TARGET.ARTIST_AVATAR,
+      source
+    })
+    if (result.phase === 'ready' && result.preparedAsset && result.preview) {
+      preparedAsset = result.preparedAsset
+      preparedPreview = result.preview
+      update({
+        phase: AVATAR_CONTROLLER_PHASE.READY,
+        preview: result.preview,
+        error: null,
+        errorKind: null
+      })
+    } else {
+      update({
+        phase:
+          result.phase === 'cancelled'
+            ? AVATAR_CONTROLLER_PHASE.IDLE
+            : AVATAR_CONTROLLER_PHASE.FAILED,
+        preview: null,
+        error: result.error,
+        errorKind: result.errorKind
+      })
+    }
+    return result
+  }
 
   let unsubscribeStore: (() => void) | null = null
   const controller: AvatarController = {
@@ -153,35 +190,13 @@ export function createAvatarController(
     },
     async selectFile(file) {
       releasePreparation()
-      update({ phase: AVATAR_CONTROLLER_PHASE.PREPARING, error: null })
-      const result = await preparation.prepare({
-        target: ASSET_TARGET.ARTIST_AVATAR,
-        source: {
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          blob: file
-        }
-      })
-      if (result.phase === 'ready' && result.preparedAsset && result.preview) {
-        preparedAsset = result.preparedAsset
-        preparedPreview = result.preview
-        update({
-          phase: AVATAR_CONTROLLER_PHASE.READY,
-          preview: result.preview,
-          error: null
-        })
-      } else {
-        update({
-          phase:
-            result.phase === 'cancelled'
-              ? AVATAR_CONTROLLER_PHASE.IDLE
-              : AVATAR_CONTROLLER_PHASE.FAILED,
-          preview: null,
-          error: result.error
-        })
+      lastSource = {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        blob: file
       }
-      return result
+      return prepareFromSource(lastSource)
     },
     async enqueue(entityId, expectedActive) {
       if (!preparedAsset) {
@@ -203,11 +218,13 @@ export function createAvatarController(
         currentJobId = job.jobId
         preparedAsset = null
         preparedPreview = null
+        lastSource = null
         update({
           phase: AVATAR_CONTROLLER_PHASE.UPLOADING,
           preview: job.preview,
           job,
-          error: null
+          error: null,
+          errorKind: null
         })
         syncJob()
       } catch (error) {
@@ -221,29 +238,39 @@ export function createAvatarController(
       if (currentJobId) runtime.cancel(currentJobId)
       releasePreparation()
       currentJobId = null
+      lastSource = null
       update({
         phase: AVATAR_CONTROLLER_PHASE.IDLE,
         preview: null,
         job: null,
-        error: null
+        error: null,
+        errorKind: null
       })
     },
     async retry() {
       const job = currentJob()
-      if (!job || job.status !== ASSET_QUEUE_STATUS.FAILED) return
-      if (job.failedStep === 'upload') await runtime.retryUpload(job.jobId)
-      else if (job.failedStep === 'persist')
-        await runtime.retryPersistence(job.jobId)
-      syncJob()
+      if (job && job.status === ASSET_QUEUE_STATUS.FAILED) {
+        if (job.failedStep === 'upload') await runtime.retryUpload(job.jobId)
+        else if (job.failedStep === 'persist')
+          await runtime.retryPersistence(job.jobId)
+        syncJob()
+        return
+      }
+      if (snapshot.errorKind === 'unknown' && lastSource) {
+        releasePreparation()
+        await prepareFromSource(lastSource)
+      }
     },
     reset() {
       releasePreparation()
       currentJobId = null
+      lastSource = null
       update({
         phase: AVATAR_CONTROLLER_PHASE.IDLE,
         preview: null,
         job: null,
-        error: null
+        error: null,
+        errorKind: null
       })
     },
     syncAvatar(avatar: ManagedAssetReference | null) {

@@ -11,6 +11,12 @@ import type { PreparationResult } from '@/shared/assets-manager/client/preparati
 import type { AvatarSequenceItem } from '../_lib/artist-avatar-history'
 
 import { useAvatarController } from '../_hooks/use-avatar-controller'
+import { cn } from '@/shared/lib/utils'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/shared/components/ui/tooltip'
 
 const ACCEPTED_AVATAR_TYPES = 'image/jpeg,image/png,image/webp'
 
@@ -64,6 +70,10 @@ export function ArtistAvatarSection({
         controller.state.job.totalBytes
       )
     : 0
+  const showErrorActions =
+    controller.state.phase === 'failed' &&
+    (controller.state.errorKind === 'unknown' ||
+      controller.state.job?.failedStep != null)
   const selectFile = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.currentTarget.files?.[0]
     event.currentTarget.value = ''
@@ -79,11 +89,13 @@ export function ArtistAvatarSection({
       aria-labelledby='artist-avatar-section-title'
       className='flex flex-col gap-4'
     >
-      <h2 id='artist-avatar-section-title' className='text-sm font-medium'>
-        Avatar del artista <span className='text-destructive ml-1'>*</span>
-      </h2>
+      {!previewUrl && (
+        <h2 id='artist-avatar-section-title' className='text-sm font-medium'>
+          Avatar del artista <span className='text-destructive ml-1'>*</span>
+        </h2>
+      )}
       <div className='flex flex-col items-center gap-4'>
-        <div className='flex items-center gap-3'>
+        <div className='flex items-center'>
           <Button
             type='button'
             variant='ghost'
@@ -94,18 +106,33 @@ export function ArtistAvatarSection({
           >
             <IconChevronLeft aria-hidden='true' />
           </Button>
+
           <label
             htmlFor={`artist-avatar-file-${artistId ?? 'new'}`}
-            className='bg-muted border-border hover:border-primary focus-within:border-primary flex size-24 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-dashed text-center transition-colors'
+            className={cn(
+              'bg-muted flex size-24 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full text-center transition-colors',
+              !previewUrl &&
+                'border-border hover:border-primary border border-dashed',
+              previewUrl && 'transition-transform hover:scale-105'
+            )}
           >
             {previewUrl ? (
-              <Image
-                src={previewUrl}
-                alt='Vista previa del avatar'
-                width={96}
-                height={96}
-                className='size-full object-cover'
-              />
+              <Tooltip>
+                <TooltipContent side='top' align='center'>
+                  Haz click para seleccionar un nuevo avatar
+                </TooltipContent>
+                <TooltipTrigger
+                  render={
+                    <Image
+                      src={previewUrl}
+                      alt='Vista previa del avatar'
+                      width={96}
+                      height={96}
+                      className='size-full object-cover'
+                    />
+                  }
+                ></TooltipTrigger>
+              </Tooltip>
             ) : (
               <span className='text-muted-foreground text-xs'>
                 Seleccionar avatar
@@ -155,7 +182,7 @@ export function ArtistAvatarSection({
       {controller.state.error && (
         <div role='alert' className='text-destructive text-sm'>
           {controller.state.error}
-          {controller.state.phase === 'failed' && (
+          {showErrorActions && (
             <>
               <Button
                 type='button'

@@ -45,18 +45,22 @@ interface PrepareAssetInput {
   signal?: AbortSignal
   onPhase?: (phase: PreparationPhase) => void
 }
+export type PreparationErrorKind = 'validation' | 'unknown'
+
 export interface PreparationResult {
   phase: PreparationPhase
   preview: LocalPreviewHandle | null
   preparedAsset: PreparedAsset | null
   error: string | null
+  errorKind: PreparationErrorKind | null
 }
 
 function result(
   phase: PreparationPhase,
-  error: string | null = null
+  error: string | null = null,
+  errorKind: PreparationErrorKind | null = null
 ): PreparationResult {
-  return { phase, preview: null, preparedAsset: null, error }
+  return { phase, preview: null, preparedAsset: null, error, errorKind }
 }
 
 function dimensionsFor(
@@ -81,7 +85,11 @@ export async function prepareAsset(
   const { codec, onPhase, signal, source, target } = input
   onPhase?.(PREPARATION_PHASE.VALIDATING)
   if (!ACCEPTED_MIME_TYPES.has(source.type) || source.size > MAX_SOURCE_BYTES)
-    return result(PREPARATION_PHASE.ERROR, 'Unsupported asset source')
+    return result(
+      PREPARATION_PHASE.ERROR,
+      'Tipo de archivo no soportado o demasiado grande.',
+      'validation'
+    )
   let image: DecodedImage | null = null
   let preview: LocalPreviewHandle | null = null
   let succeeded = false
@@ -90,7 +98,11 @@ export async function prepareAsset(
     image = await codec.decode(source.blob, signal)
     const dimensions = dimensionsFor(target, image)
     if (!dimensions)
-      return result(PREPARATION_PHASE.ERROR, 'Invalid source dimensions')
+      return result(
+        PREPARATION_PHASE.ERROR,
+        'Dimensiones inválidas, la imágen debe ser cuadrada.',
+        'validation'
+      )
     if (signal?.aborted) return result(PREPARATION_PHASE.CANCELLED)
     const previewUrl = codec.createPreview(source.blob)
     let previewReleased = false
@@ -113,19 +125,25 @@ export async function prepareAsset(
     )
     if (signal?.aborted) return result(PREPARATION_PHASE.CANCELLED)
     if (blob.type !== 'image/webp' || blob.size > MAX_OUTPUT_BYTES)
-      return result(PREPARATION_PHASE.ERROR, 'Invalid optimized asset')
+      return result(
+        PREPARATION_PHASE.ERROR,
+        'La imágen optimizada es demasiado grande.',
+        'validation'
+      )
     onPhase?.(PREPARATION_PHASE.READY)
     succeeded = true
     return {
       phase: PREPARATION_PHASE.READY,
       preview,
       preparedAsset: { blob, ...dimensions, mimeType: 'image/webp' },
-      error: null
+      error: null,
+      errorKind: null
     }
   } catch (error) {
     return result(
       signal?.aborted ? PREPARATION_PHASE.CANCELLED : PREPARATION_PHASE.ERROR,
-      error instanceof Error ? error.message : 'Preparation failed'
+      error instanceof Error ? error.message : 'Preparation failed',
+      signal?.aborted ? null : 'unknown'
     )
   } finally {
     image?.close()
