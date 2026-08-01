@@ -57,5 +57,3 @@ bun run db:migrate
 - No hardcoded credentials, auth tokens, passwords
 - **Destructive DB operations:** Ask permission first.
 - **`NEXT_PUBLIC_*`:** Never use for secrets. Only for public config values.
-## Discovery / Tooling
-- `.github/` exists in this repo. Use Read to find it. Glob hides dot-dirs.
