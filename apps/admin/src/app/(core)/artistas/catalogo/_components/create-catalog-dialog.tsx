@@ -149,7 +149,7 @@ export function CreateCatalogDialog({
     >
       <form id={CREATE_CATALOG_FORM_ID} onSubmit={handleSubmit(onSubmit)}>
         <FieldGroup className='pt-4'>
-          <div className='flex items-center gap-6'>
+          <div className='flex items-center gap-2'>
             <ArtistAvatarSection
               artistId={artistaId}
               currentAvatar={controller.state.currentAvatar ?? currentAvatar}
