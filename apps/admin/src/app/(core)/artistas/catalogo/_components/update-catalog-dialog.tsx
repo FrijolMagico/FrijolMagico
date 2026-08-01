@@ -37,11 +37,11 @@ import { useCatalogAvatarPending } from '../_lib/catalog-avatar-queue-state'
 import { UpdateArtistDialog } from '../../_components/update-artist-dialog'
 import { useArtistDialog } from '../../_store/artist-dialog-store'
 import { UPDATE_CATALOG_FORM_ID } from '../_constants'
-import type { Artist } from '../../_schemas/artista.schema'
+import type { CatalogArtist } from '../_types/catalog-list-item'
 
 interface UpdateCatalogDialogFormProps {
   catalog: Catalog
-  artist: Artist
+  artist: CatalogArtist
 }
 
 function UpdateCatalogDialogForm({
@@ -121,7 +121,10 @@ function UpdateCatalogDialogForm({
 
     if (intent === AVATAR_INTENT.PREPARED_UPLOAD) {
       try {
-        await controller.enqueue(artist.id, catalog.activeAvatar ?? null)
+        await controller.enqueue(artist.id, {
+          slug: artist.slug,
+          expectedActive: catalog.activeAvatar ?? null
+        })
       } catch {
         // The controller renders the upload error and retry action.
       }
@@ -150,6 +153,7 @@ function UpdateCatalogDialogForm({
           <div className='flex items-center gap-2'>
             <ArtistAvatarSection
               artistId={artist.id}
+              slug={artist.slug}
               currentAvatar={catalog.activeAvatar ?? null}
               autoEnqueue={false}
               avatars={history.avatars}

@@ -32,6 +32,7 @@ describe('parseAssetUpload', () => {
       fields: {
         assetTarget: 'artist-avatar',
         entityId: 'artist-123',
+        slug: 'artista-de-prueba',
         blob: new Blob(['fake-webp'], { type: 'image/webp' }),
         preparedWidth: '800',
         preparedHeight: '800'
@@ -42,6 +43,7 @@ describe('parseAssetUpload', () => {
 
     expect(result.target).toBe('artist-avatar')
     expect(result.entityId).toBe('artist-123')
+    expect(result.slug).toBe('artista-de-prueba')
     expect(result.mimeType).toBe('image/webp')
     expect(result.preparedWidth).toBe(800)
     expect(result.preparedHeight).toBe(800)

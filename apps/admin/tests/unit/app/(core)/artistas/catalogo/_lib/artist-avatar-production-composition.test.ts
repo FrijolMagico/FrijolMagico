@@ -140,10 +140,14 @@ describe('artist avatar production composition', () => {
     })
 
     await policy.upload({
-      context: { ...context, input: expectedActive },
+      context: {
+        ...context,
+        input: { slug: 'artista-de-prueba', expectedActive }
+      },
       preparedAsset
     })
 
+    expect(capture.body?.get('slug')).toBe('artista-de-prueba')
     expect(capture.body?.get('expectedActiveId')).toBe('8')
     expect(capture.body?.get('expectedActivePath')).toBe(expectedActive.path)
     expect(capture.body?.get('expectedActiveVersion')).toBe(

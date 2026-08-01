@@ -115,7 +115,7 @@ describe('useAvatarController', () => {
   })
 
   test('carries the active-avatar baseline into a deferred queue upload', async () => {
-    let receivedExpectedActive: unknown = null
+    let receivedInput: unknown = null
     const expectedActive = {
       id: 8,
       path: 'artistas/artista-de-prueba/avatar-v1.webp',
@@ -123,17 +123,22 @@ describe('useAvatarController', () => {
     }
     const { controller } = createHarness({
       upload: async ({ context }) => {
-        receivedExpectedActive =
-          'input' in context ? context.input : null
+        receivedInput = 'input' in context ? context.input : null
         return 'uploaded'
       }
     })
 
     await controller.selectFile(file)
-    await controller.enqueue('artist-1', expectedActive)
+    await controller.enqueue('artist-1', {
+      slug: 'artista-de-prueba',
+      expectedActive
+    })
     await waitForPhase(controller, AVATAR_CONTROLLER_PHASE.COMPLETED)
 
-    expect(receivedExpectedActive).toEqual(expectedActive)
+    expect(receivedInput).toEqual({
+      slug: 'artista-de-prueba',
+      expectedActive
+    })
   })
 
   test('maps failed upload state and retries through the runtime', async () => {

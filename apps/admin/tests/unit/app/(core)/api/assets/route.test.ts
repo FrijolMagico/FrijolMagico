@@ -66,6 +66,7 @@ describe('POST /api/assets', () => {
     const blob = new Blob(['fake-webp'], { type: 'image/webp' })
     formData.append('assetTarget', 'artist-avatar')
     formData.append('entityId', '42')
+    formData.append('slug', 'artista-de-prueba')
     formData.append('blob', blob)
     formData.append('preparedWidth', '800')
     formData.append('preparedHeight', '800')
@@ -83,6 +84,7 @@ describe('POST /api/assets', () => {
     expect(response.status).toBe(200)
     expect(mockUploadArtistAvatarAction).toHaveBeenCalledWith({
       artistaId: 42,
+      slug: 'artista-de-prueba',
       blob: expect.any(Blob),
       width: 800,
       height: 800,

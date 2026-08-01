@@ -222,8 +222,8 @@ describe.skipIf(!modulesLoaded)('get-catalog-data DAL', () => {
   test('getArtistsNotInCatalog returns identity only without an avatar query', async () => {
     const dbMock = createDbMock([
       [
-        { id: 3, pseudonimo: 'Bosque Azul', nombre: 'María Soto' },
-        { id: 5, pseudonimo: 'Pintacaritas', nombre: 'Pablo Zamora' }
+        { id: 3, pseudonimo: 'Bosque Azul', nombre: 'María Soto', slug: 'bosque-azul' },
+        { id: 5, pseudonimo: 'Pintacaritas', nombre: 'Pablo Zamora', slug: 'pintacaritas' }
       ]
     ])
     currentDb = dbMock.db
@@ -232,17 +232,17 @@ describe.skipIf(!modulesLoaded)('get-catalog-data DAL', () => {
 
     expect(result).toHaveLength(2)
     expect(result).toEqual([
-      { id: 3, pseudonimo: 'Bosque Azul', nombre: 'María Soto' },
-      { id: 5, pseudonimo: 'Pintacaritas', nombre: 'Pablo Zamora' }
+      { id: 3, pseudonimo: 'Bosque Azul', nombre: 'María Soto', slug: 'bosque-azul' },
+      { id: 5, pseudonimo: 'Pintacaritas', nombre: 'Pablo Zamora', slug: 'pintacaritas' }
     ])
     expect(
       Object.keys((dbMock.calls[0]?.args[0] ?? {}) as Record<string, unknown>)
-    ).toEqual(['id', 'pseudonimo', 'nombre'])
+    ).toEqual(['id', 'pseudonimo', 'nombre', 'slug'])
   })
 
   test('getArtistsNotInCatalog uses a minimal anti-join query and dual cache tags', async () => {
     const dbMock = createDbMock([
-      [{ id: 3, pseudonimo: 'Bosque Azul', nombre: 'María Soto' }]
+      [{ id: 3, pseudonimo: 'Bosque Azul', nombre: 'María Soto', slug: 'bosque-azul' }]
     ])
     currentDb = dbMock.db
 
@@ -252,13 +252,14 @@ describe.skipIf(!modulesLoaded)('get-catalog-data DAL', () => {
       {
         id: 3,
         pseudonimo: 'Bosque Azul',
-        nombre: 'María Soto'
+        nombre: 'María Soto',
+        slug: 'bosque-azul'
       }
     ])
     expect(getCacheTags()).toEqual(['catalogo:artistas', 'artistas'])
     expect(
       Object.keys((dbMock.calls[0]?.args[0] ?? {}) as Record<string, unknown>)
-    ).toEqual(['id', 'pseudonimo', 'nombre'])
+    ).toEqual(['id', 'pseudonimo', 'nombre', 'slug'])
     expect(dbMock.calls).toHaveLength(2)
   })
 })

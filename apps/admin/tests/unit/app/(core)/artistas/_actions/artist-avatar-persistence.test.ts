@@ -7,7 +7,7 @@ const cacheTag = mock(() => {})
 const getSession = mock(async () => ({ user: { id: 'admin-1' } }))
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
 const getUser = mock(async () => ({ id: 'admin-1' }))
-const putObject = mock(async () => {})
+const putObject = mock(async (_path: string, _blob: Blob) => {})
 const deleteObject = mock(async () => {})
 const originalDateNow = Date.now
 
@@ -275,6 +275,7 @@ describe('artist avatar persistence', () => {
 
     const result = await uploadArtistAvatarAction({
       artistaId: 12,
+      slug: 'artista-de-prueba',
       blob: new Blob(['prepared'], { type: 'image/webp' }),
       width: 800,
       height: 800
@@ -295,11 +296,16 @@ describe('artist avatar persistence', () => {
 
     const result = await uploadArtistAvatarAction({
       artistaId: 12,
+      slug: 'artista-de-prueba',
       blob: new Blob(['prepared'], { type: 'image/webp' }),
       width: 800,
       height: 800
     })
     expect(result.success).toBe(true)
+    // Server-owned key: artist slug + timestamp, never the numeric id or a UUID
+    expect(putObject.mock.calls[0]?.[0]).toMatch(
+      /^artistas\/artista-de-prueba\/avatar-\d+\.webp$/
+    )
   })
 
   test('rejects non-exact prepared dimensions without uploading or persisting', async () => {
@@ -308,6 +314,7 @@ describe('artist avatar persistence', () => {
 
     const result = await uploadArtistAvatarAction({
       artistaId: 12,
+      slug: 'artista-de-prueba',
       blob: new Blob(['prepared'], { type: 'image/webp' }),
       width: 799,
       height: 800
@@ -330,6 +337,7 @@ describe('artist avatar persistence', () => {
 
     const result = await uploadArtistAvatarAction({
       artistaId: 12,
+      slug: 'artista-de-prueba',
       blob: new Blob(['prepared'], { type: 'image/webp' }),
       width: 800,
       height: 800
@@ -345,6 +353,7 @@ describe('artist avatar persistence', () => {
 
     const result = await uploadArtistAvatarAction({
       artistaId: 12,
+      slug: 'artista-de-prueba',
       blob: new Blob(['prepared'], { type: 'image/webp' }),
       width: 800,
       height: 800,

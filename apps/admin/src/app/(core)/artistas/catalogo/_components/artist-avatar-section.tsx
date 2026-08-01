@@ -11,6 +11,7 @@ import type { PreparationResult } from '@/shared/assets-manager/client/preparati
 import type { AvatarSequenceItem } from '../_lib/artist-avatar-history'
 
 import { useAvatarController } from '../_hooks/use-avatar-controller'
+import type { AvatarEnqueueInput } from '../_hooks/use-avatar-controller'
 import { cn } from '@/shared/lib/utils'
 import {
   Tooltip,
@@ -23,13 +24,17 @@ const ACCEPTED_AVATAR_TYPES = 'image/jpeg,image/png,image/webp'
 export interface ExternalAvatarController {
   state: AvatarControllerState
   selectFile: (file: File) => Promise<PreparationResult>
-  enqueue: (entityId: string | number) => Promise<void>
+  enqueue: (
+    entityId: string | number,
+    input?: AvatarEnqueueInput
+  ) => Promise<void>
   cancel: () => void
   retry: () => Promise<void>
 }
 
 export interface ArtistAvatarSectionProps {
   artistId: string | number | null
+  slug?: string
   currentAvatar?: ManagedAssetReference | null
   autoEnqueue?: boolean
   controller?: ExternalAvatarController
@@ -45,6 +50,7 @@ function progressFor(sentBytes: number, totalBytes: number): number {
 
 export function ArtistAvatarSection({
   artistId,
+  slug,
   currentAvatar = null,
   autoEnqueue = true,
   controller: externalController,
@@ -81,7 +87,8 @@ export function ArtistAvatarSection({
     void controller.selectFile(file).then((result) => {
       if (result.phase !== 'ready') return
       onPreparedUpload?.()
-      if (artistId !== null && autoEnqueue) void controller.enqueue(artistId)
+      if (artistId !== null && autoEnqueue)
+        void controller.enqueue(artistId, slug ? { slug } : undefined)
     })
   }
   return (

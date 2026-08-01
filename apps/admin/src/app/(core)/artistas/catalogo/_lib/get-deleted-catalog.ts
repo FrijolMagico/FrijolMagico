@@ -11,8 +11,10 @@ import { parseRRSS } from '@/shared/lib/rrss'
 
 import { ARTIST_CACHE_TAG, CATALOG_CACHE_TAG } from '@frijolmagico/cache-tags'
 import type { ARTIST_STATUS } from '../../_constants'
-import type { Artist } from '../../_schemas/artista.schema'
-import type { CatalogListItem } from '../_types/catalog-list-item'
+import type {
+  CatalogArtist,
+  CatalogListItem
+} from '../_types/catalog-list-item'
 import type { ActiveAvatar } from './avatar-history-contracts'
 
 const { catalogArtist, artistImage, artist: artistTable } = artist
@@ -28,6 +30,7 @@ interface DeletedCatalogArtistRow {
   pais: string | null
   estadoId: number
   rrss: string | null
+  slug: string
 }
 
 interface DeletedCatalogRow {
@@ -41,7 +44,7 @@ interface DeletedCatalogRow {
   artist: DeletedCatalogArtistRow
 }
 
-function mapDeletedCatalogArtist(row: DeletedCatalogArtistRow): Artist {
+function mapDeletedCatalogArtist(row: DeletedCatalogArtistRow): CatalogArtist {
   return {
     ...row,
     estadoId: row.estadoId as ARTIST_STATUS,
@@ -73,7 +76,8 @@ export async function getDeletedCatalog(): Promise<CatalogListItem[]> {
         ciudad: artistTable.ciudad,
         pais: artistTable.pais,
         estadoId: artistTable.estadoId,
-        rrss: artistTable.rrss
+        rrss: artistTable.rrss,
+        slug: artistTable.slug
       }
     })
     .from(catalogArtist)
