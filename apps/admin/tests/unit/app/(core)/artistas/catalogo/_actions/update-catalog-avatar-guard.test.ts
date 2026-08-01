@@ -4,7 +4,11 @@ import { getAvatarUrl } from '@frijolmagico/utils/cdn'
 
 const updateTag = mock(() => {})
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
+const getSession = mock(async () => ({ user: { id: 'admin-1' } }))
+const getUser = mock(async () => ({ id: 'admin-1' }))
 const revalidateWebCache = mock(async () => ({ revalidated: true }))
+const revalidateWebCacheBestEffort = mock(async () => {})
+const buildWebInvalidationUrl = mock(() => 'https://example.com/api/revalidate')
 
 let dbTransaction: (
   cb: (tx: unknown) => Promise<unknown>
@@ -12,8 +16,16 @@ let dbTransaction: (
 
 mock.module('server-only', () => ({}))
 mock.module('next/cache', () => ({ updateTag }))
-mock.module('@/shared/lib/auth/utils', () => ({ requireAuth }))
-mock.module('@/shared/lib/web-invalidation', () => ({ revalidateWebCache }))
+mock.module('@/shared/lib/auth/utils', () => ({
+  getSession,
+  requireAuth,
+  getUser
+}))
+mock.module('@/shared/lib/web-invalidation', () => ({
+  buildWebInvalidationUrl,
+  revalidateWebCache,
+  revalidateWebCacheBestEffort
+}))
 mock.module('@frijolmagico/database/orm', () => ({
   db: {
     transaction: (cb: (tx: unknown) => Promise<unknown>) => dbTransaction(cb)
@@ -71,9 +83,11 @@ describe('update-catalog action — avatar optimistic concurrency', () => {
   test('accepts a save when expectedActive matches the full public path', async () => {
     let catalogChanged = false
     dbTransaction = async (cb) => {
-      const result = await cb(createTx([CURRENT_AVATAR], () => {
-        catalogChanged = true
-      }))
+      const result = await cb(
+        createTx([CURRENT_AVATAR], () => {
+          catalogChanged = true
+        })
+      )
       return result
     }
 
@@ -98,9 +112,11 @@ describe('update-catalog action — avatar optimistic concurrency', () => {
   test('rejects a save when expectedActive carries a raw path instead of the full public path', async () => {
     let catalogChanged = false
     dbTransaction = async (cb) => {
-      const result = await cb(createTx([CURRENT_AVATAR], () => {
-        catalogChanged = true
-      }))
+      const result = await cb(
+        createTx([CURRENT_AVATAR], () => {
+          catalogChanged = true
+        })
+      )
       return result
     }
 
@@ -127,9 +143,11 @@ describe('update-catalog action — avatar optimistic concurrency', () => {
   test('rejects activating a catalog entry without an active avatar', async () => {
     let catalogChanged = false
     dbTransaction = async (cb) => {
-      const result = await cb(createTx([], () => {
-        catalogChanged = true
-      }))
+      const result = await cb(
+        createTx([], () => {
+          catalogChanged = true
+        })
+      )
       return result
     }
 
@@ -160,9 +178,11 @@ describe('update-catalog action — avatar optimistic concurrency', () => {
   test('allows saving an avatar-less entry without activating it', async () => {
     let catalogChanged = false
     dbTransaction = async (cb) => {
-      const result = await cb(createTx([], () => {
-        catalogChanged = true
-      }))
+      const result = await cb(
+        createTx([], () => {
+          catalogChanged = true
+        })
+      )
       return result
     }
 

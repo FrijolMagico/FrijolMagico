@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
 
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
+const getSession = mock(async () => ({ user: { id: 'admin-1' } }))
+const getUser = mock(async () => ({ id: 'admin-1' }))
 const deleteObject = mock(async () => {})
 
 interface AvatarRecord {
@@ -14,8 +16,8 @@ let rows: AvatarRecord[][] = []
 let transactionError: Error | null = null
 let transactionCalls = 0
 let transactionImplementation:
-  | ((callback: (tx: unknown) => Promise<unknown>) => Promise<unknown>)
-  | null = null
+  ((callback: (tx: unknown) => Promise<unknown>) => Promise<unknown>) | null =
+  null
 
 function select() {
   return {
@@ -39,7 +41,11 @@ const db = {
 
 mock.module('server-only', () => ({}))
 mock.module('@frijolmagico/database/orm', () => ({ db }))
-mock.module('@/shared/lib/auth/utils', () => ({ requireAuth }))
+mock.module('@/shared/lib/auth/utils', () => ({
+  getSession,
+  requireAuth,
+  getUser
+}))
 mock.module('@/shared/assets-manager/server/r2-adapter', () => ({
   R2Adapter: mock(() => ({ deleteObject })),
   createR2Config: mock(() => ({}))

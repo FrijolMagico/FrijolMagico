@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, mock, test } from 'bun:test'
 
 const updateTag = mock(() => {})
 const revalidateWebCache = mock(() => Promise.resolve({ revalidated: true }))
+const buildWebInvalidationUrl = mock(() => 'https://example.com/api/revalidate')
+const revalidateWebCacheBestEffort = mock(async () => {})
 const getSession = mock(async () => ({ user: { id: '1' } }))
 const requireAuth = mock(async () => ({ user: { id: '1' } }))
 const getUser = mock(async () => ({ id: '1' }))
@@ -41,7 +43,11 @@ mock.module('@/shared/lib/auth/utils', () => ({
   requireAuth,
   getUser
 }))
-mock.module('@/shared/lib/web-invalidation', () => ({ revalidateWebCache }))
+mock.module('@/shared/lib/web-invalidation', () => ({
+  buildWebInvalidationUrl,
+  revalidateWebCache,
+  revalidateWebCacheBestEffort
+}))
 mock.module('@frijolmagico/database/orm', () => ({
   db: new Proxy(
     {},

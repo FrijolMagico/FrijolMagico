@@ -20,6 +20,7 @@ const dbProxy = {
 
 mock.module('server-only', () => ({}))
 mock.module('next/cache', () => ({ cacheTag, updateTag }))
+mock.module('next/cache.js', () => ({ cacheTag, updateTag }))
 mock.module('@frijolmagico/database/orm', () => ({ db: dbProxy }))
 
 function flattenPrimitiveValues(value: unknown): Array<string | number> {

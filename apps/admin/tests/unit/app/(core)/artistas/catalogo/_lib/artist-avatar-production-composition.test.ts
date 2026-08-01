@@ -315,9 +315,6 @@ describe('artist avatar production composition', () => {
   test('uses the real shared composition through select, enqueue, upload, and persistence', async () => {
     const events: string[] = []
     const originalFetch = globalThis.fetch
-    mock.module('@/core/artistas/_actions/upload-artist-avatar.action', () => ({
-      uploadArtistAvatarAction: async () => ({ success: true })
-    }))
     const fetchMock = async (input: RequestInfo | URL) => {
       const url = input.toString()
       events.push(url === '/api/assets' ? 'upload' : 'persist')
