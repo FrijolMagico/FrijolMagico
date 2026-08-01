@@ -76,7 +76,12 @@ These carry the business rules of the app. Mocking them hides the rules instead
 of testing them. Use one of these instead:
 
 1. **Dependency injection** — pass dependencies as parameters or factories into
-   the code under test. Preferred.
+   the code under test. Preferred. Canonical example: the asset operation policy
+   receives its IO seam by factory —
+   `createArtistAvatarOperationPolicy({ fetch })` in
+   `apps/admin/src/app/(core)/artistas/catalogo/_lib/artist-avatar-operation-policy.ts` —
+   the policy never imports `fetch`; the test injects a capture stub and the
+   production composition binds `globalThis.fetch`.
 2. **Test doubles at the boundary** — mock the infrastructure the domain hook
    depends on (DB client, auth utils, cache) and assert against the real hook.
 
@@ -84,6 +89,23 @@ If you must `mock.module` a domain module (DI is not viable), the mock must live
 **at top level** with the **full surface**, followed by `await import()` of the
 SUT. `mock.module` inside a `test()` body is **prohibited**: module registration
 is not re-evaluated per test, so the mock silently applies to the wrong scope.
+
+### Transport-edge delegation (route tests only)
+
+Route handlers (`app/**/api/**/route.ts`, cron endpoints) are **transport
+edges**: they parse requests, validate input, call a server action or `_lib`
+routine, and shape the response. A route test that mocks that delegation is
+**allowed only when all of these hold**:
+
+- The file under test is a route handler (never a `_lib`/`_actions` module
+  being tested directly).
+- The test focuses on transport behavior (parsing, validation, status codes,
+  response shape, auth guard) — not on the delegated business rules.
+- The mock is **top level** with the **full surface** of the real module.
+- The delegated module keeps its own coverage through boundary test doubles.
+
+This carve-out exists so route tests do not need an in-memory copy of the whole
+domain stack; it does not weaken the prohibition for `_lib`/`_actions` tests.
 
 ## Shape rules
 
@@ -118,4 +140,4 @@ exactly the bug they exist to catch.
 | -------------- | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | **Approved**   | Infrastructure boundaries — mock freely, full surface                                         | `server-only`, `next/cache`, `@/shared/lib/auth/utils`, `@/infra/config/dataSourceConfig`, `@frijolmagico/database/orm` |
 | **Restricted** | Large/external packages or justified helpers — partial mock allowed with documented rationale | `drizzle-orm` (`max` only), `catalog.schema` (`safeParse` only)                                                         |
-| **Prohibited** | Domain hooks — never `mock.module`; use DI/test doubles instead                               | `_actions/*`, `_lib/*`, use-cases, `(cron)/_lib/*`                                                                      |
+| **Prohibited** | Domain hooks — never `mock.module`; use DI/test doubles instead | `_actions/*`, `_lib/*`, use-cases, `(cron)/_lib/*` (exception: transport-edge delegation in route tests, see above) |
