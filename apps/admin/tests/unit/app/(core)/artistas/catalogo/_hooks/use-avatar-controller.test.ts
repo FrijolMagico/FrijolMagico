@@ -28,7 +28,8 @@ const codec: AssetCodec = {
 }
 
 function createHarness(
-  policyOverrides: Partial<AssetOperationPolicy<string, string, null>> = {}
+  policyOverrides: Partial<AssetOperationPolicy<string, string, null>> = {},
+  codecOverride?: AssetCodec
 ) {
   const operations: AssetQueueOperations = {
     upload: async () => {},
@@ -51,7 +52,11 @@ function createHarness(
   }
   runtime.register(ASSET_TARGET.ARTIST_AVATAR, policy)
   const store = createAssetQueueStore(queue)
-  const options: AvatarControllerOptions = { codec, runtime, store }
+  const options: AvatarControllerOptions = {
+    codec: codecOverride ?? codec,
+    runtime,
+    store
+  }
   return { controller: createAvatarController(options), runtime, store }
 }
 
@@ -153,6 +158,77 @@ describe('useAvatarController', () => {
     expect(controller.getSnapshot().phase).toBe(
       AVATAR_CONTROLLER_PHASE.COMPLETED
     )
+  })
+
+  test('classifies deterministic preparation failures as validation', async () => {
+    const { controller } = createHarness(
+      {},
+      {
+        createPreview: () => 'blob:avatar',
+        revokePreview: () => {},
+        decode: async () => ({ width: 800, height: 900, close: () => {} }),
+        encodeWebp: async () => new Blob(['prepared'], { type: 'image/webp' })
+      }
+    )
+
+    await controller.selectFile(file)
+
+    expect(controller.getSnapshot().phase).toBe(AVATAR_CONTROLLER_PHASE.FAILED)
+    expect(controller.getSnapshot().errorKind).toBe('validation')
+    expect(controller.getSnapshot().error).toBe(
+      'Dimensiones inválidas, la imágen debe ser cuadrada.'
+    )
+  })
+
+  test('retry re-prepares the retained file after an unknown preparation failure', async () => {
+    let decodeAttempts = 0
+    const { controller } = createHarness(
+      {},
+      {
+        createPreview: () => 'blob:avatar',
+        revokePreview: () => {},
+        decode: async () => {
+          decodeAttempts += 1
+          if (decodeAttempts === 1) throw new Error('codec unavailable')
+          return { width: 800, height: 800, close: () => {} }
+        },
+        encodeWebp: async () => new Blob(['prepared'], { type: 'image/webp' })
+      }
+    )
+
+    await controller.selectFile(file)
+    expect(controller.getSnapshot().phase).toBe(AVATAR_CONTROLLER_PHASE.FAILED)
+    expect(controller.getSnapshot().errorKind).toBe('unknown')
+
+    await controller.retry()
+
+    expect(decodeAttempts).toBe(2)
+    expect(controller.getSnapshot().phase).toBe(AVATAR_CONTROLLER_PHASE.READY)
+    expect(controller.getSnapshot().errorKind).toBeNull()
+  })
+
+  test('retry does not re-prepare deterministic validation failures', async () => {
+    let decodeAttempts = 0
+    const { controller } = createHarness(
+      {},
+      {
+        createPreview: () => 'blob:avatar',
+        revokePreview: () => {},
+        decode: async () => {
+          decodeAttempts += 1
+          return { width: 800, height: 900, close: () => {} }
+        },
+        encodeWebp: async () => new Blob(['prepared'], { type: 'image/webp' })
+      }
+    )
+
+    await controller.selectFile(file)
+    expect(controller.getSnapshot().errorKind).toBe('validation')
+
+    await controller.retry()
+
+    expect(decodeAttempts).toBe(1)
+    expect(controller.getSnapshot().phase).toBe(AVATAR_CONTROLLER_PHASE.FAILED)
   })
 
   test('preflights avatar admission before attempting a duplicate enqueue', async () => {

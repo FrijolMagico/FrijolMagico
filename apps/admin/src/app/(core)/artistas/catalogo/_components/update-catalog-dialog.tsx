@@ -10,11 +10,7 @@ import { Button } from '@/shared/components/ui/button'
 import { Switch } from '@/shared/components/ui/switch'
 import { Label } from '@/shared/components/ui/label'
 import { Textarea } from '@/shared/components/ui/textarea'
-import {
-  Field,
-  FieldGroup,
-  FieldLabel
-} from '@/shared/components/ui/field'
+import { Field, FieldGroup, FieldLabel } from '@/shared/components/ui/field'
 import {
   Tooltip,
   TooltipContent,
@@ -151,7 +147,7 @@ function UpdateCatalogDialogForm({
     >
       <form id={UPDATE_CATALOG_FORM_ID} onSubmit={handleSubmit(onSubmit)}>
         <div className='space-y-6'>
-          <div className='flex items-center gap-6'>
+          <div className='flex items-center gap-2'>
             <ArtistAvatarSection
               artistId={artist.id}
               currentAvatar={catalog.activeAvatar ?? null}
@@ -188,7 +184,7 @@ function UpdateCatalogDialogForm({
                   onClick={() => openUpdateArtistDialog(artist)}
                   title='Editar información del artista'
                 >
-                  <IconPencil className='h-4 w-4' />
+                  <IconPencil aria-hidden />
                 </Button>
               </div>
               {artist.nombre && (

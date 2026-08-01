@@ -81,14 +81,27 @@ describe('asset preparation', () => {
       })
     })
 
-    expect(rejected).toMatchObject({ phase: 'error', preparedAsset: null })
-    expect(undersized).toMatchObject({ phase: 'error', preparedAsset: null })
-    expect(failed).toMatchObject({ phase: 'error', preparedAsset: null })
+    expect(rejected).toMatchObject({
+      phase: 'error',
+      preparedAsset: null,
+      errorKind: 'validation'
+    })
+    expect(undersized).toMatchObject({
+      phase: 'error',
+      preparedAsset: null,
+      errorKind: 'validation'
+    })
+    expect(failed).toMatchObject({
+      phase: 'error',
+      preparedAsset: null,
+      errorKind: 'unknown'
+    })
     expect(oversized).toMatchObject({
       phase: 'error',
-      error: 'Invalid optimized asset',
+      error: 'La imágen optimizada es demasiado grande.',
       preview: null,
-      preparedAsset: null
+      preparedAsset: null,
+      errorKind: 'validation'
     })
     expect(revoked).toBe(1)
   })
@@ -114,8 +127,16 @@ describe('asset preparation', () => {
       codec
     })
 
-    expect(oversized).toMatchObject({ phase: 'error', preview: null })
-    expect(invalidDimensions).toMatchObject({ phase: 'error', preview: null })
+    expect(oversized).toMatchObject({
+      phase: 'error',
+      preview: null,
+      errorKind: 'validation'
+    })
+    expect(invalidDimensions).toMatchObject({
+      phase: 'error',
+      preview: null,
+      errorKind: 'validation'
+    })
     expect(previews).toBe(0)
   })
 
