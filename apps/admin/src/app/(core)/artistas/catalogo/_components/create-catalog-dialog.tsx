@@ -103,12 +103,8 @@ export function CreateCatalogDialog({
 
       // Post-submit enqueue
       const { artistId, catalogId, requestedActive } = result.data
-      const selectedArtist = availableArtists.find(
-        (artist) => artist.id === data.artistaId
-      )
       try {
         await controller.enqueue(artistId, {
-          slug: selectedArtist?.slug ?? '',
           activation: { catalogId, requestedActive }
         })
       } catch {
@@ -137,10 +133,6 @@ export function CreateCatalogDialog({
     ? { path: activeAvatar.avatar.path, version: activeAvatar.avatar.version }
     : null
 
-  const selectedSlug = availableArtists.find(
-    (artist) => artist.id === artistaId
-  )?.slug
-
   return (
     <EntityFormDialog
       open={isCreateCatalogOpen}
@@ -160,7 +152,6 @@ export function CreateCatalogDialog({
           <div className='flex items-center gap-2'>
             <ArtistAvatarSection
               artistId={artistaId}
-              slug={selectedSlug}
               currentAvatar={controller.state.currentAvatar ?? currentAvatar}
               autoEnqueue={false}
               controller={{

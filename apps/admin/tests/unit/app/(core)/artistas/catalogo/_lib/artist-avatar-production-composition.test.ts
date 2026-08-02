@@ -125,7 +125,7 @@ describe('artist avatar production composition', () => {
     })
   })
 
-  test('sends the queued active-avatar baseline with the deferred upload', async () => {
+  test('omits the legacy client slug while retaining the queued active-avatar baseline', async () => {
     const expectedActive = {
       id: 8,
       path: 'artistas/artista-de-prueba/avatar-v1.webp',
@@ -147,7 +147,7 @@ describe('artist avatar production composition', () => {
       preparedAsset
     })
 
-    expect(capture.body?.get('slug')).toBe('artista-de-prueba')
+    expect(capture.body?.get('slug')).toBeNull()
     expect(capture.body?.get('expectedActiveId')).toBe('8')
     expect(capture.body?.get('expectedActivePath')).toBe(expectedActive.path)
     expect(capture.body?.get('expectedActiveVersion')).toBe(

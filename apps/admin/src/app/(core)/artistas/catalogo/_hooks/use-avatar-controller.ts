@@ -49,13 +49,21 @@ export { AVATAR_CONTROLLER_PHASE }
 export type AvatarControllerPhase =
   (typeof AVATAR_CONTROLLER_PHASE)[keyof typeof AVATAR_CONTROLLER_PHASE]
 
+export type AvatarErrorKind = PreparationErrorKind | 'upload' | 'persist'
+
+const DETERMINISTIC_LIFECYCLE_ERRORS = new Set([
+  'AVATAR_CONFLICT',
+  'INVALID_RECEIPT',
+  'ARTIST_DELETED'
+])
+
 export interface AvatarControllerState {
   phase: AvatarControllerPhase
   preview: LocalPreviewHandle | null
   currentAvatar: ManagedAssetReference | null
   job: AssetQueueJob | null
   error: string | null
-  errorKind: PreparationErrorKind | null
+  errorKind: AvatarErrorKind | null
 }
 
 export interface AvatarControllerOptions {
@@ -77,8 +85,13 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'No se pudo cargar el avatar'
 }
 
+function errorKindForJob(job: AssetQueueJob): AvatarErrorKind | null {
+  if (job.error && DETERMINISTIC_LIFECYCLE_ERRORS.has(job.error))
+    return 'validation'
+  return job.failedStep ?? null
+}
+
 export interface AvatarEnqueueInput {
-  slug: string
   expectedActive?: ExpectedActiveAvatar | null
   activation?: { catalogId: number; requestedActive: boolean }
 }
@@ -134,7 +147,13 @@ export function createAvatarController(
   const syncJob = () => {
     const job = currentJob()
     if (!job) return
-    update({ phase: phaseForStatus(job.status), job, error: job.error })
+    update({
+      phase: phaseForStatus(job.status),
+      job,
+      error: job.error,
+      errorKind:
+        job.status === ASSET_QUEUE_STATUS.FAILED ? errorKindForJob(job) : null
+    })
   }
   const releasePreparation = () => {
     preparation.cancel()
@@ -239,7 +258,9 @@ export function createAvatarController(
       }
     },
     cancel() {
-      if (currentJobId) runtime.cancel(currentJobId)
+      const job = currentJob()
+      if (job?.status === ASSET_QUEUE_STATUS.FAILED) runtime.remove(job.jobId)
+      else if (currentJobId) runtime.cancel(currentJobId)
       releasePreparation()
       currentJobId = null
       lastSource = null
@@ -252,6 +273,7 @@ export function createAvatarController(
       })
     },
     async retry() {
+      if (snapshot.errorKind === 'validation') return
       const job = currentJob()
       if (job && job.status === ASSET_QUEUE_STATUS.FAILED) {
         if (job.failedStep === 'upload') await runtime.retryUpload(job.jobId)
