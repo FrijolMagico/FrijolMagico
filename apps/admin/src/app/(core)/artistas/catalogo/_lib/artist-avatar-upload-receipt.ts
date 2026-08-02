@@ -2,12 +2,13 @@ import type { ExpectedActiveAvatar } from './avatar-history-contracts'
 import {
   createProvisionalAssetReceipt,
   INVALID_PROVISIONAL_ASSET_RECEIPT,
-  PROVISIONAL_ASSET_RECEIPT_TTL_MS,
   type VerificationPurpose,
   verifyProvisionalAssetReceipt
 } from '@/shared/assets-manager/server/provisional-asset-receipt'
 
-const RECEIPT_TTL_MS = PROVISIONAL_ASSET_RECEIPT_TTL_MS
+export const ARTIST_AVATAR_PERSIST_TTL_MS = 60 * 60 * 1_000
+export const ARTIST_AVATAR_DISCARD_TTL_MS = 7 * 24 * 60 * 60 * 1_000
+const RECEIPT_TTL_MS = ARTIST_AVATAR_PERSIST_TTL_MS
 const INVALID_RECEIPT = INVALID_PROVISIONAL_ASSET_RECEIPT
 
 export interface ArtistAvatarUploadReceiptInput {
@@ -22,7 +23,8 @@ export interface ArtistAvatarUploadReceiptInput {
 
 export interface ArtistAvatarUploadReceiptClaims extends ArtistAvatarUploadReceiptInput {
   issuedAt: number
-  expiresAt: number
+  persistUntil: number
+  discardUntil: number
 }
 
 export interface VerifyArtistAvatarUploadReceiptInput {
@@ -56,13 +58,16 @@ function isClaims(value: unknown): value is ArtistAvatarUploadReceiptClaims {
     'path' in value &&
     'version' in value &&
     'issuedAt' in value &&
-    'expiresAt' in value &&
     typeof value.subjectId === 'string' &&
     typeof value.artistaId === 'number' &&
     typeof value.path === 'string' &&
     typeof value.version === 'string' &&
     typeof value.issuedAt === 'number' &&
-    typeof value.expiresAt === 'number' &&
+    (('expiresAt' in value && typeof value.expiresAt === 'number') ||
+      ('persistUntil' in value &&
+        'discardUntil' in value &&
+        typeof value.persistUntil === 'number' &&
+        typeof value.discardUntil === 'number')) &&
     (claims.expectedActive === undefined ||
       claims.expectedActive === null ||
       isExpectedActive(claims.expectedActive)) &&
@@ -77,20 +82,33 @@ export function createArtistAvatarUploadReceipt(
   secret: string,
   issuedAt = Date.now()
 ): string {
-  return createProvisionalAssetReceipt(input, { secret, issuedAt })
+  return createProvisionalAssetReceipt(
+    { ...input, issuedAt },
+    {
+      secret,
+      issuedAt,
+      subject: input.subjectId,
+      deadlines: {
+        persistUntil: issuedAt + ARTIST_AVATAR_PERSIST_TTL_MS,
+        discardUntil: issuedAt + ARTIST_AVATAR_DISCARD_TTL_MS
+      }
+    }
+  )
 }
 
 export function verifyArtistAvatarUploadReceipt(
   receipt: string,
   input: VerifyArtistAvatarUploadReceiptInput
 ): ArtistAvatarUploadReceiptClaims {
-  const claims = verifyProvisionalAssetReceipt(receipt, {
+  const verified = verifyProvisionalAssetReceipt(receipt, {
     secret: input.secret,
-    subjectId: input.subjectId,
+    subject: input.subjectId,
     now: input.now,
     purpose: input.purpose,
     validateClaims: isClaims
   })
+  const { subject: _subject, ...claims } = verified
+  void _subject
   if (input.artistaId !== undefined && claims.artistaId !== input.artistaId)
     throw new Error(INVALID_RECEIPT)
   return claims

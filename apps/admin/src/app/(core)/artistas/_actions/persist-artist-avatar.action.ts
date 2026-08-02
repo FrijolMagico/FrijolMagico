@@ -22,6 +22,7 @@ import { getAssetReceiptSecret } from '@/shared/assets-manager/server/asset-rece
 import type { ActionState } from '@/shared/types/actions'
 
 const schema = z.object({ receipt: z.string().min(1) })
+const ARTIST_DELETED = 'ARTIST_DELETED' as const
 
 function receiptSecret(): string {
   try {
@@ -29,6 +30,13 @@ function receiptSecret(): string {
   } catch {
     throw new Error(INVALID_RECEIPT)
   }
+}
+
+function actionErrorEntityType(message: string) {
+  if (message === AVATAR_CONFLICT) return AVATAR_CONFLICT
+  if (message === ARTIST_DELETED) return ARTIST_DELETED
+  if (message === INVALID_RECEIPT) return INVALID_RECEIPT
+  return 'artist-avatar'
 }
 
 function activeAvatarWhere(
@@ -99,6 +107,13 @@ export async function persistArtistAvatarAction(
     let avatar: UploadArtistAvatarData
     try {
       avatar = await db.transaction(async (tx) => {
+        const [currentArtist] = await tx
+          .select({ deletedAt: artist.artist.deletedAt })
+          .from(artist.artist)
+          .where(eq(artist.artist.id, claims.artistaId))
+          .limit(1)
+        if (!currentArtist || currentArtist.deletedAt !== null)
+          throw new Error(ARTIST_DELETED)
         if (claims.expectedActive === null) {
           const [current] = await tx
             .select({ id: artist.artistImage.id })
@@ -162,12 +177,7 @@ export async function persistArtistAvatarAction(
       success: false,
       errors: [
         {
-          entityType:
-            message === AVATAR_CONFLICT
-              ? AVATAR_CONFLICT
-              : message === INVALID_RECEIPT
-                ? INVALID_RECEIPT
-                : 'artist-avatar',
+          entityType: actionErrorEntityType(message),
           message
         }
       ]
