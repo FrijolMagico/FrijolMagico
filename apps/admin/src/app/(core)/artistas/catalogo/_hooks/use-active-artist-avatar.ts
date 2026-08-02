@@ -33,5 +33,11 @@ export function useActiveArtistAvatar() {
     })
   }
 
-  return { avatar, error, isPending, load }
+  const clear = () => {
+    requestId.current += 1
+    setAvatar(null)
+    setError(null)
+  }
+
+  return { avatar, error, isPending, load, clear }
 }
