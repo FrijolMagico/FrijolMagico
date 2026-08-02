@@ -2,9 +2,13 @@
 
 import 'server-only'
 
-import { z } from 'zod'
-
 import { createArtistAvatarUploadReceipt } from '../catalogo/_lib/artist-avatar-upload-receipt'
+import {
+  createArtistAvatarKey,
+  parseArtistAvatarUpload,
+  type ArtistAvatarUpload
+} from '../_lib/artist-avatar-lifecycle'
+import { resolveArtistAvatar } from '../_lib/artist-avatar-resolver'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import {
   R2Adapter,
@@ -12,38 +16,10 @@ import {
 } from '@/shared/assets-manager/server/r2-adapter'
 import { getAssetReceiptSecret } from '@/shared/assets-manager/server/asset-receipt-config'
 import type { ActionState } from '@/shared/types/actions'
-import type { ExpectedActiveAvatar } from '../catalogo/_lib/avatar-history-contracts'
-
-const schema = z
-  .object({
-    artistaId: z.number().int().positive(),
-    slug: z
-      .string()
-      .min(1, { message: 'El slug del artista es obligatorio' })
-      .regex(/^[a-z0-9-]+$/, {
-        message: 'El slug del artista tiene un formato inválido'
-      }),
-    blob: z.instanceof(Blob).refine((blob) => blob.type === 'image/webp', {
-      message: 'El avatar debe estar en formato WebP'
-    }),
-    width: z.number().int().positive(),
-    height: z.number().int().positive(),
-    expectedActive: z
-      .object({
-        id: z.number().int().positive(),
-        path: z.string().min(1),
-        version: z.string().nullable()
-      })
-      .nullable()
-      .optional(),
-    catalogId: z.number().int().positive().optional(),
-    requestedActive: z.boolean().optional()
-  })
-  .refine((input) => input.width === 800 && input.height === 800, {
-    message: 'El avatar preparado debe medir exactamente 800×800 px'
-  })
-
-export type UploadArtistAvatarInput = z.infer<typeof schema>
+export type UploadArtistAvatarInput = Omit<ArtistAvatarUpload, 'artistId'> & {
+  artistaId: number
+  slug?: string
+}
 
 export interface UploadArtistAvatarData {
   id: number
@@ -66,32 +42,22 @@ export async function uploadArtistAvatarAction(
 ): Promise<ActionState<UploadArtistAvatarReceiptData>> {
   try {
     const session = await requireAuth()
-    const parsed = schema.safeParse(input)
-    if (!parsed.success) {
-      return {
-        success: false,
-        errors: parsed.error.issues.map((issue) => ({
-          entityType: 'artist-avatar',
-          message: issue.message
-        }))
-      }
-    }
-
-    const version = String(Date.now())
-    const path = `artistas/${parsed.data.slug}/avatar-${version}.webp`
-    await getStore().putObject(path, parsed.data.blob)
+    const parsed = parseArtistAvatarUpload({
+      ...input,
+      artistId: input.artistaId
+    })
+    const artist = await resolveArtistAvatar(parsed.artistId)
+    const { path, version } = createArtistAvatarKey(artist.canonicalSlug)
+    await getStore().putObject(path, parsed.blob)
     const receipt = createArtistAvatarUploadReceipt(
       {
         subjectId: session.user.id,
-        artistaId: parsed.data.artistaId,
+        artistaId: artist.artistId,
         path,
         version,
-        expectedActive: parsed.data.expectedActive as
-          | ExpectedActiveAvatar
-          | null
-          | undefined,
-        catalogId: parsed.data.catalogId,
-        requestedActive: parsed.data.requestedActive
+        expectedActive: parsed.expectedActive,
+        catalogId: parsed.catalogId,
+        requestedActive: parsed.requestedActive
       },
       getAssetReceiptSecret()
     )

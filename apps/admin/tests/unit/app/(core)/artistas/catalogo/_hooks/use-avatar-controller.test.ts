@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 
 import {
+  ASSET_QUEUE_STATUS,
   createAssetQueue,
   type AssetQueueOperations
 } from '@/shared/assets-manager/client/queue'
@@ -95,23 +96,46 @@ async function waitForPhase(
   })
 }
 
+async function waitForStoreStatus(
+  store: ReturnType<typeof createAssetQueueStore>,
+  status: (typeof ASSET_QUEUE_STATUS)[keyof typeof ASSET_QUEUE_STATUS]
+) {
+  if (store.getState().jobs.some((job) => job.status === status)) return
+  await new Promise<void>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      unsubscribe()
+      reject(new Error(`Store status ${status} was not reached`))
+    }, 250)
+    const unsubscribe = store.subscribe(() => {
+      if (!store.getState().jobs.some((job) => job.status === status)) return
+      clearTimeout(timeout)
+      unsubscribe()
+      resolve()
+    })
+  })
+}
+
 describe('useAvatarController', () => {
-  test('owns preparation and exposes completed queue state', async () => {
-    const { controller } = createHarness()
+  test('owns preparation and keeps uploading while the store job completes', async () => {
+    const { controller, store } = createHarness()
 
     expect(controller.getSnapshot().phase).toBe(AVATAR_CONTROLLER_PHASE.IDLE)
     await controller.selectFile(file)
     expect(controller.getSnapshot().phase).toBe(AVATAR_CONTROLLER_PHASE.READY)
 
     await controller.enqueue('artist-1')
-    await waitForPhase(controller, AVATAR_CONTROLLER_PHASE.COMPLETED)
+    // A real consumer (useSyncExternalStore) keeps the controller subscribed,
+    // which drives syncJob on every store notification.
+    const unsubscribe = controller.subscribe(() => {})
+    await waitForStoreStatus(store, ASSET_QUEUE_STATUS.COMPLETED)
+    unsubscribe()
 
+    // The controller no longer exposes a terminal 'completed' phase: once the
+    // store job finishes, the snapshot stays 'uploading' and carries no job.
     expect(controller.getSnapshot().phase).toBe(
-      AVATAR_CONTROLLER_PHASE.COMPLETED
+      AVATAR_CONTROLLER_PHASE.UPLOADING
     )
-    expect(controller.getSnapshot().job?.target).toBe(
-      ASSET_TARGET.ARTIST_AVATAR
-    )
+    expect(store.getState().jobs[0]?.status).toBe(ASSET_QUEUE_STATUS.COMPLETED)
   })
 
   test('carries the active-avatar baseline into a deferred queue upload', async () => {
@@ -121,7 +145,7 @@ describe('useAvatarController', () => {
       path: 'artistas/artista-de-prueba/avatar-v1.webp',
       version: 'v1'
     }
-    const { controller } = createHarness({
+    const { controller, store } = createHarness({
       upload: async ({ context }) => {
         receivedInput = 'input' in context ? context.input : null
         return 'uploaded'
@@ -130,20 +154,18 @@ describe('useAvatarController', () => {
 
     await controller.selectFile(file)
     await controller.enqueue('artist-1', {
-      slug: 'artista-de-prueba',
       expectedActive
     })
-    await waitForPhase(controller, AVATAR_CONTROLLER_PHASE.COMPLETED)
+    await waitForStoreStatus(store, ASSET_QUEUE_STATUS.COMPLETED)
 
     expect(receivedInput).toEqual({
-      slug: 'artista-de-prueba',
       expectedActive
     })
   })
 
   test('maps failed upload state and retries through the runtime', async () => {
     let attempts = 0
-    const { controller } = createHarness({
+    const { controller, store } = createHarness({
       upload: async () => {
         attempts += 1
         if (attempts === 1) throw new Error('temporary failure')
@@ -157,12 +179,63 @@ describe('useAvatarController', () => {
     expect(controller.getSnapshot().error).toBe('temporary failure')
 
     await controller.retry()
-    await waitForPhase(controller, AVATAR_CONTROLLER_PHASE.COMPLETED)
+    const unsubscribe = controller.subscribe(() => {})
+    await waitForStoreStatus(store, ASSET_QUEUE_STATUS.COMPLETED)
+    unsubscribe()
 
     expect(attempts).toBe(2)
     expect(controller.getSnapshot().phase).toBe(
-      AVATAR_CONTROLLER_PHASE.COMPLETED
+      AVATAR_CONTROLLER_PHASE.UPLOADING
     )
+  })
+
+  test('keeps unknown upload failures retryable', async () => {
+    let attempts = 0
+    const { controller, store } = createHarness({
+      upload: async () => {
+        attempts += 1
+        if (attempts === 1) throw new Error('temporary failure')
+        return 'uploaded'
+      }
+    })
+
+    await prepareAndEnqueue(controller)
+    await waitForPhase(controller, AVATAR_CONTROLLER_PHASE.FAILED)
+
+    expect(controller.getSnapshot().errorKind).toBe('upload')
+    await controller.retry()
+    const unsubscribe = controller.subscribe(() => {})
+    await waitForStoreStatus(store, ASSET_QUEUE_STATUS.COMPLETED)
+    unsubscribe()
+    expect(attempts).toBe(2)
+  })
+
+  test('treats deterministic lifecycle failures as terminal and discards on cancel', async () => {
+    let attempts = 0
+    let discards = 0
+    const { controller } = createHarness({
+      upload: async () => {
+        attempts += 1
+        return 'uploaded'
+      },
+      persist: async () => {
+        throw new Error('INVALID_RECEIPT')
+      },
+      discardUpload: async () => {
+        discards += 1
+      }
+    })
+
+    await prepareAndEnqueue(controller)
+    await waitForPhase(controller, AVATAR_CONTROLLER_PHASE.FAILED)
+
+    expect(controller.getSnapshot().errorKind).toBe('validation')
+    await controller.retry()
+    expect(attempts).toBe(1)
+
+    controller.cancel()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(discards).toBe(1)
   })
 
   test('classifies deterministic preparation failures as validation', async () => {
@@ -272,6 +345,43 @@ describe('useAvatarController', () => {
     expect(runtime.getCleanupFailures()).toHaveLength(0)
 
     controller.reset()
+    expect(controller.getSnapshot().phase).toBe(AVATAR_CONTROLLER_PHASE.IDLE)
+  })
+
+  test('completion never surfaces a job in the snapshot', async () => {
+    const { controller, store } = createHarness()
+
+    await prepareAndEnqueue(controller)
+    await waitForStoreStatus(store, ASSET_QUEUE_STATUS.COMPLETED)
+
+    expect(controller.getSnapshot().phase).toBe(
+      AVATAR_CONTROLLER_PHASE.UPLOADING
+    )
+    expect(controller.getSnapshot()).not.toHaveProperty('job')
+  })
+
+  test('reset while a store job runs keeps the job completing without cancelling the runtime', async () => {
+    const upload = deferred<string>()
+    const { controller, store } = createHarness({
+      upload: async () => upload.promise
+    })
+
+    await prepareAndEnqueue(controller)
+    expect(store.getState().jobs[0]?.status).toBe(
+      ASSET_QUEUE_STATUS.UPLOADING
+    )
+
+    controller.reset()
+    expect(controller.getSnapshot().phase).toBe(AVATAR_CONTROLLER_PHASE.IDLE)
+    expect(controller.getSnapshot().currentAvatar).toBeNull()
+
+    // Let the background store job finish: reset must not have cancelled or
+    // removed it, so it still reaches COMPLETED in the store.
+    upload.resolve('uploaded')
+    await waitForStoreStatus(store, ASSET_QUEUE_STATUS.COMPLETED)
+
+    expect(store.getState().jobs[0]?.status).toBe(ASSET_QUEUE_STATUS.COMPLETED)
+    // currentJobId was cleared by reset, so the snapshot never re-syncs.
     expect(controller.getSnapshot().phase).toBe(AVATAR_CONTROLLER_PHASE.IDLE)
   })
 

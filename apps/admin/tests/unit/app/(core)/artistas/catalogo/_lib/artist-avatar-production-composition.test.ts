@@ -11,9 +11,11 @@ import {
 } from '@/shared/assets-manager/client/contracts'
 import type { AssetCodec } from '@/shared/assets-manager/client/preparation'
 import {
+  ASSET_QUEUE_STATUS,
   createAssetQueue,
   type AssetQueueOperations
 } from '@/shared/assets-manager/client/queue'
+import { getSharedAssetQueueStore } from '@/shared/assets-manager/client/shared-asset-queue'
 
 mock.module('server-only', () => ({}))
 
@@ -125,7 +127,7 @@ describe('artist avatar production composition', () => {
     })
   })
 
-  test('sends the queued active-avatar baseline with the deferred upload', async () => {
+  test('omits the legacy client slug while retaining the queued active-avatar baseline', async () => {
     const expectedActive = {
       id: 8,
       path: 'artistas/artista-de-prueba/avatar-v1.webp',
@@ -147,7 +149,7 @@ describe('artist avatar production composition', () => {
       preparedAsset
     })
 
-    expect(capture.body?.get('slug')).toBe('artista-de-prueba')
+    expect(capture.body?.get('slug')).toBeNull()
     expect(capture.body?.get('expectedActiveId')).toBe('8')
     expect(capture.body?.get('expectedActivePath')).toBe(expectedActive.path)
     expect(capture.body?.get('expectedActiveVersion')).toBe(
@@ -343,16 +345,29 @@ describe('artist avatar production composition', () => {
         new File(['source'], 'avatar.png', { type: 'image/png' })
       )
       await controller.enqueue(42)
+      const store = getSharedAssetQueueStore()
+      const unsubscribeController = controller.subscribe(() => {})
       await new Promise<void>((resolve) => {
-        const unsubscribe = controller.subscribe(() => {
-          if (controller.getSnapshot().phase !== 'completed') return
-          unsubscribe()
-          resolve()
+        const unsubscribe = store.subscribe(() => {
+          if (
+            store.getState().jobs.some(
+              (job) => job.status === ASSET_QUEUE_STATUS.COMPLETED
+            )
+          ) {
+            unsubscribe()
+            resolve()
+          }
         })
       })
+      unsubscribeController()
 
       expect(events).toEqual(['upload', 'persist'])
-      expect(controller.getSnapshot().job?.status).toBe('completed')
+      expect(store.getState().jobs[0]?.status).toBe(
+        ASSET_QUEUE_STATUS.COMPLETED
+      )
+      // The slimmed controller keeps the snapshot in 'uploading', never
+      // 'completed' — progress truth lives in the store alone.
+      expect(controller.getSnapshot().phase).toBe('uploading')
     } finally {
       globalThis.fetch = originalFetch
     }

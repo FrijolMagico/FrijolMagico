@@ -1,4 +1,5 @@
 import type { AssetCodec, DecodedImage } from './preparation'
+import { ASSET_OUTPUT_FORMAT } from '../format-config'
 
 interface BrowserImageBitmap {
   width: number
@@ -9,6 +10,7 @@ interface BrowserCanvas {
   width: number
   height: number
   getContext: (contextId: '2d') => {
+    imageSmoothingQuality: 'low' | 'medium' | 'high'
     drawImage: (
       source: unknown,
       x: number,
@@ -17,7 +19,11 @@ interface BrowserCanvas {
       height: number
     ) => void
   } | null
-  toBlob: (callback: (blob: Blob | null) => void, type?: string) => void
+  toBlob: (
+    callback: (blob: Blob | null) => void,
+    type?: string,
+    quality?: number
+  ) => void
 }
 export interface BrowserImageApi {
   createObjectURL: (source: Blob) => string
@@ -56,11 +62,18 @@ const browserImageApi: BrowserImageApi = {
                   y,
                   width,
                   height
-                )
+                ),
+              get imageSmoothingQuality() {
+                return context.imageSmoothingQuality
+              },
+              set imageSmoothingQuality(value) {
+                context.imageSmoothingQuality = value
+              }
             }
           : null
       },
-      toBlob: (callback, type) => canvas.toBlob(callback, type)
+      toBlob: (callback, type, quality) =>
+        canvas.toBlob(callback, type, quality)
     }
   }
 }
@@ -80,7 +93,7 @@ export function createBrowserImageCodec(
         close: () => bitmap.close()
       }
     },
-    async encodeWebp(image: DecodedImage, width, height) {
+    async encodeWebp(image: DecodedImage, width, height, quality) {
       if (!image.source) throw new Error('Decoded image source unavailable')
       const canvas = browser.createCanvas()
       canvas.width = width
@@ -88,9 +101,10 @@ export function createBrowserImageCodec(
       try {
         const context = canvas.getContext('2d')
         if (!context) throw new Error('Canvas context unavailable')
+        context.imageSmoothingQuality = 'high'
         context.drawImage(image.source, 0, 0, width, height)
         const blob = await new Promise<Blob | null>((resolve) =>
-          canvas.toBlob(resolve, 'image/webp')
+          canvas.toBlob(resolve, ASSET_OUTPUT_FORMAT.mimeType, quality)
         )
         if (!blob) throw new Error('WebP encoding failed')
         return blob

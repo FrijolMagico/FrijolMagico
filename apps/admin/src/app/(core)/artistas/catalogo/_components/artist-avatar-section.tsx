@@ -34,7 +34,6 @@ export interface ExternalAvatarController {
 
 export interface ArtistAvatarSectionProps {
   artistId: string | number | null
-  slug?: string
   currentAvatar?: ManagedAssetReference | null
   autoEnqueue?: boolean
   controller?: ExternalAvatarController
@@ -44,13 +43,8 @@ export interface ArtistAvatarSectionProps {
   onPreparedUpload?: () => void
 }
 
-function progressFor(sentBytes: number, totalBytes: number): number {
-  return totalBytes > 0 ? Math.round((sentBytes / totalBytes) * 100) : 0
-}
-
 export function ArtistAvatarSection({
   artistId,
-  slug,
   currentAvatar = null,
   autoEnqueue = true,
   controller: externalController,
@@ -70,16 +64,10 @@ export function ArtistAvatarSection({
   const isBusy =
     controller.state.phase === 'preparing' ||
     controller.state.phase === 'uploading'
-  const progress = controller.state.job
-    ? progressFor(
-        controller.state.job.sentBytes,
-        controller.state.job.totalBytes
-      )
-    : 0
   const showErrorActions =
     controller.state.phase === 'failed' &&
-    (controller.state.errorKind === 'unknown' ||
-      controller.state.job?.failedStep != null)
+    controller.state.errorKind !== null &&
+    controller.state.errorKind !== 'validation'
   const selectFile = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.currentTarget.files?.[0]
     event.currentTarget.value = ''
@@ -87,8 +75,7 @@ export function ArtistAvatarSection({
     void controller.selectFile(file).then((result) => {
       if (result.phase !== 'ready') return
       onPreparedUpload?.()
-      if (artistId !== null && autoEnqueue)
-        void controller.enqueue(artistId, slug ? { slug } : undefined)
+      if (artistId !== null && autoEnqueue) void controller.enqueue(artistId)
     })
   }
   return (
@@ -174,18 +161,6 @@ export function ArtistAvatarSection({
           <span className='text-muted-foreground text-xs'>JPG, PNG o WebP</span>
         )}
       </div>
-      {(controller.state.phase === 'uploading' ||
-        controller.state.phase === 'completed') &&
-        controller.state.job && (
-          <div role='status' aria-live='polite'>
-            <span>{progress}%</span>
-            <progress
-              value={progress}
-              max={100}
-              aria-label='Progreso de carga'
-            />
-          </div>
-        )}
       {controller.state.error && (
         <div role='alert' className='text-destructive text-sm'>
           {controller.state.error}

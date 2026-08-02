@@ -1,30 +1,14 @@
 import type { AssetTarget } from '../client/contracts'
-import type { ManagedAssetReference } from '../managed-asset-reference'
-import type { ExpectedActiveAvatar } from '@/core/artistas/catalogo/_lib/avatar-history-contracts'
 
 import { ValidationError } from './validation-error'
 
-const MAX_CONTENT_LENGTH = 1.25 * 1024 * 1024 // 1.25 MiB
+const MAX_CONTENT_LENGTH = 1.25 * 1024 * 1024
 
-export interface AssetUploadPayload {
+export interface MultipartEnvelope {
   target: AssetTarget
   entityId: string
-  slug?: string
   blob: Blob
-  mimeType: 'image/webp'
-  preparedWidth: number
-  preparedHeight: number
-  expectedActive: ExpectedActiveAvatar | null | undefined
-  catalogId?: number
-  requestedActive?: boolean
-}
-
-export interface AssetReplacementPayload extends AssetUploadPayload {
-  currentRef: ManagedAssetReference
-}
-
-interface RequiredReplacementOptions {
-  requireCurrentReference: true
+  fields: FormData
 }
 
 function parseAssetTarget(value: string): AssetTarget {
@@ -34,162 +18,51 @@ function parseAssetTarget(value: string): AssetTarget {
   return value
 }
 
-function parsePositiveInt(value: string, field: string): number {
-  const num = Number(value)
-  if (!Number.isInteger(num) || num <= 0) {
+function validateContentLength(request: Request): void {
+  const contentLength = request.headers.get('content-length')
+  if (!contentLength) return
+
+  const size = Number(contentLength)
+  if (!Number.isFinite(size) || size > MAX_CONTENT_LENGTH) {
     throw new ValidationError(
-      `Invalid ${field}: must be a positive integer`,
-      field
+      `Request size exceeds maximum allowed size of ${MAX_CONTENT_LENGTH} bytes`,
+      'content-length'
     )
   }
-  return num
 }
 
-export function parseAssetUpload(
-  request: Request,
-  options: RequiredReplacementOptions
-): Promise<AssetReplacementPayload>
-export function parseAssetUpload(request: Request): Promise<AssetUploadPayload>
 export async function parseAssetUpload(
-  request: Request,
-  options?: RequiredReplacementOptions
-): Promise<AssetUploadPayload | AssetReplacementPayload> {
-  const contentLength = request.headers.get('content-length')
+  request: Request
+): Promise<MultipartEnvelope> {
+  validateContentLength(request)
 
-  if (contentLength) {
-    const size = Number(contentLength)
-    if (!Number.isFinite(size) || size > MAX_CONTENT_LENGTH) {
-      throw new ValidationError(
-        `Request size exceeds maximum allowed size of ${MAX_CONTENT_LENGTH} bytes`,
-        'content-length'
-      )
-    }
-  }
-
-  let formData: FormData
+  let fields: FormData
   try {
-    formData = await request.formData()
+    fields = await request.formData()
   } catch {
     throw new ValidationError('Failed to parse multipart form data', 'body')
   }
 
-  const assetTargetRaw = formData.get('assetTarget')
-  if (typeof assetTargetRaw !== 'string' || !assetTargetRaw) {
+  const assetTarget = fields.get('assetTarget')
+  if (typeof assetTarget !== 'string' || !assetTarget) {
     throw new ValidationError(
       'Missing or invalid assetTarget field',
       'assetTarget'
     )
   }
-  const target = parseAssetTarget(assetTargetRaw)
 
-  const entityId = formData.get('entityId')
+  const entityId = fields.get('entityId')
   if (typeof entityId !== 'string' || !entityId) {
     throw new ValidationError('Missing or invalid entityId field', 'entityId')
   }
 
-  const slugRaw = formData.get('slug')
-  const slug =
-    typeof slugRaw === 'string' && slugRaw.length > 0 ? slugRaw : undefined
-
-  const blob = formData.get('blob')
+  const blob = fields.get('blob')
   if (!blob || !(blob instanceof Blob)) {
     throw new ValidationError('Missing or invalid blob field', 'blob')
   }
-
   if (blob.type !== 'image/webp' && blob.type !== '') {
     throw new ValidationError('Blob must be WebP format', 'blob')
   }
 
-  const preparedWidthRaw = formData.get('preparedWidth')
-  if (typeof preparedWidthRaw !== 'string') {
-    throw new ValidationError(
-      'Missing or invalid preparedWidth field',
-      'preparedWidth'
-    )
-  }
-  const preparedWidth = parsePositiveInt(preparedWidthRaw, 'preparedWidth')
-
-  const preparedHeightRaw = formData.get('preparedHeight')
-  if (typeof preparedHeightRaw !== 'string') {
-    throw new ValidationError(
-      'Missing or invalid preparedHeight field',
-      'preparedHeight'
-    )
-  }
-  const preparedHeight = parsePositiveInt(preparedHeightRaw, 'preparedHeight')
-  const catalogIdRaw = formData.get('catalogId')
-  const requestedActiveRaw = formData.get('requestedActive')
-
-  const payload: AssetUploadPayload = {
-    target,
-    entityId,
-    slug,
-    blob,
-    mimeType: 'image/webp',
-    preparedWidth,
-    preparedHeight,
-    catalogId:
-      typeof catalogIdRaw === 'string'
-        ? parsePositiveInt(catalogIdRaw, 'catalogId')
-        : undefined,
-    requestedActive:
-      requestedActiveRaw === 'true'
-        ? true
-        : requestedActiveRaw === 'false'
-          ? false
-          : undefined,
-    expectedActive: parseExpectedActive(formData)
-  }
-
-  if (!options?.requireCurrentReference) {
-    return payload
-  }
-
-  const currentPath = formData.get('currentPath')
-  const currentVersion = formData.get('currentVersion')
-  if (
-    typeof currentPath !== 'string' ||
-    !currentPath ||
-    typeof currentVersion !== 'string' ||
-    !currentVersion
-  ) {
-    throw new ValidationError(
-      'Missing or invalid currentPath/currentVersion fields',
-      'currentReference'
-    )
-  }
-
-  return {
-    ...payload,
-    currentRef: { path: currentPath, version: currentVersion }
-  }
-}
-
-function parseExpectedActive(
-  formData: FormData
-): ExpectedActiveAvatar | null | undefined {
-  const id = formData.get('expectedActiveId')
-  const path = formData.get('expectedActivePath')
-  const version = formData.get('expectedActiveVersion')
-  const expectedNone = formData.get('expectedActiveNone')
-  if (
-    expectedNone === 'true' &&
-    id === null &&
-    path === null &&
-    version === null
-  )
-    return null
-  if (id === null && path === null && version === null) return undefined
-  if (
-    typeof id !== 'string' ||
-    typeof path !== 'string' ||
-    typeof version !== 'string'
-  ) {
-    throw new ValidationError(
-      'Invalid expected active avatar',
-      'expectedActive'
-    )
-  }
-  const parsedId = parsePositiveInt(id, 'expectedActiveId')
-  return { id: parsedId, path, version: version || null }
+  return { target: parseAssetTarget(assetTarget), entityId, blob, fields }
 }

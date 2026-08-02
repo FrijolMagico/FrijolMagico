@@ -3,6 +3,7 @@
 import { useState, useSyncExternalStore } from 'react'
 
 import { ensureArtistAvatarPolicy } from '../_lib/artist-avatar-production-composition'
+import { ARTIST_AVATAR_PREPARATION_SPEC } from '../_lib/artist-avatar-preparation-policy'
 
 import { createBrowserImageCodec } from '@/shared/assets-manager/client/browser-image-codec'
 import {
@@ -40,7 +41,6 @@ const AVATAR_CONTROLLER_PHASE = {
   PREPARING: 'preparing',
   READY: 'ready',
   UPLOADING: 'uploading',
-  COMPLETED: 'completed',
   FAILED: 'failed'
 } as const
 
@@ -48,13 +48,20 @@ export { AVATAR_CONTROLLER_PHASE }
 export type AvatarControllerPhase =
   (typeof AVATAR_CONTROLLER_PHASE)[keyof typeof AVATAR_CONTROLLER_PHASE]
 
+export type AvatarErrorKind = PreparationErrorKind | 'upload' | 'persist'
+
+const DETERMINISTIC_LIFECYCLE_ERRORS = new Set([
+  'AVATAR_CONFLICT',
+  'INVALID_RECEIPT',
+  'ARTIST_DELETED'
+])
+
 export interface AvatarControllerState {
   phase: AvatarControllerPhase
   preview: LocalPreviewHandle | null
   currentAvatar: ManagedAssetReference | null
-  job: AssetQueueJob | null
   error: string | null
-  errorKind: PreparationErrorKind | null
+  errorKind: AvatarErrorKind | null
 }
 
 export interface AvatarControllerOptions {
@@ -65,8 +72,11 @@ export interface AvatarControllerOptions {
 }
 
 function phaseForStatus(status: AssetQueueStatus): AvatarControllerPhase {
+  // A finished store job no longer maps to a terminal controller phase: the
+  // controller only owns the in-flight window, so 'uploading' ≈ "a background
+  // store job exists for this entity". The store remains the progress truth.
   if (status === ASSET_QUEUE_STATUS.COMPLETED)
-    return AVATAR_CONTROLLER_PHASE.COMPLETED
+    return AVATAR_CONTROLLER_PHASE.UPLOADING
   if (status === ASSET_QUEUE_STATUS.FAILED)
     return AVATAR_CONTROLLER_PHASE.FAILED
   return AVATAR_CONTROLLER_PHASE.UPLOADING
@@ -76,8 +86,13 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'No se pudo cargar el avatar'
 }
 
+function errorKindForJob(job: AssetQueueJob): AvatarErrorKind | null {
+  if (job.error && DETERMINISTIC_LIFECYCLE_ERRORS.has(job.error))
+    return 'validation'
+  return job.failedStep ?? null
+}
+
 export interface AvatarEnqueueInput {
-  slug: string
   expectedActive?: ExpectedActiveAvatar | null
   activation?: { catalogId: number; requestedActive: boolean }
 }
@@ -113,7 +128,6 @@ export function createAvatarController(
     phase: AVATAR_CONTROLLER_PHASE.IDLE,
     preview: null,
     currentAvatar: options.initialAvatar ?? null,
-    job: null,
     error: null,
     errorKind: null
   }
@@ -133,7 +147,12 @@ export function createAvatarController(
   const syncJob = () => {
     const job = currentJob()
     if (!job) return
-    update({ phase: phaseForStatus(job.status), job, error: job.error })
+    update({
+      phase: phaseForStatus(job.status),
+      error: job.error,
+      errorKind:
+        job.status === ASSET_QUEUE_STATUS.FAILED ? errorKindForJob(job) : null
+    })
   }
   const releasePreparation = () => {
     preparation.cancel()
@@ -149,7 +168,8 @@ export function createAvatarController(
     })
     const result = await preparation.prepare({
       target: ASSET_TARGET.ARTIST_AVATAR,
-      source
+      source,
+      resize: ARTIST_AVATAR_PREPARATION_SPEC
     })
     if (result.phase === 'ready' && result.preparedAsset && result.preview) {
       preparedAsset = result.preparedAsset
@@ -224,7 +244,6 @@ export function createAvatarController(
         update({
           phase: AVATAR_CONTROLLER_PHASE.UPLOADING,
           preview: job.preview,
-          job,
           error: null,
           errorKind: null
         })
@@ -237,19 +256,21 @@ export function createAvatarController(
       }
     },
     cancel() {
-      if (currentJobId) runtime.cancel(currentJobId)
+      const job = currentJob()
+      if (job?.status === ASSET_QUEUE_STATUS.FAILED) runtime.remove(job.jobId)
+      else if (currentJobId) runtime.cancel(currentJobId)
       releasePreparation()
       currentJobId = null
       lastSource = null
       update({
         phase: AVATAR_CONTROLLER_PHASE.IDLE,
         preview: null,
-        job: null,
         error: null,
         errorKind: null
       })
     },
     async retry() {
+      if (snapshot.errorKind === 'validation') return
       const job = currentJob()
       if (job && job.status === ASSET_QUEUE_STATUS.FAILED) {
         if (job.failedStep === 'upload') await runtime.retryUpload(job.jobId)
@@ -270,7 +291,6 @@ export function createAvatarController(
       update({
         phase: AVATAR_CONTROLLER_PHASE.IDLE,
         preview: null,
-        job: null,
         error: null,
         errorKind: null
       })

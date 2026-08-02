@@ -26,7 +26,7 @@ function createMockRequest(overrides: {
 }
 
 describe('parseAssetUpload', () => {
-  it('parses valid artist-avatar upload', async () => {
+  it('parses a neutral artist-avatar envelope and leaves legacy fields opaque', async () => {
     const request = createMockRequest({
       contentLength: '500000',
       fields: {
@@ -43,14 +43,13 @@ describe('parseAssetUpload', () => {
 
     expect(result.target).toBe('artist-avatar')
     expect(result.entityId).toBe('artist-123')
-    expect(result.slug).toBe('artista-de-prueba')
-    expect(result.mimeType).toBe('image/webp')
-    expect(result.preparedWidth).toBe(800)
-    expect(result.preparedHeight).toBe(800)
-    expect(result.expectedActive).toBeUndefined()
+    expect(result.blob).toBeInstanceOf(Blob)
+    expect(result.fields.get('slug')).toBe('artista-de-prueba')
+    expect('slug' in result).toBe(false)
+    expect('preparedWidth' in result).toBe(false)
   })
 
-  it('preserves an explicit expected-none guard', async () => {
+  it('preserves an explicit expected-none guard as an opaque field', async () => {
     const request = createMockRequest({
       fields: {
         assetTarget: 'artist-avatar',
@@ -62,12 +61,12 @@ describe('parseAssetUpload', () => {
       }
     })
 
-    await expect(parseAssetUpload(request)).resolves.toMatchObject({
-      expectedActive: null
-    })
+    const result = await parseAssetUpload(request)
+
+    expect(result.fields.get('expectedActiveNone')).toBe('true')
   })
 
-  it('parses valid edition-poster upload', async () => {
+  it('parses a neutral edition-poster envelope', async () => {
     const request = createMockRequest({
       contentLength: '300000',
       fields: {
@@ -83,11 +82,11 @@ describe('parseAssetUpload', () => {
 
     expect(result.target).toBe('edition-poster')
     expect(result.entityId).toBe('edition-456')
-    expect(result.preparedWidth).toBe(800)
-    expect(result.preparedHeight).toBe(600)
+    expect(result.fields.get('preparedWidth')).toBe('800')
+    expect(result.fields.get('preparedHeight')).toBe('600')
   })
 
-  it('parses a complete required replacement reference', async () => {
+  it('preserves a complete replacement reference as opaque fields', async () => {
     const request = createMockRequest({
       fields: {
         assetTarget: 'artist-avatar',
@@ -100,17 +99,15 @@ describe('parseAssetUpload', () => {
       }
     })
 
-    const result = await parseAssetUpload(request, {
-      requireCurrentReference: true
-    })
+    const result = await parseAssetUpload(request)
 
-    expect(result.currentRef).toEqual({
-      path: 'artist-avatar/artist-123/current.webp',
-      version: 'current-version'
-    })
+    expect(result.fields.get('currentPath')).toBe(
+      'artist-avatar/artist-123/current.webp'
+    )
+    expect(result.fields.get('currentVersion')).toBe('current-version')
   })
 
-  it('rejects a missing required replacement reference', async () => {
+  it('does not interpret a missing replacement reference', async () => {
     const request = createMockRequest({
       fields: {
         assetTarget: 'artist-avatar',
@@ -121,12 +118,12 @@ describe('parseAssetUpload', () => {
       }
     })
 
-    expect(
-      parseAssetUpload(request, { requireCurrentReference: true })
-    ).rejects.toThrow(ValidationError)
+    const result = await parseAssetUpload(request)
+
+    expect(result.fields.get('currentPath')).toBeNull()
   })
 
-  it('rejects a partial required replacement reference', async () => {
+  it('does not interpret a partial replacement reference', async () => {
     const request = createMockRequest({
       fields: {
         assetTarget: 'artist-avatar',
@@ -138,9 +135,9 @@ describe('parseAssetUpload', () => {
       }
     })
 
-    expect(
-      parseAssetUpload(request, { requireCurrentReference: true })
-    ).rejects.toThrow(ValidationError)
+    const result = await parseAssetUpload(request)
+
+    expect(result.fields.get('currentVersion')).toBe('current-version')
   })
 
   it('rejects payload exceeding content-length limit', async () => {
@@ -191,7 +188,7 @@ describe('parseAssetUpload', () => {
     expect(parseAssetUpload(request)).rejects.toThrow(ValidationError)
   })
 
-  it('rejects non-positive preparedWidth', async () => {
+  it('keeps an invalid prepared width opaque for the feature parser', async () => {
     const request = createMockRequest({
       fields: {
         assetTarget: 'artist-avatar',
@@ -202,6 +199,8 @@ describe('parseAssetUpload', () => {
       }
     })
 
-    expect(parseAssetUpload(request)).rejects.toThrow(ValidationError)
+    const result = await parseAssetUpload(request)
+
+    expect(result.fields.get('preparedWidth')).toBe('0')
   })
 })
