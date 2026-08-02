@@ -1,4 +1,5 @@
 import type { AssetCodec, DecodedImage } from './preparation'
+import { ASSET_OUTPUT_FORMAT } from '../format-config'
 
 interface BrowserImageBitmap {
   width: number
@@ -17,7 +18,11 @@ interface BrowserCanvas {
       height: number
     ) => void
   } | null
-  toBlob: (callback: (blob: Blob | null) => void, type?: string) => void
+  toBlob: (
+    callback: (blob: Blob | null) => void,
+    type?: string,
+    quality?: number
+  ) => void
 }
 export interface BrowserImageApi {
   createObjectURL: (source: Blob) => string
@@ -60,7 +65,8 @@ const browserImageApi: BrowserImageApi = {
             }
           : null
       },
-      toBlob: (callback, type) => canvas.toBlob(callback, type)
+      toBlob: (callback, type, quality) =>
+        canvas.toBlob(callback, type, quality)
     }
   }
 }
@@ -90,7 +96,11 @@ export function createBrowserImageCodec(
         if (!context) throw new Error('Canvas context unavailable')
         context.drawImage(image.source, 0, 0, width, height)
         const blob = await new Promise<Blob | null>((resolve) =>
-          canvas.toBlob(resolve, 'image/webp')
+          canvas.toBlob(
+            resolve,
+            ASSET_OUTPUT_FORMAT.mimeType,
+            ASSET_OUTPUT_FORMAT.quality
+          )
         )
         if (!blob) throw new Error('WebP encoding failed')
         return blob

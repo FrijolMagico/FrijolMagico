@@ -1,3 +1,5 @@
+import type { AssetOutputFormat } from '../format-config'
+
 export const ASSET_TARGET = {
   ARTIST_AVATAR: 'artist-avatar',
   EDITION_POSTER: 'edition-poster'
@@ -17,11 +19,24 @@ export const PREPARATION_PHASE = {
 export type PreparationPhase =
   (typeof PREPARATION_PHASE)[keyof typeof PREPARATION_PHASE]
 
+export interface ImageDimensions {
+  width: number
+  height: number
+}
+
+export type ResizeDimensions = ImageDimensions
+
+export interface ResizeSpec {
+  resolve: (image: ImageDimensions) => ResizeDimensions | null
+  invalidDimensionsMessage?: string
+}
+
 export interface PreparedAsset {
   blob: Blob
   width: number
   height: number
-  mimeType: 'image/webp'
+  mimeType: AssetOutputFormat['mimeType']
+  extension?: AssetOutputFormat['extension']
 }
 
 export interface LocalPreviewHandle {

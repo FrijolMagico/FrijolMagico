@@ -5,7 +5,8 @@ import {
   createPreparationController,
   prepareAsset,
   type AssetCodec,
-  type AssetSource
+  type AssetSource,
+  type ResizeSpec
 } from '../../../../../src/shared/assets-manager/client/preparation'
 
 const source: AssetSource = {
@@ -26,15 +27,70 @@ function createCodec(overrides: Partial<AssetCodec> = {}): AssetCodec {
 }
 
 describe('asset preparation', () => {
+  test('prepares an asset according to its injected resize specification', async () => {
+    const resize: ResizeSpec = {
+      resolve: () => ({ width: 640, height: 360 })
+    }
+
+    const result = await prepareAsset({
+      source,
+      codec: createCodec(),
+      resize
+    })
+
+    expect(result).toMatchObject({
+      phase: 'ready',
+      preparedAsset: {
+        width: 640,
+        height: 360,
+        mimeType: 'image/webp',
+        extension: 'webp'
+      }
+    })
+  })
+
+  test('rejects decoded dimensions when the injected resize specification declines them', async () => {
+    const resize: ResizeSpec = { resolve: () => null }
+
+    const result = await prepareAsset({
+      source,
+      codec: createCodec(),
+      resize
+    })
+
+    expect(result).toMatchObject({
+      phase: 'error',
+      preview: null,
+      preparedAsset: null,
+      errorKind: 'validation'
+    })
+  })
+
+  test('requires a resize specification for target-bearing legacy calls', async () => {
+    const result = await prepareAsset({
+      target: ASSET_TARGET.ARTIST_AVATAR,
+      source,
+      codec: createCodec()
+    })
+
+    expect(result).toMatchObject({
+      phase: 'error',
+      preview: null,
+      preparedAsset: null,
+      error: 'Se requiere una política de redimensionamiento.',
+      errorKind: 'validation'
+    })
+  })
+
   test('prepares a valid avatar as canonical WebP with truthful indeterminate phases', async () => {
     const phases: string[] = []
 
     const result = await prepareAsset({
-      target: ASSET_TARGET.ARTIST_AVATAR,
       source: { ...source, name: 'portrait.webp', type: 'image/webp' },
       codec: createCodec({
         decode: async () => ({ width: 1000, height: 1000, close: () => {} })
       }),
+      resize: { resolve: () => ({ width: 800, height: 800 }) },
       onPhase: (phase) => phases.push(phase)
     })
 
@@ -48,19 +104,16 @@ describe('asset preparation', () => {
 
   test('blocks rejected formats, undersized images, codec errors, and oversized output', async () => {
     const rejected = await prepareAsset({
-      target: ASSET_TARGET.EDITION_POSTER,
       source: { ...source, type: 'image/svg+xml' },
       codec: createCodec()
     })
     const undersized = await prepareAsset({
-      target: ASSET_TARGET.EDITION_POSTER,
       source,
       codec: createCodec({
         decode: async () => ({ width: 799, height: 900, close: () => {} })
       })
     })
     const failed = await prepareAsset({
-      target: ASSET_TARGET.EDITION_POSTER,
       source,
       codec: createCodec({
         encodeWebp: async () => {
@@ -70,7 +123,6 @@ describe('asset preparation', () => {
     })
     let revoked = 0
     const oversized = await prepareAsset({
-      target: ASSET_TARGET.EDITION_POSTER,
       source,
       codec: createCodec({
         revokePreview: () => {
@@ -117,12 +169,10 @@ describe('asset preparation', () => {
     })
 
     const oversized = await prepareAsset({
-      target: ASSET_TARGET.EDITION_POSTER,
       source: { ...source, size: 10 * 1024 * 1024 + 1 },
       codec
     })
     const invalidDimensions = await prepareAsset({
-      target: ASSET_TARGET.EDITION_POSTER,
       source,
       codec
     })
@@ -143,7 +193,6 @@ describe('asset preparation', () => {
   test('transfers a successful preview handle that releases exactly once', async () => {
     let revoked = 0
     const prepared = await prepareAsset({
-      target: ASSET_TARGET.EDITION_POSTER,
       source,
       codec: createCodec({
         revokePreview: () => {
@@ -168,7 +217,6 @@ describe('asset preparation', () => {
     let closed = 0
     const controller = new AbortController()
     const pending = prepareAsset({
-      target: ASSET_TARGET.EDITION_POSTER,
       source,
       signal: controller.signal,
       codec: createCodec({
@@ -219,11 +267,9 @@ describe('asset preparation', () => {
     )
 
     const first = controller.prepare({
-      target: ASSET_TARGET.EDITION_POSTER,
       source
     })
     const second = controller.prepare({
-      target: ASSET_TARGET.EDITION_POSTER,
       source
     })
     controller.cancel()
@@ -254,11 +300,9 @@ describe('asset preparation', () => {
       })
     )
     const first = controller.prepare({
-      target: ASSET_TARGET.EDITION_POSTER,
       source
     })
     const second = controller.prepare({
-      target: ASSET_TARGET.EDITION_POSTER,
       source
     })
     resolveFirst?.(new Blob(['optimized'], { type: 'image/webp' }))
