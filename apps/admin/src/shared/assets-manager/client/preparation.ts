@@ -22,7 +22,7 @@ export type {
 const ACCEPTED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
 const MAX_SOURCE_BYTES = 10 * 1024 * 1024
 const MAX_OUTPUT_BYTES = 1024 * 1024
-export const MIN_BPP = 0.4
+export const MIN_BPP = 2.5
 export const LADDER_STEP = 0.1
 export const MAX_RE_ENCODES = 2
 

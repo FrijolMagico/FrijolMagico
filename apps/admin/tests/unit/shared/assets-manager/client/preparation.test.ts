@@ -27,13 +27,13 @@ function createCodec(overrides: Partial<AssetCodec> = {}): AssetCodec {
     revokePreview: () => {},
     decode: async () => ({ width: 1000, height: 900, close: () => {} }),
     encodeWebp: async () =>
-      new Blob([new Uint8Array(64 * 1024)], { type: 'image/webp' }),
+      new Blob([new Uint8Array(256 * 1024)], { type: 'image/webp' }),
     ...overrides
   }
 }
 
 function createRecordingCodec(
-  blob: Blob = new Blob([new Uint8Array(64 * 1024)], { type: 'image/webp' })
+  blob: Blob = new Blob([new Uint8Array(256 * 1024)], { type: 'image/webp' })
 ) {
   const qualities: number[] = []
   const codec = createCodec({
@@ -66,7 +66,7 @@ describe('asset preparation', () => {
         extension: 'webp'
       }
     })
-    expect(result.preparedAsset?.blob.size).toBe(64 * 1024)
+    expect(result.preparedAsset?.blob.size).toBe(256 * 1024)
   })
 
   test('accepts an optional quality in an injected resize specification', async () => {
@@ -117,7 +117,7 @@ describe('asset preparation', () => {
       resize: { resolve: () => ({ width: 640, height: 360 }) }
     })
 
-    expect(MIN_BPP).toBe(0.4)
+    expect(MIN_BPP).toBe(2.5)
     expect(MAX_RE_ENCODES).toBe(2)
     expect(qualities).toEqual([
       DEFAULT_WEBP_QUALITY,
@@ -489,7 +489,7 @@ describe('asset preparation', () => {
       source
     })
     resolveFirst?.(
-      new Blob([new Uint8Array(64 * 1024)], { type: 'image/webp' })
+      new Blob([new Uint8Array(256 * 1024)], { type: 'image/webp' })
     )
     await expect(first).resolves.toMatchObject({
       phase: 'cancelled',
