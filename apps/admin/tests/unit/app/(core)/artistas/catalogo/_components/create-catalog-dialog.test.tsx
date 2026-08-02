@@ -644,4 +644,46 @@ describe('CreateCatalogDialog avatar integration', () => {
       expect(mockCancel).not.toHaveBeenCalled()
     })
   })
+
+  describe('R5: manual close preserves state (close-and-resume)', () => {
+    test('closing the dialog keeps the dirty form values and never runs cleanup', async () => {
+      await act(async () => {
+        root?.render(createElement(CreateCatalogDialog, { availableArtists }))
+      })
+
+      // Select an artist to make the form dirty (dirty is observable through
+      // the Limpiar button becoming visible)
+      const artists = nodesByTag(container, 'button').filter(
+        (b) => b.textContent === 'Luna Roja'
+      )
+      await act(async () => {
+        reactProps(artists[0]).onClick?.()
+      })
+      expect(
+        buttons(container).filter((b) => b.textContent === 'Limpiar')
+      ).toHaveLength(1)
+
+      // Close the dialog manually (not programmatic after submit success)
+      expect(onOpenChangeCallback).toBeDefined()
+      await act(async () => {
+        onOpenChangeCallback!(false)
+      })
+
+      // Manual close cancels the in-flight controller, but must NOT clear the
+      // form/avatar state (close-and-resume) — no cleanup path may run.
+      expect(mockCancel).toHaveBeenCalled()
+      expect(mockControllerReset).not.toHaveBeenCalled()
+
+      // Reopen: the component never unmounted, so RHF kept the values — the
+      // dirty form state survives and Limpiar is visible again.
+      isCreateCatalogOpen = true
+      await act(async () => {
+        root?.render(createElement(CreateCatalogDialog, { availableArtists }))
+      })
+      expect(
+        buttons(container).filter((b) => b.textContent === 'Limpiar')
+      ).toHaveLength(1)
+      expect(mockControllerReset).not.toHaveBeenCalled()
+    })
+  })
 })
