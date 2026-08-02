@@ -130,13 +130,11 @@ describe('useAvatarController', () => {
 
     await controller.selectFile(file)
     await controller.enqueue('artist-1', {
-      slug: 'artista-de-prueba',
       expectedActive
     })
     await waitForPhase(controller, AVATAR_CONTROLLER_PHASE.COMPLETED)
 
     expect(receivedInput).toEqual({
-      slug: 'artista-de-prueba',
       expectedActive
     })
   })
@@ -163,6 +161,53 @@ describe('useAvatarController', () => {
     expect(controller.getSnapshot().phase).toBe(
       AVATAR_CONTROLLER_PHASE.COMPLETED
     )
+  })
+
+  test('keeps unknown upload failures retryable', async () => {
+    let attempts = 0
+    const { controller } = createHarness({
+      upload: async () => {
+        attempts += 1
+        if (attempts === 1) throw new Error('temporary failure')
+        return 'uploaded'
+      }
+    })
+
+    await prepareAndEnqueue(controller)
+    await waitForPhase(controller, AVATAR_CONTROLLER_PHASE.FAILED)
+
+    expect(controller.getSnapshot().errorKind).toBe('upload')
+    await controller.retry()
+    await waitForPhase(controller, AVATAR_CONTROLLER_PHASE.COMPLETED)
+    expect(attempts).toBe(2)
+  })
+
+  test('treats deterministic lifecycle failures as terminal and discards on cancel', async () => {
+    let attempts = 0
+    let discards = 0
+    const { controller } = createHarness({
+      upload: async () => {
+        attempts += 1
+        return 'uploaded'
+      },
+      persist: async () => {
+        throw new Error('INVALID_RECEIPT')
+      },
+      discardUpload: async () => {
+        discards += 1
+      }
+    })
+
+    await prepareAndEnqueue(controller)
+    await waitForPhase(controller, AVATAR_CONTROLLER_PHASE.FAILED)
+
+    expect(controller.getSnapshot().errorKind).toBe('validation')
+    await controller.retry()
+    expect(attempts).toBe(1)
+
+    controller.cancel()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(discards).toBe(1)
   })
 
   test('classifies deterministic preparation failures as validation', async () => {

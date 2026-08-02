@@ -34,7 +34,6 @@ export interface ExternalAvatarController {
 
 export interface ArtistAvatarSectionProps {
   artistId: string | number | null
-  slug?: string
   currentAvatar?: ManagedAssetReference | null
   autoEnqueue?: boolean
   controller?: ExternalAvatarController
@@ -50,7 +49,6 @@ function progressFor(sentBytes: number, totalBytes: number): number {
 
 export function ArtistAvatarSection({
   artistId,
-  slug,
   currentAvatar = null,
   autoEnqueue = true,
   controller: externalController,
@@ -78,8 +76,8 @@ export function ArtistAvatarSection({
     : 0
   const showErrorActions =
     controller.state.phase === 'failed' &&
-    (controller.state.errorKind === 'unknown' ||
-      controller.state.job?.failedStep != null)
+    controller.state.errorKind !== null &&
+    controller.state.errorKind !== 'validation'
   const selectFile = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.currentTarget.files?.[0]
     event.currentTarget.value = ''
@@ -87,8 +85,7 @@ export function ArtistAvatarSection({
     void controller.selectFile(file).then((result) => {
       if (result.phase !== 'ready') return
       onPreparedUpload?.()
-      if (artistId !== null && autoEnqueue)
-        void controller.enqueue(artistId, slug ? { slug } : undefined)
+      if (artistId !== null && autoEnqueue) void controller.enqueue(artistId)
     })
   }
   return (

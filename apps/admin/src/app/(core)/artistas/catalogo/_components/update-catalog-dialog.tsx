@@ -122,7 +122,6 @@ function UpdateCatalogDialogForm({
     if (intent === AVATAR_INTENT.PREPARED_UPLOAD) {
       try {
         await controller.enqueue(artist.id, {
-          slug: artist.slug,
           expectedActive: catalog.activeAvatar ?? null
         })
       } catch {
@@ -153,7 +152,6 @@ function UpdateCatalogDialogForm({
           <div className='flex items-center gap-2'>
             <ArtistAvatarSection
               artistId={artist.id}
-              slug={artist.slug}
               currentAvatar={catalog.activeAvatar ?? null}
               autoEnqueue={false}
               avatars={history.avatars}

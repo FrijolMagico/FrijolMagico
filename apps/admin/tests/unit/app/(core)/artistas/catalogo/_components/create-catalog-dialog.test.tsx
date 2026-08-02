@@ -455,7 +455,6 @@ describe('CreateCatalogDialog avatar integration', () => {
     expect(mockCreateCatalogAction).toHaveBeenCalled()
     // enqueue should have been called on success
     expect(mockEnqueue).toHaveBeenCalledWith(88, {
-      slug: 'luna-roja',
       activation: { catalogId: 9, requestedActive: true }
     })
     expect(submissionEvents).toEqual(['catalog-complete', 'enqueue'])

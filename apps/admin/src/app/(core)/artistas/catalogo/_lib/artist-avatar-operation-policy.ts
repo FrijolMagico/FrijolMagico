@@ -120,7 +120,6 @@ export function createArtistAvatarOperationPolicy(
       const formData = new FormData()
       formData.append('assetTarget', ASSET_TARGET.ARTIST_AVATAR)
       formData.append('entityId', context.entityId)
-      if (input?.slug) formData.append('slug', input.slug)
       formData.append('blob', preparedAsset.blob, 'avatar.webp')
       formData.append('preparedWidth', String(preparedAsset.width))
       formData.append('preparedHeight', String(preparedAsset.height))
