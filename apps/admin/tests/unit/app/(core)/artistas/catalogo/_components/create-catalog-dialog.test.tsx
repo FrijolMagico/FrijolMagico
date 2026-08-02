@@ -30,6 +30,10 @@ let controllerError: string | null = null
 const mockSelectFile = mock(async () => ({ phase: 'ready' as const }))
 const mockEnqueue = mock(async () => submissionEvents.push('enqueue'))
 const mockCancel = mock(() => {})
+const mockControllerReset = mock(() => {
+  controllerPhase = 'idle'
+  submissionEvents.push('cleanup')
+})
 const mockRetry = mock(async () => {})
 const mockSyncAvatar = mock(
   (avatar: { path: string | null; version: string | null } | null) => {
@@ -48,20 +52,18 @@ mock.module('@/core/artistas/catalogo/_hooks/use-avatar-controller', () => ({
       phase: controllerPhase,
       preview: null,
       currentAvatar: controllerCurrentAvatar,
-      job: null,
       error: controllerError
     },
     selectFile: mockSelectFile,
     enqueue: mockEnqueue,
     cancel: mockCancel,
     retry: mockRetry,
-    reset: mock(() => {}),
+    reset: mockControllerReset,
     syncAvatar: mockSyncAvatar,
     getSnapshot: () => ({
       phase: controllerPhase,
       preview: null,
       currentAvatar: controllerCurrentAvatar,
-      job: null,
       error: controllerError
     }),
     subscribe: () => () => {}
@@ -352,6 +354,7 @@ beforeEach(() => {
   mockSelectFile.mockClear()
   mockEnqueue.mockClear()
   mockCancel.mockClear()
+  mockControllerReset.mockClear()
   mockRetry.mockClear()
   mockSyncAvatar.mockClear()
   mockCreateCatalogAction.mockClear()
@@ -423,7 +426,7 @@ describe('CreateCatalogDialog avatar integration', () => {
     expect(container.textContent).toContain('Agregar al Catálogo')
   })
 
-  test('R5+4.8: enqueue called on successful create; cancel NOT called after programmatic close', async () => {
+  test('R5+4.8: enqueue runs before cleanup on successful create; cancel NOT called after programmatic close', async () => {
     actionResult = {
       success: true,
       data: { catalogId: 9, artistId: 88, requestedActive: true }
@@ -457,12 +460,14 @@ describe('CreateCatalogDialog avatar integration', () => {
     expect(mockEnqueue).toHaveBeenCalledWith(88, {
       activation: { catalogId: 9, requestedActive: true }
     })
-    expect(submissionEvents).toEqual(['catalog-complete', 'enqueue'])
+    // enqueue-before-reset ordering: the action resolved first, then enqueue,
+    // and only after that did the cleanup (controller.reset) run.
+    expect(submissionEvents).toEqual(['catalog-complete', 'enqueue', 'cleanup'])
     // cancel should NOT have been called (suppressCancelRef guarded against it)
     expect(mockCancel).not.toHaveBeenCalled()
   })
 
-  test('R6: failed create does NOT enqueue', async () => {
+  test('R6: failed create does NOT enqueue and skips cleanup', async () => {
     actionResult = { success: false }
 
     await act(async () => {
@@ -488,6 +493,8 @@ describe('CreateCatalogDialog avatar integration', () => {
     expect(mockCreateCatalogAction).toHaveBeenCalled()
     // enqueue should NOT have been called on failure
     expect(mockEnqueue).not.toHaveBeenCalled()
+    // cleanup (reset) must be skipped when the action failed
+    expect(mockControllerReset).not.toHaveBeenCalled()
   })
 
   test('R7: dialog close mid-upload calls cancel', async () => {
@@ -542,5 +549,99 @@ describe('CreateCatalogDialog avatar integration', () => {
     // The mock already implements this logic
     // currentAvatar should still be null (phase===ready prevents update)
     expect(controllerCurrentAvatar).toBeNull()
+  })
+
+  describe('Limpiar (R4)', () => {
+    test('hidden when the form is clean, idle, and no avatar is loaded', async () => {
+      await act(async () => {
+        root?.render(createElement(CreateCatalogDialog, { availableArtists }))
+      })
+
+      const limpiar = buttons(container).filter(
+        (b) => b.textContent === 'Limpiar'
+      )
+      expect(limpiar).toHaveLength(0)
+    })
+
+    test('visible when the form is dirty', async () => {
+      await act(async () => {
+        root?.render(createElement(CreateCatalogDialog, { availableArtists }))
+      })
+
+      const artists = nodesByTag(container, 'button').filter(
+        (b) => b.textContent === 'Luna Roja'
+      )
+      await act(async () => {
+        reactProps(artists[0]).onClick?.()
+      })
+
+      const limpiar = buttons(container).filter(
+        (b) => b.textContent === 'Limpiar'
+      )
+      expect(limpiar).toHaveLength(1)
+    })
+
+    test('visible when the controller has a prepared file (ready)', async () => {
+      controllerPhase = 'ready'
+
+      await act(async () => {
+        root?.render(createElement(CreateCatalogDialog, { availableArtists }))
+      })
+
+      const limpiar = buttons(container).filter(
+        (b) => b.textContent === 'Limpiar'
+      )
+      expect(limpiar).toHaveLength(1)
+    })
+
+    test('visible when an artist avatar is loaded', async () => {
+      await act(async () => {
+        root?.render(createElement(CreateCatalogDialog, { availableArtists }))
+      })
+
+      const bosque = nodesByTag(container, 'button').filter(
+        (b) => b.textContent === 'Bosque Azul'
+      )
+      await act(async () => {
+        reactProps(bosque[0]).onClick?.()
+      })
+      // Flush the async load() of the artist avatar
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 10))
+      })
+
+      const limpiar = buttons(container).filter(
+        (b) => b.textContent === 'Limpiar'
+      )
+      expect(limpiar).toHaveLength(1)
+    })
+
+    test('clicking Limpiar clears the form, avatar, and controller', async () => {
+      controllerPhase = 'ready'
+
+      await act(async () => {
+        root?.render(createElement(CreateCatalogDialog, { availableArtists }))
+      })
+
+      const limpiar = buttons(container).filter(
+        (b) => b.textContent === 'Limpiar'
+      )
+      expect(limpiar).toHaveLength(1)
+
+      await act(async () => {
+        reactProps(limpiar[0]).onClick?.()
+      })
+
+      // controller.reset() ran (idle snapshot) — cleanup order is
+      // RHF reset() → activeAvatar.clear() → controller.reset()
+      expect(mockControllerReset).toHaveBeenCalledTimes(1)
+      // The form reset removed the dirty state, so Limpiar disappears
+      const afterClear = buttons(container).filter(
+        (b) => b.textContent === 'Limpiar'
+      )
+      expect(afterClear).toHaveLength(0)
+      // Limpiar must never cancel a queue job
+      expect(mockCancel).not.toHaveBeenCalled()
+    })
   })
 })
