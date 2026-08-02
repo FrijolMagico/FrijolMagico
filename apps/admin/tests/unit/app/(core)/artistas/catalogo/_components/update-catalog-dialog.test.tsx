@@ -31,7 +31,35 @@ mock.module('@/core/artistas/catalogo/_lib/catalog-avatar-queue-state', () => ({
 mock.module('@/core/artistas/catalogo/_actions/update-catalog.action', () => ({ updateCatalogAction: async () => ({ success: true }) }))
 mock.module('@/core/artistas/catalogo/_components/artist-avatar-section', () => ({ ArtistAvatarSection: () => null }))
 mock.module('@/core/artistas/_components/update-artist-dialog', () => ({ UpdateArtistDialog: () => null }))
-mock.module('@/shared/components/entity-form/entity-form-dialog', () => ({ EntityFormDialog: ({ children }: { children: unknown }) => createElement('div', null, children) }))
+mock.module('@/shared/components/entity-form/entity-form-dialog', () => ({
+  EntityFormDialog: ({
+    children,
+    title,
+    submit,
+    footerStart,
+    isDirty
+  }: {
+    children: unknown
+    title?: unknown
+    submit?: unknown
+    footerStart?: unknown
+    isDirty?: boolean
+  }) =>
+    createElement(
+      'div',
+      null,
+      isDirty ? createElement('span', { 'data-testid': 'badge' }, 'Editado') : null,
+      title ? createElement('h2', { 'data-testid': 'dialog-title' }, title as string) : null,
+      children,
+      submit
+        ? createElement(
+            'div',
+            { 'data-testid': 'dialog-footer' },
+            footerStart ?? null
+          )
+        : null
+    )
+}))
 mock.module('@/shared/components/ui/switch', () => ({ Switch: ({ disabled }: { disabled?: boolean }) => createElement('button', { 'data-testid': 'active-switch', disabled }, 'Active') }))
 mock.module('react-hook-form', () => ({
   get: () => undefined,
@@ -89,5 +117,13 @@ describe('UpdateCatalogDialog pending avatar lock', () => {
     pendingAvatar = false
     const markup = renderToStaticMarkup(createElement(UpdateCatalogDialog))
     expect(markup).not.toContain('data-testid="active-switch" disabled=""')
+  })
+
+  test('R4: renders no Limpiar button in the footer', () => {
+    const markup = renderToStaticMarkup(createElement(UpdateCatalogDialog))
+    // The submit button is present, so the footer region renders — but the
+    // update dialog must never show the create-only Limpiar (R4).
+    expect(markup).toContain('data-testid="dialog-footer"')
+    expect(markup).not.toContain('Limpiar')
   })
 })

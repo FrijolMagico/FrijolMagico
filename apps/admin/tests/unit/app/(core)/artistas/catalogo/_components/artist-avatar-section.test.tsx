@@ -3,8 +3,7 @@ import { act, createElement, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 
 const hookState = {
-  phase: 'idle' as 'idle' | 'uploading',
-  job: null as { sentBytes: number; totalBytes: number } | null
+  phase: 'idle' as 'idle' | 'uploading'
 }
 let selectFileCallCount = 0
 let enqueueCallCount = 0
@@ -17,13 +16,11 @@ mock.module('@/core/artistas/catalogo/_hooks/use-avatar-controller', () => ({
         phase: hookState.phase,
         preview: null,
         currentAvatar: { path: 'avatar.webp', version: 'v1' },
-        job: hookState.job,
         error: null
       },
       async selectFile() {
         selectFileCallCount += 1
         hookState.phase = 'uploading'
-        hookState.job = { sentBytes: 40, totalBytes: 100 }
         rerender((value) => value + 1)
         return { phase: 'ready' }
       },
@@ -75,6 +72,13 @@ function nodesByTag(root: TestNode, tagName: string): TestNode[] {
   ])
 }
 
+function nodesByRole(root: TestNode, role: string): TestNode[] {
+  return root.childNodes.flatMap((child) => [
+    ...(child.attributes.get('role') === role ? [child] : []),
+    ...nodesByRole(child, role)
+  ])
+}
+
 function buttons(root: TestNode) {
   return nodesByTag(root, 'button')
 }
@@ -113,7 +117,6 @@ let root: ReturnType<typeof createRoot> | null = null
 
 beforeEach(() => {
   hookState.phase = 'idle'
-  hookState.job = null
   selectFileCallCount = 0
   enqueueCallCount = 0
   document.body.childNodes = []
@@ -152,36 +155,112 @@ afterEach(() => {
     expect(enqueueCallCount).toBe(1)
   })
 
-  test('drives file selection into upload progress markup', async () => {
-  const container = document.createElement('main')
-  document.body.appendChild(container)
-  root = createRoot(container as unknown as Element)
+  test('R1 regression: phase uploading renders no progress markup and keeps the input disabled', async () => {
+    const container = document.createElement('main')
+    document.body.appendChild(container)
+    root = createRoot(container as unknown as Element)
 
-  await act(async () => {
-    root?.render(
-      <ArtistAvatarSection
-        artistId='artist-1'
-        currentAvatar={{ path: 'avatar.webp', version: 'v1' }}
-      />
-    )
+    // Even with an active queue job in state, the section must NOT render
+    // <progress>, role='status', or percentage text — progress truth moved to
+    // the shared queue store (QueueFloatBar).
+    await act(async () => {
+      root?.render(
+        <ArtistAvatarSection
+          artistId='artist-1'
+          currentAvatar={{ path: 'avatar.webp', version: 'v1' }}
+          autoEnqueue={false}
+          controller={{
+            state: {
+              phase: 'uploading' as const,
+              preview: null,
+              currentAvatar: { path: 'avatar.webp', version: 'v1' },
+              job: {
+                jobId: 'job-1',
+                target: 'artist-avatar',
+                entityId: 'artist-1',
+                preparedAsset: {
+                  blob: new Blob([]),
+                  width: 800,
+                  height: 800,
+                  mimeType: 'image/webp'
+                },
+                preview: null,
+                status: 'uploading' as const,
+                sentBytes: 40,
+                totalBytes: 100,
+                error: null,
+                failedStep: null
+              },
+              error: null
+            },
+            selectFile: async () => ({ phase: 'ready' as const }),
+            enqueue: async () => {},
+            cancel: () => {},
+            retry: async () => {}
+          }}
+        />
+      )
+    })
+
+    const input = nodesByTag(container, 'input')[0]
+    expect(input.attributes.get('disabled')).toBe('')
+    expect(nodesByTag(container, 'progress')).toHaveLength(0)
+    expect(nodesByRole(container, 'status')).toHaveLength(0)
+    expect(container.textContent).not.toContain('%')
   })
 
-  const input = nodesByTag(container, 'input')[0]
-  Object.defineProperty(input, 'files', {
-    value: [{ name: 'new-avatar.webp', type: 'image/webp', size: 100 }]
-  })
+  test('R1 regression: phase completed renders no progress markup either', async () => {
+    const container = document.createElement('main')
+    document.body.appendChild(container)
+    root = createRoot(container as unknown as Element)
 
-  await act(async () => {
-    reactProps(input).onChange?.({ currentTarget: input })
-  })
+    await act(async () => {
+      root?.render(
+        <ArtistAvatarSection
+          artistId='artist-1'
+          currentAvatar={{ path: 'avatar.webp', version: 'v1' }}
+          autoEnqueue={false}
+          controller={{
+            state: {
+              phase: 'completed' as const,
+              preview: null,
+              currentAvatar: { path: 'avatar.webp', version: 'v1' },
+              job: {
+                jobId: 'job-2',
+                target: 'artist-avatar',
+                entityId: 'artist-1',
+                preparedAsset: {
+                  blob: new Blob([]),
+                  width: 800,
+                  height: 800,
+                  mimeType: 'image/webp'
+                },
+                preview: null,
+                status: 'completed' as const,
+                sentBytes: 100,
+                totalBytes: 100,
+                error: null,
+                failedStep: null
+              },
+              error: null
+            },
+            selectFile: async () => ({ phase: 'ready' as const }),
+            enqueue: async () => {},
+            cancel: () => {},
+            retry: async () => {}
+          }}
+        />
+      )
+    })
 
-  const progress = nodesByTag(container, 'progress')[0]
-  expect(selectFileCallCount).toBe(1)
-  expect(enqueueCallCount).toBe(1)
-  expect(progress.attributes.get('aria-label')).toBe('Progreso de carga')
-  expect(progress.attributes.get('value')).toBe('40')
-  expect(container.textContent).toContain('40%')
-})
+    // isBusy only covers preparing/uploading, so the input is re-enabled,
+    // but the progress surface must still be absent.
+    const input = nodesByTag(container, 'input')[0]
+    expect(input.attributes.get('disabled')).toBeUndefined()
+    expect(nodesByTag(container, 'progress')).toHaveLength(0)
+    expect(nodesByRole(container, 'status')).toHaveLength(0)
+    expect(container.textContent).not.toContain('%')
+  })
 
 test('does not show catalog history controls outside the catalog context', async () => {
   const container = document.createElement('main')
@@ -251,7 +330,6 @@ describe('external controller prop', () => {
               phase: 'idle' as const,
               preview: null,
               currentAvatar: { path: 'ext-avatar.png', version: 'v1' },
-              job: null,
               error: null
             },
             selectFile: externalSelectFile,

@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 
 import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
+import { Button } from '@/shared/components/ui/button'
 import {
   Combobox,
   ComboboxContent,
@@ -84,6 +85,17 @@ export function CreateCatalogDialog({
     toggleDialog(open)
   }
 
+  const clearCreateState = () => {
+    reset()
+    activeAvatar.clear()
+    controller.reset()
+  }
+
+  const showClear =
+    isDirty ||
+    controller.state.phase === 'ready' ||
+    activeAvatar.avatar !== null
+
   const onSubmit = async (data: CatalogCreateFormInput) => {
     let success = false
     try {
@@ -119,6 +131,8 @@ export function CreateCatalogDialog({
     } finally {
       if (success) {
         reset()
+        activeAvatar.clear()
+        controller.reset()
         suppressCancelRef.current = false
       }
     }
@@ -146,6 +160,13 @@ export function CreateCatalogDialog({
         isSubmitting,
         disabled: isSubmitting || !formValid
       }}
+      footerStart={
+        showClear ? (
+          <Button type='button' variant='destructive' onClick={clearCreateState}>
+            Limpiar
+          </Button>
+        ) : undefined
+      }
     >
       <form id={CREATE_CATALOG_FORM_ID} onSubmit={handleSubmit(onSubmit)}>
         <FieldGroup className='pt-4'>
