@@ -41,7 +41,6 @@ const AVATAR_CONTROLLER_PHASE = {
   PREPARING: 'preparing',
   READY: 'ready',
   UPLOADING: 'uploading',
-  COMPLETED: 'completed',
   FAILED: 'failed'
 } as const
 
@@ -61,7 +60,6 @@ export interface AvatarControllerState {
   phase: AvatarControllerPhase
   preview: LocalPreviewHandle | null
   currentAvatar: ManagedAssetReference | null
-  job: AssetQueueJob | null
   error: string | null
   errorKind: AvatarErrorKind | null
 }
@@ -74,8 +72,11 @@ export interface AvatarControllerOptions {
 }
 
 function phaseForStatus(status: AssetQueueStatus): AvatarControllerPhase {
+  // A finished store job no longer maps to a terminal controller phase: the
+  // controller only owns the in-flight window, so 'uploading' ≈ "a background
+  // store job exists for this entity". The store remains the progress truth.
   if (status === ASSET_QUEUE_STATUS.COMPLETED)
-    return AVATAR_CONTROLLER_PHASE.COMPLETED
+    return AVATAR_CONTROLLER_PHASE.UPLOADING
   if (status === ASSET_QUEUE_STATUS.FAILED)
     return AVATAR_CONTROLLER_PHASE.FAILED
   return AVATAR_CONTROLLER_PHASE.UPLOADING
@@ -127,7 +128,6 @@ export function createAvatarController(
     phase: AVATAR_CONTROLLER_PHASE.IDLE,
     preview: null,
     currentAvatar: options.initialAvatar ?? null,
-    job: null,
     error: null,
     errorKind: null
   }
@@ -149,7 +149,6 @@ export function createAvatarController(
     if (!job) return
     update({
       phase: phaseForStatus(job.status),
-      job,
       error: job.error,
       errorKind:
         job.status === ASSET_QUEUE_STATUS.FAILED ? errorKindForJob(job) : null
@@ -245,7 +244,6 @@ export function createAvatarController(
         update({
           phase: AVATAR_CONTROLLER_PHASE.UPLOADING,
           preview: job.preview,
-          job,
           error: null,
           errorKind: null
         })
@@ -267,7 +265,6 @@ export function createAvatarController(
       update({
         phase: AVATAR_CONTROLLER_PHASE.IDLE,
         preview: null,
-        job: null,
         error: null,
         errorKind: null
       })
@@ -294,7 +291,6 @@ export function createAvatarController(
       update({
         phase: AVATAR_CONTROLLER_PHASE.IDLE,
         preview: null,
-        job: null,
         error: null,
         errorKind: null
       })
