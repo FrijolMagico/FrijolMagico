@@ -3,6 +3,7 @@ import type { ResizeSpec } from '@/shared/assets-manager/client/contracts'
 const ARTIST_AVATAR_OUTPUT_SIZE = 800
 
 export const ARTIST_AVATAR_PREPARATION_SPEC: ResizeSpec = {
+  quality: 1,
   invalidDimensionsMessage:
     'Dimensiones inválidas, la imágen debe ser cuadrada.',
   resolve: (image) =>

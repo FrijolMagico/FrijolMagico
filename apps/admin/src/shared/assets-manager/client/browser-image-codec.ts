@@ -10,6 +10,7 @@ interface BrowserCanvas {
   width: number
   height: number
   getContext: (contextId: '2d') => {
+    imageSmoothingQuality: 'low' | 'medium' | 'high'
     drawImage: (
       source: unknown,
       x: number,
@@ -61,7 +62,13 @@ const browserImageApi: BrowserImageApi = {
                   y,
                   width,
                   height
-                )
+                ),
+              get imageSmoothingQuality() {
+                return context.imageSmoothingQuality
+              },
+              set imageSmoothingQuality(value) {
+                context.imageSmoothingQuality = value
+              }
             }
           : null
       },
@@ -86,7 +93,7 @@ export function createBrowserImageCodec(
         close: () => bitmap.close()
       }
     },
-    async encodeWebp(image: DecodedImage, width, height) {
+    async encodeWebp(image: DecodedImage, width, height, quality) {
       if (!image.source) throw new Error('Decoded image source unavailable')
       const canvas = browser.createCanvas()
       canvas.width = width
@@ -94,13 +101,10 @@ export function createBrowserImageCodec(
       try {
         const context = canvas.getContext('2d')
         if (!context) throw new Error('Canvas context unavailable')
+        context.imageSmoothingQuality = 'high'
         context.drawImage(image.source, 0, 0, width, height)
         const blob = await new Promise<Blob | null>((resolve) =>
-          canvas.toBlob(
-            resolve,
-            ASSET_OUTPUT_FORMAT.mimeType,
-            ASSET_OUTPUT_FORMAT.quality
-          )
+          canvas.toBlob(resolve, ASSET_OUTPUT_FORMAT.mimeType, quality)
         )
         if (!blob) throw new Error('WebP encoding failed')
         return blob
