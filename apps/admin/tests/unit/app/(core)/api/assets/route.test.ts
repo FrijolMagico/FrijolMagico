@@ -58,9 +58,10 @@ describe('POST /api/assets', () => {
     const response = await POST(request)
 
     expect(response.status).toBe(400)
+    expect(mockUploadArtistAvatarAction).not.toHaveBeenCalled()
   })
 
-  it('delegates an artist avatar upload using only prepared client input', async () => {
+  it('dispatches after neutral parsing without forwarding a legacy slug', async () => {
     mockGetSession.mockResolvedValueOnce({ user: { id: '1' } })
     const formData = new FormData()
     const blob = new Blob(['fake-webp'], { type: 'image/webp' })
@@ -84,11 +85,13 @@ describe('POST /api/assets', () => {
     expect(response.status).toBe(200)
     expect(mockUploadArtistAvatarAction).toHaveBeenCalledWith({
       artistaId: 42,
-      slug: 'artista-de-prueba',
+      slug: '',
       blob: expect.any(Blob),
       width: 800,
       height: 800,
-        expectedActive: undefined
+      expectedActive: undefined,
+      catalogId: undefined,
+      requestedActive: undefined
     })
     await expect(response.json()).resolves.toEqual({
       id: 7,
@@ -97,5 +100,94 @@ describe('POST /api/assets', () => {
       version: '1710000000000',
       oldAsset: null
     })
+  })
+
+  it('forwards expected active avatar metadata to the upload action', async () => {
+    mockGetSession.mockResolvedValueOnce({ user: { id: '1' } })
+    const formData = new FormData()
+    formData.append('assetTarget', 'artist-avatar')
+    formData.append('entityId', '42')
+    formData.append('blob', new Blob(['fake-webp'], { type: 'image/webp' }))
+    formData.append('preparedWidth', '800')
+    formData.append('preparedHeight', '800')
+    formData.append('expectedActiveId', '3')
+    formData.append('expectedActivePath', 'artistas/foo/avatar-old.webp')
+    formData.append('expectedActiveVersion', '1710000000000')
+    formData.append('catalogId', '9')
+    formData.append('requestedActive', 'true')
+
+    const { POST } = await import('@/app/(core)/api/assets/route')
+    const response = await POST(
+      new Request('http://localhost/api/assets', {
+        method: 'POST',
+        body: formData
+      })
+    )
+
+    expect(response.status).toBe(200)
+    expect(mockUploadArtistAvatarAction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        expectedActive: {
+          id: 3,
+          path: 'artistas/foo/avatar-old.webp',
+          version: '1710000000000'
+        },
+        catalogId: 9,
+        requestedActive: true
+      })
+    )
+  })
+
+  it('forwards a nullable expected active when no current avatar exists', async () => {
+    mockGetSession.mockResolvedValueOnce({ user: { id: '1' } })
+    const formData = new FormData()
+    formData.append('assetTarget', 'artist-avatar')
+    formData.append('entityId', '42')
+    formData.append('blob', new Blob(['fake-webp'], { type: 'image/webp' }))
+    formData.append('preparedWidth', '800')
+    formData.append('preparedHeight', '800')
+    formData.append('expectedActiveNone', 'true')
+
+    const { POST } = await import('@/app/(core)/api/assets/route')
+    const response = await POST(
+      new Request('http://localhost/api/assets', {
+        method: 'POST',
+        body: formData
+      })
+    )
+
+    expect(response.status).toBe(200)
+    expect(mockUploadArtistAvatarAction).toHaveBeenCalledWith(
+      expect.objectContaining({ expectedActive: null })
+    )
+  })
+
+  it('forwards current activation fields when requestedActive is false', async () => {
+    mockGetSession.mockResolvedValueOnce({ user: { id: '1' } })
+    const formData = new FormData()
+    formData.append('assetTarget', 'artist-avatar')
+    formData.append('entityId', '42')
+    formData.append('blob', new Blob(['fake-webp'], { type: 'image/webp' }))
+    formData.append('preparedWidth', '800')
+    formData.append('preparedHeight', '800')
+    formData.append('catalogId', '9')
+    formData.append('requestedActive', 'false')
+
+    const { POST } = await import('@/app/(core)/api/assets/route')
+    const response = await POST(
+      new Request('http://localhost/api/assets', {
+        method: 'POST',
+        body: formData
+      })
+    )
+
+    expect(response.status).toBe(200)
+    expect(mockUploadArtistAvatarAction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        expectedActive: undefined,
+        catalogId: 9,
+        requestedActive: false
+      })
+    )
   })
 })
