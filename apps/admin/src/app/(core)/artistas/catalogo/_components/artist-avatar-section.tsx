@@ -43,10 +43,6 @@ export interface ArtistAvatarSectionProps {
   onPreparedUpload?: () => void
 }
 
-function progressFor(sentBytes: number, totalBytes: number): number {
-  return totalBytes > 0 ? Math.round((sentBytes / totalBytes) * 100) : 0
-}
-
 export function ArtistAvatarSection({
   artistId,
   currentAvatar = null,
@@ -68,12 +64,6 @@ export function ArtistAvatarSection({
   const isBusy =
     controller.state.phase === 'preparing' ||
     controller.state.phase === 'uploading'
-  const progress = controller.state.job
-    ? progressFor(
-        controller.state.job.sentBytes,
-        controller.state.job.totalBytes
-      )
-    : 0
   const showErrorActions =
     controller.state.phase === 'failed' &&
     controller.state.errorKind !== null &&
@@ -171,18 +161,6 @@ export function ArtistAvatarSection({
           <span className='text-muted-foreground text-xs'>JPG, PNG o WebP</span>
         )}
       </div>
-      {(controller.state.phase === 'uploading' ||
-        controller.state.phase === 'completed') &&
-        controller.state.job && (
-          <div role='status' aria-live='polite'>
-            <span>{progress}%</span>
-            <progress
-              value={progress}
-              max={100}
-              aria-label='Progreso de carga'
-            />
-          </div>
-        )}
       {controller.state.error && (
         <div role='alert' className='text-destructive text-sm'>
           {controller.state.error}
