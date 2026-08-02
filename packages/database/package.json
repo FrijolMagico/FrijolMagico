@@ -27,8 +27,10 @@
   "scripts": {
     "migrate": "bun run --env-file .env.local drizzle-kit migrate --config drizzle.config.ts",
     "new": "bun run --env-file .env.local drizzle-kit generate --custom --name",
-    "seed": "bun run --env-file .env.local turso db shell $TURSO_DATABASE_NAME < seed/seed.sql",
-    "dev": "turso dev --db-file local.db",
+    "seed": "bun run scripts/seed.ts",
+    "reset:dev-r2": "NODE_ENV=development bun run --env-file .env.local scripts/clean-devr2/reset-dev-r2.ts",
+    "dev": "turso dev --db-file local.dev.db",
+    "prod": "turso dev --db-file local.db",
     "lint": "eslint .",
     "test": "bun test",
     "type-check": "tsc --noEmit"
@@ -40,6 +42,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@aws-sdk/client-s3": "^3.1091.0",
     "@frijolmagico/eslint-config": "workspace:*",
     "@frijolmagico/typescript-config": "workspace:*",
     "@types/node": "^25.9.1",

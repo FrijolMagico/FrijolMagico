@@ -8,9 +8,19 @@ const mockRotateFeaturedArtists = mock(() =>
   Promise.resolve({ rotated: true, count: 3 } as const)
 )
 
+const mockFisherYatesShuffle = mock((arr: readonly unknown[]) => [...arr])
+
+const mockSelectFeaturedArtists = mock((candidates: readonly unknown[]) => [])
+
 const mockInvalidateWebFeaturedArtists = mock(() =>
   Promise.resolve({ revalidated: true } as const)
 )
+
+const mockBuildWebInvalidationUrl = mock(
+  () => 'https://example.com/api/revalidate'
+)
+
+const mockRevalidateWebCacheBestEffort = mock(async () => {})
 
 const mockTransaction = mock((fn: (tx: unknown) => Promise<unknown>) =>
   fn('mock-tx')
@@ -21,11 +31,15 @@ mock.module('@frijolmagico/database/orm', () => ({
 }))
 
 mock.module('@/app/(cron)/_lib/rotate-featured-artists', () => ({
-  rotateFeaturedArtists: mockRotateFeaturedArtists
+  rotateFeaturedArtists: mockRotateFeaturedArtists,
+  fisherYatesShuffle: mockFisherYatesShuffle,
+  selectFeaturedArtists: mockSelectFeaturedArtists
 }))
 
 mock.module('@/shared/lib/web-invalidation', () => ({
-  revalidateWebCache: mockInvalidateWebFeaturedArtists
+  revalidateWebCache: mockInvalidateWebFeaturedArtists,
+  buildWebInvalidationUrl: mockBuildWebInvalidationUrl,
+  revalidateWebCacheBestEffort: mockRevalidateWebCacheBestEffort
 }))
 
 import { GET } from '@/app/(cron)/api/cron/featured-artists/route'

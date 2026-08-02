@@ -59,6 +59,7 @@ tmp/
 /dump.sql
 */**/dump.sql
 */**/local.db*
+*/**/local.dev.db*
 
 # database data insertion scripts (keep README and .gitkeep)
 packages/database/data/*.sql
@@ -83,3 +84,4 @@ skills-lock.json
 .pi/
 .sdd/
 mock.local.db
+.codegraph/

@@ -16,6 +16,11 @@ mock.module('next/cache', () => ({
   cacheTag: mock(() => {})
 }))
 
+mock.module('@/infra/config/dataSourceConfig', () => ({
+  getDataSource: () => 'local',
+  isMockMode: () => false
+}))
+
 beforeEach(() => {
   executeQueryMock.mockReset()
 })

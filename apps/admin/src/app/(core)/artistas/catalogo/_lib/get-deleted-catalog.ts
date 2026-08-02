@@ -5,14 +5,17 @@ import { and, asc, eq, inArray, isNotNull } from 'drizzle-orm'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { isNotDeleted } from '@frijolmagico/database/filters'
+import { getAvatarUrl } from '@frijolmagico/utils/cdn'
 
-import { getAvatarUrl } from '@/shared/lib/cdn'
 import { parseRRSS } from '@/shared/lib/rrss'
 
 import { ARTIST_CACHE_TAG, CATALOG_CACHE_TAG } from '@frijolmagico/cache-tags'
 import type { ARTIST_STATUS } from '../../_constants'
-import type { Artist } from '../../_schemas/artista.schema'
-import type { CatalogListItem } from '../_types/catalog-list-item'
+import type {
+  CatalogArtist,
+  CatalogListItem
+} from '../_types/catalog-list-item'
+import type { ActiveAvatar } from './avatar-history-contracts'
 
 const { catalogArtist, artistImage, artist: artistTable } = artist
 
@@ -27,6 +30,7 @@ interface DeletedCatalogArtistRow {
   pais: string | null
   estadoId: number
   rrss: string | null
+  slug: string
 }
 
 interface DeletedCatalogRow {
@@ -40,7 +44,7 @@ interface DeletedCatalogRow {
   artist: DeletedCatalogArtistRow
 }
 
-function mapDeletedCatalogArtist(row: DeletedCatalogArtistRow): Artist {
+function mapDeletedCatalogArtist(row: DeletedCatalogArtistRow): CatalogArtist {
   return {
     ...row,
     estadoId: row.estadoId as ARTIST_STATUS,
@@ -72,7 +76,8 @@ export async function getDeletedCatalog(): Promise<CatalogListItem[]> {
         ciudad: artistTable.ciudad,
         pais: artistTable.pais,
         estadoId: artistTable.estadoId,
-        rrss: artistTable.rrss
+        rrss: artistTable.rrss,
+        slug: artistTable.slug
       }
     })
     .from(catalogArtist)
@@ -89,8 +94,9 @@ export async function getDeletedCatalog(): Promise<CatalogListItem[]> {
   const avatars = await db
     .select({
       artistaId: artistImage.artistaId,
+      id: artistImage.id,
       imagenUrl: artistImage.imagenUrl,
-      orden: artistImage.orden
+      version: artistImage.artistAvatarVersion
     })
     .from(artistImage)
     .where(
@@ -102,16 +108,21 @@ export async function getDeletedCatalog(): Promise<CatalogListItem[]> {
     )
     .orderBy(asc(artistImage.orden))
 
-  const avatarMap = new Map<number, string>()
+  const avatarMap = new Map<number, ActiveAvatar>()
   for (const avatar of avatars) {
     if (!avatarMap.has(avatar.artistaId)) {
-      avatarMap.set(avatar.artistaId, avatar.imagenUrl)
+      avatarMap.set(avatar.artistaId, {
+        id: avatar.id,
+        // Full public path built server-side (same contract as getCatalogData).
+        path: getAvatarUrl(avatar.imagenUrl),
+        version: avatar.version
+      })
     }
   }
 
   return results.map((row) => ({
     ...row,
     artist: mapDeletedCatalogArtist(row.artist),
-    avatarUrl: getAvatarUrl(avatarMap.get(row.artistaId) ?? null)
+    activeAvatar: avatarMap.get(row.artistaId) ?? null
   }))
 }

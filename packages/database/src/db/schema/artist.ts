@@ -73,6 +73,7 @@ export const artistImage = sqliteTable(
       .notNull()
       .references(() => artist.id),
     imagenUrl: text('imagen_url').notNull(),
+    artistAvatarVersion: text('imagen_version'),
     tipo: text('tipo', { enum: ['avatar', 'galeria'] }).notNull(),
     orden: integer('orden').notNull().default(1),
     metadata: text('metadata'),
@@ -87,7 +88,10 @@ export const artistImage = sqliteTable(
   (table) => [
     index('idx_artist_image_artista').on(table.artistaId),
     index('idx_artist_image_artista_tipo').on(table.artistaId, table.tipo),
-    index('idx_artist_image_deleted_at').on(table.deletedAt)
+    index('idx_artist_image_deleted_at').on(table.deletedAt),
+    uniqueIndex('uq_artist_image_active_avatar')
+      .on(table.artistaId)
+      .where(sql`${table.tipo} = 'avatar' AND ${table.deletedAt} IS NULL`)
   ]
 )
 

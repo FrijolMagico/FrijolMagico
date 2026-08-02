@@ -1,0 +1,59 @@
+import { describe, it, expect, mock } from 'bun:test'
+
+mock.module('server-only', () => ({}))
+
+describe('assertAssetStore', () => {
+  it('passes for a valid AssetStore implementation', async () => {
+    const { assertAssetStore } = await import('@/shared/assets-manager/server/asset-store')
+
+    const store = {
+      putObject: async (_key: string, _blob: Blob) => {},
+      deleteObject: async (_key: string) => {},
+    }
+
+    expect(() => assertAssetStore(store)).not.toThrow()
+  })
+
+  it('throws AssetStoreError for null', async () => {
+    const { assertAssetStore } = await import('@/shared/assets-manager/server/asset-store')
+    const { AssetStoreError } = await import('@/shared/assets-manager/server/asset-store-error')
+
+    expect(() => assertAssetStore(null)).toThrow(AssetStoreError)
+  })
+
+  it('throws AssetStoreError for undefined', async () => {
+    const { assertAssetStore } = await import('@/shared/assets-manager/server/asset-store')
+    const { AssetStoreError } = await import('@/shared/assets-manager/server/asset-store-error')
+
+    expect(() => assertAssetStore(undefined)).toThrow(AssetStoreError)
+  })
+
+  it('throws AssetStoreError for plain object without methods', async () => {
+    const { assertAssetStore } = await import('@/shared/assets-manager/server/asset-store')
+    const { AssetStoreError } = await import('@/shared/assets-manager/server/asset-store-error')
+
+    expect(() => assertAssetStore({})).toThrow(AssetStoreError)
+  })
+
+  it('throws AssetStoreError for object missing deleteObject', async () => {
+    const { assertAssetStore } = await import('@/shared/assets-manager/server/asset-store')
+    const { AssetStoreError } = await import('@/shared/assets-manager/server/asset-store-error')
+
+    const invalid = {
+      putObject: async (_key: string, _blob: Blob) => {},
+    }
+
+    expect(() => assertAssetStore(invalid)).toThrow(AssetStoreError)
+  })
+
+  it('passes for minimal valid store', async () => {
+    const { assertAssetStore } = await import('@/shared/assets-manager/server/asset-store')
+
+    const minimal = {
+      putObject: async (_key: string, _blob: Blob) => {},
+      deleteObject: async (_key: string) => {},
+    }
+
+    expect(() => assertAssetStore(minimal)).not.toThrow()
+  })
+})

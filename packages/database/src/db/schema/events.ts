@@ -54,6 +54,8 @@ export const eventEdition = sqliteTable(
     numeroEdicion: text('numero_edicion').notNull(),
     slug: text('slug'),
     posterUrl: text('poster_url'),
+    editionPosterPath: text('poster_path'),
+    editionPosterVersion: text('poster_version'),
     published: integer('published', { mode: 'boolean' }).notNull().default(false),
     createdAt: text('created_at')
       .notNull()

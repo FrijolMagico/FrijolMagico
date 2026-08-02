@@ -5,8 +5,8 @@ import { and, asc, count, eq, inArray, notExists, sql } from 'drizzle-orm'
 import { isNotDeleted } from '@frijolmagico/database/filters'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
+import { getAvatarUrl } from '@frijolmagico/utils/cdn'
 
-import { getAvatarUrl } from '@/shared/lib/cdn'
 import {
   createPaginatedResponse,
   type PaginatedResponse
@@ -15,15 +15,16 @@ import { parseRRSS } from '@/shared/lib/rrss'
 
 import { ARTIST_CACHE_TAG, CATALOG_CACHE_TAG } from '@frijolmagico/cache-tags'
 import { type ARTIST_STATUS } from '../../_constants'
-import type { Artist } from '../../_schemas/artista.schema'
 import {
   catalogQueryParamsSchema,
   type CatalogQueryParams
 } from '../_schemas/query-params.schema'
 import type {
+  CatalogArtist,
   CatalogAvailableArtist,
   CatalogListItem
 } from '../_types/catalog-list-item'
+import type { ActiveAvatar } from './avatar-history-contracts'
 
 const { catalogArtist, artistImage, artist: artistTable } = artist
 
@@ -38,6 +39,7 @@ interface CatalogArtistRow {
   pais: string | null
   estadoId: number
   rrss: string | null
+  slug: string
 }
 
 interface CatalogResultRow {
@@ -51,7 +53,7 @@ interface CatalogResultRow {
   artist: CatalogArtistRow
 }
 
-function mapCatalogArtist(row: CatalogArtistRow): Artist {
+function mapCatalogArtist(row: CatalogArtistRow): CatalogArtist {
   return {
     ...row,
     estadoId: row.estadoId as ARTIST_STATUS,
@@ -108,7 +110,8 @@ export async function getCatalogData(
         ciudad: artistTable.ciudad,
         pais: artistTable.pais,
         estadoId: artistTable.estadoId,
-        rrss: artistTable.rrss
+        rrss: artistTable.rrss,
+        slug: artistTable.slug
       }
     })
     .from(catalogArtist)
@@ -123,8 +126,10 @@ export async function getCatalogData(
     artistIds.length > 0
       ? await db
           .select({
+            id: artistImage.id,
             artistaId: artistImage.artistaId,
             imagenUrl: artistImage.imagenUrl,
+            version: artistImage.artistAvatarVersion,
             orden: artistImage.orden
           })
           .from(artistImage)
@@ -138,17 +143,25 @@ export async function getCatalogData(
           .orderBy(asc(artistImage.orden))
       : []
 
-  const avatarMap = new Map<number, string>()
+  const avatarMap = new Map<number, ActiveAvatar>()
   for (const avatar of avatars) {
     if (!avatarMap.has(avatar.artistaId)) {
-      avatarMap.set(avatar.artistaId, avatar.imagenUrl)
+      avatarMap.set(avatar.artistaId, {
+        id: avatar.id,
+        // Full public path built server-side (getAvatarUrl). The persistence
+        // boundaries compare full paths: the guard builds the same full path
+        // from `imagenUrl` and `persistArtistAvatarAction` reverts it with
+        // toRawAssetPath() for the SQL equality.
+        path: getAvatarUrl(avatar.imagenUrl),
+        version: avatar.version
+      })
     }
   }
 
   const results = catalogResults.map((row) => ({
     ...row,
     artist: mapCatalogArtist(row.artist),
-    avatarUrl: avatarMap.get(row.artistaId) ?? null
+    activeAvatar: avatarMap.get(row.artistaId) ?? null
   }))
 
   const totalResult = await db
@@ -157,17 +170,11 @@ export async function getCatalogData(
     .innerJoin(artistTable, eq(artistTable.id, catalogArtist.artistaId))
     .where(whereClause)
 
-  return createPaginatedResponse(
-    results.map((row) => ({
-      ...row,
-      avatarUrl: getAvatarUrl(row.avatarUrl)
-    })),
-    {
-      total: totalResult[0]?.total ?? 0,
-      page: query.page,
-      pageSize: query.limit
-    }
-  )
+  return createPaginatedResponse(results, {
+    total: totalResult[0]?.total ?? 0,
+    page: query.page,
+    pageSize: query.limit
+  })
 }
 
 export async function getArtistsNotInCatalog(): Promise<
@@ -177,11 +184,12 @@ export async function getArtistsNotInCatalog(): Promise<
   cacheTag(CATALOG_CACHE_TAG)
   cacheTag(ARTIST_CACHE_TAG)
 
-  return db
+  const artists = await db
     .select({
       id: artistTable.id,
       pseudonimo: artistTable.pseudonimo,
-      nombre: artistTable.nombre
+      nombre: artistTable.nombre,
+      slug: artistTable.slug
     })
     .from(artistTable)
     .where(
@@ -201,4 +209,6 @@ export async function getArtistsNotInCatalog(): Promise<
       )
     )
     .orderBy(asc(artistTable.pseudonimo), asc(artistTable.nombre))
+
+  return artists
 }

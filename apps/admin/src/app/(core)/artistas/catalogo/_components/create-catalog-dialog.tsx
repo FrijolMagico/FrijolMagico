@@ -1,10 +1,12 @@
 'use client'
 
-import { useForm, Controller } from 'react-hook-form'
+import { useRef } from 'react'
+import { useForm, Controller, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 
 import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
+import { Button } from '@/shared/components/ui/button'
 import {
   Combobox,
   ComboboxContent,
@@ -28,6 +30,10 @@ import type { CatalogCreateFormInput } from '../_schemas/catalog.schema'
 import type { CatalogAvailableArtist } from '../_types/catalog-list-item'
 import { useCatalogDialog } from '../_store/catalog-dialog-store'
 import { CREATE_CATALOG_FORM_ID } from '../_constants'
+import { useAvatarController } from '../_hooks/use-avatar-controller'
+import { useActiveArtistAvatar } from '../_hooks/use-active-artist-avatar'
+import { ArtistAvatarSection } from './artist-avatar-section'
+import type { ManagedAssetReference } from '@/shared/assets-manager/managed-asset-reference'
 
 interface CreateCatalogDialogProps {
   availableArtists: CatalogAvailableArtist[]
@@ -51,11 +57,44 @@ export function CreateCatalogDialog({
       artistaId: 0,
       descripcion: null,
       destacado: false,
-      activo: true,
-      avatarUrl: null
+      activo: true
     },
     mode: 'onChange'
   })
+
+  const artistaId = useWatch({ name: 'artistaId', control })
+
+  const controller = useAvatarController()
+  const activeAvatar = useActiveArtistAvatar()
+  const suppressCancelRef = useRef(false)
+
+  // Avatar validation: satisfied if artist has existing avatar OR a file is ready
+  const avatarSatisfied =
+    !!activeAvatar.avatar || controller.state.phase === 'ready'
+
+  const formValid = isDirty && isValid && avatarSatisfied
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      // User closed the dialog (not programmatic after submit success)
+      if (!suppressCancelRef.current) {
+        controller.cancel()
+      }
+      toggleDialog(false)
+    }
+    toggleDialog(open)
+  }
+
+  const clearCreateState = () => {
+    reset()
+    activeAvatar.clear()
+    controller.reset()
+  }
+
+  const showClear =
+    isDirty ||
+    controller.state.phase === 'ready' ||
+    activeAvatar.avatar !== null
 
   const onSubmit = async (data: CatalogCreateFormInput) => {
     let success = false
@@ -69,12 +108,32 @@ export function CreateCatalogDialog({
         return
       }
 
+      if (!result.data) {
+        toast.error('No se pudo identificar el artista creado')
+        return
+      }
+
+      // Post-submit enqueue
+      const { artistId, catalogId, requestedActive } = result.data
+      try {
+        await controller.enqueue(artistId, {
+          activation: { catalogId, requestedActive }
+        })
+      } catch {
+        // Enqueue failure handled by controller state — error+retry shown in ArtistAvatarSection
+        // The catalog entry was already created
+      }
+
       success = true
+      suppressCancelRef.current = true
       toggleDialog(false)
       toast.success('Artista agregado al catálogo')
     } finally {
       if (success) {
         reset()
+        activeAvatar.clear()
+        controller.reset()
+        suppressCancelRef.current = false
       }
     }
   }
@@ -84,10 +143,14 @@ export function CreateCatalogDialog({
     value: artist.id
   }))
 
+  const currentAvatar: ManagedAssetReference | null = activeAvatar.avatar
+    ? { path: activeAvatar.avatar.path, version: activeAvatar.avatar.version }
+    : null
+
   return (
     <EntityFormDialog
       open={isCreateCatalogOpen}
-      onOpenChange={toggleDialog}
+      onOpenChange={handleOpenChange}
       title='Agregar al Catálogo'
       triggerLabel='Agregar al catálogo'
       isDirty={isDirty}
@@ -95,55 +158,90 @@ export function CreateCatalogDialog({
         type: 'submit',
         form: CREATE_CATALOG_FORM_ID,
         isSubmitting,
-        disabled: isSubmitting || !isDirty || !isValid
+        disabled: isSubmitting || !formValid
       }}
+      footerStart={
+        showClear ? (
+          <Button type='button' variant='destructive' onClick={clearCreateState}>
+            Limpiar
+          </Button>
+        ) : undefined
+      }
     >
       <form id={CREATE_CATALOG_FORM_ID} onSubmit={handleSubmit(onSubmit)}>
         <FieldGroup className='pt-4'>
-          <Field>
-            <FieldLabel>
-              Artista <span className='text-destructive'>*</span>
-            </FieldLabel>
-            <Controller
-              name='artistaId'
-              control={control}
-              render={({ field: { onChange, value } }) => {
-                const selectedArtist = comboboxArtists.find(
-                  (item) => item.value === value
-                )
-
-                return (
-                  <Combobox
-                    items={comboboxArtists}
-                    value={selectedArtist ?? null}
-                    onValueChange={(val) => {
-                      onChange(val?.value ?? 0)
-                    }}
-                    itemToStringLabel={(item) => item?.label ?? ''}
-                  >
-                    <ComboboxInput
-                      placeholder='Buscar artista...'
-                      showTrigger
-                      showClear
-                    />
-                    <ComboboxContent className='pointer-events-auto!'>
-                      <ComboboxEmpty>No hay artistas disponibles</ComboboxEmpty>
-                      <ComboboxList className=''>
-                        {(artist: (typeof comboboxArtists)[0]) => (
-                          <ComboboxItem key={artist.value} value={artist}>
-                            {artist.label}
-                          </ComboboxItem>
-                        )}
-                      </ComboboxList>
-                    </ComboboxContent>
-                  </Combobox>
-                )
+          <div className='flex items-center gap-2'>
+            <ArtistAvatarSection
+              artistId={artistaId}
+              currentAvatar={controller.state.currentAvatar ?? currentAvatar}
+              autoEnqueue={false}
+              controller={{
+                state: controller.state,
+                selectFile: controller.selectFile,
+                enqueue: controller.enqueue,
+                cancel: controller.cancel,
+                retry: controller.retry
               }}
             />
-            {errors.artistaId && (
-              <FieldError>{errors.artistaId.message}</FieldError>
-            )}
-          </Field>
+            <div className='flex-1'>
+              <Field>
+                <FieldLabel>
+                  Artista <span className='text-destructive'>*</span>
+                </FieldLabel>
+                <Controller
+                  name='artistaId'
+                  control={control}
+                  render={({ field: { onChange, value } }) => {
+                    const selectedComboItem = comboboxArtists.find(
+                      (item) => item.value === value
+                    )
+
+                    return (
+                      <Combobox
+                        items={comboboxArtists}
+                        value={selectedComboItem ?? null}
+                        onValueChange={(val) => {
+                          onChange(val?.value ?? 0)
+                          activeAvatar.load(val?.value ?? null)
+                          controller.syncAvatar(null)
+                        }}
+                        itemToStringLabel={(item) => item?.label ?? ''}
+                      >
+                        <ComboboxInput
+                          placeholder='Buscar artista...'
+                          showTrigger
+                          showClear
+                        />
+                        <ComboboxContent className='pointer-events-auto!'>
+                          <ComboboxEmpty>
+                            No hay artistas disponibles
+                          </ComboboxEmpty>
+                          <ComboboxList className=''>
+                            {(artist: (typeof comboboxArtists)[0]) => (
+                              <ComboboxItem key={artist.value} value={artist}>
+                                {artist.label}
+                              </ComboboxItem>
+                            )}
+                          </ComboboxList>
+                        </ComboboxContent>
+                      </Combobox>
+                    )
+                  }}
+                />
+                {errors.artistaId && (
+                  <FieldError>{errors.artistaId.message}</FieldError>
+                )}
+              </Field>
+              {activeAvatar.isPending && (
+                <span role='status'>Cargando avatar...</span>
+              )}
+              {activeAvatar.error && (
+                <span role='alert' className='text-destructive text-sm'>
+                  {activeAvatar.error}
+                </span>
+              )}
+            </div>
+          </div>
 
           <Field>
             <FieldLabel htmlFor='descripcion'>Descripción</FieldLabel>

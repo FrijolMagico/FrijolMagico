@@ -4,7 +4,8 @@ import { executeQueryMock } from '@/test-utils/mockDatabase'
 
 // Aislar dataSourceConfig: evitar fuga de mock.module desde otros tests
 mock.module('@/infra/config/dataSourceConfig', () => ({
-  getDataSource: () => 'local'
+  getDataSource: () => 'local',
+  isMockMode: () => false
 }))
 
 import { getFestivalSlugs } from './getFestivalSlugs'

@@ -134,6 +134,20 @@
       "when": 1784062397124,
       "tag": "0018_add_edition_publication",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1784390400000,
+      "tag": "0019_add_asset_foundations",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1785196800000,
+      "tag": "0020_unique_active_artist_avatar",
+      "breakpoints": true
     }
   ]
 }
