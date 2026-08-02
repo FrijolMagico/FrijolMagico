@@ -10,6 +10,7 @@
 export const ASSET_OUTPUT_FORMAT = {
   mimeType: 'image/webp',
   extension: 'webp',
+  quality: 0.82
 } as const
 
 export type AssetOutputFormat = typeof ASSET_OUTPUT_FORMAT

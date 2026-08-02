@@ -3,6 +3,7 @@
 import { useState, useSyncExternalStore } from 'react'
 
 import { ensureArtistAvatarPolicy } from '../_lib/artist-avatar-production-composition'
+import { ARTIST_AVATAR_PREPARATION_SPEC } from '../_lib/artist-avatar-preparation-policy'
 
 import { createBrowserImageCodec } from '@/shared/assets-manager/client/browser-image-codec'
 import {
@@ -149,7 +150,8 @@ export function createAvatarController(
     })
     const result = await preparation.prepare({
       target: ASSET_TARGET.ARTIST_AVATAR,
-      source
+      source,
+      resize: ARTIST_AVATAR_PREPARATION_SPEC
     })
     if (result.phase === 'ready' && result.preparedAsset && result.preview) {
       preparedAsset = result.preparedAsset
