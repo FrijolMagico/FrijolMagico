@@ -4,10 +4,8 @@ import { describe, expect, mock, test } from 'bun:test'
 
 mock.module('server-only', () => ({}))
 
-const {
-  createProvisionalAssetReceipt,
-  verifyProvisionalAssetReceipt
-} = await import('@/shared/assets-manager/server/provisional-asset-receipt')
+const { createProvisionalAssetReceipt, verifyProvisionalAssetReceipt } =
+  await import('@/shared/assets-manager/server/provisional-asset-receipt')
 
 const secret = 'receipt-secret-for-tests'
 const claims = { subjectId: 'admin-1', assetKey: 'tmp/object.webp' }
@@ -20,6 +18,15 @@ function isAssetClaims(value: unknown): value is typeof claims {
     'subjectId' in value &&
     'assetKey' in value &&
     typeof value.subjectId === 'string' &&
+    typeof value.assetKey === 'string'
+  )
+}
+
+function isGenericAssetClaims(value: unknown): value is { assetKey: string } {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'assetKey' in value &&
     typeof value.assetKey === 'string'
   )
 }
@@ -39,7 +46,7 @@ describe('provisional asset receipt', () => {
         secret,
         subjectId: 'admin-1',
         now: 301_000,
-        validateClaims: isAssetClaims
+        validateClaims: isGenericAssetClaims
       })
     ).toEqual({ ...claims, issuedAt: 1_000, expiresAt: 301_000 })
   })
@@ -55,7 +62,7 @@ describe('provisional asset receipt', () => {
         secret,
         subjectId: 'admin-1',
         now: 1_001,
-        validateClaims: isAssetClaims
+        validateClaims: isGenericAssetClaims
       })
     ).toEqual({ ...claims, issuedAt: 1_000, expiresAt: 301_000 })
   })
@@ -65,9 +72,16 @@ describe('provisional asset receipt', () => {
       secret,
       issuedAt: 1_000
     })
-    const options = { secret, subjectId: 'admin-1', validateClaims: isAssetClaims }
+    const options = {
+      secret,
+      subjectId: 'admin-1',
+      validateClaims: isAssetClaims
+    }
     const invalidPayload = Buffer.from('not json').toString('base64url')
-    const signedInvalidPayload = `${invalidPayload}.${createHmac('sha256', secret)
+    const signedInvalidPayload = `${invalidPayload}.${createHmac(
+      'sha256',
+      secret
+    )
       .update(invalidPayload)
       .digest('base64url')}`
 
@@ -77,14 +91,17 @@ describe('provisional asset receipt', () => {
     expect(() =>
       verifyProvisionalAssetReceipt(signedInvalidPayload, options)
     ).toThrow('INVALID_RECEIPT')
-    expect(() =>
-      verifyProvisionalAssetReceipt(`${receipt}x`, options)
-    ).toThrow('INVALID_RECEIPT')
+    expect(() => verifyProvisionalAssetReceipt(`${receipt}x`, options)).toThrow(
+      'INVALID_RECEIPT'
+    )
     expect(() =>
       verifyProvisionalAssetReceipt(receipt.split('.')[0] + '.x', options)
     ).toThrow('INVALID_RECEIPT')
     expect(() =>
-      verifyProvisionalAssetReceipt(receipt, { ...options, subjectId: 'admin-2' })
+      verifyProvisionalAssetReceipt(receipt, {
+        ...options,
+        subjectId: 'admin-2'
+      })
     ).toThrow('INVALID_RECEIPT')
     expect(() =>
       verifyProvisionalAssetReceipt(receipt, {
@@ -109,8 +126,54 @@ describe('provisional asset receipt', () => {
         subjectId: 'admin-1',
         now: 301_001,
         purpose: 'cleanup',
-        validateClaims: isAssetClaims
+        validateClaims: isGenericAssetClaims
       })
     ).toEqual({ ...claims, issuedAt: 1_000, expiresAt: 301_000 })
+  })
+
+  test('binds a generic subject to independent persistence and cleanup deadlines', () => {
+    const receipt = createProvisionalAssetReceipt(
+      { assetKey: 'tmp/object.webp' },
+      {
+        secret,
+        subject: 'admin-1',
+        issuedAt: 1_000,
+        deadlines: { persistUntil: 3_601_000, discardUntil: 604_801_000 }
+      }
+    )
+
+    expect(
+      verifyProvisionalAssetReceipt(receipt, {
+        secret,
+        subject: 'admin-1',
+        now: 3_601_000,
+        validateClaims: isGenericAssetClaims
+      })
+    ).toMatchObject({ assetKey: 'tmp/object.webp', subject: 'admin-1' })
+    expect(() =>
+      verifyProvisionalAssetReceipt(receipt, {
+        secret,
+        subject: 'admin-2',
+        now: 3_601_000,
+        validateClaims: isGenericAssetClaims
+      })
+    ).toThrow('INVALID_RECEIPT')
+    expect(() =>
+      verifyProvisionalAssetReceipt(receipt, {
+        secret,
+        subject: 'admin-1',
+        now: 3_601_001,
+        validateClaims: isGenericAssetClaims
+      })
+    ).toThrow('INVALID_RECEIPT')
+    expect(
+      verifyProvisionalAssetReceipt(receipt, {
+        secret,
+        subject: 'admin-1',
+        now: 604_801_000,
+        purpose: 'cleanup',
+        validateClaims: isGenericAssetClaims
+      })
+    ).toMatchObject({ assetKey: 'tmp/object.webp', subject: 'admin-1' })
   })
 })
