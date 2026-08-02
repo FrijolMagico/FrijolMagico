@@ -2,10 +2,8 @@ import { describe, expect, mock, test } from 'bun:test'
 
 mock.module('server-only', () => ({}))
 
-const {
-  createArtistAvatarUploadReceipt,
-  verifyArtistAvatarUploadReceipt
-} = await import('@/core/artistas/catalogo/_lib/artist-avatar-upload-receipt')
+const { createArtistAvatarUploadReceipt, verifyArtistAvatarUploadReceipt } =
+  await import('@/core/artistas/catalogo/_lib/artist-avatar-upload-receipt')
 
 const secret = 'receipt-secret-for-tests'
 
@@ -41,7 +39,8 @@ describe('artist avatar upload receipt', () => {
       catalogId: 7,
       requestedActive: true,
       issuedAt: 1_000,
-      expiresAt: 301_000
+      persistUntil: 3_601_000,
+      discardUntil: 604_801_000
     })
   })
 
@@ -89,7 +88,7 @@ describe('artist avatar upload receipt', () => {
         secret,
         subjectId: 'admin-1',
         artistaId: 42,
-        now: 301_001
+        now: 3_601_001
       })
     ).toThrow('INVALID_RECEIPT')
   })
@@ -114,9 +113,35 @@ describe('artist avatar upload receipt', () => {
         secret,
         subjectId: 'admin-1',
         artistaId: 42,
-        now: 301_001,
+        now: 3_601_001,
         purpose: 'cleanup'
       })
     ).toMatchObject({ artistaId: 42, path: 'artistas/test/avatar-v1.webp' })
+  })
+
+  test('refuses cleanup after its seven-day provisional window', () => {
+    const receipt = createArtistAvatarUploadReceipt(
+      {
+        subjectId: 'admin-1',
+        artistaId: 42,
+        path: 'artistas/test/avatar-v1.webp',
+        version: 'v1',
+        expectedActive: undefined,
+        catalogId: undefined,
+        requestedActive: undefined
+      },
+      secret,
+      1_000
+    )
+
+    expect(() =>
+      verifyArtistAvatarUploadReceipt(receipt, {
+        secret,
+        subjectId: 'admin-1',
+        artistaId: 42,
+        now: 604_801_001,
+        purpose: 'cleanup'
+      })
+    ).toThrow('INVALID_RECEIPT')
   })
 })

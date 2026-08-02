@@ -179,11 +179,39 @@ describe('artist avatar persistence boundaries', () => {
     expect(transactionCalls).toBe(1)
   })
 
+  test('rejects persistence after artist deletion while retaining seven-day cleanup eligibility', async () => {
+    rows = [[], []]
+    transactionImplementation = (callback) =>
+      callback({
+        select: () => ({
+          from: () => ({
+            where: () => ({ limit: async () => [{ deletedAt: '2026-08-02' }] })
+          })
+        })
+      })
+
+    await expect(
+      persistArtistAvatarAction({ receipt: receipt() })
+    ).resolves.toEqual({
+      success: false,
+      errors: [{ entityType: 'ARTIST_DELETED', message: 'ARTIST_DELETED' }]
+    })
+    await expect(
+      discardArtistAvatarAction({
+        receipt: receipt(Date.now() - 2 * 60 * 60 * 1_000)
+      })
+    ).resolves.toEqual({ success: true, data: null })
+
+    expect(deleteObject).toHaveBeenCalledWith(claims.path)
+  })
+
   test('accepts an authentic expired receipt only to discard an unpersisted provisional object', async () => {
     rows = [[]]
 
     await expect(
-      discardArtistAvatarAction({ receipt: receipt(0) })
+      discardArtistAvatarAction({
+        receipt: receipt(Date.now() - 2 * 60 * 60 * 1_000)
+      })
     ).resolves.toEqual({ success: true, data: null })
     expect(deleteObject).toHaveBeenCalledWith(claims.path)
   })
@@ -203,11 +231,86 @@ describe('artist avatar persistence boundaries', () => {
     expect(deleteObject).not.toHaveBeenCalled()
   })
 
+  test('keeps a failed provisional discard retryable without a durable cleanup ledger', async () => {
+    rows = [[], []]
+    deleteObject.mockRejectedValueOnce(new Error('R2 unavailable'))
+    const provisional = receipt(Date.now() - 2 * 60 * 60 * 1_000)
+
+    await expect(
+      discardArtistAvatarAction({ receipt: provisional })
+    ).resolves.toEqual({
+      success: false,
+      errors: [{ entityType: 'artist-avatar', message: 'R2 unavailable' }]
+    })
+    await expect(
+      discardArtistAvatarAction({ receipt: provisional })
+    ).resolves.toEqual({ success: true, data: null })
+
+    expect(deleteObject).toHaveBeenCalledTimes(2)
+  })
+
+  test('retains the replaced object when a catalog membership has departed', async () => {
+    rows = [[]]
+    transactionImplementation = (callback) =>
+      callback({
+        select: () => ({
+          from: () => ({
+            where: () => ({ limit: async () => [{ deletedAt: null }] })
+          })
+        }),
+        update: () => ({
+          set: () => ({
+            where: () => ({
+              returning: async () => [
+                { path: 'artistas/42/old.webp', version: 'old' }
+              ]
+            })
+          })
+        }),
+        insert: () => ({
+          values: () => ({
+            returning: async () => [
+              {
+                id: 13,
+                artistaId: 42,
+                path: claims.path,
+                version: claims.version
+              }
+            ]
+          })
+        })
+      })
+
+    await expect(
+      persistArtistAvatarAction({
+        receipt: createArtistAvatarUploadReceipt(
+          { ...claims, catalogId: 99, requestedActive: false },
+          secret
+        )
+      })
+    ).resolves.toEqual({
+      success: true,
+      data: {
+        id: 13,
+        artistaId: 42,
+        path: claims.path,
+        version: claims.version,
+        oldAsset: { path: 'artistas/42/old.webp', version: 'old' }
+      }
+    })
+    expect(deleteObject).not.toHaveBeenCalled()
+  })
+
   test('preserves conditional activation at the persistence boundary', async () => {
     const updates: unknown[] = []
     rows = [[]]
     transactionImplementation = (callback) =>
       callback({
+        select: () => ({
+          from: () => ({
+            where: () => ({ limit: async () => [{ deletedAt: null }] })
+          })
+        }),
         update: () => ({
           set: (value: unknown) => ({
             where: () => {
@@ -244,10 +347,18 @@ describe('artist avatar persistence boundaries', () => {
 
   test('preserves the active-avatar conflict policy at persistence', async () => {
     rows = [[]]
+    let selectCalls = 0
     transactionImplementation = (callback) =>
       callback({
         select: () => ({
-          from: () => ({ where: () => ({ limit: async () => [{ id: 11 }] }) })
+          from: () => ({
+            where: () => ({
+              limit: async () => {
+                selectCalls++
+                return selectCalls === 1 ? [{ deletedAt: null }] : [{ id: 11 }]
+              }
+            })
+          })
         })
       })
 

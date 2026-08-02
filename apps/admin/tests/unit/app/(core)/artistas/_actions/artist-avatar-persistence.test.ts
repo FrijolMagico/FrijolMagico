@@ -116,7 +116,18 @@ function createUploadDb(
   return {
     select: () => ({
       from: () => ({
-        where: async () => [{ id: 12, slug: 'artista-de-prueba' }]
+        innerJoin: () => ({
+          where: () => ({
+            limit: async () => [
+              {
+                id: 12,
+                slug: 'artista-de-prueba',
+                artistDeletedAt: null,
+                catalogDeletedAt: null
+              }
+            ]
+          })
+        })
       })
     }),
     transaction: async (callback: (tx: unknown) => Promise<unknown>) => {
@@ -284,7 +295,7 @@ describe('artist avatar persistence', () => {
     expect(putObject).toHaveBeenCalledTimes(1)
   })
 
-  test('owns the timestamped key and version instead of trusting client metadata', async () => {
+  test('owns the UUID key and version instead of trusting client metadata', async () => {
     const state = createState()
     const replacement = {
       ...avatar,
@@ -302,9 +313,9 @@ describe('artist avatar persistence', () => {
       height: 800
     })
     expect(result.success).toBe(true)
-    // Server-owned key: artist slug + timestamp, never the numeric id or a UUID
+    // Server-owned key: canonical artist slug + UUID, never client metadata.
     expect(putObject.mock.calls[0]?.[0]).toMatch(
-      /^artistas\/artista-de-prueba\/avatar-\d+\.webp$/
+      /^artistas\/artista-de-prueba\/avatar-[0-9a-f-]{36}\.webp$/
     )
   })
 
