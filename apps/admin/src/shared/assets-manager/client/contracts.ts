@@ -29,6 +29,7 @@ export type ResizeDimensions = ImageDimensions
 export interface ResizeSpec {
   resolve: (image: ImageDimensions) => ResizeDimensions | null
   invalidDimensionsMessage?: string
+  quality?: number
 }
 
 export interface PreparedAsset {

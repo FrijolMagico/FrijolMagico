@@ -7,7 +7,7 @@ import {
   type PreparationPhase,
   type PreparedAsset
 } from './contracts'
-import { ASSET_OUTPUT_FORMAT } from '../format-config'
+import { ASSET_OUTPUT_FORMAT, DEFAULT_WEBP_QUALITY } from '../format-config'
 import type { ResizeDimensions, ResizeSpec } from './contracts'
 
 export { ASSET_TARGET }
@@ -22,6 +22,9 @@ export type {
 const ACCEPTED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
 const MAX_SOURCE_BYTES = 10 * 1024 * 1024
 const MAX_OUTPUT_BYTES = 1024 * 1024
+export const MIN_BPP = 0.4
+export const LADDER_STEP = 0.1
+export const MAX_RE_ENCODES = 2
 
 export interface AssetSource {
   name: string
@@ -41,6 +44,7 @@ export interface AssetCodec {
     image: DecodedImage,
     width: number,
     height: number,
+    quality: number,
     signal?: AbortSignal
   ) => Promise<Blob>
 }
@@ -137,12 +141,31 @@ export async function prepareAsset(
     }
     signal?.addEventListener('abort', preview.release, { once: true })
     onPhase?.(PREPARATION_PHASE.OPTIMIZING)
-    const blob = await codec.encodeWebp(
+    let quality = resize.quality ?? DEFAULT_WEBP_QUALITY
+    let reEncodes = 0
+    let blob = await codec.encodeWebp(
       image,
       dimensions.width,
       dimensions.height,
+      quality,
       signal
     )
+    while (
+      blob.size * 8 < MIN_BPP * dimensions.width * dimensions.height &&
+      reEncodes < MAX_RE_ENCODES &&
+      quality < 1
+    ) {
+      if (signal?.aborted) return result(PREPARATION_PHASE.CANCELLED)
+      quality = Math.min(1, quality + LADDER_STEP)
+      reEncodes += 1
+      blob = await codec.encodeWebp(
+        image,
+        dimensions.width,
+        dimensions.height,
+        quality,
+        signal
+      )
+    }
     if (signal?.aborted) return result(PREPARATION_PHASE.CANCELLED)
     if (
       blob.type !== ASSET_OUTPUT_FORMAT.mimeType ||
@@ -158,7 +181,13 @@ export async function prepareAsset(
     return {
       phase: PREPARATION_PHASE.READY,
       preview,
-      preparedAsset: { blob, ...dimensions, ...ASSET_OUTPUT_FORMAT },
+      preparedAsset: {
+        blob,
+        width: dimensions.width,
+        height: dimensions.height,
+        mimeType: ASSET_OUTPUT_FORMAT.mimeType,
+        extension: ASSET_OUTPUT_FORMAT.extension
+      },
       error: null,
       errorKind: null
     }
