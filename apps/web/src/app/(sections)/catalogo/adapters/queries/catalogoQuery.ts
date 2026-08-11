@@ -12,8 +12,11 @@ export const CATALOG_QUERY = `SELECT json_object(
   'avatar', (
     SELECT ai.imagen_url
     FROM artista_imagen ai
-    WHERE ai.artista_id = a.id AND ai.tipo = 'avatar'
-    ORDER BY ai.orden ASC
+    WHERE
+      ai.artista_id = a.id
+      AND ai.tipo = 'avatar'
+      AND ai.deleted_at IS NULL
+    ORDER BY ai.created_at DESC, ai.id DESC
     LIMIT 1
   ),
   'category', (

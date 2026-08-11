@@ -32,8 +32,11 @@ export const FESTIVAL_DETAIL_QUERY = `SELECT json_object(
           'avatar_url', CASE WHEN ca.id IS NOT NULL THEN (
             SELECT ai.imagen_url
             FROM artista_imagen ai
-            WHERE ai.artista_id = a.id AND ai.tipo = 'avatar'
-            ORDER BY ai.orden ASC
+            WHERE
+              ai.artista_id = a.id
+              AND ai.tipo = 'avatar'
+              AND ai.deleted_at IS NULL
+            ORDER BY ai.created_at DESC, ai.id DESC
             LIMIT 1
           ) ELSE NULL END
     ))
