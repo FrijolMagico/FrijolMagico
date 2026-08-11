@@ -351,13 +351,95 @@ jobs:
             }
 
             // ----------------------------------------------------------------
-            // 5. Validate and update package.json in dev
+            // 5. Bring main into dev before touching the version
             // ----------------------------------------------------------------
+            /*
+             * The provisional version must be born on top of the real state
+             * of main. If main changed its version line since the last common
+             * ancestor (for example, after a release), bumping dev's stale
+             * line directly produces a content conflict in the Release PR.
+             * By merging main first, the bump becomes a one-sided change and
+             * the Release PR (dev → main) can always be merged.
+             */
+            run('git', [
+              'config',
+              'user.name',
+              `${process.env.APP_SLUG}[bot]`,
+            ]);
+
+            run('git', [
+              'config',
+              'user.email',
+              `${process.env.APP_USER_ID}+${process.env.APP_SLUG}[bot]@users.noreply.github.com`,
+            ]);
+
             const packagePath = path.join(
               process.env.GITHUB_WORKSPACE,
               'package.json'
             );
 
+            const headBeforeMerge = run('git', ['rev-parse', 'HEAD']);
+
+            let mergeCreatedCommit = false;
+
+            try {
+              run('git', ['merge', 'origin/main', '--no-edit']);
+              mergeCreatedCommit =
+                run('git', ['rev-parse', 'HEAD']) !== headBeforeMerge;
+            } catch (error) {
+              const unmerged = run('git', [
+                'diff',
+                '--name-only',
+                '--diff-filter=U',
+              ]);
+
+              const unmergedFiles = (unmerged || '')
+                .split('\n')
+                .map((file) => file.trim())
+                .filter(Boolean);
+
+              /*
+               * Only an exclusive package.json conflict (the version line)
+               * is resolved automatically. Any other real divergence between
+               * dev and main must be reviewed by a person.
+               */
+              if (
+                unmergedFiles.length !== 1 ||
+                unmergedFiles[0] !== 'package.json'
+              ) {
+                run('git', ['merge', '--abort']);
+                throw new Error(
+                  'Merge between dev and main has real divergences: ' +
+                    (unmergedFiles.join(', ') || 'unknown files') +
+                    '. Release preparation aborted; review required.'
+                );
+              }
+
+              /*
+               * Resolve the conflict with the version calculated from main
+               * and complete the merge commit to preserve ancestry.
+               */
+              const mergedPackage = JSON.parse(
+                run('git', ['show', 'HEAD:package.json'])
+              );
+
+              mergedPackage.version = nextVersion;
+
+              fs.writeFileSync(
+                packagePath,
+                `${JSON.stringify(mergedPackage, null, 2)}\n`
+              );
+
+              run('git', ['add', 'package.json']);
+
+              run('git', ['commit', '--no-edit']);
+
+              mergeCreatedCommit = true;
+            }
+
+            // ----------------------------------------------------------------
+            // 6. Validate and update package.json in dev
+            // ----------------------------------------------------------------
             const devPackage = JSON.parse(
               fs.readFileSync(packagePath, 'utf8')
             );
@@ -426,7 +508,7 @@ jobs:
             ].join('\n'));
 
             // ----------------------------------------------------------------
-            // 6. Create provisional commit and push to dev
+            // 7. Create provisional commit and push to dev
             // ----------------------------------------------------------------
             const packageStatus = run('git', [
               'status',
@@ -435,19 +517,9 @@ jobs:
               'package.json',
             ]);
 
+            let mustPush = mergeCreatedCommit;
+
             if (packageStatus) {
-              run('git', [
-                'config',
-                'user.name',
-                `${process.env.APP_SLUG}[bot]`,
-              ]);
-
-              run('git', [
-                'config',
-                'user.email',
-                `${process.env.APP_USER_ID}+${process.env.APP_SLUG}[bot]@users.noreply.github.com`,
-              ]);
-
               run('git', ['add', 'package.json']);
 
               run('git', [
@@ -456,8 +528,20 @@ jobs:
                 `chore(release): prepare v${nextVersion}`,
               ]);
 
+              mustPush = true;
+
+              console.log(
+                `Commit de versión v${nextVersion} creado.`
+              );
+            } else if (!mergeCreatedCommit) {
+              console.log(
+                'No es necesario crear un nuevo commit de versión.'
+              );
+            }
+
+            if (mustPush) {
               /*
-               * actions/checkout configured origin with the GitHub App 
+               * actions/checkout configured origin with the GitHub App
                * installation token.
                *
                * The App needs "Always allow" bypass in the dev ruleset.
@@ -469,11 +553,7 @@ jobs:
               ]);
 
               console.log(
-                `Commit de versión v${nextVersion} enviado a dev.`
-              );
-            } else {
-              console.log(
-                'No es necesario crear un nuevo commit de versión.'
+                `Sync con main y versión v${nextVersion} enviados a dev.`
               );
             }
 
