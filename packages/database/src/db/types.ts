@@ -18,6 +18,7 @@ import {
 
 import {
   activity,
+  activityRegistration,
   editionParticipation,
   admissionMode,
   participationActivity,
@@ -131,6 +132,11 @@ export type ParticipationActivity = InferSelectModel<
 >
 export type NewParticipationActivity = InferInsertModel<
   typeof participationActivity
+>
+
+export type ActivityRegistration = InferSelectModel<typeof activityRegistration>
+export type NewActivityRegistration = InferInsertModel<
+  typeof activityRegistration
 >
 
 export type Activity = InferSelectModel<typeof activity>

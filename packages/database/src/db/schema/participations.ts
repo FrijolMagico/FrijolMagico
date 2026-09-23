@@ -4,6 +4,7 @@ import {
   text,
   integer,
   index,
+  check,
   uniqueIndex
 } from 'drizzle-orm/sqlite-core'
 
@@ -181,6 +182,48 @@ export const participationActivity = sqliteTable(
     index('idx_pact_participacion').on(table.participacionId),
     index('idx_pact_tipo_actividad').on(table.tipoActividadId),
     index('idx_pact_estado').on(table.estado)
+  ]
+)
+
+/**
+ * Optional registration for a non-music participation activity.
+ * The migration also guards cross-table music transitions with triggers.
+ */
+export const activityRegistration = sqliteTable(
+  'activity_registration',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    participationActivityId: integer('participation_activity_id')
+      .notNull()
+      .unique()
+      .references(() => participationActivity.id, { onDelete: 'cascade' }),
+    url: text('url').notNull(),
+    startAt: text('start_at').notNull(),
+    endAt: text('end_at').notNull(),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text('updated_at')
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`)
+  },
+  (table) => [
+    check(
+      'chk_activity_registration_https',
+      sql`${table.url} LIKE 'https://_%' COLLATE BINARY AND substr(${table.url}, 1, 8) = 'https://'`
+    ),
+    check(
+      'chk_activity_registration_start',
+      sql`strftime('%Y-%m-%dT%H:%M:%fZ', julianday(${table.startAt})) IS NOT NULL AND strftime('%Y-%m-%dT%H:%M:%fZ', julianday(${table.startAt})) = ${table.startAt}`
+    ),
+    check(
+      'chk_activity_registration_end',
+      sql`strftime('%Y-%m-%dT%H:%M:%fZ', julianday(${table.endAt})) IS NOT NULL AND strftime('%Y-%m-%dT%H:%M:%fZ', julianday(${table.endAt})) = ${table.endAt}`
+    ),
+    check(
+      'chk_activity_registration_window',
+      sql`${table.endAt} > ${table.startAt}`
+    )
   ]
 )
 
