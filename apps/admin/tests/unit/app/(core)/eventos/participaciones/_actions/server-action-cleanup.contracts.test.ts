@@ -71,12 +71,12 @@ describe('participation server action cleanup contracts', () => {
       'updateTag(getParticipationExhibitionsCacheTag(participationId))'
     )
 
+    expect(createActivitySource).toContain('getEditionParticipationsCacheTag')
     expect(createActivitySource).toContain(
-      'updateTag(getEditionParticipationsCacheTag'
+      'getParticipationActivitiesCacheTag(participationId)'
     )
-    expect(createActivitySource).toContain(
-      'updateTag(getParticipationActivitiesCacheTag(participationId))'
-    )
+    expect(createActivitySource).toContain('...PUBLIC_ACTIVITY_TAGS')
+    expect(createActivitySource).toContain('revalidateWebCacheBestEffort')
     expect(updateActivitySource).toContain(
       'updateTag(getParticipationActivitiesCacheTag'
     )
