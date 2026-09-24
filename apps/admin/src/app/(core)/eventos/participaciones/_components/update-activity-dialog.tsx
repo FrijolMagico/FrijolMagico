@@ -28,11 +28,7 @@ import {
   PARTICIPATION_STATUS_LABELS,
   PARTICIPATION_STATUSES
 } from '../_constants/participations.constants'
-import { updateParticipationAction } from '../_actions/participations/update-participation.action'
-import { updateActivityAction } from '../_actions/activities/update-activity.action'
-import { createActivityDetailAction } from '../_actions/activities/create-activity-detail.action'
-import { updateActivityDetailAction } from '../_actions/activities/update-activity-detail.action'
-import { executeUpdatePlan } from '../_lib/execute-update-plan'
+import { updateActivityAggregateAction } from '../_actions/activities/update-activity-aggregate.action'
 import {
   Select,
   SelectContent,
@@ -96,128 +92,39 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
   if (!entity || !activity) return null
 
   const onSubmit = async (values: ActivityFormInput) => {
-    const result = await executeUpdatePlan([
-      {
-        label: 'la participación',
-        initial: {
-          id: activity.participacionId,
-          edicionId: edition.id,
-          artistaId: entity.artist?.id ?? null,
-          agrupacionId: entity.collective?.id ?? null,
-          bandaId: entity.band?.id ?? null
-        },
-        current: {
-          id: activity.participacionId,
-          edicionId: edition.id,
-          artistaId: values.entity.artistaId,
-          agrupacionId: values.entity.agrupacionId,
-          bandaId: values.entity.bandaId
-        },
-        execute: () =>
-          updateParticipationAction({
-            id: activity.participacionId,
-            edicionId: edition.id,
-            artistaId: values.entity.artistaId,
-            agrupacionId: values.entity.agrupacionId,
-            bandaId: values.entity.bandaId
-          })
+    const result = await updateActivityAggregateAction({
+      editionId: edition.id,
+      participation: {
+        id: activity.participacionId,
+        edicionId: edition.id,
+        artistaId: values.entity.artistaId,
+        agrupacionId: values.entity.agrupacionId,
+        bandaId: values.entity.bandaId
       },
-      {
-        label: 'la actividad',
-        initial: {
-          id: activity.id,
-          participacionId: activity.participacionId,
-          tipoActividadId: activity.tipoActividadId,
-          modoIngresoId: activity.modoIngresoId,
-          notas: activity.notas ?? '',
-          estado: activity.estado,
-          puntaje: activity.puntaje ?? null
-        },
-        current: {
-          id: activity.id,
-          participacionId: activity.participacionId,
-          tipoActividadId: values.tipoActividadId,
-          modoIngresoId: values.modoIngresoId,
-          notas: values.notas,
-          estado: values.estado,
-          puntaje: values.puntaje
-        },
-        execute: () =>
-          updateActivityAction({
-            id: activity.id,
-            participacionId: activity.participacionId,
-            tipoActividadId: values.tipoActividadId,
-            modoIngresoId: values.modoIngresoId,
-            notas: values.notas,
-            estado: values.estado,
-            puntaje: values.puntaje
-          })
+      activity: {
+        id: activity.id,
+        participacionId: activity.participacionId,
+        tipoActividadId: values.tipoActividadId,
+        modoIngresoId: values.modoIngresoId,
+        notas: values.notas,
+        estado: values.estado,
+        puntaje: values.puntaje
       },
-      {
-        label: 'el detalle de actividad',
-        initial: activity.detail
-          ? {
-              id: activity.detail.id,
-              titulo: activity.detail.titulo ?? '',
-              descripcion: activity.detail.descripcion ?? '',
-              duracionMinutos: activity.detail.duracionMinutos ?? null,
-              cupos: activity.detail.cupos ?? null,
-              horaInicio: activity.detail.horaInicio ?? '',
-              ubicacion: activity.detail.ubicacion ?? ''
-            }
-          : {
-              participacionActividadId: activity.id,
-              titulo: '',
-              descripcion: '',
-              duracionMinutos: null,
-              cupos: null,
-              horaInicio: '',
-              ubicacion: ''
-            },
-        current: activity.detail
-          ? {
-              id: activity.detail.id,
-              titulo: values.detail.titulo ?? '',
-              descripcion: values.detail.descripcion ?? '',
-              duracionMinutos: values.detail.duracionMinutos ?? null,
-              cupos: values.detail.cupos ?? null,
-              horaInicio: values.detail.horaInicio ?? '',
-              ubicacion: values.detail.ubicacion ?? ''
-            }
-          : {
-              participacionActividadId: activity.id,
-              titulo: values.detail.titulo ?? '',
-              descripcion: values.detail.descripcion ?? '',
-              duracionMinutos: values.detail.duracionMinutos ?? null,
-              cupos: values.detail.cupos ?? null,
-              horaInicio: values.detail.horaInicio ?? '',
-              ubicacion: values.detail.ubicacion ?? ''
-            },
-        execute: () =>
-          activity.detail
-            ? updateActivityDetailAction(activity.participacionId!, {
-                id: activity.detail.id,
-                titulo: values.detail.titulo,
-                descripcion: values.detail.descripcion,
-                duracionMinutos: values.detail.duracionMinutos,
-                cupos: values.detail.cupos,
-                horaInicio: values.detail.horaInicio,
-                ubicacion: values.detail.ubicacion
-              })
-            : createActivityDetailAction(activity.participacionId!, {
-                participacionActividadId: activity.id,
-                titulo: values.detail.titulo,
-                descripcion: values.detail.descripcion,
-                duracionMinutos: values.detail.duracionMinutos,
-                cupos: values.detail.cupos,
-                horaInicio: values.detail.horaInicio,
-                ubicacion: values.detail.ubicacion
-              })
+      detail: {
+        titulo: values.detail.titulo,
+        descripcion: values.detail.descripcion,
+        duracionMinutos: values.detail.duracionMinutos,
+        cupos: values.detail.cupos,
+        horaInicio: values.detail.horaInicio,
+        ubicacion: values.detail.ubicacion
       }
-    ])
+    })
 
     if (!result.success) {
-      toast.error(result.errorMessage)
+      toast.error(
+        result.errors?.map((error) => error.message).join(', ') ??
+          'No se pudo actualizar la actividad'
+      )
       return
     }
 
