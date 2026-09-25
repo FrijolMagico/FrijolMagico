@@ -453,19 +453,19 @@ VALUES (4, 4, 'Diseño de personajes con identidad local', 'Charla sobre cómo c
 -- BANDAS (5 ficticias)
 -- =============================================================================
 
-INSERT INTO banda (id, nombre, descripcion, correo, activo, created_at, updated_at)
+INSERT INTO band (id, name, description, email, active, created_at, updated_at)
 VALUES (1, 'Los Colores del Viento', 'Fusión latinoamericana que mezcla ritmos folclóricos con sonidos contemporáneos. Su música explora la relación entre el color y el sonido en el paisaje norteño.', 'colores.viento@email.com', 1, '2026-07-04 04:18:44', '2026-07-04 04:18:44');
 
-INSERT INTO banda (id, nombre, descripcion, correo, activo, created_at, updated_at)
+INSERT INTO band (id, name, description, email, active, created_at, updated_at)
 VALUES (2, 'Río Interior', 'Rock alternativo con letras que abordan la introspección y el viaje interior. Su sonido combina guitarras eléctricas con texturas electrónicas sutiles.', 'rio.interior@email.com', 1, '2026-07-04 04:18:45', '2026-07-04 04:18:45');
 
-INSERT INTO banda (id, nombre, descripcion, correo, activo, created_at, updated_at)
+INSERT INTO band (id, name, description, email, active, created_at, updated_at)
 VALUES (3, 'Sonic Horizon', 'Electrónica experimental que fusiona sintetizadores analógicos con sampling de campo. Paisajes sonoros que evocan el horizonte del Valle de Elqui.', 'sonic.horizon@email.com', 1, '2026-07-04 04:18:46', '2026-07-04 04:18:46');
 
-INSERT INTO banda (id, nombre, descripcion, correo, activo, created_at, updated_at)
+INSERT INTO band (id, name, description, email, active, created_at, updated_at)
 VALUES (4, 'La Ronda de los Pájaros', 'Folk contemporáneo con influencias de la música tradicional chilena. Canciones que narran historias del territorio y sus habitantes.', 'ronda.pajaros@email.com', 1, '2026-07-04 04:18:47', '2026-07-04 04:18:47');
 
-INSERT INTO banda (id, nombre, descripcion, correo, activo, created_at, updated_at)
+INSERT INTO band (id, name, description, email, active, created_at, updated_at)
 VALUES (5, 'Marea de Papel', 'Indie pop con atmósferas acústicas y letras que exploran la creatividad, el proceso artístico y la vida en la costa. Su nombre evoca la fragilidad y fuerza del papel frente al mar.', 'marea.papel@email.com', 1, '2026-07-04 04:18:48', '2026-07-04 04:18:48');
 
 -- =============================================================================
