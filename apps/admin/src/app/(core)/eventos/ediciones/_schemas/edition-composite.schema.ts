@@ -16,6 +16,7 @@ export const edicionWithDaysSchema = z.object({
     .min(1, { message: 'El número de edición es obligatorio' }),
   nombre: z.string().nullable().optional(),
   posterUrl: z.string().nullable().optional(),
+  posterDisplayUrl: z.string().nullable().optional(),
   days: z.array(dayFormStateSchema)
 })
 
