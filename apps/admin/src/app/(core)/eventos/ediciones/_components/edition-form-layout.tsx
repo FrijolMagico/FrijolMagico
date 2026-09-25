@@ -188,7 +188,7 @@ export function EditionFormLayout({
         <Field className='space-y-2'>
           <FieldLabel>Poster</FieldLabel>
           <PosterSection
-            posterUrl={selectedEdition?.posterUrl ?? null}
+            posterUrl={selectedEdition?.posterDisplayUrl ?? null}
             alt={
               selectedEdition?.nombre ??
               selectedEdition?.numeroEdicion ??
@@ -198,7 +198,7 @@ export function EditionFormLayout({
           />
           <PosterPreview
             isOpen={isPosterPreviewOpen}
-            posterUrl={selectedEdition?.posterUrl ?? null}
+            posterUrl={selectedEdition?.posterDisplayUrl ?? null}
             alt={selectedEdition?.nombre ?? 'Poster'}
             onClose={() => setIsPosterPreviewOpen(false)}
             onUpload={handlePosterUpload}

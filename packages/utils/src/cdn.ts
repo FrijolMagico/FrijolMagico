@@ -44,7 +44,6 @@ export function toRawAssetPath(path: string): string {
   return path.startsWith(`${base}/`) ? path.slice(base.length + 1) : path
 }
 
-// TODO: Implement poster URL resolution when CDN integration is ready
 export function getPosterUrl(path: string | null): string | null {
   if (!path) return null
   if (path.startsWith('http')) return path
