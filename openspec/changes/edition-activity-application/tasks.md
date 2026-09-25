@@ -97,10 +97,10 @@ Chain strategy: feature-branch-chain
 - `apps/admin/src/app/(core)/eventos/participaciones/**/_components/update-activity-dialog.tsx`
 - adjacent admin dialog/contract tests
 
-- [ ] RED: Add read-model and component tests for empty/update Chile-local defaults, registration join absence, music hiding/clearing, complete submission wiring, and forged payload coverage at the action boundary. <!-- sdd-owner: implementation -->
-- [ ] GREEN: Left join registration in admin activity reads, propagate optional defaults/types/composer data, add registration fields, hide and clear them for music, and submit the aggregate action. <!-- sdd-owner: implementation -->
-- [ ] TRIANGULATE: Run admin tests and manually inspect the rendered form contract for create/update, canonical round trips, reset/refresh behavior, and no client-only eligibility trust. <!-- sdd-owner: implementation -->
-- [ ] REFACTOR: Keep dialog changes limited to registration presentation and aggregate submission; remove duplicated state transformations and preserve existing form accessibility conventions. <!-- sdd-owner: implementation -->
+- [x] RED: Add read-model and component tests for empty/update Chile-local defaults, registration join absence, music hiding/clearing, complete submission wiring, and forged payload coverage at the action boundary. <!-- sdd-owner: implementation -->
+- [x] GREEN: Left join registration in admin activity reads, propagate optional defaults/types/composer data, add registration fields, hide and clear them for music, and submit the aggregate action. <!-- sdd-owner: implementation -->
+- [x] TRIANGULATE: Run admin tests and manually inspect the rendered form contract for create/update, canonical round trips, reset/refresh behavior, and no client-only eligibility trust. <!-- sdd-owner: implementation -->
+- [x] REFACTOR: Keep dialog changes limited to registration presentation and aggregate submission; remove duplicated state transformations and preserve existing form accessibility conventions. <!-- sdd-owner: implementation -->
 
 **Verification commands:** `bun run test --filter=@frijolmagico/admin`, `bun run type-check`, `bun run lint`.
 

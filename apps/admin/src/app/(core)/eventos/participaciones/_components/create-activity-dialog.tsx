@@ -3,6 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm, useFormState, useWatch } from 'react-hook-form'
 import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 import { Input } from '@/shared/components/ui/input'
 import {
   Select,
@@ -46,6 +47,11 @@ import {
 } from '@/shared/components/ui/field'
 import { ControllerCombobox } from '@/shared/components/controller-combobox'
 import { Separator } from '@/shared/components/ui/separator'
+import {
+  ActivityRegistrationFields,
+  EMPTY_REGISTRATION,
+  clearRegistration
+} from './activity-registration-fields'
 
 interface CreateActivityDialogProps {
   edition: {
@@ -64,6 +70,7 @@ export function CreateActivityDialog({
   agrupaciones,
   bandas
 }: CreateActivityDialogProps) {
+  const router = useRouter()
   const isCreateActivityDialogOpen = useParticipationsStore(
     (state) => state.isCreateActivityDialogOpen
   )
@@ -80,6 +87,7 @@ export function CreateActivityDialog({
       notas: '',
       estado: PARTICIPATION_STATUS.SELECCIONADO,
       puntaje: null,
+      registration: EMPTY_REGISTRATION,
       detail: {
         titulo: '',
         descripcion: '',
@@ -106,6 +114,13 @@ export function CreateActivityDialog({
     name: 'participantType'
   })
 
+  const selectedType = useWatch({
+    control: methods.control,
+    name: 'tipoActividadId'
+  })
+  const isMusic =
+    tipo === PARTICIPANT_TYPE.BANDA || selectedType === ACTIVITY_TYPES.MUSICA
+
   const onSubmit = async (values: ActivityFormInput) => {
     const result = await createActivityAction({
       participation: {
@@ -124,6 +139,7 @@ export function CreateActivityDialog({
         notas: values.notas,
         estado: values.estado
       },
+      registration: values.registration,
       detail: {
         titulo: values.detail.titulo,
         descripcion: values.detail.descripcion,
@@ -146,6 +162,7 @@ export function CreateActivityDialog({
     toast.success('Actividad agregada correctamente')
     methods.reset()
     toggleCreateActivityDialogOpen(false)
+    router.refresh()
   }
 
   const comboboxArtists = artistas
@@ -199,6 +216,8 @@ export function CreateActivityDialog({
                     const nextTipo = value as ParticipantType
 
                     field.onChange(nextTipo)
+                    if (nextTipo === PARTICIPANT_TYPE.BANDA)
+                      clearRegistration(methods)
 
                     if (nextTipo === PARTICIPANT_TYPE.ARTISTA) {
                       methods.setValue('entity.agrupacionId', null, {
@@ -299,7 +318,11 @@ export function CreateActivityDialog({
                       ? ACTIVITY_TYPES.MUSICA
                       : field.value
                   }
-                  onValueChange={(val) => field.onChange(Number(val))}
+                  onValueChange={(val) => {
+                    field.onChange(Number(val))
+                    if (Number(val) === ACTIVITY_TYPES.MUSICA)
+                      clearRegistration(methods)
+                  }}
                   disabled={isSubmitting || tipo === PARTICIPANT_TYPE.BANDA}
                 >
                   <SelectTrigger>
@@ -434,6 +457,13 @@ export function CreateActivityDialog({
               />
             </Field>
           </FieldGroup>
+
+          {!isMusic && (
+            <ActivityRegistrationFields
+              methods={methods}
+              disabled={isSubmitting}
+            />
+          )}
 
           <FieldGroup>
             <Field>

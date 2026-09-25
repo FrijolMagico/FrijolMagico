@@ -1,7 +1,8 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Controller, useForm, useFormState } from 'react-hook-form'
+import { Controller, useForm, useFormState, useWatch } from 'react-hook-form'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import {
   Field,
@@ -19,6 +20,7 @@ import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-di
 import { useParticipationsStore } from '../_store/use-participations-store'
 import {
   ACTIVITY_IDS,
+  ACTIVITY_TYPES,
   ACTIVITY_TYPE_LABELS,
   ActivityId,
   ENTRY_MODE_IDS,
@@ -38,6 +40,11 @@ import {
 } from '@/shared/components/ui/select'
 import { Separator } from '@/shared/components/ui/separator'
 import { Button } from '@/shared/components/ui/button'
+import {
+  ActivityRegistrationFields,
+  EMPTY_REGISTRATION,
+  clearRegistration
+} from './activity-registration-fields'
 
 interface UpdateActivityDialogProps {
   edition: {
@@ -48,6 +55,7 @@ interface UpdateActivityDialogProps {
 }
 
 export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
+  const router = useRouter()
   const selectedActivity = useParticipationsStore((s) => s.selectedActivity)
   const isUpdateActivityDialogOpen = useParticipationsStore(
     (s) => s.isUpdateActivityDialogOpen
@@ -68,6 +76,7 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
       notas: activity?.notas ?? '',
       estado: activity?.estado ?? PARTICIPATION_STATUS.COMPLETADO,
       puntaje: activity?.puntaje ?? null,
+      registration: activity?.registration ?? EMPTY_REGISTRATION,
       entity: {
         artistaId: entity?.artist?.id ?? null,
         agrupacionId: entity?.collective?.id ?? null,
@@ -88,6 +97,13 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
   const { isDirty, isSubmitting, isValid, errors } = useFormState({
     control: methods.control
   })
+
+  const selectedType = useWatch({
+    control: methods.control,
+    name: 'tipoActividadId'
+  })
+  const isBand = Boolean(entity?.band)
+  const isMusic = isBand || selectedType === ACTIVITY_TYPES.MUSICA
 
   if (!entity || !activity) return null
 
@@ -110,6 +126,7 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
         estado: values.estado,
         puntaje: values.puntaje
       },
+      registration: values.registration,
       detail: {
         titulo: values.detail.titulo,
         descripcion: values.detail.descripcion,
@@ -131,10 +148,10 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
     toast.success('Cambios guardados')
     methods.reset(values)
     closeUpdateDialogs()
+    router.refresh()
   }
 
   const detailId = activity.detail?.id
-  const isBand = Boolean(entity.band)
   const entityTitle =
     entity.artist?.pseudonym ??
     entity.collective?.name ??
@@ -182,7 +199,11 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
               render={({ field }) => (
                 <Select
                   value={String(field.value ?? '')}
-                  onValueChange={(val) => field.onChange(Number(val))}
+                  onValueChange={(val) => {
+                    field.onChange(Number(val))
+                    if (Number(val) === ACTIVITY_TYPES.MUSICA)
+                      clearRegistration(methods)
+                  }}
                   disabled={isBand || isSubmitting}
                 >
                   <SelectTrigger>
@@ -371,6 +392,13 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
               )}
             </Field>
           </div>
+
+          {!isMusic && (
+            <ActivityRegistrationFields
+              methods={methods}
+              disabled={isSubmitting}
+            />
+          )}
 
           <Field>
             <FieldLabel htmlFor={`detalle-hora-${detailId}`}>
