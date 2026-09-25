@@ -13,6 +13,7 @@ import {
   SelectValue
 } from '@/shared/components/ui/select'
 import { Textarea } from '@/shared/components/ui/textarea'
+import { TimePickerField } from '@/shared/components/time-picker-field'
 import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
 import { useParticipationsStore } from '../_store/use-participations-store'
 import { createActivityAction } from '../_actions/activities/create-activity.action'
@@ -466,14 +467,20 @@ export function CreateActivityDialog({
           )}
 
           <FieldGroup>
-            <Field>
-              <FieldLabel>Hora Inicio</FieldLabel>
-              <Input
-                {...methods.register('detail.horaInicio')}
-                type='time'
-                disabled={isSubmitting}
-              />
-            </Field>
+            <Controller
+              name='detail.horaInicio'
+              control={methods.control}
+              render={({ field }) => (
+                <TimePickerField
+                  id='detail-horaInicio'
+                  label='Hora Inicio'
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  error={errors.detail?.horaInicio?.message}
+                  disabled={isSubmitting}
+                />
+              )}
+            />
             <Field>
               <FieldLabel>Ubicación</FieldLabel>
               <Input

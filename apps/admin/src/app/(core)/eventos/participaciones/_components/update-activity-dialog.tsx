@@ -12,6 +12,7 @@ import {
 } from '@/shared/components/ui/field'
 import { Input } from '@/shared/components/ui/input'
 import { Textarea } from '@/shared/components/ui/textarea'
+import { TimePickerField } from '@/shared/components/time-picker-field'
 import {
   type ActivityFormInput,
   activityFormSchema
@@ -400,20 +401,20 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
             />
           )}
 
-          <Field>
-            <FieldLabel htmlFor={`detalle-hora-${detailId}`}>
-              Hora de inicio
-            </FieldLabel>
-            <Input
-              id={`detalle-hora-${detailId}`}
-              type='time'
-              {...methods.register('detail.horaInicio')}
-              disabled={isSubmitting}
-            />
-            {errors.detail?.horaInicio && (
-              <FieldError>{errors.detail.horaInicio.message}</FieldError>
+          <Controller
+            name='detail.horaInicio'
+            control={methods.control}
+            render={({ field }) => (
+              <TimePickerField
+                id={`detalle-hora-${detailId}`}
+                label='Hora de inicio'
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                error={errors.detail?.horaInicio?.message}
+                disabled={isSubmitting}
+              />
             )}
-          </Field>
+          />
 
           <Field>
             <FieldLabel htmlFor={`detalle-ubicacion-${detailId}`}>

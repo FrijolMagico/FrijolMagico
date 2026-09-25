@@ -32,8 +32,15 @@ describe('admin registration read and dialog contract', () => {
     ]) {
       expect(fields).toContain(`${name}: ''`)
     }
-    expect(fields).toContain('methods.register(name)')
+    // URL uses native Input with methods.register
     expect(fields).toContain("methods.register('registration.url')")
+    // Date/time use custom pickers with Controller
+    expect(fields).toContain("name='registration.startDate'")
+    expect(fields).toContain("name='registration.startTime'")
+    expect(fields).toContain("name='registration.endDate'")
+    expect(fields).toContain("name='registration.endTime'")
+    expect(fields).toContain('<DatePickerField')
+    expect(fields).toContain('<TimePickerField')
     for (const dialog of [create, update]) {
       expect(dialog).toContain('EMPTY_REGISTRATION')
       expect(dialog).toContain('<ActivityRegistrationFields')

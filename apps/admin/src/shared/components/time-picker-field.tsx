@@ -28,6 +28,7 @@ interface TimePickerFieldProps {
   value: string
   onChange: (value: string) => void
   error?: string
+  disabled?: boolean
 }
 
 export function TimePickerField({
@@ -35,7 +36,8 @@ export function TimePickerField({
   label,
   value,
   onChange,
-  error
+  error,
+  disabled
 }: TimePickerFieldProps) {
   const [hour = '', minute = ''] = value ? value.split(':') : []
 
@@ -63,6 +65,7 @@ export function TimePickerField({
               id={id}
               type='button'
               variant='outline'
+              disabled={disabled}
               className={cn(
                 'w-full justify-start text-left font-normal',
                 !displayValue && 'text-muted-foreground',
@@ -78,7 +81,7 @@ export function TimePickerField({
           <div className='flex items-center gap-2'>
             <div className='flex flex-col gap-1'>
               <span className='text-muted-foreground text-xs'>Hora</span>
-              <Select value={hour} onValueChange={handleHourChange}>
+              <Select value={hour} onValueChange={handleHourChange} disabled={disabled}>
                 <SelectTrigger className='w-18'>
                   <SelectValue placeholder='HH' />
                 </SelectTrigger>
@@ -94,7 +97,7 @@ export function TimePickerField({
 
             <div className='flex flex-col gap-1'>
               <span className='text-muted-foreground text-xs'>Minutos</span>
-              <Select value={minute} onValueChange={handleMinuteChange}>
+              <Select value={minute} onValueChange={handleMinuteChange} disabled={disabled}>
                 <SelectTrigger className='w-18'>
                   <SelectValue placeholder='MM' />
                 </SelectTrigger>

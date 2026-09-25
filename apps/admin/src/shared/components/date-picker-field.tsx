@@ -18,6 +18,7 @@ interface DatePickerFieldProps {
   value: string
   onChange: (value: string) => void
   error?: string
+  disabled?: boolean
 }
 
 export function DatePickerField({
@@ -25,7 +26,8 @@ export function DatePickerField({
   label,
   value,
   onChange,
-  error
+  error,
+  disabled
 }: DatePickerFieldProps) {
   const selectedDate = value
     ? parse(value, 'yyyy-MM-dd', new Date())
@@ -51,6 +53,7 @@ export function DatePickerField({
               id={id}
               type='button'
               variant='outline'
+              disabled={disabled}
               className={cn(
                 'w-full justify-start text-left font-normal',
                 !displayDate && 'text-muted-foreground',
