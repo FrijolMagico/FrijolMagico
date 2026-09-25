@@ -111,7 +111,8 @@ export function composeParticipations({
           puntaje: activity.puntaje,
           estado: activity.estado,
           notas: activity.notas,
-          detail: activity.detail
+          detail: activity.detail,
+          registration: activity.registration
         }))
       }
     ]

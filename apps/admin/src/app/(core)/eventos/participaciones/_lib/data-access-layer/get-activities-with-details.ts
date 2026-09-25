@@ -6,10 +6,11 @@ import { db } from '@frijolmagico/database/orm'
 import { participations } from '@frijolmagico/database/schema'
 import { asc, eq, inArray } from 'drizzle-orm'
 import type { ActivityDetail } from '@/core/eventos/participaciones/_schemas/activity.schema'
+import { utcToChileLocal } from '../activity-registration-time'
 import { getParticipationActivitiesCacheTag } from '@frijolmagico/cache-tags'
 import { ActivityWithDetail } from '../../_types/activity.types'
 
-const { participationActivity, activity } = participations
+const { participationActivity, activity, activityRegistration } = participations
 
 export async function getActivitiesWithDetails(
   participationIds: number[]
@@ -40,17 +41,33 @@ export async function getActivitiesWithDetails(
       detalleDuracionMinutos: activity.duracionMinutos,
       detalleUbicacion: activity.ubicacion,
       detalleHoraInicio: activity.horaInicio,
-      detalleCupos: activity.cupos
+      detalleCupos: activity.cupos,
+      registrationId: activityRegistration.id,
+      registrationUrl: activityRegistration.url,
+      registrationStartAt: activityRegistration.startAt,
+      registrationEndAt: activityRegistration.endAt
     })
     .from(participationActivity)
     .leftJoin(
       activity,
       eq(activity.participacionActividadId, participationActivity.id)
     )
+    .leftJoin(
+      activityRegistration,
+      eq(activityRegistration.participationActivityId, participationActivity.id)
+    )
     .where(inArray(participationActivity.participacionId, participationIds))
     .orderBy(asc(participationActivity.id), asc(activity.id))
 
   return rows.map((row) => {
+    const start =
+      row.registrationId !== null && row.registrationStartAt !== null
+        ? utcToChileLocal(row.registrationStartAt)
+        : null
+    const end =
+      row.registrationId !== null && row.registrationEndAt !== null
+        ? utcToChileLocal(row.registrationEndAt)
+        : null
     const detail: ActivityDetail | null =
       row.detalleId === null || row.detalleParticipacionActividadId === null
         ? null
@@ -65,6 +82,20 @@ export async function getActivitiesWithDetails(
             cupos: row.detalleCupos
           }
 
+    const registration =
+      row.registrationId === null ||
+      row.registrationUrl === null ||
+      start === null ||
+      end === null
+        ? null
+        : {
+            url: row.registrationUrl,
+            startDate: start.date,
+            startTime: start.time,
+            endDate: end.date,
+            endTime: end.time
+          }
+
     return {
       id: row.id,
       participacionId: row.participacionId,
@@ -74,7 +105,8 @@ export async function getActivitiesWithDetails(
       puntaje: row.puntaje,
       estado: row.estado,
       notas: row.notas,
-      detail
+      detail,
+      registration
     }
   })
 }
