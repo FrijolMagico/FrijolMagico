@@ -3,24 +3,28 @@
 ALTER TABLE agrupacion ADD COLUMN activo INTEGER NOT NULL DEFAULT 1;
 --> statement-breakpoint
 
-CREATE TABLE banda (
+CREATE TABLE band (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombre TEXT NOT NULL UNIQUE,
-    descripcion TEXT,
-    correo TEXT,
-    activo INTEGER NOT NULL DEFAULT 1,
+    name TEXT NOT NULL UNIQUE,
+    description TEXT,
+    email TEXT,
+    active INTEGER NOT NULL DEFAULT 1,
+    phone TEXT,
+    city TEXT,
+    country TEXT,
+    deleted_at TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT chk_banda_activo CHECK (activo IN (0, 1))
+    CONSTRAINT chk_band_active CHECK (active IN (0, 1))
 );
 --> statement-breakpoint
 
 CREATE TRIGGER trg_banda_updated_at
-AFTER UPDATE ON banda
+AFTER UPDATE ON band
 FOR EACH ROW
 WHEN OLD.updated_at != NEW.updated_at
 BEGIN
-    UPDATE banda SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = NEW.updated_at;
+    UPDATE band SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id AND updated_at = NEW.updated_at;
 END;
 --> statement-breakpoint
 
