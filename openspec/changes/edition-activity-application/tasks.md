@@ -130,14 +130,14 @@ Chain strategy: none (stacked to a dedicated feature branch)
 - `apps/web/src/components/LinkBtn.tsx` (read-only text-link reference)
 - `apps/web/src/components/top-bar-info/TopBarInfoClient.tsx`
 - `apps/web/src/app/(sections)/festivales/components/FestivalTimelineCard.tsx`
-- `apps/web/src/app/(home)/components/NewBadget.tsx` (read-only visual reference; hardcoded label)
+- `apps/web/src/app/(home)/components/NewBadget.tsx` (unused legacy visual reference; remove after migrating its presentation to the generic Badge)
 - `apps/web/src/components/link-cta.tsx` and `apps/web/src/components/badge.tsx`
 - adjacent web component tests
 
-- [ ] RED: Test semantic anchor CTA variants, preserved top-bar/timeline labels and placement, no button nesting, visible keyboard focus, and readable default/hover/focus contrast; test reusable Badge as a non-interactive `span` accepting content without a tab stop. <!-- sdd-owner: implementation -->
-- [ ] GREEN: Extract a reusable web link-CTA primitive with solid top-bar and offset-border timeline variants, reuse at both existing links, and add a reusable brand-aligned non-interactive web Badge; leave native `Button`, text-link `LinkBtn`, and admin Badge unchanged. <!-- sdd-owner: implementation -->
-- [ ] TRIANGULATE: Run scoped web tests and inspect focus/contrast and narrow visual parity for both existing links and the Badge; do not import admin Badge or use hardcoded `NewBadget`. <!-- sdd-owner: implementation -->
-- [ ] REFACTOR: Share only navigation CTA visuals and retain existing web link semantics, labels, and layout without broad redesign. <!-- sdd-owner: implementation -->
+- [x] RED: Test semantic anchor CTA variants, preserved top-bar/timeline labels and placement, no button nesting, visible keyboard focus, and readable default/hover/focus contrast; test generic Badge children, typed `new`/`registration` variants, legacy tilted outlined presentation, and non-interactive `span` without role/tab stop. <!-- sdd-owner: implementation -->
+- [x] GREEN: Extract a reusable web link-CTA primitive with solid top-bar and offset-border timeline variants, reuse at both existing links, and replace unused `NewBadget` with shared web Badge accepting children (no hardcoded labels), typed `new`/`registration` variants and legacy presentation; add no home call site and leave native `Button`, text-link `LinkBtn`, and admin Badge unchanged. <!-- sdd-owner: implementation -->
+- [x] TRIANGULATE: Run scoped web tests and inspect focus/contrast and narrow visual parity for both existing links and Badge variants; confirm no `NewBadget` imports/usages, admin Badge import or home call site. <!-- sdd-owner: implementation -->
+- [x] REFACTOR: Share only navigation CTA visuals and retain existing web link semantics, labels, and layout without broad redesign. <!-- sdd-owner: implementation -->
 
 **Verification commands:** `bun run test --filter=@frijolmagico/web`, `bun run type-check`, `bun run lint`.
 

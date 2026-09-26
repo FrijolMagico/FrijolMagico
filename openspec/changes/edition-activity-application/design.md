@@ -282,7 +282,7 @@ While active, the registration CTA is a semantic anchor with:
 - `rel="noopener noreferrer"`;
 - the shared web link-CTA focus-visible treatment.
 
-Add a small reusable web `Badge` primitive, styled with the existing web rounded/outlined brand language rather than importing admin Badge or reusing the hardcoded `NewBadget`. Render it as non-interactive text (`span`, no role/button/tab stop); pass the exact registration label `Inscríbete` as content. It is not a substitute for the CTA when expanded content exists.
+Replace the currently unused `apps/web/src/app/(home)/components/NewBadget.tsx` with a generic shared web `Badge` at `apps/web/src/components/badge.tsx`. Its typed `new` variant preserves the original rounded, outlined, tilted presentation (including optional color/background/outline customization), but defaults to readable primary text instead of the low-contrast legacy secondary on background; its `registration` variant supplies the brand-aligned treatment for future WU6. Neither `Nuevo!` nor `Inscríbete` is hardcoded in the primitive: callers pass children, e.g. `<Badge variant='new'>Nuevo!</Badge>`. Render as non-interactive text (`span`, no role/button/tab stop); WU6 passes `Inscríbete` as content. No home call site is added in WU6A. The Badge is not a substitute for the CTA when expanded content exists. Leave the existing web link CTA intent and variants unchanged.
 
 ## 9. Error and consistency behavior
 
@@ -326,7 +326,7 @@ Add a small reusable web `Badge` primitive, styled with the existing web rounded
 - `.../[slug]/adapters/mappers/festivalDetailMapper.ts`, mocks, and repository tests — propagation/regression updates.
 - `.../[slug]/components/ActivityItem.tsx` — two leaf placements.
 - `apps/web/src/components/link-cta.tsx` — reusable semantic-link CTA variants and focus-visible/contrast treatment.
-- `apps/web/src/components/badge.tsx` — reusable non-interactive web Badge.
+- `apps/web/src/components/badge.tsx` — generic non-interactive web Badge with typed `new` and `registration` variants; remove the unused `.../(home)/components/NewBadget.tsx`.
 - `apps/web/src/components/top-bar-info/TopBarInfoClient.tsx` and `.../festivales/components/FestivalTimelineCard.tsx` — reuse matching CTA variants without changing labels or placement.
 - `.../[slug]/components/activity-registration-affordance.tsx` — client-only lifecycle behavior using the web CTA/Badge primitives.
 - Adjacent query, mapper, repository, DTO, activity-item, activity-list, link-CTA, and Badge tests.

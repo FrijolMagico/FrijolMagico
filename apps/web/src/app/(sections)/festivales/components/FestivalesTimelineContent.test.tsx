@@ -105,6 +105,13 @@ describe('FestivalesTimelineContent', () => {
       '/festivales/edicion-xv-1',
       '/festivales/edicion-3-2'
     ])
+    expect(links.map((link) => link.textContent)).toEqual([
+      'Ver más',
+      'Ver más'
+    ])
+    expect(links[0]?.closest('article')).toBe(articles[0])
+    expect(links[0]?.querySelector('button')).toBeNull()
+    expect(links[0]?.className).toContain('focus-visible:ring-2')
   })
 
   test('alternates desktop card placement and connector direction', () => {
