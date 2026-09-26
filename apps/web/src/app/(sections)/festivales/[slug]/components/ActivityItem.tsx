@@ -1,6 +1,9 @@
 import { ChevronDown, Clock, MapPin } from 'lucide-react'
 
-import { ActivityRegistrationBadge } from './activity-registration-affordance'
+import {
+  ActivityRegistrationBadge,
+  ActivityRegistrationCta
+} from './activity-registration-affordance'
 
 import type { FestivalActivity } from '../../types/festival'
 
@@ -80,6 +83,9 @@ export const ActivityItem = ({ activity }: ActivityItemProps) => {
               <p className='text-palette-foreground/50 mt-1 text-xs'>
                 Duración: {activity.duracion_minutos} min
               </p>
+            )}
+            {activity.tipo !== 'musica' && activity.registration && (
+              <ActivityRegistrationCta registration={activity.registration} />
             )}
           </div>
         </details>

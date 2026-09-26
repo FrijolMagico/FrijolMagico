@@ -11,10 +11,15 @@ const MAX_TIMEOUT_DELAY = 2147483647
 export function useActivityRegistration(
   registration: ActivityRegistration | null
 ) {
-  const [active, setActive] = useState(false)
   const url = registration?.url
   const startAt = registration?.start_at
   const endAt = registration?.end_at
+  const [evaluated, setEvaluated] = useState({
+    url,
+    startAt,
+    endAt,
+    active: false
+  })
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined
@@ -26,7 +31,7 @@ export function useActivityRegistration(
           : null,
         Date.now()
       )
-      setActive(state.active)
+      setEvaluated({ url, startAt, endAt, active: state.active })
       if (state.nextAt !== null) {
         timer = setTimeout(
           reconcile,
@@ -45,5 +50,10 @@ export function useActivityRegistration(
     }
   }, [url, startAt, endAt])
 
-  return active
+  return (
+    evaluated.url === url &&
+    evaluated.startAt === startAt &&
+    evaluated.endAt === endAt &&
+    evaluated.active
+  )
 }

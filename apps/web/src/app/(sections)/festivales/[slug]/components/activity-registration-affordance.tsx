@@ -1,10 +1,32 @@
 'use client'
 
 import { Badge } from '@/components/badge'
+import { LinkCta } from '@/components/link-cta'
 
 import { useActivityRegistration } from './use-activity-registration'
 
 import type { ActivityRegistration } from '../../types/festival'
+
+export function ActivityRegistrationCta({
+  registration
+}: {
+  registration: ActivityRegistration
+}) {
+  const active = useActivityRegistration(registration)
+  if (!active) return null
+
+  return (
+    <LinkCta
+      href={registration.url}
+      variant='offset'
+      target='_blank'
+      rel='noopener noreferrer'
+      className='mt-4 inline-block'
+    >
+      Inscríbete Aquí
+    </LinkCta>
+  )
+}
 
 export function ActivityRegistrationBadge({
   registration

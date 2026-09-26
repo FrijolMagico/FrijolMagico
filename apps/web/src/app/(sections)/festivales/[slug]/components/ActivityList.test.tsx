@@ -19,7 +19,7 @@ describe('ActivityList', () => {
         actividades={[
           {
             titulo: 'Concierto',
-            descripcion: null,
+            descripcion: 'Concierto en vivo',
             duracion_minutos: null,
             ubicacion: null,
             hora_inicio: null,
@@ -37,6 +37,10 @@ describe('ActivityList', () => {
     )
     expect(screen.getByText('Banda')).toBeDefined()
     expect(screen.queryByText('Inscríbete')).toBeNull()
+    expect(
+      screen.queryByRole('link', { hidden: true, name: 'Inscríbete Aquí' })
+    ).toBeNull()
+    expect(document.querySelector('details a')).toBeNull()
   })
 
   test('groups activities by type with Música always last', () => {

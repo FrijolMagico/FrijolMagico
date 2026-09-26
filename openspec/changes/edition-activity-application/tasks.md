@@ -151,10 +151,10 @@ Chain strategy: none (stacked to a dedicated feature branch)
 - `apps/web/src/components/link-cta.tsx` and `apps/web/src/components/badge.tsx` (reuse)
 - adjacent ActivityItem/ActivityList/component tests
 
-- [ ] RED: Add pure helper and component tests for hidden server/first render, inclusive start/end, inactive/malformed values, boundary timers, timeout re-evaluation, focus/visibility reconciliation, cleanup, collapsed `Inscríbete` Badge, expanded-only `Inscríbete Aquí` anchor CTA, music exclusion, exact labels, target/rel, no button nesting, readable contrast, and focus-visible semantics. <!-- sdd-owner: implementation -->
-- [ ] GREEN: Implement client-only leaf affordances with `active=false` initialization, boundary scheduling without polling, lifecycle listeners, safe anchor attributes through the shared link-CTA, reusable non-interactive web Badge at top-right, and CTA at the bottom of expanded content. <!-- sdd-owner: implementation -->
-- [ ] TRIANGULATE: Run web tests with fake clocks/timers and explicit focus/visibility events; verify server-rendered markup contains neither label and no CTA appears in summary/minimal cards. <!-- sdd-owner: implementation -->
-- [ ] REFACTOR: Keep `ActivityItem` server-first, isolate timing logic from markup, and preserve existing card/details semantics and music rendering. <!-- sdd-owner: implementation -->
+- [x] RED: Add pure helper and component tests for hidden server/first render, inclusive start/end, inactive/malformed values, boundary timers, timeout re-evaluation, focus/visibility reconciliation, cleanup, collapsed `Inscríbete` Badge, expanded-only `Inscríbete Aquí` anchor CTA, music exclusion, exact labels, target/rel, no button nesting, readable contrast, and focus-visible semantics. <!-- sdd-owner: implementation -->
+- [x] GREEN: Implement client-only leaf affordances with `active=false` initialization, boundary scheduling without polling, lifecycle listeners, safe anchor attributes through the shared link-CTA, reusable non-interactive web Badge at top-right, and CTA at the bottom of expanded content. <!-- sdd-owner: implementation -->
+- [x] TRIANGULATE: Run web tests with fake clocks/timers and explicit focus/visibility events; verify server-rendered markup contains neither label and no CTA appears in summary/minimal cards. <!-- sdd-owner: implementation -->
+- [x] REFACTOR: Keep `ActivityItem` server-first, isolate timing logic from markup, and preserve existing card/details semantics and music rendering. <!-- sdd-owner: implementation -->
 
 **Verification commands:** `bun run test --filter=@frijolmagico/web`, `bun run type-check`, `bun run lint`.
 
