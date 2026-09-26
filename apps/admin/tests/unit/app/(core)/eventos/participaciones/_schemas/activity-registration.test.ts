@@ -10,7 +10,8 @@ const complete = {
   startDate: '2026-07-01',
   startTime: '10:00',
   endDate: '2026-07-02',
-  endTime: '11:00'
+  endTime: '11:00',
+  registrationEnabled: true
 }
 const fields = Object.keys(complete) as (keyof typeof complete)[]
 
@@ -18,7 +19,10 @@ describe('activity registration input', () => {
   test('normalizes whitespace-only fields to absent and preserves complete input', () => {
     expect(
       activityRegistrationFormSchema.parse(
-        Object.fromEntries(fields.map((field) => [field, '  ']))
+        Object.fromEntries([
+          ...fields.map((field) => [field, '  ']),
+          ['registrationEnabled', false]
+        ])
       )
     ).toBeNull()
     expect(
@@ -98,7 +102,8 @@ describe('activity registration input', () => {
         startDate: '  ',
         startTime: '  ',
         endDate: '  ',
-        endTime: '  '
+        endTime: '  ',
+        registrationEnabled: false
       }
     })
     // RHF retains the five string inputs; normalization is at the action boundary.
@@ -107,7 +112,8 @@ describe('activity registration input', () => {
       startDate: '',
       startTime: '',
       endDate: '',
-      endTime: ''
+      endTime: '',
+      registrationEnabled: false
     })
     expect(
       parseActivityRegistrationInput(emptyForm.registration, 'taller')

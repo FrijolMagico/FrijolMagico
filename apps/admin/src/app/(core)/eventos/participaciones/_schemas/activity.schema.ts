@@ -78,13 +78,18 @@ const registrationInputSchema = z.object({
   startDate: z.string().trim(),
   startTime: z.string().trim(),
   endDate: z.string().trim(),
-  endTime: z.string().trim()
+  endTime: z.string().trim(),
+  // UI-only field: controls visibility/validation of registration section
+  registrationEnabled: z.boolean()
 })
 
 const validatedRegistrationSchema = registrationInputSchema.superRefine(
   (value, context) => {
+    // If registration is disabled, no validation needed - transform will return null
+    if (!value.registrationEnabled) return
+
+    // registrationEnabled === true: all fields are required
     const filled = registrationFields.filter((field) => value[field] !== '')
-    if (filled.length === 0) return
     if (filled.length !== registrationFields.length) {
       for (const field of registrationFields) {
         if (!value[field])
@@ -133,9 +138,12 @@ const validatedRegistrationSchema = registrationInputSchema.superRefine(
 )
 
 export const activityRegistrationFormSchema =
-  validatedRegistrationSchema.transform((value) =>
-    registrationFields.every((field) => !value[field]) ? null : value
-  )
+  validatedRegistrationSchema.transform((value) => {
+    // If registration is disabled, return null (no registration in DB)
+    if (!value.registrationEnabled) return null
+    // registrationEnabled === true: return registration object (validated as complete)
+    return value
+  })
 
 export function parseActivityRegistrationInput(
   value: unknown,

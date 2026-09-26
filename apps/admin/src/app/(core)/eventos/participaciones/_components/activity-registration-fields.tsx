@@ -16,7 +16,8 @@ export const EMPTY_REGISTRATION = {
   startDate: '',
   startTime: '',
   endDate: '',
-  endTime: ''
+  endTime: '',
+  registrationEnabled: false
 }
 
 export function clearRegistration(methods: UseFormReturn<ActivityFormInput>) {
@@ -25,11 +26,29 @@ export function clearRegistration(methods: UseFormReturn<ActivityFormInput>) {
     'startDate',
     'startTime',
     'endDate',
-    'endTime'
+    'endTime',
+    'registrationEnabled'
   ] as const) {
     methods.setValue(`registration.${name}`, '', { shouldDirty: true })
   }
+  // Set registrationEnabled to false explicitly
+  methods.setValue('registration.registrationEnabled', false, {
+    shouldDirty: true
+  })
   void methods.trigger('registration')
+}
+
+function setDefaultTimeIfEmpty(
+  methods: UseFormReturn<ActivityFormInput>,
+  timeField: 'startTime' | 'endTime',
+  dateValue: string
+) {
+  if (dateValue && !methods.getValues(`registration.${timeField}`)) {
+    methods.setValue(`registration.${timeField}`, '00:00', {
+      shouldDirty: true,
+      shouldValidate: true
+    })
+  }
 }
 
 export function ActivityRegistrationFields({
@@ -44,12 +63,10 @@ export function ActivityRegistrationFields({
 
   return (
     <FieldGroup>
-      <p className='text-sm font-medium'>
-        Inscripción (opcional, horario de Chile)
-      </p>
+      <p className='font-medium'>Inscripción</p>
       <Field>
         <FieldLabel htmlFor='registration-url'>
-          Enlace HTTPS de inscripción
+          Enlace de inscripción <span className='text-destructive'>*</span>
         </FieldLabel>
         <Input
           id='registration-url'
@@ -57,20 +74,28 @@ export function ActivityRegistrationFields({
           {...methods.register('registration.url')}
           disabled={disabled}
           aria-invalid={Boolean(registrationErrors?.url)}
+          required
         />
-        {registrationErrors?.url && <FieldError>{registrationErrors.url.message}</FieldError>}
+        {registrationErrors?.url && (
+          <FieldError>{registrationErrors.url.message}</FieldError>
+        )}
       </Field>
-      <div className='grid grid-cols-2 gap-3'>
-        <FieldGroup>
+      <FieldGroup>
+        <FieldLabel>
+          Inicio <span className='text-destructive'>*</span>
+        </FieldLabel>
+        <div className='grid grid-cols-2 gap-3'>
           <Controller
             name='registration.startDate'
             control={methods.control}
             render={({ field }) => (
               <DatePickerField
                 id='registration-startDate'
-                label='Inicio: fecha'
                 value={field.value ?? ''}
-                onChange={field.onChange}
+                onChange={(value) => {
+                  field.onChange(value)
+                  setDefaultTimeIfEmpty(methods, 'startTime', value)
+                }}
                 error={registrationErrors?.startDate?.message}
                 disabled={disabled}
               />
@@ -82,7 +107,6 @@ export function ActivityRegistrationFields({
             render={({ field }) => (
               <TimePickerField
                 id='registration-startTime'
-                label='Inicio: hora'
                 value={field.value ?? ''}
                 onChange={field.onChange}
                 error={registrationErrors?.startTime?.message}
@@ -90,17 +114,25 @@ export function ActivityRegistrationFields({
               />
             )}
           />
-        </FieldGroup>
-        <FieldGroup>
+        </div>
+      </FieldGroup>
+
+      <FieldGroup>
+        <FieldLabel>
+          Fin <span className='text-destructive'>*</span>
+        </FieldLabel>
+        <div className='grid grid-cols-2 gap-3'>
           <Controller
             name='registration.endDate'
             control={methods.control}
             render={({ field }) => (
               <DatePickerField
                 id='registration-endDate'
-                label='Fin: fecha'
                 value={field.value ?? ''}
-                onChange={field.onChange}
+                onChange={(value) => {
+                  field.onChange(value)
+                  setDefaultTimeIfEmpty(methods, 'endTime', value)
+                }}
                 error={registrationErrors?.endDate?.message}
                 disabled={disabled}
               />
@@ -112,7 +144,6 @@ export function ActivityRegistrationFields({
             render={({ field }) => (
               <TimePickerField
                 id='registration-endTime'
-                label='Fin: hora'
                 value={field.value ?? ''}
                 onChange={field.onChange}
                 error={registrationErrors?.endTime?.message}
@@ -120,8 +151,8 @@ export function ActivityRegistrationFields({
               />
             )}
           />
-        </FieldGroup>
-      </div>
+        </div>
+      </FieldGroup>
     </FieldGroup>
   )
 }

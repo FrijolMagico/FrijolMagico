@@ -41,6 +41,7 @@ import {
 } from '@/shared/components/ui/select'
 import { Separator } from '@/shared/components/ui/separator'
 import { Button } from '@/shared/components/ui/button'
+import { Switch } from '@/shared/components/ui/switch'
 import {
   ActivityRegistrationFields,
   EMPTY_REGISTRATION,
@@ -68,6 +69,9 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
 
   const { entity, activity } = selectedActivity ?? {}
 
+  // Determine if registration exists in DB to initialize toggle state
+  const hasExistingRegistration = activity?.registration !== null
+
   const methods = useForm<ActivityFormInput>({
     resolver: zodResolver(activityFormSchema),
     values: {
@@ -77,7 +81,10 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
       notas: activity?.notas ?? '',
       estado: activity?.estado ?? PARTICIPATION_STATUS.COMPLETADO,
       puntaje: activity?.puntaje ?? null,
-      registration: activity?.registration ?? EMPTY_REGISTRATION,
+      registration: {
+        ...(activity?.registration ?? EMPTY_REGISTRATION),
+        registrationEnabled: hasExistingRegistration
+      },
       entity: {
         artistaId: entity?.artist?.id ?? null,
         agrupacionId: entity?.collective?.id ?? null,
@@ -105,6 +112,11 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
   })
   const isBand = Boolean(entity?.band)
   const isMusic = isBand || selectedType === ACTIVITY_TYPES.MUSICA
+
+  const registrationEnabled = useWatch({
+    control: methods.control,
+    name: 'registration.registrationEnabled'
+  })
 
   if (!entity || !activity) return null
 
@@ -167,7 +179,7 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
       }}
       title={`Editar actividad: ${entityTitle} en ${edition.eventName} ${edition.editionNumber}`}
       description='Modifica los detalles de esta actividad.'
-      className='sm:max-w-3xl'
+      className='md:max-w-6xl md:min-w-3xl'
       footerStart={
         <Button
           type='button'
@@ -394,13 +406,6 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
             </Field>
           </div>
 
-          {!isMusic && (
-            <ActivityRegistrationFields
-              methods={methods}
-              disabled={isSubmitting}
-            />
-          )}
-
           <Controller
             name='detail.horaInicio'
             control={methods.control}
@@ -430,7 +435,41 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
               <FieldError>{errors.detail.ubicacion.message}</FieldError>
             )}
           </Field>
+
+          {!isMusic && (
+            <Field>
+              <FieldLabel>Inscripción</FieldLabel>
+              <div className='flex items-center gap-2'>
+                <Switch
+                  id='registration-enabled'
+                  checked={registrationEnabled}
+                  onCheckedChange={(checked) => {
+                    methods.setValue('registration.registrationEnabled', checked, {
+                      shouldDirty: true,
+                      shouldValidate: true
+                    })
+                    if (!checked) {
+                      clearRegistration(methods)
+                    }
+                  }}
+                  disabled={isSubmitting}
+                  aria-label='Habilitar inscripción'
+                />
+                <span className='text-sm'>{registrationEnabled ? 'Activado' : 'Desactivado'}</span>
+              </div>
+            </Field>
+          )}
         </FieldGroup>
+
+        {registrationEnabled && (
+          <>
+            <Separator orientation='vertical' />
+            <ActivityRegistrationFields
+              methods={methods}
+              disabled={isSubmitting}
+            />
+          </>
+        )}
       </form>
     </EntityFormDialog>
   )

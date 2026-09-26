@@ -124,7 +124,8 @@ describe('admin activity read model', () => {
       startDate: '2026-06-10',
       startTime: '10:00',
       endDate: '2026-12-10',
-      endTime: '10:00'
+      endTime: '10:00',
+      registrationEnabled: true
     })
     if (registration === null) throw new Error('Expected registration defaults')
     expect(

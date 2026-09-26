@@ -93,7 +93,8 @@ export async function getActivitiesWithDetails(
             startDate: start.date,
             startTime: start.time,
             endDate: end.date,
-            endTime: end.time
+            endTime: end.time,
+            registrationEnabled: true
           }
 
     return {

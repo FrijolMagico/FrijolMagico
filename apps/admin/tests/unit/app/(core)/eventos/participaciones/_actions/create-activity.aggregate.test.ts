@@ -148,7 +148,7 @@ describe('createActivityAction aggregate', () => {
       horaInicio: null,
       cupos: null
     },
-    ...(registration ? { registration } : {})
+    ...(registration ? { registration: { ...registration, registrationEnabled: true } } : {})
   })
 
   test('creates an eligible activity and registration atomically', async () => {

@@ -142,7 +142,8 @@ const input = {
     startDate: '2026-06-01',
     startTime: '10:00',
     endDate: '2026-06-01',
-    endTime: '12:00'
+    endTime: '12:00',
+    registrationEnabled: true
   }
 }
 
