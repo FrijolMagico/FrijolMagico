@@ -114,10 +114,10 @@ Chain strategy: none (stacked to a dedicated feature branch)
 - `apps/web/src/app/**/festivales/**/[slug]/adapters/mappers/festivalDetailMapper.ts`
 - repository fixtures/mocks and adjacent query/mapper tests
 
-- [ ] RED: Add tests for the exact left join, nested nullable registration object, absence of current-time SQL predicates, mapper/DTO propagation, missing-row `null`, and music-path exclusion. <!-- sdd-owner: implementation -->
-- [ ] GREEN: Add the left join and registration JSON selection, extend public types/mappers/fixtures, and preserve `MusicActivityItem` routing without computing active state server-side. <!-- sdd-owner: implementation -->
-- [ ] TRIANGULATE: Run the scoped web tests and inspect generated/query fixtures to verify inactive registrations remain serialized and no browser database request is required. <!-- sdd-owner: implementation -->
-- [ ] REFACTOR: Normalize nullable mapping and fixture helpers; avoid broad DTO or catalog/artist changes. <!-- sdd-owner: implementation -->
+- [x] RED: Add tests for the exact left join, nested nullable registration object, absence of current-time SQL predicates, mapper/DTO propagation, missing-row `null`, and music-path exclusion. <!-- sdd-owner: implementation -->
+- [x] GREEN: Add the left join and registration JSON selection, extend public types/mappers/fixtures, and preserve `MusicActivityItem` routing without computing active state server-side. <!-- sdd-owner: implementation -->
+- [x] TRIANGULATE: Run the scoped web tests and inspect generated/query fixtures to verify inactive registrations remain serialized and no browser database request is required. <!-- sdd-owner: implementation -->
+- [x] REFACTOR: Normalize nullable mapping and fixture helpers; avoid broad DTO or catalog/artist changes. <!-- sdd-owner: implementation -->
 
 **Verification commands:** `bun run test --filter=@frijolmagico/web`, `bun run type-check`.
 

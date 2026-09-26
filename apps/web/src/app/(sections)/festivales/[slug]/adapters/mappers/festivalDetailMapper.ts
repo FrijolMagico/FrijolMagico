@@ -29,6 +29,10 @@ const mapParticipant = (
 export const mapFestivalDetail = (raw: FestivalDetail): FestivalDetail => {
   return {
     ...raw,
-    participantes: raw.participantes.map(mapParticipant)
+    participantes: raw.participantes.map(mapParticipant),
+    actividades: raw.actividades.map((activity) => ({
+      ...activity,
+      registration: activity.registration ?? null
+    }))
   }
 }

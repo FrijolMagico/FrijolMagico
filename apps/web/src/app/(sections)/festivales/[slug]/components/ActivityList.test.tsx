@@ -18,7 +18,8 @@ describe('ActivityList', () => {
         hora_inicio: '18:00',
         tipo: 'taller',
         fecha: '2025-01-15',
-        participante_pseudonimo: 'A'
+        participante_pseudonimo: 'A',
+        registration: null
       },
       {
         titulo: 'Concierto',
@@ -28,7 +29,8 @@ describe('ActivityList', () => {
         hora_inicio: '20:00',
         tipo: 'musica',
         fecha: '2025-01-16',
-        participante_pseudonimo: 'B'
+        participante_pseudonimo: 'B',
+        registration: null
       },
       {
         titulo: 'Taller 2',
@@ -38,7 +40,8 @@ describe('ActivityList', () => {
         hora_inicio: '19:00',
         tipo: 'taller',
         fecha: '2025-01-15',
-        participante_pseudonimo: 'C'
+        participante_pseudonimo: 'C',
+        registration: null
       }
     ]
 

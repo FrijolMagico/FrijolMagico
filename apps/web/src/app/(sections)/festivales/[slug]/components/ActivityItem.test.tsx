@@ -17,7 +17,8 @@ describe('ActivityItem', () => {
       hora_inicio: '18:00',
       tipo: 'taller',
       fecha: '2025-01-15',
-      participante_pseudonimo: 'Artista Ejemplo'
+      participante_pseudonimo: 'Artista Ejemplo',
+      registration: null
     }
 
     render(<ActivityItem activity={activity} />)
@@ -51,7 +52,8 @@ describe('ActivityItem', () => {
       hora_inicio: null,
       tipo: 'musica',
       fecha: null,
-      participante_pseudonimo: 'Banda X'
+      participante_pseudonimo: 'Banda X',
+      registration: null
     }
 
     render(<ActivityItem activity={activity} />)
