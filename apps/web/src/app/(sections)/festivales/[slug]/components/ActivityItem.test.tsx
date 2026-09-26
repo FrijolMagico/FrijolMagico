@@ -1,13 +1,60 @@
-import { afterEach, describe, expect, test } from 'bun:test'
+import { afterEach, describe, expect, jest, test } from 'bun:test'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { renderToString } from 'react-dom/server'
 
 import { ActivityItem } from './ActivityItem'
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  jest.useRealTimers()
+})
 
 import type { FestivalActivity } from '../../types/festival'
 
 describe('ActivityItem', () => {
+  const activity: FestivalActivity = {
+    titulo: 'Taller',
+    descripcion: 'Aprende',
+    duracion_minutos: null,
+    ubicacion: null,
+    hora_inicio: null,
+    tipo: 'taller',
+    fecha: null,
+    participante_pseudonimo: 'Artista',
+    registration: {
+      url: 'https://example.org/signup',
+      start_at: '2026-09-05T16:30:00.000Z',
+      end_at: '2026-09-05T17:30:00.000Z'
+    }
+  }
+
+  test('hides registration in server output and shows badge outside collapsed details after mount', () => {
+    expect(renderToString(<ActivityItem activity={activity} />)).not.toContain(
+      'Inscríbete'
+    )
+    jest.useFakeTimers()
+    jest.setSystemTime(new Date('2026-09-05T16:30:00.000Z'))
+    const { container } = render(<ActivityItem activity={activity} />)
+    const badge = screen.getByText('Inscríbete')
+    expect(badge.tagName).toBe('SPAN')
+    expect(badge.closest('summary, details')).toBeNull()
+    expect(container.querySelector('details')?.open).toBe(false)
+    expect(screen.queryByText('Inscríbete Aquí')).toBeNull()
+  })
+
+  test('shows the badge on a minimal non-music card but never on a music item', () => {
+    jest.useFakeTimers()
+    jest.setSystemTime(new Date('2026-09-05T17:30:00.000Z'))
+    const { container } = render(
+      <ActivityItem activity={{ ...activity, descripcion: null }} />
+    )
+    expect(container.querySelector('details')).toBeNull()
+    expect(screen.getByText('Inscríbete').tagName).toBe('SPAN')
+    expect(screen.queryByText('Inscríbete Aquí')).toBeNull()
+    render(<ActivityItem activity={{ ...activity, tipo: 'musica' }} />)
+    expect(screen.getAllByText('Inscríbete')).toHaveLength(1)
+  })
+
   test('renders title and participant, expands to show details', () => {
     const activity: FestivalActivity = {
       titulo: 'Taller de Acuarela',

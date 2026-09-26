@@ -1,5 +1,7 @@
 import { ChevronDown, Clock, MapPin } from 'lucide-react'
 
+import { ActivityRegistrationBadge } from './activity-registration-affordance'
+
 import type { FestivalActivity } from '../../types/festival'
 
 interface ActivityItemProps {
@@ -25,6 +27,9 @@ export const ActivityItem = ({ activity }: ActivityItemProps) => {
   return (
     <article className='bg-palette-background border-palette-primary group relative max-w-xs min-w-[16rem] rounded-lg border'>
       <div className='bg-palette-primary absolute -z-10 size-full translate-x-1.5 translate-y-1.5 rounded-lg duration-300 group-hover:translate-0' />
+      {activity.tipo !== 'musica' && activity.registration && (
+        <ActivityRegistrationBadge registration={activity.registration} />
+      )}
 
       {details ? (
         <details className='group/details'>

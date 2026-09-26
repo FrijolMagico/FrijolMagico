@@ -1,13 +1,44 @@
-import { afterEach, describe, expect, test } from 'bun:test'
+import { afterEach, describe, expect, jest, test } from 'bun:test'
 import { cleanup, render, screen } from '@testing-library/react'
 
 import { ActivityList } from './ActivityList'
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  jest.useRealTimers()
+})
 
 import type { FestivalActivity } from '../../types/festival'
 
 describe('ActivityList', () => {
+  test('routes music with unexpected registration data away from the badge', () => {
+    jest.useFakeTimers()
+    jest.setSystemTime(new Date('2026-09-05T16:30:00.000Z'))
+    render(
+      <ActivityList
+        actividades={[
+          {
+            titulo: 'Concierto',
+            descripcion: null,
+            duracion_minutos: null,
+            ubicacion: null,
+            hora_inicio: null,
+            tipo: 'musica',
+            fecha: null,
+            participante_pseudonimo: 'Banda',
+            registration: {
+              url: 'https://example.org/signup',
+              start_at: '2026-09-05T16:30:00.000Z',
+              end_at: '2026-09-05T17:30:00.000Z'
+            }
+          }
+        ]}
+      />
+    )
+    expect(screen.getByText('Banda')).toBeDefined()
+    expect(screen.queryByText('Inscríbete')).toBeNull()
+  })
+
   test('groups activities by type with Música always last', () => {
     const actividades: FestivalActivity[] = [
       {
