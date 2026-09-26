@@ -29,6 +29,7 @@ interface TimePickerFieldProps {
   onChange: (value: string) => void
   error?: string
   disabled?: boolean
+  required?: boolean
 }
 
 export function TimePickerField({
@@ -37,7 +38,8 @@ export function TimePickerField({
   value,
   onChange,
   error,
-  disabled
+  disabled,
+  required
 }: TimePickerFieldProps) {
   const [hour = '', minute = ''] = value ? value.split(':') : []
 
@@ -57,7 +59,12 @@ export function TimePickerField({
 
   return (
     <Field>
-      {label && <FieldLabel htmlFor={id}>{label}</FieldLabel>}
+      {label && (
+        <FieldLabel htmlFor={id}>
+          {label}
+          {required && <span className='text-destructive ml-1'>*</span>}
+        </FieldLabel>
+      )}
       <Popover>
         <PopoverTrigger
           render={
@@ -73,7 +80,9 @@ export function TimePickerField({
               )}
             >
               <IconClock className='mr-2 h-4 w-4 shrink-0' />
-              {displayValue ?? 'Seleccionar hora...'}
+              <span className='truncate flex-1 min-w-0'>
+                {displayValue ?? 'Seleccionar hora...'}
+              </span>
             </Button>
           }
         />

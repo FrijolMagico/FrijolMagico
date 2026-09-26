@@ -19,6 +19,7 @@ interface DatePickerFieldProps {
   onChange: (value: string) => void
   error?: string
   disabled?: boolean
+  required?: boolean
 }
 
 export function DatePickerField({
@@ -27,7 +28,8 @@ export function DatePickerField({
   value,
   onChange,
   error,
-  disabled
+  disabled,
+  required
 }: DatePickerFieldProps) {
   const selectedDate = value
     ? parse(value, 'yyyy-MM-dd', new Date())
@@ -45,7 +47,12 @@ export function DatePickerField({
 
   return (
     <Field>
-      {label && <FieldLabel htmlFor={id}>{label}</FieldLabel>}
+      {label && (
+        <FieldLabel htmlFor={id}>
+          {label}
+          {required && <span className='text-destructive ml-1'>*</span>}
+        </FieldLabel>
+      )}
       <Popover>
         <PopoverTrigger
           render={
@@ -61,7 +68,9 @@ export function DatePickerField({
               )}
             >
               <IconCalendar className='mr-2 h-4 w-4 shrink-0' />
-              {displayDate ?? 'Seleccionar fecha...'}
+              <span className='truncate flex-1 min-w-0'>
+                {displayDate ?? 'Seleccionar fecha...'}
+              </span>
             </Button>
           }
         />
