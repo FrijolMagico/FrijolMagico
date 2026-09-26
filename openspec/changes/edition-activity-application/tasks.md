@@ -6,14 +6,14 @@
 |-------|-------|
 | Estimated changed lines | 900–1,300 changed lines across database, admin, web, dependencies, migrations, and tests; re-estimate for CTA/Badge reuse |
 | 400-line budget risk | High |
-| Chained PRs recommended | Yes |
-| Suggested split | Child PR 1: database persistence → child PR 2: admin validation/timezone/aggregate → child PR 3: admin dialogs → child PR 4: public data → child PR 5: reusable web CTA/Badge and client UI; adjust once after measuring cohesive slices |
-| Delivery strategy | feature-branch-chain (user approved) |
-| Chain strategy | draft/no-merge tracker PR to `dev`; child PR #1 to tracker branch, each later child to immediately preceding branch |
+| Chained PRs recommended | No |
+| Suggested split | One sequential PR per work unit, each targeting the dedicated feature branch; adjust once after measuring cohesive slices |
+| Delivery strategy | stacked-to-feature-branch (user decided) |
+| Chain strategy | none; a dedicated feature branch accumulates approved work units, and every work-unit PR targets that branch |
 
 Decision needed before apply: Explicit user authorization to begin apply remains required; delivery strategy is settled.
-Chained PRs recommended: Yes
-Chain strategy: feature-branch-chain
+Chained PRs recommended: No
+Chain strategy: none (stacked to a dedicated feature branch)
 400-line budget risk: High
 
 **Apply gate:** This document is planning only. Stop before implementation/apply until the user explicitly authorizes apply. No branch, issue, PR, publication, label, rebase, or `size:exception` is implied or performed by this plan.
@@ -170,7 +170,8 @@ Chain strategy: feature-branch-chain
 
 - [ ] Before any PR, create or verify a matching issue through the repository issue form/review process and confirm `status:approved`; creating an issue alone does not approve it. Do not publish remotely without authorization. <!-- sdd-owner: parent -->
 - [ ] Measure additions + deletions per child PR against 400 changed lines and target about ≤60 minutes of review; make one honest cohesive slicing pass if needed, keeping tests/docs with behavior. If an unavoidable slice still exceeds 400, report its actual count/rationale and stop for maintainer `size:exception` approval; never infer approval or shrink code artificially. <!-- sdd-owner: parent -->
-- [ ] When separately authorized, prepare a draft/no-merge tracker PR targeting `dev` (never `main`); child PR #1 targets the tracker branch, and each later child targets the immediately previous branch. Use `.github/PULL_REQUEST_TEMPLATE.md` for tracker and children, link the approved issue, and ensure exactly one `type:*` and one `major|minor|patch` version label per PR. Add chain context and a dependency diagram marking the current child `📍` without replacing the template. No direct commits to `dev`. <!-- sdd-owner: parent -->
-- [ ] Verify each child PR diff contains only its current work unit with tests/docs and checks; integrate children in order, keep tracker draft/no-merge until integration, then rebase the final tracker branch onto current `dev` before final review/merge. Record actual branch/PR/label/rebase evidence only if performed. <!-- sdd-owner: parent -->
+- [ ] When separately authorized, target every work-unit PR at the dedicated feature branch `feat/edition-activity-application`; never target `dev` and never target another work unit's branch. Use `.github/PULL_REQUEST_TEMPLATE.md`, link the approved issue, and ensure exactly one `type:*` and one version label per PR. Describe the feature-branch position and the unit scope in the PR notes without replacing the template. No direct commits to `dev`. <!-- sdd-owner: parent -->
+- [ ] Open each work-unit PR only after the previous one is integrated into the feature branch, and verify its diff contains only its current work unit with tests/docs and checks. Record actual branch/PR/label evidence only if performed. <!-- sdd-owner: parent -->
+- [ ] When every work unit is integrated, open the single integration PR from the feature branch to `dev`, report its full changed-line count, and request `size:exception` approval before merge. <!-- sdd-owner: parent -->
 - [ ] Start or reuse a bounded review after the implementation diff and verification evidence are available, according to the user-owned review switch and provider route; no review begins during this planning edit. <!-- sdd-owner: parent -->
 - [ ] Stop and request authorization before any destructive migration rollback/drop of `activity_registration`. <!-- sdd-owner: parent -->
