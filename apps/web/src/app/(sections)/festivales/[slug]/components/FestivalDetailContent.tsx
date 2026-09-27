@@ -99,7 +99,7 @@ export const FestivalDetailContent = ({
             animationMode={animationMode}
           />
           {detail.actividades.length > 0 && (
-            <ActivityList actividades={detail.actividades} />
+            <ActivityList actividades={detail.actividades} isEditionPast={detail.is_edition_past} />
           )}
           {navigator && <div className='pt-10'>{navigator}</div>}
         </div>

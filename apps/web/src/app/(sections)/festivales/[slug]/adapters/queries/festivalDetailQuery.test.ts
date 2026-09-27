@@ -11,6 +11,15 @@ describe('FESTIVAL_DETAIL_QUERY', () => {
     expect(FESTIVAL_DETAIL_QUERY).toContain('AND ee.published = 1')
   })
 
+  test('returns ordered occurrence rows per activity without inventing an edition date', () => {
+    expect(FESTIVAL_DETAIL_QUERY).toContain('FROM activity_occurrence ao')
+    expect(FESTIVAL_DETAIL_QUERY).toContain('WHERE ao.activity_id = ac.id')
+    expect(FESTIVAL_DETAIL_QUERY).toContain('ORDER BY ao.date, ao.start_time, ao.id')
+    expect(FESTIVAL_DETAIL_QUERY).toContain("'duracion_minutos', scheduled.duration_minutes")
+    expect(FESTIVAL_DETAIL_QUERY).not.toContain('SELECT MIN(eed.fecha)')
+    expect(FESTIVAL_DETAIL_QUERY).not.toContain("'hora_inicio', ac.hora_inicio")
+  })
+
   test('left joins registration by participation activity without filtering by time', () => {
     expect(FESTIVAL_DETAIL_QUERY).toContain(
       'LEFT JOIN activity_registration ar ON ar.participation_activity_id = pact.id'

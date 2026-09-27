@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm, useFormState, useWatch } from 'react-hook-form'
 import { toast } from 'sonner'
@@ -13,7 +14,7 @@ import {
   SelectValue
 } from '@/shared/components/ui/select'
 import { Textarea } from '@/shared/components/ui/textarea'
-import { TimePickerField } from '@/shared/components/time-picker-field'
+import { RichTextarea } from '@/shared/components/rich-textarea'
 import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
 import { useParticipationsStore } from '../_store/use-participations-store'
 import { createActivityAction } from '../_actions/activities/create-activity.action'
@@ -54,6 +55,7 @@ import {
   EMPTY_REGISTRATION,
   clearRegistration
 } from './activity-registration-fields'
+import { ActivityOccurrenceFields } from './activity-occurrence-fields'
 
 interface CreateActivityDialogProps {
   edition: {
@@ -73,6 +75,7 @@ export function CreateActivityDialog({
   bandas
 }: CreateActivityDialogProps) {
   const router = useRouter()
+  const [descriptionResetKey, setDescriptionResetKey] = useState(0)
   const isCreateActivityDialogOpen = useParticipationsStore(
     (state) => state.isCreateActivityDialogOpen
   )
@@ -90,6 +93,7 @@ export function CreateActivityDialog({
       estado: PARTICIPATION_STATUS.SELECCIONADO,
       puntaje: null,
       registration: EMPTY_REGISTRATION,
+      occurrences: [],
       detail: {
         titulo: '',
         descripcion: '',
@@ -147,6 +151,7 @@ export function CreateActivityDialog({
         estado: values.estado
       },
       registration: values.registration,
+      occurrences: values.occurrences ?? [],
       detail: {
         titulo: values.detail.titulo,
         descripcion: values.detail.descripcion,
@@ -168,6 +173,7 @@ export function CreateActivityDialog({
 
     toast.success('Actividad agregada correctamente')
     methods.reset()
+    setDescriptionResetKey((key) => key + 1)
     toggleCreateActivityDialogOpen(false)
     router.refresh()
   }
@@ -195,7 +201,7 @@ export function CreateActivityDialog({
       onOpenChange={toggleCreateActivityDialogOpen}
       title={`Agregar Actividad: ${edition.eventName} ${edition.editionNumber}`}
       description='Añade un participante a una actividad específica en esta edición.'
-      className='md:max-w-6xl md:min-w-3xl'
+      contentSized
       triggerLabel='Agregar Actividad'
       submit={{
         type: 'submit',
@@ -207,7 +213,7 @@ export function CreateActivityDialog({
     >
       <form
         id='create-activity-form'
-        className='flex gap-4'
+        className='flex min-w-0 max-w-full flex-col gap-4 md:w-6xl md:flex-row'
         onSubmit={methods.handleSubmit(onSubmit)}
       >
         <FieldGroup>
@@ -223,8 +229,13 @@ export function CreateActivityDialog({
                     const nextTipo = value as ParticipantType
 
                     field.onChange(nextTipo)
-                    if (nextTipo === PARTICIPANT_TYPE.BANDA)
+                    if (nextTipo === PARTICIPANT_TYPE.BANDA) {
                       clearRegistration(methods)
+                      methods.setValue('occurrences', [], {
+                        shouldDirty: true,
+                        shouldValidate: true
+                      })
+                    }
 
                     if (nextTipo === PARTICIPANT_TYPE.ARTISTA) {
                       methods.setValue('entity.agrupacionId', null, {
@@ -327,8 +338,13 @@ export function CreateActivityDialog({
                   }
                   onValueChange={(val) => {
                     field.onChange(Number(val))
-                    if (Number(val) === ACTIVITY_TYPES.MUSICA)
+                    if (Number(val) === ACTIVITY_TYPES.MUSICA) {
                       clearRegistration(methods)
+                      methods.setValue('occurrences', [], {
+                        shouldDirty: true,
+                        shouldValidate: true
+                      })
+                    }
                   }}
                   disabled={isSubmitting || tipo === PARTICIPANT_TYPE.BANDA}
                 >
@@ -400,7 +416,7 @@ export function CreateActivityDialog({
           </Field>
         </FieldGroup>
 
-        <Separator orientation='vertical' />
+        <Separator orientation='vertical' className='hidden md:block' />
 
         <FieldGroup>
           <Field>
@@ -413,34 +429,34 @@ export function CreateActivityDialog({
           </Field>
 
           <Field>
-            <FieldLabel>Descripción (opcional)</FieldLabel>
-            <Textarea
-              {...methods.register('detail.descripcion')}
-              placeholder='De qué trata la actividad...'
-              rows={3}
-              disabled={isSubmitting}
+            <FieldLabel htmlFor='create-activity-description'>
+              Descripción (opcional)
+            </FieldLabel>
+            <Controller
+              name='detail.descripcion'
+              control={methods.control}
+              render={({ field }) => (
+                <RichTextarea
+                  key={descriptionResetKey}
+                  id='create-activity-description'
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  placeholder='De qué trata la actividad...'
+                />
+              )}
             />
+            {errors.detail?.descripcion && (
+              <FieldError>{errors.detail.descripcion.message}</FieldError>
+            )}
           </Field>
 
-          <FieldGroup className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+          <FieldGroup className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
             <Field>
-              <FieldLabel>Duración (minutos)</FieldLabel>
-              <Controller
-                name='detail.duracionMinutos'
-                control={methods.control}
-                render={({ field }) => (
-                  <Input
-                    type='number'
-                    placeholder='Ej: 90'
-                    disabled={isSubmitting}
-                    value={field.value ?? ''}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value === '' ? null : Number(e.target.value)
-                      )
-                    }
-                  />
-                )}
+              <FieldLabel>Ubicación</FieldLabel>
+              <Input
+                {...methods.register('detail.ubicacion')}
+                placeholder='Ej: Sala 3'
+                disabled={isSubmitting}
               />
             </Field>
             <Field>
@@ -466,29 +482,6 @@ export function CreateActivityDialog({
           </FieldGroup>
 
           <FieldGroup>
-            <Controller
-              name='detail.horaInicio'
-              control={methods.control}
-              render={({ field }) => (
-                <TimePickerField
-                  id='detail-horaInicio'
-                  label='Hora Inicio'
-                  value={field.value ?? ''}
-                  onChange={field.onChange}
-                  error={errors.detail?.horaInicio?.message}
-                  disabled={isSubmitting}
-                />
-              )}
-            />
-            <Field>
-              <FieldLabel>Ubicación</FieldLabel>
-              <Input
-                {...methods.register('detail.ubicacion')}
-                placeholder='Ej: Sala 3'
-                disabled={isSubmitting}
-              />
-            </Field>
-
             {!isMusic && (
               <Field>
                 <FieldLabel>Inscripción</FieldLabel>
@@ -513,11 +506,12 @@ export function CreateActivityDialog({
               </Field>
             )}
           </FieldGroup>
+          {!isMusic && <ActivityOccurrenceFields methods={methods} disabled={isSubmitting} />}
         </FieldGroup>
 
         {registrationEnabled && (
           <>
-            <Separator orientation='vertical' />
+            <Separator orientation='vertical' className='hidden md:block' />
             <ActivityRegistrationFields
               methods={methods}
               disabled={isSubmitting}
