@@ -9,8 +9,8 @@
 - TDD: not configured explicitly in project/session; ordinary checks, exact runner `bun run test --filter=@frijolmagico/admin` and `bun run test --filter=@frijolmagico/web` (confirm workspace package names). RDD: off (session-rendered). Delivery: ask-on-risk, forecast ~250–400 authored lines, revisit if >400.
 
 ## Tasks
-- [x] A1 — Integrate existing rich-text editor into create/edit activity forms with controlled form values; verify persisted and reloaded formatting using focused Admin tests. Route: delegated writer (2 non-trivial files). Evidence: 2 focused tests pass, Admin type-check passes, parent reran focused test; editor itself mocked in form tests. Commit: pending.
-- [ ] W1 — Render activity description safely with supported HTML and links while preserving plain-text/null behavior; test formatted, unsafe and legacy data. Route: delegated writer (component + tests). Evidence: pending. Commit: pending.
+- [x] A1 — Integrate existing rich-text editor into create/edit activity forms with controlled form values; verify persisted and reloaded formatting using focused Admin tests. Route: delegated writer (2 non-trivial files). Evidence: 2 focused tests pass, Admin type-check passes, parent reran focused test; editor itself mocked in form tests. Commit: `e27bbdd3`. Native assessment: high, independent verification required (completed for initial A1, rerun after fix at closure).
+- [x] W1 — Render activity description safely with supported HTML and links while preserving plain-text/null behavior; test formatted, unsafe and legacy data. Route: delegated writer (component + tests). Evidence: 7 renderer tests and 10 card tests pass; web type-check passes; independent full web suite 163/163 passed on retry (one earlier Bun SIGSEGV). Commit: pending.
 
 ## Acceptance and checks
 - Creation/editing persists and reloads bold, italic, lists, links, paragraphs.
@@ -19,4 +19,4 @@
 - Focused workspace tests and applicable full checks recorded per task; no PR until `status:approved`.
 
 ## Progress
-- A1 complete after correcting RHF/editor remount on activity refresh; focused tests and Admin type-check pass. Next: W1.
+- A1 committed `e27bbdd3` after correcting RHF/editor remount on activity refresh; focused tests and Admin type-check pass. W1 implemented and full web suite passed on retry. Known ambiguity: legacy literal `<p>...</p>` is indistinguishable from rich HTML without format metadata. Next: commit W1 and final review/verification.

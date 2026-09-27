@@ -2,6 +2,7 @@ import { ChevronDown, Clock, MapPin } from 'lucide-react'
 import { formatSantiagoDateTime } from '@frijolmagico/utils/santiago-date-format'
 
 import { ActivityRegistrationCta } from './activity-registration-affordance'
+import { ActivityDescription } from './activity-description'
 
 import type { FestivalActivity } from '../../types/festival'
 
@@ -81,11 +82,7 @@ export const ActivityItem = ({ activity }: ActivityItemProps) => {
                 </div>
               )}
             </div>
-            {activity.descripcion && (
-              <p className='text-palette-foreground/70 mt-3 text-sm leading-relaxed'>
-                {activity.descripcion}
-              </p>
-            )}
+            <ActivityDescription description={activity.descripcion} />
             {activity.duracion_minutos && (
               <p className='text-palette-foreground/50 mt-1 text-xs'>
                 Duración: {activity.duracion_minutos} min
