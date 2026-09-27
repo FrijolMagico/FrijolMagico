@@ -6,6 +6,7 @@ import { cn } from '@/utils/cn'
 
 interface ActivityListProps {
   actividades: FestivalActivity[]
+  isEditionPast: boolean
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -20,7 +21,7 @@ const TYPE_ORDER: Record<string, number> = {
   musica: 99
 }
 
-export const ActivityList = ({ actividades }: ActivityListProps) => {
+export const ActivityList = ({ actividades, isEditionPast }: ActivityListProps) => {
   const sorted = [...actividades].sort((a, b) => {
     const firstA = a.ocurrencias[0]
     const firstB = b.ocurrencias[0]
@@ -60,7 +61,7 @@ export const ActivityList = ({ actividades }: ActivityListProps) => {
                 {group.map((activity, index) => (
                   <li key={`${tipo}-${activity.titulo ?? index}-${index}`}>
                     {tipo !== 'musica' ? (
-                      <ActivityItem activity={activity} />
+                      <ActivityItem activity={activity} isEditionPast={isEditionPast} />
                     ) : (
                       <MusicActivityItem activity={activity} />
                     )}

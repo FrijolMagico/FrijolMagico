@@ -82,6 +82,8 @@ export interface FestivalDetail {
   edicion_nombre: string | null
   numero_edicion: string
   poster_url: string | null
+  edicion_fin: string | null
+  is_edition_past: boolean
   dias: FestivalDia[]
   participantes: FestivalParticipant[]
   actividades: FestivalActivity[]

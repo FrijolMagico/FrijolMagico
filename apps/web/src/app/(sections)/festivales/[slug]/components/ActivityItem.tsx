@@ -7,12 +7,13 @@ import type { FestivalActivity } from '../../types/festival'
 
 interface ActivityItemProps {
   activity: FestivalActivity
+  isEditionPast: boolean
 }
 
 const hasDetails = (a: FestivalActivity) =>
   Boolean(a.ocurrencias.length || a.ubicacion || a.descripcion)
 
-export const ActivityItem = ({ activity }: ActivityItemProps) => {
+export const ActivityItem = ({ activity, isEditionPast }: ActivityItemProps) => {
   const details = hasDetails(activity)
 
   return (
@@ -73,9 +74,9 @@ export const ActivityItem = ({ activity }: ActivityItemProps) => {
                     </li>
                   ))}
                 </ul>
-              ) : (
+              ) : (!isEditionPast ? (
                 <span>Fecha y horario por confirmar</span>
-              )}
+              ) : null)}
               {activity.ubicacion && (
                 <div className='flex items-center gap-1.5'>
                   <MapPin className='size-4' aria-hidden='true' />
@@ -105,7 +106,7 @@ export const ActivityItem = ({ activity }: ActivityItemProps) => {
               {activity.titulo}
             </h3>
           )}
-          {activity.tipo !== 'musica' && (
+          {activity.tipo !== 'musica' && !isEditionPast && (
             <p className='text-palette-foreground/60 mt-2 text-sm'>
               Fecha y horario por confirmar
             </p>

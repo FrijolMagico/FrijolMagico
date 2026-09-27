@@ -12,6 +12,8 @@ const mockDetails: Record<string, FestivalDetail> = {
     numero_edicion: 'XV',
     poster_url:
       'https://cdn.frijolmagico.cl/festivales/frijol-magico/afiche-xv.webp',
+    edicion_fin: '2025-10-04',
+    is_edition_past: true,
     dias: [
       {
         fecha: '2025-10-03',
@@ -100,6 +102,8 @@ const mockDetails: Record<string, FestivalDetail> = {
     numero_edicion: '3',
     poster_url:
       'https://cdn.frijolmagico.cl/festivales/ilustra-benders/afiche-3.webp',
+    edicion_fin: '2025-05-10',
+    is_edition_past: true,
     dias: [
       {
         fecha: '2025-05-10',

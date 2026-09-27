@@ -8,6 +8,7 @@ export const FESTIVAL_DETAIL_QUERY = `SELECT json_object(
   'edicion_nombre', ee.nombre,
   'numero_edicion', ee.numero_edicion,
   'poster_url', ee.poster_url,
+  'edicion_fin', (SELECT MAX(eed.fecha) FROM evento_edicion_dia eed WHERE eed.evento_edicion_id = ee.id),
   'dias', COALESCE((
     SELECT json_group_array(json_object(
       'fecha', eed.fecha,
