@@ -20,13 +20,16 @@ import {
   activityDetailInsertSchema,
   activityInsertSchema,
   activityUpdateSchema,
-  parseActivityRegistrationInput
+  parseActivityRegistrationInput,
+  parseActivityOccurrencesInput,
+  sameActivitySchedule
 } from '../../_schemas/activity.schema'
 import { editionParticipationUpdateSchema } from '../../_schemas/edition-participation.schema'
 
 const {
   activity,
   activityRegistration,
+  activityOccurrence,
   editionParticipation,
   participationActivity
 } = participations
@@ -38,6 +41,8 @@ interface UpdateActivityAggregateInput {
   activity: unknown
   detail: unknown
   registration?: unknown
+  occurrences?: unknown
+  expectedOccurrences?: unknown
 }
 
 export async function updateActivityAggregateAction(
@@ -82,11 +87,39 @@ export async function updateActivityAggregateAction(
         activityInput.tipoActividadId ?? existingActivity.tipoActividadId
       const effectiveType = await tx.query.activityType.findFirst({
         where: (table, operators) =>
-          participation.bandaId !== null
+          participation.bandaId != null
             ? operators.eq(table.slug, 'musica')
             : operators.eq(table.id, submittedTypeId)
       })
       if (!effectiveType) throw new Error('El tipo de actividad no existe')
+      const switchingToMusic = effectiveType.slug === 'musica' &&
+        existingActivity.tipoActividadId !== effectiveType.id
+      const replacingSchedule = input.occurrences !== undefined || switchingToMusic
+      if (replacingSchedule && input.expectedOccurrences === undefined) {
+        throw new Error('Falta la versión original de las sesiones. Recargá la actividad e intentá de nuevo.')
+      }
+      if (!replacingSchedule && input.expectedOccurrences !== undefined) {
+        throw new Error('No se puede verificar una sesión sin cambios solicitados')
+      }
+      const occurrences = replacingSchedule
+        ? parseActivityOccurrencesInput(input.occurrences, effectiveType.slug)
+        : null
+      if (replacingSchedule) {
+        const expected = parseActivityOccurrencesInput(input.expectedOccurrences, 'taller')
+        const existingDetail = await tx.query.activity.findFirst({
+          where: (table, operators) =>
+            operators.eq(table.participacionActividadId, activityInput.id)
+        })
+        const current = existingDetail
+          ? await tx.query.activityOccurrence.findMany({
+              where: (table, operators) => operators.eq(table.activityId, existingDetail.id),
+              columns: { date: true, startTime: true, durationMinutes: true }
+            })
+          : []
+        if (!sameActivitySchedule(current, expected)) {
+          throw new Error('Las sesiones cambiaron mientras editabas. Recargá la actividad e intentá de nuevo.')
+        }
+      }
       const registration = parseActivityRegistrationInput(
         input.registration,
         effectiveType.slug
@@ -135,6 +168,19 @@ export async function updateActivityAggregateAction(
         target: activity.participacionActividadId,
         set: detailValues
       })
+      if (occurrences !== null) {
+        const detail = await tx.query.activity.findFirst({
+          where: (table, operators) =>
+            operators.eq(table.participacionActividadId, activityInput.id)
+        })
+        if (!detail) throw new Error('No se encontraron los detalles de la actividad')
+        await tx.delete(activityOccurrence).where(eq(activityOccurrence.activityId, detail.id))
+        if (occurrences.length) {
+          await tx.insert(activityOccurrence).values(
+            occurrences.map((occurrence) => ({ activityId: detail.id, ...occurrence }))
+          )
+        }
+      }
       if (registration && instants) {
         await tx
           .insert(activityRegistration)

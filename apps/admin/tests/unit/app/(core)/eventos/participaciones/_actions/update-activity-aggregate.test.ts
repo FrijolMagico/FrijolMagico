@@ -7,6 +7,7 @@ let parentEditionId = 7
 let activityTypeSlug = 'taller'
 let activityExists = true
 let activityParticipationId = 11
+let storedSessions: { date: string; startTime: string; durationMinutes: number }[] = []
 let invalidations: string[]
 let committed = false
 let operations: string[]
@@ -30,12 +31,15 @@ function tableName(table: unknown) {
   if (table === tables.participationActivity) return 'activity'
   if (table === tables.activity) return 'detail'
   if (table === tables.activityRegistration) return 'registration'
+  if (table === tables.activityOccurrence) return 'occurrence'
   return 'unknown'
 }
 
 function createHarness() {
   const tx = {
     query: {
+      activity: { findFirst: async () => ({ id: 33 }) },
+      activityOccurrence: { findMany: async () => storedSessions },
       participationActivity: {
         findFirst: async () =>
           activityExists
@@ -69,11 +73,19 @@ function createHarness() {
       })
     }),
     insert: (table: unknown) => ({
-      values: (values: Record<string, unknown>) => ({
+      values: (values: Record<string, unknown> | Record<string, unknown>[]) => ({
+        then: (resolve: (value: unknown) => unknown) => {
+          const name = tableName(table)
+          operations.push(`${name}:insert`)
+          writes.push(...(Array.isArray(values) ? values : [values]).map((row) => ({ table: name, values: row })))
+          stagedMutations.push(`${name}:insert`)
+          if (failAt === name) throw new Error(`failed ${name}`)
+          return Promise.resolve(resolve([]))
+        },
         onConflictDoUpdate: async () => {
           const name = tableName(table)
           operations.push(`${name}:upsert`)
-          writes.push({ table: name, values })
+          writes.push({ table: name, values: Array.isArray(values) ? values[0] : values })
           stagedMutations.push(`${name}:upsert`)
           if (failAt === name) throw new Error(`failed ${name}`)
           return values
@@ -153,6 +165,7 @@ beforeEach(async () => {
   activityTypeSlug = 'taller'
   activityExists = true
   activityParticipationId = 11
+  storedSessions = []
   invalidations = []
   committed = false
   operations = []
@@ -217,7 +230,7 @@ describe('updateActivityAggregateAction', () => {
     const rejected = await action(input)
     expect(rejected.success).toBe(false)
     expect(operations).toEqual([])
-    const cleared = await action({ ...input, registration: undefined })
+    const cleared = await action({ ...input, registration: undefined, expectedOccurrences: [] })
     expect(cleared.success).toBe(true)
     expect(operations).toContain('registration:delete')
     expect(operations).toContain('activity:update')
@@ -228,13 +241,75 @@ describe('updateActivityAggregateAction', () => {
     const result = await action({
       ...input,
       participation: { ...input.participation, artistaId: null, bandaId: 4 },
-      registration: null
+      registration: null,
+      expectedOccurrences: []
     })
     expect(result.success).toBe(true)
     expect(
       writes.find((write) => write.table === 'activity')?.values.tipoActividadId
     ).toBe(3)
     expect(operations).toContain('registration:delete')
+  })
+
+  test('replaces sessions explicitly and clears them when becoming music', async () => {
+    const sessions = [
+      { date: '2026-06-10', startTime: '09:00', durationMinutes: 45 },
+      { date: '2026-06-11', startTime: '10:00', durationMinutes: 60 }
+    ]
+    expect((await action({ ...input, occurrences: sessions, expectedOccurrences: [] })).success).toBe(true)
+    expect(operations).toContain('occurrence:delete')
+    expect(operations).toContain('occurrence:insert')
+    expect(writes.filter((write) => write.table === 'occurrence').map((write) => write.values))
+      .toEqual(sessions.map((session) => ({ activityId: 33, ...session })))
+    expect((await action({ ...input, occurrences: [], expectedOccurrences: [] })).success).toBe(true)
+    expect(operations).toContain('occurrence:delete')
+    expect(operations).not.toContain('occurrence:insert')
+    activityTypeSlug = 'musica'
+    expect((await action({ ...input, registration: null, expectedOccurrences: [] })).success).toBe(true)
+    expect(operations).toContain('occurrence:delete')
+    expect((await action({ ...input, registration: null, occurrences: sessions })).success).toBe(false)
+  })
+
+  test('preserves a newer schedule when an unrelated edit omits occurrences', async () => {
+    storedSessions = [{ date: '2026-06-12', startTime: '11:00', durationMinutes: 60 }]
+    expect((await action(input)).success).toBe(true)
+    expect(operations).not.toContain('occurrence:delete')
+    expect(storedSessions).toHaveLength(1)
+  })
+
+  test('rejects stale and unguarded schedule writes before any aggregate mutation', async () => {
+    storedSessions = [{ date: '2026-06-12', startTime: '11:00', durationMinutes: 60 }]
+    const desired = [{ date: '2026-06-13', startTime: '12:00', durationMinutes: 45 }]
+    const unguarded = await action({ ...input, occurrences: desired })
+    expect(unguarded.success).toBe(false)
+    expect(operations).toEqual([])
+    const stale = await action({ ...input, occurrences: desired, expectedOccurrences: [] })
+    expect(stale.success).toBe(false)
+    expect(stale.errors?.[0]?.message).toContain('Recargá')
+    expect(operations).toEqual([])
+    expect(invalidations).toEqual([])
+    expect(committedState).toEqual(['prior-state'])
+    const valid = await action({ ...input, occurrences: desired, expectedOccurrences: storedSessions })
+    expect(valid.success).toBe(true)
+    expect(operations).toContain('occurrence:delete')
+  })
+
+  test('omitted band ID on an artist does not clear sessions as music', async () => {
+    const { bandaId: _omitted, ...artist } = input.participation
+    expect((await action({ ...input, participation: artist })).success).toBe(true)
+    expect(operations).not.toContain('occurrence:delete')
+    expect(writes.find((write) => write.table === 'activity')?.values.tipoActividadId).toBe(1)
+  })
+
+  test('rolls back if replacing sessions fails after aggregate writes', async () => {
+    failAt = 'occurrence'
+    const result = await action({ ...input, occurrences: [
+      { date: '2026-06-10', startTime: '09:00', durationMinutes: 45 }
+    ], expectedOccurrences: [] })
+    expect(result.success).toBe(false)
+    expect(committed).toBe(false)
+    expect(committedState).toEqual(['prior-state'])
+    expect(invalidations).toEqual([])
   })
 
   test('rolls back all mutations and skips cache invalidation after each late failure', async () => {
