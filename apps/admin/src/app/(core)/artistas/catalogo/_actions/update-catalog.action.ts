@@ -8,6 +8,7 @@ import { and, eq, isNotNull, isNull, sql } from 'drizzle-orm'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import {
+  ARTIST_DETAIL_CACHE_TAG,
   CATALOG_CACHE_TAG,
   FEATURED_ARTISTS_CACHE_TAG
 } from '@frijolmagico/cache-tags'
@@ -165,6 +166,13 @@ export async function updateCatalogAction(
     return conflict()
   }
 
+  if (intent === AVATAR_INTENT.HISTORICAL) {
+    try {
+      updateTag(ARTIST_DETAIL_CACHE_TAG)
+    } catch {
+      // The restore committed; cache invalidation is best-effort.
+    }
+  }
   try {
     updateTag(CATALOG_CACHE_TAG)
   } catch {

@@ -8,6 +8,7 @@ import { eq } from 'drizzle-orm'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import type { ActionState } from '@/shared/types/actions'
 import {
+  ARTIST_DETAIL_CACHE_TAG,
   getEditionParticipationsCacheTag,
   getParticipationActivitiesCacheTag
 } from '@frijolmagico/cache-tags'
@@ -81,6 +82,7 @@ export async function deleteActivityAction(
 
     updateTag(getEditionParticipationsCacheTag(editionId))
     updateTag(getParticipationActivitiesCacheTag(participationId))
+    updateTag(ARTIST_DETAIL_CACHE_TAG)
 
     return { success: true, data: { alreadyAbsent, participationDeleted } }
   } catch (error) {
