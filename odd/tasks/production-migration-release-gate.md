@@ -36,8 +36,13 @@ Prevent a `dev → main` release PR from merging unless pending production Turso
 - Changing migration files, database schema, or Drizzle migration semantics.
 - Applying production migrations during implementation or verification.
 
+## Delivery evidence
+- Implementation commit: `02e7a8a18e28d4c2c7a7e67e5dbd50a7cec2d934` (`ci(workflows): gate release PRs on Turso migrations`).
+- PR #195: https://github.com/FrijolMagico/FrijolMagico/pull/195, targeting `dev`, linked to approved issue #193.
+- GitHub PR checks passed: `Lint & Type-Check & Build & Test`, Vercel Preview Comments, and both Vercel deployments. `Production Migrations` was skipped as expected because this feature PR targets `dev`, not `main`.
+
 ## Progress
 - Task 1: complete; same-repository release-only migration gate and fork-to-main rejection implemented; static conditions reviewed.
-- Task 2: partial; `git diff --check` passed and routing semantics were reviewed. No YAML parser or `actionlint` is installed, so syntax validation remains outstanding.
+- Task 2: complete; `git diff --check` passed, routing semantics reviewed, and GitHub Actions parsed and ran the PR workflow successfully. The local environment did not have `actionlint` or a YAML parser.
 - Task 3: complete; environment and secret names confirmed, quality required-check rule confirmed; no reviewers by the user's choice.
-- Task 4: in progress; issue #193 is created and approved. Prepare the Conventional Commit and open the authorized PR to `dev`.
+- Task 4: complete; PR #195 is open to `dev` and all applicable PR checks passed. The production migration job correctly skipped for this feature PR; it will run on a future `dev → main` release PR.
