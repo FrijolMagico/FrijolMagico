@@ -37,43 +37,33 @@ describe('ActivityItem', () => {
     expect(activity.registration!.end_at).toBe('2026-09-05T17:30:00.000Z')
   })
 
-  test('hides registration in server output and shows badge outside collapsed details after mount', () => {
+  test('hides the registration CTA in server output and shows the top-right link after activation', () => {
     expect(renderToString(<ActivityItem activity={activity} />)).not.toContain(
       'Inscríbete'
     )
     jest.useFakeTimers()
     jest.setSystemTime(new Date('2026-09-05T16:30:00.000Z'))
     const { container } = render(<ActivityItem activity={activity} />)
-    const badge = screen.getByText('Inscríbete')
-    expect(badge.tagName).toBe('SPAN')
-    expect(badge.closest('summary, details')).toBeNull()
+    const link = screen.getByRole('link', { name: 'Inscríbete' })
+    const article = container.querySelector('article')!
+
+    expect(link.parentElement).toBe(article)
+    expect(link.closest('summary, details')).toBeNull()
     expect(container.querySelector('details')?.open).toBe(false)
-    const closedLink = screen.getByRole('link', {
-      hidden: true,
-      name: 'Inscríbete Aquí'
-    })
-    expect(closedLink.closest('details')).toBe(
-      container.querySelector('details')
-    )
-    expect(closedLink.closest('summary')).toBeNull()
   })
 
-  test('keeps the active link inside closed details, last in expanded content, with safe anchor semantics', () => {
+  test('keeps the top-right CTA outside disclosure details with safe anchor semantics', () => {
     jest.useFakeTimers()
     jest.setSystemTime(new Date('2026-09-05T16:30:00.000Z'))
     const { container } = render(<ActivityItem activity={activity} />)
     const details = container.querySelector('details')!
     const summary = details.querySelector('summary')!
-    const content = details.querySelector('div.border-t')!
-    const link = screen.getByRole('link', {
-      hidden: true,
-      name: 'Inscríbete Aquí'
-    })
+    const link = screen.getByRole('link', { name: 'Inscríbete' })
 
     expect(details.open).toBe(false)
-    expect(link.closest('summary')).toBeNull()
+    expect(link.parentElement).toBe(container.querySelector('article'))
     expect(summary.contains(link)).toBe(false)
-    expect(content.lastElementChild).toBe(link)
+    expect(link.closest('details')).toBeNull()
     expect(link.getAttribute('href')).toBe('https://example.org/signup')
     expect(link.getAttribute('target')).toBe('_blank')
     expect(link.getAttribute('rel')).toBe('noopener noreferrer')
@@ -84,21 +74,17 @@ describe('ActivityItem', () => {
 
     fireEvent.click(summary)
     expect(details.open).toBe(true)
-    expect(screen.getByRole('link', { name: 'Inscríbete Aquí' })).toBe(link)
-    expect(screen.getByText('Inscríbete').closest('details')).toBeNull()
+    expect(screen.getByRole('link', { name: 'Inscríbete' })).toBe(link)
   })
 
-  test('renders neither label on server and removes both affordances outside the window or for malformed data', () => {
+  test('renders no CTA on the server or outside the window and hides it for malformed data', () => {
     const serverHtml = renderToString(<ActivityItem activity={activity} />)
     expect(serverHtml).not.toContain('Inscríbete')
     jest.useFakeTimers()
     jest.setSystemTime(new Date('2026-09-05T17:30:00.001Z'))
     const { rerender, container } = render(<ActivityItem activity={activity} />)
     expect(container.querySelector('details')).not.toBeNull()
-    expect(screen.queryByText('Inscríbete')).toBeNull()
-    expect(
-      screen.queryByRole('link', { hidden: true, name: 'Inscríbete Aquí' })
-    ).toBeNull()
+    expect(screen.queryByRole('link', { name: 'Inscríbete' })).toBeNull()
 
     jest.setSystemTime(new Date('2026-09-05T16:30:00.000Z'))
     rerender(
@@ -112,23 +98,20 @@ describe('ActivityItem', () => {
         }}
       />
     )
-    expect(screen.queryByText('Inscríbete')).toBeNull()
-    expect(
-      screen.queryByRole('link', { hidden: true, name: 'Inscríbete Aquí' })
-    ).toBeNull()
+    expect(screen.queryByRole('link', { name: 'Inscríbete' })).toBeNull()
   })
 
   test('never commits a replacement URL with the prior active window before passive reconciliation', () => {
     jest.useFakeTimers()
     jest.setSystemTime(new Date('2026-09-05T16:30:00.000Z'))
-    const commits: { href: string | null; badge: boolean }[] = []
+    const commits: { href: string | null; cta: boolean }[] = []
 
     function ObserveCommit({ value }: { value: FestivalActivity }) {
       useLayoutEffect(() => {
+        const link = document.querySelector('article > a')
         commits.push({
-          href:
-            document.querySelector('details a')?.getAttribute('href') ?? null,
-          badge: Boolean(document.querySelector('article > span'))
+          href: link?.getAttribute('href') ?? null,
+          cta: Boolean(link)
         })
       }, [value])
       return <ActivityItem activity={value} />
@@ -136,17 +119,15 @@ describe('ActivityItem', () => {
 
     const { rerender } = render(<ObserveCommit value={activity} />)
     expect(
-      screen
-        .getByRole('link', { hidden: true, name: 'Inscríbete Aquí' })
-        .getAttribute('href')
+      screen.getByRole('link', { name: 'Inscríbete' }).getAttribute('href')
     ).toBe('https://example.org/signup')
     const malicious = {
       ...activity,
       registration: { ...activity.registration!, url: 'javascript:alert(1)' }
     }
     rerender(<ObserveCommit value={malicious} />)
-    expect(commits.at(-1)).toEqual({ href: null, badge: false })
-    expect(document.querySelector('details a')).toBeNull()
+    expect(commits.at(-1)).toEqual({ href: null, cta: false })
+    expect(document.querySelector('article > a')).toBeNull()
 
     const replacement = {
       ...activity,
@@ -156,8 +137,8 @@ describe('ActivityItem', () => {
       }
     }
     rerender(<ObserveCommit value={replacement} />)
-    expect(commits.at(-1)).toEqual({ href: null, badge: false })
-    expect(document.querySelector('details a')?.getAttribute('href')).toBe(
+    expect(commits.at(-1)).toEqual({ href: null, cta: false })
+    expect(document.querySelector('article > a')?.getAttribute('href')).toBe(
       'https://example.org/new'
     )
 
@@ -166,49 +147,44 @@ describe('ActivityItem', () => {
       registration: { ...activity.registration!, end_at: 'invalid' }
     }
     rerender(<ObserveCommit value={invalidWindow} />)
-    expect(commits.at(-1)).toEqual({ href: null, badge: false })
-    expect(document.querySelector('details a')).toBeNull()
+    expect(commits.at(-1)).toEqual({ href: null, cta: false })
+    expect(document.querySelector('article > a')).toBeNull()
   })
 
-  test('reconciles both leaves at start, inclusive end, post-end and focus without a request', () => {
+  test('reconciles the CTA at start, inclusive end, post-end and focus without a request', () => {
     jest.useFakeTimers()
     jest.setSystemTime(new Date('2026-09-05T16:29:59.999Z'))
     const fetchSpy = jest.spyOn(globalThis, 'fetch')
     try {
       const { container } = render(<ActivityItem activity={activity} />)
-      const link = () => container.querySelector('details a')
+      const link = () => container.querySelector('article > a')
       expect(link()).toBeNull()
       act(() => jest.advanceTimersByTime(1))
-      expect(link()?.textContent).toBe('Inscríbete Aquí')
-      expect(screen.getByText('Inscríbete').tagName).toBe('SPAN')
+      expect(link()?.textContent).toBe('Inscríbete')
       jest.setSystemTime(new Date('2026-09-05T17:30:00.000Z'))
       act(() => window.dispatchEvent(new window.Event('focus')))
       expect(link()?.getAttribute('href')).toBe('https://example.org/signup')
       act(() => jest.advanceTimersByTime(1))
       expect(link()).toBeNull()
-      expect(screen.queryByText('Inscríbete')).toBeNull()
       expect(fetchSpy).not.toHaveBeenCalled()
     } finally {
       fetchSpy.mockRestore()
     }
   })
 
-  test('shows the badge on a minimal non-music card but never on a music item', () => {
+  test('shows the CTA on a minimal non-music card but never on a music item', () => {
     jest.useFakeTimers()
     jest.setSystemTime(new Date('2026-09-05T17:30:00.000Z'))
     const { container } = render(
       <ActivityItem activity={{ ...activity, descripcion: null }} />
     )
     expect(container.querySelector('details')).toBeNull()
-    expect(screen.getByText('Inscríbete').tagName).toBe('SPAN')
-    expect(
-      screen.queryByRole('link', { hidden: true, name: 'Inscríbete Aquí' })
-    ).toBeNull()
-    render(<ActivityItem activity={{ ...activity, tipo: 'musica' }} />)
-    expect(screen.getAllByText('Inscríbete')).toHaveLength(1)
-    expect(
-      screen.queryByRole('link', { hidden: true, name: 'Inscríbete Aquí' })
-    ).toBeNull()
+    expect(screen.getByRole('link', { name: 'Inscríbete' })).toBeDefined()
+
+    const music = render(
+      <ActivityItem activity={{ ...activity, tipo: 'musica' }} />
+    )
+    expect(music.container.querySelector('article > a')).toBeNull()
   })
 
   test('renders title and participant, expands to show details', () => {

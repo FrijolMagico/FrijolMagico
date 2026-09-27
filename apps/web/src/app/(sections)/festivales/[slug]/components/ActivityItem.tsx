@@ -1,10 +1,7 @@
 import { ChevronDown, Clock, MapPin } from 'lucide-react'
 import { formatSantiagoDateTime } from '@frijolmagico/utils/santiago-date-format'
 
-import {
-  ActivityRegistrationBadge,
-  ActivityRegistrationCta
-} from './activity-registration-affordance'
+import { ActivityRegistrationCta } from './activity-registration-affordance'
 
 import type { FestivalActivity } from '../../types/festival'
 
@@ -32,7 +29,7 @@ export const ActivityItem = ({ activity }: ActivityItemProps) => {
     <article className='bg-palette-background border-palette-primary group relative max-w-xs min-w-[16rem] rounded-lg border'>
       <div className='bg-palette-primary absolute -z-10 size-full translate-x-1.5 translate-y-1.5 rounded-lg duration-300 group-hover:translate-0' />
       {activity.tipo !== 'musica' && activity.registration && (
-        <ActivityRegistrationBadge registration={activity.registration} />
+        <ActivityRegistrationCta registration={activity.registration} />
       )}
 
       {details ? (
@@ -52,6 +49,7 @@ export const ActivityItem = ({ activity }: ActivityItemProps) => {
                   {activity.titulo}
                 </h3>
               )}
+
               {activity.registration && (
                 <span className='text-palette-foreground/50 mt-1 inline-block text-sm leading-none'>
                   Inscripciones abiertas hasta el{' '}
@@ -60,7 +58,6 @@ export const ActivityItem = ({ activity }: ActivityItemProps) => {
                   </strong>
                 </span>
               )}
-
             </div>
 
             <ChevronDown
@@ -93,9 +90,6 @@ export const ActivityItem = ({ activity }: ActivityItemProps) => {
               <p className='text-palette-foreground/50 mt-1 text-xs'>
                 Duración: {activity.duracion_minutos} min
               </p>
-            )}
-            {activity.tipo !== 'musica' && activity.registration && (
-              <ActivityRegistrationCta registration={activity.registration} />
             )}
           </div>
         </details>

@@ -14,7 +14,7 @@ The implementation must preserve these approved contracts:
 - The unique foreign key on `participation_activity_id` is the lookup and join index; no indexes are added for `url`, `start_at`, or `end_at`.
 - Admin-entered local values are interpreted in `America/Santiago`; persisted boundaries are canonical UTC instants.
 - Public time transitions use only serialized server data and local browser JavaScript.
-- Registration UI is absent from the initial server output; the accepted small hydration delay remains.
+- The actionable registration link is absent from the initial server output; the accepted small hydration delay remains. The informational Chilean-local registration deadline is present in the server-rendered activity summary.
 - No cron, queue, polling, TTL, worker, time-based cache invalidation, or scheduling infrastructure is introduced.
 
 Catalog and artist surfaces remain outside this design.
@@ -34,7 +34,7 @@ End-to-end create/update flow:
 
 End-to-end public flow:
 
-`activity_registration LEFT JOIN -> JSON registration DTO -> FestivalActivity -> server-rendered ActivityItem with hidden client leaves -> hydration-time evaluation -> boundary/lifecycle reconciliation`
+`activity_registration LEFT JOIN -> JSON registration DTO -> FestivalActivity -> server-rendered ActivityItem with informational deadline and hidden client link -> hydration-time evaluation -> boundary/lifecycle reconciliation`
 
 ## 3. Database design
 
@@ -232,16 +232,9 @@ Update repository fixtures/mocks and mapper tests to carry the field unchanged. 
 
 ### 8.1 Component boundary
 
-Keep `ActivityItem` server-first. Add a small client-only registration affordance component/hook used in two leaf placements:
+Keep `ActivityItem` server-first. For configured registrations, render an informational deadline in the activity `<summary>` in Chilean local date/time; this text is present in initial server HTML and is not gated by the active window. The UTC boundary remains unchanged in the DTO. The current summary deadline is displayed on cards with native `<details>`; minimal cards without a summary do not gain one.
 
-- badge variant at the article's top-right;
-- CTA variant at the bottom of the existing expanded-content `<div>`.
-
-Each leaf initializes `active` to `false`. Its server render and first hydration render therefore return `null`, guaranteeing that neither label appears in initial HTML. The effect computes visibility only after hydration. Using leaf clients avoids converting the whole activity card or native `<details>` structure into a client component.
-
-The two leaves intentionally evaluate the same immutable registration input independently. This small duplication preserves correct DOM placement and avoids lifting the entire card into a client boundary.
-
-The badge is rendered for active registrations even when `<details>` is collapsed or when the card has no expanded-content region. The CTA leaf is instantiated only inside the expanded-content region, so minimal cards have no CTA and the link is never placed in `<summary>`.
+A single small client-only CTA leaf is placed at the article's top-right, outside native `<details>`. It initializes inactive, so its server render and first hydration render contain no actionable link; the client evaluates the window after hydration. The link remains accessible while details are collapsed and on minimal non-music cards. The CTA is not placed inside `<summary>` or expanded content. Music remains excluded from the registration affordance.
 
 ### 8.2 Active-state algorithm
 
@@ -268,21 +261,21 @@ This repairs state after background throttling, sleep, or suspended tabs. Cleanu
 
 No fetch, Server Action, route request, database request, interval, or polling loop is used.
 
-### 8.3 Web CTA and badge treatment
+### 8.3 Web CTA treatment and reusable Badge history
 
-The web `Button` in `apps/web/src/components/ui/button.tsx` renders a native button only (no `asChild`); it must not wrap an anchor or be used for navigation. `LinkBtn` is a text-link treatment, the top-bar CTA is a styled Next `Link` in `TopBarInfoClient.tsx`, and `FestivalTimelineCard` uses a separate offset-border Next `Link`. The admin Badge is app-local; `NewBadget` hardcodes `Nuevo!`. None is a reusable registration badge.
+The web `Button` in `apps/web/src/components/ui/button.tsx` renders a native button only (no `asChild`); it must not wrap an anchor or be used for navigation. `LinkBtn` remains a text-link treatment. Before WU6A, the top-bar CTA and `FestivalTimelineCard` each styled a Next `Link` separately; WU6A extracted their visual variants into the shared `LinkCta`. The admin Badge remains app-local; the former `NewBadget` hardcoded `Nuevo!`.
 
 Extract a narrow, reusable web `LinkCta` anchor primitive with visual variants from the existing top-bar solid CTA and timeline offset-border CTA; migrate those two call sites to the matching variants without redesigning their placement or labels. Reuse the offset-border variant for registration, with the same visual button treatment on the anchor itself, never nested inside a button. Leave `LinkBtn` for text links and `Button` for actions. Each variant must provide a clearly visible `focus-visible` indicator and readable foreground/background contrast in default, hover, and focus states; verify these in component tests and visual review.
 
-While active, the registration CTA is a semantic anchor with:
+While active, the top-right registration CTA is a semantic anchor with:
 
-- exact visible and accessible text `Inscríbete Aquí`;
+- exact visible and accessible text `Inscríbete`;
 - `href` set to the server-validated HTTPS URL;
 - `target="_blank"`;
 - `rel="noopener noreferrer"`;
 - the shared web link-CTA focus-visible treatment.
 
-Replace the currently unused `apps/web/src/app/(home)/components/NewBadget.tsx` with a generic shared web `Badge` at `apps/web/src/components/badge.tsx`. Its typed `new` variant preserves the original rounded, outlined, tilted presentation (including optional color/background/outline customization), but defaults to readable primary text instead of the low-contrast legacy secondary on background; its `registration` variant supplies the brand-aligned treatment for future WU6. Neither `Nuevo!` nor `Inscríbete` is hardcoded in the primitive: callers pass children, e.g. `<Badge variant='new'>Nuevo!</Badge>`. Render as non-interactive text (`span`, no role/button/tab stop); WU6 passes `Inscríbete` as content. No home call site is added in WU6A. The Badge is not a substitute for the CTA when expanded content exists. Leave the existing web link CTA intent and variants unchanged.
+WU6A replaced the unused `apps/web/src/app/(home)/components/NewBadget.tsx` with a generic shared web `Badge` at `apps/web/src/components/badge.tsx`. Its typed `new` variant preserves the rounded, outlined, tilted presentation (including optional color/background/outline customization), with readable primary text; its `registration` variant remains available as a reusable treatment but is not part of the definitive activity-card registration UI. Neither `Nuevo!` nor `Inscríbete` is hardcoded in the primitive: callers pass children. It renders as non-interactive text (`span`, no role/button/tab stop). No home call site was added in WU6A. Leave existing web link CTA intent and variants unchanged.
 
 ## 9. Error and consistency behavior
 
@@ -324,11 +317,11 @@ Replace the currently unused `apps/web/src/app/(home)/components/NewBadget.tsx` 
 - `.../[slug]/adapters/queries/festivalDetailQuery.ts` — left join and nested registration JSON.
 - `.../festivales/types/festival.ts` — public registration DTO.
 - `.../[slug]/adapters/mappers/festivalDetailMapper.ts`, mocks, and repository tests — propagation/regression updates.
-- `.../[slug]/components/ActivityItem.tsx` — two leaf placements.
+- `.../[slug]/components/ActivityItem.tsx` — server-rendered Chilean-local summary deadline and top-right CTA leaf outside details.
 - `apps/web/src/components/link-cta.tsx` — reusable semantic-link CTA variants and focus-visible/contrast treatment.
 - `apps/web/src/components/badge.tsx` — generic non-interactive web Badge with typed `new` and `registration` variants; remove the unused `.../(home)/components/NewBadget.tsx`.
 - `apps/web/src/components/top-bar-info/TopBarInfoClient.tsx` and `.../festivales/components/FestivalTimelineCard.tsx` — reuse matching CTA variants without changing labels or placement.
-- `.../[slug]/components/activity-registration-affordance.tsx` — client-only lifecycle behavior using the web CTA/Badge primitives.
+- `.../[slug]/components/activity-registration-affordance.tsx` — client-only lifecycle behavior using the shared web link CTA.
 - Adjacent query, mapper, repository, DTO, activity-item, activity-list, link-CTA, and Badge tests.
 
 `packages/cache-tags` requires no new constant because the public detail already declares sufficient broad tags.
@@ -394,7 +387,7 @@ Verify:
 
 Separate pure time calculation from React lifecycle wiring. Use fake clocks/timers and explicit event dispatch to verify:
 
-- server-rendered HTML contains neither approved label;
+- server-rendered HTML contains the Chilean-local informational deadline for configured summary cards, but not the actionable `Inscríbete` link or a raw UTC deadline;
 - first hydrated effect reveals an active registration;
 - exact start and exact end are active;
 - before-start and after-end are inactive;
@@ -402,11 +395,11 @@ Separate pure time calculation from React lifecycle wiring. Use fake clocks/time
 - early/throttled callbacks recompute safely;
 - focus and visibility changes reconcile state;
 - cleanup removes listeners and timers;
-- collapsed cards retain the badge;
-- CTA is at the bottom of expanded content and absent from summary/minimal cards;
+- collapsed and minimal non-music cards retain the top-right link while active;
+- the link is outside details and summary, with the deadline inside the summary when details exist;
 - link label, target, rel, semantic anchor (no nested button), and keyboard focus semantics;
 - reusable CTA variants preserve top-bar/timeline labels and placement with visible focus and readable contrast;
-- reusable Badge has non-interactive semantics, exact registration label, and readable contrast;
+- reusable Badge retains its independently tested non-interactive semantics and readable contrast; the activity registration UI does not use it;
 - malformed timestamps fail closed.
 
 ## 12. Rollout and rollback

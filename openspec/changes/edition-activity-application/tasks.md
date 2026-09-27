@@ -148,13 +148,13 @@ Chain strategy: none (stacked to a dedicated feature branch)
 **Expected files/discovery targets:**
 - `apps/web/src/app/**/festivales/**/[slug]/components/ActivityItem.tsx`
 - `apps/web/src/app/**/festivales/**/[slug]/components/activity-registration-affordance.tsx`
-- `apps/web/src/components/link-cta.tsx` and `apps/web/src/components/badge.tsx` (reuse)
+- `apps/web/src/components/link-cta.tsx` (reuse); `apps/web/src/components/badge.tsx` (WU6A primitive retained, not used in the definitive activity CTA)
 - adjacent ActivityItem/ActivityList/component tests
 
-- [x] RED: Add pure helper and component tests for hidden server/first render, inclusive start/end, inactive/malformed values, boundary timers, timeout re-evaluation, focus/visibility reconciliation, cleanup, collapsed `Inscríbete` Badge, expanded-only `Inscríbete Aquí` anchor CTA, music exclusion, exact labels, target/rel, no button nesting, readable contrast, and focus-visible semantics. <!-- sdd-owner: implementation -->
-- [x] GREEN: Implement client-only leaf affordances with `active=false` initialization, boundary scheduling without polling, lifecycle listeners, safe anchor attributes through the shared link-CTA, reusable non-interactive web Badge at top-right, and CTA at the bottom of expanded content. <!-- sdd-owner: implementation -->
-- [x] TRIANGULATE: Run web tests with fake clocks/timers and explicit focus/visibility events; verify server-rendered markup contains neither label and no CTA appears in summary/minimal cards. <!-- sdd-owner: implementation -->
-- [x] REFACTOR: Keep `ActivityItem` server-first, isolate timing logic from markup, and preserve existing card/details semantics and music rendering. <!-- sdd-owner: implementation -->
+- [x] RED: Add pure helper and component tests for the hydration-only actionable link, inclusive start/end, inactive/malformed values, boundary timers, timeout re-evaluation, focus/visibility reconciliation, cleanup, music exclusion, safe external-link attributes, and fail-closed URL replacement. The definitive UI also requires a Chilean-local informational deadline in the server-rendered activity summary and a top-right `Inscríbete` link outside details on active collapsed and minimal non-music cards. Historical WU6 RED evidence concerns the superseded badge/expanded CTA; the current UI assertions are present in the working tree, but no new RED run is claimed for this reconciliation. <!-- sdd-owner: implementation -->
+- [x] GREEN: Keep `ActivityItem` server-first with the configured deadline rendered in the summary; retain client-only window evaluation, boundary scheduling without polling, lifecycle listeners, and a safe `Inscríbete` anchor at the article's top-right outside details. The independent WU6A Badge primitive remains available but is not used by the activity card. <!-- sdd-owner: implementation -->
+- [x] TRIANGULATE: Preserve recorded web fake-clock/timer and focus/visibility checks for the earlier implementation. Current working-tree assertions cover Chilean-local server-rendered deadline text, absence of the actionable link in SSR, top-right collapsed/minimal link placement, music exclusion, and safe link attributes; do not attribute a new test run to this docs-only reconciliation. <!-- sdd-owner: implementation -->
+- [x] REFACTOR: Keep `ActivityItem` server-first, isolate timing logic from markup, and preserve existing card/details semantics and music rendering while presenting the deadline independently of client link activation. <!-- sdd-owner: implementation -->
 
 **Verification commands:** `bun run test --filter=@frijolmagico/web`, `bun run type-check`, `bun run lint`.
 

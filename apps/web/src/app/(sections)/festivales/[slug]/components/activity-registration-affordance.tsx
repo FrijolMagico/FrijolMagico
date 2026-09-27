@@ -1,6 +1,5 @@
 'use client'
 
-import { Badge } from '@/components/badge'
 import { LinkCta } from '@/components/link-cta'
 
 import { useActivityRegistration } from './use-activity-registration'
@@ -21,24 +20,9 @@ export function ActivityRegistrationCta({
       variant='offset'
       target='_blank'
       rel='noopener noreferrer'
-      className='mt-4 inline-block'
+      className='absolute -top-4 -right-4 z-20'
     >
-      Inscríbete Aquí
-    </LinkCta>
-  )
-}
-
-export function ActivityRegistrationBadge({
-  registration
-}: {
-  registration: ActivityRegistration
-}) {
-  const active = useActivityRegistration(registration)
-  if (!active) return null
-
-  return (
-    <Badge variant='registration' className='absolute -top-2 -right-2 z-20'>
       Inscríbete
-    </Badge>
+    </LinkCta>
   )
 }
