@@ -1,6 +1,11 @@
 import { describe, expect, test } from 'bun:test'
 
-import { composeAssetUrl, getAvatarUrl, toRawAssetPath } from './cdn'
+import {
+  composeAssetUrl,
+  getAvatarUrl,
+  getPosterUrl,
+  toRawAssetPath
+} from './cdn'
 
 describe('composeAssetUrl', () => {
   test('normalizes managed paths and encodes each path segment and version', () => {
@@ -36,6 +41,22 @@ describe('composeAssetUrl', () => {
   })
 })
 
+describe('getPosterUrl', () => {
+  test('resolves relative keys against the environment public CDN URL', () => {
+    const base = process.env.R2_PUBLIC_URL ?? 'https://cdn.frijolmagico.cl'
+    expect(getPosterUrl('/posters/edition.webp')).toBe(
+      `${base}/posters/edition.webp`
+    )
+  })
+
+  test('preserves absolute URLs and null', () => {
+    expect(getPosterUrl('https://legacy.example/poster.webp')).toBe(
+      'https://legacy.example/poster.webp'
+    )
+    expect(getPosterUrl(null)).toBeNull()
+  })
+})
+
 describe('toRawAssetPath', () => {
   test('reverts the public CDN URL back to the raw R2 key', () => {
     // Uses the same captured base as getAvatarUrl, so it stays correct
@@ -51,9 +72,9 @@ describe('toRawAssetPath', () => {
   })
 
   test('passes through foreign absolute URLs unchanged', () => {
-    expect(
-      toRawAssetPath('https://legacy.example/poster.webp?fit=cover')
-    ).toBe('https://legacy.example/poster.webp?fit=cover')
+    expect(toRawAssetPath('https://legacy.example/poster.webp?fit=cover')).toBe(
+      'https://legacy.example/poster.webp?fit=cover'
+    )
   })
 
   test('passes through placeholder paths unchanged', () => {

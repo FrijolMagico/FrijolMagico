@@ -1,10 +1,12 @@
 import { z } from 'zod'
+import { Temporal } from '@js-temporal/polyfill'
 import {
   createInsertSchema,
   createSelectSchema,
   createUpdateSchema
 } from 'drizzle-zod'
 import { participations } from '@frijolmagico/database/schema'
+import { parseChileLocalInstant } from '../_lib/activity-registration-local'
 import { editionParticipationEntitySchema } from './edition-participation.schema'
 import {
   PARTICIPANT_TYPE,
@@ -63,6 +65,103 @@ export const activityDetailUpdateSchema = createUpdateSchema(activityDetail)
 // UI FORM SCHEMAS — Derived from DB Insert Schemas, pure DB types
 // ============================================================================
 
+const registrationFields = [
+  'url',
+  'startDate',
+  'startTime',
+  'endDate',
+  'endTime'
+] as const
+
+const registrationInputSchema = z.object({
+  url: z.string().trim(),
+  startDate: z.string().trim(),
+  startTime: z.string().trim(),
+  endDate: z.string().trim(),
+  endTime: z.string().trim(),
+  // UI-only field: controls visibility/validation of registration section
+  registrationEnabled: z.boolean()
+})
+
+const validatedRegistrationSchema = registrationInputSchema.superRefine(
+  (value, context) => {
+    // If registration is disabled, no validation needed - transform will return null
+    if (!value.registrationEnabled) return
+
+    // registrationEnabled === true: all fields are required
+    const filled = registrationFields.filter((field) => value[field] !== '')
+    if (filled.length !== registrationFields.length) {
+      for (const field of registrationFields) {
+        if (!value[field])
+          context.addIssue({
+            code: 'custom',
+            path: [field],
+            message: 'Completa todos los campos de inscripción'
+          })
+      }
+      return
+    }
+    try {
+      const url = new URL(value.url)
+      if (
+        url.protocol !== 'https:' ||
+        !url.hostname ||
+        url.username ||
+        url.password
+      )
+        throw new Error()
+    } catch {
+      context.addIssue({
+        code: 'custom',
+        path: ['url'],
+        message: 'Ingresa una URL HTTPS válida'
+      })
+    }
+    try {
+      const start = parseChileLocalInstant(value.startDate, value.startTime)
+      const end = parseChileLocalInstant(value.endDate, value.endTime)
+      if (Temporal.Instant.compare(end, start) <= 0) {
+        context.addIssue({
+          code: 'custom',
+          path: ['endDate'],
+          message: 'El fin debe ser posterior al inicio'
+        })
+      }
+    } catch {
+      context.addIssue({
+        code: 'custom',
+        path: ['startDate'],
+        message: 'Fecha u hora inválida o ambigua en Chile'
+      })
+    }
+  }
+)
+
+export const activityRegistrationFormSchema =
+  validatedRegistrationSchema.transform((value) => {
+    // If registration is disabled, return null (no registration in DB)
+    if (!value.registrationEnabled) return null
+    // registrationEnabled === true: return registration object (validated as complete)
+    return value
+  })
+
+export function parseActivityRegistrationInput(
+  value: unknown,
+  effectiveTypeSlug: string
+) {
+  const registration =
+    value == null ? null : activityRegistrationFormSchema.parse(value)
+  if (registration !== null && effectiveTypeSlug === 'musica') {
+    throw new Error('No se permite inscripción para actividades de música')
+  }
+  return registration
+}
+
+export type ActivityRegistrationInput = Exclude<
+  z.infer<typeof activityRegistrationFormSchema>,
+  null
+>
+
 // Base object schema (no refine) — shared between form and dialog schemas
 // modoIngresoId is overridden to remove .default() so RHF input/output types match
 export const activityFormSchema = activityInsertSchema
@@ -77,7 +176,8 @@ export const activityFormSchema = activityInsertSchema
       participacionActividadId: true
     }),
     participantType: z.enum(Object.values(PARTICIPANT_TYPE)),
-    entity: editionParticipationEntitySchema
+    entity: editionParticipationEntitySchema,
+    registration: validatedRegistrationSchema.optional()
   })
 
 // ============================================================================

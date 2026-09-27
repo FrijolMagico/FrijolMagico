@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test'
+import { getPosterUrl } from '@frijolmagico/utils/cdn'
 
 import { mapFestivalDetail } from './festivalDetailMapper'
 
@@ -49,6 +50,35 @@ const baseRaw = {
 }
 
 describe('mapFestivalDetail', () => {
+  test('resolves a relative poster key to the public CDN URL', () => {
+    const key = 'festivales/poster.webp'
+    const result = mapFestivalDetail({
+      ...baseRaw,
+      poster_url: key
+    } as FestivalDetail)
+
+    expect(result.poster_url).toBe(getPosterUrl(key))
+  })
+
+  test('preserves an absolute HTTP poster URL', () => {
+    const url = 'https://example.org/poster.webp'
+    const result = mapFestivalDetail({
+      ...baseRaw,
+      poster_url: url
+    } as FestivalDetail)
+
+    expect(result.poster_url).toBe(url)
+  })
+
+  test('keeps a null poster URL', () => {
+    const result = mapFestivalDetail({
+      ...baseRaw,
+      poster_url: null
+    } as FestivalDetail)
+
+    expect(result.poster_url).toBeNull()
+  })
+
   test('maps known discipline slugs to labels', () => {
     const result = mapFestivalDetail(baseRaw as unknown as FestivalDetail)
 
@@ -71,6 +101,40 @@ describe('mapFestivalDetail', () => {
     const result = mapFestivalDetail(raw as unknown as FestivalDetail)
 
     expect(result.participantes[0].disciplina_slug).toBe('nueva-disciplina')
+  })
+
+  test('preserves configured registration even when its window is inactive', () => {
+    const registration = {
+      url: 'https://example.org/inscripcion',
+      start_at: '2020-01-01T00:00:00.000Z',
+      end_at: '2020-01-02T00:00:00.000Z'
+    }
+    const result = mapFestivalDetail({
+      ...baseRaw,
+      actividades: [{ ...baseRaw.actividades[0], registration }]
+    } as FestivalDetail)
+
+    expect(result.actividades[0].registration).toEqual(registration)
+  })
+
+  test('normalizes missing registration to null without changing music type', () => {
+    const result = mapFestivalDetail({
+      ...baseRaw,
+      actividades: [
+        { ...baseRaw.actividades[0], registration: null },
+        { ...baseRaw.actividades[0], tipo: 'musica' }
+      ]
+    } as FestivalDetail)
+
+    expect(
+      result.actividades.map(({ tipo, registration }) => ({
+        tipo,
+        registration
+      }))
+    ).toEqual([
+      { tipo: 'taller', registration: null },
+      { tipo: 'musica', registration: null }
+    ])
   })
 
   test('returns the same top-level fields', () => {

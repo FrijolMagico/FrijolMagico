@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 
 import { executeQueryMock } from '@/test-utils/mockDatabase'
 
@@ -10,6 +12,7 @@ mock.module('@/infra/config/dataSourceConfig', () => ({
   isMockMode: isMockModeMock
 }))
 
+import { ActivityList } from '../components/ActivityList'
 import { festivalDetailRepository } from './festivalDetailRepository'
 
 beforeEach(() => {
@@ -65,6 +68,52 @@ describe('festivalDetailRepository', () => {
     expect(result).not.toBeNull()
     expect(result?.slug).toBe('edicion-15-1')
     expect(result?.participantes[0].disciplina_slug).toBe('Ilustración')
+  })
+
+  test('serializes configured, absent, and music activities without time filtering', async () => {
+    const registration = {
+      url: 'https://example.org/inscripcion',
+      start_at: '2020-01-01T00:00:00.000Z',
+      end_at: '2020-01-02T00:00:00.000Z'
+    }
+    const activity = {
+      titulo: 'Taller',
+      descripcion: null,
+      duracion_minutos: null,
+      ubicacion: null,
+      hora_inicio: null,
+      tipo: 'taller',
+      fecha: null,
+      participante_pseudonimo: 'Tallerista'
+    }
+    const payload = JSON.parse(baseRawResult.resultado)
+    payload.actividades = [
+      { ...activity, registration },
+      { ...activity, titulo: 'Sin inscripción', registration: null },
+      {
+        ...activity,
+        titulo: 'Concierto reservado',
+        tipo: 'musica',
+        participante_pseudonimo: 'Músico',
+        registration: null
+      }
+    ]
+    executeQueryMock.mockResolvedValueOnce({
+      data: [{ resultado: JSON.stringify(payload) }],
+      error: null
+    })
+
+    const result = await festivalDetailRepository('edicion-15-1')
+
+    expect(result?.actividades.map(({ registration }) => registration)).toEqual(
+      [registration, null, null]
+    )
+    const html = renderToStaticMarkup(
+      createElement(ActivityList, { actividades: result?.actividades ?? [] })
+    )
+    expect(html).toContain('Músico')
+    expect(html).not.toContain('Concierto reservado')
+    expect(html).not.toContain('Inscríbete')
   })
 
   test('returns null when no rows match', async () => {

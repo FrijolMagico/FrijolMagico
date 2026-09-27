@@ -1,6 +1,6 @@
-import Link from 'next/link'
 import { ArrowRightIcon } from 'lucide-react'
 
+import { LinkCta } from '@/components/link-cta'
 import { cn } from '@/utils/cn'
 import { getDaysDisplay, getLocation } from '../utils/timelineUtils'
 
@@ -113,17 +113,13 @@ export const FestivalTimelineCard = ({
           />
 
           {/* Bottom link button */}
-          <Link
+          <LinkCta
             href={`/festivales/${festival.evento.edicion_slug}`}
-            className={cn('group/btn relative z-20')}
+            variant='offset'
           >
-            {/* Plain bg effect — same pattern as ArtistCard */}
-            <div className='bg-primary absolute -z-10 size-full translate-x-1.5 translate-y-1.5 rounded-lg transition-transform duration-300 group-hover/btn:translate-x-0 group-hover/btn:translate-y-0' />
-            <span className='border-primary bg-background text-primary group-hover/btn:bg-primary group-hover/btn:text-background relative flex items-center justify-center gap-2 rounded-lg border-2 px-4 py-1 font-semibold transition-colors duration-200'>
-              Ver más
-              <ArrowRightIcon className='size-4 transition-transform duration-200 group-hover/btn:-rotate-45' />
-            </span>
-          </Link>
+            Ver más
+            <ArrowRightIcon className='size-4 transition-transform duration-200 group-hover/btn:-rotate-45' />
+          </LinkCta>
         </div>
       </article>
 

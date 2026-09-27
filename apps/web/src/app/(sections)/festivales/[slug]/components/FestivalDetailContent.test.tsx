@@ -55,7 +55,8 @@ const baseDetail: FestivalDetail = {
       hora_inicio: '18:00',
       tipo: 'taller',
       fecha: '2025-10-03',
-      participante_pseudonimo: 'Artista Ejemplo'
+      participante_pseudonimo: 'Artista Ejemplo',
+      registration: null
     }
   ]
 }

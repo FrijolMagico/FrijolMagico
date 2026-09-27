@@ -1,4 +1,7 @@
 import { ChevronDown, Clock, MapPin } from 'lucide-react'
+import { formatSantiagoDateTime } from '@frijolmagico/utils/santiago-date-format'
+
+import { ActivityRegistrationCta } from './activity-registration-affordance'
 
 import type { FestivalActivity } from '../../types/festival'
 
@@ -25,6 +28,9 @@ export const ActivityItem = ({ activity }: ActivityItemProps) => {
   return (
     <article className='bg-palette-background border-palette-primary group relative max-w-xs min-w-[16rem] rounded-lg border'>
       <div className='bg-palette-primary absolute -z-10 size-full translate-x-1.5 translate-y-1.5 rounded-lg duration-300 group-hover:translate-0' />
+      {activity.tipo !== 'musica' && activity.registration && (
+        <ActivityRegistrationCta registration={activity.registration} />
+      )}
 
       {details ? (
         <details className='group/details'>
@@ -42,6 +48,15 @@ export const ActivityItem = ({ activity }: ActivityItemProps) => {
                 <h3 className='text-palette-foreground text-base leading-none font-semibold'>
                   {activity.titulo}
                 </h3>
+              )}
+
+              {activity.registration && (
+                <span className='text-palette-foreground/50 mt-1 inline-block text-sm leading-none'>
+                  Inscripciones abiertas hasta el{' '}
+                  <strong>
+                    {formatSantiagoDateTime(activity.registration.end_at)}hrs
+                  </strong>
+                </span>
               )}
             </div>
 

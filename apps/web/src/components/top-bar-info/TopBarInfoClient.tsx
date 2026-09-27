@@ -1,7 +1,8 @@
 'use client'
 
-import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
+
+import { LinkCta } from '@/components/link-cta'
 import { cn } from '@/utils/cn'
 import { useScrollHide } from '@/hooks/useScrollHide'
 
@@ -41,17 +42,9 @@ export const TopBarInfoClient = ({ data }: TopBarInfoClientProps) => {
         </h2>
       </div>
       {data.button.active && (
-        <Link
-          href={data.button.active ? (data.button.href ?? '#') : '#'}
-          className={cn(
-            'bg-accent background-size-[150%] rounded-lg bg-linear-to-r px-4 py-0.5 font-bold text-white transition-[background-position] duration-200 hover:bg-right',
-            data.button.active
-              ? 'cursor-pointer'
-              : 'cursor-not-allowed opacity-75'
-          )}
-        >
+        <LinkCta href={data.button.href ?? '#'} variant='solid'>
           {data.button.text}
-        </Link>
+        </LinkCta>
       )}
     </section>
   )

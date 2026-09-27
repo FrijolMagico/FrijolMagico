@@ -8,3 +8,5 @@ docs/
 
 .sisyphus/
 openspec/
+# Local Pi runtime state
+.atl/

@@ -1,0 +1,65 @@
+# OpenSpec project configuration for FrijolMagico
+project:
+  name: FrijolMagico
+  description: Turborepo monorepo for the Frijol Mágico web and admin applications.
+
+sdd:
+  artifact_store: openspec
+  strict_tdd: true
+  execution_mode: auto
+  delivery_strategy: ask-on-risk
+  review_budget_lines: 400
+  phase_rules:
+    - clarify before implementation
+    - preserve human approval gates for ambiguous scope, security, destructive, and publishing actions
+    - do not implement during requirements scoping
+    - record verification evidence for implementation phases
+
+testing:
+  runner: Bun test
+  monorepo_command: bun run test
+  scoped_commands:
+    admin: bun run test --filter=@frijolmagico/admin
+    web: bun run test --filter=@frijolmagico/web
+  app_commands:
+    admin: bun test
+    web: bun test --isolate
+  unit_test_locations:
+    - apps/admin/tests/unit
+    - apps/web/src/**/*.test.ts
+    - apps/web/src/**/*.test.tsx
+  e2e: No Playwright configuration detected during initialization.
+  quality_commands:
+    - bun run type-check
+    - bun run lint
+    - bun run test
+
+conventions:
+  package_manager: Bun 1.2.2
+  workspace: Turborepo + Bun workspaces (apps/*, packages/*)
+  language: TypeScript strict
+  framework: Next.js 16 App Router
+  ui_labels: Spanish
+  code_and_artifacts: English
+  components: Named exports; page.tsx and layout.tsx may default export
+  formatting: Prettier, no semicolons, single quotes, 2-space indentation, no trailing commas
+  forbidden: [barrel files, any, as any, ts-ignore, ts-expect-error, disabled strict mode]
+
+areas:
+  admin: apps/admin — protected configuration, Server Actions, Drizzle-Zod, Bun unit tests
+  web: apps/web — public festival pages, server-first data flow, Bun unit/component tests
+  database: packages/database — Drizzle ORM + Turso/libSQL schema and migrations
+
+initial_scope:
+  intent: Define edition activity application links and date ranges, configured in admin and conditionally rendered on web.
+  explicit_exclusion: Music activities are excluded.
+  current_phase: Work Unit 3 complete (15/40 tasks); Work Unit 4 is next. No Work Unit 4 implementation in this maintenance task.
+  likely_areas:
+    - apps/admin/src/app/(core)/eventos/ediciones
+    - apps/admin/src/app/(core)/eventos/participaciones
+    - apps/web/src/app/(sections)/festivales
+    - packages/database/src/db/schema/events.ts
+notes:
+  codegraph: CodeGraph was attempted during initialization but reported the repository as unindexed; filesystem inspection was used as fallback.
+  existing_openspec: No root openspec/config.yaml existed before initialization.
+  skills: Resolve available skill paths in the current environment; do not assume the initialization device's ignored local registry or external skills are present.

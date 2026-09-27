@@ -1,3 +1,4 @@
+import { getPosterUrl } from '@frijolmagico/utils/cdn'
 import type { Edition } from '../_schemas/edition.schema'
 import type { EditionDay } from '../_schemas/edition-day.schema'
 import type { Place } from '../_schemas/place.schema'
@@ -45,6 +46,7 @@ export function composeEditions(
 
     return {
       ...edition,
+      posterDisplayUrl: getPosterUrl(edition.posterUrl),
       eventoNombre: eventosById.get(edition.eventoId)?.nombre ?? '',
       dateRange: formatEdicionFechas(editionDays),
       firstDate: firstDay?.fecha ?? '',

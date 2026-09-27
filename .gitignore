@@ -68,7 +68,6 @@ packages/database/data/*.sql
 .turbo
 .sisyphus
 */**/.sisyphus
-openspec/
 */**/openspec
 db-workspace
 

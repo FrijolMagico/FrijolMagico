@@ -105,6 +105,7 @@ export function EditionRow({ edition, days, places, events }: EditionRowProps) {
     numeroEdicion: edition.numeroEdicion,
     nombre: edition.nombre,
     posterUrl: edition.posterUrl,
+    posterDisplayUrl: edition.posterDisplayUrl,
     days: sortedDays.map((day) => ({
       tempId: crypto.randomUUID(),
       existingId: day.id,
@@ -131,7 +132,7 @@ export function EditionRow({ edition, days, places, events }: EditionRowProps) {
             render={
               <div onClick={() => setIsPosterPreviewOpen(true)}>
                 <PosterThumbnail
-                  posterUrl={edition.posterUrl}
+                  posterUrl={edition.posterDisplayUrl}
                   alt={edition.nombre || `Edition ${edition.numeroEdicion}`}
                 />
               </div>
@@ -143,7 +144,7 @@ export function EditionRow({ edition, days, places, events }: EditionRowProps) {
         </Tooltip>
         <PosterPreview
           isOpen={isPosterPreviewOpen}
-          posterUrl={edition.posterUrl}
+          posterUrl={edition.posterDisplayUrl}
           alt={edition.nombre || `Edition ${edition.numeroEdicion}`}
           onClose={() => setIsPosterPreviewOpen(false)}
           onUpload={handlePosterUpload}

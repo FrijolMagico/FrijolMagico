@@ -3,6 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm, useFormState, useWatch } from 'react-hook-form'
 import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 import { Input } from '@/shared/components/ui/input'
 import {
   Select,
@@ -12,6 +13,7 @@ import {
   SelectValue
 } from '@/shared/components/ui/select'
 import { Textarea } from '@/shared/components/ui/textarea'
+import { TimePickerField } from '@/shared/components/time-picker-field'
 import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
 import { useParticipationsStore } from '../_store/use-participations-store'
 import { createActivityAction } from '../_actions/activities/create-activity.action'
@@ -46,6 +48,12 @@ import {
 } from '@/shared/components/ui/field'
 import { ControllerCombobox } from '@/shared/components/controller-combobox'
 import { Separator } from '@/shared/components/ui/separator'
+import { Switch } from '@/shared/components/ui/switch'
+import {
+  ActivityRegistrationFields,
+  EMPTY_REGISTRATION,
+  clearRegistration
+} from './activity-registration-fields'
 
 interface CreateActivityDialogProps {
   edition: {
@@ -64,6 +72,7 @@ export function CreateActivityDialog({
   agrupaciones,
   bandas
 }: CreateActivityDialogProps) {
+  const router = useRouter()
   const isCreateActivityDialogOpen = useParticipationsStore(
     (state) => state.isCreateActivityDialogOpen
   )
@@ -80,6 +89,7 @@ export function CreateActivityDialog({
       notas: '',
       estado: PARTICIPATION_STATUS.SELECCIONADO,
       puntaje: null,
+      registration: EMPTY_REGISTRATION,
       detail: {
         titulo: '',
         descripcion: '',
@@ -106,6 +116,18 @@ export function CreateActivityDialog({
     name: 'participantType'
   })
 
+  const selectedType = useWatch({
+    control: methods.control,
+    name: 'tipoActividadId'
+  })
+  const isMusic =
+    tipo === PARTICIPANT_TYPE.BANDA || selectedType === ACTIVITY_TYPES.MUSICA
+
+  const registrationEnabled = useWatch({
+    control: methods.control,
+    name: 'registration.registrationEnabled'
+  })
+
   const onSubmit = async (values: ActivityFormInput) => {
     const result = await createActivityAction({
       participation: {
@@ -124,6 +146,7 @@ export function CreateActivityDialog({
         notas: values.notas,
         estado: values.estado
       },
+      registration: values.registration,
       detail: {
         titulo: values.detail.titulo,
         descripcion: values.detail.descripcion,
@@ -146,6 +169,7 @@ export function CreateActivityDialog({
     toast.success('Actividad agregada correctamente')
     methods.reset()
     toggleCreateActivityDialogOpen(false)
+    router.refresh()
   }
 
   const comboboxArtists = artistas
@@ -171,7 +195,7 @@ export function CreateActivityDialog({
       onOpenChange={toggleCreateActivityDialogOpen}
       title={`Agregar Actividad: ${edition.eventName} ${edition.editionNumber}`}
       description='Añade un participante a una actividad específica en esta edición.'
-      className='sm:max-w-3xl'
+      className='md:max-w-6xl md:min-w-3xl'
       triggerLabel='Agregar Actividad'
       submit={{
         type: 'submit',
@@ -199,6 +223,8 @@ export function CreateActivityDialog({
                     const nextTipo = value as ParticipantType
 
                     field.onChange(nextTipo)
+                    if (nextTipo === PARTICIPANT_TYPE.BANDA)
+                      clearRegistration(methods)
 
                     if (nextTipo === PARTICIPANT_TYPE.ARTISTA) {
                       methods.setValue('entity.agrupacionId', null, {
@@ -299,7 +325,11 @@ export function CreateActivityDialog({
                       ? ACTIVITY_TYPES.MUSICA
                       : field.value
                   }
-                  onValueChange={(val) => field.onChange(Number(val))}
+                  onValueChange={(val) => {
+                    field.onChange(Number(val))
+                    if (Number(val) === ACTIVITY_TYPES.MUSICA)
+                      clearRegistration(methods)
+                  }}
                   disabled={isSubmitting || tipo === PARTICIPANT_TYPE.BANDA}
                 >
                   <SelectTrigger>
@@ -436,14 +466,20 @@ export function CreateActivityDialog({
           </FieldGroup>
 
           <FieldGroup>
-            <Field>
-              <FieldLabel>Hora Inicio</FieldLabel>
-              <Input
-                {...methods.register('detail.horaInicio')}
-                type='time'
-                disabled={isSubmitting}
-              />
-            </Field>
+            <Controller
+              name='detail.horaInicio'
+              control={methods.control}
+              render={({ field }) => (
+                <TimePickerField
+                  id='detail-horaInicio'
+                  label='Hora Inicio'
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  error={errors.detail?.horaInicio?.message}
+                  disabled={isSubmitting}
+                />
+              )}
+            />
             <Field>
               <FieldLabel>Ubicación</FieldLabel>
               <Input
@@ -452,8 +488,42 @@ export function CreateActivityDialog({
                 disabled={isSubmitting}
               />
             </Field>
+
+            {!isMusic && (
+              <Field>
+                <FieldLabel>Inscripción</FieldLabel>
+                <div className='flex items-center gap-2'>
+                  <Switch
+                    id='registration-enabled'
+                    checked={registrationEnabled}
+                    onCheckedChange={(checked) => {
+                      methods.setValue('registration.registrationEnabled', checked, {
+                        shouldDirty: true,
+                        shouldValidate: true
+                      })
+                      if (!checked) {
+                        clearRegistration(methods)
+                      }
+                    }}
+                    disabled={isSubmitting}
+                    aria-label='Habilitar inscripción'
+                  />
+                  <span className='text-sm'>{registrationEnabled ? 'Activado' : 'Desactivado'}</span>
+                </div>
+              </Field>
+            )}
           </FieldGroup>
         </FieldGroup>
+
+        {registrationEnabled && (
+          <>
+            <Separator orientation='vertical' />
+            <ActivityRegistrationFields
+              methods={methods}
+              disabled={isSubmitting}
+            />
+          </>
+        )}
       </form>
     </EntityFormDialog>
   )

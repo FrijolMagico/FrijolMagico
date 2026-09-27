@@ -1,7 +1,8 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Controller, useForm, useFormState } from 'react-hook-form'
+import { Controller, useForm, useFormState, useWatch } from 'react-hook-form'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import {
   Field,
@@ -11,6 +12,7 @@ import {
 } from '@/shared/components/ui/field'
 import { Input } from '@/shared/components/ui/input'
 import { Textarea } from '@/shared/components/ui/textarea'
+import { TimePickerField } from '@/shared/components/time-picker-field'
 import {
   type ActivityFormInput,
   activityFormSchema
@@ -19,6 +21,7 @@ import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-di
 import { useParticipationsStore } from '../_store/use-participations-store'
 import {
   ACTIVITY_IDS,
+  ACTIVITY_TYPES,
   ACTIVITY_TYPE_LABELS,
   ActivityId,
   ENTRY_MODE_IDS,
@@ -28,11 +31,7 @@ import {
   PARTICIPATION_STATUS_LABELS,
   PARTICIPATION_STATUSES
 } from '../_constants/participations.constants'
-import { updateParticipationAction } from '../_actions/participations/update-participation.action'
-import { updateActivityAction } from '../_actions/activities/update-activity.action'
-import { createActivityDetailAction } from '../_actions/activities/create-activity-detail.action'
-import { updateActivityDetailAction } from '../_actions/activities/update-activity-detail.action'
-import { executeUpdatePlan } from '../_lib/execute-update-plan'
+import { updateActivityAggregateAction } from '../_actions/activities/update-activity-aggregate.action'
 import {
   Select,
   SelectContent,
@@ -42,6 +41,12 @@ import {
 } from '@/shared/components/ui/select'
 import { Separator } from '@/shared/components/ui/separator'
 import { Button } from '@/shared/components/ui/button'
+import { Switch } from '@/shared/components/ui/switch'
+import {
+  ActivityRegistrationFields,
+  EMPTY_REGISTRATION,
+  clearRegistration
+} from './activity-registration-fields'
 
 interface UpdateActivityDialogProps {
   edition: {
@@ -52,6 +57,7 @@ interface UpdateActivityDialogProps {
 }
 
 export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
+  const router = useRouter()
   const selectedActivity = useParticipationsStore((s) => s.selectedActivity)
   const isUpdateActivityDialogOpen = useParticipationsStore(
     (s) => s.isUpdateActivityDialogOpen
@@ -63,6 +69,9 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
 
   const { entity, activity } = selectedActivity ?? {}
 
+  // Determine if registration exists in DB to initialize toggle state
+  const hasExistingRegistration = activity?.registration !== null
+
   const methods = useForm<ActivityFormInput>({
     resolver: zodResolver(activityFormSchema),
     values: {
@@ -72,6 +81,10 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
       notas: activity?.notas ?? '',
       estado: activity?.estado ?? PARTICIPATION_STATUS.COMPLETADO,
       puntaje: activity?.puntaje ?? null,
+      registration: {
+        ...(activity?.registration ?? EMPTY_REGISTRATION),
+        registrationEnabled: hasExistingRegistration
+      },
       entity: {
         artistaId: entity?.artist?.id ?? null,
         agrupacionId: entity?.collective?.id ?? null,
@@ -93,141 +106,65 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
     control: methods.control
   })
 
+  const selectedType = useWatch({
+    control: methods.control,
+    name: 'tipoActividadId'
+  })
+  const isBand = Boolean(entity?.band)
+  const isMusic = isBand || selectedType === ACTIVITY_TYPES.MUSICA
+
+  const registrationEnabled = useWatch({
+    control: methods.control,
+    name: 'registration.registrationEnabled'
+  })
+
   if (!entity || !activity) return null
 
   const onSubmit = async (values: ActivityFormInput) => {
-    const result = await executeUpdatePlan([
-      {
-        label: 'la participación',
-        initial: {
-          id: activity.participacionId,
-          edicionId: edition.id,
-          artistaId: entity.artist?.id ?? null,
-          agrupacionId: entity.collective?.id ?? null,
-          bandaId: entity.band?.id ?? null
-        },
-        current: {
-          id: activity.participacionId,
-          edicionId: edition.id,
-          artistaId: values.entity.artistaId,
-          agrupacionId: values.entity.agrupacionId,
-          bandaId: values.entity.bandaId
-        },
-        execute: () =>
-          updateParticipationAction({
-            id: activity.participacionId,
-            edicionId: edition.id,
-            artistaId: values.entity.artistaId,
-            agrupacionId: values.entity.agrupacionId,
-            bandaId: values.entity.bandaId
-          })
+    const result = await updateActivityAggregateAction({
+      editionId: edition.id,
+      participation: {
+        id: activity.participacionId,
+        edicionId: edition.id,
+        artistaId: values.entity.artistaId,
+        agrupacionId: values.entity.agrupacionId,
+        bandaId: values.entity.bandaId
       },
-      {
-        label: 'la actividad',
-        initial: {
-          id: activity.id,
-          participacionId: activity.participacionId,
-          tipoActividadId: activity.tipoActividadId,
-          modoIngresoId: activity.modoIngresoId,
-          notas: activity.notas ?? '',
-          estado: activity.estado,
-          puntaje: activity.puntaje ?? null
-        },
-        current: {
-          id: activity.id,
-          participacionId: activity.participacionId,
-          tipoActividadId: values.tipoActividadId,
-          modoIngresoId: values.modoIngresoId,
-          notas: values.notas,
-          estado: values.estado,
-          puntaje: values.puntaje
-        },
-        execute: () =>
-          updateActivityAction({
-            id: activity.id,
-            participacionId: activity.participacionId,
-            tipoActividadId: values.tipoActividadId,
-            modoIngresoId: values.modoIngresoId,
-            notas: values.notas,
-            estado: values.estado,
-            puntaje: values.puntaje
-          })
+      activity: {
+        id: activity.id,
+        participacionId: activity.participacionId,
+        tipoActividadId: values.tipoActividadId,
+        modoIngresoId: values.modoIngresoId,
+        notas: values.notas,
+        estado: values.estado,
+        puntaje: values.puntaje
       },
-      {
-        label: 'el detalle de actividad',
-        initial: activity.detail
-          ? {
-              id: activity.detail.id,
-              titulo: activity.detail.titulo ?? '',
-              descripcion: activity.detail.descripcion ?? '',
-              duracionMinutos: activity.detail.duracionMinutos ?? null,
-              cupos: activity.detail.cupos ?? null,
-              horaInicio: activity.detail.horaInicio ?? '',
-              ubicacion: activity.detail.ubicacion ?? ''
-            }
-          : {
-              participacionActividadId: activity.id,
-              titulo: '',
-              descripcion: '',
-              duracionMinutos: null,
-              cupos: null,
-              horaInicio: '',
-              ubicacion: ''
-            },
-        current: activity.detail
-          ? {
-              id: activity.detail.id,
-              titulo: values.detail.titulo ?? '',
-              descripcion: values.detail.descripcion ?? '',
-              duracionMinutos: values.detail.duracionMinutos ?? null,
-              cupos: values.detail.cupos ?? null,
-              horaInicio: values.detail.horaInicio ?? '',
-              ubicacion: values.detail.ubicacion ?? ''
-            }
-          : {
-              participacionActividadId: activity.id,
-              titulo: values.detail.titulo ?? '',
-              descripcion: values.detail.descripcion ?? '',
-              duracionMinutos: values.detail.duracionMinutos ?? null,
-              cupos: values.detail.cupos ?? null,
-              horaInicio: values.detail.horaInicio ?? '',
-              ubicacion: values.detail.ubicacion ?? ''
-            },
-        execute: () =>
-          activity.detail
-            ? updateActivityDetailAction(activity.participacionId!, {
-                id: activity.detail.id,
-                titulo: values.detail.titulo,
-                descripcion: values.detail.descripcion,
-                duracionMinutos: values.detail.duracionMinutos,
-                cupos: values.detail.cupos,
-                horaInicio: values.detail.horaInicio,
-                ubicacion: values.detail.ubicacion
-              })
-            : createActivityDetailAction(activity.participacionId!, {
-                participacionActividadId: activity.id,
-                titulo: values.detail.titulo,
-                descripcion: values.detail.descripcion,
-                duracionMinutos: values.detail.duracionMinutos,
-                cupos: values.detail.cupos,
-                horaInicio: values.detail.horaInicio,
-                ubicacion: values.detail.ubicacion
-              })
+      registration: values.registration,
+      detail: {
+        titulo: values.detail.titulo,
+        descripcion: values.detail.descripcion,
+        duracionMinutos: values.detail.duracionMinutos,
+        cupos: values.detail.cupos,
+        horaInicio: values.detail.horaInicio,
+        ubicacion: values.detail.ubicacion
       }
-    ])
+    })
 
     if (!result.success) {
-      toast.error(result.errorMessage)
+      toast.error(
+        result.errors?.map((error) => error.message).join(', ') ??
+          'No se pudo actualizar la actividad'
+      )
       return
     }
 
     toast.success('Cambios guardados')
     methods.reset(values)
     closeUpdateDialogs()
+    router.refresh()
   }
 
   const detailId = activity.detail?.id
-  const isBand = Boolean(entity.band)
   const entityTitle =
     entity.artist?.pseudonym ??
     entity.collective?.name ??
@@ -242,7 +179,7 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
       }}
       title={`Editar actividad: ${entityTitle} en ${edition.eventName} ${edition.editionNumber}`}
       description='Modifica los detalles de esta actividad.'
-      className='sm:max-w-3xl'
+      className='md:max-w-6xl md:min-w-3xl'
       footerStart={
         <Button
           type='button'
@@ -275,7 +212,11 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
               render={({ field }) => (
                 <Select
                   value={String(field.value ?? '')}
-                  onValueChange={(val) => field.onChange(Number(val))}
+                  onValueChange={(val) => {
+                    field.onChange(Number(val))
+                    if (Number(val) === ACTIVITY_TYPES.MUSICA)
+                      clearRegistration(methods)
+                  }}
                   disabled={isBand || isSubmitting}
                 >
                   <SelectTrigger>
@@ -465,20 +406,20 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
             </Field>
           </div>
 
-          <Field>
-            <FieldLabel htmlFor={`detalle-hora-${detailId}`}>
-              Hora de inicio
-            </FieldLabel>
-            <Input
-              id={`detalle-hora-${detailId}`}
-              type='time'
-              {...methods.register('detail.horaInicio')}
-              disabled={isSubmitting}
-            />
-            {errors.detail?.horaInicio && (
-              <FieldError>{errors.detail.horaInicio.message}</FieldError>
+          <Controller
+            name='detail.horaInicio'
+            control={methods.control}
+            render={({ field }) => (
+              <TimePickerField
+                id={`detalle-hora-${detailId}`}
+                label='Hora de inicio'
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                error={errors.detail?.horaInicio?.message}
+                disabled={isSubmitting}
+              />
             )}
-          </Field>
+          />
 
           <Field>
             <FieldLabel htmlFor={`detalle-ubicacion-${detailId}`}>
@@ -494,7 +435,41 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
               <FieldError>{errors.detail.ubicacion.message}</FieldError>
             )}
           </Field>
+
+          {!isMusic && (
+            <Field>
+              <FieldLabel>Inscripción</FieldLabel>
+              <div className='flex items-center gap-2'>
+                <Switch
+                  id='registration-enabled'
+                  checked={registrationEnabled}
+                  onCheckedChange={(checked) => {
+                    methods.setValue('registration.registrationEnabled', checked, {
+                      shouldDirty: true,
+                      shouldValidate: true
+                    })
+                    if (!checked) {
+                      clearRegistration(methods)
+                    }
+                  }}
+                  disabled={isSubmitting}
+                  aria-label='Habilitar inscripción'
+                />
+                <span className='text-sm'>{registrationEnabled ? 'Activado' : 'Desactivado'}</span>
+              </div>
+            </Field>
+          )}
         </FieldGroup>
+
+        {registrationEnabled && (
+          <>
+            <Separator orientation='vertical' />
+            <ActivityRegistrationFields
+              methods={methods}
+              disabled={isSubmitting}
+            />
+          </>
+        )}
       </form>
     </EntityFormDialog>
   )

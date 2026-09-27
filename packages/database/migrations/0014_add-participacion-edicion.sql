@@ -20,7 +20,7 @@ CREATE TABLE participacion_edicion (
     CONSTRAINT fk_participacion_edicion_agrupacion FOREIGN KEY (agrupacion_id)
         REFERENCES agrupacion (id) ON DELETE RESTRICT,
     CONSTRAINT fk_participacion_edicion_banda FOREIGN KEY (banda_id)
-        REFERENCES banda (id) ON DELETE RESTRICT,
+        REFERENCES band (id) ON DELETE RESTRICT,
     CONSTRAINT chk_participacion_edicion_exclusive_arc CHECK (
         (artista_id IS NOT NULL) + (agrupacion_id IS NOT NULL) + (banda_id IS NOT NULL) = 1
     )

@@ -40,27 +40,32 @@ const mockDetails: Record<string, FestivalDetail> = {
         disciplina_slug: 'ilustracion',
         catalogo_slug: 'akane-ilustracion',
         rrss: null,
-        avatar_url: 'https://cdn.frijolmagico.cl/artistas/akane-ilustracion/avatar.webp'
+        avatar_url:
+          'https://cdn.frijolmagico.cl/artistas/akane-ilustracion/avatar.webp'
       },
       {
         pseudonimo: 'Sol Dibujante',
         disciplina_slug: 'ilustracion',
         catalogo_slug: 'sol-dibujante',
         rrss: null,
-        avatar_url: 'https://cdn.frijolmagico.cl/artistas/sol-dibujante/avatar.webp'
+        avatar_url:
+          'https://cdn.frijolmagico.cl/artistas/sol-dibujante/avatar.webp'
       },
       {
         pseudonimo: 'Manos Que Tejen',
         disciplina_slug: 'manualidades',
         catalogo_slug: null,
-        rrss: JSON.stringify({ instagram: 'https://instagram.com/manosquetejen' })
+        rrss: JSON.stringify({
+          instagram: 'https://instagram.com/manosquetejen'
+        })
       },
       {
         pseudonimo: 'Cósmica Cómics',
         disciplina_slug: 'narrativa-grafica',
         catalogo_slug: 'cosmica-comics',
         rrss: null,
-        avatar_url: 'https://cdn.frijolmagico.cl/artistas/cosmica-comics/avatar.webp'
+        avatar_url:
+          'https://cdn.frijolmagico.cl/artistas/cosmica-comics/avatar.webp'
       }
     ],
     actividades: [
@@ -72,7 +77,8 @@ const mockDetails: Record<string, FestivalDetail> = {
         hora_inicio: '14:00',
         tipo: 'taller',
         fecha: '2025-10-03',
-        participante_pseudonimo: 'Akane Ilustración'
+        participante_pseudonimo: 'Akane Ilustración',
+        registration: null
       },
       {
         titulo: 'Concierto de Cierre',
@@ -82,7 +88,8 @@ const mockDetails: Record<string, FestivalDetail> = {
         hora_inicio: '18:00',
         tipo: 'musica',
         fecha: '2025-10-04',
-        participante_pseudonimo: 'Banda Invitada'
+        participante_pseudonimo: 'Banda Invitada',
+        registration: null
       }
     ]
   },
@@ -115,7 +122,8 @@ const mockDetails: Record<string, FestivalDetail> = {
         disciplina_slug: 'ilustracion',
         catalogo_slug: 'lineas-nocturnas',
         rrss: null,
-        avatar_url: 'https://cdn.frijolmagico.cl/artistas/lineas-nocturnas/avatar.webp'
+        avatar_url:
+          'https://cdn.frijolmagico.cl/artistas/lineas-nocturnas/avatar.webp'
       },
       {
         pseudonimo: 'Trazo Suelto',
@@ -133,7 +141,8 @@ const mockDetails: Record<string, FestivalDetail> = {
         hora_inicio: '20:00',
         tipo: 'exposicion',
         fecha: '2025-05-10',
-        participante_pseudonimo: 'Líneas Nocturnas'
+        participante_pseudonimo: 'Líneas Nocturnas',
+        registration: null
       }
     ]
   }
