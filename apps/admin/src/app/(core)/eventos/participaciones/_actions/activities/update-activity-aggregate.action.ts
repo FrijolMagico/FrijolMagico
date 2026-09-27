@@ -8,6 +8,7 @@ import { participations } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import type { ActionState } from '@/shared/types/actions'
 import {
+  ARTIST_DETAIL_CACHE_TAG,
   EDITION_CACHE_TAG,
   EVENT_CACHE_TAG,
   FESTIVALES_CACHE_TAG,
@@ -162,7 +163,8 @@ export async function updateActivityAggregateAction(
       ...(effectiveParticipationId === null
         ? []
         : [getParticipationActivitiesCacheTag(effectiveParticipationId)]),
-      ...PUBLIC_TAGS
+      ...PUBLIC_TAGS,
+      ARTIST_DETAIL_CACHE_TAG
     ]
     for (const tag of tags) {
       try {

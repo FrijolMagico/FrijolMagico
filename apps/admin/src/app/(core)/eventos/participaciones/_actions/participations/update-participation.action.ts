@@ -11,7 +11,7 @@ import {
   editionParticipationUpdateSchema,
   type ParticipationUpdateInput
 } from '../../_schemas/edition-participation.schema'
-import { getEditionParticipationsCacheTag } from '@frijolmagico/cache-tags'
+import { ARTIST_DETAIL_CACHE_TAG, getEditionParticipationsCacheTag } from '@frijolmagico/cache-tags'
 
 const { editionParticipation } = participations
 
@@ -39,6 +39,7 @@ export async function updateParticipationAction(
       .where(eq(editionParticipation.id, parsed.data.id))
 
     updateTag(getEditionParticipationsCacheTag(parsed.data.edicionId))
+    updateTag(ARTIST_DETAIL_CACHE_TAG)
 
     return { success: true }
   } catch (error) {

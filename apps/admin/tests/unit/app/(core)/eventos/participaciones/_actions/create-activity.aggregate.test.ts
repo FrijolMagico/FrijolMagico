@@ -268,14 +268,15 @@ describe('createActivityAction aggregate', () => {
       'actividades:participacion:11',
       'festivales',
       'eventos',
-      'ediciones'
+      'ediciones',
+      'artistas:detalle'
     ])
     expect(revalidateWebCacheBestEffort.mock.calls).toEqual([
       [{ tag: 'festivales' }],
       [{ tag: 'eventos' }],
       [{ tag: 'ediciones' }]
     ])
-    expect(invalidationCommitStates).toEqual(Array(8).fill(true))
+    expect(invalidationCommitStates).toEqual(Array(9).fill(true))
   })
 
   test('does not invalidate any cache after a later detail mutation fails', async () => {

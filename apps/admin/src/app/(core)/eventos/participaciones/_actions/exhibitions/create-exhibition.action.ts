@@ -7,6 +7,7 @@ import { participations } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import { ActionState } from '@/shared/types/actions'
 import {
+  ARTIST_DETAIL_CACHE_TAG,
   getEditionParticipationsCacheTag,
   getParticipationExhibitionsCacheTag
 } from '@frijolmagico/cache-tags'
@@ -69,6 +70,7 @@ export async function createExhibitionAction(data: {
     if (participationId !== null) {
       updateTag(getParticipationExhibitionsCacheTag(participationId))
     }
+    updateTag(ARTIST_DETAIL_CACHE_TAG)
 
     return { success: true }
   } catch (error) {
