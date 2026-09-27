@@ -1,5 +1,7 @@
 import { ChevronDown, Clock, MapPin } from 'lucide-react'
 import { formatSantiagoDateTime } from '@frijolmagico/utils/santiago-date-format'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
 
 import { ActivityRegistrationCta } from './activity-registration-affordance'
 
@@ -12,6 +14,9 @@ interface ActivityItemProps {
 
 const hasDetails = (a: FestivalActivity) =>
   Boolean(a.ocurrencias.length || a.ubicacion || a.descripcion)
+
+const formatSessionDate = (date: string) =>
+  format(new Date(date + 'T00:00:00'), 'd MMM yyyy', { locale: es })
 
 export const ActivityItem = ({ activity, isEditionPast }: ActivityItemProps) => {
   const details = hasDetails(activity)
@@ -60,20 +65,23 @@ export const ActivityItem = ({ activity, isEditionPast }: ActivityItemProps) => 
           <div className='border-palette-primary/20 h-full overflow-hidden border-t px-4 pt-3 pb-4'>
             <div className='text-foreground/60 flex flex-wrap gap-4 text-sm'>
               {activity.ocurrencias.length > 0 ? (
-                <ul className='space-y-1'>
-                  {activity.ocurrencias.map((occurrence) => (
-                    <li
-                      key={`${occurrence.fecha}-${occurrence.hora_inicio}`}
-                      className='flex items-center gap-1.5'
-                    >
-                      <Clock className='size-4' aria-hidden='true' />
-                      <time dateTime={`${occurrence.fecha}T${occurrence.hora_inicio}:00`}>
-                        {occurrence.fecha} — {occurrence.hora_inicio}
-                      </time>
-                      <span>({occurrence.duracion_minutos} min)</span>
-                    </li>
-                  ))}
-                </ul>
+                <div className='space-y-2'>
+                  <h4 className='text-palette-foreground font-medium text-sm'>Horarios</h4>
+                  <ul className='space-y-1'>
+                    {activity.ocurrencias.map((occurrence) => (
+                      <li
+                        key={`${occurrence.fecha}-${occurrence.hora_inicio}`}
+                        className='flex items-center gap-1.5'
+                      >
+                        <Clock className='size-4' aria-hidden='true' />
+                        <time dateTime={`${occurrence.fecha}T${occurrence.hora_inicio}:00`}>
+                          {formatSessionDate(occurrence.fecha)} — {occurrence.hora_inicio}
+                        </time>
+                        <span>({occurrence.duracion_minutos} min)</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ) : (!isEditionPast ? (
                 <span>Fecha y horario por confirmar</span>
               ) : null)}

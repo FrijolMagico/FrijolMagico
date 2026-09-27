@@ -215,7 +215,7 @@ describe('ActivityItem', () => {
     fireEvent.click(summary)
     expect(details.open).toBe(true)
 
-    expect(screen.getByText('2025-01-15 — 18:00')).toBeDefined()
+    expect(screen.getByText('15 ene 2025 — 18:00')).toBeDefined()
     expect(screen.getByText('Sala A')).toBeDefined()
     expect(screen.getByText('Introducción a acuarela')).toBeDefined()
     expect(screen.getByText('(90 min)')).toBeDefined()
@@ -232,9 +232,9 @@ describe('ActivityItem', () => {
       ]
     }} isEditionPast={false} />)
     const text = html.replaceAll('<!-- -->', '')
-    expect(text).toContain('2026-09-05 — 09:00')
-    expect(text).toContain('2026-09-05 — 12:30')
-    expect(text).toContain('2026-09-07 — 10:00')
+    expect(text).toContain('5 sep 2026 — 09:00')
+    expect(text).toContain('5 sep 2026 — 12:30')
+    expect(text).toContain('7 sep 2026 — 10:00')
     expect(text).toContain('(45 min)')
     expect(text).toContain('(60 min)')
     expect(text).toContain('(90 min)')
