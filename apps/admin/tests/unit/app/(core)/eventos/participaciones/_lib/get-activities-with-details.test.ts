@@ -4,14 +4,16 @@ import { participations } from '@frijolmagico/database/schema'
 const cacheTag = mock((_tag: string) => {})
 const joins: unknown[] = []
 let rows: Record<string, unknown>[] = []
+let occurrenceRows: Record<string, unknown>[] = []
+let selectedTable: unknown
 const query = {
-  from: () => query,
+  from: (table: unknown) => { selectedTable = table; return query },
   leftJoin: (table: unknown) => {
     joins.push(table)
     return query
   },
   where: () => query,
-  orderBy: async () => rows
+  orderBy: async () => selectedTable === participations.activityOccurrence ? occurrenceRows : rows
 }
 
 mock.module('server-only', () => ({}))
@@ -92,6 +94,7 @@ describe('admin activity read model', () => {
       participations.activity,
       participations.activityRegistration
     ])
+    expect(result[0].occurrences).toEqual([])
     expect(result).toHaveLength(1)
     expect(result[0].registration).toBeNull()
     expect(composedRegistration(result[0])).toBeNull()
@@ -104,6 +107,28 @@ describe('admin activity read model', () => {
     expect(result).toHaveLength(1)
     expect(result[0].id).toBe(42)
     expect(composedRegistration(result[0])).toBeNull()
+  })
+
+  test('maps ordered occurrences to the matching activity and composer', async () => {
+    rows = [{ ...baseRow, detalleId: 33, detalleParticipacionActividadId: 42 }]
+    occurrenceRows = [
+      { activityId: 33, date: '2026-06-10', startTime: '09:00', durationMinutes: 45 },
+      { activityId: 33, date: '2026-06-11', startTime: '11:00', durationMinutes: 60 },
+      { activityId: 99, date: '2026-06-12', startTime: '12:00', durationMinutes: 60 }
+    ]
+    const result = await getActivitiesWithDetails([11])
+    expect(result[0].occurrences).toEqual([
+      { date: '2026-06-10', startTime: '09:00', durationMinutes: 45 },
+      { date: '2026-06-11', startTime: '11:00', durationMinutes: 60 }
+    ])
+    expect(composeParticipations({
+      participations: [{ id: 11, edicionId: 7, artistaId: 4, agrupacionId: null, bandaId: null, notas: null }],
+      edition: { id: 7, editionNumber: '1', slug: 'edition', eventName: 'Festival', published: true },
+      exhibitions: [], activities: result,
+      artistsLookup: new Map([[4, { id: 4, pseudonym: 'Artista', statusId: 1 }]]),
+      collectivesLookup: new Map(), bandsLookup: new Map()
+    })[0].activities[0].occurrences).toEqual(result[0].occurrences)
+    occurrenceRows = []
   })
 
   test('converts both canonical UTC boundaries to Chile-local defaults through the composer', async () => {

@@ -1,6 +1,8 @@
 'use client'
 
+import { useState } from 'react'
 import { format, parse, isValid } from 'date-fns'
+import { es } from 'date-fns/locale'
 import { IconCalendar } from '@tabler/icons-react'
 import { Button } from '@/shared/components/ui/button'
 import { Calendar } from '@/shared/components/ui/calendar'
@@ -20,6 +22,7 @@ interface DatePickerFieldProps {
   error?: string
   disabled?: boolean
   required?: boolean
+  placeholder?: string
 }
 
 export function DatePickerField({
@@ -29,7 +32,8 @@ export function DatePickerField({
   onChange,
   error,
   disabled,
-  required
+  required,
+  placeholder = 'Seleccionar fecha...'
 }: DatePickerFieldProps) {
   const selectedDate = value
     ? parse(value, 'yyyy-MM-dd', new Date())
@@ -37,12 +41,16 @@ export function DatePickerField({
 
   const displayDate =
     selectedDate && isValid(selectedDate)
-      ? format(selectedDate, 'dd/MM/yyyy')
+      ? format(selectedDate, "d MMM yyyy", { locale: es })
       : null
+
+  const [open, setOpen] = useState(false)
 
   const handleSelect = (date: Date | undefined) => {
     if (!date) return
-    onChange(format(date, 'yyyy-MM-dd'))
+    const formatted = format(date, 'yyyy-MM-dd')
+    onChange(formatted)
+    setOpen(false)
   }
 
   return (
@@ -53,7 +61,7 @@ export function DatePickerField({
           {required && <span className='text-destructive ml-1'>*</span>}
         </FieldLabel>
       )}
-      <Popover>
+      <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger
           render={
             <Button
@@ -69,7 +77,7 @@ export function DatePickerField({
             >
               <IconCalendar className='mr-2 h-4 w-4 shrink-0' />
               <span className='truncate flex-1 min-w-0'>
-                {displayDate ?? 'Seleccionar fecha...'}
+                {displayDate ?? placeholder}
               </span>
             </Button>
           }

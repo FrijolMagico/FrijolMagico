@@ -13,10 +13,10 @@ import {
 import { Input } from '@/shared/components/ui/input'
 import { Textarea } from '@/shared/components/ui/textarea'
 import { RichTextarea } from '@/shared/components/rich-textarea'
-import { TimePickerField } from '@/shared/components/time-picker-field'
 import {
   type ActivityFormInput,
-  activityFormSchema
+  activityFormSchema,
+  activityScheduleUpdate
 } from '../_schemas/activity.schema'
 import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
 import { useParticipationsStore } from '../_store/use-participations-store'
@@ -48,6 +48,7 @@ import {
   EMPTY_REGISTRATION,
   clearRegistration
 } from './activity-registration-fields'
+import { ActivityOccurrenceFields } from './activity-occurrence-fields'
 
 interface UpdateActivityDialogProps {
   edition: {
@@ -86,6 +87,7 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
         ...(activity?.registration ?? EMPTY_REGISTRATION),
         registrationEnabled: hasExistingRegistration
       },
+      occurrences: activity?.occurrences ?? [],
       entity: {
         artistaId: entity?.artist?.id ?? null,
         agrupacionId: entity?.collective?.id ?? null,
@@ -122,6 +124,12 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
   if (!entity || !activity) return null
 
   const onSubmit = async (values: ActivityFormInput) => {
+    const schedule = activityScheduleUpdate(
+      activity.occurrences ?? [],
+      values.occurrences ?? [],
+      !isBand && activity.tipoActividadId !== ACTIVITY_TYPES.MUSICA &&
+        values.tipoActividadId === ACTIVITY_TYPES.MUSICA
+    )
     const result = await updateActivityAggregateAction({
       editionId: edition.id,
       participation: {
@@ -141,6 +149,7 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
         puntaje: values.puntaje
       },
       registration: values.registration,
+      ...schedule,
       detail: {
         titulo: values.detail.titulo,
         descripcion: values.detail.descripcion,
@@ -215,8 +224,13 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
                   value={String(field.value ?? '')}
                   onValueChange={(val) => {
                     field.onChange(Number(val))
-                    if (Number(val) === ACTIVITY_TYPES.MUSICA)
+                    if (Number(val) === ACTIVITY_TYPES.MUSICA) {
                       clearRegistration(methods)
+                      methods.setValue('occurrences', [], {
+                        shouldDirty: true,
+                        shouldValidate: true
+                      })
+                    }
                   }}
                   disabled={isBand || isSubmitting}
                 >
@@ -361,31 +375,19 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
 
           <div className='grid grid-cols-1 gap-3 md:grid-cols-2'>
             <Field>
-              <FieldLabel htmlFor={`detalle-duracion-${detailId}`}>
-                Duracion (min)
+              <FieldLabel htmlFor={`detalle-ubicacion-${detailId}`}>
+                Ubicacion
               </FieldLabel>
-              <Controller
-                name='detail.duracionMinutos'
-                control={methods.control}
-                render={({ field }) => (
-                  <Input
-                    id={`detalle-duracion-${detailId}`}
-                    type='number'
-                    disabled={isSubmitting}
-                    value={field.value ?? ''}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value === '' ? null : Number(e.target.value)
-                      )
-                    }
-                  />
-                )}
+              <Input
+                id={`detalle-ubicacion-${detailId}`}
+                {...methods.register('detail.ubicacion')}
+                placeholder='Sala, espacio...'
+                disabled={isSubmitting}
               />
-              {errors.detail?.duracionMinutos && (
-                <FieldError>{errors.detail.duracionMinutos.message}</FieldError>
+              {errors.detail?.ubicacion && (
+                <FieldError>{errors.detail.ubicacion.message}</FieldError>
               )}
             </Field>
-
             <Field>
               <FieldLabel htmlFor={`detalle-cupos-${detailId}`}>
                 Cupos
@@ -413,36 +415,6 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
             </Field>
           </div>
 
-          <Controller
-            name='detail.horaInicio'
-            control={methods.control}
-            render={({ field }) => (
-              <TimePickerField
-                id={`detalle-hora-${detailId}`}
-                label='Hora de inicio'
-                value={field.value ?? ''}
-                onChange={field.onChange}
-                error={errors.detail?.horaInicio?.message}
-                disabled={isSubmitting}
-              />
-            )}
-          />
-
-          <Field>
-            <FieldLabel htmlFor={`detalle-ubicacion-${detailId}`}>
-              Ubicacion
-            </FieldLabel>
-            <Input
-              id={`detalle-ubicacion-${detailId}`}
-              {...methods.register('detail.ubicacion')}
-              placeholder='Sala, espacio...'
-              disabled={isSubmitting}
-            />
-            {errors.detail?.ubicacion && (
-              <FieldError>{errors.detail.ubicacion.message}</FieldError>
-            )}
-          </Field>
-
           {!isMusic && (
             <Field>
               <FieldLabel>Inscripción</FieldLabel>
@@ -466,6 +438,7 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
               </div>
             </Field>
           )}
+          {!isMusic && <ActivityOccurrenceFields methods={methods} disabled={isSubmitting} />}
         </FieldGroup>
 
         {registrationEnabled && (

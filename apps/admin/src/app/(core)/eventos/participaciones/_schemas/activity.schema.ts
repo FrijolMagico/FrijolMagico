@@ -162,6 +162,74 @@ export type ActivityRegistrationInput = Exclude<
   null
 >
 
+const occurrenceSchema = z.object({
+  date: z.string().refine((date) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return false
+    try {
+      Temporal.PlainDate.from(date, { overflow: 'reject' })
+      return true
+    } catch {
+      return false
+    }
+  }, 'Ingresa una fecha de calendario válida'),
+  startTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Ingresa una hora válida (HH:mm)').nullable().optional(),
+  durationMinutes: z.number().int().positive('La duración debe ser positiva').nullable().optional()
+})
+
+export const activityOccurrencesSchema = z.array(occurrenceSchema).superRefine(
+  (occurrences, context) => {
+    const windows: { date: string; start: number; end: number }[] = []
+    for (const [index, occurrence] of occurrences.entries()) {
+      // Only validate time/duration if both are present
+      const startTime = occurrence.startTime
+      const duration = occurrence.durationMinutes
+      if (startTime && duration != null) {
+        const start = Number(startTime.slice(0, 2)) * 60 +
+          Number(startTime.slice(3))
+        if (start + duration > 1440) {
+          context.addIssue({ code: 'custom', path: [index, 'durationMinutes'], message: 'La sesión no puede terminar después de medianoche' })
+        }
+        if (windows.some((window) => window.date === occurrence.date &&
+          window.start < start + duration && start < window.end)) {
+          context.addIssue({ code: 'custom', path: [index, 'startTime'], message: 'Las sesiones no pueden superponerse' })
+        }
+        windows.push({ date: occurrence.date, start, end: start + duration })
+      }
+    }
+  }
+)
+
+export type ActivityOccurrenceInput = z.infer<typeof activityOccurrencesSchema>[number]
+
+// Schedule order is presentation-only; compare the complete date/time/duration tuple.
+export function sameActivitySchedule(
+  left: ActivityOccurrenceInput[],
+  right: ActivityOccurrenceInput[]
+): boolean {
+  const keys = (rows: ActivityOccurrenceInput[]) => rows
+    .map(({ date, startTime, durationMinutes }) =>
+      JSON.stringify([date, startTime, durationMinutes]))
+    .sort()
+  return JSON.stringify(keys(left)) === JSON.stringify(keys(right))
+}
+
+export function activityScheduleUpdate(
+  original: ActivityOccurrenceInput[],
+  desired: ActivityOccurrenceInput[],
+  switchingToMusic: boolean
+): { occurrences: ActivityOccurrenceInput[]; expectedOccurrences: ActivityOccurrenceInput[] } | Record<string, never> {
+  if (!switchingToMusic && sameActivitySchedule(original, desired)) return {}
+  return { occurrences: desired, expectedOccurrences: original }
+}
+
+export function parseActivityOccurrencesInput(value: unknown, effectiveTypeSlug: string): ActivityOccurrenceInput[] {
+  const occurrences = activityOccurrencesSchema.parse(value ?? [])
+  if (occurrences.length && !['taller', 'charla'].includes(effectiveTypeSlug)) {
+    throw new Error('Solo talleres y charlas pueden tener sesiones')
+  }
+  return occurrences
+}
+
 // Base object schema (no refine) — shared between form and dialog schemas
 // modoIngresoId is overridden to remove .default() so RHF input/output types match
 export const activityFormSchema = activityInsertSchema
@@ -177,7 +245,8 @@ export const activityFormSchema = activityInsertSchema
     }),
     participantType: z.enum(Object.values(PARTICIPANT_TYPE)),
     entity: editionParticipationEntitySchema,
-    registration: validatedRegistrationSchema.optional()
+    registration: validatedRegistrationSchema.optional(),
+    occurrences: activityOccurrencesSchema.optional()
   })
 
 // ============================================================================

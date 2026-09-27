@@ -15,7 +15,6 @@ import {
 } from '@/shared/components/ui/select'
 import { Textarea } from '@/shared/components/ui/textarea'
 import { RichTextarea } from '@/shared/components/rich-textarea'
-import { TimePickerField } from '@/shared/components/time-picker-field'
 import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
 import { useParticipationsStore } from '../_store/use-participations-store'
 import { createActivityAction } from '../_actions/activities/create-activity.action'
@@ -56,6 +55,7 @@ import {
   EMPTY_REGISTRATION,
   clearRegistration
 } from './activity-registration-fields'
+import { ActivityOccurrenceFields } from './activity-occurrence-fields'
 
 interface CreateActivityDialogProps {
   edition: {
@@ -93,6 +93,7 @@ export function CreateActivityDialog({
       estado: PARTICIPATION_STATUS.SELECCIONADO,
       puntaje: null,
       registration: EMPTY_REGISTRATION,
+      occurrences: [],
       detail: {
         titulo: '',
         descripcion: '',
@@ -150,6 +151,7 @@ export function CreateActivityDialog({
         estado: values.estado
       },
       registration: values.registration,
+      occurrences: values.occurrences ?? [],
       detail: {
         titulo: values.detail.titulo,
         descripcion: values.detail.descripcion,
@@ -227,8 +229,13 @@ export function CreateActivityDialog({
                     const nextTipo = value as ParticipantType
 
                     field.onChange(nextTipo)
-                    if (nextTipo === PARTICIPANT_TYPE.BANDA)
+                    if (nextTipo === PARTICIPANT_TYPE.BANDA) {
                       clearRegistration(methods)
+                      methods.setValue('occurrences', [], {
+                        shouldDirty: true,
+                        shouldValidate: true
+                      })
+                    }
 
                     if (nextTipo === PARTICIPANT_TYPE.ARTISTA) {
                       methods.setValue('entity.agrupacionId', null, {
@@ -331,8 +338,13 @@ export function CreateActivityDialog({
                   }
                   onValueChange={(val) => {
                     field.onChange(Number(val))
-                    if (Number(val) === ACTIVITY_TYPES.MUSICA)
+                    if (Number(val) === ACTIVITY_TYPES.MUSICA) {
                       clearRegistration(methods)
+                      methods.setValue('occurrences', [], {
+                        shouldDirty: true,
+                        shouldValidate: true
+                      })
+                    }
                   }}
                   disabled={isSubmitting || tipo === PARTICIPANT_TYPE.BANDA}
                 >
@@ -438,25 +450,13 @@ export function CreateActivityDialog({
             )}
           </Field>
 
-          <FieldGroup className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+          <FieldGroup className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
             <Field>
-              <FieldLabel>Duración (minutos)</FieldLabel>
-              <Controller
-                name='detail.duracionMinutos'
-                control={methods.control}
-                render={({ field }) => (
-                  <Input
-                    type='number'
-                    placeholder='Ej: 90'
-                    disabled={isSubmitting}
-                    value={field.value ?? ''}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value === '' ? null : Number(e.target.value)
-                      )
-                    }
-                  />
-                )}
+              <FieldLabel>Ubicación</FieldLabel>
+              <Input
+                {...methods.register('detail.ubicacion')}
+                placeholder='Ej: Sala 3'
+                disabled={isSubmitting}
               />
             </Field>
             <Field>
@@ -482,29 +482,6 @@ export function CreateActivityDialog({
           </FieldGroup>
 
           <FieldGroup>
-            <Controller
-              name='detail.horaInicio'
-              control={methods.control}
-              render={({ field }) => (
-                <TimePickerField
-                  id='detail-horaInicio'
-                  label='Hora Inicio'
-                  value={field.value ?? ''}
-                  onChange={field.onChange}
-                  error={errors.detail?.horaInicio?.message}
-                  disabled={isSubmitting}
-                />
-              )}
-            />
-            <Field>
-              <FieldLabel>Ubicación</FieldLabel>
-              <Input
-                {...methods.register('detail.ubicacion')}
-                placeholder='Ej: Sala 3'
-                disabled={isSubmitting}
-              />
-            </Field>
-
             {!isMusic && (
               <Field>
                 <FieldLabel>Inscripción</FieldLabel>
@@ -529,6 +506,7 @@ export function CreateActivityDialog({
               </Field>
             )}
           </FieldGroup>
+          {!isMusic && <ActivityOccurrenceFields methods={methods} disabled={isSubmitting} />}
         </FieldGroup>
 
         {registrationEnabled && (
