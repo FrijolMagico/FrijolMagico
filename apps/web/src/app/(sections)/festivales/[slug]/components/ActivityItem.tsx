@@ -25,7 +25,7 @@ export const ActivityItem = ({
   const details = hasDetails(activity)
 
   return (
-    <article className='bg-palette-background border-palette-primary group relative max-w-xs min-w-[16rem] rounded-lg border'>
+    <article className='bg-palette-background border-palette-primary group relative max-w-[calc(100%-1rem)] min-w-[16rem] rounded-lg border sm:max-w-xs'>
       <div className='bg-palette-primary absolute -z-10 size-full translate-x-1.5 translate-y-1.5 rounded-lg duration-300 group-hover:translate-0' />
       {activity.tipo !== 'musica' && activity.registration && (
         <ActivityRegistrationCta registration={activity.registration} />
