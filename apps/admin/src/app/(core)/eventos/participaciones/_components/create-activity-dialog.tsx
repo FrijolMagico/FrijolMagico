@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm, useFormState, useWatch } from 'react-hook-form'
 import { toast } from 'sonner'
@@ -13,6 +14,7 @@ import {
   SelectValue
 } from '@/shared/components/ui/select'
 import { Textarea } from '@/shared/components/ui/textarea'
+import { RichTextarea } from '@/shared/components/rich-textarea'
 import { TimePickerField } from '@/shared/components/time-picker-field'
 import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
 import { useParticipationsStore } from '../_store/use-participations-store'
@@ -73,6 +75,7 @@ export function CreateActivityDialog({
   bandas
 }: CreateActivityDialogProps) {
   const router = useRouter()
+  const [descriptionResetKey, setDescriptionResetKey] = useState(0)
   const isCreateActivityDialogOpen = useParticipationsStore(
     (state) => state.isCreateActivityDialogOpen
   )
@@ -168,6 +171,7 @@ export function CreateActivityDialog({
 
     toast.success('Actividad agregada correctamente')
     methods.reset()
+    setDescriptionResetKey((key) => key + 1)
     toggleCreateActivityDialogOpen(false)
     router.refresh()
   }
@@ -413,13 +417,25 @@ export function CreateActivityDialog({
           </Field>
 
           <Field>
-            <FieldLabel>Descripción (opcional)</FieldLabel>
-            <Textarea
-              {...methods.register('detail.descripcion')}
-              placeholder='De qué trata la actividad...'
-              rows={3}
-              disabled={isSubmitting}
+            <FieldLabel htmlFor='create-activity-description'>
+              Descripción (opcional)
+            </FieldLabel>
+            <Controller
+              name='detail.descripcion'
+              control={methods.control}
+              render={({ field }) => (
+                <RichTextarea
+                  key={descriptionResetKey}
+                  id='create-activity-description'
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  placeholder='De qué trata la actividad...'
+                />
+              )}
             />
+            {errors.detail?.descripcion && (
+              <FieldError>{errors.detail.descripcion.message}</FieldError>
+            )}
           </Field>
 
           <FieldGroup className='grid grid-cols-1 gap-4 md:grid-cols-2'>
