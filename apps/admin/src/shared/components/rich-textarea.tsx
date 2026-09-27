@@ -83,7 +83,7 @@ export function RichTextarea({
         <TiptapToolbar />
         <Tiptap.Content
           id={id}
-          className='px-2.5 py-2 *:ring-0 *:outline-none *:focus:outline-none'
+          className='px-2.5 py-2 *:ring-0 *:outline-none *:focus:outline-none [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5'
         />
       </div>
     </Tiptap>

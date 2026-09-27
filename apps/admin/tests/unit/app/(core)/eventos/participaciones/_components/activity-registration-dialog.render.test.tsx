@@ -2,6 +2,7 @@ import { expect, test, mock } from 'bun:test'
 import { createElement, act } from 'react'
 import { useController, useForm } from 'react-hook-form'
 import type { ActivityFormInput } from '@/core/eventos/participaciones/_schemas/activity.schema'
+import { activityRegistrationFormSchema } from '@/core/eventos/participaciones/_schemas/activity.schema'
 import { Window } from 'happy-dom'
 
 const window = new Window()
@@ -139,6 +140,41 @@ mock.module(
 const { ActivityRegistrationFields, EMPTY_REGISTRATION } =
   await import('@/core/eventos/participaciones/_components/activity-registration-fields')
 
+function RegistrationWithValue() {
+  const methods = useForm<ActivityFormInput>({
+    defaultValues: { registration: {
+      url: 'https://example.org/alta', startDate: '2026-07-01', startTime: '10:30',
+      endDate: '2026-07-02', endTime: '11:00', registrationEnabled: true
+    } }
+  })
+  return createElement('section', null,
+    createElement(ActivityRegistrationFields, { methods, disabled: false }),
+    createElement('output', null, JSON.stringify(methods.watch('registration'))))
+}
+
+test('registration edits replace prior UTC-valid time and keep UTC validation', async () => {
+  const container = document.createElement('main')
+  document.body.append(container)
+  const root = createRoot(container)
+  await act(async () => root.render(createElement(RegistrationWithValue)))
+  const hour = container.querySelector<HTMLInputElement>('#registration-startTime-hour')!
+  const minute = container.querySelector<HTMLInputElement>('#registration-startTime-minute')!
+  for (const [input, text, expected] of [
+    [hour, '2', '2:30'], [hour, '24', '24:30'], [hour, '10', '10:30'],
+    [minute, '60', '10:60'], [minute, '', '10:'], [hour, '', '']
+  ] as const) {
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set?.call(input, text)
+      input.dispatchEvent(new window.Event('input', { bubbles: true }))
+    })
+    const registration = JSON.parse(container.querySelector('output')!.textContent!)
+    expect(registration.startTime).toBe(expected)
+    expect(activityRegistrationFormSchema.safeParse(registration).success).toBe(expected === '10:30')
+  }
+  await act(async () => root.unmount())
+  container.remove()
+})
+
 function RegistrationForm() {
   const methods = useForm<ActivityFormInput>({
     defaultValues: { registration: EMPTY_REGISTRATION }
@@ -264,6 +300,8 @@ test('renders update Chile-local defaults and submits absent registration after 
   }
   expect(urlInput).not.toBeNull()
   expect(urlInput?.value).toBe('https://example.org/registro')
+  expect(container.querySelector<HTMLInputElement>('#registration-startTime-hour')?.value).toBe('12')
+  expect(container.querySelector<HTMLInputElement>('#registration-startTime-minute')?.value).toBe('00')
 
   // Registration form renders correctly (pickers tested in integration)
 

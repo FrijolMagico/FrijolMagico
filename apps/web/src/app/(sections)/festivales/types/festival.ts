@@ -56,14 +56,18 @@ export interface ActivityRegistration {
   end_at: string
 }
 
+export interface FestivalActivityOccurrence {
+  fecha: string
+  hora_inicio: string
+  duracion_minutos: number
+}
+
 export interface FestivalActivity {
   titulo: string | null
   descripcion: string | null
-  duracion_minutos: number | null
   ubicacion: string | null
-  hora_inicio: string | null
+  ocurrencias: FestivalActivityOccurrence[]
   tipo: string
-  fecha: string | null
   participante_pseudonimo: string | null
   registration: ActivityRegistration | null
 }
@@ -78,6 +82,8 @@ export interface FestivalDetail {
   edicion_nombre: string | null
   numero_edicion: string
   poster_url: string | null
+  edicion_fin: string | null
+  is_edition_past: boolean
   dias: FestivalDia[]
   participantes: FestivalParticipant[]
   actividades: FestivalActivity[]

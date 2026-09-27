@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { readFileSync } from 'node:fs'
+import { activityScheduleUpdate } from '../../../../../../../src/app/(core)/eventos/participaciones/_schemas/activity.schema'
 
 const componentPath =
   process.cwd() +
@@ -23,6 +24,20 @@ describe('UpdateActivityDialog aggregate save contract', () => {
     expect(componentSource).not.toContain('updateActivityAction')
     expect(componentSource).not.toContain('createActivityDetailAction')
     expect(componentSource).not.toContain('updateActivityDetailAction')
+  })
+
+  test('omits unchanged schedule on unrelated edits and carries original snapshot for changes', () => {
+    const original = [{ date: '2026-06-10', startTime: '09:00', durationMinutes: 45 }]
+    const changed = [{ date: '2026-06-11', startTime: '10:00', durationMinutes: 60 }]
+    expect(componentSource).toContain('...schedule,')
+    expect(componentSource).toContain('activityScheduleUpdate(')
+    expect(activityScheduleUpdate(original, [...original], false)).toEqual({})
+    expect(activityScheduleUpdate(original, changed, false)).toEqual({
+      occurrences: changed, expectedOccurrences: original
+    })
+    expect(activityScheduleUpdate(original, [], true)).toEqual({
+      occurrences: [], expectedOccurrences: original
+    })
   })
 
   test('keeps save feedback, form reset, and dialog close behavior', () => {

@@ -27,12 +27,21 @@ const mapParticipant = (
 }
 
 export const mapFestivalDetail = (raw: FestivalDetail): FestivalDetail => {
+  const editionEnd = raw.edicion_fin ? new Date(raw.edicion_fin + 'T23:59:59') : null
+  const isEditionPast = editionEnd ? editionEnd < new Date() : false
+
   return {
     ...raw,
+    is_edition_past: isEditionPast,
     poster_url: getPosterUrl(raw.poster_url),
     participantes: raw.participantes.map(mapParticipant),
     actividades: raw.actividades.map((activity) => ({
       ...activity,
+      ocurrencias: [...activity.ocurrencias].sort(
+        (a, b) =>
+          a.fecha.localeCompare(b.fecha) ||
+          a.hora_inicio.localeCompare(b.hora_inicio)
+      ),
       registration: activity.registration ?? null
     }))
   }

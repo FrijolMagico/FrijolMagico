@@ -7,6 +7,11 @@ import {
 import { events } from '@frijolmagico/database/schema'
 
 const { eventEditionDay } = events
+const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/
+const validTime = (schema: z.ZodString, requiredMessage: string) =>
+  schema.min(1, { message: requiredMessage }).regex(TIME_PATTERN, {
+    message: 'Ingresa una hora válida (HH:mm)'
+  })
 
 export const editionDaySelectSchema = createSelectSchema(eventEditionDay).omit({
   createdAt: true,
@@ -17,10 +22,8 @@ export const edicionDiaInsertSchema = createInsertSchema(eventEditionDay, {
   eventoEdicionId: () => z.number().int().positive(),
   lugarId: () => z.number().int().positive().optional(),
   fecha: (schema) => schema.min(1, { message: 'La fecha es obligatoria' }),
-  horaInicio: (schema) =>
-    schema.min(1, { message: 'La hora de inicio es obligatoria' }),
-  horaFin: (schema) =>
-    schema.min(1, { message: 'La hora de fin es obligatoria' })
+  horaInicio: (schema) => validTime(schema, 'La hora de inicio es obligatoria'),
+  horaFin: (schema) => validTime(schema, 'La hora de fin es obligatoria')
 }).omit({
   id: true,
   createdAt: true,
@@ -30,10 +33,8 @@ export const edicionDiaInsertSchema = createInsertSchema(eventEditionDay, {
 export const edicionDiaUpdateSchema = createUpdateSchema(eventEditionDay, {
   lugarId: () => z.number().int().positive().nullable().optional(),
   fecha: (schema) => schema.min(1, { message: 'La fecha es obligatoria' }),
-  horaInicio: (schema) =>
-    schema.min(1, { message: 'La hora de inicio es obligatoria' }),
-  horaFin: (schema) =>
-    schema.min(1, { message: 'La hora de fin es obligatoria' })
+  horaInicio: (schema) => validTime(schema, 'La hora de inicio es obligatoria'),
+  horaFin: (schema) => validTime(schema, 'La hora de fin es obligatoria')
 }).omit({
   createdAt: true,
   updatedAt: true
@@ -42,10 +43,8 @@ export const edicionDiaUpdateSchema = createUpdateSchema(eventEditionDay, {
 export const dayFormStateSchema = z.object({
   tempId: z.string(),
   fecha: z.string().min(1, { message: 'La fecha es obligatoria' }),
-  horaInicio: z
-    .string()
-    .min(1, { message: 'La hora de inicio es obligatoria' }),
-  horaFin: z.string().min(1, { message: 'La hora de fin es obligatoria' }),
+  horaInicio: validTime(z.string(), 'La hora de inicio es obligatoria'),
+  horaFin: validTime(z.string(), 'La hora de fin es obligatoria'),
   modalidad: z.enum(['presencial', 'online', 'hibrido']).nullable(),
   lugarId: z.number().int().positive().nullable(),
   existingId: z.number().int().positive().optional()
