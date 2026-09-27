@@ -53,6 +53,23 @@ describe('admin registration read and dialog contract', () => {
     expect(update).toContain('updateActivityAggregateAction')
   })
 
+  test('create submits desired sessions while edit omits unchanged sessions and guards replacements', () => {
+    for (const dialog of [create, update]) {
+      expect(dialog).toContain('<ActivityOccurrenceFields')
+      expect(dialog).toContain("methods.setValue('occurrences', []")
+    }
+    expect(create).toContain('occurrences: values.occurrences ?? []')
+    expect(create).toContain('occurrences: []')
+    expect(update).toContain('activity?.occurrences ?? []')
+    expect(update).toContain('activityScheduleUpdate(')
+    expect(update).toContain('values.occurrences ?? []')
+    expect(update).toContain('...schedule,')
+    const schema = source('_schemas/activity.schema.ts')
+    expect(schema).toContain('sameActivitySchedule(original, desired)')
+    expect(schema).toContain('if (!switchingToMusic && sameActivitySchedule(original, desired)) return {}')
+    expect(schema).toContain('return { occurrences: desired, expectedOccurrences: original }')
+  })
+
   test('music clearing is based on selected type or band, not trusted by the server action', () => {
     for (const dialog of [create, update]) {
       expect(dialog).toContain('ACTIVITY_TYPES.MUSICA')

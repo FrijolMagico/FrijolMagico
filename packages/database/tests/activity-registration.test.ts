@@ -116,9 +116,24 @@ describe('activity registration database contract', () => {
       'participation_activity_id'
     ])
     const journal = JSON.parse(readFileSync(journalPath, 'utf8')) as {
-      entries: { tag: string }[]
+      entries: {
+        idx: number
+        version: string
+        when: number
+        tag: string
+        breakpoints: boolean
+      }[]
     }
-    expect(journal.entries.at(-1)?.tag).toBe('0021_activity_registration')
+    // Later migrations can follow 0021; validate its own entry, not its position.
+    expect(
+      journal.entries.find((entry) => entry.tag === '0021_activity_registration')
+    ).toEqual({
+      idx: 21,
+      version: '7',
+      when: 1785283200000,
+      tag: '0021_activity_registration',
+      breakpoints: true
+    })
     const db = await setup()
     const columns = await db.execute('PRAGMA table_info(activity_registration)')
     expect(columns.rows.map((row) => row.name)).toEqual([

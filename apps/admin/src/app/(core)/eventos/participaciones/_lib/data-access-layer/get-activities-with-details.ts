@@ -10,7 +10,7 @@ import { utcToChileLocal } from '../activity-registration-time'
 import { getParticipationActivitiesCacheTag } from '@frijolmagico/cache-tags'
 import { ActivityWithDetail } from '../../_types/activity.types'
 
-const { participationActivity, activity, activityRegistration } = participations
+const { participationActivity, activity, activityRegistration, activityOccurrence } = participations
 
 export async function getActivitiesWithDetails(
   participationIds: number[]
@@ -58,6 +58,18 @@ export async function getActivitiesWithDetails(
     )
     .where(inArray(participationActivity.participacionId, participationIds))
     .orderBy(asc(participationActivity.id), asc(activity.id))
+
+  const detailIds = rows.flatMap((row) => row.detalleId === null ? [] : [row.detalleId])
+  const occurrences = detailIds.length === 0 ? [] : await db
+    .select({
+      activityId: activityOccurrence.activityId,
+      date: activityOccurrence.date,
+      startTime: activityOccurrence.startTime,
+      durationMinutes: activityOccurrence.durationMinutes
+    })
+    .from(activityOccurrence)
+    .where(inArray(activityOccurrence.activityId, detailIds))
+    .orderBy(asc(activityOccurrence.date), asc(activityOccurrence.startTime))
 
   return rows.map((row) => {
     const start =
@@ -107,7 +119,9 @@ export async function getActivitiesWithDetails(
       estado: row.estado,
       notas: row.notas,
       detail,
-      registration
+      registration,
+      occurrences: occurrences.filter((occurrence) => occurrence.activityId === row.detalleId)
+        .map(({ date, startTime, durationMinutes }) => ({ date, startTime, durationMinutes }))
     }
   })
 }
