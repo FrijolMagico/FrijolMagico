@@ -11,8 +11,9 @@ OpenSpec marks WU6 implementation tasks complete, but its design/tasks still des
 - Synchronize WU6 OpenSpec design/task/evidence artifacts; do not change source behavior.
 - Preserve the independently documented `shared-santiago-timezone` and `web-poster-url-normalization` work.
 - WU7 remains verification-only; do not add behavior under its gate.
-- Do not publish, push, create a PR, or run destructive database operations.
-- Commit only within the user's explicit authorization; clarify if the intended commit scope exceeds it.
+- User explicitly authorized aligning/approving issue #190 and preparing a single PR to `dev`; no merge authorization.
+- Request a maintainer `size:exception` for the oversized single PR before merge; do not create alternate chain slices without re-authorizing the recorded delivery strategy.
+- No destructive database operations.
 
 ## TDD and verification
 - Existing strict TDD evidence for prior work is recorded in the source task and cumulative apply-progress artifact; do not invent new RED/GREEN claims for documentation reconciliation.
@@ -22,6 +23,9 @@ OpenSpec marks WU6 implementation tasks complete, but its design/tasks still des
 - [x] **T1 — Reconcile WU6 artifacts with definitive UI.** Updated design/tasks and appended accurate progress evidence; source remains unchanged.
 - [x] **T2 — Reconcile dirty-worktree scope and commit boundary.** Identified three interleaved units and received explicit authorization for separate WU6, shared-time, and poster-URL commits; no push or PR authorized.
 - [x] **T3 — Run and record WU7 verification.** Full root test, cached and forced type-check/lint, committed-range diff check, and static scope audit passed; recorded limits and warnings in OpenSpec.
+- [x] **P1 — Align and approve issue #190.** Updated its acceptance criteria to the definitive UI and replaced `status:needs-review` with `status:approved` under explicit user authorization.
+- [ ] **P2 — Prepare the single integration PR to `dev`.** Preserve the selected no-chain strategy, create as draft, and request maintainer `size:exception` before merge; no merge.
+- [ ] **P3 — Verify PR metadata and diff.** Confirm approved issue linkage, exact `type:feature` and `minor` labels, base/head, draft status, changed-line count, and checks.
 
 ## Acceptance criteria
 - OpenSpec accurately states the definitive collapsed/minimal-card CTA placement/label and Chilean-local deadline display, including the server-rendered behavior.
@@ -32,7 +36,7 @@ OpenSpec marks WU6 implementation tasks complete, but its design/tasks still des
 ## Progress
 - Exploration confirmed HEAD `5813f39d` with WU6 implementation commits already present; WU6 tasks are checked, while WU7 remains unchecked.
 - The dirty worktree contains 13 modified tracked paths and 6 untracked paths, with no staged changes. It includes three interleaved scopes: WU6 CTA behavior, shared Santiago-time utilities/deadline presentation, and poster URL normalization/CDN configuration. The modified ActivityItem and mapper test paths overlap those scopes, so a single path-based WU6 commit would absorb unrelated work.
-- User confirmed the current UI is definitive. OpenSpec design/tasks and cumulative apply-progress were reconciled; no source behavior was changed. WU6 task checkboxes were retained. Worker reported `git diff --check` passed for the three OpenSpec files; parent read back the diff.
+- User confirmed the current UI is definitive and has now approved manual visual validation. This is recorded as a user attestation, not as an agent-run browser check. OpenSpec design/tasks and cumulative apply-progress were reconciled; no source behavior was changed. WU6 task checkboxes were retained. Worker reported `git diff --check` passed for the three OpenSpec files; parent read back the diff.
 - The user explicitly authorized separate commits for WU6, shared Santiago-time, and poster URL normalization; no push or PR.
 - Poster URL unit committed as `11a491e2` (`fix(web): normalize festival poster URLs`). Shared Santiago-time unit committed as `602f57de` (`feat(utils): share Santiago time utilities`). A native assess of `602f57de` failed closed because unrelated untracked files were present, so the independent verifier treated it as high risk. It ran all three scoped package suites (utils 16/16, admin 515/515, web 155/155), Admin/Web type-check and lint (passed; Web lint had four warnings, no errors). These checks ran on the combined worktree, which still had uncommitted WU6 CTA edits in overlapping files; they are not isolated-commit verification. No push or PR.
 - WU6 definitive UI and artifact reconciliation committed as `bef3f09a` (`feat(web): finalize activity registration CTA`). Independent final-commit verification: web tests 155/155 (481 assertions), forced Web type-check and lint passed (four warnings, zero errors), and diff check passed. Browser visual inspection was not performed. Shared-time checks above remain combined-worktree evidence, not isolated-commit proof.
@@ -41,5 +45,5 @@ OpenSpec marks WU6 implementation tasks complete, but its design/tasks still des
 - Before evidence-only documentation edits, `git status --short --branch` showed a clean branch ahead 11, and `git diff --stat` showed an empty worktree. `git diff --stat origin/feat/edition-activity-application...HEAD` showed 45 files, 1,537 insertions, 164 deletions; `git diff --check` on the committed range passed. Static changed-path/addition audit found no catalog/artist source changes, rollback SQL, URL/window indexes, polling/cron/TTL/worker infrastructure, added secrets, or destructive migration commands. Existing Next image `minimumCacheTTL` was not introduced by this range; only a CDN remote pattern changed in that configuration. Static inspection is not runtime proof. Historical implementation RED/GREEN evidence in apply-progress was not rerun in WU7.
 - T3 complete: the three WU7 implementation verification rows are checked; parent-owned issue/review/sizing/PR/migration lifecycle rows remain unchecked. No push, PR, browser visual inspection, live migration, or isolated shared-time verification is claimed.
 
-## Next step
-Parent to reconcile the evidence-only documentation diff and decide the separately authorized lifecycle steps; the 45-file, 1,701-line committed range is not an approved PR slice or size exception.
+## Next steps
+WU6/WU7 implementation verification is complete. Issue #190's body now states the definitive current UI, tests, and user-approved manual visual validation; its label is `status:approved` (the prior `status:needs-review` was removed). User requested an exception for the single oversized PR; the exception is not yet granted. Create a draft PR to request it, never merge without maintainer acceptance. No push or PR has yet occurred in this follow-up.
