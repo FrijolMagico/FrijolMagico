@@ -128,7 +128,9 @@ export async function createActivityAction(
         await tx.insert(activityOccurrence).values(
           occurrences.map((occurrence) => ({
             activityId: insertedDetail.id,
-            ...occurrence
+            date: occurrence.date,
+            startTime: occurrence.startTime ?? null,
+            durationMinutes: occurrence.durationMinutes ?? null
           }))
         )
       }

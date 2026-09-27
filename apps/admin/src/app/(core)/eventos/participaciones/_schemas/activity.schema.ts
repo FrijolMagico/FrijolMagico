@@ -172,24 +172,29 @@ const occurrenceSchema = z.object({
       return false
     }
   }, 'Ingresa una fecha de calendario válida'),
-  startTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Ingresa una hora válida (HH:mm)'),
-  durationMinutes: z.number().int().positive('La duración debe ser positiva')
+  startTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Ingresa una hora válida (HH:mm)').nullable().optional(),
+  durationMinutes: z.number().int().positive('La duración debe ser positiva').nullable().optional()
 })
 
 export const activityOccurrencesSchema = z.array(occurrenceSchema).superRefine(
   (occurrences, context) => {
     const windows: { date: string; start: number; end: number }[] = []
     for (const [index, occurrence] of occurrences.entries()) {
-      const start = Number(occurrence.startTime.slice(0, 2)) * 60 +
-        Number(occurrence.startTime.slice(3))
-      if (start + occurrence.durationMinutes > 1440) {
-        context.addIssue({ code: 'custom', path: [index, 'durationMinutes'], message: 'La sesión no puede terminar después de medianoche' })
+      // Only validate time/duration if both are present
+      const startTime = occurrence.startTime
+      const duration = occurrence.durationMinutes
+      if (startTime && duration != null) {
+        const start = Number(startTime.slice(0, 2)) * 60 +
+          Number(startTime.slice(3))
+        if (start + duration > 1440) {
+          context.addIssue({ code: 'custom', path: [index, 'durationMinutes'], message: 'La sesión no puede terminar después de medianoche' })
+        }
+        if (windows.some((window) => window.date === occurrence.date &&
+          window.start < start + duration && start < window.end)) {
+          context.addIssue({ code: 'custom', path: [index, 'startTime'], message: 'Las sesiones no pueden superponerse' })
+        }
+        windows.push({ date: occurrence.date, start, end: start + duration })
       }
-      if (windows.some((window) => window.date === occurrence.date &&
-        window.start < start + occurrence.durationMinutes && start < window.end)) {
-        context.addIssue({ code: 'custom', path: [index, 'startTime'], message: 'Las sesiones no pueden superponerse' })
-      }
-      windows.push({ date: occurrence.date, start, end: start + occurrence.durationMinutes })
     }
   }
 )

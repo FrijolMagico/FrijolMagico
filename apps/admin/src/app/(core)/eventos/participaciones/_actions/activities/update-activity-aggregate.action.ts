@@ -177,7 +177,12 @@ export async function updateActivityAggregateAction(
         await tx.delete(activityOccurrence).where(eq(activityOccurrence.activityId, detail.id))
         if (occurrences.length) {
           await tx.insert(activityOccurrence).values(
-            occurrences.map((occurrence) => ({ activityId: detail.id, ...occurrence }))
+            occurrences.map((occurrence) => ({
+              activityId: detail.id,
+              date: occurrence.date,
+              startTime: occurrence.startTime ?? null,
+              durationMinutes: occurrence.durationMinutes ?? null
+            }))
           )
         }
       }
