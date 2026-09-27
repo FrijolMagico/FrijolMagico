@@ -228,6 +228,49 @@ export const activityRegistration = sqliteTable(
 )
 
 /**
+ * Optional Chile-local sessions for workshop and talk activities.
+ * SQLite migration triggers enforce non-overlap, including concurrent writers.
+ */
+export const activityOccurrence = sqliteTable(
+  'activity_occurrence',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    activityId: integer('activity_id')
+      .notNull()
+      .references(() => activity.id, { onDelete: 'cascade' }),
+    date: text('date').notNull(),
+    startTime: text('start_time').notNull(),
+    durationMinutes: integer('duration_minutes').notNull(),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text('updated_at')
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`)
+  },
+  (table) => [
+    uniqueIndex('uq_activity_occurrence_start').on(
+      table.activityId,
+      table.date,
+      table.startTime
+    ),
+    index('idx_activity_occurrence_date').on(table.date, table.startTime),
+    check(
+      'chk_activity_occurrence_date',
+      sql`${table.date} GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' AND julianday(${table.date}) IS NOT NULL AND date(julianday(${table.date})) = ${table.date}`
+    ),
+    check(
+      'chk_activity_occurrence_start_time',
+      sql`${table.startTime} GLOB '[0-2][0-9]:[0-5][0-9]' AND substr(${table.startTime}, 1, 2) BETWEEN '00' AND '23'`
+    ),
+    check(
+      'chk_activity_occurrence_duration',
+      sql`typeof(${table.durationMinutes}) = 'integer' AND ${table.durationMinutes} > 0 AND (CAST(substr(${table.startTime}, 1, 2) AS INTEGER) * 60 + CAST(substr(${table.startTime}, 4, 2) AS INTEGER) + ${table.durationMinutes}) <= 1440`
+    )
+  ]
+)
+
+/**
  * Activity - Details of scheduled activities
  */
 export const activity = sqliteTable(
