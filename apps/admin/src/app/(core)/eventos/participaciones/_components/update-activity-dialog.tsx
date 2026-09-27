@@ -12,6 +12,7 @@ import {
 } from '@/shared/components/ui/field'
 import { Input } from '@/shared/components/ui/input'
 import { Textarea } from '@/shared/components/ui/textarea'
+import { RichTextarea } from '@/shared/components/rich-textarea'
 import {
   type ActivityFormInput,
   activityFormSchema,
@@ -355,11 +356,17 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
             <FieldLabel htmlFor={`detalle-descripcion-${detailId}`}>
               Descripcion
             </FieldLabel>
-            <Textarea
-              id={`detalle-descripcion-${detailId}`}
-              {...methods.register('detail.descripcion')}
-              rows={2}
-              disabled={isSubmitting}
+            <Controller
+              name='detail.descripcion'
+              control={methods.control}
+              render={({ field }) => (
+                <RichTextarea
+                  key={`${activity.id}:${activity.detail?.descripcion ?? ''}`}
+                  id={`detalle-descripcion-${detailId}`}
+                  value={activity.detail?.descripcion ?? ''}
+                  onChange={field.onChange}
+                />
+              )}
             />
             {errors.detail?.descripcion && (
               <FieldError>{errors.detail.descripcion.message}</FieldError>

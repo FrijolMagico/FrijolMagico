@@ -248,6 +248,23 @@ describe('ActivityItem', () => {
     expect(html).not.toContain('Duración:')
   })
 
+  test('renders rich description inside details without nesting paragraphs', () => {
+    const html = renderToString(
+      <ActivityItem
+        activity={{
+          ...baseActivity,
+          registration: null,
+          descripcion: '<p>Vení al <strong>taller</strong></p><ul><li>Gratis</li></ul>'
+        }}
+        isEditionPast={false}
+      />
+    )
+
+    expect(html).toContain('<p>Vení al <strong>taller</strong></p>')
+    expect(html).toContain('<ul><li>Gratis</li></ul>')
+    expect(html).not.toMatch(/<p[^>]*>\s*<p/)
+  })
+
   test('renders minimal with participant name, no title or chevron', () => {
     const activity: FestivalActivity = {
       titulo: null,

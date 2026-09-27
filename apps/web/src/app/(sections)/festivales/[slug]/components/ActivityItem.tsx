@@ -4,6 +4,7 @@ import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 import { ActivityRegistrationCta } from './activity-registration-affordance'
+import { ActivityDescription } from './activity-description'
 
 import type { FestivalActivity } from '../../types/festival'
 
@@ -103,11 +104,7 @@ export const ActivityItem = ({
                 </div>
               )}
             </div>
-            {activity.descripcion && (
-              <p className='text-palette-foreground/70 mt-3 text-sm leading-relaxed'>
-                {activity.descripcion}
-              </p>
-            )}
+            <ActivityDescription description={activity.descripcion} />
           </div>
         </details>
       ) : (
