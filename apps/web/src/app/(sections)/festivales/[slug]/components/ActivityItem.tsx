@@ -1,4 +1,5 @@
 import { ChevronDown, Clock, MapPin } from 'lucide-react'
+import { formatSantiagoDateTime } from '@frijolmagico/utils/santiago-date-format'
 
 import {
   ActivityRegistrationBadge,
@@ -51,6 +52,15 @@ export const ActivityItem = ({ activity }: ActivityItemProps) => {
                   {activity.titulo}
                 </h3>
               )}
+              {activity.registration && (
+                <span className='text-palette-foreground/50 mt-1 inline-block text-sm leading-none'>
+                  Inscripciones abiertas hasta el{' '}
+                  <strong>
+                    {formatSantiagoDateTime(activity.registration.end_at)}hrs
+                  </strong>
+                </span>
+              )}
+
             </div>
 
             <ChevronDown

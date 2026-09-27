@@ -11,7 +11,9 @@
     "./shallow-diff": "./src/shallow-diff.ts",
     "./rrss": "./src/rrss.ts",
     "./cdn": "./src/cdn.ts",
-    "./version": "./src/version.ts"
+    "./version": "./src/version.ts",
+    "./santiago-time": "./src/santiago-time.ts",
+    "./santiago-date-format": "./src/santiago-date-format.ts"
   },
   "files": [
     "./src/cn.ts",
@@ -21,9 +23,12 @@
     "./src/shallow-diff.ts",
     "./src/rrss.ts",
     "./src/cdn.ts",
-    "./src/version.ts"
+    "./src/version.ts",
+    "./src/santiago-time.ts",
+    "./src/santiago-date-format.ts"
   ],
   "dependencies": {
+    "@js-temporal/polyfill": "^0.5.1",
     "clsx": "^2.1.1",
     "tailwind-merge": "^3.5.0"
   },

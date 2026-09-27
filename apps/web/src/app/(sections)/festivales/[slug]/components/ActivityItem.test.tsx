@@ -29,6 +29,14 @@ describe('ActivityItem', () => {
     }
   }
 
+  test('shows only the Chilean local deadline while preserving the UTC DTO', () => {
+    const html = renderToString(<ActivityItem activity={activity} />)
+    expect(html).toContain('Inscripciones abiertas hasta el')
+    expect(html.replaceAll('<!-- -->', '')).toContain('05/09/2026 13:30hrs')
+    expect(html).not.toContain(activity.registration!.end_at)
+    expect(activity.registration!.end_at).toBe('2026-09-05T17:30:00.000Z')
+  })
+
   test('hides registration in server output and shows badge outside collapsed details after mount', () => {
     expect(renderToString(<ActivityItem activity={activity} />)).not.toContain(
       'Inscríbete'

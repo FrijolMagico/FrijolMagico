@@ -184,6 +184,7 @@
       "name": "@frijolmagico/utils",
       "version": "1.0.0",
       "dependencies": {
+        "@js-temporal/polyfill": "^0.5.1",
         "clsx": "^2.1.1",
         "tailwind-merge": "^3.5.0",
       },

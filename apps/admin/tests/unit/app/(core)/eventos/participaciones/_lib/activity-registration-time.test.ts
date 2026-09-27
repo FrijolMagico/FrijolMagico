@@ -1,10 +1,16 @@
 import { describe, expect, mock, test } from 'bun:test'
+import { chileLocalToUtc as sharedChileLocalToUtc } from '@frijolmagico/utils/santiago-time'
 
 mock.module('server-only', () => ({}))
 const { chileLocalToUtc, registrationWindowToUtc, utcToChileLocal } =
   await import('@/core/eventos/participaciones/_lib/activity-registration-time')
 
 describe('America/Santiago registration times', () => {
+  test('uses the shared converter and reconstructs edit form fields', () => {
+    const stored = chileLocalToUtc('2026-07-01', '10:30')
+    expect(stored).toBe(sharedChileLocalToUtc('2026-07-01', '10:30'))
+    expect(utcToChileLocal(stored)).toEqual({ date: '2026-07-01', time: '10:30' })
+  })
   test('uses winter -04 and summer -03, serialized to UTC milliseconds', () => {
     expect(chileLocalToUtc('2026-07-01', '10:30')).toBe(
       '2026-07-01T14:30:00.000Z'
