@@ -20,11 +20,9 @@ describe('ActivityList', () => {
           {
             titulo: 'Concierto',
             descripcion: 'Concierto en vivo',
-            duracion_minutos: null,
             ubicacion: null,
-            hora_inicio: null,
+            ocurrencias: [],
             tipo: 'musica',
-            fecha: null,
             participante_pseudonimo: 'Banda',
             registration: {
               url: 'https://example.org/signup',
@@ -48,33 +46,27 @@ describe('ActivityList', () => {
       {
         titulo: 'Taller 1',
         descripcion: null,
-        duracion_minutos: null,
         ubicacion: null,
-        hora_inicio: '18:00',
+        ocurrencias: [{ fecha: '2025-01-15', hora_inicio: '18:00', duracion_minutos: 60 }],
         tipo: 'taller',
-        fecha: '2025-01-15',
         participante_pseudonimo: 'A',
         registration: null
       },
       {
         titulo: 'Concierto',
         descripcion: null,
-        duracion_minutos: null,
         ubicacion: null,
-        hora_inicio: '20:00',
+        ocurrencias: [],
         tipo: 'musica',
-        fecha: '2025-01-16',
         participante_pseudonimo: 'B',
         registration: null
       },
       {
         titulo: 'Taller 2',
         descripcion: null,
-        duracion_minutos: null,
         ubicacion: null,
-        hora_inicio: '19:00',
+        ocurrencias: [{ fecha: '2025-01-15', hora_inicio: '19:00', duracion_minutos: 60 }],
         tipo: 'taller',
-        fecha: '2025-01-15',
         participante_pseudonimo: 'C',
         registration: null
       }
@@ -91,12 +83,38 @@ describe('ActivityList', () => {
     expect(headings[headings.length - 1].textContent).toBe('Música')
 
     // Each group renders a list
-    const lists = screen.getAllByRole('list')
+    const lists = document.querySelectorAll('section > ul')
     expect(lists).toHaveLength(2)
 
     // The last list (Música) has 1 item
     const lastList = lists[lists.length - 1]
     expect(lastList.querySelectorAll('li')).toHaveLength(1)
+  })
+
+  test('keeps one card per workshop and orders by first session with unscheduled last', () => {
+    const makeActivity = (title: string, ocurrencias: FestivalActivity['ocurrencias']): FestivalActivity => ({
+      titulo: title,
+      descripcion: null,
+      ubicacion: 'Sala compartida',
+      ocurrencias,
+      tipo: 'taller',
+      participante_pseudonimo: null,
+      registration: null
+    })
+    const { container } = render(<ActivityList actividades={[
+      makeActivity('Por confirmar', []),
+      makeActivity('Más tarde', [{ fecha: '2025-10-04', hora_inicio: '18:00', duracion_minutos: 30 }]),
+      makeActivity('Primero', [
+        { fecha: '2025-10-03', hora_inicio: '09:00', duracion_minutos: 60 },
+        { fecha: '2025-10-04', hora_inicio: '09:00', duracion_minutos: 60 }
+      ])
+    ]} />)
+    expect(Array.from(container.querySelectorAll('article h3')).map((heading) => heading.textContent)).toEqual([
+      'Primero', 'Más tarde', 'Por confirmar'
+    ])
+    expect(container.querySelectorAll('article')).toHaveLength(3)
+    expect(screen.getAllByText('Sala compartida')).toHaveLength(3)
+    expect(screen.getByText('Fecha y horario por confirmar')).toBeDefined()
   })
 
   test('renders empty when no activities', () => {

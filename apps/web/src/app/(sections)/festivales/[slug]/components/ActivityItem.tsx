@@ -10,20 +10,10 @@ interface ActivityItemProps {
 }
 
 const hasDetails = (a: FestivalActivity) =>
-  Boolean(
-    a.hora_inicio ||
-    a.fecha ||
-    a.ubicacion ||
-    a.descripcion ||
-    a.duracion_minutos
-  )
+  Boolean(a.ocurrencias.length || a.ubicacion || a.descripcion)
 
 export const ActivityItem = ({ activity }: ActivityItemProps) => {
   const details = hasDetails(activity)
-
-  const timeDisplay = [activity.fecha, activity.hora_inicio]
-    .filter(Boolean)
-    .join(' — ')
 
   return (
     <article className='bg-palette-background border-palette-primary group relative max-w-xs min-w-[16rem] rounded-lg border'>
@@ -68,11 +58,23 @@ export const ActivityItem = ({ activity }: ActivityItemProps) => {
 
           <div className='border-palette-primary/20 h-full overflow-hidden border-t px-4 pt-3 pb-4'>
             <div className='text-foreground/60 flex flex-wrap gap-4 text-sm'>
-              {timeDisplay && (
-                <div className='flex items-center gap-1.5'>
-                  <Clock className='size-4' aria-hidden='true' />
-                  <time>{timeDisplay}</time>
-                </div>
+              {activity.ocurrencias.length > 0 ? (
+                <ul className='space-y-1'>
+                  {activity.ocurrencias.map((occurrence) => (
+                    <li
+                      key={`${occurrence.fecha}-${occurrence.hora_inicio}`}
+                      className='flex items-center gap-1.5'
+                    >
+                      <Clock className='size-4' aria-hidden='true' />
+                      <time dateTime={`${occurrence.fecha}T${occurrence.hora_inicio}:00`}>
+                        {occurrence.fecha} — {occurrence.hora_inicio}
+                      </time>
+                      <span>({occurrence.duracion_minutos} min)</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <span>Fecha y horario por confirmar</span>
               )}
               {activity.ubicacion && (
                 <div className='flex items-center gap-1.5'>
@@ -84,11 +86,6 @@ export const ActivityItem = ({ activity }: ActivityItemProps) => {
             {activity.descripcion && (
               <p className='text-palette-foreground/70 mt-3 text-sm leading-relaxed'>
                 {activity.descripcion}
-              </p>
-            )}
-            {activity.duracion_minutos && (
-              <p className='text-palette-foreground/50 mt-1 text-xs'>
-                Duración: {activity.duracion_minutos} min
               </p>
             )}
           </div>
@@ -107,6 +104,11 @@ export const ActivityItem = ({ activity }: ActivityItemProps) => {
             <h3 className='text-palette-foreground text-base leading-none font-semibold'>
               {activity.titulo}
             </h3>
+          )}
+          {activity.tipo !== 'musica' && (
+            <p className='text-palette-foreground/60 mt-2 text-sm'>
+              Fecha y horario por confirmar
+            </p>
           )}
         </div>
       )}

@@ -72,22 +72,18 @@ const mockDetails: Record<string, FestivalDetail> = {
       {
         titulo: 'Taller de Acuarela',
         descripcion: 'Aprende técnicas básicas de acuarela',
-        duracion_minutos: 90,
         ubicacion: 'Sala 1',
-        hora_inicio: '14:00',
+        ocurrencias: [{ fecha: '2025-10-03', hora_inicio: '14:00', duracion_minutos: 90 }],
         tipo: 'taller',
-        fecha: '2025-10-03',
         participante_pseudonimo: 'Akane Ilustración',
         registration: null
       },
       {
         titulo: 'Concierto de Cierre',
         descripcion: 'Presentación musical en vivo',
-        duracion_minutos: 60,
         ubicacion: 'Escenario Principal',
-        hora_inicio: '18:00',
+        ocurrencias: [],
         tipo: 'musica',
-        fecha: '2025-10-04',
         participante_pseudonimo: 'Banda Invitada',
         registration: null
       }
@@ -136,11 +132,9 @@ const mockDetails: Record<string, FestivalDetail> = {
       {
         titulo: 'Live Drawing Session',
         descripcion: 'Sesión de dibujo en vivo con música',
-        duracion_minutos: 120,
         ubicacion: 'Benders Bar',
-        hora_inicio: '20:00',
+        ocurrencias: [{ fecha: '2025-05-10', hora_inicio: '20:00', duracion_minutos: 120 }],
         tipo: 'exposicion',
-        fecha: '2025-05-10',
         participante_pseudonimo: 'Líneas Nocturnas',
         registration: null
       }

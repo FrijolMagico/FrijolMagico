@@ -44,18 +44,16 @@ describe('Festival types', () => {
     const activity: FestivalActivity = {
       titulo: 'Taller de Acuarela',
       descripcion: 'Un taller introductorio',
-      duracion_minutos: 90,
       ubicacion: 'Sala A',
-      hora_inicio: '18:00',
+      ocurrencias: [{ fecha: '2025-01-15', hora_inicio: '18:00', duracion_minutos: 90 }],
       tipo: 'taller',
-      fecha: '2025-01-15',
       participante_pseudonimo: 'Artista Ejemplo',
       registration: null
     }
 
     expect(activity.registration).toBeNull()
     expect(activity.tipo).toBe('taller')
-    expect(activity.fecha).toBe('2025-01-15')
+    expect(activity.ocurrencias[0].fecha).toBe('2025-01-15')
   })
 
   test('FestivalDetail shape aggregates edition data', () => {

@@ -50,11 +50,9 @@ const baseDetail: FestivalDetail = {
     {
       titulo: 'Taller de Acuarela',
       descripcion: null,
-      duracion_minutos: 60,
       ubicacion: 'Sala A',
-      hora_inicio: '18:00',
+      ocurrencias: [{ fecha: '2025-10-03', hora_inicio: '18:00', duracion_minutos: 60 }],
       tipo: 'taller',
-      fecha: '2025-10-03',
       participante_pseudonimo: 'Artista Ejemplo',
       registration: null
     }

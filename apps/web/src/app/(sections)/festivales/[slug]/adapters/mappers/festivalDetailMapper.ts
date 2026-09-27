@@ -33,6 +33,11 @@ export const mapFestivalDetail = (raw: FestivalDetail): FestivalDetail => {
     participantes: raw.participantes.map(mapParticipant),
     actividades: raw.actividades.map((activity) => ({
       ...activity,
+      ocurrencias: [...activity.ocurrencias].sort(
+        (a, b) =>
+          a.fecha.localeCompare(b.fecha) ||
+          a.hora_inicio.localeCompare(b.hora_inicio)
+      ),
       registration: activity.registration ?? null
     }))
   }

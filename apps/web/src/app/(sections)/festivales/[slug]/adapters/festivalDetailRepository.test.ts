@@ -79,11 +79,9 @@ describe('festivalDetailRepository', () => {
     const activity = {
       titulo: 'Taller',
       descripcion: null,
-      duracion_minutos: null,
       ubicacion: null,
-      hora_inicio: null,
+      ocurrencias: [],
       tipo: 'taller',
-      fecha: null,
       participante_pseudonimo: 'Tallerista'
     }
     const payload = JSON.parse(baseRawResult.resultado)
@@ -108,6 +106,7 @@ describe('festivalDetailRepository', () => {
     expect(result?.actividades.map(({ registration }) => registration)).toEqual(
       [registration, null, null]
     )
+    expect(result?.actividades[1].ocurrencias).toEqual([])
     const html = renderToStaticMarkup(
       createElement(ActivityList, { actividades: result?.actividades ?? [] })
     )

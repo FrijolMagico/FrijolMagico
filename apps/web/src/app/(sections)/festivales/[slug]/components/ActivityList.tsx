@@ -22,12 +22,13 @@ const TYPE_ORDER: Record<string, number> = {
 
 export const ActivityList = ({ actividades }: ActivityListProps) => {
   const sorted = [...actividades].sort((a, b) => {
-    const dateA = a.fecha ?? ''
-    const dateB = b.fecha ?? ''
-    if (dateA !== dateB) {
-      return dateA.localeCompare(dateB)
-    }
-    return (a.hora_inicio ?? '').localeCompare(b.hora_inicio ?? '')
+    const firstA = a.ocurrencias[0]
+    const firstB = b.ocurrencias[0]
+    if (!firstA || !firstB) return Number(Boolean(firstB)) - Number(Boolean(firstA))
+    return (
+      firstA.fecha.localeCompare(firstB.fecha) ||
+      firstA.hora_inicio.localeCompare(firstB.hora_inicio)
+    )
   })
 
   const grouped = sorted.reduce<Record<string, FestivalActivity[]>>(

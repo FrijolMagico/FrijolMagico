@@ -16,11 +16,9 @@ describe('ActivityItem', () => {
   const activity: FestivalActivity = {
     titulo: 'Taller',
     descripcion: 'Aprende',
-    duracion_minutos: null,
     ubicacion: null,
-    hora_inicio: null,
+    ocurrencias: [],
     tipo: 'taller',
-    fecha: null,
     participante_pseudonimo: 'Artista',
     registration: {
       url: 'https://example.org/signup',
@@ -191,11 +189,9 @@ describe('ActivityItem', () => {
     const activity: FestivalActivity = {
       titulo: 'Taller de Acuarela',
       descripcion: 'Introducción a acuarela',
-      duracion_minutos: 90,
       ubicacion: 'Sala A',
-      hora_inicio: '18:00',
+      ocurrencias: [{ fecha: '2025-01-15', hora_inicio: '18:00', duracion_minutos: 90 }],
       tipo: 'taller',
-      fecha: '2025-01-15',
       participante_pseudonimo: 'Artista Ejemplo',
       registration: null
     }
@@ -219,18 +215,43 @@ describe('ActivityItem', () => {
     expect(screen.getByText('2025-01-15 — 18:00')).toBeDefined()
     expect(screen.getByText('Sala A')).toBeDefined()
     expect(screen.getByText('Introducción a acuarela')).toBeDefined()
-    expect(screen.getByText('Duración: 90 min')).toBeDefined()
+    expect(screen.getByText('(90 min)')).toBeDefined()
+  })
+
+  test('lists Chile-local sessions across days and within a day without timezone conversion', () => {
+    const html = renderToString(<ActivityItem activity={{
+      ...activity,
+      registration: null,
+      ocurrencias: [
+        { fecha: '2026-09-05', hora_inicio: '09:00', duracion_minutos: 45 },
+        { fecha: '2026-09-05', hora_inicio: '12:30', duracion_minutos: 60 },
+        { fecha: '2026-09-07', hora_inicio: '10:00', duracion_minutos: 90 }
+      ]
+    }} />)
+    const text = html.replaceAll('<!-- -->', '')
+    expect(text).toContain('2026-09-05 — 09:00')
+    expect(text).toContain('2026-09-05 — 12:30')
+    expect(text).toContain('2026-09-07 — 10:00')
+    expect(text).toContain('(45 min)')
+    expect(text).toContain('(60 min)')
+    expect(text).toContain('(90 min)')
+    expect(html).not.toContain('Fecha y horario por confirmar')
+  })
+
+  test('shows exact unscheduled copy without invented date or duration', () => {
+    const html = renderToString(<ActivityItem activity={{ ...activity, registration: null }} />)
+    expect(html).toContain('Fecha y horario por confirmar')
+    expect(html).not.toContain('<time')
+    expect(html).not.toContain('Duración:')
   })
 
   test('renders minimal with participant name, no title or chevron', () => {
     const activity: FestivalActivity = {
       titulo: null,
       descripcion: null,
-      duracion_minutos: null,
       ubicacion: null,
-      hora_inicio: null,
+      ocurrencias: [],
       tipo: 'musica',
-      fecha: null,
       participante_pseudonimo: 'Banda X',
       registration: null
     }
