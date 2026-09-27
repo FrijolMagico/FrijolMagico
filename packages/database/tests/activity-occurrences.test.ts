@@ -105,7 +105,9 @@ describe('activity occurrences additive migration', () => {
     }
     await expect(add(db, 3, '2026-09-05', '09:00', 60)).rejects.toThrow()
     await expect(add(db, 999, '2026-09-05', '09:00', 60)).rejects.toThrow()
-    await expect(db.execute("INSERT INTO activity_occurrence (activity_id, date, start_time) VALUES (2, '2026-09-05', '09:00')")).rejects.toThrow()
+    // date + start_time without duration is now allowed (nullable)
+    await db.execute("INSERT INTO activity_occurrence (activity_id, date, start_time) VALUES (2, '2026-09-05', '09:00')")
+    // But duration=0 is still rejected
     await expect(db.execute("UPDATE activity_occurrence SET duration_minutes = 0 WHERE activity_id = 1")).rejects.toThrow()
   })
 

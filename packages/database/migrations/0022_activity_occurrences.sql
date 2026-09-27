@@ -4,13 +4,13 @@ CREATE TABLE activity_occurrence (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     activity_id INTEGER NOT NULL REFERENCES actividad(id) ON DELETE CASCADE,
     date TEXT NOT NULL,
-    start_time TEXT NOT NULL,
-    duration_minutes INTEGER NOT NULL,
+    start_time TEXT,
+    duration_minutes INTEGER,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT chk_activity_occurrence_date CHECK (date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' AND julianday(date) IS NOT NULL AND date(julianday(date)) = date),
-    CONSTRAINT chk_activity_occurrence_start_time CHECK (start_time GLOB '[0-2][0-9]:[0-5][0-9]' AND substr(start_time, 1, 2) BETWEEN '00' AND '23'),
-    CONSTRAINT chk_activity_occurrence_duration CHECK (typeof(duration_minutes) = 'integer' AND duration_minutes > 0 AND (CAST(substr(start_time, 1, 2) AS INTEGER) * 60 + CAST(substr(start_time, 4, 2) AS INTEGER) + duration_minutes) <= 1440)
+    CONSTRAINT chk_activity_occurrence_start_time CHECK (start_time IS NULL OR (start_time GLOB '[0-2][0-9]:[0-5][0-9]' AND substr(start_time, 1, 2) BETWEEN '00' AND '23')),
+    CONSTRAINT chk_activity_occurrence_duration CHECK (duration_minutes IS NULL OR (typeof(duration_minutes) = 'integer' AND duration_minutes > 0 AND start_time IS NOT NULL AND (CAST(substr(start_time, 1, 2) AS INTEGER) * 60 + CAST(substr(start_time, 4, 2) AS INTEGER) + duration_minutes) <= 1440))
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX uq_activity_occurrence_start ON activity_occurrence (activity_id, date, start_time);
@@ -29,6 +29,8 @@ FOR EACH ROW BEGIN
     SELECT RAISE(ABORT, 'activity occurrences overlap') WHERE EXISTS (
         SELECT 1 FROM activity_occurrence o
         WHERE o.activity_id = NEW.activity_id AND o.date = NEW.date
+          AND NEW.start_time IS NOT NULL AND NEW.duration_minutes IS NOT NULL
+          AND o.start_time IS NOT NULL AND o.duration_minutes IS NOT NULL
           AND (CAST(substr(o.start_time, 1, 2) AS INTEGER) * 60 + CAST(substr(o.start_time, 4, 2) AS INTEGER))
               < (CAST(substr(NEW.start_time, 1, 2) AS INTEGER) * 60 + CAST(substr(NEW.start_time, 4, 2) AS INTEGER) + NEW.duration_minutes)
           AND (CAST(substr(NEW.start_time, 1, 2) AS INTEGER) * 60 + CAST(substr(NEW.start_time, 4, 2) AS INTEGER))
@@ -48,6 +50,8 @@ FOR EACH ROW BEGIN
     SELECT RAISE(ABORT, 'activity occurrences overlap') WHERE EXISTS (
         SELECT 1 FROM activity_occurrence o
         WHERE o.id <> OLD.id AND o.activity_id = NEW.activity_id AND o.date = NEW.date
+          AND NEW.start_time IS NOT NULL AND NEW.duration_minutes IS NOT NULL
+          AND o.start_time IS NOT NULL AND o.duration_minutes IS NOT NULL
           AND (CAST(substr(o.start_time, 1, 2) AS INTEGER) * 60 + CAST(substr(o.start_time, 4, 2) AS INTEGER))
               < (CAST(substr(NEW.start_time, 1, 2) AS INTEGER) * 60 + CAST(substr(NEW.start_time, 4, 2) AS INTEGER) + NEW.duration_minutes)
           AND (CAST(substr(NEW.start_time, 1, 2) AS INTEGER) * 60 + CAST(substr(NEW.start_time, 4, 2) AS INTEGER))

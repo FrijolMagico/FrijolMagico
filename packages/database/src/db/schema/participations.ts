@@ -239,8 +239,8 @@ export const activityOccurrence = sqliteTable(
       .notNull()
       .references(() => activity.id, { onDelete: 'cascade' }),
     date: text('date').notNull(),
-    startTime: text('start_time').notNull(),
-    durationMinutes: integer('duration_minutes').notNull(),
+    startTime: text('start_time'),
+    durationMinutes: integer('duration_minutes'),
     createdAt: text('created_at')
       .notNull()
       .default(sql`CURRENT_TIMESTAMP`),
