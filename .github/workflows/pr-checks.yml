@@ -4,18 +4,50 @@ on:
   pull_request:
 
 jobs:
+  production-migrations:
+    name: Production Migrations
+    if: github.base_ref == 'main' && github.head_ref == 'dev' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    environment: production-migrations
+    concurrency:
+      group: production-migrations
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Apply production migrations
+        run: bun run --filter=@frijolmagico/database migrate
+        env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+
   quality:
     name: Lint & Type-Check & Build & Test
+    needs: production-migrations
+    if: always()
     runs-on: ubuntu-latest
     steps:
+      - name: Require successful production migrations for release PRs
+        if: github.base_ref == 'main' && github.head_ref == 'dev' && github.event.pull_request.head.repo.full_name == github.repository && needs.production-migrations.result != 'success'
+        run: |
+          echo "Production migrations did not succeed; failing the release PR quality check."
+          exit 1
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
       - name: Block direct PRs to main
-        if: github.base_ref == 'main' && github.head_ref != 'dev'
+        if: github.base_ref == 'main' && (github.head_ref != 'dev' || github.event.pull_request.head.repo.full_name != github.repository)
         run: |
-          echo "❌ PRs directo a main solo desde dev."
+          echo "❌ PRs directo a main solo desde dev del mismo repositorio."
           echo "Source: ${{ github.head_ref }} → main"
           exit 1
 
