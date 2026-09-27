@@ -64,6 +64,8 @@ describe('Festival types', () => {
       edicion_nombre: 'Edición XV',
       numero_edicion: 'XV',
       poster_url: 'https://cdn.frijolmagico.cl/poster.webp',
+      edicion_fin: '2025-10-03',
+      is_edition_past: true,
       dias: [],
       participantes: [],
       actividades: []

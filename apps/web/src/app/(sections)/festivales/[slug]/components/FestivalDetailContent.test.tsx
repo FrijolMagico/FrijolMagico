@@ -29,6 +29,8 @@ const baseDetail: FestivalDetail = {
   edicion_nombre: 'Un Nuevo Germinar',
   numero_edicion: 'XV',
   poster_url: 'https://cdn.frijolmagico.cl/poster.webp',
+  edicion_fin: '2025-10-03',
+  is_edition_past: true,
   dias: [
     {
       fecha: '2025-10-03',

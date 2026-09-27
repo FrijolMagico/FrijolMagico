@@ -28,6 +28,8 @@ const baseRawResult = {
     edicion_nombre: 'Edición XV',
     numero_edicion: 'XV',
     poster_url: 'https://cdn.frijolmagico.cl/poster.webp',
+    edicion_fin: '2025-10-03',
+    is_edition_past: true,
     dias: [],
     participantes: [
       {
@@ -108,7 +110,7 @@ describe('festivalDetailRepository', () => {
     )
     expect(result?.actividades[1].ocurrencias).toEqual([])
     const html = renderToStaticMarkup(
-      createElement(ActivityList, { actividades: result?.actividades ?? [] })
+      createElement(ActivityList, { actividades: result?.actividades ?? [], isEditionPast: false })
     )
     expect(html).toContain('Músico')
     expect(html).not.toContain('Concierto reservado')

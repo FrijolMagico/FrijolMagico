@@ -31,6 +31,7 @@ describe('ActivityList', () => {
             }
           }
         ]}
+        isEditionPast={false}
       />
     )
     expect(screen.getByText('Banda')).toBeDefined()
@@ -72,7 +73,7 @@ describe('ActivityList', () => {
       }
     ]
 
-    render(<ActivityList actividades={actividades} />)
+    render(<ActivityList actividades={actividades} isEditionPast={false} />)
 
     // All group headings are present
     expect(screen.getByText('Música')).toBeDefined()
@@ -108,7 +109,7 @@ describe('ActivityList', () => {
         { fecha: '2025-10-03', hora_inicio: '09:00', duracion_minutos: 60 },
         { fecha: '2025-10-04', hora_inicio: '09:00', duracion_minutos: 60 }
       ])
-    ]} />)
+    ]} isEditionPast={false} />)
     expect(Array.from(container.querySelectorAll('article h3')).map((heading) => heading.textContent)).toEqual([
       'Primero', 'Más tarde', 'Por confirmar'
     ])
@@ -118,7 +119,7 @@ describe('ActivityList', () => {
   })
 
   test('renders empty when no activities', () => {
-    render(<ActivityList actividades={[]} />)
+    render(<ActivityList actividades={[]} isEditionPast={false} />)
 
     // The section header still renders
     expect(screen.getByText('Actividades')).toBeDefined()
