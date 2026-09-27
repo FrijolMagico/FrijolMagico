@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'cdn.frijolmagico.cl',
         pathname: '/**'
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn-dev.frijolmagico.cl',
+        pathname: '/**'
       }
     ]
   }

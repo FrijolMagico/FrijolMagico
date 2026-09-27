@@ -1,5 +1,5 @@
 import { getDisciplineLabel } from '@/app/(sections)/adapters/mappers/disciplineMapper'
-import { getAvatarUrl } from '@frijolmagico/utils/cdn'
+import { getAvatarUrl, getPosterUrl } from '@frijolmagico/utils/cdn'
 
 import type {
   FestivalDetail,
@@ -29,6 +29,7 @@ const mapParticipant = (
 export const mapFestivalDetail = (raw: FestivalDetail): FestivalDetail => {
   return {
     ...raw,
+    poster_url: getPosterUrl(raw.poster_url),
     participantes: raw.participantes.map(mapParticipant),
     actividades: raw.actividades.map((activity) => ({
       ...activity,

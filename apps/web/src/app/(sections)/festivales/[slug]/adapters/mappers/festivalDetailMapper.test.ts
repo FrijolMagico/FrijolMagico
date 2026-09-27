@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test'
+import { getPosterUrl } from '@frijolmagico/utils/cdn'
 
 import { mapFestivalDetail } from './festivalDetailMapper'
 
@@ -49,6 +50,35 @@ const baseRaw = {
 }
 
 describe('mapFestivalDetail', () => {
+  test('resolves a relative poster key to the public CDN URL', () => {
+    const key = 'festivales/poster.webp'
+    const result = mapFestivalDetail({
+      ...baseRaw,
+      poster_url: key
+    } as FestivalDetail)
+
+    expect(result.poster_url).toBe(getPosterUrl(key))
+  })
+
+  test('preserves an absolute HTTP poster URL', () => {
+    const url = 'https://example.org/poster.webp'
+    const result = mapFestivalDetail({
+      ...baseRaw,
+      poster_url: url
+    } as FestivalDetail)
+
+    expect(result.poster_url).toBe(url)
+  })
+
+  test('keeps a null poster URL', () => {
+    const result = mapFestivalDetail({
+      ...baseRaw,
+      poster_url: null
+    } as FestivalDetail)
+
+    expect(result.poster_url).toBeNull()
+  })
+
   test('maps known discipline slugs to labels', () => {
     const result = mapFestivalDetail(baseRaw as unknown as FestivalDetail)
 
