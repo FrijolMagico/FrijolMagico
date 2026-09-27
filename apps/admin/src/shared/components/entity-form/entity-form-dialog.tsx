@@ -42,6 +42,7 @@ interface EntityFormDialogProps {
   isDirty?: boolean
   children: ReactNode
   className?: string
+  contentSized?: boolean
   triggerLabel?: string
   close?: {
     label?: string
@@ -62,7 +63,8 @@ export function EntityFormDialog({
   footerStart,
   submit,
   isDirty,
-  className
+  className,
+  contentSized = false
 }: EntityFormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -76,21 +78,29 @@ export function EntityFormDialog({
           }
         />
       )}
-      <DialogContent className={cn(className)}>
+      <DialogContent
+        className={cn(
+          'flex max-h-[calc(100dvh-2rem)] min-w-0 flex-col gap-0',
+          contentSized && 'w-fit sm:max-w-none',
+          className
+        )}
+        style={contentSized ? { maxWidth: 'calc(100vw - 2rem)' } : undefined}
+      >
         {isDirty && (
           <Badge className='absolute -top-2 -left-6 ml-2 -rotate-6'>
             Editado
           </Badge>
         )}
-        <DialogHeader>
+        <DialogHeader className='shrink-0 border-b pb-6'>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
-        {children}
+        <div className='min-h-0 min-w-0 overflow-y-auto py-6'>{children}</div>
 
         {submit && (
           <DialogFooter
             className={cn(
+              'shrink-0 border-t pt-6',
               footerStart &&
                 'flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-start'
             )}

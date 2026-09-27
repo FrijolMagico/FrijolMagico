@@ -201,7 +201,7 @@ export function CreateActivityDialog({
       onOpenChange={toggleCreateActivityDialogOpen}
       title={`Agregar Actividad: ${edition.eventName} ${edition.editionNumber}`}
       description='Añade un participante a una actividad específica en esta edición.'
-      className='md:max-w-6xl md:min-w-3xl'
+      contentSized
       triggerLabel='Agregar Actividad'
       submit={{
         type: 'submit',
@@ -213,7 +213,7 @@ export function CreateActivityDialog({
     >
       <form
         id='create-activity-form'
-        className='flex gap-4'
+        className='flex min-w-0 max-w-full flex-col gap-4 md:w-6xl md:flex-row'
         onSubmit={methods.handleSubmit(onSubmit)}
       >
         <FieldGroup>
@@ -416,7 +416,7 @@ export function CreateActivityDialog({
           </Field>
         </FieldGroup>
 
-        <Separator orientation='vertical' />
+        <Separator orientation='vertical' className='hidden md:block' />
 
         <FieldGroup>
           <Field>
@@ -511,7 +511,7 @@ export function CreateActivityDialog({
 
         {registrationEnabled && (
           <>
-            <Separator orientation='vertical' />
+            <Separator orientation='vertical' className='hidden md:block' />
             <ActivityRegistrationFields
               methods={methods}
               disabled={isSubmitting}

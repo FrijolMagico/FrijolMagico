@@ -189,7 +189,7 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
       }}
       title={`Editar actividad: ${entityTitle} en ${edition.eventName} ${edition.editionNumber}`}
       description='Modifica los detalles de esta actividad.'
-      className='md:max-w-6xl md:min-w-3xl'
+      contentSized
       footerStart={
         <Button
           type='button'
@@ -210,7 +210,7 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
     >
       <form
         id='update-activity-form'
-        className='flex gap-4'
+        className='flex min-w-0 max-w-full flex-col gap-4 md:w-6xl md:flex-row'
         onSubmit={methods.handleSubmit(onSubmit)}
       >
         <FieldGroup>
@@ -334,7 +334,7 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
           </Field>
         </FieldGroup>
 
-        <Separator orientation='vertical' />
+        <Separator orientation='vertical' className='hidden md:block' />
 
         <FieldGroup>
           <Field>
@@ -373,7 +373,7 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
             )}
           </Field>
 
-          <div className='grid grid-cols-1 gap-3 sm:grid-cols-2'>
+          <div className='grid grid-cols-1 gap-3 md:grid-cols-2'>
             <Field>
               <FieldLabel htmlFor={`detalle-ubicacion-${detailId}`}>
                 Ubicacion
@@ -443,7 +443,7 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
 
         {registrationEnabled && (
           <>
-            <Separator orientation='vertical' />
+            <Separator orientation='vertical' className='hidden md:block' />
             <ActivityRegistrationFields
               methods={methods}
               disabled={isSubmitting}
