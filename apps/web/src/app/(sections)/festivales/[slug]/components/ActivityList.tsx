@@ -55,7 +55,7 @@ export const ActivityList = ({ actividades }: ActivityListProps) => {
               <h3 className='text-palette-accent mb-3 text-center font-mono text-2xl font-bold md:text-start'>
                 {TYPE_LABELS[tipo] ?? tipo}
               </h3>
-              <ul className={cn(tipo === 'musica' ? 'space-y-2' : 'space-y-3')}>
+              <ul className={cn(tipo === 'musica' ? 'space-y-2' : 'space-y-8')}>
                 {group.map((activity, index) => (
                   <li key={`${tipo}-${activity.titulo ?? index}-${index}`}>
                     {tipo !== 'musica' ? (

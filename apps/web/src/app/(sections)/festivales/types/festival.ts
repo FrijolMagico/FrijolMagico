@@ -50,6 +50,12 @@ export interface FestivalParticipant {
   avatar_url?: string | null
 }
 
+export interface ActivityRegistration {
+  url: string
+  start_at: string
+  end_at: string
+}
+
 export interface FestivalActivity {
   titulo: string | null
   descripcion: string | null
@@ -59,6 +65,7 @@ export interface FestivalActivity {
   tipo: string
   fecha: string | null
   participante_pseudonimo: string | null
+  registration: ActivityRegistration | null
 }
 
 export interface FestivalDetail {

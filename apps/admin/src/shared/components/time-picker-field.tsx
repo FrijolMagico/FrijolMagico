@@ -28,6 +28,8 @@ interface TimePickerFieldProps {
   value: string
   onChange: (value: string) => void
   error?: string
+  disabled?: boolean
+  required?: boolean
 }
 
 export function TimePickerField({
@@ -35,7 +37,9 @@ export function TimePickerField({
   label,
   value,
   onChange,
-  error
+  error,
+  disabled,
+  required
 }: TimePickerFieldProps) {
   const [hour = '', minute = ''] = value ? value.split(':') : []
 
@@ -55,7 +59,12 @@ export function TimePickerField({
 
   return (
     <Field>
-      {label && <FieldLabel htmlFor={id}>{label}</FieldLabel>}
+      {label && (
+        <FieldLabel htmlFor={id}>
+          {label}
+          {required && <span className='text-destructive ml-1'>*</span>}
+        </FieldLabel>
+      )}
       <Popover>
         <PopoverTrigger
           render={
@@ -63,6 +72,7 @@ export function TimePickerField({
               id={id}
               type='button'
               variant='outline'
+              disabled={disabled}
               className={cn(
                 'w-full justify-start text-left font-normal',
                 !displayValue && 'text-muted-foreground',
@@ -70,7 +80,9 @@ export function TimePickerField({
               )}
             >
               <IconClock className='mr-2 h-4 w-4 shrink-0' />
-              {displayValue ?? 'Seleccionar hora...'}
+              <span className='truncate flex-1 min-w-0'>
+                {displayValue ?? 'Seleccionar hora...'}
+              </span>
             </Button>
           }
         />
@@ -78,7 +90,7 @@ export function TimePickerField({
           <div className='flex items-center gap-2'>
             <div className='flex flex-col gap-1'>
               <span className='text-muted-foreground text-xs'>Hora</span>
-              <Select value={hour} onValueChange={handleHourChange}>
+              <Select value={hour} onValueChange={handleHourChange} disabled={disabled}>
                 <SelectTrigger className='w-18'>
                   <SelectValue placeholder='HH' />
                 </SelectTrigger>
@@ -94,7 +106,7 @@ export function TimePickerField({
 
             <div className='flex flex-col gap-1'>
               <span className='text-muted-foreground text-xs'>Minutos</span>
-              <Select value={minute} onValueChange={handleMinuteChange}>
+              <Select value={minute} onValueChange={handleMinuteChange} disabled={disabled}>
                 <SelectTrigger className='w-18'>
                   <SelectValue placeholder='MM' />
                 </SelectTrigger>

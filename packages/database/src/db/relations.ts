@@ -18,6 +18,7 @@ import {
 
 import {
   activity,
+  activityRegistration,
   editionParticipation,
   admissionMode,
   participationActivity,
@@ -276,6 +277,20 @@ export const participationActivityRelations = relations(
     actividad: one(activity, {
       fields: [participationActivity.id],
       references: [activity.participacionActividadId]
+    }),
+    registration: one(activityRegistration, {
+      fields: [participationActivity.id],
+      references: [activityRegistration.participationActivityId]
+    })
+  })
+)
+
+export const activityRegistrationRelations = relations(
+  activityRegistration,
+  ({ one }) => ({
+    participationActivity: one(participationActivity, {
+      fields: [activityRegistration.participationActivityId],
+      references: [participationActivity.id]
     })
   })
 )

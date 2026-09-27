@@ -49,9 +49,11 @@ describe('Festival types', () => {
       hora_inicio: '18:00',
       tipo: 'taller',
       fecha: '2025-01-15',
-      participante_pseudonimo: 'Artista Ejemplo'
+      participante_pseudonimo: 'Artista Ejemplo',
+      registration: null
     }
 
+    expect(activity.registration).toBeNull()
     expect(activity.tipo).toBe('taller')
     expect(activity.fecha).toBe('2025-01-15')
   })
