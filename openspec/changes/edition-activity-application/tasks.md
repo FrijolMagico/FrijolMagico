@@ -162,9 +162,9 @@ Chain strategy: none (stacked to a dedicated feature branch)
 
 **Depends on:** Work Units 1–6 and 6A. **Expected boundary:** verification only; no new behavior.
 
-- [ ] Run the complete strict-TDD evidence pass: database, admin, and web RED/GREEN/TRIANGULATE/REFACTOR results are recorded in the apply/verify artifacts, with failures resolved before delivery. <!-- sdd-owner: implementation -->
-- [ ] Run `bun run test`, `bun run type-check`, and `bun run lint`; capture command results and changed-line statistics with `git diff --stat`. <!-- sdd-owner: implementation -->
-- [ ] Verify scope boundaries: no catalog/artist changes, no rollback SQL file, no URL/window indexes, no polling/cron/TTL/worker infrastructure, and no unsafe secrets or destructive migration execution. <!-- sdd-owner: implementation -->
+- [x] Run the complete strict-TDD evidence pass: database, admin, and web RED/GREEN/TRIANGULATE/REFACTOR results are recorded in the apply/verify artifacts, with failures resolved before delivery. <!-- sdd-owner: implementation -->
+- [x] Run `bun run test`, `bun run type-check`, and `bun run lint`; capture command results and changed-line statistics with `git diff --stat`. <!-- sdd-owner: implementation -->
+- [x] Verify scope boundaries: no catalog/artist changes, no rollback SQL file, no URL/window indexes, no polling/cron/TTL/worker infrastructure, and no unsafe secrets or destructive migration execution. <!-- sdd-owner: implementation -->
 
 ## Parent-owned lifecycle actions (future authorized steps; after apply only)
 
