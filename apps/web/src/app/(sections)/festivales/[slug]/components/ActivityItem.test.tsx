@@ -215,7 +215,7 @@ describe('ActivityItem', () => {
     fireEvent.click(summary)
     expect(details.open).toBe(true)
 
-    expect(screen.getByText('15 ene 2025 — 18:00')).toBeDefined()
+    expect(screen.getByText('15 ene 2025 — 18:00hrs')).toBeDefined()
     expect(screen.getByText('Sala A')).toBeDefined()
     expect(screen.getByText('Introducción a acuarela')).toBeDefined()
     expect(screen.getByText('(90 min)')).toBeDefined()

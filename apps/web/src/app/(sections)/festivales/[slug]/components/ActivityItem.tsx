@@ -18,7 +18,10 @@ const hasDetails = (a: FestivalActivity) =>
 const formatSessionDate = (date: string) =>
   format(new Date(date + 'T00:00:00'), 'd MMM yyyy', { locale: es })
 
-export const ActivityItem = ({ activity, isEditionPast }: ActivityItemProps) => {
+export const ActivityItem = ({
+  activity,
+  isEditionPast
+}: ActivityItemProps) => {
   const details = hasDetails(activity)
 
   return (
@@ -65,8 +68,10 @@ export const ActivityItem = ({ activity, isEditionPast }: ActivityItemProps) => 
           <div className='border-palette-primary/20 h-full overflow-hidden border-t px-4 pt-3 pb-4'>
             <div className='text-foreground/60 flex flex-wrap gap-4 text-sm'>
               {activity.ocurrencias.length > 0 ? (
-                <div className='space-y-2'>
-                  <h4 className='text-palette-foreground font-medium text-sm'>Horarios</h4>
+                <div className='space-y-1'>
+                  <h4 className='text-palette-foreground text-sm font-medium'>
+                    Horarios
+                  </h4>
                   <ul className='space-y-1'>
                     {activity.ocurrencias.map((occurrence) => (
                       <li
@@ -74,17 +79,23 @@ export const ActivityItem = ({ activity, isEditionPast }: ActivityItemProps) => 
                         className='flex items-center gap-1.5'
                       >
                         <Clock className='size-4' aria-hidden='true' />
-                        <time dateTime={`${occurrence.fecha}T${occurrence.hora_inicio}:00`}>
-                          {formatSessionDate(occurrence.fecha)} — {occurrence.hora_inicio}
+                        <time
+                          dateTime={`${occurrence.fecha}T${occurrence.hora_inicio}:00`}
+                          className='-mb-.5'
+                        >
+                          {formatSessionDate(occurrence.fecha)} —{' '}
+                          {occurrence.hora_inicio}hrs
                         </time>
-                        <span>({occurrence.duracion_minutos} min)</span>
+                        <span className='-mb-.5'>
+                          ({occurrence.duracion_minutos} min)
+                        </span>
                       </li>
                     ))}
                   </ul>
                 </div>
-              ) : (!isEditionPast ? (
+              ) : !isEditionPast ? (
                 <span>Fecha y horario por confirmar</span>
-              ) : null)}
+              ) : null}
               {activity.ubicacion && (
                 <div className='flex items-center gap-1.5'>
                   <MapPin className='size-4' aria-hidden='true' />
