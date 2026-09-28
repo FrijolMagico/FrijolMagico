@@ -323,13 +323,22 @@ export function CreateActivityDialog({
                   const selected = activePseudonyms.some((item) => item.id === selectedPseudonymId)
                     ? selectedPseudonymId
                     : activePseudonyms.find((item) => item.isPrimary)?.id ?? activePseudonyms[0]?.id
+                  const selectedPseudonym = activePseudonyms.find(
+                    (item) => item.id === selected
+                  )
                   return (
                     <Select
                       value={selected == null ? '' : String(selected)}
                       onValueChange={(value) => field.onChange(Number(value))}
                       disabled={isSubmitting || activePseudonyms.length === 0}
                     >
-                      <SelectTrigger><SelectValue placeholder='Elegir pseudónimo' /></SelectTrigger>
+                      <SelectTrigger>
+                        <SelectValue placeholder='Elegir pseudónimo'>
+                          {selectedPseudonym
+                            ? `${selectedPseudonym.pseudonym}${selectedPseudonym.isPrimary ? ' (principal)' : ''}`
+                            : 'Elegir pseudónimo'}
+                        </SelectValue>
+                      </SelectTrigger>
                       <SelectContent>
                         {activePseudonyms.map((pseudonym) => (
                           <SelectItem key={pseudonym.id} value={String(pseudonym.id)}>

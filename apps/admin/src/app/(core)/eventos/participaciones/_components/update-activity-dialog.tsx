@@ -233,13 +233,22 @@ export function UpdateActivityDialog({ edition, artistas = [] }: UpdateActivityD
                   const selected = artistOptions.some((item) => item.id === selectedPseudonymId)
                     ? selectedPseudonymId
                     : artistOptions.find((item) => item.isPrimary)?.id ?? artistOptions[0]?.id
+                  const selectedPseudonym = artistOptions.find(
+                    (item) => item.id === selected
+                  )
                   return (
                     <Select
                       value={selected == null ? '' : String(selected)}
                       onValueChange={(value) => field.onChange(Number(value))}
                       disabled={isSubmitting || artistOptions.length === 0}
                     >
-                      <SelectTrigger><SelectValue placeholder='Elegir pseudónimo' /></SelectTrigger>
+                      <SelectTrigger>
+                        <SelectValue placeholder='Elegir pseudónimo'>
+                          {selectedPseudonym
+                            ? `${selectedPseudonym.pseudonym}${selectedPseudonym.isPrimary ? ' (principal)' : ''}`
+                            : 'Elegir pseudónimo'}
+                        </SelectValue>
+                      </SelectTrigger>
                       <SelectContent>
                         {artistOptions.map((pseudonym) => (
                           <SelectItem key={pseudonym.id} value={String(pseudonym.id)}>
