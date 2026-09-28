@@ -1753,5 +1753,30 @@ VALUES (2, 16, 'https://example.org/inscripcion-taller-activo', '2026-09-01T00:0
 -- =============================================================================
 
 -- =============================================================================
+-- FECHAS DE ACTIVIDADES LEGACY + PARTICIPACIÓN MUSICAL
+-- =============================================================================
+-- Las actividades legacy 5–9 reciben el primer día válido de su edición sin
+-- inferir horarios ni duraciones de los campos históricos de actividad.
+INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
+VALUES (47, 5, '2017-02-25', NULL, NULL);
+INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
+VALUES (48, 6, '2017-04-22', NULL, NULL);
+INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
+VALUES (49, 7, '2017-02-25', NULL, NULL);
+INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
+VALUES (50, 8, '2017-04-22', NULL, NULL);
+INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
+VALUES (51, 9, '2017-04-22', NULL, NULL);
+
+-- Los Colores del Viento (participación 7) ofrece una presentación musical
+-- fechada y sin inscripción, CTA ni URL.
+INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
+VALUES (49, 7, 3, NULL, 2, NULL, 'completado', 'Presentación musical', '2026-03-05 23:48:59', '2026-03-05 23:48:59');
+INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
+VALUES (49, 49, 'Concierto de Los Colores del Viento', 'Presentación en vivo de fusión latinoamericana con ritmos folclóricos y sonidos contemporáneos.', NULL, NULL, 'Monasterio Casa Taller', NULL, '2026-07-04 04:18:49', '2026-07-04 04:18:49');
+INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
+VALUES (52, 49, '2017-02-25', NULL, NULL);
+
+-- =============================================================================
 -- FIN DEL SEED
 -- =============================================================================
