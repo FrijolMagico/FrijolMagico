@@ -27,7 +27,7 @@ Fix duplicate festival edition badges by preserving and displaying real particip
   - Added Next 16 `src/proxy.ts` using Node runtime + existing alias resolver; active aliases receive a real 308/Location before page render. Canonical precedence is protected by the resolver query and self-redirect guard; removed redundant page/metadata streamed redirects.
   - Tests: web suite 208 passed; type-check passed; lint passed with 3 unrelated warnings; independent verification clean.
   - Runtime: live alias request returned `HTTP/1.1 308 Permanent Redirect` and `Location: /catalogo/anima-blue`; forced build passed (2/2, 0 cached), Next reported `ƒ Proxy (Middleware)`, no DB fallback/bundling error. One existing metadataBase warning.
-  - Commit pending.
+  - Work-unit commit `2aafb175` (`fix(web): redirect catalog aliases before streaming`).
 
 - [ ] **T3 — Run combined verification and browser smoke** (in progress)
   - Run `bun run test --filter=@frijolmagico/web`, `bun run type-check --filter=@frijolmagico/web`, `bun run lint --filter=@frijolmagico/web`, and `bun run build --force`.
