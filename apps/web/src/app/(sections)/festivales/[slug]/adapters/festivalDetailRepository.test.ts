@@ -109,10 +109,15 @@ describe('festivalDetailRepository', () => {
       [registration, null, null]
     )
     expect(result?.actividades[1].ocurrencias).toEqual([])
+    expect(result?.actividades[2]).toMatchObject({
+      tipo: 'musica',
+      participante_pseudonimo: 'Músico',
+      ocurrencias: []
+    })
     const html = renderToStaticMarkup(
       createElement(ActivityList, { actividades: result?.actividades ?? [], isEditionPast: false })
     )
-    expect(html).toContain('Músico')
+    expect(html).not.toContain('Músico')
     expect(html).not.toContain('Concierto reservado')
     expect(html).not.toContain('Inscríbete')
   })

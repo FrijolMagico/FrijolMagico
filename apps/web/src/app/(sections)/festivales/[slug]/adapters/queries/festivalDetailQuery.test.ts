@@ -44,6 +44,9 @@ describe('FESTIVAL_DETAIL_QUERY', () => {
 
   test('returns ordered occurrence rows per activity without inventing an edition date', () => {
     expect(FESTIVAL_DETAIL_QUERY).toContain('FROM activity_occurrence ao')
+    expect(FESTIVAL_DETAIL_QUERY).toContain("'id', scheduled.id")
+    expect(FESTIVAL_DETAIL_QUERY).toContain("'registration_url', scheduled.url")
+    expect(FESTIVAL_DETAIL_QUERY).toContain('SELECT ao.id, ao.date, ao.start_time, ao.duration_minutes, ao.url')
     expect(FESTIVAL_DETAIL_QUERY).toContain('WHERE ao.activity_id = ac.id')
     expect(FESTIVAL_DETAIL_QUERY).toContain(
       'ORDER BY ao.date, ao.start_time, ao.id'

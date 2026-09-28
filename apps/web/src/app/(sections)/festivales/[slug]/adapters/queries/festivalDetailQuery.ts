@@ -61,12 +61,14 @@ export const FESTIVAL_DETAIL_QUERY = `SELECT json_object(
       'tipo', ta.slug,
       'ocurrencias', COALESCE((
         SELECT json_group_array(json_object(
+          'id', scheduled.id,
           'fecha', scheduled.date,
           'hora_inicio', scheduled.start_time,
-          'duracion_minutos', scheduled.duration_minutes
+          'duracion_minutos', scheduled.duration_minutes,
+          'registration_url', scheduled.url
         ))
         FROM (
-          SELECT ao.date, ao.start_time, ao.duration_minutes
+          SELECT ao.id, ao.date, ao.start_time, ao.duration_minutes, ao.url
           FROM activity_occurrence ao
           WHERE ao.activity_id = ac.id
           ORDER BY ao.date, ao.start_time, ao.id
