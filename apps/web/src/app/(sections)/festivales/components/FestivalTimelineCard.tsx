@@ -109,6 +109,7 @@ export const FestivalTimelineCard = ({
 
           <FestivalFooterStats
             talleresCount={resumen.total_participantes.talleres}
+            charlasCount={resumen.total_participantes.charlas}
             musicaCount={resumen.total_participantes.musica}
           />
 

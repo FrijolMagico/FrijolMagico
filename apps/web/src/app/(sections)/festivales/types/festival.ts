@@ -15,6 +15,7 @@ export interface FestivalTotalParticipantes {
   exponentes: number
   talleres: number
   musica: number
+  charlas: number
 }
 
 export interface FestivalResumen {

@@ -7,6 +7,12 @@ describe('FESTIVALES_QUERY', () => {
     expect(FESTIVALES_QUERY).toContain("'edicion_slug', ee.slug")
   })
 
+  test('aggregates distinct talk participants by the charla activity slug', () => {
+    expect(FESTIVALES_QUERY).toMatch(
+      /'charlas',\s*\(\s*SELECT COUNT\(DISTINCT ped\.id\)[\s\S]*?ta\.slug = 'charla'/
+    )
+  })
+
   test('filters by published = 1', () => {
     expect(FESTIVALES_QUERY).toMatch(/ee\.published\s*=\s*1/)
   })

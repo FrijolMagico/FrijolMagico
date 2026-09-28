@@ -3,23 +3,34 @@ import { Mic, Music, Paintbrush, type LucideIcon } from 'lucide-react'
 
 interface FestivalFooterStatsProps {
   talleresCount: number
+  charlasCount: number
   musicaCount: number
 }
 
 export const FestivalFooterStats = ({
   talleresCount,
+  charlasCount,
   musicaCount
 }: FestivalFooterStatsProps) => (
   <div className='flex items-center gap-3'>
     {talleresCount > 0 && (
       <FestivalFooterStatItem
-        icon={Mic}
+        icon={Paintbrush}
         label='Talleres'
         count={talleresCount}
         color={{
           bg: 'bg-accent/5',
           icon: 'text-accent'
         }}
+      />
+    )}
+
+    {charlasCount > 0 && (
+      <FestivalFooterStatItem
+        icon={Mic}
+        label='Charlas'
+        count={charlasCount}
+        color={{ bg: 'bg-primary/5', icon: 'text-primary' }}
       />
     )}
 
