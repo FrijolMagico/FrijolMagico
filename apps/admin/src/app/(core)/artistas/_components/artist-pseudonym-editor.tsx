@@ -22,6 +22,7 @@ import {
   addNewArtistPseudonym,
   createNewArtistPseudonymState,
   getArtistPseudonymCheckboxState,
+  getPseudonymCheckboxLabelClass,
   makeNewArtistPseudonymPrimary,
   preserveHistoryForPseudonymText,
   persistablePseudonymDrafts,
@@ -204,7 +205,7 @@ export function ArtistPseudonymEditor({
           </Popover>
         </InputGroupAddon>
       </InputGroup>
-      <label className='flex items-center gap-2 text-sm'>
+      <label className={getPseudonymCheckboxLabelClass(checkboxState.historyDisabled)}>
         <Checkbox
           checked={preserveHistory}
           disabled={checkboxState.historyDisabled}
@@ -212,7 +213,7 @@ export function ArtistPseudonymEditor({
         />
         Guardar el nombre anterior en el historial
       </label>
-      <label className='flex items-center gap-2 text-sm'>
+      <label className={getPseudonymCheckboxLabelClass(checkboxState.primaryDisabled)}>
         <Checkbox
           checked={checkboxState.makePrimary}
           disabled={checkboxState.primaryDisabled}

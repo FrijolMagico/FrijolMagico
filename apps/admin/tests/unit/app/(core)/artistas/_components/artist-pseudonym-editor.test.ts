@@ -4,6 +4,7 @@ import {
   clearPseudonymDrafts,
   createNewArtistPseudonymState,
   getArtistPseudonymCheckboxState,
+  getPseudonymCheckboxLabelClass,
   makeNewArtistPseudonymPrimary,
   preserveHistoryForPseudonymText,
   persistablePseudonymDrafts,
@@ -34,7 +35,7 @@ describe('artist pseudonym editor draft state', () => {
     })).toMatchObject({ makePrimary: false, primaryDisabled: false })
   })
 
-  test('moves the checked disabled primary to a pending selection and back when reselected', () => {
+  test('keeps a pending primary enabled so it can be unchecked and reselected', () => {
     const options = [{ id: 10, isPrimary: true }, { id: 11, isPrimary: false }]
     const pendingOther = {
       '11': {
@@ -44,23 +45,39 @@ describe('artist pseudonym editor draft state', () => {
     }
 
     expect(getArtistPseudonymCheckboxState({
-      adding: false, selectedId: 11, options, drafts: pendingOther, currentText: 'Other', originalText: 'Other'
+      adding: false, selectedId: 10, options, drafts: pendingOther, currentText: 'Primary', originalText: 'Primary'
     })).toMatchObject({ makePrimary: true, primaryDisabled: true })
     expect(getArtistPseudonymCheckboxState({
-      adding: false, selectedId: 10, options, drafts: pendingOther, currentText: 'Primary', originalText: 'Primary'
+      adding: false, selectedId: 11, options, drafts: pendingOther, currentText: 'Other', originalText: 'Other'
+    })).toMatchObject({ makePrimary: true, primaryDisabled: false })
+
+    const pendingUnchecked = {
+      '11': { ...pendingOther['11'], makePrimary: false }
+    }
+    expect(getArtistPseudonymCheckboxState({
+      adding: false, selectedId: 10, options, drafts: pendingUnchecked, currentText: 'Primary', originalText: 'Primary'
+    })).toMatchObject({ makePrimary: true, primaryDisabled: true })
+    expect(getArtistPseudonymCheckboxState({
+      adding: false, selectedId: 11, options, drafts: pendingUnchecked, currentText: 'Other', originalText: 'Other'
     })).toMatchObject({ makePrimary: false, primaryDisabled: false })
 
     const pendingReselected = {
-      ...pendingOther,
-      '10': {
-        operation: 'edit' as const, pseudonymId: 10, pseudonym: 'Primary', originalText: 'Primary',
-        preserveHistory: false, makePrimary: true
-      },
-      '11': { ...pendingOther['11'], makePrimary: false }
+      '11': { ...pendingOther['11'], makePrimary: true }
     }
     expect(getArtistPseudonymCheckboxState({
       adding: false, selectedId: 10, options, drafts: pendingReselected, currentText: 'Primary', originalText: 'Primary'
     })).toMatchObject({ makePrimary: true, primaryDisabled: true })
+    expect(getArtistPseudonymCheckboxState({
+      adding: false, selectedId: 11, options, drafts: pendingReselected, currentText: 'Other', originalText: 'Other'
+    })).toMatchObject({ makePrimary: true, primaryDisabled: false })
+    expect(persistablePseudonymDrafts(pendingReselected)).toEqual([
+      { operation: 'edit', pseudonymId: 11, pseudonym: 'Other', preserveHistory: false, makePrimary: true }
+    ])
+  })
+
+  test('dims the label only when its checkbox is disabled', () => {
+    expect(getPseudonymCheckboxLabelClass(true)).toContain('opacity-50')
+    expect(getPseudonymCheckboxLabelClass(false)).not.toContain('opacity-50')
   })
 
   test('enables history only for normalized text changes and clears it on revert', () => {

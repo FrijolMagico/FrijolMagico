@@ -83,6 +83,10 @@ export interface ArtistPseudonymCheckboxState {
   primaryDisabled: boolean
 }
 
+export function getPseudonymCheckboxLabelClass(disabled: boolean): string {
+  return `flex items-center gap-2 text-sm${disabled ? ' opacity-50' : ''}`
+}
+
 export function getArtistPseudonymCheckboxState({
   adding,
   selectedId,
@@ -94,22 +98,24 @@ export function getArtistPseudonymCheckboxState({
   const changed = hasPseudonymTextChanged(currentText, originalText)
   const currentKey = adding ? 'new' : selectedId === null ? 'primary' : String(selectedId)
   const currentDraft = drafts[currentKey]
-  const pendingPrimaryKey = Object.entries(drafts).find(([, draft]) => draft.makePrimary)?.[0]
   const persistedPrimary = options.find((option) => option.isPrimary)
-  const effectivePrimaryKey = pendingPrimaryKey
-    ?? (persistedPrimary ? String(persistedPrimary.id) : 'primary')
+  const persistedPrimaryKey = persistedPrimary ? String(persistedPrimary.id) : 'primary'
+  const pendingPrimaryKey = Object.entries(drafts).find(([key, draft]) =>
+    key !== persistedPrimaryKey && draft.makePrimary
+  )?.[0]
   const currentIdentityKey = adding
     ? 'new'
     : selectedId === null && persistedPrimary
       ? String(persistedPrimary.id)
       : currentKey
-  const isEffectivePrimary = currentIdentityKey === effectivePrimaryKey
+  const isPersistedPrimary = currentIdentityKey === persistedPrimaryKey
+  const isPendingPrimary = currentIdentityKey === pendingPrimaryKey
 
   return {
     preserveHistory: changed && currentDraft?.operation === 'edit' && currentDraft.preserveHistory,
     historyDisabled: adding || !changed,
-    makePrimary: isEffectivePrimary,
-    primaryDisabled: isEffectivePrimary
+    makePrimary: isPersistedPrimary || isPendingPrimary,
+    primaryDisabled: isPersistedPrimary
   }
 }
 
