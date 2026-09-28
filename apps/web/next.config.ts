@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
   images: {
     ...(isDev ? {} : { minimumCacheTTL: 2678400 }),
     qualities: [100, 75],
+    loader: isDev ? 'custom' : 'default',
+    loaderFile: isDev ? './src/lib/dev-image-loader.ts' : undefined,
     remotePatterns: [
       {
         protocol: 'https',
