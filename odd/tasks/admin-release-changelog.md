@@ -40,13 +40,15 @@ Show administrators the published GitHub release history in admin, with a small 
   - Route: delegated verification when required by native risk assessment; parent performs the mandatory spot-check.
 
 - [x] **T4 — Polish the sidebar changelog link**
-  - Remove the link underline and insert a visible hyphen separator between the version and the link.
-  - Add/update the focused sidebar test and confirm its behavior.
+  - Remove the link underline explicitly with `no-underline` and retain the visible hyphen separator between version and link.
+  - Update the focused sidebar test to require the `no-underline` utility class, not merely check for absence of the substring `underline`.
+  - Re-run the focused workspace test and lint.
   - Route: delegated direct writer; component and test are a bounded two-file change.
 
-- [ ] **T5 — Commit and open the PR (in progress)**
+- [x] **T5 — Commit and open the PR**
+  - Feature work-unit commit: `2c9f7933` (`feat(admin): add release changelog`); sidebar polish commit: `a1fcd95a`.
   - Refresh remote `dev` and determine whether the feature branch needs to be updated before PR creation; preserve all feature changes.
-  - Create one Conventional Commit for the complete feature and polish.
+  - Create a Conventional Commit for the sidebar correction.
   - Open a PR to `dev` without creating or linking an issue, as requested; apply the appropriate type and release-version labels.
   - Report the PR URL and any checks still pending.
   - Route: parent orchestration under the branch-PR workflow.
@@ -54,7 +56,7 @@ Show administrators the published GitHub release history in admin, with a small 
 ## Acceptance criteria
 
 - Root `package.json` no longer pins a Bun version.
-- Sidebar displays a small changelog link adjacent to the current version.
+- Sidebar displays a small changelog link adjacent to the current version, separated by a hyphen and explicitly styled with `no-underline`.
 - `/changelog` is protected by admin authentication and lists all published releases newest first.
 - Only the newest release is initially expanded; older releases are initially collapsed and can be opened.
 - Release notes retain readable Markdown formatting without rendering raw HTML.
@@ -70,10 +72,14 @@ Show administrators the published GitHub release history in admin, with a small 
 - Writer-reported checks: admin tests 598 passed, type-check passed, lint passed, frozen install passed, `git diff --check` passed. One initial test run was interrupted due to a test mock matching page 1/page 10; the mock was corrected before the successful run. A type error in a fetch mock was also corrected.
 - The worker runtime reported process cleanup unconfirmed. The separate verifier independently passed the scoped admin tests (598 tests, 0 failures), type-check, lint, and `git diff --check`; it also reviewed route authentication, pagination/fail-closed behavior, accordion initial state, and raw-HTML-safe Markdown rendering.
 - Parent spot-check: reran `bun run test --filter=@frijolmagico/admin`; exit 0, 598 passed, 0 failed across 99 files.
-- Final `git status` readback contains only the expected feature files and this task document; no commit, push, or PR was created.
+- Initial implementation status readback contained only the expected feature files and this task document; no unrelated workspace changes were observed.
 - Build, browser E2E, and live GitHub API checks were not run; they are outside the scoped verification plan.
-- T4 completed: removed the link underline, added a hyphen separator, and updated the focused test. RED was observed before the component edit; GREEN: 598 admin tests passed; lint passed. Only the component and its test were changed for this refinement.
-- T5 preflight: fetched `origin/dev`; feature branch is one commit behind due to an unrelated web image-cache fix. No rebase/merge or PR has been performed; the branch and dev have no conflicting changes in the observed work.
+- T4 correction completed: the sidebar link now explicitly has `no-underline`; the test checks the link's class tokens for `no-underline` and rejects standalone `underline`. The hyphen separator remains. RED was observed before the component edit; GREEN: 598 admin tests passed; lint and scoped `git diff --check` passed.
+- T5 completed: fetched `origin/dev` at `f01c7a5c` and rebased successfully; the feature branch is now based on the latest `dev`.
+- Feature commit `2c9f7933` (`feat(admin): add release changelog`) and style correction commit `a1fcd95a` (`style(admin): remove underline from changelog link`) are pushed to `feat/admin-changelog`.
 - Final checks after T4: admin tests 598/598 passed, admin lint passed, admin type-check passed, and `git diff --check` passed.
 - PR policy: local template allows no issue when none exists; user requested no issue. Available labels include `type:feature` and `minor`. No existing PR was found for this head branch.
-- Next step: stage only the expected feature/task files, commit conventionally, push the branch, and open the PR to `dev` without an issue as requested.
+- Independent committed-candidate verification passed the admin test suite (598 tests), type-check, lint, and `git diff --check origin/dev...HEAD`. The task-document-only update was explicitly excluded from the candidate review.
+- Opened PR #220 to `dev`: https://github.com/FrijolMagico/FrijolMagico/pull/220. No issue was created or linked. Labels: `type:feature`, `minor`.
+- At PR inspection, the quality workflow was in progress, Vercel admin preview was pending, Vercel web preview succeeded, and Vercel preview comments succeeded; production migrations were skipped as expected for a feature PR to `dev`.
+- Current PR checks were pending at submission time; report this status and any later updates.
