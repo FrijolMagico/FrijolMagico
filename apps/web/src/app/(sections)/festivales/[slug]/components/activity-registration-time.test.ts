@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'bun:test'
 
-import { getRegistrationWindow } from './activity-registration-time'
+import {
+  formatOccurrenceTimeRange,
+  getRegistrationWindow
+} from './activity-registration-time'
 
 const registration = {
   url: 'https://example.org/signup',
@@ -9,6 +12,16 @@ const registration = {
 }
 const start = Date.parse(registration.start_at)
 const end = Date.parse(registration.end_at)
+
+describe('formatOccurrenceTimeRange', () => {
+  test('calculates ranges safely and rejects absent, invalid, or midnight-crossing values', () => {
+    expect(formatOccurrenceTimeRange('14:00', 90)).toBe('14:00hrs a 15:30hrs')
+    expect(formatOccurrenceTimeRange('23:00', 60)).toBe('23:00hrs a 24:00hrs')
+    expect(formatOccurrenceTimeRange(null, null)).toBeNull()
+    expect(formatOccurrenceTimeRange('23:30', 60)).toBeNull()
+    expect(formatOccurrenceTimeRange('25:00', 30)).toBeNull()
+  })
+})
 
 describe('getRegistrationWindow', () => {
   test('includes both boundaries and wakes just after the end', () => {
