@@ -35,6 +35,7 @@ interface DeletedCatalogArtistRow {
 
 interface DeletedCatalogRow {
   id: number
+  pseudonimoId: number | null
   artistaId: number
   orden: string
   destacado: boolean
@@ -60,6 +61,7 @@ export async function getDeletedCatalog(): Promise<CatalogListItem[]> {
   const results: DeletedCatalogRow[] = await db
     .select({
       id: catalogArtist.id,
+      pseudonimoId: catalogArtist.pseudonimoId,
       artistaId: catalogArtist.artistaId,
       orden: catalogArtist.orden,
       destacado: catalogArtist.destacado,

@@ -95,6 +95,8 @@ export function composeParticipations({
         exhibition: exhibition
           ? {
               id: exhibition.id,
+              artistaId: exhibition.artistaId,
+              pseudonimoId: exhibition.pseudonimoId,
               participacionId: exhibition.participacionId,
               disciplinaId: exhibition.disciplinaId,
               modoIngresoId: exhibition.modoIngresoId,
@@ -105,6 +107,8 @@ export function composeParticipations({
           : null,
         activities: activitiesFromParticipation.map((activity) => ({
           id: activity.id,
+          artistaId: activity.artistaId,
+          pseudonimoId: activity.pseudonimoId,
           participacionId: activity.participacionId,
           modoIngresoId: activity.modoIngresoId,
           tipoActividadId: activity.tipoActividadId,

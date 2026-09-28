@@ -44,6 +44,7 @@ interface CatalogArtistRow {
 
 interface CatalogResultRow {
   id: number
+  pseudonimoId: number | null
   artistaId: number
   orden: string
   destacado: boolean
@@ -94,6 +95,7 @@ export async function getCatalogData(
   const catalogResults: CatalogResultRow[] = await db
     .select({
       id: catalogArtist.id,
+      pseudonimoId: catalogArtist.pseudonimoId,
       artistaId: catalogArtist.artistaId,
       orden: catalogArtist.orden,
       destacado: catalogArtist.destacado,

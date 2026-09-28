@@ -76,7 +76,11 @@ describe('artist pseudonym migration', () => {
       UNION ALL SELECT 'exhibition', pseudonimo_id FROM participacion_exposicion
       UNION ALL SELECT 'activity', pseudonimo_id FROM participacion_actividad WHERE id = 1000`)
     expect(associations.rows.map((row) => row.pseudonimo_id)).toEqual([1, 1, 2, 1])
-    expect((await db.execute('SELECT artista_id, pseudonimo_id FROM participacion_actividad WHERE id = 2000')).rows[0]).toEqual({ artista_id: null, pseudonimo_id: null })
+    const unassignedActivity = (await db.execute(
+      'SELECT artista_id, pseudonimo_id FROM participacion_actividad WHERE id = 2000'
+    )).rows[0]
+    expect(unassignedActivity?.artista_id).toBeNull()
+    expect(unassignedActivity?.pseudonimo_id).toBeNull()
   })
 
   test('enforces active global uniqueness, ownership, referenced retirement and primary retention', async () => {
@@ -108,6 +112,29 @@ describe('artist pseudonym migration', () => {
     expect((await db.execute(`SELECT pseudonimo_id FROM catalogo_artista WHERE id = 1`)).rows[0]?.pseudonimo_id).toBe(1)
     expect((await db.execute('SELECT pseudonimo_id FROM participacion_exposicion WHERE id = 100')).rows[0]?.pseudonimo_id).toBe(1)
     expect((await db.execute('SELECT pseudonimo_id FROM participacion_actividad WHERE id = 1000')).rows[0]?.pseudonimo_id).toBe(1)
+  })
+
+  test('keeps the trigger-created primary identity when adding only additional pseudonyms', async () => {
+    const db = await setup()
+    await db.execute("INSERT INTO artista (id, pseudonimo, slug) VALUES (3, 'Primary Name', 'primary-name')")
+
+    const primaryBefore = (await db.execute(`SELECT pp.pseudonimo_id, p.pseudonimo
+      FROM artista_pseudonimo_principal pp
+      JOIN artista_pseudonimo p ON p.id = pp.pseudonimo_id
+      WHERE pp.artista_id = 3`)).rows[0]
+    expect(primaryBefore?.pseudonimo).toBe('Primary Name')
+
+    await db.execute("INSERT INTO artista_pseudonimo (artista_id, pseudonimo) VALUES (3, 'Additional Name')")
+    const primaryAfter = (await db.execute(`SELECT pp.pseudonimo_id, p.pseudonimo
+      FROM artista_pseudonimo_principal pp
+      JOIN artista_pseudonimo p ON p.id = pp.pseudonimo_id
+      WHERE pp.artista_id = 3`)).rows[0]
+    const pseudonyms = await db.execute('SELECT id, pseudonimo FROM artista_pseudonimo WHERE artista_id = 3 ORDER BY id')
+
+    expect(primaryAfter?.pseudonimo_id).toBe(primaryBefore?.pseudonimo_id)
+    expect(primaryAfter?.pseudonimo).toBe('Primary Name')
+    expect(pseudonyms.rows).toHaveLength(2)
+    expect(pseudonyms.rows.map((row) => row.pseudonimo)).toEqual(['Primary Name', 'Additional Name'])
   })
 
   test('preserves legacy artist writers and allows primary replacement before retirement', async () => {
