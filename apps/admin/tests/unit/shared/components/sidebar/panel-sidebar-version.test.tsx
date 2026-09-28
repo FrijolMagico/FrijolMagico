@@ -21,8 +21,12 @@ describe('PanelSidebarVersion', () => {
 
   test('links to the changelog after a hyphen without an underline', () => {
     const markup = renderToStaticMarkup(<PanelSidebarVersion />)
+    const linkMarkup = markup.match(/<a[^>]*href="\/changelog"[^>]*>/)?.[0]
     expect(markup).toMatch(/<\/span>-[^<]*<a[^>]*href="\/changelog"/)
     expect(markup).toContain('Changelog')
-    expect(markup).not.toContain('underline')
+
+    const classNames = linkMarkup?.match(/class="([^"]*)"/)?.[1].split(' ') ?? []
+    expect(classNames).toContain('no-underline')
+    expect(classNames).not.toContain('underline')
   })
 })
