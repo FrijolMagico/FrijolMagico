@@ -2,6 +2,12 @@
   "name": "frijolmagico",
   "version": "4.9.1",
   "private": true,
+  "devEngines": {
+    "packageManager": {
+      "name": "bun",
+      "version": "^1.0.0"
+    }
+  },
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
@@ -19,7 +25,6 @@
     "semver": "^7.8.5",
     "turbo": "^2.10.5"
   },
-  "packageManager": "bun@1.2.2",
   "workspaces": [
     "apps/*",
     "packages/*"
