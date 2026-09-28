@@ -11,11 +11,11 @@ Verification mode: TDD not established in session; ordinary checks. Exact runner
 - [x] T3a [delegated; multi-file]: Admin editor and create/edit wiring using shadcn primitives without modifying them; initial primary, per-ID draft/history/primary, atomic updates. Checks: admin 611 tests/type-check; independent defects corrected. Commit: f0ba275a.
 - [x] T3b1 [delegated; multi-file]: Catalog selector and server actions persist contextual pseudonym ID with same-artist validation. Checks: admin 612 tests/type-check; independent review no findings. Commit: 6c1ab0f4.
 - [x] T3b2 [delegated; multi-file]: Exhibition/activity selectors persist per-detail contextual IDs; exhibit uniqueness remains artist-keyed and activities permit different pseudonyms. Checks: admin 616 tests/type-check; independent review no findings. Commit: 1c0c5936.
-- [x] T4a [delegated; multi-file]: Admin queries/displays resolve primary in general views and contextual pseudonyms in catalog/participations, including deleted catalog entries; focused tests. Checks: admin 623 tests and type-check passed; independent review finding fixed. Commit pending.
-- [ ] T4b [delegated; multi-file]: Public web queries provide primary for general contexts and contextual pseudonyms for catalog/exhibition/activity; no UI redesign; focused tests. Commit pending.
+- [x] T4a [delegated; multi-file]: Admin queries/displays resolve primary in general views and contextual pseudonyms in catalog/participations, including deleted catalog entries; focused tests. Checks: admin 623 tests and type-check passed; independent review finding fixed. Commit: 13a5b810.
+- [x] T4b [delegated; multi-file]: Public web queries provide primary for general contexts and contextual pseudonyms for catalog/exhibition/activity; no UI redesign. Checks: web 194 tests/type-check passed; independent review confirmed name resolution and null/band/collective paths. Commit pending.
 - [ ] T5 [delegated; multi-file]: Catalog canonical slug, aliases/redirects and additive collision behavior; caches/metadata/tests. Commit pending.
 - [ ] T6 [delegated; verification]: Full/scoped checks, migration and browser verification; record failures honestly. Commit pending.
 
 Current: T1–T3b2 complete and locally committed. T3a/T2/T1 are cohesive slices above the ~400-line review budget; consider documented size exceptions when preparing chained PRs, do not reduce tests to fit. No push/PR. Native risk assessment unassessable due to unrelated untracked files; independent verification used. Preserve unrelated `odd/tasks/participation-status-visibility.md`.
 
-Current: T4a implementation complete and independently verified; awaiting work-unit commit. Next: T4b public query data, T5 slugs, T6 verification.
+Current: T4a completed and committed locally as 13a5b810; T4b implementation and independent review complete, awaiting local commit. Next: T5 slugs and T6 verification.

@@ -1,6 +1,6 @@
 export const CATALOG_QUERY = `SELECT json_object(
   'id', a.id,
-  'name', COALESCE(a.pseudonimo, a.nombre),
+  'name', COALESCE(catalog_pseudonym.pseudonimo, a.pseudonimo, a.nombre),
   'slug', a.slug,
   'email', a.correo,
   'rrss', a.rrss,
@@ -129,5 +129,6 @@ export const CATALOG_QUERY = `SELECT json_object(
 ) as resultado
 FROM catalogo_artista ca
 JOIN artista a ON ca.artista_id = a.id
+LEFT JOIN artista_pseudonimo catalog_pseudonym ON catalog_pseudonym.id = ca.pseudonimo_id
 WHERE ca.activo = 1 AND ca.deleted_at IS NULL
 ORDER BY ca.orden ASC`

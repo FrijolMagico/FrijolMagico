@@ -10,6 +10,16 @@ describe('CATALOG_QUERY', () => {
     expect(categoryQuery?.match(/pexp\.estado IN \('confirmado', 'completado'\)/g)).toHaveLength(2)
   })
 
+  test('resolves catalog display names through the catalog-selected pseudonym', () => {
+    expect(CATALOG_QUERY).toContain(
+      "'name', COALESCE(catalog_pseudonym.pseudonimo, a.pseudonimo, a.nombre)"
+    )
+    expect(CATALOG_QUERY).toContain(
+      'LEFT JOIN artista_pseudonimo catalog_pseudonym ON catalog_pseudonym.id = ca.pseudonimo_id'
+    )
+    expect(CATALOG_QUERY).not.toContain('app.pseudonimo_id')
+  })
+
   test('includes public edition metadata only for visible participation', () => {
     const editionsQuery = CATALOG_QUERY.split("'editions',")[1]
 

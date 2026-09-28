@@ -11,6 +11,24 @@ describe('FESTIVAL_DETAIL_QUERY', () => {
     expect(FESTIVAL_DETAIL_QUERY).toContain('AND ee.published = 1')
   })
 
+  test('resolves exhibitions and activities through their own contextual pseudonym IDs', () => {
+    expect(FESTIVAL_DETAIL_QUERY).toContain(
+      "'pseudonimo', COALESCE(exhibition_pseudonym.pseudonimo, a.pseudonimo, ag.nombre, b.name)"
+    )
+    expect(FESTIVAL_DETAIL_QUERY).toContain(
+      'LEFT JOIN artista_pseudonimo exhibition_pseudonym ON exhibition_pseudonym.id = pexp.pseudonimo_id'
+    )
+    expect(FESTIVAL_DETAIL_QUERY).toContain(
+      'ORDER BY d.slug, COALESCE(exhibition_pseudonym.pseudonimo, a.pseudonimo, ag.nombre, b.name)'
+    )
+    expect(FESTIVAL_DETAIL_QUERY).toContain(
+      "'participante_pseudonimo', COALESCE(activity_pseudonym.pseudonimo, a2.pseudonimo, ag2.nombre, b2.name)"
+    )
+    expect(FESTIVAL_DETAIL_QUERY).toContain(
+      'LEFT JOIN artista_pseudonimo activity_pseudonym ON activity_pseudonym.id = pact.pseudonimo_id'
+    )
+  })
+
   test('exposes only confirmed and completed exhibition and activity participation', () => {
     expect(FESTIVAL_DETAIL_QUERY).toContain(
       "AND pexp.estado IN ('confirmado', 'completado')"
