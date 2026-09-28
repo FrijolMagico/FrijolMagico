@@ -23,14 +23,13 @@ Fix duplicate festival edition badges by preserving and displaying real particip
   - Tests: `bun run test --filter=@frijolmagico/web` passed (202 tests); type-check passed; lint passed with 3 existing warnings in unrelated files; independent verifier found no mismatch. Parent spot-check passed; `git diff --check` passed.
   - Work-unit commit `32be480f` (`feat(web): group catalog participation badges`).
 
-- [ ] **T2 — Redirect catalog aliases before streaming** (in progress)
-  - Use a Next 16 request-stage mechanism compatible with the web app and database client to resolve aliases and issue an HTTP 308 with `Location` before page content streams.
-  - Keep canonical slugs untouched; inactive/missing aliases do not redirect. Avoid redundant page/metadata redirect work if the new layer safely owns it.
-  - Add tests for the request-stage redirect decision and verify a real alias response has status 308 + canonical `Location`, not a streamed HTTP 200/meta refresh.
-  - Checks: focused redirect tests, web type-check/lint.
-  - Route: bounded implementation after T1 closes, independently verified.
+- [x] **T2 — Redirect catalog aliases before streaming**
+  - Added Next 16 `src/proxy.ts` using Node runtime + existing alias resolver; active aliases receive a real 308/Location before page render. Canonical precedence is protected by the resolver query and self-redirect guard; removed redundant page/metadata streamed redirects.
+  - Tests: web suite 208 passed; type-check passed; lint passed with 3 unrelated warnings; independent verification clean.
+  - Runtime: live alias request returned `HTTP/1.1 308 Permanent Redirect` and `Location: /catalogo/anima-blue`; forced build passed (2/2, 0 cached), Next reported `ƒ Proxy (Middleware)`, no DB fallback/bundling error. One existing metadataBase warning.
+  - Commit pending.
 
-- [ ] **T3 — Run combined verification and browser smoke**
+- [ ] **T3 — Run combined verification and browser smoke** (in progress)
   - Run `bun run test --filter=@frijolmagico/web`, `bun run type-check --filter=@frijolmagico/web`, `bun run lint --filter=@frijolmagico/web`, and `bun run build --force`.
   - Browser-smoke `/catalogo` and one alias; verify category groups/unique badges, alias responds directly with canonical redirect, and canonical slug still loads.
   - Record checks and commit identities. Do not push/open PR.
@@ -38,5 +37,5 @@ Fix duplicate festival edition badges by preserving and displaying real particip
 ## Progress and evidence
 
 - Read-only diagnosis completed before implementation. The component key omitted `via_agrupacion`; the catalog query combines direct and collective rows with `UNION ALL` and currently drops participation categories. Direct exhibition + activity rows alone are combined by an `EXISTS`/edition group and are not sufficient to explain duplicate keys.
-- The slug page currently calls server-side `permanentRedirect` after async data resolution; the live streamed response was HTTP 200 containing Next `NEXT_REDIRECT` + meta refresh, explaining the visible intermediate old route. A request-stage redirect must be confirmed against the installed Next 16 runtime before writing it.
-- T1 implementation is complete and independently verified; its worktree changes are ready for a local work-unit commit. T2 remains to confirm the installed Next 16 request-stage API and implement/test a true pre-streaming HTTP 308.
+- Before T2, the slug page called server-side `permanentRedirect` after async data resolution; the streamed response was HTTP 200 containing Next `NEXT_REDIRECT` + meta refresh. Next 16.2.12 supports a Node-runtime `src/proxy.ts`; the new proxy now returns an early HTTP 308 with Location, verified on a live alias.
+- T1 and T2 implementations are independently verified and pass focused checks; T1 is committed as `32be480f` with evidence commit `fb0829b5`. T2's forced build and direct HTTP 308/Location check passed; T3 browser smoke remains.

@@ -60,4 +60,11 @@ describe('catalog slug resolution', () => {
     expect(CATALOG_ALIAS_QUERY).toContain('AND ca.activo = 1')
     expect(CATALOG_ALIAS_QUERY).toContain('AND ca.deleted_at IS NULL')
   })
+
+  test('excludes aliases that collide with an active canonical catalog slug', () => {
+    expect(CATALOG_ALIAS_QUERY).toContain('AND NOT EXISTS (')
+    expect(CATALOG_ALIAS_QUERY).toContain('WHERE canonical_artist.slug = alias.slug')
+    expect(CATALOG_ALIAS_QUERY).toContain('AND canonical_ca.activo = 1')
+    expect(CATALOG_ALIAS_QUERY).toContain('AND canonical_ca.deleted_at IS NULL')
+  })
 })

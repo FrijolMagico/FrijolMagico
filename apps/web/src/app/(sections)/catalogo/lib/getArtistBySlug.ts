@@ -18,6 +18,14 @@ export const CATALOG_ALIAS_QUERY = `
   WHERE alias.slug = ?
     AND ca.activo = 1
     AND ca.deleted_at IS NULL
+    AND NOT EXISTS (
+      SELECT 1
+      FROM artista canonical_artist
+      JOIN catalogo_artista canonical_ca ON canonical_ca.artista_id = canonical_artist.id
+      WHERE canonical_artist.slug = alias.slug
+        AND canonical_ca.activo = 1
+        AND canonical_ca.deleted_at IS NULL
+    )
   LIMIT 1
 `
 

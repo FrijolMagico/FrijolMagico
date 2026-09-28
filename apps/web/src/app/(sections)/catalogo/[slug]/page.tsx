@@ -1,12 +1,8 @@
-import { notFound, permanentRedirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Image from 'next/image'
 
-import {
-  getActiveCatalogSlugForAlias,
-  getArtistBySlug,
-  resolveCatalogArtistSlug
-} from '../lib/getArtistBySlug'
+import { getArtistBySlug } from '../lib/getArtistBySlug'
 import { getCatalogData } from '../lib/getCatalogData'
 import { ArtistBioFull } from './components/ArtistBioFull'
 import { ArtistTimelineVisual } from './components/ArtistTimelineVisual'
@@ -36,19 +32,7 @@ export async function generateMetadata({
   }
 
   const { data } = await getCatalogData()
-  const canonicalArtist = getArtistBySlug(data, slug)
-  const aliasCanonicalSlug = canonicalArtist
-    ? null
-    : await getActiveCatalogSlugForAlias(slug)
-  const { artist, isAlias } = resolveCatalogArtistSlug(
-    data,
-    slug,
-    aliasCanonicalSlug
-  )
-
-  if (isAlias && artist) {
-    permanentRedirect(`/catalogo/${artist.slug}`)
-  }
+  const artist = getArtistBySlug(data, slug)
 
   if (!artist) {
     return { title: 'Artista no encontrado | Catálogo — Frijol Mágico' }
@@ -84,17 +68,8 @@ export default async function ArtistPage({
   if (!slug) notFound()
 
   const { data: catalogData } = await getCatalogData()
-  const canonicalArtist = getArtistBySlug(catalogData, slug)
-  const aliasCanonicalSlug = canonicalArtist
-    ? null
-    : await getActiveCatalogSlugForAlias(slug)
-  const { artist, isAlias } = resolveCatalogArtistSlug(
-    catalogData,
-    slug,
-    aliasCanonicalSlug
-  )
+  const artist = getArtistBySlug(catalogData, slug)
   if (!artist) notFound()
-  if (isAlias) permanentRedirect(`/catalogo/${artist.slug}`)
 
   return (
     <>
