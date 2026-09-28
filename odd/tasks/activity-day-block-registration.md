@@ -1,44 +1,41 @@
-# Activity day cards and block registration
+# Activity day cards and per-block registration
 
-## Objective
-Display one public activity card per calendar day with blocks within the card, each having its own registration CTA and optional time. Admin controls one global registration window and a URL per occurrence when registration is enabled. Existing registration URLs are copied to every existing occurrence.
+## Outcome
+A festival activity appears once per scheduled day. Its card lists that day's blocks; each workshop/talk block can have a separate registration URL while the registration window stays global. New and edited activities, including music, require at least one date; times remain optional.
 
-## Baseline and constraints
-- Branch `feat/activity-day-block-registration` in a new worktree from verified remote `origin/dev` at `42d8ab06`.
-- Preserve occurrence identity on edits; current update replaces all occurrences. New and edited activities of every type require at least one valid occurrence date (server and client validation). User has now authorized expanding the schema/editor to permit music dates with optional time, superseding the temporary reject-music decision. Preserve MusicActivityItem in the web day grouping. All activity types require dates. Legacy activities with no occurrence remain untouched in the code migration, with their URL preserved. At the very end, only under explicit user approval and supervision, use Turso CLI to assign an undated activity the first calendar day of its festival edition (the sole day for a one-day edition), without a time; then migrate/assign its URL to that occurrence. No production DB command before approval.
-- A block may have no time and still allow registration. Omit the block number for a single occurrence on a day. Day label belongs to the outer group, not the card.
-- Admin registration switch gates URL inputs per occurrence; global start/end fields are the only inputs directly beneath it. Day selector remains visible in the third column.
-- Project test runner: `bun run test` via Turbo, optionally scoped `bun run test --filter=@frijolmagico/<workspace>`; never root `bun test`. Strict TDD disabled for the entire implementation by explicit user choice on 2026-09-28; use ordinary functional checks, do not claim RED/GREEN.
-- Delivery strategy: stacked PRs targeting `dev`, selected by user. User authorized local work-unit commits and a documented size:exception for one cohesive web-card slice (~536 lines), not pushes or PR creation. Current authored diff including new files before commits: DB 176, admin 964, web 1072, task doc 41 = 2253 lines. One honest slicing pass: DB 176; admin create/validation, update/concurrency, UI/test units; web data, day/music (~381), card/CTA (~536 exception). Keep tests with behavior; split only at verified coherent boundaries. `origin/dev` advanced after worktree creation with seed/release changes; check current remote before delivery, no automatic rebase.
+## Decisions and boundaries
 
-## Tasks
-- [ ] T1 — Persist per-occurrence registration URLs and global activity window. Migrate and copy existing URL to each occurrence, preserve occurrence IDs through create/update, require at least one occurrence date on create/update (including music via revised DB triggers) while allowing absent time and preserving legacy undated records. Route: delegated writer (multi-file schema/actions). Checks: migration/schema tests, admin action tests, focused type-check. Commit: pending.
-- [ ] T2 — Redesign admin occurrence/registration form. Always show day selection in third column for all types including music; switch reveals global window, per-occurrence URL fields only when enabled for eligible registration; support multiple days and blocks, edit hydration. Route: delegated writer (multi-file components/schema). Checks: focused admin tests, type-check/lint. Commit: pending.
-- [ ] T3 — Render public day groups and block CTAs. One card per activity/day, chronological block list with calculated end time or no time; omit block number when single; CTA per block; remove date and old schedule details. Route: delegated writer (multi-file web query/types/components). Checks: focused web tests, type-check/lint and applicable full suite. Commit: pending.
-- [ ] T4 — After implementation, prepare a read-only audit of undated legacy activities and festival edition dates; request explicit user approval and supervision before any Turso CLI update; assign first edition day, no time, retain per-occurrence URL; verify none remain undated. Route: read-only scout then supervised operation only. Checks: audit counts and post-operation readback. Commit: not applicable to production data.
+| Area | Rule |
+| --- | --- |
+| Public web | Day heading outside the card. One card per activity/day, blocks inside; omit “Bloque 1” for a single block and omit missing time rather than inventing it. Keep the music-specific card, without registration CTA. |
+| Admin | Date/occurrence selector always in the third column. Registration switch reveals only the global start/end controls beneath it and per-occurrence URL inputs beside blocks. Music has dates but no registration. |
+| Persistence | Migration 0023 adds nullable URL to occurrences and copies the existing global URL to each *existing* occurrence. Preserve occurrence IDs on edits and reject stale URL snapshots. Existing undated records and legacy URLs are not modified by this migration. |
+| Legacy data | At the end, under explicit user approval and supervision, use Turso CLI to assign each undated activity the *first calendar day* of its festival edition, with **no time**, and copy its global URL to the new occurrence. Until then, undated activities stay stored but hidden from day groups. Never access or mutate a real DB without fresh approval. |
+| Workflow | Worktree `/home/strocs/dev/FrijolMagico-day-block-registration`, branch `feat/activity-day-block-registration`, forked from remote-confirmed `origin/dev` at `42d8ab06`. Strict TDD disabled by user choice; use `bun run test` via Turbo, never root `bun test`. |
 
-## Acceptance
-- Activity spanning N distinct days renders N cards in day groups; repeated blocks on one day stay within one card. Creating or updating an activity without at least one valid date fails validation.
-- A timed block shows start/end; an untimed block may show its own registration CTA.
-- Each CTA points to its own occurrence URL and respects the shared activity registration window.
-- Existing URL copied to all occurrences during migration, admin can adjust each independently; changing one block does not reassign another block's URL.
-- Disabled registration hides URL inputs and CTAs; global start/end remain at activity scope.
+## Tasks and evidence
 
-## Progress and evidence
-- 2026-09-28: Read-only mapping completed; new worktree created from remote-confirmed origin/dev. No source changes or checks yet.
-- 2026-09-28: User chose to hide activities lacking occurrences until a day is assigned, preserving their legacy URL without loss.
-- 2026-09-28: User additionally required at least one date for every newly created or edited activity.
-- 2026-09-28: Correction: undated legacy records must ultimately receive first festival-edition day without time via Turso CLI, only at end under explicit approval and supervision; no silent or automatic production backfill.
-- 2026-09-28: User selected requiring dates for every activity type; reject create/update for types with incompatible occurrence constraints (currently music) instead of exempting them. Existing records untouched. T1 writer reported `turbo: command not found` in fresh worktree; environment diagnosis pending, tests not run.
-- 2026-09-28: T1 partial implementation present: additive occurrence URL migration/schema, ID-preserving admin writes, required date checks. Corrected stale aggregate tests: admin suite passed (598), database passed (60), type-check passed (Turbo cache); no real DB commands, commits, or pushes.
-- 2026-09-28: Independent T1 verification found P2 loss of occurrence-specific URLs on edit hydration (reader omits URL; action overwrites from global fallback) and noted SQL HTTPS check less strict than app validator. T1 remains open pending T2 hydration and regression test; parent `git diff --check` passed.
-- 2026-09-28: T2 form implementation added three columns/URL hydration; initial admin failures were obsolete fixtures plus malformed test literals. After fixes one legacy band-submit test remains adjusted to expect refusal under temporary model; re-verification underway.
-- 2026-09-28: User approved music occurrences (date optional time), superseding temporary music rejection, because all activities must ultimately have dates. New DB trigger/admin/music web work required; Turso legacy update still final and supervised.
-- 2026-09-28: User explicitly chose ordinary functional checks for the entire implementation (Strict TDD disabled, Turbo runner). Music schema/admin adaptation implemented, DB tests 60 and admin 604 passed, type-check/lint passed. Independent verifier found P2: schedule concurrency check omits URL and ID, allowing a concurrent URL-only edit to be overwritten. T1/T2 remain open for guard correction and re-verification.
-- 2026-09-28: T3 public day-group implementation present: per-day cards with same-day block list and occurrence CTA; updated obsolete undated-music fixture with explicit authorization. Web tests passed (184), type-check and lint passed (3 existing unrelated warnings). T3 awaits independent verification. Turso untouched; no commits or pushes.
-- 2026-09-28: Admin concurrency guard P2 fixed: compare normalized per-occurrence URL in order-independent schedule snapshot without requiring IDs for legacy; regression covers stale URL rejection before writes and URL-only success. Admin tests passed (607), type-check/lint passed. Full independent T1-T3 verifier running `bun run test`, `bun run type-check`, `bun run lint`.
-- 2026-09-28: Read-only T4 preparation delegated from local schema, no Turso access or data operations.
-- 2026-09-28: Full independent verifier after music correction: `bun run test`, `bun run type-check`, `bun run lint` passed (3 existing unrelated lint warnings). Parent spot-check `bun run test --filter=@frijolmagico/web` freshly passed 187/187 and `git diff --check` passed. No open code finding. T1-T3 behavior verified but work-unit commits pending delivery-size decision.
-- 2026-09-28: User chose stacked PRs toward dev and approved preparing a supervised SELECT-only Turso audit, but the exact database name and final query execution authorization are still missing. Local-only SQL validation delegated; no remote access.
-- 2026-09-28: User approved one documented oversized web-card slice and local conventional commits for stacked delivery, no push/PR. Local Turso audit SELECT validated on in-memory SQLite with no real data; target name not yet supplied. Remote `origin/dev` advanced from original base `42d8ab06` via release/seed commits; no overlapping changed source paths observed in local refs; remote head must be rechecked before delivery.
-- Next: stage verified DB work unit, continue coherent local commits and checks without PR/push; obtain exact Turso target and fresh approval before real SELECT, separate authorization before any write.
+- [x] T1 — Database and per-occurrence registration persistence. Migration/schema/URL backfill, stable IDs, concurrent URL guard, music dates. Commits `c7b2ee58`, `471a8ab1`, `906ef316`; database **60** and admin **607** tests passed. User-authorized migration `0023` subsequently applied to `db-frijolmagico` under paused writes; see T4 verification.
+- [x] T2 — Admin three-column form, switch-gated URL inputs, global window, edit hydration and client/server required-date validation. Commits `471a8ab1`, `906ef316`; admin tests, type-check and lint passed.
+- [x] T3 — Public day/type groups and per-day activity cards, timed/untimed blocks, separate CTA URL per block, music blocks. Commits `a263d268`, `ff85412d`, `50e39b65`, `04d74fe1`; web **187** tests passed. Independent full `bun run test`, `bun run type-check`, `bun run lint` passed; 3 unrelated lint warnings. Parent re-ran web suite (187/187) and `git diff --check` successfully.
+- [x] T4 — Supervised legacy data remediation. With explicit approval, exactly two SELECTs via Turso CLI on `db-frijolmagico` verified all six expected tables and found **6 undated activities**: IDs `6,7,8` in edition `14` (first day `2021-04-16`, 3 days) and IDs `11,13,20` in edition `20` (first day `2026-10-09`, 2 days). All have `invalid_day_count=0` and no legacy registration URL. Authorized read-only schema checks on `db-frijolmagico` confirm `activity_occurrence.url` absent, five old triggers still present (two workshop/talk guards and three destructive clear-on-* triggers), and remote Drizzle journal latest `1785369600000` = 0022; local journal lists 0023 at `1785456000000`. User-authorized `turso db export db-frijolmagico` saved a private pre-0023 snapshot outside the repo at `/home/strocs/.local/share/frijolmagico/backups/db-frijolmagico-pre-0023-20260928T165733Z.db` plus `-wal` (mode 600; parent directory 700). Local read-only SQLite integrity check = `ok`; snapshot journal latest 0022, 35 occurrences and 6 undated. Keep `.db` and `-wal` together; no restore rehearsal yet. User reconfirmed the no-write pause and authorized `cd packages/database && bun run migrate`. Before execution: exact host/token guard passed, file SHA-256 matched `d519e53c0f31c7db791ee06883eaad33652fc14de52a8f9020bc9461db084a17`, remote journal was 0022 with no URL column. Drizzle Kit reported success. Post-readback: URL column present, exactly one matching journal row for `0023`, 35 occurrences preserved, 20 occurrence URLs populated with zero legacy mismatches, only two new insert/update occurrence triggers remain, and 6 activities still undated before the backfill. With separate explicit user authorization, rechecked six activity types, first edition dates and absence of legacy URLs, then inserted all six date-only occurrences in one atomic Turso CLI statement: IDs `6,7,8` → `2021-04-16` (music); IDs `11,13,20` → `2026-10-09` (talks); `start_time`, `duration_minutes`, `url` all NULL. Post-readback: 41 total occurrences, 0 undated activities, 20 populated URLs, six exact new rows and one 0023 journal row. **No deploy, push, PR or authorization to resume other writes.**
+
+## Delivery plan (not published)
+
+User selected stacked PRs toward `dev`, all **draft/no-merge until the entire chain is complete**. User authorized local conventional commits, not push or PR creation. Coherent slices:
+
+| Slice | Commit(s) | Authored lines | Review focus |
+| --- | --- | ---: | --- |
+| S1 | `c7b2ee58` | 220 | Database migration, schema and tests; task doc |
+| S2 | `471a8ab1` | 616 | Admin creation, validation and date picker; approved `size:exception` |
+| S3 | `906ef316` | 348 | Admin edit, ID/URL retention and concurrency |
+| S4 | `a263d268` + `ff85412d` | 155 | Public data contract, time and CTA helpers |
+| S5 | `50e39b65` | 381 | Day grouping and music blocks |
+| S6 | `04d74fe1` | 536 | Workshop/talk card and tests; approved `size:exception` |
+
+Each slice depends on its predecessor; intermediate checks ran against the combined worktree, **not isolated slice CI**. Do not merge partial slices. `origin/dev` advanced after branch creation (release/seed paths); recheck current remote and reconcile before any delivery without an automatic rebase.
+
+## Next step
+
+1. Remote schema migration and supervised date-only backfill are verified; keep the consensual write pause until the user and deployment operator explicitly decide whether to end it. The pre-0023 backup was not restore-rehearsed.
+2. Reconcile the feature branch with newer `origin/dev` only after explicit authorization for history rewrite; reverify the final candidate. Push/PR creation, production deployment and resuming admin writes require separate user decisions.
