@@ -69,6 +69,10 @@ export interface FestivalActivity {
   ocurrencias: FestivalActivityOccurrence[]
   tipo: string
   participante_pseudonimo: string | null
+  catalogo_slug?: string | null
+  avatar_url?: string | null
+  rrss?: string | null
+  correo?: string | null
   registration: ActivityRegistration | null
 }
 
