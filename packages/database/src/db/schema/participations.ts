@@ -239,6 +239,7 @@ export const activityOccurrence = sqliteTable(
       .notNull()
       .references(() => activity.id, { onDelete: 'cascade' }),
     date: text('date').notNull(),
+    url: text('url'),
     startTime: text('start_time'),
     durationMinutes: integer('duration_minutes'),
     createdAt: text('created_at')
@@ -258,6 +259,10 @@ export const activityOccurrence = sqliteTable(
     check(
       'chk_activity_occurrence_date',
       sql`${table.date} GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' AND julianday(${table.date}) IS NOT NULL AND date(julianday(${table.date})) = ${table.date}`
+    ),
+    check(
+      'chk_activity_occurrence_https',
+      sql`${table.url} IS NULL OR (${table.url} LIKE 'https://_%' COLLATE BINARY AND substr(${table.url}, 1, 8) = 'https://')`
     ),
     check(
       'chk_activity_occurrence_start_time',
