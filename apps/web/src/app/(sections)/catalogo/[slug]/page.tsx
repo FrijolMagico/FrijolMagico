@@ -1,8 +1,12 @@
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import Image from 'next/image'
 
-import { getArtistBySlug } from '../lib/getArtistBySlug'
+import {
+  getActiveCatalogSlugForAlias,
+  getArtistBySlug,
+  resolveCatalogArtistSlug
+} from '../lib/getArtistBySlug'
 import { getCatalogData } from '../lib/getCatalogData'
 import { ArtistBioFull } from './components/ArtistBioFull'
 import { ArtistTimelineVisual } from './components/ArtistTimelineVisual'
@@ -32,7 +36,19 @@ export async function generateMetadata({
   }
 
   const { data } = await getCatalogData()
-  const artist = getArtistBySlug(data, slug)
+  const canonicalArtist = getArtistBySlug(data, slug)
+  const aliasCanonicalSlug = canonicalArtist
+    ? null
+    : await getActiveCatalogSlugForAlias(slug)
+  const { artist, isAlias } = resolveCatalogArtistSlug(
+    data,
+    slug,
+    aliasCanonicalSlug
+  )
+
+  if (isAlias && artist) {
+    permanentRedirect(`/catalogo/${artist.slug}`)
+  }
 
   if (!artist) {
     return { title: 'Artista no encontrado | Catálogo — Frijol Mágico' }
@@ -45,11 +61,15 @@ export async function generateMetadata({
   return {
     title: `${artist.name} | Catálogo — Frijol Mágico`,
     description,
+    alternates: {
+      canonical: `/catalogo/${artist.slug}`
+    },
     openGraph: {
       title: artist.name,
       description,
       images: artist.avatar ? [{ url: artist.avatar }] : [],
-      type: 'profile'
+      type: 'profile',
+      url: `/catalogo/${artist.slug}`
     }
   }
 }
@@ -64,14 +84,23 @@ export default async function ArtistPage({
   if (!slug) notFound()
 
   const { data: catalogData } = await getCatalogData()
-  const artist = getArtistBySlug(catalogData, slug)
+  const canonicalArtist = getArtistBySlug(catalogData, slug)
+  const aliasCanonicalSlug = canonicalArtist
+    ? null
+    : await getActiveCatalogSlugForAlias(slug)
+  const { artist, isAlias } = resolveCatalogArtistSlug(
+    catalogData,
+    slug,
+    aliasCanonicalSlug
+  )
   if (!artist) notFound()
+  if (isAlias) permanentRedirect(`/catalogo/${artist.slug}`)
 
   return (
     <>
       <TrackPageView
         sectionName={`Catálogo - ${artist.name}`}
-        sectionPath={`/catalogo/${slug}`}
+        sectionPath={`/catalogo/${artist.slug}`}
       />
       <article className='container mx-auto max-w-4xl px-4 py-16'>
         <div className='flex flex-col gap-8 md:flex-row'>
