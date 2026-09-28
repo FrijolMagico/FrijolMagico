@@ -33,6 +33,12 @@ export const mapFestivalDetail = (raw: FestivalDetail): FestivalDetail => {
     participantes: raw.participantes.map(mapParticipant),
     actividades: raw.actividades.map((activity) => ({
       ...activity,
+      catalogo_slug: activity.catalogo_slug ?? null,
+      avatar_url: activity.catalogo_slug
+        ? getAvatarUrl(activity.avatar_url ?? null)
+        : null,
+      rrss: activity.rrss ?? null,
+      correo: activity.correo ?? null,
       registration: activity.registration ?? null
     }))
   }

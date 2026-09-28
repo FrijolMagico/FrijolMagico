@@ -65,6 +65,19 @@ export const FESTIVAL_DETAIL_QUERY = `SELECT json_object(
         WHERE eed.evento_edicion_id = ee.id
       ),
       'participante_pseudonimo', COALESCE(a2.pseudonimo, ag2.nombre, b2.name),
+      'catalogo_slug', CASE WHEN ca2.id IS NOT NULL THEN a2.slug ELSE NULL END,
+      'avatar_url', CASE WHEN ca2.id IS NOT NULL THEN (
+        SELECT ai.imagen_url
+        FROM artista_imagen ai
+        WHERE
+          ai.artista_id = a2.id
+          AND ai.tipo = 'avatar'
+          AND ai.deleted_at IS NULL
+        ORDER BY ai.created_at DESC, ai.id DESC
+        LIMIT 1
+      ) ELSE NULL END,
+      'rrss', a2.rrss,
+      'correo', a2.correo,
       'registration', CASE WHEN ar.id IS NOT NULL
         THEN json_object(
           'url', ar.url,
@@ -79,6 +92,8 @@ export const FESTIVAL_DETAIL_QUERY = `SELECT json_object(
     LEFT JOIN activity_registration ar ON ar.participation_activity_id = pact.id
     JOIN tipo_actividad ta ON pact.tipo_actividad_id = ta.id
     LEFT JOIN artista a2 ON ped2.artista_id = a2.id
+    LEFT JOIN catalogo_artista ca2 ON ca2.artista_id = a2.id
+      AND ca2.activo = 1 AND ca2.deleted_at IS NULL
     LEFT JOIN agrupacion ag2 ON ped2.agrupacion_id = ag2.id
     LEFT JOIN band b2 ON ped2.banda_id = b2.id
     WHERE ped2.edicion_id = ee.id

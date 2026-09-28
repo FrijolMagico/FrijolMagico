@@ -78,6 +78,11 @@ const mockDetails: Record<string, FestivalDetail> = {
         tipo: 'taller',
         fecha: '2025-10-03',
         participante_pseudonimo: 'Akane Ilustración',
+        catalogo_slug: 'akane-ilustracion',
+        avatar_url:
+          'https://cdn.frijolmagico.cl/artistas/akane-ilustracion/avatar.webp',
+        rrss: null,
+        correo: null,
         registration: null
       },
       {
@@ -89,6 +94,10 @@ const mockDetails: Record<string, FestivalDetail> = {
         tipo: 'musica',
         fecha: '2025-10-04',
         participante_pseudonimo: 'Banda Invitada',
+        catalogo_slug: null,
+        avatar_url: null,
+        rrss: null,
+        correo: null,
         registration: null
       }
     ]
@@ -142,6 +151,11 @@ const mockDetails: Record<string, FestivalDetail> = {
         tipo: 'exposicion',
         fecha: '2025-05-10',
         participante_pseudonimo: 'Líneas Nocturnas',
+        catalogo_slug: 'lineas-nocturnas',
+        avatar_url:
+          'https://cdn.frijolmagico.cl/artistas/lineas-nocturnas/avatar.webp',
+        rrss: null,
+        correo: null,
         registration: null
       }
     ]

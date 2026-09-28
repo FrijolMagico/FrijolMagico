@@ -11,6 +11,28 @@ describe('FESTIVAL_DETAIL_QUERY', () => {
     expect(FESTIVAL_DETAIL_QUERY).toContain('AND ee.published = 1')
   })
 
+  test('selects activity artist contact data from the participating artist and active catalog', () => {
+    expect(FESTIVAL_DETAIL_QUERY).toContain(
+      "'catalogo_slug', CASE WHEN ca2.id IS NOT NULL THEN a2.slug ELSE NULL END"
+    )
+    expect(FESTIVAL_DETAIL_QUERY).toContain(
+      "'avatar_url', CASE WHEN ca2.id IS NOT NULL THEN ("
+    )
+    expect(FESTIVAL_DETAIL_QUERY).toContain("ai.tipo = 'avatar'")
+    expect(FESTIVAL_DETAIL_QUERY).toContain('ai.deleted_at IS NULL')
+    expect(FESTIVAL_DETAIL_QUERY).toContain(
+      'ORDER BY ai.created_at DESC, ai.id DESC'
+    )
+    expect(FESTIVAL_DETAIL_QUERY).toContain("'rrss', a2.rrss")
+    expect(FESTIVAL_DETAIL_QUERY).toContain("'correo', a2.correo")
+    expect(FESTIVAL_DETAIL_QUERY).toContain(
+      'LEFT JOIN catalogo_artista ca2 ON ca2.artista_id = a2.id'
+    )
+    expect(FESTIVAL_DETAIL_QUERY).toContain(
+      'AND ca2.activo = 1 AND ca2.deleted_at IS NULL'
+    )
+  })
+
   test('left joins registration by participation activity without filtering by time', () => {
     expect(FESTIVAL_DETAIL_QUERY).toContain(
       'LEFT JOIN activity_registration ar ON ar.participation_activity_id = pact.id'
