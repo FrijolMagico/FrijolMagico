@@ -17,7 +17,7 @@ const baseRaw: FestivalEdicion = {
     dias: []
   },
   resumen: {
-    total_participantes: { exponentes: 0, talleres: 0, musica: 0 },
+    total_participantes: { exponentes: 0, talleres: 0, charlas: 0, musica: 0 },
     por_disciplina: {}
   }
 }

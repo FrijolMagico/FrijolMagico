@@ -333,6 +333,12 @@ VALUES (1, 1, 1, '2017-02-25', '14:00', '20:00', 'presencial', '2026-01-20 03:38
 INSERT INTO evento_edicion_dia (id, evento_edicion_id, lugar_id, fecha, hora_inicio, hora_fin, modalidad, created_at, updated_at)
 VALUES (2, 2, 2, '2017-04-22', '12:00', '20:30', 'presencial', '2026-01-20 03:38:59', '2026-01-20 03:38:59');
 
+INSERT INTO evento_edicion_dia (id, evento_edicion_id, lugar_id, fecha, hora_inicio, hora_fin, modalidad, created_at, updated_at)
+VALUES (3, 1, 1, '2017-02-26', '12:00', '20:00', 'presencial', '2026-01-20 03:38:59', '2026-01-20 03:38:59');
+
+INSERT INTO evento_edicion_dia (id, evento_edicion_id, lugar_id, fecha, hora_inicio, hora_fin, modalidad, created_at, updated_at)
+VALUES (4, 2, 2, '2017-04-23', '12:00', '20:30', 'presencial', '2026-01-20 03:38:59', '2026-01-20 03:38:59');
+
 -- =============================================================================
 -- AGRUPACION
 -- =============================================================================
@@ -602,6 +608,36 @@ INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, po
 VALUES (9, 21, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
 VALUES (9, 9, 'Taller de papelería artesanal', 'Taller donde los asistentes aprenderán técnicas básicas de encuadernación, plegado de papel y creación de libretas artesanales con materiales reciclados.', 90, '14:30', NULL, 15, '2026-07-04 04:18:48', '2026-07-04 04:18:48');
+
+-- =============================================================================
+-- INSCRIPCIONES Y OCURRENCIAS DE ACTIVIDADES (DEV)
+-- =============================================================================
+-- Los talleres y charlas tienen sesiones explícitas dentro de los días de su edición.
+-- El taller de acuarela mantiene inscripciones activas para facilitar pruebas en UI.
+
+INSERT INTO activity_registration (id, participation_activity_id, url, start_at, end_at)
+VALUES (1, 3, 'https://example.org/inscripcion-taller-acuarela', '2020-01-01T00:00:00.000Z', '2099-12-31T23:59:59.000Z');
+
+INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
+VALUES (1, 1, '2017-02-25', '18:00', 60);
+
+INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
+VALUES (2, 2, '2017-02-25', '16:00', 45);
+
+INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
+VALUES (3, 2, '2017-02-26', '16:30', 45);
+
+INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
+VALUES (4, 3, '2017-04-22', '15:00', 90);
+
+INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
+VALUES (5, 3, '2017-04-23', '16:30', 90);
+
+INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
+VALUES (6, 4, '2017-04-22', '17:30', 50);
+
+INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
+VALUES (7, 4, '2017-04-23', '14:00', 50);
 
 -- =============================================================================
 -- FIN DEL SEED

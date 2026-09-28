@@ -40,6 +40,7 @@ export function getFestivalesMock(): FestivalEdicion[] {
         total_participantes: {
           exponentes: 42,
           talleres: 6,
+          charlas: 0,
           musica: 3
         },
         por_disciplina: {
@@ -77,6 +78,7 @@ export function getFestivalesMock(): FestivalEdicion[] {
         total_participantes: {
           exponentes: 15,
           talleres: 0,
+          charlas: 0,
           musica: 2
         },
         por_disciplina: {
@@ -112,6 +114,7 @@ export function getFestivalesMock(): FestivalEdicion[] {
         total_participantes: {
           exponentes: 38,
           talleres: 4,
+          charlas: 0,
           musica: 2
         },
         por_disciplina: {
@@ -149,6 +152,7 @@ export function getFestivalesMock(): FestivalEdicion[] {
         total_participantes: {
           exponentes: 12,
           talleres: 0,
+          charlas: 0,
           musica: 1
         },
         por_disciplina: {
@@ -184,6 +188,7 @@ export function getFestivalesMock(): FestivalEdicion[] {
         total_participantes: {
           exponentes: 35,
           talleres: 3,
+          charlas: 0,
           musica: 2
         },
         por_disciplina: {
@@ -221,6 +226,7 @@ export function getFestivalesMock(): FestivalEdicion[] {
         total_participantes: {
           exponentes: 10,
           talleres: 0,
+          charlas: 0,
           musica: 1
         },
         por_disciplina: {
@@ -256,6 +262,7 @@ export function getFestivalesMock(): FestivalEdicion[] {
         total_participantes: {
           exponentes: 45,
           talleres: 3,
+          charlas: 0,
           musica: 2
         },
         por_disciplina: {
@@ -303,6 +310,7 @@ export function getFestivalesMock(): FestivalEdicion[] {
         total_participantes: {
           exponentes: 30,
           talleres: 8,
+          charlas: 0,
           musica: 4
         },
         por_disciplina: {
@@ -349,6 +357,7 @@ export function getFestivalesMock(): FestivalEdicion[] {
         total_participantes: {
           exponentes: 61,
           talleres: 5,
+          charlas: 0,
           musica: 3
         },
         por_disciplina: {

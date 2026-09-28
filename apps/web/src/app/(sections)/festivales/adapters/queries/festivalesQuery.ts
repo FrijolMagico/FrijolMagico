@@ -55,6 +55,14 @@ export const FESTIVALES_QUERY = `SELECT json_object(
                 WHERE ped.edicion_id = ee.id
                   AND pact.estado IN ('confirmado', 'completado')
                   AND ta.slug = 'musica'
+            ),
+            'charlas', (
+                SELECT COUNT(DISTINCT ped.id)
+                FROM participacion_actividad pact
+                JOIN participacion_edicion ped ON ped.id = pact.participacion_id
+                JOIN tipo_actividad ta ON pact.tipo_actividad_id = ta.id
+                WHERE ped.edicion_id = ee.id
+                  AND ta.slug = 'charla'
             )
         ),
         'por_disciplina', COALESCE((
