@@ -3,8 +3,19 @@ import { describe, expect, test } from 'bun:test'
 import { FESTIVALES_QUERY } from './festivalesQuery'
 
 describe('FESTIVALES_QUERY', () => {
+  test('counts only confirmed and completed exhibition and activity participation', () => {
+    expect(FESTIVALES_QUERY.match(/pexp\.estado IN \('confirmado', 'completado'\)/g)).toHaveLength(2)
+    expect(FESTIVALES_QUERY.match(/pact\.estado IN \('confirmado', 'completado'\)/g)).toHaveLength(2)
+  })
+
   test('includes edition slug in evento object', () => {
     expect(FESTIVALES_QUERY).toContain("'edicion_slug', ee.slug")
+  })
+
+  test('aggregates distinct talk participants by the charla activity slug', () => {
+    expect(FESTIVALES_QUERY).toMatch(
+      /'charlas',\s*\(\s*SELECT COUNT\(DISTINCT ped\.id\)[\s\S]*?ta\.slug = 'charla'/
+    )
   })
 
   test('filters by published = 1', () => {

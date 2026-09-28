@@ -31,6 +31,7 @@ export const CATALOG_QUERY = `SELECT json_object(
       JOIN evento_edicion ee ON ped.edicion_id = ee.id
       LEFT JOIN evento_edicion_dia eed ON ee.id = eed.evento_edicion_id
       WHERE ped.artista_id = a.id
+        AND pexp.estado IN ('confirmado', 'completado')
       GROUP BY pexp.id, d.slug
 
       UNION ALL
@@ -45,6 +46,7 @@ export const CATALOG_QUERY = `SELECT json_object(
       JOIN evento_edicion ee ON ped.edicion_id = ee.id
       LEFT JOIN evento_edicion_dia eed ON ee.id = eed.evento_edicion_id
       WHERE aa.artista_id = a.id
+        AND pexp.estado IN ('confirmado', 'completado')
       GROUP BY pexp.id, d.slug
     ) sub
     ORDER BY sub.last_fecha DESC
@@ -77,6 +79,20 @@ export const CATALOG_QUERY = `SELECT json_object(
       JOIN evento ev ON ee.evento_id = ev.id
       LEFT JOIN evento_edicion_dia eed ON ee.id = eed.evento_edicion_id
       WHERE ped.artista_id = a.id
+        AND (
+          EXISTS (
+            SELECT 1
+            FROM participacion_exposicion pexp
+            WHERE pexp.participacion_id = ped.id
+              AND pexp.estado IN ('confirmado', 'completado')
+          )
+          OR EXISTS (
+            SELECT 1
+            FROM participacion_actividad pact
+            WHERE pact.participacion_id = ped.id
+              AND pact.estado IN ('confirmado', 'completado')
+          )
+        )
       GROUP BY ee.id, ee.numero_edicion, ev.nombre
 
       UNION ALL
@@ -93,6 +109,20 @@ export const CATALOG_QUERY = `SELECT json_object(
       JOIN evento ev ON ee.evento_id = ev.id
       LEFT JOIN evento_edicion_dia eed ON ee.id = eed.evento_edicion_id
       WHERE aa.artista_id = a.id
+        AND (
+          EXISTS (
+            SELECT 1
+            FROM participacion_exposicion pexp
+            WHERE pexp.participacion_id = ped.id
+              AND pexp.estado IN ('confirmado', 'completado')
+          )
+          OR EXISTS (
+            SELECT 1
+            FROM participacion_actividad pact
+            WHERE pact.participacion_id = ped.id
+              AND pact.estado IN ('confirmado', 'completado')
+          )
+        )
       GROUP BY ee.id, ee.numero_edicion, ev.nombre, ag.nombre
     ) sub
   ), '[]')

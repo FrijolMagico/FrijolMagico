@@ -4,6 +4,9 @@
   "workspaces": {
     "": {
       "name": "frijolmagico",
+      "dependencies": {
+        "date-fns": "^4.4.0",
+      },
       "devDependencies": {
         "@types/semver": "^7.7.1",
         "prettier": "^3.8.3",

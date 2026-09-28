@@ -20,6 +20,10 @@ describe('ActivityItem', () => {
     ocurrencias: [],
     tipo: 'taller',
     participante_pseudonimo: 'Artista',
+    catalogo_slug: null,
+    avatar_url: null,
+    rrss: null,
+    correo: null,
     registration: {
       url: 'https://example.org/signup',
       start_at: '2026-09-05T16:30:00.000Z',
@@ -69,8 +73,8 @@ describe('ActivityItem', () => {
     expect(link.getAttribute('rel')).toBe('noopener noreferrer')
     expect(link.querySelector('button')).toBeNull()
     expect(link.className).toContain('focus-visible:ring-2')
-    expect(link.innerHTML).toContain('group-hover/btn:bg-primary')
-    expect(link.innerHTML).toContain('group-focus-visible/btn:text-background')
+    expect(link.innerHTML).toContain('group-hover/btn:bg-palette-primary')
+    expect(link.innerHTML).toContain('group-focus-visible/btn:text-palette-background')
 
     fireEvent.click(summary)
     expect(details.open).toBe(true)
@@ -248,6 +252,30 @@ describe('ActivityItem', () => {
     expect(html).not.toContain('Duración:')
   })
 
+  test('gives a title-less details summary an accessible name without nesting the artist link', () => {
+    const { container } = render(
+      <ActivityItem
+        activity={{
+          ...baseActivity,
+          titulo: null,
+          registration: null,
+          catalogo_slug: 'artista-slug',
+          descripcion: 'Detalles de la actividad'
+        }}
+        isEditionPast={false}
+      />
+    )
+
+    const summary = container.querySelector('summary')!
+    expect(summary.getAttribute('aria-label')).toBe('Artista')
+    expect(screen.getByLabelText('Artista')).toBe(summary)
+    expect(summary.textContent).toBe('')
+    expect(summary.contains(screen.getByText('Artista'))).toBe(false)
+    expect(
+      screen.getByRole('link', { name: 'Ver perfil de Artista' }).closest('summary')
+    ).toBeNull()
+  })
+
   test('renders rich description inside details without nesting paragraphs', () => {
     const html = renderToString(
       <ActivityItem
@@ -263,6 +291,44 @@ describe('ActivityItem', () => {
     expect(html).toContain('<p>Vení al <strong>taller</strong></p>')
     expect(html).toContain('<ul><li>Gratis</li></ul>')
     expect(html).not.toMatch(/<p[^>]*>\s*<p/)
+  })
+
+  test('links the artist outside the summary, including the no-details branch', () => {
+    const { container } = render(
+      <ActivityItem
+        activity={{
+          ...baseActivity,
+          descripcion: null,
+          catalogo_slug: null,
+          rrss: null,
+          correo: 'artista@example.org'
+        }}
+        isEditionPast={false}
+      />
+    )
+
+    expect(container.querySelector('details')).toBeNull()
+    const link = screen.getByRole('link', {
+      name: 'Abrir enlace de contacto de Artista'
+    })
+    expect(link.getAttribute('href')).toBe('mailto:artista@example.org')
+    expect(link.closest('summary')).toBeNull()
+  })
+
+  test('keeps artist link outside the interactive disclosure summary', () => {
+    const { container } = render(
+      <ActivityItem
+        activity={{
+          ...baseActivity,
+          catalogo_slug: 'artista-slug',
+          avatar_url: 'https://example.org/avatar.jpg'
+        }}
+        isEditionPast={false}
+      />
+    )
+    const link = screen.getByRole('link', { name: 'Ver perfil de Artista' })
+    expect(link.getAttribute('href')).toBe('/catalogo/artista-slug')
+    expect(container.querySelector('summary')?.contains(link)).toBe(false)
   })
 
   test('renders minimal with participant name, no title or chevron', () => {

@@ -1,7 +1,7 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Controller, useForm, useFormState } from 'react-hook-form'
+import { Controller, useForm, useFormState, useWatch } from 'react-hook-form'
 import { toast } from 'sonner'
 import {
   Field,
@@ -78,6 +78,7 @@ export function UpdateExhibitionDialog({ edition }: ExhibitionEditorFormProps) {
   const { isDirty, isSubmitting, isValid, errors } = useFormState({
     control: methods.control
   })
+  const status = useWatch({ control: methods.control, name: 'estado' })
 
   if (!entity || !exhibition) return null
 
@@ -245,6 +246,12 @@ export function UpdateExhibitionDialog({ edition }: ExhibitionEditorFormProps) {
                 </Select>
               )}
             />
+            {status !== PARTICIPATION_STATUS.CONFIRMADO &&
+              status !== PARTICIPATION_STATUS.COMPLETADO && (
+                <p className='text-muted-foreground text-xs'>
+                  Esta exhibición no se mostrará en la web a menos que tenga estado Confirmado o Completado.
+                </p>
+              )}
             {errors.estado && <FieldError>{errors.estado.message}</FieldError>}
           </Field>
 

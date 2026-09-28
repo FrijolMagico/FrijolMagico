@@ -25,7 +25,7 @@ describe('festivalesRepository', () => {
               dias: []
             },
             resumen: {
-              total_participantes: { exponentes: 5, talleres: 3, musica: 2 },
+              total_participantes: { exponentes: 5, talleres: 3, musica: 2, charlas: 0 },
               por_disciplina: {}
             }
           })

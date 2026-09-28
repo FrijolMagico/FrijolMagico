@@ -20,7 +20,7 @@ describe('LinkCta', () => {
     expect(html).toContain('bg-linear-to-r')
     expect(html).toContain('background-size-[150%]')
     expect(html).toContain('hover:bg-right')
-    expect(html).toContain('text-foreground')
+    expect(html).toContain('text-primary')
     expect(html).toContain('focus-visible:ring-2')
     expect(html).toContain('focus-visible:ring-white')
     expect(html).toContain('focus-visible:ring-offset-primary')
@@ -89,13 +89,13 @@ describe('LinkCta', () => {
     expect(html).toContain('rel="noopener noreferrer"')
     expect(html).toContain('>Ver más</span>')
     expect(html).not.toContain('<button')
-    expect(html).toContain('bg-background text-primary')
+    expect(html).toContain('bg-palette-background text-palette-primary')
     expect(html).toContain(
-      'group-hover/btn:bg-primary group-hover/btn:text-background'
+      'group-hover/btn:bg-palette-primary group-hover/btn:text-palette-background'
     )
     expect(html).toContain('focus-visible:ring-2')
     expect(html).toContain(
-      'group-focus-visible/btn:bg-primary group-focus-visible/btn:text-background'
+      'group-focus-visible/btn:bg-palette-primary group-focus-visible/btn:text-palette-background'
     )
   })
 })

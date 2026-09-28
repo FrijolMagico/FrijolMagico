@@ -33,6 +33,8 @@ import {
   PARTICIPANT_TYPE,
   PARTICIPANT_TYPE_LABELS,
   PARTICIPATION_STATUS,
+  PARTICIPATION_STATUS_LABELS,
+  PARTICIPATION_STATUSES,
   type ParticipantType
 } from '../_constants/participations.constants'
 import { ARTIST_STATUS } from '@/core/artistas/_constants'
@@ -131,6 +133,7 @@ export function CreateActivityDialog({
     control: methods.control,
     name: 'registration.registrationEnabled'
   })
+  const status = useWatch({ control: methods.control, name: 'estado' })
 
   const onSubmit = async (values: ActivityFormInput) => {
     const result = await createActivityAction({
@@ -372,6 +375,40 @@ export function CreateActivityDialog({
             {errors.tipoActividadId && (
               <FieldError>{errors.tipoActividadId.message}</FieldError>
             )}
+          </Field>
+
+          <Field>
+            <FieldLabel>Estado</FieldLabel>
+            <Controller
+              name='estado'
+              control={methods.control}
+              render={({ field }) => (
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger>
+                    <SelectValue>
+                      {PARTICIPATION_STATUS_LABELS[field.value]}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PARTICIPATION_STATUSES.map((state) => (
+                      <SelectItem key={state} value={state}>
+                        {PARTICIPATION_STATUS_LABELS[state]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {status !== PARTICIPATION_STATUS.CONFIRMADO &&
+              status !== PARTICIPATION_STATUS.COMPLETADO && (
+                <p className='text-muted-foreground text-xs'>
+                  Esta actividad no se mostrará en la web a menos que tenga estado Confirmado o Completado.
+                </p>
+              )}
           </Field>
 
           <Field>
