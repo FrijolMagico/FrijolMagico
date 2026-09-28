@@ -78,6 +78,11 @@ const mockDetails: Record<string, FestivalDetail> = {
         ocurrencias: [{ fecha: '2025-10-03', hora_inicio: '14:00', duracion_minutos: 90 }],
         tipo: 'taller',
         participante_pseudonimo: 'Akane Ilustración',
+        catalogo_slug: 'akane-ilustracion',
+        avatar_url:
+          'https://cdn.frijolmagico.cl/artistas/akane-ilustracion/avatar.webp',
+        rrss: null,
+        correo: null,
         registration: null
       },
       {
@@ -87,6 +92,10 @@ const mockDetails: Record<string, FestivalDetail> = {
         ocurrencias: [],
         tipo: 'musica',
         participante_pseudonimo: 'Banda Invitada',
+        catalogo_slug: null,
+        avatar_url: null,
+        rrss: null,
+        correo: null,
         registration: null
       }
     ]
@@ -140,6 +149,11 @@ const mockDetails: Record<string, FestivalDetail> = {
         ocurrencias: [{ fecha: '2025-05-10', hora_inicio: '20:00', duracion_minutos: 120 }],
         tipo: 'exposicion',
         participante_pseudonimo: 'Líneas Nocturnas',
+        catalogo_slug: 'lineas-nocturnas',
+        avatar_url:
+          'https://cdn.frijolmagico.cl/artistas/lineas-nocturnas/avatar.webp',
+        rrss: null,
+        correo: null,
         registration: null
       }
     ]

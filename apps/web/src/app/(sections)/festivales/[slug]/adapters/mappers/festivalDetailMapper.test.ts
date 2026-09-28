@@ -40,9 +40,15 @@ const baseRaw = {
       titulo: 'Taller',
       descripcion: 'Taller de prueba',
       ubicacion: 'Sala A',
-      ocurrencias: [{ fecha: '2025-10-03', hora_inicio: '18:00', duracion_minutos: 60 }],
       tipo: 'taller',
-      participante_pseudonimo: 'Artista Ejemplo'
+      ocurrencias: [
+        { fecha: '2025-10-03', hora_inicio: '18:00', duracion_minutos: 60 }
+      ],
+      participante_pseudonimo: 'Artista Ejemplo',
+      catalogo_slug: 'artista-ejemplo',
+      avatar_url: 'artistas/artista-ejemplo/avatar.webp',
+      rrss: '{"instagram":"https://instagram.com/artista"}',
+      correo: 'artista@example.org'
     }
   ]
 }
@@ -99,6 +105,41 @@ describe('mapFestivalDetail', () => {
     const result = mapFestivalDetail(raw as unknown as FestivalDetail)
 
     expect(result.participantes[0].disciplina_slug).toBe('nueva-disciplina')
+  })
+
+  test('maps activity artist avatar only when an active catalog profile is present', () => {
+    const result = mapFestivalDetail({
+      ...baseRaw,
+      actividades: [
+        {
+          ...baseRaw.actividades[0],
+          catalogo_slug: 'artista-ejemplo',
+          avatar_url: 'artistas/artista-ejemplo/avatar.webp',
+          rrss: '{"instagram":"https://instagram.com/artista"}',
+          correo: 'artista@example.org'
+        },
+        {
+          ...baseRaw.actividades[0],
+          catalogo_slug: null,
+          avatar_url: 'artistas/sin-catalogo/avatar.webp',
+          rrss: '{"facebook":"https://facebook.com/artista"}',
+          correo: 'sin-catalogo@example.org'
+        }
+      ]
+    } as FestivalDetail)
+
+    expect(result.actividades[0]).toMatchObject({
+      catalogo_slug: 'artista-ejemplo',
+      avatar_url: expect.stringContaining('artistas/artista-ejemplo/avatar.webp'),
+      rrss: '{"instagram":"https://instagram.com/artista"}',
+      correo: 'artista@example.org'
+    })
+    expect(result.actividades[1]).toMatchObject({
+      catalogo_slug: null,
+      avatar_url: null,
+      rrss: '{"facebook":"https://facebook.com/artista"}',
+      correo: 'sin-catalogo@example.org'
+    })
   })
 
   test('preserves configured registration even when its window is inactive', () => {
