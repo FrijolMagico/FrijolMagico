@@ -64,5 +64,6 @@ seeding a disposable DB and inspecting counts/queries. Runner: `bun run seed`
   2026-10-09/10 → VII is the active edition.
 - Database suite: 60 pass / 0 fail (includes `parseSeedAssetKeys` over the real
   `seed.sql`). Prettier applied to the ODD doc.
-- Not committed: awaiting explicit user request (no direct `dev` commits; branch
-  per scope before committing).
+- Committed on branch `chore/seed-rich-editions` as `7722f1c0` (conventional
+  commit, no AI attribution) and opened PR #216 → `dev` with labels `type:chore`
+  and `patch` (no issue: explicitly approved as a direct PR).
