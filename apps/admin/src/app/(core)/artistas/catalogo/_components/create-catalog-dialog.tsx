@@ -49,12 +49,14 @@ export function CreateCatalogDialog({
     formState: { isValid, isDirty, errors, isSubmitting },
     register,
     reset,
+    setValue,
     control,
     handleSubmit
   } = useForm({
     resolver: zodResolver(catalogInsertSchema.omit({ orden: true })),
     values: {
       artistaId: 0,
+      pseudonimoId: 0,
       descripcion: null,
       destacado: false,
       activo: true
@@ -138,9 +140,10 @@ export function CreateCatalogDialog({
     }
   }
 
-  const comboboxArtists = availableArtists.map((artist) => ({
+  const comboboxPseudonyms = availableArtists.map((artist) => ({
     label: artist.pseudonimo,
-    value: artist.id
+    value: artist.pseudonimoId,
+    artistId: artist.id
   }))
 
   const currentAvatar: ManagedAssetReference | null = activeAvatar.avatar
@@ -189,37 +192,41 @@ export function CreateCatalogDialog({
                   Artista <span className='text-destructive'>*</span>
                 </FieldLabel>
                 <Controller
-                  name='artistaId'
+                  name='pseudonimoId'
                   control={control}
                   render={({ field: { onChange, value } }) => {
-                    const selectedComboItem = comboboxArtists.find(
+                    const selectedComboItem = comboboxPseudonyms.find(
                       (item) => item.value === value
                     )
 
                     return (
                       <Combobox
-                        items={comboboxArtists}
+                        items={comboboxPseudonyms}
                         value={selectedComboItem ?? null}
                         onValueChange={(val) => {
                           onChange(val?.value ?? 0)
-                          activeAvatar.load(val?.value ?? null)
+                          setValue('artistaId', val?.artistId ?? 0, {
+                            shouldDirty: true,
+                            shouldValidate: true
+                          })
+                          activeAvatar.load(val?.artistId ?? null)
                           controller.syncAvatar(null)
                         }}
                         itemToStringLabel={(item) => item?.label ?? ''}
                       >
                         <ComboboxInput
-                          placeholder='Buscar artista...'
+                          placeholder='Buscar pseudónimo...'
                           showTrigger
                           showClear
                         />
                         <ComboboxContent className='pointer-events-auto!'>
                           <ComboboxEmpty>
-                            No hay artistas disponibles
+                            No hay pseudónimos disponibles
                           </ComboboxEmpty>
                           <ComboboxList className=''>
-                            {(artist: (typeof comboboxArtists)[0]) => (
-                              <ComboboxItem key={artist.value} value={artist}>
-                                {artist.label}
+                            {(pseudonym: (typeof comboboxPseudonyms)[0]) => (
+                              <ComboboxItem key={pseudonym.value} value={pseudonym}>
+                                {pseudonym.label}
                               </ComboboxItem>
                             )}
                           </ComboboxList>

@@ -1,7 +1,9 @@
 import type { CatalogArtist } from '../../types/catalog'
+import { deduplicateTimelineEditions } from '../../lib/deduplicateTimelineEditions'
 
 interface SortedEditionParticipation {
   año?: string | null
+  evento_id?: number
   edicion: string
   evento: string
   originalIndex: number
@@ -54,7 +56,9 @@ export interface ArtistTimelineVisualProps {
 export const ArtistTimelineVisual = ({
   editions
 }: ArtistTimelineVisualProps) => {
-  const participations = groupFestivalParticipations(editions)
+  const participations = groupFestivalParticipations(
+    deduplicateTimelineEditions(editions)
+  )
 
   if (participations.length === 0) return null
 
@@ -70,7 +74,7 @@ export const ArtistTimelineVisual = ({
             <ul className='mt-1.5 flex flex-wrap gap-1.5'>
               {festival.editions.map((edition) => (
                 <li
-                  key={`${festival.evento}-${edition.edicion}-${edition.año ?? 'sin-año'}`}
+                  key={`${edition.evento_id ?? festival.evento}-${edition.edicion}-${edition.año ?? 'sin-año'}`}
                 >
                   <span className='bg-accent/10 text-accent inline-block rounded-full px-3 py-1 text-xs font-medium'>
                     {edition.edicion}

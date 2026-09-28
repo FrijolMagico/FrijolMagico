@@ -165,6 +165,10 @@ describe.skipIf(!modulesLoaded)('get-catalog-data DAL', () => {
           orden: 1
         }
       ],
+      [
+        { id: 70, artistaId: 7, pseudonimo: 'Luna Roja' },
+        { id: 71, artistaId: 7, pseudonimo: 'Sol Azul' }
+      ],
       [{ total: 1 }]
     ])
     currentDb = dbMock.db
@@ -180,6 +184,10 @@ describe.skipIf(!modulesLoaded)('get-catalog-data DAL', () => {
     expect(getCacheTags()).toEqual(['catalogo:artistas', 'artistas'])
     expect(result.data[0]?.artist).toMatchObject({
       id: 7,
+      activePseudonyms: [
+        { id: 70, pseudonimo: 'Luna Roja' },
+        { id: 71, pseudonimo: 'Sol Azul' }
+      ],
       pseudonimo: 'Luna Roja',
       nombre: 'Ana Pérez',
       correo: 'ana@frijolmagico.cl',
@@ -219,30 +227,32 @@ describe.skipIf(!modulesLoaded)('get-catalog-data DAL', () => {
     expect(dbMock.calls).toHaveLength(2)
   })
 
-  test('getArtistsNotInCatalog returns identity only without an avatar query', async () => {
+  test('getArtistsNotInCatalog returns active pseudonym options without an avatar query', async () => {
     const dbMock = createDbMock([
       [
-        { id: 3, pseudonimo: 'Bosque Azul', nombre: 'María Soto', slug: 'bosque-azul' },
-        { id: 5, pseudonimo: 'Pintacaritas', nombre: 'Pablo Zamora', slug: 'pintacaritas' }
+        { id: 3, pseudonimoId: 30, pseudonimo: 'Bosque Azul', nombre: 'María Soto', slug: 'bosque-azul' },
+        { id: 3, pseudonimoId: 31, pseudonimo: 'Bosque 2', nombre: 'María Soto', slug: 'bosque-azul' },
+        { id: 5, pseudonimoId: 50, pseudonimo: 'Pintacaritas', nombre: 'Pablo Zamora', slug: 'pintacaritas' }
       ]
     ])
     currentDb = dbMock.db
 
     const result = await getArtistsNotInCatalog()
 
-    expect(result).toHaveLength(2)
+    expect(result).toHaveLength(3)
     expect(result).toEqual([
-      { id: 3, pseudonimo: 'Bosque Azul', nombre: 'María Soto', slug: 'bosque-azul' },
-      { id: 5, pseudonimo: 'Pintacaritas', nombre: 'Pablo Zamora', slug: 'pintacaritas' }
+      { id: 3, pseudonimoId: 30, pseudonimo: 'Bosque Azul', nombre: 'María Soto', slug: 'bosque-azul' },
+      { id: 3, pseudonimoId: 31, pseudonimo: 'Bosque 2', nombre: 'María Soto', slug: 'bosque-azul' },
+      { id: 5, pseudonimoId: 50, pseudonimo: 'Pintacaritas', nombre: 'Pablo Zamora', slug: 'pintacaritas' }
     ])
     expect(
       Object.keys((dbMock.calls[0]?.args[0] ?? {}) as Record<string, unknown>)
-    ).toEqual(['id', 'pseudonimo', 'nombre', 'slug'])
+    ).toEqual(['id', 'pseudonimoId', 'pseudonimo', 'nombre', 'slug'])
   })
 
-  test('getArtistsNotInCatalog uses a minimal anti-join query and dual cache tags', async () => {
+  test('getArtistsNotInCatalog uses a minimal active-pseudonym anti-join query and dual cache tags', async () => {
     const dbMock = createDbMock([
-      [{ id: 3, pseudonimo: 'Bosque Azul', nombre: 'María Soto', slug: 'bosque-azul' }]
+      [{ id: 3, pseudonimoId: 30, pseudonimo: 'Bosque Azul', nombre: 'María Soto', slug: 'bosque-azul' }]
     ])
     currentDb = dbMock.db
 
@@ -251,6 +261,7 @@ describe.skipIf(!modulesLoaded)('get-catalog-data DAL', () => {
     expect(result).toEqual([
       {
         id: 3,
+        pseudonimoId: 30,
         pseudonimo: 'Bosque Azul',
         nombre: 'María Soto',
         slug: 'bosque-azul'
@@ -259,7 +270,7 @@ describe.skipIf(!modulesLoaded)('get-catalog-data DAL', () => {
     expect(getCacheTags()).toEqual(['catalogo:artistas', 'artistas'])
     expect(
       Object.keys((dbMock.calls[0]?.args[0] ?? {}) as Record<string, unknown>)
-    ).toEqual(['id', 'pseudonimo', 'nombre', 'slug'])
+    ).toEqual(['id', 'pseudonimoId', 'pseudonimo', 'nombre', 'slug'])
     expect(dbMock.calls).toHaveLength(2)
   })
 })

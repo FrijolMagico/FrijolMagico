@@ -1,5 +1,5 @@
 import { cacheTag } from 'next/cache'
-import { count, desc, asc, eq, and, isNotNull, sql } from 'drizzle-orm'
+import { count, desc, asc, eq, and, isNotNull, isNull, sql } from 'drizzle-orm'
 
 import { db } from '@frijolmagico/database/orm'
 import {
@@ -26,7 +26,13 @@ import type {
 } from '../_types'
 import { FESTIVAL_EVENT_ID } from '../_constants'
 
-const { artist: artistTable, artistStatus, catalogArtist } = artist
+const {
+  artist: artistTable,
+  artistStatus,
+  artistPseudonym,
+  artistPrimaryPseudonym,
+  catalogArtist
+} = artist
 const { eventEdition } = events
 const { discipline } = core
 const { editionParticipation, participationExhibition } = participations
@@ -181,11 +187,23 @@ export async function getDashboardTopArtists(): Promise<TopArtistEntry[]> {
   const rows = await db
     .select({
       id: artistTable.id,
-      pseudonimo: artistTable.pseudonimo,
+      pseudonimo: artistPseudonym.pseudonimo,
       ediciones: count(editionParticipation.id)
     })
     .from(editionParticipation)
     .innerJoin(artistTable, eq(editionParticipation.artistaId, artistTable.id))
+    .innerJoin(
+      artistPrimaryPseudonym,
+      eq(artistPrimaryPseudonym.artistaId, artistTable.id)
+    )
+    .innerJoin(
+      artistPseudonym,
+      and(
+        eq(artistPseudonym.id, artistPrimaryPseudonym.pseudonimoId),
+        eq(artistPseudonym.artistaId, artistTable.id),
+        isNull(artistPseudonym.deletedAt)
+      )
+    )
     .groupBy(artistTable.id)
     .orderBy(desc(count(editionParticipation.id)))
     .limit(10)

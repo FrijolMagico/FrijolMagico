@@ -12,6 +12,7 @@ import {
   getParticipationExhibitionsCacheTag
 } from '@frijolmagico/cache-tags'
 import { findOrCreateEditionParticipation } from '../_lib/find-or-create-edition-participation'
+import { resolveActiveArtistPseudonym } from '../_lib/resolve-artist-pseudonym'
 import {
   type ExhibitionInsertInput,
   exhibitionInsertSchema
@@ -58,8 +59,17 @@ export async function createExhibitionAction(data: {
         throw new Error('Error al crear o encontrar la participación')
       }
 
+      const pseudonimoId = parsed.data.artistaId
+        ? await resolveActiveArtistPseudonym(
+            tx,
+            parsed.data.artistaId,
+            data.exhibition.pseudonimoId
+          )
+        : null
       const exhibitionValues = exhibitionInsertSchema.parse({
         ...data.exhibition,
+        artistaId: parsed.data.artistaId ?? null,
+        pseudonimoId,
         participacionId: participationRecord.id
       })
 

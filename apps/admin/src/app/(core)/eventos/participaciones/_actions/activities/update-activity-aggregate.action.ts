@@ -17,6 +17,7 @@ import {
 } from '@frijolmagico/cache-tags'
 import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
 import { registrationWindowToUtc } from '../../_lib/activity-registration-time'
+import { resolveActiveArtistPseudonym } from '../_lib/resolve-artist-pseudonym'
 import {
   activityDetailInsertSchema,
   activityInsertSchema,
@@ -133,8 +134,18 @@ export async function updateActivityAggregateAction(
             registration.endTime
           )
         : null
+      const pseudonimoId = participation.artistaId
+        ? await resolveActiveArtistPseudonym(
+            tx,
+            participation.artistaId,
+            activityInput.pseudonimoId,
+            existingActivity.pseudonimoId
+          )
+        : null
       const activityValues = activityInsertSchema.parse({
         ...activityInput,
+        artistaId: participation.artistaId ?? null,
+        pseudonimoId,
         tipoActividadId: effectiveType.id,
         participacionId: participation.id
       })
@@ -162,7 +173,9 @@ export async function updateActivityAggregateAction(
           modoIngresoId: activityValues.modoIngresoId,
           estado: activityValues.estado,
           puntaje: activityValues.puntaje,
-          notas: activityValues.notas
+          notas: activityValues.notas,
+          artistaId: activityValues.artistaId,
+          pseudonimoId: activityValues.pseudonimoId
         })
         .where(eq(participationActivity.id, activityInput.id))
       await tx.insert(activity).values(detailValues).onConflictDoUpdate({

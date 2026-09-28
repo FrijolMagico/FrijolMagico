@@ -49,8 +49,10 @@ import {
   clearRegistration
 } from './activity-registration-fields'
 import { ActivityOccurrenceFields } from './activity-occurrence-fields'
+import type { ArtistLookup } from '../_types/participations.types'
 
 interface UpdateActivityDialogProps {
+  artistas?: ArtistLookup[]
   edition: {
     id: number
     editionNumber: string
@@ -58,7 +60,7 @@ interface UpdateActivityDialogProps {
   }
 }
 
-export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
+export function UpdateActivityDialog({ edition, artistas = [] }: UpdateActivityDialogProps) {
   const router = useRouter()
   const selectedActivity = useParticipationsStore((s) => s.selectedActivity)
   const isUpdateActivityDialogOpen = useParticipationsStore(
@@ -83,6 +85,7 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
       notas: activity?.notas ?? '',
       estado: activity?.estado ?? PARTICIPATION_STATUS.COMPLETADO,
       puntaje: activity?.puntaje ?? null,
+      pseudonimoId: activity?.pseudonimoId ?? null,
       registration: {
         ...(activity?.registration ?? EMPTY_REGISTRATION),
         registrationEnabled: hasExistingRegistration
@@ -121,6 +124,8 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
     name: 'registration.registrationEnabled'
   })
   const status = useWatch({ control: methods.control, name: 'estado' })
+  const selectedPseudonymId = useWatch({ control: methods.control, name: 'pseudonimoId' })
+  const artistOptions = artistas.find((artist) => artist.id === entity?.artist?.id)?.pseudonyms ?? []
 
   if (!entity || !activity) return null
 
@@ -147,7 +152,10 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
         modoIngresoId: values.modoIngresoId,
         notas: values.notas,
         estado: values.estado,
-        puntaje: values.puntaje
+        puntaje: values.puntaje,
+        pseudonimoId: artistOptions.some((item) => item.id === values.pseudonimoId)
+          ? values.pseudonimoId
+          : artistOptions.find((item) => item.isPrimary)?.id ?? artistOptions[0]?.id ?? null
       },
       registration: values.registration,
       ...schedule,
@@ -215,6 +223,45 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
         onSubmit={methods.handleSubmit(onSubmit)}
       >
         <FieldGroup>
+          {entity.artist && (
+            <Field>
+              <FieldLabel>Pseudónimo para esta actividad</FieldLabel>
+              <Controller
+                name='pseudonimoId'
+                control={methods.control}
+                render={({ field }) => {
+                  const selected = artistOptions.some((item) => item.id === selectedPseudonymId)
+                    ? selectedPseudonymId
+                    : artistOptions.find((item) => item.isPrimary)?.id ?? artistOptions[0]?.id
+                  const selectedPseudonym = artistOptions.find(
+                    (item) => item.id === selected
+                  )
+                  return (
+                    <Select
+                      value={selected == null ? '' : String(selected)}
+                      onValueChange={(value) => field.onChange(Number(value))}
+                      disabled={isSubmitting || artistOptions.length === 0}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder='Elegir pseudónimo'>
+                          {selectedPseudonym
+                            ? `${selectedPseudonym.pseudonym}${selectedPseudonym.isPrimary ? ' (principal)' : ''}`
+                            : 'Elegir pseudónimo'}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {artistOptions.map((pseudonym) => (
+                          <SelectItem key={pseudonym.id} value={String(pseudonym.id)}>
+                            {pseudonym.pseudonym}{pseudonym.isPrimary ? ' (principal)' : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )
+                }}
+              />
+            </Field>
+          )}
           <Field>
             <FieldLabel>Tipo</FieldLabel>
             <Controller

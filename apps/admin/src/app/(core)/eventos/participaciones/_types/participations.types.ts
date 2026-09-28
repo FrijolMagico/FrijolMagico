@@ -20,10 +20,17 @@ export interface EditionLookup {
   published: boolean
 }
 
+export interface ArtistPseudonymLookup {
+  id: number
+  pseudonym: string
+  isPrimary: boolean
+}
+
 export interface ArtistLookup {
   id: number
   pseudonym: string
   statusId: number
+  pseudonyms: ArtistPseudonymLookup[]
 }
 
 export interface CollectiveLookup {

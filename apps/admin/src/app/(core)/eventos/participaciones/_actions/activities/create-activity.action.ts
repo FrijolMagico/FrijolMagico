@@ -16,6 +16,7 @@ import {
 } from '@frijolmagico/cache-tags'
 import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
 import { findOrCreateEditionParticipation } from '../_lib/find-or-create-edition-participation'
+import { resolveActiveArtistPseudonym } from '../_lib/resolve-artist-pseudonym'
 import { registrationWindowToUtc } from '../../_lib/activity-registration-time'
 import {
   type ActivityDetailInsertInput,
@@ -40,6 +41,7 @@ const PUBLIC_ACTIVITY_TAGS = [
 interface CreateActivityActionInput {
   participation: ParticipationInsertInput
   activity: Omit<ActivityInsertInput, 'participacionId'>
+  pseudonimoId?: number | null
   detail: Omit<ActivityDetailInsertInput, 'participacionActividadId'>
   registration?: unknown
   occurrences?: unknown
@@ -105,8 +107,17 @@ export async function createActivityAction(
           )
         : null
 
+      const pseudonimoId = parsed.data.artistaId
+        ? await resolveActiveArtistPseudonym(
+            tx,
+            parsed.data.artistaId,
+            data.pseudonimoId
+          )
+        : null
       const participationActivityValues = activityInsertSchema.parse({
         ...data.activity,
+        artistaId: parsed.data.artistaId ?? null,
+        pseudonimoId,
         tipoActividadId: effectiveType.id,
         participacionId: participationRecord.id
       })

@@ -37,8 +37,10 @@ import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-di
 import { useParticipationsStore } from '../_store/use-participations-store'
 import { updateParticipationAction } from '../_actions/participations/update-participation.action'
 import { executeUpdatePlan } from '../_lib/execute-update-plan'
+import type { ArtistLookup } from '../_types/participations.types'
 
 interface ExhibitionEditorFormProps {
+  artistas?: ArtistLookup[]
   edition: {
     id: number
     editionNumber: string
@@ -46,7 +48,7 @@ interface ExhibitionEditorFormProps {
   }
 }
 
-export function UpdateExhibitionDialog({ edition }: ExhibitionEditorFormProps) {
+export function UpdateExhibitionDialog({ edition, artistas = [] }: ExhibitionEditorFormProps) {
   const selectedExhibition = useParticipationsStore((s) => s.selectedExhibition)
   const { entity, exhibition } = selectedExhibition ?? {}
 
@@ -67,6 +69,7 @@ export function UpdateExhibitionDialog({ edition }: ExhibitionEditorFormProps) {
       notas: exhibition?.notas ?? '',
       estado: exhibition?.estado ?? PARTICIPATION_STATUS.SELECCIONADO,
       puntaje: exhibition?.puntaje ?? null,
+      pseudonimoId: exhibition?.pseudonimoId ?? null,
       entity: {
         artistaId: entity?.artist?.id ?? null,
         agrupacionId: entity?.collective?.id ?? null
@@ -79,6 +82,8 @@ export function UpdateExhibitionDialog({ edition }: ExhibitionEditorFormProps) {
     control: methods.control
   })
   const status = useWatch({ control: methods.control, name: 'estado' })
+  const selectedPseudonymId = useWatch({ control: methods.control, name: 'pseudonimoId' })
+  const artistOptions = artistas.find((artist) => artist.id === entity?.artist?.id)?.pseudonyms ?? []
 
   if (!entity || !exhibition) return null
 
@@ -115,7 +120,8 @@ export function UpdateExhibitionDialog({ edition }: ExhibitionEditorFormProps) {
           modoIngresoId: exhibition.modoIngresoId,
           notas: exhibition.notas ?? '',
           estado: exhibition.estado,
-          puntaje: exhibition.puntaje ?? null
+          puntaje: exhibition.puntaje ?? null,
+          pseudonimoId: exhibition.pseudonimoId ?? null
         },
         current: {
           id: exhibition.id,
@@ -124,7 +130,10 @@ export function UpdateExhibitionDialog({ edition }: ExhibitionEditorFormProps) {
           modoIngresoId: values.modoIngresoId,
           notas: values.notas,
           estado: values.estado,
-          puntaje: values.puntaje
+          puntaje: values.puntaje,
+          pseudonimoId: artistOptions.some((item) => item.id === values.pseudonimoId)
+            ? values.pseudonimoId
+            : artistOptions.find((item) => item.isPrimary)?.id ?? artistOptions[0]?.id ?? null
         },
         execute: () =>
           updateExhibitionAction({
@@ -134,7 +143,10 @@ export function UpdateExhibitionDialog({ edition }: ExhibitionEditorFormProps) {
             modoIngresoId: values.modoIngresoId,
             notas: values.notas,
             estado: values.estado,
-            puntaje: values.puntaje
+            puntaje: values.puntaje,
+            pseudonimoId: artistOptions.some((item) => item.id === values.pseudonimoId)
+              ? values.pseudonimoId
+              : artistOptions.find((item) => item.isPrimary)?.id ?? artistOptions[0]?.id ?? null
           })
       }
     ])
@@ -185,6 +197,45 @@ export function UpdateExhibitionDialog({ edition }: ExhibitionEditorFormProps) {
         id='update-exhibition-form'
       >
         <FieldGroup>
+          {entity.artist && (
+            <Field>
+              <FieldLabel>Pseudónimo para esta exhibición</FieldLabel>
+              <Controller
+                name='pseudonimoId'
+                control={methods.control}
+                render={({ field }) => {
+                  const selected = artistOptions.some((item) => item.id === selectedPseudonymId)
+                    ? selectedPseudonymId
+                    : artistOptions.find((item) => item.isPrimary)?.id ?? artistOptions[0]?.id
+                  const selectedPseudonym = artistOptions.find(
+                    (item) => item.id === selected
+                  )
+                  return (
+                    <Select
+                      value={selected == null ? '' : String(selected)}
+                      onValueChange={(value) => field.onChange(Number(value))}
+                      disabled={isBanned || isSubmitting || artistOptions.length === 0}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder='Elegir pseudónimo'>
+                          {selectedPseudonym
+                            ? `${selectedPseudonym.pseudonym}${selectedPseudonym.isPrimary ? ' (principal)' : ''}`
+                            : 'Elegir pseudónimo'}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {artistOptions.map((pseudonym) => (
+                          <SelectItem key={pseudonym.id} value={String(pseudonym.id)}>
+                            {pseudonym.pseudonym}{pseudonym.isPrimary ? ' (principal)' : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )
+                }}
+              />
+            </Field>
+          )}
           <Field>
             <FieldLabel>Disciplina</FieldLabel>
             <Controller

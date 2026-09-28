@@ -37,6 +37,11 @@ function tableName(table: unknown) {
 
 function createHarness() {
   const tx = {
+    select: () => ({
+      from: () => ({
+        where: () => ({ limit: async () => [{ id: 41 }] })
+      })
+    }),
     query: {
       activity: { findFirst: async () => ({ id: 33 }) },
       activityOccurrence: { findMany: async () => storedSessions },
@@ -46,7 +51,8 @@ function createHarness() {
             ? {
                 id: 22,
                 participacionId: activityParticipationId,
-                tipoActividadId: 1
+                tipoActividadId: 1,
+                pseudonimoId: 41
               }
             : undefined
       },

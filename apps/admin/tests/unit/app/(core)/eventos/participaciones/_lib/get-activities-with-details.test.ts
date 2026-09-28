@@ -75,7 +75,7 @@ function composedRegistration(activity: Row) {
     },
     exhibitions: [],
     activities: [activity],
-    artistsLookup: new Map([[4, { id: 4, pseudonym: 'Artista', statusId: 1 }]]),
+    artistsLookup: new Map([[4, { id: 4, pseudonym: 'Artista', statusId: 1, pseudonyms: [] }]]),
     collectivesLookup: new Map(),
     bandsLookup: new Map()
   })
@@ -125,7 +125,7 @@ describe('admin activity read model', () => {
       participations: [{ id: 11, edicionId: 7, artistaId: 4, agrupacionId: null, bandaId: null, notas: null }],
       edition: { id: 7, editionNumber: '1', slug: 'edition', eventName: 'Festival', published: true },
       exhibitions: [], activities: result,
-      artistsLookup: new Map([[4, { id: 4, pseudonym: 'Artista', statusId: 1 }]]),
+      artistsLookup: new Map([[4, { id: 4, pseudonym: 'Artista', statusId: 1, pseudonyms: [] }]]),
       collectivesLookup: new Map(), bandsLookup: new Map()
     })[0].activities[0].occurrences).toEqual(result[0].occurrences)
     occurrenceRows = []

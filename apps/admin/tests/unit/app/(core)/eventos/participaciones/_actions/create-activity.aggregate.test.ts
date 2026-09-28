@@ -14,6 +14,7 @@ const committed: { rows: Map<unknown, Record<string, unknown>[]> } = {
 let currentDb: Record<string, unknown>
 let failAt: string | null
 let effectiveTypeSlug = 'taller'
+let activePseudonymId = 41
 let participationExists = true
 let typeLookups: unknown[]
 let transactionCommitted: boolean
@@ -30,6 +31,14 @@ function createHarness() {
   invalidationCommitStates = []
   typeLookups = []
   const tx = {
+    select: () => ({
+      from: () => ({
+        where: () => ({ limit: async () => [{ id: activePseudonymId }] }),
+        innerJoin: () => ({
+          where: () => ({ limit: async () => [{ id: activePseudonymId }] })
+        })
+      })
+    }),
     query: {
       editionParticipation: {
         findFirst: async () =>
@@ -118,6 +127,7 @@ describe('createActivityAction aggregate', () => {
     requireAuth.mockClear()
     revalidateWebCacheBestEffort.mockClear()
     effectiveTypeSlug = 'taller'
+    activePseudonymId = 41
     participationExists = true
     createHarness()
   })
@@ -174,6 +184,24 @@ describe('createActivityAction aggregate', () => {
       }
     ])
     expect(transactionCommitted).toBe(true)
+  })
+
+  test('persists distinct pseudonyms for multiple activities by the same artist', async () => {
+    const harness = createHarness()
+    const first = await createActivityAction({
+      ...payload(),
+      pseudonimoId: 41
+    } as never)
+    activePseudonymId = 42
+    const second = await createActivityAction({
+      ...payload(),
+      pseudonimoId: 42
+    } as never)
+
+    expect(first.success).toBe(true)
+    expect(second.success).toBe(true)
+    expect(harness.pending.get(tables.participationActivity)?.map((row) => row.pseudonimoId)).toEqual([41, 42])
+    expect(harness.pending.get(tables.participationActivity)?.every((row) => row.participacionId === 11)).toBe(true)
   })
 
   test('creates the activity without a registration row when configuration is absent', async () => {

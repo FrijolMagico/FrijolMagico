@@ -4,18 +4,24 @@ import { cacheTag } from 'next/cache'
 
 import { db } from '@frijolmagico/database/orm'
 import { artist, participations } from '@frijolmagico/database/schema'
-import { and, asc, eq, sql } from 'drizzle-orm'
+import { and, asc, eq, isNull, sql } from 'drizzle-orm'
 import { participationsQueryParamsSchema } from '@/core/eventos/participaciones/_schemas/query-params.schema'
 
 import { getEditionParticipationsCacheTag } from '@frijolmagico/cache-tags'
 
 const { editionParticipation, participationExhibition, participationActivity } =
   participations
-const { artist: artistTable, collective, band } = artist
+const {
+  artist: artistTable,
+  artistPseudonym,
+  artistPrimaryPseudonym,
+  collective,
+  band
+} = artist
 
 function buildSortLabel() {
   return sql<string>`lower(coalesce(
-    ${artistTable.pseudonimo},
+    ${artistPseudonym.pseudonimo},
     ${artistTable.nombre},
     ${collective.nombre},
     ${band.name},
@@ -88,6 +94,18 @@ export async function getParticipations(edicionId: number, params: unknown) {
     })
     .from(editionParticipation)
     .leftJoin(artistTable, eq(artistTable.id, editionParticipation.artistaId))
+    .leftJoin(
+      artistPrimaryPseudonym,
+      eq(artistPrimaryPseudonym.artistaId, artistTable.id)
+    )
+    .leftJoin(
+      artistPseudonym,
+      and(
+        eq(artistPseudonym.id, artistPrimaryPseudonym.pseudonimoId),
+        eq(artistPseudonym.artistaId, artistTable.id),
+        isNull(artistPseudonym.deletedAt)
+      )
+    )
     .leftJoin(collective, eq(collective.id, editionParticipation.agrupacionId))
     .leftJoin(band, eq(band.id, editionParticipation.bandaId))
     .where(whereClause)

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { FormProvider, useForm, useFormState } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -8,10 +9,9 @@ import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-di
 import { toSlug } from '@/shared/lib/utils'
 
 import { useArtistDialog } from '../_store/artist-dialog-store'
-import { createArtistaAction } from '../_actions/create-artista.action'
+import { createArtistWithPseudonymsAction } from '../_actions/artist-pseudonym-mutations.action'
 import {
   type ArtistCreateFormInput,
-  type ArtistInsertInput,
   artistCreateFormSchema
 } from '../_schemas/artista.schema'
 import { CREATE_ARTIST_FORM_ID } from '../_constants'
@@ -19,6 +19,8 @@ import { CREATE_ARTIST_FORM_ID } from '../_constants'
 import { ArtistFormLayout } from './artist-form-layout'
 
 export function CreateArtistDialog() {
+  const [pseudonyms, setPseudonyms] = useState<string[]>([])
+  const [editorKey, setEditorKey] = useState(0)
   const isCreateArtistOpen = useArtistDialog((s) => s.isCreateArtistOpen)
   const toggleCreateArtistDialog = useArtistDialog(
     (s) => s.toggleCreateArtistDialog
@@ -47,13 +49,19 @@ export function CreateArtistDialog() {
   const onSubmit = async (data: ArtistCreateFormInput) => {
     let success = false
     try {
-      const slug = toSlug(data.pseudonimo)
-      const result = await createArtistaAction(
+      const primaryPseudonym = data.pseudonimo.trim()
+      const submittedPseudonyms = [...new Set(
+        [...pseudonyms, primaryPseudonym].map((pseudonym) => pseudonym.trim()).filter(Boolean)
+      )]
+      const slug = toSlug(primaryPseudonym)
+      const { pseudonimo: _pseudonimo, ...artist } = data
+      const result = await createArtistWithPseudonymsAction(
         { success: false },
         {
-          ...data,
-          slug
-        } as ArtistInsertInput & { slug: string }
+          artist: { ...artist, slug },
+          pseudonyms: submittedPseudonyms,
+          primaryPseudonym
+        } as Parameters<typeof createArtistWithPseudonymsAction>[1]
       )
 
       if (!result.success) {
@@ -68,6 +76,8 @@ export function CreateArtistDialog() {
       success = true
       toast.success('Artista agregado correctamente')
       methods.reset()
+      setPseudonyms([])
+      setEditorKey((key) => key + 1)
     } finally {
       if (success) {
         toggleCreateArtistDialog(false)
@@ -95,7 +105,10 @@ export function CreateArtistDialog() {
             id={CREATE_ARTIST_FORM_ID}
             onSubmit={methods.handleSubmit(onSubmit)}
           >
-            <ArtistFormLayout />
+            <ArtistFormLayout
+              key={editorKey}
+              onCreatePseudonymsChange={({ pseudonyms: nextPseudonyms }) => setPseudonyms(nextPseudonyms)}
+            />
           </form>
         </EntityFormDialog>
       </FormProvider>

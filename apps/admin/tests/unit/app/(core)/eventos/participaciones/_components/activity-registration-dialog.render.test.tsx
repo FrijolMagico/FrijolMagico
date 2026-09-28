@@ -305,7 +305,13 @@ test('renders update Chile-local defaults and submits absent registration after 
   await act(async () =>
     root.render(
       createElement(UpdateActivityDialog, {
-        edition: { id: 1, editionNumber: '2026', eventName: 'Festival' }
+        edition: { id: 1, editionNumber: '2026', eventName: 'Festival' },
+        artistas: [{
+          id: 5,
+          pseudonym: 'Sol',
+          statusId: 1,
+          pseudonyms: [{ id: 13, pseudonym: 'Sol', isPrimary: true }]
+        }]
       })
     )
   )
@@ -325,9 +331,7 @@ test('renders update Chile-local defaults and submits absent registration after 
 
   // Registration form renders correctly (pickers tested in integration)
 
-  const musicButton = container.querySelector<HTMLButtonElement>(
-    '[data-select] button'
-  )
+  const musicButton = container.querySelectorAll<HTMLButtonElement>('[data-select] button')[1]
   await act(async () => musicButton?.click())
   // When music is selected, registration pickers are hidden
   expect(findPickerButton(container, 'Inicio: fecha')).toBeNull()
@@ -345,7 +349,8 @@ test('renders update Chile-local defaults and submits absent registration after 
     })
   )
   await act(async () =>
-    container.querySelector<HTMLButtonElement>('[data-select] button')?.click()
+    [...container.querySelectorAll<HTMLButtonElement>('[data-select] button')]
+      .find((button) => button.textContent === 'Cambiar participante')?.click()
   )
   // When banda is selected, registration section is hidden
   expect(
