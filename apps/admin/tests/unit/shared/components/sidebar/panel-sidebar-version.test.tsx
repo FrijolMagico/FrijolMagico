@@ -18,4 +18,11 @@ describe('PanelSidebarVersion', () => {
     const markup = renderToStaticMarkup(<PanelSidebarVersion />)
     expect(markup).toContain('text-sidebar-foreground/30')
   })
+
+  test('links to the changelog after a hyphen without an underline', () => {
+    const markup = renderToStaticMarkup(<PanelSidebarVersion />)
+    expect(markup).toMatch(/<\/span>-[^<]*<a[^>]*href="\/changelog"/)
+    expect(markup).toContain('Changelog')
+    expect(markup).not.toContain('underline')
+  })
 })
