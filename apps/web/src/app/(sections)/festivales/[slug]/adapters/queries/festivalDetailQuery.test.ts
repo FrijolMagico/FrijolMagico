@@ -11,6 +11,15 @@ describe('FESTIVAL_DETAIL_QUERY', () => {
     expect(FESTIVAL_DETAIL_QUERY).toContain('AND ee.published = 1')
   })
 
+  test('exposes only confirmed and completed exhibition and activity participation', () => {
+    expect(FESTIVAL_DETAIL_QUERY).toContain(
+      "AND pexp.estado IN ('confirmado', 'completado')"
+    )
+    expect(FESTIVAL_DETAIL_QUERY).toContain(
+      "AND pact.estado IN ('confirmado', 'completado')"
+    )
+  })
+
   test('selects activity artist contact data from the participating artist and active catalog', () => {
     expect(FESTIVAL_DETAIL_QUERY).toContain(
       "'catalogo_slug', CASE WHEN ca2.id IS NOT NULL THEN a2.slug ELSE NULL END"

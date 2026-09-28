@@ -80,6 +80,7 @@ export function CreateExhibitionDialog({
     control: methods.control,
     name: 'participantType'
   })
+  const status = useWatch({ control: methods.control, name: 'estado' })
 
   const onSubmit = async (values: ExhibitionFormInput) => {
     const result = await createExhibitionAction({
@@ -267,6 +268,12 @@ export function CreateExhibitionDialog({
               </Select>
             )}
           />
+          {status !== PARTICIPATION_STATUS.CONFIRMADO &&
+            status !== PARTICIPATION_STATUS.COMPLETADO && (
+              <p className='text-muted-foreground text-xs'>
+                Esta exhibición no se mostrará en la web a menos que tenga estado Confirmado o Completado.
+              </p>
+            )}
           {errors.estado && <FieldError>{errors.estado.message}</FieldError>}
         </Field>
 

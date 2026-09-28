@@ -120,6 +120,7 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
     control: methods.control,
     name: 'registration.registrationEnabled'
   })
+  const status = useWatch({ control: methods.control, name: 'estado' })
 
   if (!entity || !activity) return null
 
@@ -285,6 +286,12 @@ export function UpdateActivityDialog({ edition }: UpdateActivityDialogProps) {
                 </Select>
               )}
             />
+            {status !== PARTICIPATION_STATUS.CONFIRMADO &&
+              status !== PARTICIPATION_STATUS.COMPLETADO && (
+                <p className='text-muted-foreground text-xs'>
+                  Esta actividad no se mostrará en la web a menos que tenga estado Confirmado o Completado.
+                </p>
+              )}
             {errors.estado && <FieldError>{errors.estado.message}</FieldError>}
           </Field>
 

@@ -36,6 +36,7 @@ export const FESTIVALES_QUERY = `SELECT json_object(
                 FROM participacion_exposicion pexp
                 JOIN participacion_edicion ped ON ped.id = pexp.participacion_id
                 WHERE ped.edicion_id = ee.id
+                  AND pexp.estado IN ('confirmado', 'completado')
             ),
             'talleres', (
                 SELECT COUNT(DISTINCT ped.id)
@@ -43,6 +44,7 @@ export const FESTIVALES_QUERY = `SELECT json_object(
                 JOIN participacion_edicion ped ON ped.id = pact.participacion_id
                 JOIN tipo_actividad ta ON pact.tipo_actividad_id = ta.id
                 WHERE ped.edicion_id = ee.id
+                  AND pact.estado IN ('confirmado', 'completado')
                   AND ta.slug = 'taller'
             ),
             'musica', (
@@ -51,6 +53,7 @@ export const FESTIVALES_QUERY = `SELECT json_object(
                 JOIN participacion_edicion ped ON ped.id = pact.participacion_id
                 JOIN tipo_actividad ta ON pact.tipo_actividad_id = ta.id
                 WHERE ped.edicion_id = ee.id
+                  AND pact.estado IN ('confirmado', 'completado')
                   AND ta.slug = 'musica'
             ),
             'charlas', (
@@ -69,6 +72,7 @@ export const FESTIVALES_QUERY = `SELECT json_object(
                 FROM participacion_exposicion pexp
                 JOIN participacion_edicion ped ON ped.id = pexp.participacion_id
                 WHERE ped.edicion_id = ee.id
+                  AND pexp.estado IN ('confirmado', 'completado')
                 GROUP BY pexp.disciplina_id
             ) sub
             JOIN disciplina d ON sub.disciplina_id = d.id
