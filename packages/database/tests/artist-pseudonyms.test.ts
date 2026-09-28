@@ -10,6 +10,7 @@ import { getTableColumns, getTableName } from 'drizzle-orm'
 import {
   artistPseudonym,
   artistPrimaryPseudonym,
+  artistSlugAlias,
   catalogArtist
 } from '../src/db/schema/artist'
 import {
@@ -18,8 +19,14 @@ import {
   participationExhibition
 } from '../src/db/schema/participations'
 
-const migrationPath = join(import.meta.dir, '../migrations/0023_artist_pseudonyms.sql')
-const migration = readFileSync(migrationPath, 'utf8')
+const pseudonymMigration = readFileSync(
+  join(import.meta.dir, '../migrations/0023_artist_pseudonyms.sql'),
+  'utf8'
+)
+const slugAliasMigration = readFileSync(
+  join(import.meta.dir, '../migrations/0024_catalog_slug_aliases.sql'),
+  'utf8'
+)
 const directories: string[] = []
 
 async function setup() {
@@ -43,8 +50,10 @@ async function setup() {
   await db.execute('INSERT INTO participacion_edicion (id, artista_id) VALUES (10, 1), (20, 2), (30, NULL)')
   await db.execute('INSERT INTO participacion_exposicion (id, participacion_id) VALUES (100, 10), (200, 20)')
   await db.execute('INSERT INTO participacion_actividad (id, participacion_id) VALUES (1000, 10), (2000, 30)')
-  for (const statement of migration.split('--> statement-breakpoint').map((part) => part.trim()).filter(Boolean)) {
-    await db.execute(statement)
+  for (const migration of [pseudonymMigration, slugAliasMigration]) {
+    for (const statement of migration.split('--> statement-breakpoint').map((part) => part.trim()).filter(Boolean)) {
+      await db.execute(statement)
+    }
   }
   return db
 }
@@ -61,6 +70,8 @@ describe('artist pseudonym migration', () => {
       'id', 'artista_id', 'pseudonimo', 'deleted_at', 'created_at', 'updated_at'
     ])
     expect(getTableName(artistPrimaryPseudonym)).toBe('artista_pseudonimo_principal')
+    expect(getTableName(artistSlugAlias)).toBe('artista_slug_alias')
+    expect(Object.keys(getTableColumns(artistSlugAlias))).toEqual(['slug', 'artistaId'])
     expect(Object.keys(getTableColumns(catalogArtist))).toContain('pseudonimoId')
     expect(Object.keys(getTableColumns(editionParticipation))).toContain('artistaId')
     expect(Object.keys(getTableColumns(participationExhibition))).toContain('pseudonimoId')
@@ -81,6 +92,25 @@ describe('artist pseudonym migration', () => {
     )).rows[0]
     expect(unassignedActivity?.artista_id).toBeNull()
     expect(unassignedActivity?.pseudonimo_id).toBeNull()
+  })
+
+  test('guards canonical slugs against cross-artist aliases while retaining prior slugs', async () => {
+    const db = await setup()
+    await db.execute("UPDATE artista SET slug = 'sol-nuevo' WHERE id = 1")
+    await db.execute("INSERT INTO artista_slug_alias (slug, artista_id) VALUES ('sol', 1)")
+
+    const aliases = await db.execute('SELECT slug, artista_id FROM artista_slug_alias WHERE artista_id = 1')
+    expect(aliases.rows.map((row) => [row.slug, row.artista_id])).toEqual([['sol', 1]])
+    await expect(db.execute("INSERT INTO artista_slug_alias (slug, artista_id) VALUES ('luna', 1)")).rejects.toThrow(
+      'artist slug alias collides with canonical slug'
+    )
+    await expect(db.execute("UPDATE artista SET slug = 'sol' WHERE id = 1")).rejects.toThrow(
+      'canonical artist slug collides with alias'
+    )
+    await expect(db.execute("UPDATE artista SET slug = 'sol' WHERE id = 2")).rejects.toThrow(
+      'canonical artist slug collides with alias'
+    )
+    await expect(db.execute("INSERT INTO artista_slug_alias (slug, artista_id) VALUES ('sol', 2)")).rejects.toThrow()
   })
 
   test('enforces active global uniqueness, ownership, referenced retirement and primary retention', async () => {

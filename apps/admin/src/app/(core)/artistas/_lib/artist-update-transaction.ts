@@ -3,10 +3,11 @@ import { db } from '@frijolmagico/database/orm'
 import { artist as artistTables } from '@frijolmagico/database/schema'
 import { and, eq, isNull, sql } from 'drizzle-orm'
 import type { ArtistPseudonymDraftInput } from '../_schemas/artist-pseudonym.schema'
+import { allocateCatalogSlug } from '../catalogo/_lib/catalog-slug'
 
 type ArtistTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
 
-const { artist, artistPseudonym, artistPrimaryPseudonym, artistHistory } = artistTables
+const { artist, artistPseudonym, artistPrimaryPseudonym, artistHistory, catalogArtist } = artistTables
 
 async function requireActiveArtist(transaction: ArtistTransaction, artistId: number) {
   const [activeArtist] = await transaction
@@ -58,6 +59,7 @@ export async function applyArtistPseudonymDrafts(
 ) {
   await requireActiveArtist(transaction, artistId)
   let historyChanged = false
+  let catalogSlugChanged = false
 
   for (const draft of drafts) {
     if (draft.operation === 'add') {
@@ -110,6 +112,18 @@ export async function applyArtistPseudonymDrafts(
       if (primary?.pseudonimoId === pseudonym.id) {
         await transaction.update(artist).set({ pseudonimo: draft.pseudonym }).where(eq(artist.id, artistId))
       }
+
+      const [catalogSelection] = await transaction
+        .select({ pseudonimoId: catalogArtist.pseudonimoId })
+        .from(catalogArtist)
+        .where(eq(catalogArtist.artistaId, artistId))
+      if (catalogSelection?.pseudonimoId === pseudonym.id) {
+        catalogSlugChanged = await allocateCatalogSlug(
+          transaction,
+          artistId,
+          draft.pseudonym
+        ) || catalogSlugChanged
+      }
     }
 
     if (draft.makePrimary) {
@@ -117,5 +131,5 @@ export async function applyArtistPseudonymDrafts(
     }
   }
 
-  return { historyChanged }
+  return { historyChanged, catalogSlugChanged }
 }

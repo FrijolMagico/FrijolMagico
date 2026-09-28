@@ -11,9 +11,15 @@ const max = mock(() => 'max(orden)')
 const pseudonymTable = {
   id: 'pseudonym.id',
   artistaId: 'pseudonym.artistaId',
+  pseudonimo: 'pseudonym.pseudonimo',
   deletedAt: 'pseudonym.deletedAt'
 }
+const artistTable = { id: 'artist.id', slug: 'artist.slug' }
+const aliasTable = { slug: 'alias.slug', artistaId: 'alias.artistaId' }
+const catalogTable = { id: 'catalog.id', orden: 'orden', artistaId: 'catalog.artistId' }
 let insertedValues: Record<string, unknown> | null = null
+let slugValues: Record<string, unknown>[] = []
+let aliasValues: Record<string, unknown>[] = []
 let returningResult: unknown = [{ id: 9, artistaId: 42 }]
 let ownedPseudonym: unknown = { id: 43 }
 
@@ -23,6 +29,7 @@ mock.module('next/cache', () => ({ updateTag }))
 mock.module('drizzle-orm', () => ({
   max,
   and: (...conditions: unknown[]) => conditions,
+  ne: (...values: unknown[]) => values,
   eq: (...values: unknown[]) => values,
   isNull: (value: unknown) => value
 }))
@@ -38,7 +45,9 @@ mock.module('@/shared/lib/web-invalidation', () => ({
 }))
 mock.module('@frijolmagico/database/schema', () => ({
   artist: {
-    catalogArtist: { orden: 'orden' },
+    artist: artistTable,
+    artistSlugAlias: aliasTable,
+    catalogArtist: catalogTable,
     artistPseudonym: pseudonymTable
   }
 }))
@@ -55,6 +64,8 @@ mock.module('@frijolmagico/database/orm', () => ({
           ? { where: () => ({ limit: async () => ownedPseudonym ? [ownedPseudonym] : [] }) }
           : Promise.resolve([{ maxOrden: null }])
     }),
+    transaction: async (run: (tx: ReturnType<typeof createTransaction>) => Promise<unknown>) =>
+      run(createTransaction()),
     insert: () => ({
       values: (values: Record<string, unknown>) => {
         insertedValues = values
@@ -63,6 +74,48 @@ mock.module('@frijolmagico/database/orm', () => ({
     })
   }
 }))
+
+function createTransaction() {
+  let initialArtistLookup = true
+  return {
+    select: () => ({
+      from: (table: unknown) => ({
+        where: () => ({
+          limit: async () => {
+            if (table === pseudonymTable) return ownedPseudonym ? [ownedPseudonym] : []
+            if (table === artistTable && initialArtistLookup) {
+              initialArtistLookup = false
+              return [{ slug: 'old-slug' }]
+            }
+            if (table === artistTable) return []
+            if (table === aliasTable) return []
+            return []
+          }
+        })
+      })
+    }),
+    delete: () => ({ where: async () => undefined }),
+    update: () => ({
+      set: (values: Record<string, unknown>) => ({
+        where: async () => {
+          slugValues.push(values)
+        }
+      })
+    }),
+    insert: (table: unknown) => ({
+      values: (values: Record<string, unknown>) => {
+        if (table === aliasTable) {
+          aliasValues.push(values)
+          return Promise.resolve()
+        }
+        insertedValues = values
+        return {
+          returning: async () => returningResult
+        }
+      }
+    })
+  }
+}
 
 const { createCatalogAction } = await import(
   new URL(
@@ -74,8 +127,10 @@ const { createCatalogAction } = await import(
 describe('createCatalogAction', () => {
   beforeEach(() => {
     insertedValues = null
+    slugValues = []
+    aliasValues = []
     returningResult = [{ id: 9, artistaId: 42 }]
-    ownedPseudonym = { id: 43 }
+    ownedPseudonym = { id: 43, pseudonimo: 'Selected Artist' }
     updateTag.mockClear()
     revalidateWebCacheBestEffort.mockClear()
   })
@@ -91,6 +146,8 @@ describe('createCatalogAction', () => {
       data: { catalogId: 9, artistId: 42, requestedActive: true }
     })
     expect(insertedValues).toMatchObject({ artistaId: 42, pseudonimoId: 43, activo: false })
+    expect(slugValues).toEqual([{ slug: 'selected-artist' }])
+    expect(aliasValues).toEqual([{ slug: 'old-slug', artistaId: 42 }])
   })
 
   test('invokes internal best-effort revalidation after a committed create', async () => {

@@ -42,8 +42,12 @@ function createTx(rows: unknown[], onUpdate?: () => void) {
     select: (selection: Record<string, unknown>) => ({
       from: () => ({
         where: () => ({
-          limit: async () =>
-            Object.keys(selection).length === 1 ? [{ id: 43 }] : rows
+          limit: async () => {
+            if ('pseudonimo' in selection) return [{ id: 43, pseudonimo: 'Selected Artist' }]
+            if ('pseudonimoId' in selection) return [{ pseudonimoId: 43 }]
+            if ('slug' in selection) return [{ slug: 'old-slug' }]
+            return rows
+          }
         })
       })
     }),

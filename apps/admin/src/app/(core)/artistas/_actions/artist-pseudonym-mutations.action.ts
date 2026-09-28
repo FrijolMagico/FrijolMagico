@@ -6,7 +6,13 @@ import { db } from '@frijolmagico/database/orm'
 import { artist as artistTables, participations } from '@frijolmagico/database/schema'
 import { and, eq, isNull, sql } from 'drizzle-orm'
 import { requireAuth } from '@/shared/lib/auth/utils'
-import { ARTIST_CACHE_TAG, ARTIST_HISTORY_CACHE_TAG } from '@frijolmagico/cache-tags'
+import {
+  ARTIST_CACHE_TAG,
+  ARTIST_HISTORY_CACHE_TAG,
+  CATALOG_CACHE_TAG
+} from '@frijolmagico/cache-tags'
+import { revalidateWebCache } from '@/shared/lib/web-invalidation'
+import { allocateCatalogSlug } from '../catalogo/_lib/catalog-slug'
 import type { ActionState } from '@/shared/types/actions'
 import { artistInsertSchema } from '../_schemas/artista.schema'
 import {
@@ -125,6 +131,7 @@ export async function mutateArtistPseudonymAction(
   data: ArtistPseudonymMutationInput
 ): Promise<ActionState> {
   let historyChanged = false
+  let catalogSlugChanged = false
   try {
     await requireAuth()
     const parsed = artistPseudonymMutationSchema.safeParse(data)
@@ -176,6 +183,17 @@ export async function mutateArtistPseudonymAction(
         if (primary?.pseudonimoId === pseudonym.id) {
           await transaction.update(artist).set({ pseudonimo: mutation.pseudonym }).where(eq(artist.id, mutation.artistId))
         }
+        const [catalogSelection] = await transaction
+          .select({ pseudonimoId: catalogArtist.pseudonimoId })
+          .from(catalogArtist)
+          .where(eq(catalogArtist.artistaId, mutation.artistId))
+        if (catalogSelection?.pseudonimoId === pseudonym.id) {
+          catalogSlugChanged = await allocateCatalogSlug(
+            transaction,
+            mutation.artistId,
+            mutation.pseudonym
+          )
+        }
         return
       }
 
@@ -218,6 +236,13 @@ export async function mutateArtistPseudonymAction(
         await transaction.update(catalogArtist).set({ pseudonimoId: replacement.id }).where(and(eq(catalogArtist.artistaId, mutation.artistId), eq(catalogArtist.pseudonimoId, pseudonym.id)))
         await transaction.update(participationExhibition).set({ pseudonimoId: replacement.id }).where(and(eq(participationExhibition.artistaId, mutation.artistId), eq(participationExhibition.pseudonimoId, pseudonym.id)))
         await transaction.update(participationActivity).set({ pseudonimoId: replacement.id }).where(and(eq(participationActivity.artistaId, mutation.artistId), eq(participationActivity.pseudonimoId, pseudonym.id)))
+        if (catalogReference) {
+          catalogSlugChanged = await allocateCatalogSlug(
+            transaction,
+            mutation.artistId,
+            replacement.pseudonimo
+          )
+        }
         if (primary?.pseudonimoId === pseudonym.id) {
           await setPrimary(transaction, mutation.artistId, replacement.id, replacement.pseudonimo)
         }
@@ -230,6 +255,10 @@ export async function mutateArtistPseudonymAction(
 
     updateTag(ARTIST_CACHE_TAG)
     if (historyChanged) updateTag(ARTIST_HISTORY_CACHE_TAG)
+    if (catalogSlugChanged) {
+      updateTag(CATALOG_CACHE_TAG)
+      void revalidateWebCache({ tag: CATALOG_CACHE_TAG, path: '/catalogo' })
+    }
     return { success: true }
   } catch (error) {
     return invalid(errorMessage(error))

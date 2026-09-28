@@ -27,6 +27,7 @@ import {
   type CatalogUpdateInput,
   catalogUpdateSchema
 } from '../_schemas/catalog.schema'
+import { allocateCatalogSlug } from '../_lib/catalog-slug'
 
 function conflict(): ActionState {
   return {
@@ -83,7 +84,7 @@ export async function updateCatalogAction(
   try {
     const result = await db.transaction(async (tx) => {
       const [ownedPseudonym] = await tx
-        .select({ id: artist.artistPseudonym.id })
+        .select({ id: artist.artistPseudonym.id, pseudonimo: artist.artistPseudonym.pseudonimo })
         .from(artist.artistPseudonym)
         .where(
           and(
@@ -153,6 +154,15 @@ export async function updateCatalogAction(
           .limit(1)
         if (!historical || !isOwnedDeletedAvatar(historical, artistaId))
           return null
+      }
+
+      const [currentCatalog] = await tx
+        .select({ pseudonimoId: artist.catalogArtist.pseudonimoId })
+        .from(artist.catalogArtist)
+        .where(eq(artist.catalogArtist.id, id))
+        .limit(1)
+      if (currentCatalog && currentCatalog.pseudonimoId !== pseudonimoId) {
+        await allocateCatalogSlug(tx, artistaId, ownedPseudonym.pseudonimo)
       }
 
       await tx

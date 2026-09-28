@@ -10,8 +10,11 @@ const { artist, artistPseudonym, artistPrimaryPseudonym } = artistTables
 import { requireAuth } from '@/shared/lib/auth/utils'
 import {
   ARTIST_CACHE_TAG,
-  ARTIST_HISTORY_CACHE_TAG
+  ARTIST_HISTORY_CACHE_TAG,
+  CATALOG_CACHE_TAG
 } from '@frijolmagico/cache-tags'
+import { revalidateWebCache } from '@/shared/lib/web-invalidation'
+import { allocateCatalogSlug } from '../catalogo/_lib/catalog-slug'
 import { artistUpdateSchema } from '../_schemas/artista.schema'
 import { artistHistoryInsertSchema } from '../_schemas/history.schema'
 import type { ArtistUpdateFormInput, Artist } from '../_schemas/artista.schema'
@@ -114,7 +117,7 @@ export async function updateArtistaWithPseudonymsAction(
   }
 
   try {
-    const { historyChanged } = await db.transaction(async (tx) => {
+    const { historyChanged, catalogSlugChanged } = await db.transaction(async (tx) => {
       const pseudonymResult = await applyArtistPseudonymDrafts(
         tx,
         prevData.id,
@@ -132,11 +135,18 @@ export async function updateArtistaWithPseudonymsAction(
           orden: (maxResult?.maxOrden ?? 0) + 1
         })
       }
-      return { historyChanged: pseudonymResult.historyChanged }
+      return {
+        historyChanged: pseudonymResult.historyChanged,
+        catalogSlugChanged: pseudonymResult.catalogSlugChanged
+      }
     })
 
     updateTag(ARTIST_CACHE_TAG)
     if (historialInsert || historyChanged) updateTag(ARTIST_HISTORY_CACHE_TAG)
+    if (catalogSlugChanged) {
+      updateTag(CATALOG_CACHE_TAG)
+      void revalidateWebCache({ tag: CATALOG_CACHE_TAG, path: '/catalogo' })
+    }
     return { success: true }
   } catch (error) {
     return {
@@ -202,7 +212,7 @@ export async function updateArtistaAction(
     }
   }
 
-  await db.transaction(async (tx) => {
+  const catalogSlugChanged = await db.transaction(async (tx) => {
     await tx
       .update(artist)
       .set(parsed.data)
@@ -221,10 +231,31 @@ export async function updateArtistaAction(
         orden: (maxResult?.maxOrden ?? 0) + 1
       })
     }
+
+    const [catalogSelection] = await tx
+      .select({ pseudonimoId: artistTables.catalogArtist.pseudonimoId })
+      .from(artistTables.catalogArtist)
+      .where(eq(artistTables.catalogArtist.artistaId, prevData.id))
+    const [primary] = await tx
+      .select({ pseudonimoId: artistTables.artistPrimaryPseudonym.pseudonimoId })
+      .from(artistTables.artistPrimaryPseudonym)
+      .where(eq(artistTables.artistPrimaryPseudonym.artistaId, prevData.id))
+    if (
+      catalogSelection?.pseudonimoId != null &&
+      catalogSelection.pseudonimoId === primary?.pseudonimoId &&
+      parsed.data.pseudonimo !== undefined
+    ) {
+      return allocateCatalogSlug(tx, prevData.id, parsed.data.pseudonimo)
+    }
+    return false
   })
 
   updateTag(ARTIST_CACHE_TAG)
   if (historialInsert) updateTag(ARTIST_HISTORY_CACHE_TAG)
+  if (catalogSlugChanged) {
+    updateTag(CATALOG_CACHE_TAG)
+    void revalidateWebCache({ tag: CATALOG_CACHE_TAG, path: '/catalogo' })
+  }
 
   return { success: true }
 }

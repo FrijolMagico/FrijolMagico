@@ -18,6 +18,7 @@ import {
   type CatalogInsertInput
 } from '../_schemas/catalog.schema'
 import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
+import { allocateCatalogSlug } from '../_lib/catalog-slug'
 
 interface CreatedCatalog {
   catalogId: number
@@ -29,6 +30,8 @@ interface CreatedCatalogRow {
   id: number
   artistaId: number
 }
+
+const CATALOG_CREATE_NOT_CONFIRMED = 'CATALOG_CREATE_NOT_CONFIRMED'
 
 function isCreatedCatalogRow(value: unknown): value is CreatedCatalogRow {
   return (
@@ -73,19 +76,34 @@ export async function createCatalogAction(
     }
 
     const { artistaId, pseudonimoId, ...catalog } = parsed.data
-    const [ownedPseudonym] = await db
-      .select({ id: artist.artistPseudonym.id })
-      .from(artist.artistPseudonym)
-      .where(
-        and(
-          eq(artist.artistPseudonym.id, pseudonimoId),
-          eq(artist.artistPseudonym.artistaId, artistaId),
-          isNull(artist.artistPseudonym.deletedAt)
+    const transactionResult = await db.transaction(async (tx) => {
+      const [ownedPseudonym] = await tx
+        .select({ id: artist.artistPseudonym.id, pseudonimo: artist.artistPseudonym.pseudonimo })
+        .from(artist.artistPseudonym)
+        .where(
+          and(
+            eq(artist.artistPseudonym.id, pseudonimoId),
+            eq(artist.artistPseudonym.artistaId, artistaId),
+            isNull(artist.artistPseudonym.deletedAt)
+          )
         )
-      )
-      .limit(1)
+        .limit(1)
 
-    if (!ownedPseudonym) {
+      if (!ownedPseudonym) return null
+
+      await allocateCatalogSlug(tx, artistaId, ownedPseudonym.pseudonimo)
+      const [inserted] = await tx
+        .insert(artist.catalogArtist)
+        .values({ ...catalog, artistaId, pseudonimoId, activo: false })
+        .returning({
+          id: artist.catalogArtist.id,
+          artistaId: artist.catalogArtist.artistaId
+        })
+      if (!isCreatedCatalogRow(inserted)) throw new Error(CATALOG_CREATE_NOT_CONFIRMED)
+      return inserted
+    })
+
+    if (!transactionResult) {
       return {
         success: false,
         errors: [
@@ -97,25 +115,7 @@ export async function createCatalogAction(
       }
     }
 
-    const [createdCatalog] = await db
-      .insert(artist.catalogArtist)
-      .values({ ...catalog, artistaId, pseudonimoId, activo: false })
-      .returning({
-        id: artist.catalogArtist.id,
-        artistaId: artist.catalogArtist.artistaId
-      })
-
-    if (!isCreatedCatalogRow(createdCatalog)) {
-      return {
-        success: false,
-        errors: [
-          {
-            entityType: 'catalogo',
-            message: 'No se pudo confirmar la creación del catálogo'
-          }
-        ]
-      }
-    }
+    const createdCatalog = transactionResult
 
     // NOTE: Soft-deleted catalog rows still rely on the current unique `artistaId`
     // constraint. This change does not introduce restore-or-reinsert semantics.
@@ -146,6 +146,12 @@ export async function createCatalogAction(
       }
     }
   } catch (error) {
+    if (error instanceof Error && error.message === CATALOG_CREATE_NOT_CONFIRMED) {
+      return {
+        success: false,
+        errors: [{ entityType: 'catalogo', message: 'No se pudo confirmar la creación del catálogo' }]
+      }
+    }
     return {
       success: false,
       errors: [

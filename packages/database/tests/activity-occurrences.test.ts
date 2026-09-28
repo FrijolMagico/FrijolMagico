@@ -167,10 +167,10 @@ describe('activity occurrences additive migration', () => {
       breakpoints: true
     })
     expect(entries.at(-1)).toEqual({
-      idx: 23,
+      idx: 24,
       version: '7',
-      when: 1785456000000,
-      tag: '0023_artist_pseudonyms',
+      when: 1785542400000,
+      tag: '0024_catalog_slug_aliases',
       breakpoints: true
     })
     expect(entries.at(-1)!.when).toBeGreaterThan(entries.at(-2)!.when)

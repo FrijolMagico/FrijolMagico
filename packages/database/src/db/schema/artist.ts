@@ -67,6 +67,17 @@ export const artist = sqliteTable(
  * Stable artist pseudonyms. A soft-retired name may be retained while active
  * pseudonyms remain globally unique.
  */
+export const artistSlugAlias = sqliteTable(
+  'artista_slug_alias',
+  {
+    slug: text('slug').primaryKey(),
+    artistaId: integer('artista_id')
+      .notNull()
+      .references(() => artist.id, { onDelete: 'cascade' })
+  },
+  (table) => [index('idx_artist_slug_alias_artist').on(table.artistaId)]
+)
+
 export const artistPseudonym = sqliteTable(
   'artista_pseudonimo',
   {

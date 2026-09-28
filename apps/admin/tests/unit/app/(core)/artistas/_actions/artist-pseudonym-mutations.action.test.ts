@@ -2,10 +2,11 @@ import { beforeEach, describe, expect, mock, test } from 'bun:test'
 import { getTableName } from 'drizzle-orm'
 import { artist as artistTables, participations } from '@frijolmagico/database/schema'
 
-const { artist, artistHistory, artistPseudonym, artistPrimaryPseudonym, catalogArtist } = artistTables
+const { artist, artistHistory, artistPseudonym, artistPrimaryPseudonym, artistSlugAlias, catalogArtist } = artistTables
 const { participationActivity, participationExhibition } = participations
 
 const updateTag = mock(() => {})
+const revalidateWebCache = mock(async () => ({ revalidated: true }))
 const requireAuth = mock(async () => ({ user: { id: '1' } }))
 
 type QueryState = {
@@ -33,10 +34,15 @@ function createDatabaseMock() {
         from: (source: unknown) => {
           table = getTableName(source as Parameters<typeof getTableName>[0])
           return {
-            where: async () => {
+            where: () => {
               const count = state.selectCounts.get(table) ?? 0
               state.selectCounts.set(table, count + 1)
-              return state.selects.get(table)?.[count] ?? []
+              const rows = state.selects.get(table)?.[count] ?? []
+              return {
+                limit: async () => rows,
+                then: (resolve: (value: unknown[]) => unknown, reject: (reason: unknown) => unknown) =>
+                  Promise.resolve(rows).then(resolve, reject)
+              }
             }
           }
         }
@@ -55,6 +61,14 @@ function createDatabaseMock() {
                 : [],
             onConflictDoUpdate: async () => undefined
           }
+        }
+      }
+    },
+    delete: (target: unknown) => {
+      const table = getTableName(target as Parameters<typeof getTableName>[0])
+      return {
+        where: async () => {
+          state.writes.push({ operation: 'delete', table })
         }
       }
     },
@@ -96,11 +110,12 @@ mock.module('@frijolmagico/database/orm', () => ({
   db: new Proxy({}, { get: (_, property) => currentDb[property as keyof typeof currentDb] })
 }))
 mock.module('@/shared/lib/auth/utils', () => ({ requireAuth }))
+mock.module('@/shared/lib/web-invalidation', () => ({ revalidateWebCache }))
 
 const { createArtistWithPseudonymsAction, mutateArtistPseudonymAction } = await import(
   '@/core/artistas/_actions/artist-pseudonym-mutations.action'
 )
-const { updateArtistaWithPseudonymsAction } = await import(
+const { updateArtistaWithPseudonymsAction, updateArtistaAction } = await import(
   '@/core/artistas/_actions/update-artista.action'
 )
 
@@ -120,6 +135,7 @@ function withActiveArtist(mockDb: ReturnType<typeof createDatabaseMock>) {
 
 beforeEach(() => {
   updateTag.mockClear()
+  revalidateWebCache.mockClear()
   requireAuth.mockClear()
 })
 
@@ -207,6 +223,70 @@ describe('updateArtistaWithPseudonymsAction', () => {
       operation: 'update', table: tableName(artist),
       value: expect.objectContaining({ nombre: 'Updated artist' })
     }))
+  })
+
+  test('renaming the catalog-selected pseudonym updates the slug and invalidates catalog caches', async () => {
+    const mockDb = createDatabaseMock()
+    setSelects(mockDb, [
+      [artist, [[{ id: 1 }], [{ slug: 'old-name' }], []]],
+      [artistPrimaryPseudonym, [[{ pseudonimoId: 10 }]]],
+      [artistPseudonym, [[pseudonym]]],
+      [catalogArtist, [[{ pseudonimoId: 10 }]]],
+      [artistSlugAlias, [[]]]
+    ])
+    currentDb = mockDb.db
+
+    const result = await updateArtistaWithPseudonymsAction(
+      { success: false, data: { id: 1 } } as never,
+      {
+        data: {
+          nombre: 'Updated artist', pseudonimo: 'Renamed', rut: null,
+          telefono: null, correo: null, ciudad: null, pais: null, rrss: null,
+          estadoId: 1,
+          historialFlags: { pseudonimo: false, correo: false, ciudad: false, pais: false, rrss: false }
+        },
+        pseudonymDrafts: [{
+          operation: 'edit', pseudonymId: 10, pseudonym: 'Renamed',
+          preserveHistory: false, makePrimary: false
+        }]
+      } as never
+    )
+
+    expect(result.success).toBe(true)
+    expect(mockDb.state.writes).toContainEqual(expect.objectContaining({
+      operation: 'update', table: tableName(artist), value: { slug: 'renamed' }
+    }))
+    expect(mockDb.state.writes).toContainEqual(expect.objectContaining({
+      operation: 'insert', table: tableName(artistSlugAlias), value: { slug: 'old-name', artistaId: 1 }
+    }))
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+  })
+
+  test('legacy artist updates invalidate catalog when the selected primary pseudonym is renamed', async () => {
+    const mockDb = createDatabaseMock()
+    setSelects(mockDb, [
+      [artist, [[{ slug: 'old-name' }], []]],
+      [catalogArtist, [[{ pseudonimoId: 10 }]]],
+      [artistPrimaryPseudonym, [[{ pseudonimoId: 10 }]]],
+      [artistSlugAlias, [[]]]
+    ])
+    currentDb = mockDb.db
+
+    const result = await updateArtistaAction(
+      { success: false, data: { id: 1 } } as never,
+      {
+        nombre: 'Updated artist', pseudonimo: 'Renamed', rut: null,
+        telefono: null, correo: null, ciudad: null, pais: null, rrss: null,
+        estadoId: 1,
+        historialFlags: { pseudonimo: false, correo: false, ciudad: false, pais: false, rrss: false }
+      } as never
+    )
+
+    expect(result.success).toBe(true)
+    expect(mockDb.state.writes).toContainEqual(expect.objectContaining({
+      operation: 'update', table: tableName(artist), value: { slug: 'renamed' }
+    }))
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
   })
 
   test('rolls back the whole submit when a general artist update fails', async () => {
@@ -361,7 +441,9 @@ describe('mutateArtistPseudonymAction', () => {
     const retirement = createDatabaseMock()
     withActiveArtist(retirement)
     setSelects(retirement, [
+      [artist, [[{ id: 1 }], [{ slug: 'old-name' }], []]],
       [artistPseudonym, [[pseudonym], [{ id: 11, pseudonimo: 'Replacement' }]]],
+      [artistSlugAlias, [[]]],
       [catalogArtist, [[{ id: 30 }]]],
       [participationExhibition, [[{ id: 31 }]]],
       [participationActivity, [[{ id: 32 }]]],
@@ -374,6 +456,13 @@ describe('mutateArtistPseudonymAction', () => {
     })
     expect(result.success).toBe(true)
     expect(retirement.state.committed).toBe(true)
+    expect(retirement.state.writes).toContainEqual(expect.objectContaining({
+      operation: 'update', table: tableName(artist), value: { slug: 'replacement' }
+    }))
+    expect(retirement.state.writes).toContainEqual(expect.objectContaining({
+      operation: 'insert', table: tableName(artistSlugAlias), value: { slug: 'old-name', artistaId: 1 }
+    }))
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
     for (const table of [catalogArtist, participationExhibition, participationActivity]) {
       expect(retirement.state.writes.some(({ operation, table: writtenTable, value }) =>
         operation === 'update' && writtenTable === tableName(table) &&
