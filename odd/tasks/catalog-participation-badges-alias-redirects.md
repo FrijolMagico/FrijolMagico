@@ -32,7 +32,7 @@ Fix duplicate festival edition badges by preserving and displaying real particip
 - [x] **T3 — Deduplicate category-expanded editions in the artist timeline**
   - Kept the profile timeline's flat presentation while deduplicating one badge per event/edition/year; category detail remains intact in the `/catalogo` panel.
   - Tests: `bun run test --filter=@frijolmagico/web` passed (210 tests); type-check passed; lint passed with 3 unrelated warnings; independent verifier and parent spot-check clean.
-  - Commit pending.
+  - Work-unit commit `91668a3a` (`fix(web): dedupe profile timeline editions`).
 
 - [ ] **T4 — Run combined verification and browser smoke** (in progress)
   - Run `bun run test --filter=@frijolmagico/web`, `bun run type-check --filter=@frijolmagico/web`, `bun run lint --filter=@frijolmagico/web`, and `bun run build --force`.
