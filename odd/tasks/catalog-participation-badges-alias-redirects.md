@@ -37,11 +37,11 @@ Fix duplicate festival edition badges by preserving and displaying real particip
 - [x] **T4 — Run combined verification and browser smoke**
   - `bun run test --filter=@frijolmagico/web`: 210 passed; web type-check passed; lint passed with 3 pre-existing warnings outside catalog; `bun run build --force`: 2/2 tasks, 0 cached, no DB fallback, 2 existing `metadataBase` warnings.
   - Browser: `/catalogo` showed Festival → Ilustración/Narrativa Gráfica/Taller → edition/year; profile showed one badge per edition; both had 0 console errors/warnings. Alias navigation ended at `/catalogo/anima-blue`; prior direct HTTP check returned 308 + canonical Location. All isolated sessions closed and temp artifacts cleaned.
-  - Commits: T1 `32be480f`, T2 `2aafb175`, T3 `91668a3a`; evidence docs `fb0829b5`, `1f75f054`, `06cffb2d`. T4 evidence commit pending. No push/PR.
+  - Commits: T1 `32be480f`, T2 `2aafb175`, T3 `91668a3a`, T4 evidence `743fa9b9`; prior docs commits `fb0829b5`, `1f75f054`, `06cffb2d`. No push/PR.
 
 ## Progress and evidence
 
 - Read-only diagnosis completed before implementation. The component key omitted `via_agrupacion`; the catalog query combines direct and collective rows with `UNION ALL` and currently drops participation categories. Direct exhibition + activity rows alone are combined by an `EXISTS`/edition group and are not sufficient to explain duplicate keys.
 - Before T2, the slug page called server-side `permanentRedirect` after async data resolution; the streamed response was HTTP 200 containing Next `NEXT_REDIRECT` + meta refresh. Next 16.2.12 supports a Node-runtime `src/proxy.ts`; the new proxy now returns an early HTTP 308 with Location, verified on a live alias.
 - T1–T3 are implemented, independently verified and committed: `32be480f` (categorized panel), `2aafb175` (pre-stream 308), and `91668a3a` (flat profile timeline deduplication), with docs evidence commits `fb0829b5`, `1f75f054`, and `06cffb2d`.
-- T4 passed: web suite 210 tests; type-check; lint (3 unrelated pre-existing warnings); forced build 2/2 tasks, zero cached, no DB fallback (2 existing metadataBase warnings); browser confirmed categorized panel, deduped profile, alias to canonical, and zero duplicate-key/browser console warnings. The final T4 evidence doc commit is pending.
+- T4 passed: web suite 210 tests; type-check; lint (3 unrelated pre-existing warnings); forced build 2/2 tasks, zero cached, no DB fallback (2 existing metadataBase warnings); browser confirmed categorized panel, deduped profile, alias to canonical, and zero duplicate-key/browser console warnings. T4 evidence commit: `743fa9b9`.
