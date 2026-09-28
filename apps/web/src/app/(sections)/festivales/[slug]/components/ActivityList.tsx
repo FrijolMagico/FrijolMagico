@@ -1,8 +1,10 @@
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
+
 import { ActivityItem } from './ActivityItem'
 import { MusicActivityItem } from './MusicActivityItem'
 
 import type { FestivalActivity } from '../../types/festival'
-import { cn } from '@/utils/cn'
 
 interface ActivityListProps {
   actividades: FestivalActivity[]
@@ -21,53 +23,73 @@ const TYPE_ORDER: Record<string, number> = {
   musica: 99
 }
 
-export const ActivityList = ({ actividades, isEditionPast }: ActivityListProps) => {
-  const sorted = [...actividades].sort((a, b) => {
-    const firstA = a.ocurrencias[0]
-    const firstB = b.ocurrencias[0]
-    if (!firstA || !firstB) return Number(Boolean(firstB)) - Number(Boolean(firstA))
-    return (
-      firstA.fecha.localeCompare(firstB.fecha) ||
-      firstA.hora_inicio.localeCompare(firstB.hora_inicio)
-    )
-  })
+export const ActivityList = ({ actividades }: ActivityListProps) => {
+  const days = new Map<
+    string,
+    Map<string, Map<FestivalActivity, FestivalActivity>>
+  >()
 
-  const grouped = sorted.reduce<Record<string, FestivalActivity[]>>(
-    (acc, activity) => {
-      const key = activity.tipo
-      if (!acc[key]) {
-        acc[key] = []
+  actividades.forEach((activity) => {
+    activity.ocurrencias.forEach((occurrence) => {
+      let types = days.get(occurrence.fecha)
+      if (!types) {
+        types = new Map()
+        days.set(occurrence.fecha, types)
       }
-      acc[key].push(activity)
-      return acc
-    },
-    {}
-  )
+      let activities = types.get(activity.tipo)
+      if (!activities) {
+        activities = new Map()
+        types.set(activity.tipo, activities)
+      }
+      let dayActivity = activities.get(activity)
+      if (!dayActivity) {
+        dayActivity = { ...activity, ocurrencias: [] }
+        activities.set(activity, dayActivity)
+      }
+      if (
+        occurrence.id === undefined ||
+        !dayActivity.ocurrencias.some(({ id }) => id === occurrence.id)
+      ) {
+        dayActivity.ocurrencias.push(occurrence)
+      }
+    })
+  })
 
   return (
     <section>
       <h2 className='text-palette-primary mb-6 w-full text-center text-4xl font-bold md:text-start'>
         Actividades
       </h2>
-      <div className='flex flex-wrap gap-12 space-y-8'>
-        {Object.entries(grouped)
-          .sort(([a], [b]) => (TYPE_ORDER[a] ?? 99) - (TYPE_ORDER[b] ?? 99))
-          .map(([tipo, group]) => (
-            <section key={tipo} className='flex-1'>
-              <h3 className='text-palette-accent mb-3 text-center font-mono text-2xl font-bold md:text-start'>
-                {TYPE_LABELS[tipo] ?? tipo}
+      <div className='space-y-10'>
+        {[...days.entries()]
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([date, types]) => (
+            <section key={date} aria-label={`Actividades del ${date}`}>
+              <h3 className='text-palette-accent mb-4 font-mono text-2xl font-bold'>
+                {format(new Date(`${date}T00:00:00`), 'd MMMM yyyy', { locale: es })}
               </h3>
-              <ul className={cn(tipo === 'musica' ? 'space-y-2' : 'space-y-8')}>
-                {group.map((activity, index) => (
-                  <li key={`${tipo}-${activity.titulo ?? index}-${index}`}>
-                    {tipo !== 'musica' ? (
-                      <ActivityItem activity={activity} isEditionPast={isEditionPast} />
-                    ) : (
-                      <MusicActivityItem activity={activity} />
-                    )}
-                  </li>
-                ))}
-              </ul>
+              <div className='flex flex-wrap gap-12'>
+                {[...types.entries()]
+                  .sort(([a], [b]) => (TYPE_ORDER[a] ?? 99) - (TYPE_ORDER[b] ?? 99))
+                  .map(([type, group]) => (
+                    <section key={type} className='flex-1'>
+                      <h4 className='text-palette-accent mb-3 text-center font-mono text-xl font-bold md:text-start'>
+                        {TYPE_LABELS[type] ?? type}
+                      </h4>
+                      <ul className={type === 'musica' ? 'space-y-2' : 'space-y-8'}>
+                        {[...group.values()].map((activity, index) => (
+                          <li key={`${type}-${activity.titulo ?? index}-${index}`}>
+                            {type === 'musica' ? (
+                              <MusicActivityItem activity={activity} />
+                            ) : (
+                              <ActivityItem activity={activity} />
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  ))}
+              </div>
             </section>
           ))}
       </div>

@@ -1,129 +1,108 @@
-import { afterEach, describe, expect, jest, test } from 'bun:test'
-import { cleanup, render, screen } from '@testing-library/react'
+import { describe, expect, test } from 'bun:test'
+import { render, screen } from '@testing-library/react'
 
 import { ActivityList } from './ActivityList'
 
-afterEach(() => {
-  cleanup()
-  jest.useRealTimers()
-})
-
 import type { FestivalActivity } from '../../types/festival'
 
+const makeActivity = (
+  title: string,
+  type: string,
+  occurrences: FestivalActivity['ocurrencias']
+): FestivalActivity => ({
+  titulo: title,
+  descripcion: null,
+  ubicacion: null,
+  ocurrencias: occurrences,
+  tipo: type,
+  participante_pseudonimo: null,
+  registration: null
+})
+
+const occurrence = (
+  id: number,
+  date: string,
+  time: string | null = '10:00'
+): FestivalActivity['ocurrencias'][number] => ({
+  id,
+  fecha: date,
+  hora_inicio: time,
+  duracion_minutos: time ? 60 : null,
+  registration_url: null
+})
+
 describe('ActivityList', () => {
-  test('routes music with unexpected registration data away from the badge', () => {
-    jest.useFakeTimers()
-    jest.setSystemTime(new Date('2026-09-05T16:30:00.000Z'))
-    render(
+  test('renders one activity card per distinct day and keeps same-day blocks together', () => {
+    const activity = makeActivity('Taller', 'taller', [
+      occurrence(1, '2026-10-03', '09:00'),
+      occurrence(2, '2026-10-03', '12:00'),
+      occurrence(3, '2026-10-04', '10:00')
+    ])
+    const { container } = render(
+      <ActivityList actividades={[activity]} isEditionPast={false} />
+    )
+
+    expect(container.querySelectorAll('article')).toHaveLength(2)
+    expect(
+      container.querySelectorAll('section[aria-label^="Actividades del"] > h3')
+    ).toHaveLength(2)
+    expect(screen.getAllByText('Taller')).toHaveLength(2)
+    expect(screen.getByText('Bloque 1: 09:00hrs a 10:00hrs')).toBeDefined()
+    expect(screen.getByText('Bloque 2: 12:00hrs a 13:00hrs')).toBeDefined()
+    expect(container.textContent).not.toContain('2026-10-03')
+    expect(container.textContent).not.toContain('2026-10-04')
+  })
+
+  test('retains type subgroups within each day and places music last without registration CTA', () => {
+    const date = '2026-10-03'
+    const { container } = render(
       <ActivityList
         actividades={[
+          makeActivity('Charla', 'charla', [occurrence(1, date)]),
           {
-            titulo: 'Concierto',
-            descripcion: 'Concierto en vivo',
-            ubicacion: null,
-            ocurrencias: [],
-            tipo: 'musica',
-            participante_pseudonimo: 'Banda',
+            ...makeActivity('Música', 'musica', [occurrence(2, date, '19:00')]),
             registration: {
-              url: 'https://example.org/signup',
-              start_at: '2026-09-05T16:30:00.000Z',
-              end_at: '2026-09-05T17:30:00.000Z'
+              url: 'https://example.org/register',
+              start_at: '2026-10-01T00:00:00.000Z',
+              end_at: '2026-10-05T00:00:00.000Z'
             }
-          }
+          },
+          makeActivity('Taller', 'taller', [occurrence(3, date)])
         ]}
         isEditionPast={false}
       />
     )
-    expect(screen.getByText('Banda')).toBeDefined()
-    expect(screen.queryByText('Inscríbete')).toBeNull()
-    expect(
-      screen.queryByRole('link', { hidden: true, name: 'Inscríbete Aquí' })
-    ).toBeNull()
-    expect(document.querySelector('details a')).toBeNull()
-  })
 
-  test('groups activities by type with Música always last', () => {
-    const actividades: FestivalActivity[] = [
-      {
-        titulo: 'Taller 1',
-        descripcion: null,
-        ubicacion: null,
-        ocurrencias: [{ fecha: '2025-01-15', hora_inicio: '18:00', duracion_minutos: 60 }],
-        tipo: 'taller',
-        participante_pseudonimo: 'A',
-        registration: null
-      },
-      {
-        titulo: 'Concierto',
-        descripcion: null,
-        ubicacion: null,
-        ocurrencias: [],
-        tipo: 'musica',
-        participante_pseudonimo: 'B',
-        registration: null
-      },
-      {
-        titulo: 'Taller 2',
-        descripcion: null,
-        ubicacion: null,
-        ocurrencias: [{ fecha: '2025-01-15', hora_inicio: '19:00', duracion_minutos: 60 }],
-        tipo: 'taller',
-        participante_pseudonimo: 'C',
-        registration: null
-      }
-    ]
-
-    render(<ActivityList actividades={actividades} isEditionPast={false} />)
-
-    // All group headings are present
-    expect(screen.getByText('Música')).toBeDefined()
-    expect(screen.getByText('Talleres')).toBeDefined()
-
-    // Música is always the last group heading
-    const headings = screen.getAllByRole('heading', { level: 3 })
-    expect(headings[headings.length - 1].textContent).toBe('Música')
-
-    // Each group renders a list
-    const lists = document.querySelectorAll('section > ul')
-    expect(lists).toHaveLength(2)
-
-    // The last list (Música) has 1 item
-    const lastList = lists[lists.length - 1]
-    expect(lastList.querySelectorAll('li')).toHaveLength(1)
-  })
-
-  test('keeps one card per workshop and orders by first session with unscheduled last', () => {
-    const makeActivity = (title: string, ocurrencias: FestivalActivity['ocurrencias']): FestivalActivity => ({
-      titulo: title,
-      descripcion: null,
-      ubicacion: 'Sala compartida',
-      ocurrencias,
-      tipo: 'taller',
-      participante_pseudonimo: null,
-      registration: null
-    })
-    const { container } = render(<ActivityList actividades={[
-      makeActivity('Por confirmar', []),
-      makeActivity('Más tarde', [{ fecha: '2025-10-04', hora_inicio: '18:00', duracion_minutos: 30 }]),
-      makeActivity('Primero', [
-        { fecha: '2025-10-03', hora_inicio: '09:00', duracion_minutos: 60 },
-        { fecha: '2025-10-04', hora_inicio: '09:00', duracion_minutos: 60 }
-      ])
-    ]} isEditionPast={false} />)
-    expect(Array.from(container.querySelectorAll('article h3')).map((heading) => heading.textContent)).toEqual([
-      'Primero', 'Más tarde', 'Por confirmar'
+    const typeHeadings = screen.getAllByRole('heading', { level: 4 })
+    expect(typeHeadings.map((heading) => heading.textContent)).toEqual([
+      'Talleres',
+      'Charlas',
+      'Música'
     ])
     expect(container.querySelectorAll('article')).toHaveLength(3)
-    expect(screen.getAllByText('Sala compartida')).toHaveLength(3)
-    expect(screen.getByText('Fecha y horario por confirmar')).toBeDefined()
+    expect(screen.getByText('19:00hrs a 20:00hrs')).toBeDefined()
+    expect(screen.queryByRole('link', { name: 'Inscríbete' })).toBeNull()
   })
 
-  test('renders empty when no activities', () => {
-    render(<ActivityList actividades={[]} isEditionPast={false} />)
+  test('keeps separate activities distinct and hides undated legacy activities', () => {
+    const { container } = render(
+      <ActivityList
+        actividades={[
+          makeActivity('Duplicado', 'taller', [occurrence(1, '2026-10-03')]),
+          makeActivity('Duplicado', 'taller', [occurrence(2, '2026-10-03')]),
+          makeActivity('Legacy', 'charla', [])
+        ]}
+        isEditionPast={false}
+      />
+    )
+    expect(container.querySelectorAll('article')).toHaveLength(2)
+    expect(screen.getAllByText('Duplicado')).toHaveLength(2)
+    expect(screen.queryByText('Legacy')).toBeNull()
+  })
 
-    // The section header still renders
+  test('renders only the section heading when no dated activities exist', () => {
+    render(<ActivityList actividades={[]} isEditionPast={false} />)
     expect(screen.getByText('Actividades')).toBeDefined()
-    // No list items when there are no activities
     expect(screen.queryAllByRole('listitem')).toHaveLength(0)
   })
 })
