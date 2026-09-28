@@ -73,8 +73,8 @@ describe('ActivityItem', () => {
     expect(link.getAttribute('rel')).toBe('noopener noreferrer')
     expect(link.querySelector('button')).toBeNull()
     expect(link.className).toContain('focus-visible:ring-2')
-    expect(link.innerHTML).toContain('group-hover/btn:bg-primary')
-    expect(link.innerHTML).toContain('group-focus-visible/btn:text-background')
+    expect(link.innerHTML).toContain('group-hover/btn:bg-palette-primary')
+    expect(link.innerHTML).toContain('group-focus-visible/btn:text-palette-background')
 
     fireEvent.click(summary)
     expect(details.open).toBe(true)
