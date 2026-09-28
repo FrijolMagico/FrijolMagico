@@ -21,6 +21,17 @@ describe('admin registration read and dialog contract', () => {
     expect(composer).toContain('registration: activity.registration')
   })
 
+  test('hydrates per-occurrence database IDs and URLs without using RHF field IDs', () => {
+    expect(dal).toContain('id: activityOccurrence.id')
+    expect(dal).toContain('url: activityOccurrence.url')
+    expect(dal).toContain('...(id === undefined ? {} : { id })')
+    expect(dal).toContain('...(url === undefined ? {} : { url })')
+    const fields = source('_components/activity-occurrence-fields.tsx')
+    expect(fields).toContain("keyName: 'rhfId'")
+    expect(fields).toContain('methods.register(`occurrences.${index}.url`)')
+    expect(fields).toContain('registrationEnabled && (')
+  })
+
   test('both dialogs bind complete registration fields and submit to authoritative actions', () => {
     const fields = source('_components/activity-registration-fields.tsx')
     for (const name of [
@@ -32,8 +43,8 @@ describe('admin registration read and dialog contract', () => {
     ]) {
       expect(fields).toContain(`${name}: ''`)
     }
-    // URL uses native Input with methods.register
-    expect(fields).toContain("methods.register('registration.url')")
+    // Registration now contains only the shared global window; URLs belong to occurrences.
+    expect(fields).not.toContain("methods.register('registration.url')")
     // Date/time use custom pickers with Controller
     expect(fields).toContain("name='registration.startDate'")
     expect(fields).toContain("name='registration.startTime'")
@@ -56,7 +67,7 @@ describe('admin registration read and dialog contract', () => {
   test('create submits desired sessions while edit omits unchanged sessions and guards replacements', () => {
     for (const dialog of [create, update]) {
       expect(dialog).toContain('<ActivityOccurrenceFields')
-      expect(dialog).toContain("methods.setValue('occurrences', []")
+      expect(dialog).not.toContain("methods.setValue('occurrences', []")
     }
     expect(create).toContain('occurrences: values.occurrences ?? []')
     expect(create).toContain('occurrences: []')
@@ -66,7 +77,7 @@ describe('admin registration read and dialog contract', () => {
     expect(update).toContain('...schedule,')
     const schema = source('_schemas/activity.schema.ts')
     expect(schema).toContain('sameActivitySchedule(original, desired)')
-    expect(schema).toContain('if (!switchingToMusic && sameActivitySchedule(original, desired)) return {}')
+    expect(schema).toContain('sameOccurrenceAssignments(original, desired)')
     expect(schema).toContain('return { occurrences: desired, expectedOccurrences: original }')
   })
 

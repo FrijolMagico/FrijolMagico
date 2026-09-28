@@ -88,6 +88,11 @@ export async function createActivityAction(
       })
       if (!effectiveType) throw new Error('El tipo de actividad no existe')
 
+      if (!['taller', 'charla', 'musica'].includes(effectiveType.slug)) {
+        throw new Error(
+          'Este tipo de actividad no admite sesiones y no se puede crear o editar hasta que el modelo lo soporte'
+        )
+      }
       const occurrences = parseActivityOccurrencesInput(
         data.occurrences,
         effectiveType.slug
@@ -96,6 +101,15 @@ export async function createActivityAction(
         data.registration,
         effectiveType.slug
       )
+      const occurrenceValues = occurrences.map((occurrence) => ({
+        date: occurrence.date,
+        startTime: occurrence.startTime || null,
+        durationMinutes: occurrence.durationMinutes ?? null,
+        url: registration ? occurrence.url || registration.url || null : null
+      }))
+      if (registration && occurrenceValues.some(({ url }) => !url)) {
+        throw new Error('Cada sesión debe tener una URL de inscripción')
+      }
       const registrationInstants = registration
         ? registrationWindowToUtc(
             registration.startDate,
@@ -125,13 +139,12 @@ export async function createActivityAction(
         .values(activityDetailsValues)
         .returning({ id: activity.id })
 
-      if (occurrences.length) {
+      if (occurrenceValues.length) {
         await tx.insert(activityOccurrence).values(
-          occurrences.map((occurrence) => ({
+          occurrenceValues.map(({ url, ...occurrence }) => ({
             activityId: insertedDetail.id,
-            date: occurrence.date,
-            startTime: occurrence.startTime ?? null,
-            durationMinutes: occurrence.durationMinutes ?? null
+            ...occurrence,
+            ...(url ? { url } : {})
           }))
         )
       }
@@ -139,7 +152,8 @@ export async function createActivityAction(
       if (registration && registrationInstants) {
         await tx.insert(activityRegistration).values({
           participationActivityId: insertedActivity.id,
-          url: registration.url,
+          // Retained for compatibility with legacy readers; occurrence URLs are authoritative.
+          url: occurrenceValues[0]!.url!,
           ...registrationInstants
         })
       }

@@ -234,10 +234,6 @@ export function CreateActivityDialog({
                     field.onChange(nextTipo)
                     if (nextTipo === PARTICIPANT_TYPE.BANDA) {
                       clearRegistration(methods)
-                      methods.setValue('occurrences', [], {
-                        shouldDirty: true,
-                        shouldValidate: true
-                      })
                     }
 
                     if (nextTipo === PARTICIPANT_TYPE.ARTISTA) {
@@ -343,10 +339,6 @@ export function CreateActivityDialog({
                     field.onChange(Number(val))
                     if (Number(val) === ACTIVITY_TYPES.MUSICA) {
                       clearRegistration(methods)
-                      methods.setValue('occurrences', [], {
-                        shouldDirty: true,
-                        shouldValidate: true
-                      })
                     }
                   }}
                   disabled={isSubmitting || tipo === PARTICIPANT_TYPE.BANDA}
@@ -543,18 +535,20 @@ export function CreateActivityDialog({
               </Field>
             )}
           </FieldGroup>
-          {!isMusic && <ActivityOccurrenceFields methods={methods} disabled={isSubmitting} />}
-        </FieldGroup>
-
-        {registrationEnabled && (
-          <>
-            <Separator orientation='vertical' className='hidden md:block' />
+          {registrationEnabled && !isMusic && (
             <ActivityRegistrationFields
               methods={methods}
               disabled={isSubmitting}
             />
-          </>
-        )}
+          )}
+        </FieldGroup>
+
+        <Separator orientation='vertical' className='hidden md:block' />
+        <ActivityOccurrenceFields
+          methods={methods}
+          disabled={isSubmitting}
+          registrationEnabled={Boolean(registrationEnabled && !isMusic)}
+        />
       </form>
     </EntityFormDialog>
   )

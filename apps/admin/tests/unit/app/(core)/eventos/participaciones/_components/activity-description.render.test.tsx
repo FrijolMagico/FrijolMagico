@@ -42,6 +42,15 @@ mock.module('@/core/eventos/participaciones/_store/use-participations-store', ()
       setRemoveActivityDialogOpen: () => {}
     })
 }))
+mock.module('@/core/eventos/participaciones/_components/activity-occurrence-fields', () => ({
+  ActivityOccurrenceFields: ({ methods }: {
+    methods: { setValue: (name: 'occurrences', value: { date: string }[]) => void }
+  }) => createElement('button', {
+    id: 'test-add-occurrence-date',
+    type: 'button',
+    onClick: () => methods.setValue('occurrences', [{ date: '2026-07-01' }])
+  }, 'Add valid occurrence date')
+}))
 mock.module('@/shared/components/ui/select', () => ({
   Select: ({ children }: { children: React.ReactNode }) => createElement('div', null, children),
   SelectTrigger: ({ children }: { children: React.ReactNode }) => createElement('div', null, children),
@@ -85,6 +94,7 @@ test('creation sends editor HTML through RHF and clears the editor after success
   const { container, root } = await mount(createElement(CreateActivityDialog, {
     edition, artistas: [], agrupaciones: [], bandas: []
   }))
+  await act(async () => container.querySelector<HTMLButtonElement>('#test-add-occurrence-date')?.click())
   await act(async () => container.querySelector<HTMLButtonElement>('#create-activity-description button')?.click())
   await act(async () => Array.from(container.querySelectorAll<HTMLButtonElement>('button'))
     .find((button) => button.textContent === 'Choose artist')?.click())
@@ -112,6 +122,7 @@ test('editing loads persisted HTML, saves edits and reloads a different activity
     activity: {
       id, participacionId: 3, tipoActividadId: 1, modoIngresoId: 1,
       notas: '', estado: 'completado', puntaje: null, registration: null,
+      occurrences: [{ date: '2026-07-01', startTime: null, durationMinutes: null }],
       detail: { id: 4, titulo: 'Taller', descripcion, duracionMinutos: null,
         cupos: null, horaInicio: '', ubicacion: '' }
     }

@@ -154,15 +154,16 @@ describe('createActivityAction aggregate', () => {
 
   test('creates an eligible activity and registration atomically', async () => {
     const harness = createHarness()
-    const result = await createActivityAction(
-      payload({
+    const result = await createActivityAction({
+      ...payload({
         url: 'https://registro.example/form',
         startDate: '2026-06-10',
         startTime: '10:00',
         endDate: '2026-06-10',
         endTime: '11:00'
-      }) as never
-    )
+      }),
+      occurrences: [{ date: '2026-06-10', startTime: '10:00', durationMinutes: 60 }]
+    } as never)
 
     expect(result.success).toBe(true)
     expect(harness.pending.get(tables.activityRegistration)).toEqual([
@@ -178,7 +179,10 @@ describe('createActivityAction aggregate', () => {
 
   test('creates the activity without a registration row when configuration is absent', async () => {
     const harness = createHarness()
-    const result = await createActivityAction(payload() as never)
+    const result = await createActivityAction({
+      ...payload(),
+      occurrences: [{ date: '2026-06-10' }]
+    } as never)
 
     expect(result.success).toBe(true)
     expect(harness.pending.has(tables.activityRegistration)).toBe(false)
@@ -229,9 +233,10 @@ describe('createActivityAction aggregate', () => {
 
   test('uses the database-resolved activity type instead of trusting the submitted type id', async () => {
     const harness = createHarness()
-    const result = await createActivityAction(
-      payload(undefined, { typeId: 3 }) as never
-    )
+    const result = await createActivityAction({
+      ...payload(undefined, { typeId: 3 }),
+      occurrences: [{ date: '2026-06-10' }]
+    } as never)
 
     expect(result.success).toBe(true)
     expect(
@@ -242,20 +247,34 @@ describe('createActivityAction aggregate', () => {
     expect(typeLookups).toHaveLength(1)
   })
 
-  test('normalizes band activities to the authoritative music type', async () => {
+  test('creates a music activity with an untimed date and no registration', async () => {
     effectiveTypeSlug = 'musica'
     const harness = createHarness()
-    const result = await createActivityAction(
-      payload(undefined, { bandId: 8 }) as never
-    )
+    const result = await createActivityAction({
+      ...payload(undefined, { bandId: 8 }),
+      occurrences: [{ date: '2026-06-10' }]
+    } as never)
 
     expect(result.success).toBe(true)
-    expect(
-      harness.pending.get(tables.participationActivity)?.[0]
-    ).toMatchObject({
-      tipoActividadId: 3
-    })
+    expect(harness.records.get(tables.activityOccurrence)).toEqual([
+      { activityId: 22, date: '2026-06-10', startTime: null, durationMinutes: null }
+    ])
     expect(harness.pending.has(tables.activityRegistration)).toBe(false)
+  })
+
+  test('rejects music activities without a date before inserting aggregate rows', async () => {
+    effectiveTypeSlug = 'musica'
+    const harness = createHarness()
+    const result = await createActivityAction({
+      ...payload(undefined, { bandId: 8 }),
+      occurrences: []
+    } as never)
+
+    expect(result.success).toBe(false)
+    expect(result.errors?.[0]?.message).toContain('al menos una fecha')
+    expect(typeLookups).toHaveLength(1)
+    expect(harness.pending.has(tables.participationActivity)).toBe(false)
+    expect(transactionCommitted).toBe(false)
   })
 
   test('rejects registration when the database-resolved effective type is music', async () => {
@@ -301,7 +320,10 @@ describe('createActivityAction aggregate', () => {
   })
 
   test('invalidates scoped and public tags only after the transaction commits', async () => {
-    const result = await createActivityAction(payload() as never)
+    const result = await createActivityAction({
+      ...payload(),
+      occurrences: [{ date: '2026-06-10' }]
+    } as never)
 
     expect(result.success).toBe(true)
     expect(transactionCommitted).toBe(true)
@@ -324,7 +346,10 @@ describe('createActivityAction aggregate', () => {
   test('does not invalidate any cache after a later detail mutation fails', async () => {
     createHarness()
     failAt = 'detail'
-    const result = await createActivityAction(payload() as never)
+    const result = await createActivityAction({
+      ...payload(),
+      occurrences: [{ date: '2026-06-10' }]
+    } as never)
 
     expect(result.success).toBe(false)
     expect(transactionCommitted).toBe(false)
