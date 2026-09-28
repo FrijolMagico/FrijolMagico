@@ -74,7 +74,8 @@ describe('complete activity seed contract', () => {
     const client = await freshSeededDatabase()
     const result = await client.execute(`
       SELECT a.id AS activity_id, occurrence.date, occurrence.start_time,
-        occurrence.duration_minutes, (
+        occurrence.duration_minutes, occurrence.url,
+        registration.id AS registration_id, (
           SELECT MIN(day.fecha)
           FROM evento_edicion_dia day
           WHERE day.evento_edicion_id = pe.edicion_id
@@ -83,6 +84,8 @@ describe('complete activity seed contract', () => {
       JOIN activity_occurrence occurrence ON occurrence.activity_id = a.id
       JOIN participacion_actividad pa ON pa.id = a.participacion_actividad_id
       JOIN participacion_edicion pe ON pe.id = pa.participacion_id
+      LEFT JOIN activity_registration registration
+        ON registration.participation_activity_id = pa.id
       WHERE a.id BETWEEN 5 AND 9
       ORDER BY a.id
     `)
@@ -90,13 +93,96 @@ describe('complete activity seed contract', () => {
     expect(result.rows).toHaveLength(5)
     expect(result.rows).toEqual(
       [
-        { activity_id: 5, date: '2017-02-25', start_time: null, duration_minutes: null, first_edition_day: '2017-02-25' },
-        { activity_id: 6, date: '2017-04-22', start_time: null, duration_minutes: null, first_edition_day: '2017-04-22' },
-        { activity_id: 7, date: '2017-02-25', start_time: null, duration_minutes: null, first_edition_day: '2017-02-25' },
-        { activity_id: 8, date: '2017-04-22', start_time: null, duration_minutes: null, first_edition_day: '2017-04-22' },
-        { activity_id: 9, date: '2017-04-22', start_time: null, duration_minutes: null, first_edition_day: '2017-04-22' }
+        { activity_id: 5, date: '2017-02-25', start_time: null, duration_minutes: null, url: null, registration_id: null, first_edition_day: '2017-02-25' },
+        { activity_id: 6, date: '2017-04-22', start_time: null, duration_minutes: null, url: null, registration_id: null, first_edition_day: '2017-04-22' },
+        { activity_id: 7, date: '2017-02-25', start_time: null, duration_minutes: null, url: null, registration_id: null, first_edition_day: '2017-02-25' },
+        { activity_id: 8, date: '2017-04-22', start_time: null, duration_minutes: null, url: null, registration_id: null, first_edition_day: '2017-04-22' },
+        { activity_id: 9, date: '2017-04-22', start_time: null, duration_minutes: null, url: null, registration_id: null, first_edition_day: '2017-04-22' }
       ]
     )
+  })
+
+  test('registered activity 3 has two same-day blocks and one next-day block under one global window', async () => {
+    const client = await freshSeededDatabase()
+    const result = await client.execute(`
+      SELECT pa.id AS participation_activity_id,
+        occurrence.id AS occurrence_id, occurrence.date, occurrence.start_time,
+        occurrence.duration_minutes, occurrence.url,
+        registration.start_at, registration.end_at
+      FROM actividad a
+      JOIN activity_occurrence occurrence ON occurrence.activity_id = a.id
+      JOIN participacion_actividad pa ON pa.id = a.participacion_actividad_id
+      JOIN activity_registration registration
+        ON registration.participation_activity_id = pa.id
+      WHERE a.id = 3 AND pa.id = 3
+      ORDER BY occurrence.date, occurrence.start_time
+    `)
+
+    expect(result.rows).toEqual([
+      {
+        participation_activity_id: 3,
+        occurrence_id: 4,
+        date: '2017-04-22',
+        start_time: '15:00',
+        duration_minutes: 90,
+        url: 'https://example.org/acuarela-sabado-1500',
+        start_at: '2020-01-01T00:00:00.000Z',
+        end_at: '2099-12-31T23:59:59.000Z'
+      },
+      {
+        participation_activity_id: 3,
+        occurrence_id: 53,
+        date: '2017-04-22',
+        start_time: '17:00',
+        duration_minutes: 60,
+        url: 'https://example.org/acuarela-sabado-1700',
+        start_at: '2020-01-01T00:00:00.000Z',
+        end_at: '2099-12-31T23:59:59.000Z'
+      },
+      {
+        participation_activity_id: 3,
+        occurrence_id: 5,
+        date: '2017-04-23',
+        start_time: '16:30',
+        duration_minutes: 90,
+        url: 'https://example.org/acuarela-domingo-1630',
+        start_at: '2020-01-01T00:00:00.000Z',
+        end_at: '2099-12-31T23:59:59.000Z'
+      }
+    ])
+
+    const blockCounts = await client.execute(`
+      SELECT date, COUNT(*) AS block_count
+      FROM activity_occurrence
+      WHERE activity_id = 3
+      GROUP BY date
+      ORDER BY date
+    `)
+    expect(blockCounts.rows).toEqual([
+      { date: '2017-04-22', block_count: 2 },
+      { date: '2017-04-23', block_count: 1 }
+    ])
+  })
+
+  test('active-edition activity 16 occurrence URL keeps its global registration window through year 3000', async () => {
+    const client = await freshSeededDatabase()
+    const result = await client.execute(`
+      SELECT occurrence.url, registration.start_at, registration.end_at
+      FROM actividad a
+      JOIN activity_occurrence occurrence ON occurrence.activity_id = a.id
+      JOIN participacion_actividad pa ON pa.id = a.participacion_actividad_id
+      JOIN activity_registration registration
+        ON registration.participation_activity_id = pa.id
+      WHERE a.id = 16 AND pa.id = 16
+    `)
+
+    expect(result.rows).toEqual([
+      {
+        url: 'https://example.org/taller-activo-2026-10-09',
+        start_at: '2026-09-01T00:00:00.000Z',
+        end_at: '3000-12-31T23:59:59.000Z'
+      }
+    ])
   })
 
   test('music has a dated occurrence and no registration', async () => {

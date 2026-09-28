@@ -627,11 +627,14 @@ VALUES (2, 2, '2017-02-25', '16:00', 45);
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
 VALUES (3, 2, '2017-02-26', '16:30', 45);
 
-INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (4, 3, '2017-04-22', '15:00', 90);
+INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes, url)
+VALUES (4, 3, '2017-04-22', '15:00', 90, 'https://example.org/acuarela-sabado-1500');
 
-INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (5, 3, '2017-04-23', '16:30', 90);
+INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes, url)
+VALUES (5, 3, '2017-04-23', '16:30', 90, 'https://example.org/acuarela-domingo-1630');
+
+INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes, url)
+VALUES (53, 3, '2017-04-22', '17:00', 60, 'https://example.org/acuarela-sabado-1700');
 
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
 VALUES (6, 4, '2017-04-22', '17:30', 50);
@@ -1273,8 +1276,8 @@ INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, po
 VALUES (16, 46, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
 VALUES (16, 16, 'Diseño de personajes: del boceto al color', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 60, '17:00', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
-INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (14, 16, '2026-10-09', '17:00', 60);
+INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes, url)
+VALUES (14, 16, '2026-10-09', '17:00', 60, 'https://example.org/taller-activo-2026-10-09');
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (47, 7, 2, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1746,7 +1749,7 @@ VALUES (124, 7, NULL, 1, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56
 -- INSCRIPCIONES (DEV) — taller de la edición activa con inscripción abierta
 -- =============================================================================
 INSERT INTO activity_registration (id, participation_activity_id, url, start_at, end_at)
-VALUES (2, 16, 'https://example.org/inscripcion-taller-activo', '2026-09-01T00:00:00.000Z', '2099-12-31T23:59:59.000Z');
+VALUES (2, 16, 'https://example.org/inscripcion-taller-activo', '2026-09-01T00:00:00.000Z', '3000-12-31T23:59:59.000Z');
 
 -- =============================================================================
 -- FIN DEL SEED EXTENDIDO
