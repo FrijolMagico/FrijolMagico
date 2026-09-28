@@ -6,7 +6,7 @@ on:
 jobs:
   production-migrations:
     name: Production Migrations
-    if: github.base_ref == 'main' && github.head_ref == 'dev' && github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event.pull_request.base.ref == 'main' && github.head_ref == 'dev' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     environment: production-migrations
     concurrency:
@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Require successful production migrations for release PRs
-        if: github.base_ref == 'main' && github.head_ref == 'dev' && github.event.pull_request.head.repo.full_name == github.repository && needs.production-migrations.result != 'success'
+        if: github.event.pull_request.base.ref == 'main' && github.head_ref == 'dev' && github.event.pull_request.head.repo.full_name == github.repository && needs.production-migrations.result != 'success'
         run: |
           echo "Production migrations did not succeed; failing the release PR quality check."
           exit 1
@@ -45,7 +45,7 @@ jobs:
           fetch-depth: 1
 
       - name: Block direct PRs to main
-        if: github.base_ref == 'main' && (github.head_ref != 'dev' || github.event.pull_request.head.repo.full_name != github.repository)
+        if: github.event.pull_request.base.ref == 'main' && (github.head_ref != 'dev' || github.event.pull_request.head.repo.full_name != github.repository)
         run: |
           echo "❌ PRs directo a main solo desde dev del mismo repositorio."
           echo "Source: ${{ github.head_ref }} → main"
