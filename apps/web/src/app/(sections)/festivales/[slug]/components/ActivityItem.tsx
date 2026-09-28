@@ -5,6 +5,7 @@ import { es } from 'date-fns/locale'
 
 import { ActivityRegistrationCta } from './activity-registration-affordance'
 import { ActivityDescription } from './activity-description'
+import { ActivityArtistLink } from './ActivityArtistLink'
 
 import type { FestivalActivity } from '../../types/festival'
 
@@ -32,18 +33,28 @@ export const ActivityItem = ({
         <ActivityRegistrationCta registration={activity.registration} />
       )}
 
+      <div className='px-4 pt-3'>
+        <ActivityArtistLink
+          pseudonym={activity.participante_pseudonimo}
+          catalogSlug={activity.catalogo_slug}
+          avatarUrl={activity.avatar_url}
+          rrss={activity.rrss}
+          email={activity.correo}
+        />
+      </div>
+
       {details ? (
         <details className='group/details'>
-          <summary className='flex w-full cursor-pointer items-center justify-between px-4 py-3 text-left marker:content-none'>
+          <summary
+            aria-label={
+              !activity.titulo && !activity.registration
+                ? activity.participante_pseudonimo ??
+                  'Ver detalles de la actividad'
+                : undefined
+            }
+            className='flex w-full cursor-pointer items-center justify-between px-4 py-3 text-left marker:content-none'
+          >
             <div className='min-w-0 flex-1'>
-              <div className='mb-1 flex flex-wrap items-center gap-2'>
-                {activity.participante_pseudonimo && (
-                  <span className='text-palette-primary/70 text-sm'>
-                    {activity.participante_pseudonimo}
-                  </span>
-                )}
-              </div>
-
               {activity.titulo && (
                 <h3 className='text-palette-foreground text-base leading-none font-semibold'>
                   {activity.titulo}
@@ -109,14 +120,6 @@ export const ActivityItem = ({
         </details>
       ) : (
         <div className='px-4 py-3'>
-          <div className='mb-1 flex flex-wrap items-center gap-2'>
-            {activity.participante_pseudonimo && (
-              <span className='text-palette-primary/70 text-sm'>
-                {activity.participante_pseudonimo}
-              </span>
-            )}
-          </div>
-
           {activity.titulo && (
             <h3 className='text-palette-foreground text-base leading-none font-semibold'>
               {activity.titulo}
