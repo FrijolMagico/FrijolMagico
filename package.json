@@ -26,5 +26,8 @@
   ],
   "overrides": {
     "eslint": "9.39.4"
+  },
+  "dependencies": {
+    "date-fns": "^4.4.0"
   }
 }

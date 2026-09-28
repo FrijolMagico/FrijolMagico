@@ -5,15 +5,17 @@ import { MusicActivityItem } from './MusicActivityItem'
 
 import type { FestivalActivity } from '../../types/festival'
 
-const activity: FestivalActivity = {
+const baseActivity: FestivalActivity = {
   titulo: null,
   descripcion: null,
-  duracion_minutos: null,
   ubicacion: null,
-  hora_inicio: null,
+  ocurrencias: [],
   tipo: 'musica',
-  fecha: null,
   participante_pseudonimo: 'Banda X',
+  catalogo_slug: null,
+  avatar_url: null,
+  rrss: null,
+  correo: null,
   registration: null
 }
 
@@ -22,7 +24,7 @@ describe('MusicActivityItem', () => {
     render(
       <MusicActivityItem
         activity={{
-          ...activity,
+          ...baseActivity,
           catalogo_slug: 'banda-x',
           avatar_url: 'https://example.org/avatar.jpg',
           rrss: '{"instagram":"https://instagram.com/bandax"}',
@@ -40,7 +42,7 @@ describe('MusicActivityItem', () => {
     const { rerender } = render(
       <MusicActivityItem
         activity={{
-          ...activity,
+          ...baseActivity,
           rrss: '{"instagram":"https://instagram.com/bandax","web":"https://example.org"}'
         }}
       />
@@ -52,7 +54,7 @@ describe('MusicActivityItem', () => {
     rerender(
       <MusicActivityItem
         activity={{
-          ...activity,
+          ...baseActivity,
           rrss: '{"instagram":"javascript:alert(1)","web":"https://example.org/bandax"}'
         }}
       />
@@ -64,7 +66,7 @@ describe('MusicActivityItem', () => {
 
   test('uses valid email or renders a plain pseudonym when no contact is valid', () => {
     const { rerender } = render(
-      <MusicActivityItem activity={{ ...activity, correo: 'banda@example.org' }} />
+      <MusicActivityItem activity={{ ...baseActivity, correo: 'banda@example.org' }} />
     )
     expect(screen.getByRole('link').getAttribute('href')).toBe(
       'mailto:banda@example.org'
@@ -73,7 +75,7 @@ describe('MusicActivityItem', () => {
     rerender(
       <MusicActivityItem
         activity={{
-          ...activity,
+          ...baseActivity,
           rrss: '{invalid',
           correo: 'bad email'
         }}

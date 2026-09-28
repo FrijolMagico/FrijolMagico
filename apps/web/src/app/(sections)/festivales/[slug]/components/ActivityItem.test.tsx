@@ -20,6 +20,10 @@ describe('ActivityItem', () => {
     ocurrencias: [],
     tipo: 'taller',
     participante_pseudonimo: 'Artista',
+    catalogo_slug: null,
+    avatar_url: null,
+    rrss: null,
+    correo: null,
     registration: {
       url: 'https://example.org/signup',
       start_at: '2026-09-05T16:30:00.000Z',
@@ -252,12 +256,13 @@ describe('ActivityItem', () => {
     const { container } = render(
       <ActivityItem
         activity={{
-          ...activity,
+          ...baseActivity,
           titulo: null,
           registration: null,
           catalogo_slug: 'artista-slug',
           descripcion: 'Detalles de la actividad'
         }}
+        isEditionPast={false}
       />
     )
 
@@ -292,12 +297,13 @@ describe('ActivityItem', () => {
     const { container } = render(
       <ActivityItem
         activity={{
-          ...activity,
+          ...baseActivity,
           descripcion: null,
           catalogo_slug: null,
           rrss: null,
           correo: 'artista@example.org'
         }}
+        isEditionPast={false}
       />
     )
 
@@ -313,10 +319,11 @@ describe('ActivityItem', () => {
     const { container } = render(
       <ActivityItem
         activity={{
-          ...activity,
+          ...baseActivity,
           catalogo_slug: 'artista-slug',
           avatar_url: 'https://example.org/avatar.jpg'
         }}
+        isEditionPast={false}
       />
     )
     const link = screen.getByRole('link', { name: 'Ver perfil de Artista' })
