@@ -92,6 +92,26 @@ mock.module('@/shared/components/ui/select', () => ({
           value === 'artista' || value === 'banda'
             ? 'Cambiar participante'
             : 'Cambiar tipo'
+        ),
+      onValueChange &&
+        [
+          'seleccionado',
+          'confirmado',
+          'completado',
+          'desistido',
+          'cancelado',
+          'ausente'
+        ].includes(String(value)) &&
+        ['confirmado', 'completado', 'cancelado'].map((status) =>
+          createElement(
+            'button',
+            {
+              key: status,
+              type: 'button',
+              onClick: () => onValueChange(status)
+            },
+            `Estado ${status}`
+          )
         )
     ),
   SelectTrigger: ({ children }: { children: React.ReactNode }) =>
@@ -414,6 +434,102 @@ function TestRegistrationForm() {
 
 // Make test form submit handler accessible globally
 ;(window as any).__testFormSubmit = null
+
+test('activity status guidance follows the selected state in create and update forms', async () => {
+  const note =
+    'Esta actividad no se mostrará en la web a menos que tenga estado Confirmado o Completado.'
+  const edition = { id: 1, editionNumber: '2026', eventName: 'Festival' }
+  const { CreateActivityDialog } = await import(
+    '@/core/eventos/participaciones/_components/create-activity-dialog'
+  )
+  const createContainer = document.createElement('main')
+  document.body.append(createContainer)
+  const createRootInstance = createRoot(createContainer)
+  await act(async () =>
+    createRootInstance.render(
+      createElement(CreateActivityDialog, {
+        edition,
+        artistas: [],
+        agrupaciones: [],
+        bandas: []
+      })
+    )
+  )
+  expect(createContainer.textContent).toContain(note)
+  for (const status of ['confirmado', 'completado']) {
+    await act(async () =>
+      Array.from(createContainer.querySelectorAll<HTMLButtonElement>('button'))
+        .find((button) => button.textContent === `Estado ${status}`)
+        ?.click()
+    )
+    expect(createContainer.textContent).not.toContain(note)
+  }
+  await act(async () =>
+    Array.from(createContainer.querySelectorAll<HTMLButtonElement>('button'))
+      .find((button) => button.textContent === 'Estado cancelado')
+      ?.click()
+  )
+  expect(createContainer.textContent).toContain(note)
+  await act(async () => createRootInstance.unmount())
+  createContainer.remove()
+
+  selectedActivity = {
+    entity: {
+      artist: { id: 5, pseudonym: 'Sol', statusId: 1 },
+      collective: null,
+      band: null
+    },
+    activity: {
+      id: 7,
+      participacionId: 3,
+      tipoActividadId: 1,
+      modoIngresoId: 1,
+      notas: '',
+      estado: 'seleccionado',
+      puntaje: null,
+      detail: {
+        id: 4,
+        titulo: 'Taller',
+        descripcion: '',
+        duracionMinutos: null,
+        cupos: null,
+        horaInicio: '',
+        ubicacion: ''
+      },
+      registration: null,
+      occurrences: []
+    }
+  }
+  const { UpdateActivityDialog } = await import(
+    '@/core/eventos/participaciones/_components/update-activity-dialog'
+  )
+  const updateContainer = document.createElement('main')
+  document.body.append(updateContainer)
+  const updateRootInstance = createRoot(updateContainer)
+  await act(async () =>
+    updateRootInstance.render(
+      createElement(UpdateActivityDialog, { edition })
+    )
+  )
+  expect(updateContainer.textContent).toContain(note)
+  for (const status of ['confirmado', 'completado']) {
+    await act(async () =>
+      Array.from(updateContainer.querySelectorAll<HTMLButtonElement>('button'))
+        .find((button) => button.textContent === `Estado ${status}`)
+        ?.click()
+    )
+    expect(updateContainer.textContent).not.toContain(note)
+  }
+  await act(async () =>
+    Array.from(updateContainer.querySelectorAll<HTMLButtonElement>('button'))
+      .find((button) => button.textContent === 'Estado cancelado')
+      ?.click()
+  )
+  expect(updateContainer.textContent).toContain(note)
+  await act(async () => updateRootInstance.unmount())
+  updateContainer.remove()
+  selectedActivity = { entity: null, activity: null }
+})
 
 test('create band selection hides, clears and submits absent registration', async () => {
   createAction.mockClear()

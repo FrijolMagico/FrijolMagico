@@ -50,6 +50,7 @@ export const FESTIVAL_DETAIL_QUERY = `SELECT json_object(
     LEFT JOIN catalogo_artista ca ON ca.artista_id = a.id
       AND ca.activo = 1 AND ca.deleted_at IS NULL
     WHERE ped.edicion_id = ee.id
+      AND pexp.estado IN ('confirmado', 'completado')
     ORDER BY d.slug, COALESCE(a.pseudonimo, ag.nombre, b.name)
   ), '[]'),
   'actividades', COALESCE((
@@ -104,6 +105,7 @@ export const FESTIVAL_DETAIL_QUERY = `SELECT json_object(
     LEFT JOIN agrupacion ag2 ON ped2.agrupacion_id = ag2.id
     LEFT JOIN band b2 ON ped2.banda_id = b2.id
     WHERE ped2.edicion_id = ee.id
+      AND pact.estado IN ('confirmado', 'completado')
     ORDER BY (
       SELECT MIN(ao.date || ' ' || ao.start_time)
       FROM activity_occurrence ao WHERE ao.activity_id = ac.id
