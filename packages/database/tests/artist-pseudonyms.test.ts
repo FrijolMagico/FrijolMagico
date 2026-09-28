@@ -20,11 +20,11 @@ import {
 } from '../src/db/schema/participations'
 
 const pseudonymMigration = readFileSync(
-  join(import.meta.dir, '../migrations/0023_artist_pseudonyms.sql'),
+  join(import.meta.dir, '../migrations/0024_artist_pseudonyms.sql'),
   'utf8'
 )
 const slugAliasMigration = readFileSync(
-  join(import.meta.dir, '../migrations/0024_catalog_slug_aliases.sql'),
+  join(import.meta.dir, '../migrations/0025_catalog_slug_aliases.sql'),
   'utf8'
 )
 const directories: string[] = []

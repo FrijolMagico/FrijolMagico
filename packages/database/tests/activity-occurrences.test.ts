@@ -151,7 +151,7 @@ describe('activity occurrences additive migration', () => {
     await expect(add(db, 1, '2026-09-07', '10:00', 60)).rejects.toThrow()
   })
 
-  test('journal exposes 0022 and the local Drizzle migrator applies it exactly once', async () => {
+  test('journal exposes activity occurrence migrations and the local Drizzle migrator applies them exactly once', async () => {
     const entries = JSON.parse(readFileSync(journalPath, 'utf8')).entries as {
       idx: number
       version: string
@@ -166,11 +166,18 @@ describe('activity occurrences additive migration', () => {
       tag: '0022_activity_occurrences',
       breakpoints: true
     })
-    expect(entries.at(-1)).toEqual({
-      idx: 24,
+    expect(entries[23]).toEqual({
+      idx: 23,
       version: '7',
-      when: 1785542400000,
-      tag: '0024_catalog_slug_aliases',
+      when: 1785456000000,
+      tag: '0023_activity_occurrence_registration',
+      breakpoints: true
+    })
+    expect(entries.at(-1)).toEqual({
+      idx: 25,
+      version: '7',
+      when: 1785628800000,
+      tag: '0025_catalog_slug_aliases',
       breakpoints: true
     })
     expect(entries.at(-1)!.when).toBeGreaterThan(entries.at(-2)!.when)
