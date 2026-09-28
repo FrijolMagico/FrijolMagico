@@ -112,7 +112,8 @@ export function composeParticipations({
           estado: activity.estado,
           notas: activity.notas,
           detail: activity.detail,
-          registration: activity.registration
+          registration: activity.registration,
+          occurrences: activity.occurrences
         }))
       }
     ]

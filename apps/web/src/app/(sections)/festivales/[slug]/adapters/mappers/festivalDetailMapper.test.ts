@@ -39,11 +39,11 @@ const baseRaw = {
     {
       titulo: 'Taller',
       descripcion: 'Taller de prueba',
-      duracion_minutos: 60,
       ubicacion: 'Sala A',
-      hora_inicio: '18:00',
       tipo: 'taller',
-      fecha: '2025-10-03',
+      ocurrencias: [
+        { fecha: '2025-10-03', hora_inicio: '18:00', duracion_minutos: 60 }
+      ],
       participante_pseudonimo: 'Artista Ejemplo',
       catalogo_slug: 'artista-ejemplo',
       avatar_url: 'artistas/artista-ejemplo/avatar.webp',
@@ -174,6 +174,25 @@ describe('mapFestivalDetail', () => {
       { tipo: 'taller', registration: null },
       { tipo: 'musica', registration: null }
     ])
+  })
+
+  test('orders multi-day and same-day sessions without inferring an edition date', () => {
+    const result = mapFestivalDetail({
+      ...baseRaw,
+      actividades: [
+        { ...baseRaw.actividades[0], ocurrencias: [
+          { fecha: '2025-10-05', hora_inicio: '11:00', duracion_minutos: 30 },
+          { fecha: '2025-10-03', hora_inicio: '18:00', duracion_minutos: 60 },
+          { fecha: '2025-10-03', hora_inicio: '09:00', duracion_minutos: 45 }
+        ] },
+        { ...baseRaw.actividades[0], ocurrencias: [] }
+      ]
+    } as FestivalDetail)
+
+    expect(result.actividades[0].ocurrencias.map(({ fecha, hora_inicio }) => `${fecha} ${hora_inicio}`)).toEqual([
+      '2025-10-03 09:00', '2025-10-03 18:00', '2025-10-05 11:00'
+    ])
+    expect(result.actividades[1].ocurrencias).toEqual([])
   })
 
   test('returns the same top-level fields', () => {

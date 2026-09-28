@@ -15,6 +15,7 @@ import { ArtistListFilters } from './artist-list-filters'
 import { ArtistListTable } from './artist-list-table'
 import { UpdateArtistDialog } from './update-artist-dialog'
 import { ArtistHistoryDialog } from './artist-history-dialog'
+import { ArtistDetailDialog } from './artist-detail-dialog'
 
 import type { PaginatedResponse } from '@/shared/types/pagination'
 import type { ArtistListItem, ArtistWithHistory } from '../_types/artist'
@@ -142,6 +143,7 @@ export function ArtistListContainer({
 
       <UpdateArtistDialog />
       <ArtistHistoryDialog />
+      <ArtistDetailDialog />
     </article>
   )
 }

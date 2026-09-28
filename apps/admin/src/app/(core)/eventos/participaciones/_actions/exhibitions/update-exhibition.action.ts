@@ -7,7 +7,7 @@ import { db } from '@frijolmagico/database/orm'
 import { participations } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import type { ActionState } from '@/shared/types/actions'
-import { getParticipationExhibitionsCacheTag } from '@frijolmagico/cache-tags'
+import { ARTIST_DETAIL_CACHE_TAG, getParticipationExhibitionsCacheTag } from '@frijolmagico/cache-tags'
 import {
   exhibitionUpdateSchema,
   type ExhibitionUpdateInput
@@ -39,6 +39,7 @@ export async function updateExhibitionAction(
       .where(eq(participationExhibition.id, parsed.data.id))
 
     updateTag(getParticipationExhibitionsCacheTag(parsed.data.participacionId))
+    updateTag(ARTIST_DETAIL_CACHE_TAG)
 
     return { success: true }
   } catch (error) {

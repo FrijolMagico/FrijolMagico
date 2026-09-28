@@ -46,12 +46,12 @@ function createHarness() {
       }
     },
     insert: (table: unknown) => ({
-      values: (values: Record<string, unknown>) => ({
+      values: (values: Record<string, unknown> | Record<string, unknown>[]) => ({
         returning: async () => {
           if (failAt === tableName(table))
             throw new Error(`failed ${tableName(table)}`)
           const rows = pending.get(table) ?? []
-          rows.push(values)
+          rows.push(...(Array.isArray(values) ? values : [values]))
           pending.set(table, rows)
           return [{ id: table === tables.editionParticipation ? 11 : 22 }]
         },
@@ -59,7 +59,7 @@ function createHarness() {
           if (failAt === tableName(table))
             throw new Error(`failed ${tableName(table)}`)
           const rows = pending.get(table) ?? []
-          rows.push(values)
+          rows.push(...(Array.isArray(values) ? values : [values]))
           pending.set(table, rows)
           return Promise.resolve(resolve([]))
         }
@@ -91,6 +91,7 @@ function tableName(table: unknown): string {
   if (table === tables.participationActivity) return 'activity'
   if (table === tables.activity) return 'detail'
   if (table === tables.activityRegistration) return 'registration'
+  if (table === tables.activityOccurrence) return 'occurrence'
   return 'unknown'
 }
 
@@ -185,6 +186,47 @@ describe('createActivityAction aggregate', () => {
     expect(transactionCommitted).toBe(true)
   })
 
+  test('accepts an artist payload with omitted band ID and retains its sessions', async () => {
+    const harness = createHarness()
+    const { bandaId: _omitted, ...artist } = payload().participation
+    const sessions = [{ date: '2026-06-10', startTime: '09:00', durationMinutes: 45 }]
+    const result = await createActivityAction({
+      ...payload(), participation: artist, occurrences: sessions
+    } as never)
+    expect(result.success).toBe(true)
+    expect(harness.records.get(tables.activityOccurrence)).toEqual([
+      { activityId: 22, ...sessions[0] }
+    ])
+    expect(harness.records.get(tables.participationActivity)?.[0]?.tipoActividadId).toBe(1)
+  })
+
+  test('persists multiple sessions on the detail row in the aggregate transaction', async () => {
+    const harness = createHarness()
+    const occurrences = [
+      { date: '2026-06-10', startTime: '09:00', durationMinutes: 45 },
+      { date: '2026-06-11', startTime: '10:00', durationMinutes: 60 }
+    ]
+    const result = await createActivityAction({ ...payload(), occurrences } as never)
+    expect(result.success).toBe(true)
+    expect(harness.records.get(tables.activityOccurrence)).toEqual(
+      occurrences.map((occurrence) => ({ activityId: 22, ...occurrence }))
+    )
+  })
+
+  test('rolls back every aggregate row when session insertion fails', async () => {
+    const harness = createHarness()
+    failAt = 'occurrence'
+    const result = await createActivityAction({
+      ...payload(),
+      occurrences: [{ date: '2026-06-10', startTime: '09:00', durationMinutes: 45 }]
+    } as never)
+    expect(result.success).toBe(false)
+    expect(harness.records.get(tables.activityOccurrence)).toBeUndefined()
+    expect(harness.records.get(tables.participationActivity)).toBeUndefined()
+    expect(transactionCommitted).toBe(false)
+    expect(updateTag).not.toHaveBeenCalled()
+  })
+
   test('uses the database-resolved activity type instead of trusting the submitted type id', async () => {
     const harness = createHarness()
     const result = await createActivityAction(
@@ -268,14 +310,15 @@ describe('createActivityAction aggregate', () => {
       'actividades:participacion:11',
       'festivales',
       'eventos',
-      'ediciones'
+      'ediciones',
+      'artistas:detalle'
     ])
     expect(revalidateWebCacheBestEffort.mock.calls).toEqual([
       [{ tag: 'festivales' }],
       [{ tag: 'eventos' }],
       [{ tag: 'ediciones' }]
     ])
-    expect(invalidationCommitStates).toEqual(Array(8).fill(true))
+    expect(invalidationCommitStates).toEqual(Array(9).fill(true))
   })
 
   test('does not invalidate any cache after a later detail mutation fails', async () => {

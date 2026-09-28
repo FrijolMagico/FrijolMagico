@@ -1,5 +1,7 @@
 import { ChevronDown, Clock, MapPin } from 'lucide-react'
 import { formatSantiagoDateTime } from '@frijolmagico/utils/santiago-date-format'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
 
 import { ActivityRegistrationCta } from './activity-registration-affordance'
 import { ActivityDescription } from './activity-description'
@@ -8,26 +10,23 @@ import type { FestivalActivity } from '../../types/festival'
 
 interface ActivityItemProps {
   activity: FestivalActivity
+  isEditionPast: boolean
 }
 
 const hasDetails = (a: FestivalActivity) =>
-  Boolean(
-    a.hora_inicio ||
-    a.fecha ||
-    a.ubicacion ||
-    a.descripcion ||
-    a.duracion_minutos
-  )
+  Boolean(a.ocurrencias.length || a.ubicacion || a.descripcion)
 
-export const ActivityItem = ({ activity }: ActivityItemProps) => {
+const formatSessionDate = (date: string) =>
+  format(new Date(date + 'T00:00:00'), 'd MMM yyyy', { locale: es })
+
+export const ActivityItem = ({
+  activity,
+  isEditionPast
+}: ActivityItemProps) => {
   const details = hasDetails(activity)
 
-  const timeDisplay = [activity.fecha, activity.hora_inicio]
-    .filter(Boolean)
-    .join(' — ')
-
   return (
-    <article className='bg-palette-background border-palette-primary group relative max-w-xs min-w-[16rem] rounded-lg border'>
+    <article className='bg-palette-background border-palette-primary group relative max-w-[calc(100%-1rem)] min-w-[16rem] rounded-lg border sm:max-w-xs'>
       <div className='bg-palette-primary absolute -z-10 size-full translate-x-1.5 translate-y-1.5 rounded-lg duration-300 group-hover:translate-0' />
       {activity.tipo !== 'musica' && activity.registration && (
         <ActivityRegistrationCta registration={activity.registration} />
@@ -69,12 +68,35 @@ export const ActivityItem = ({ activity }: ActivityItemProps) => {
 
           <div className='border-palette-primary/20 h-full overflow-hidden border-t px-4 pt-3 pb-4'>
             <div className='text-foreground/60 flex flex-wrap gap-4 text-sm'>
-              {timeDisplay && (
-                <div className='flex items-center gap-1.5'>
-                  <Clock className='size-4' aria-hidden='true' />
-                  <time>{timeDisplay}</time>
+              {activity.ocurrencias.length > 0 ? (
+                <div className='space-y-1'>
+                  <h4 className='text-palette-foreground text-sm font-medium'>
+                    Horarios
+                  </h4>
+                  <ul className='space-y-1'>
+                    {activity.ocurrencias.map((occurrence) => (
+                      <li
+                        key={`${occurrence.fecha}-${occurrence.hora_inicio}`}
+                        className='flex items-center gap-1.5'
+                      >
+                        <Clock className='size-4' aria-hidden='true' />
+                        <time
+                          dateTime={`${occurrence.fecha}T${occurrence.hora_inicio}:00`}
+                          className='-mb-.5'
+                        >
+                          {formatSessionDate(occurrence.fecha)} —{' '}
+                          {occurrence.hora_inicio}hrs
+                        </time>
+                        <span className='-mb-.5'>
+                          ({occurrence.duracion_minutos} min)
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              )}
+              ) : !isEditionPast ? (
+                <span>Fecha y horario por confirmar</span>
+              ) : null}
               {activity.ubicacion && (
                 <div className='flex items-center gap-1.5'>
                   <MapPin className='size-4' aria-hidden='true' />
@@ -83,11 +105,6 @@ export const ActivityItem = ({ activity }: ActivityItemProps) => {
               )}
             </div>
             <ActivityDescription description={activity.descripcion} />
-            {activity.duracion_minutos && (
-              <p className='text-palette-foreground/50 mt-1 text-xs'>
-                Duración: {activity.duracion_minutos} min
-              </p>
-            )}
           </div>
         </details>
       ) : (
@@ -104,6 +121,11 @@ export const ActivityItem = ({ activity }: ActivityItemProps) => {
             <h3 className='text-palette-foreground text-base leading-none font-semibold'>
               {activity.titulo}
             </h3>
+          )}
+          {activity.tipo !== 'musica' && !isEditionPast && (
+            <p className='text-palette-foreground/60 mt-2 text-sm'>
+              Fecha y horario por confirmar
+            </p>
           )}
         </div>
       )}

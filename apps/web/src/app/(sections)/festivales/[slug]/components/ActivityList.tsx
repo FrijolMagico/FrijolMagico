@@ -6,6 +6,7 @@ import { cn } from '@/utils/cn'
 
 interface ActivityListProps {
   actividades: FestivalActivity[]
+  isEditionPast: boolean
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -20,14 +21,15 @@ const TYPE_ORDER: Record<string, number> = {
   musica: 99
 }
 
-export const ActivityList = ({ actividades }: ActivityListProps) => {
+export const ActivityList = ({ actividades, isEditionPast }: ActivityListProps) => {
   const sorted = [...actividades].sort((a, b) => {
-    const dateA = a.fecha ?? ''
-    const dateB = b.fecha ?? ''
-    if (dateA !== dateB) {
-      return dateA.localeCompare(dateB)
-    }
-    return (a.hora_inicio ?? '').localeCompare(b.hora_inicio ?? '')
+    const firstA = a.ocurrencias[0]
+    const firstB = b.ocurrencias[0]
+    if (!firstA || !firstB) return Number(Boolean(firstB)) - Number(Boolean(firstA))
+    return (
+      firstA.fecha.localeCompare(firstB.fecha) ||
+      firstA.hora_inicio.localeCompare(firstB.hora_inicio)
+    )
   })
 
   const grouped = sorted.reduce<Record<string, FestivalActivity[]>>(
@@ -59,7 +61,7 @@ export const ActivityList = ({ actividades }: ActivityListProps) => {
                 {group.map((activity, index) => (
                   <li key={`${tipo}-${activity.titulo ?? index}-${index}`}>
                     {tipo !== 'musica' ? (
-                      <ActivityItem activity={activity} />
+                      <ActivityItem activity={activity} isEditionPast={isEditionPast} />
                     ) : (
                       <MusicActivityItem activity={activity} />
                     )}

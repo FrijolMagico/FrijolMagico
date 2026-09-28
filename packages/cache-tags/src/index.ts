@@ -19,6 +19,7 @@ export const FESTIVALES_CACHE_TAG = 'festivales'
 
 // ── Artistas ──────────────────────────────────
 export const ARTIST_CACHE_TAG = 'artistas'
+export const ARTIST_DETAIL_CACHE_TAG = 'artistas:detalle'
 export const ARTIST_HISTORY_CACHE_TAG = 'artistas:historial'
 
 // ── Eventos ───────────────────────────────────

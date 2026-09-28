@@ -7,6 +7,7 @@ import { participations } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import { ActionState } from '@/shared/types/actions'
 import {
+  ARTIST_DETAIL_CACHE_TAG,
   EDITION_CACHE_TAG,
   EVENT_CACHE_TAG,
   FESTIVALES_CACHE_TAG,
@@ -21,14 +22,15 @@ import {
   activityDetailInsertSchema,
   type ActivityInsertInput,
   activityInsertSchema,
-  parseActivityRegistrationInput
+  parseActivityRegistrationInput,
+  parseActivityOccurrencesInput
 } from '../../_schemas/activity.schema'
 import {
   editionParticipationInsertSchema,
   type ParticipationInsertInput
 } from '../../_schemas/edition-participation.schema'
 
-const { participationActivity, activity, activityRegistration } = participations
+const { participationActivity, activity, activityRegistration, activityOccurrence } = participations
 const PUBLIC_ACTIVITY_TAGS = [
   FESTIVALES_CACHE_TAG,
   EVENT_CACHE_TAG,
@@ -40,6 +42,7 @@ interface CreateActivityActionInput {
   activity: Omit<ActivityInsertInput, 'participacionId'>
   detail: Omit<ActivityDetailInsertInput, 'participacionActividadId'>
   registration?: unknown
+  occurrences?: unknown
 }
 
 export async function createActivityAction(
@@ -76,7 +79,7 @@ export async function createActivityAction(
         throw new Error('Error al crear o encontrar la participación')
       }
 
-      const isBand = parsed.data.bandaId !== null
+      const isBand = parsed.data.bandaId != null
       const effectiveType = await tx.query.activityType.findFirst({
         where: (table, { eq }) =>
           isBand
@@ -85,6 +88,10 @@ export async function createActivityAction(
       })
       if (!effectiveType) throw new Error('El tipo de actividad no existe')
 
+      const occurrences = parseActivityOccurrencesInput(
+        data.occurrences,
+        effectiveType.slug
+      )
       const registration = parseActivityRegistrationInput(
         data.registration,
         effectiveType.slug
@@ -114,7 +121,20 @@ export async function createActivityAction(
         ...data.detail
       })
 
-      await tx.insert(activity).values(activityDetailsValues)
+      const [insertedDetail] = await tx.insert(activity)
+        .values(activityDetailsValues)
+        .returning({ id: activity.id })
+
+      if (occurrences.length) {
+        await tx.insert(activityOccurrence).values(
+          occurrences.map((occurrence) => ({
+            activityId: insertedDetail.id,
+            date: occurrence.date,
+            startTime: occurrence.startTime ?? null,
+            durationMinutes: occurrence.durationMinutes ?? null
+          }))
+        )
+      }
 
       if (registration && registrationInstants) {
         await tx.insert(activityRegistration).values({
@@ -130,7 +150,8 @@ export async function createActivityAction(
       ...(participationId === null
         ? []
         : [getParticipationActivitiesCacheTag(participationId)]),
-      ...PUBLIC_ACTIVITY_TAGS
+      ...PUBLIC_ACTIVITY_TAGS,
+      ARTIST_DETAIL_CACHE_TAG
     ]
     for (const tag of localTags) {
       try {

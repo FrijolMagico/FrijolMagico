@@ -8,6 +8,7 @@ export const FESTIVAL_DETAIL_QUERY = `SELECT json_object(
   'edicion_nombre', ee.nombre,
   'numero_edicion', ee.numero_edicion,
   'poster_url', ee.poster_url,
+  'edicion_fin', (SELECT MAX(eed.fecha) FROM evento_edicion_dia eed WHERE eed.evento_edicion_id = ee.id),
   'dias', COALESCE((
     SELECT json_group_array(json_object(
       'fecha', eed.fecha,
@@ -55,15 +56,21 @@ export const FESTIVAL_DETAIL_QUERY = `SELECT json_object(
     SELECT json_group_array(json_object(
       'titulo', ac.titulo,
       'descripcion', ac.descripcion,
-      'duracion_minutos', ac.duracion_minutos,
       'ubicacion', ac.ubicacion,
-      'hora_inicio', ac.hora_inicio,
       'tipo', ta.slug,
-      'fecha', (
-        SELECT MIN(eed.fecha)
-        FROM evento_edicion_dia eed
-        WHERE eed.evento_edicion_id = ee.id
-      ),
+      'ocurrencias', COALESCE((
+        SELECT json_group_array(json_object(
+          'fecha', scheduled.date,
+          'hora_inicio', scheduled.start_time,
+          'duracion_minutos', scheduled.duration_minutes
+        ))
+        FROM (
+          SELECT ao.date, ao.start_time, ao.duration_minutes
+          FROM activity_occurrence ao
+          WHERE ao.activity_id = ac.id
+          ORDER BY ao.date, ao.start_time, ao.id
+        ) scheduled
+      ), '[]'),
       'participante_pseudonimo', COALESCE(a2.pseudonimo, ag2.nombre, b2.name),
       'catalogo_slug', CASE WHEN ca2.id IS NOT NULL THEN a2.slug ELSE NULL END,
       'avatar_url', CASE WHEN ca2.id IS NOT NULL THEN (
@@ -97,7 +104,10 @@ export const FESTIVAL_DETAIL_QUERY = `SELECT json_object(
     LEFT JOIN agrupacion ag2 ON ped2.agrupacion_id = ag2.id
     LEFT JOIN band b2 ON ped2.banda_id = b2.id
     WHERE ped2.edicion_id = ee.id
-    ORDER BY ac.hora_inicio
+    ORDER BY (
+      SELECT MIN(ao.date || ' ' || ao.start_time)
+      FROM activity_occurrence ao WHERE ao.activity_id = ac.id
+    ) NULLS LAST, pact.id
   ), '[]')
 ) as resultado
 FROM evento e
