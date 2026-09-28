@@ -55,11 +55,13 @@ export async function getArtistsLookup(): Promise<Map<number, ArtistLookup>> {
       pseudonyms: []
     }
     if (row.pseudonymId !== null && row.pseudonymName !== null) {
+      const isPrimary = row.pseudonymId === row.primaryId
       entry.pseudonyms.push({
         id: row.pseudonymId,
         pseudonym: row.pseudonymName,
-        isPrimary: row.pseudonymId === row.primaryId
+        isPrimary
       })
+      if (isPrimary) entry.pseudonym = row.pseudonymName
     }
     lookup.set(row.id, entry)
   }

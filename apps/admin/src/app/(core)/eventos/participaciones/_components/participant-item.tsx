@@ -29,6 +29,11 @@ export function ParticipantItem({ entity, participation }: ParticipantItem) {
   const setSelectedParticipant = useParticipationsStore(
     (state) => state.setSelectedParticipant
   )
+  const displayPseudonym = entity.artist
+    ? entity.artist.pseudonyms.find(
+        (pseudonym) => pseudonym.id === participation.pseudonimoId
+      )?.pseudonym ?? entity.artist.pseudonym
+    : null
 
   return (
     <Item
@@ -67,9 +72,7 @@ export function ParticipantItem({ entity, participation }: ParticipantItem) {
       </ItemMedia>
       <ItemContent>
         <ItemTitle>
-          {entity.artist?.pseudonym ||
-            entity.collective?.name ||
-            entity.band?.name}
+          {displayPseudonym || entity.collective?.name || entity.band?.name}
           {entity.artist?.statusId === ARTIST_STATUS.SUSPENDED && (
             <Badge variant='destructive'>Vetado</Badge>
           )}

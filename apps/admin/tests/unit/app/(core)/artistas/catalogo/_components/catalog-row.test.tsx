@@ -280,6 +280,25 @@ function renderCatalogRow(catalog: ReturnType<typeof createMockCatalog>) {
 // ── Tests ────────────────────────────────────────────────────────────
 
 describe('CatalogRow — Avatar Business Rule', () => {
+  test('shows the pseudonym selected for this catalog entry instead of the primary', async () => {
+    const catalog = createMockCatalog({
+      pseudonimoId: 12,
+      artist: {
+        ...createMockCatalog().artist,
+        pseudonimo: 'Primary Name',
+        activePseudonyms: [
+          { id: 11, pseudonimo: 'Primary Name' },
+          { id: 12, pseudonimo: 'Catalog Name' }
+        ]
+      }
+    })
+
+    await renderCatalogRow(catalog)
+
+    expect(container.textContent).toContain('Catalog Name')
+    expect(container.textContent).not.toContain('Primary Name')
+  })
+
   test('1. Missing avatar: no IconUser, switch disabled, tooltip shown', async () => {
     const catalog = createMockCatalog({ avatarUrl: null })
     await renderCatalogRow(catalog)
