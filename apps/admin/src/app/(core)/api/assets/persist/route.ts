@@ -3,12 +3,12 @@ import 'server-only'
 import { revalidateTag } from 'next/cache'
 import { NextResponse } from 'next/server'
 
-import { ARTIST_CACHE_TAG, CATALOG_CACHE_TAG } from '@frijolmagico/cache-tags'
+import { ARTIST_CACHE_TAG, ARTIST_DETAIL_CACHE_TAG, CATALOG_CACHE_TAG } from '@frijolmagico/cache-tags'
 import { persistArtistAvatarAction } from '@/core/artistas/_actions/persist-artist-avatar.action'
 import { getSession } from '@/shared/lib/auth/utils'
 
 function invalidateCatalogCache(): void {
-  for (const tag of [CATALOG_CACHE_TAG, ARTIST_CACHE_TAG]) {
+  for (const tag of [CATALOG_CACHE_TAG, ARTIST_CACHE_TAG, ARTIST_DETAIL_CACHE_TAG]) {
     try {
       revalidateTag(tag, { expire: 0 })
     } catch (error) {

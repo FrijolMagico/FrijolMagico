@@ -46,6 +46,7 @@ export function ArtistListRow({
     )
 
   const handleOpenEdit = () => openUpdateArtistDialog(artistData)
+  const openDetail = useArtistDialog((s) => s.openArtistDetailDialog)
 
   return (
     <TableRow className={cn('group')}>
@@ -87,6 +88,10 @@ export function ArtistListRow({
         ) : (
           <ActionMenuButton
             actions={[
+              {
+                label: 'Ficha de artista',
+                onClick: () => void openDetail(artist)
+              },
               {
                 label: 'Editar',
                 onClick: handleOpenEdit

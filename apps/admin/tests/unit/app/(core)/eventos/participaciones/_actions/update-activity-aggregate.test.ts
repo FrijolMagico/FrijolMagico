@@ -206,6 +206,7 @@ describe('updateActivityAggregateAction', () => {
       'festivales',
       'eventos',
       'ediciones',
+      'artistas:detalle',
       'festivales',
       'eventos',
       'ediciones'

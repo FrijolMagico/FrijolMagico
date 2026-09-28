@@ -7,6 +7,7 @@ import { participations } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import { ActionState } from '@/shared/types/actions'
 import {
+  ARTIST_DETAIL_CACHE_TAG,
   EDITION_CACHE_TAG,
   EVENT_CACHE_TAG,
   FESTIVALES_CACHE_TAG,
@@ -149,7 +150,8 @@ export async function createActivityAction(
       ...(participationId === null
         ? []
         : [getParticipationActivitiesCacheTag(participationId)]),
-      ...PUBLIC_ACTIVITY_TAGS
+      ...PUBLIC_ACTIVITY_TAGS,
+      ARTIST_DETAIL_CACHE_TAG
     ]
     for (const tag of localTags) {
       try {
