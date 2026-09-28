@@ -15,9 +15,9 @@ A festival activity appears once per scheduled day. Its card lists that day's bl
 
 ## Tasks and evidence
 
-- [x] T1 — Database and per-occurrence registration persistence. Migration/schema/URL backfill, stable IDs, concurrent URL guard, music dates. Commits `c7b2ee58`, `471a8ab1`, `906ef316`; database **60** and admin **607** tests passed. User-authorized migration `0023` subsequently applied to `db-frijolmagico` under paused writes; see T4 verification.
-- [x] T2 — Admin three-column form, switch-gated URL inputs, global window, edit hydration and client/server required-date validation. Commits `471a8ab1`, `906ef316`; admin tests, type-check and lint passed.
-- [x] T3 — Public day/type groups and per-day activity cards, timed/untimed blocks, separate CTA URL per block, music blocks. Commits `a263d268`, `ff85412d`, `50e39b65`, `04d74fe1`; web **187** tests passed. Independent full `bun run test`, `bun run type-check`, `bun run lint` passed; 3 unrelated lint warnings. Parent re-ran web suite (187/187) and `git diff --check` successfully.
+- [x] T1 — Database and per-occurrence registration persistence. Migration/schema/URL backfill, stable IDs, concurrent URL guard, music dates. Commits `7c6fb373`, `4bbada8f`, `390a332e`; database **60** and admin **607** tests passed. User-authorized migration `0023` subsequently applied to `db-frijolmagico` under paused writes; see T4 verification.
+- [x] T2 — Admin three-column form, switch-gated URL inputs, global window, edit hydration and client/server required-date validation. Commits `4bbada8f`, `390a332e`; admin tests, type-check and lint passed.
+- [x] T3 — Public day/type groups and per-day activity cards, timed/untimed blocks, separate CTA URL per block, music blocks. Commits `069615d3`, `d248f4c8`, `753fc8be`, `63d8ab76`; web **187** tests passed. Independent full `bun run test`, `bun run type-check`, `bun run lint` passed; 3 unrelated lint warnings. Parent re-ran web suite (187/187) and `git diff --check` successfully. After authorized rebase on `origin/dev=37976904` and frozen lockfile install (no tracked dependency changes), independently repeated the root Turbo suite under isolated SQLite env: **613 tests passed across 100 files**, type-check/lint passed (three unrelated existing web warnings); diff checks passed. This full-suite result is not isolated per PR slice.
 - [x] T4 — Supervised legacy data remediation. With explicit approval, exactly two SELECTs via Turso CLI on `db-frijolmagico` verified all six expected tables and found **6 undated activities**: IDs `6,7,8` in edition `14` (first day `2021-04-16`, 3 days) and IDs `11,13,20` in edition `20` (first day `2026-10-09`, 2 days). All have `invalid_day_count=0` and no legacy registration URL. Authorized read-only schema checks on `db-frijolmagico` confirm `activity_occurrence.url` absent, five old triggers still present (two workshop/talk guards and three destructive clear-on-* triggers), and remote Drizzle journal latest `1785369600000` = 0022; local journal lists 0023 at `1785456000000`. User-authorized `turso db export db-frijolmagico` saved a private pre-0023 snapshot outside the repo at `/home/strocs/.local/share/frijolmagico/backups/db-frijolmagico-pre-0023-20260928T165733Z.db` plus `-wal` (mode 600; parent directory 700). Local read-only SQLite integrity check = `ok`; snapshot journal latest 0022, 35 occurrences and 6 undated. Keep `.db` and `-wal` together; no restore rehearsal yet. User reconfirmed the no-write pause and authorized `cd packages/database && bun run migrate`. Before execution: exact host/token guard passed, file SHA-256 matched `d519e53c0f31c7db791ee06883eaad33652fc14de52a8f9020bc9461db084a17`, remote journal was 0022 with no URL column. Drizzle Kit reported success. Post-readback: URL column present, exactly one matching journal row for `0023`, 35 occurrences preserved, 20 occurrence URLs populated with zero legacy mismatches, only two new insert/update occurrence triggers remain, and 6 activities still undated before the backfill. With separate explicit user authorization, rechecked six activity types, first edition dates and absence of legacy URLs, then inserted all six date-only occurrences in one atomic Turso CLI statement: IDs `6,7,8` → `2021-04-16` (music); IDs `11,13,20` → `2026-10-09` (talks); `start_time`, `duration_minutes`, `url` all NULL. Post-readback: 41 total occurrences, 0 undated activities, 20 populated URLs, six exact new rows and one 0023 journal row. **No deploy, push, PR or authorization to resume other writes.**
 
 ## Delivery plan (not published)
@@ -26,16 +26,17 @@ User selected stacked PRs toward `dev`, all **draft/no-merge until the entire ch
 
 | Slice | Commit(s) | Authored lines | Review focus |
 | --- | --- | ---: | --- |
-| S1 | `c7b2ee58` | 220 | Database migration, schema and tests; task doc |
-| S2 | `471a8ab1` | 616 | Admin creation, validation and date picker; approved `size:exception` |
-| S3 | `906ef316` | 348 | Admin edit, ID/URL retention and concurrency |
-| S4 | `a263d268` + `ff85412d` | 155 | Public data contract, time and CTA helpers |
-| S5 | `50e39b65` | 381 | Day grouping and music blocks |
-| S6 | `04d74fe1` | 536 | Workshop/talk card and tests; approved `size:exception` |
+| S1 | `7c6fb373` | 220 | Database migration, schema and tests; task doc |
+| S2 | `4bbada8f` | 616 | Admin creation, validation and date picker; approved `size:exception` |
+| S3 | `390a332e` | 348 | Admin edit, ID/URL retention and concurrency |
+| S4 | `069615d3` + `d248f4c8` | 155 | Public data contract, time and CTA helpers |
+| S5 | `753fc8be` | 381 | Day grouping and music blocks |
+| S6 | `63d8ab76` | 536 | Workshop/talk card and tests; approved `size:exception` |
+| S7 | `e00a0704` | 85 | Migration/backfill audit trail and delivery checkpoint |
 
-Each slice depends on its predecessor; intermediate checks ran against the combined worktree, **not isolated slice CI**. Do not merge partial slices. `origin/dev` advanced after branch creation (release/seed paths); recheck current remote and reconcile before any delivery without an automatic rebase.
+Each slice depends on its predecessor; intermediate checks ran against the combined worktree, **not isolated slice CI**. Do not merge partial slices. User authorized a local rebase onto `origin/dev` at `37976904`; all eight unpublished commits replayed without conflicts. Original hashes were replaced with the hashes above; documentation checkpoint is `e00a0704`. Recheck current remote before publication; all slice boundaries still require isolated CI.
 
 ## Next step
 
 1. Remote schema migration and supervised date-only backfill are verified; keep the consensual write pause until the user and deployment operator explicitly decide whether to end it. The pre-0023 backup was not restore-rehearsed.
-2. Reconcile the feature branch with newer `origin/dev` only after explicit authorization for history rewrite; reverify the final candidate. Push/PR creation, production deployment and resuming admin writes require separate user decisions.
+2. Root checks passed after rebase, but isolated CI for intermediate PR slices has not run. Push/PR creation, production deployment and resuming admin writes require separate user decisions.
