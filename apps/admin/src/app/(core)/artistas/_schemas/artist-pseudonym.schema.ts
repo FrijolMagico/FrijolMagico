@@ -51,6 +51,68 @@ export type ArtistPseudonymEditorDraft = ArtistPseudonymDraftInput & {
 }
 export type ArtistPseudonymDraftState = Record<string, ArtistPseudonymEditorDraft>
 
+export function normalizePseudonymText(value: string): string {
+  return value.trim()
+}
+
+export function hasPseudonymTextChanged(pseudonym: string, originalText: string): boolean {
+  return normalizePseudonymText(pseudonym) !== normalizePseudonymText(originalText)
+}
+
+export function preserveHistoryForPseudonymText(
+  pseudonym: string,
+  originalText: string,
+  requested: boolean
+): boolean {
+  return hasPseudonymTextChanged(pseudonym, originalText) && requested
+}
+
+export interface ArtistPseudonymCheckboxStateInput {
+  adding: boolean
+  selectedId: number | null
+  options: { id: number; isPrimary: boolean }[]
+  drafts: ArtistPseudonymDraftState
+  currentText: string
+  originalText: string
+}
+
+export interface ArtistPseudonymCheckboxState {
+  preserveHistory: boolean
+  historyDisabled: boolean
+  makePrimary: boolean
+  primaryDisabled: boolean
+}
+
+export function getArtistPseudonymCheckboxState({
+  adding,
+  selectedId,
+  options,
+  drafts,
+  currentText,
+  originalText
+}: ArtistPseudonymCheckboxStateInput): ArtistPseudonymCheckboxState {
+  const changed = hasPseudonymTextChanged(currentText, originalText)
+  const currentKey = adding ? 'new' : selectedId === null ? 'primary' : String(selectedId)
+  const currentDraft = drafts[currentKey]
+  const pendingPrimaryKey = Object.entries(drafts).find(([, draft]) => draft.makePrimary)?.[0]
+  const persistedPrimary = options.find((option) => option.isPrimary)
+  const effectivePrimaryKey = pendingPrimaryKey
+    ?? (persistedPrimary ? String(persistedPrimary.id) : 'primary')
+  const currentIdentityKey = adding
+    ? 'new'
+    : selectedId === null && persistedPrimary
+      ? String(persistedPrimary.id)
+      : currentKey
+  const isEffectivePrimary = currentIdentityKey === effectivePrimaryKey
+
+  return {
+    preserveHistory: changed && currentDraft?.operation === 'edit' && currentDraft.preserveHistory,
+    historyDisabled: adding || !changed,
+    makePrimary: isEffectivePrimary,
+    primaryDisabled: isEffectivePrimary
+  }
+}
+
 export interface NewArtistPseudonymDraft {
   id: number
   pseudonym: string
@@ -112,8 +174,8 @@ export function persistablePseudonymDrafts(
 ): ArtistPseudonymDraftInput[] {
   return Object.values(drafts)
     .filter((draft) => draft.operation === 'add'
-      ? draft.pseudonym.trim().length > 0
-      : draft.pseudonym.trim() !== draft.originalText || draft.makePrimary)
+      ? normalizePseudonymText(draft.pseudonym).length > 0
+      : hasPseudonymTextChanged(draft.pseudonym, draft.originalText) || draft.makePrimary)
     .map(({ originalText: _originalText, ...draft }) => draft)
 }
 

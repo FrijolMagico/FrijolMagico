@@ -21,7 +21,9 @@ import { getArtistPseudonymsAction } from '../_actions/update-artista.action'
 import {
   addNewArtistPseudonym,
   createNewArtistPseudonymState,
+  getArtistPseudonymCheckboxState,
   makeNewArtistPseudonymPrimary,
+  preserveHistoryForPseudonymText,
   persistablePseudonymDrafts,
   updateNewArtistPseudonym,
   upsertPseudonymDraft,
@@ -64,9 +66,16 @@ export function ArtistPseudonymEditor({
     ? ''
     : selected?.pseudonimo ?? storedDraft?.originalText ?? initialPseudonym
   const currentText = storedDraft?.pseudonym ?? originalText
-  const preserveHistory = storedDraft?.operation === 'edit' && storedDraft.preserveHistory
+  const checkboxState = getArtistPseudonymCheckboxState({
+    adding,
+    selectedId,
+    options,
+    drafts,
+    currentText,
+    originalText
+  })
+  const preserveHistory = checkboxState.preserveHistory
   const makePrimary = storedDraft?.makePrimary ?? false
-  const hasPendingPrimary = Object.values(drafts).some((draft) => draft.makePrimary)
 
   const publish = (nextDrafts: ArtistPseudonymDraftState) => {
     setDrafts(nextDrafts)
@@ -89,10 +98,14 @@ export function ArtistPseudonymEditor({
           operation: 'edit',
           pseudonymId: selectedId,
           pseudonym,
-          preserveHistory,
           makePrimary,
           originalText,
-          ...changes
+          ...changes,
+          preserveHistory: preserveHistoryForPseudonymText(
+            pseudonym,
+            originalText,
+            changes.preserveHistory ?? preserveHistory
+          )
         } as ArtistPseudonymEditorDraft
     const nextDrafts: ArtistPseudonymDraftState = changes.makePrimary === true
       ? Object.fromEntries(Object.entries(drafts).map(([key, current]) => [
@@ -194,15 +207,15 @@ export function ArtistPseudonymEditor({
       <label className='flex items-center gap-2 text-sm'>
         <Checkbox
           checked={preserveHistory}
-          disabled={adding || currentText.trim() === originalText}
+          disabled={checkboxState.historyDisabled}
           onCheckedChange={(value) => saveCurrent(currentText, { preserveHistory: value === true })}
         />
         Guardar el nombre anterior en el historial
       </label>
       <label className='flex items-center gap-2 text-sm'>
         <Checkbox
-          checked={makePrimary || (selected?.isPrimary === true && !hasPendingPrimary)}
-          disabled={!selected && !adding && selectedId !== null}
+          checked={checkboxState.makePrimary}
+          disabled={checkboxState.primaryDisabled}
           onCheckedChange={(value) => saveCurrent(currentText, { makePrimary: value === true })}
         />
         Usar como pseudónimo principal

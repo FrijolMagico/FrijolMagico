@@ -3,13 +3,84 @@ import {
   addNewArtistPseudonym,
   clearPseudonymDrafts,
   createNewArtistPseudonymState,
+  getArtistPseudonymCheckboxState,
   makeNewArtistPseudonymPrimary,
+  preserveHistoryForPseudonymText,
   persistablePseudonymDrafts,
   updateNewArtistPseudonym,
   upsertPseudonymDraft
 } from '@/core/artistas/_schemas/artist-pseudonym.schema'
 
 describe('artist pseudonym editor draft state', () => {
+  test('checks and disables the initially displayed implicit primary before options load', () => {
+    expect(getArtistPseudonymCheckboxState({
+      adding: false,
+      selectedId: null,
+      options: [],
+      drafts: {},
+      currentText: 'Primary',
+      originalText: 'Primary'
+    })).toMatchObject({ makePrimary: true, primaryDisabled: true })
+  })
+
+  test('checks and disables the loaded primary, while another option can become primary', () => {
+    const options = [{ id: 10, isPrimary: true }, { id: 11, isPrimary: false }]
+
+    expect(getArtistPseudonymCheckboxState({
+      adding: false, selectedId: 10, options, drafts: {}, currentText: 'Primary', originalText: 'Primary'
+    })).toMatchObject({ makePrimary: true, primaryDisabled: true })
+    expect(getArtistPseudonymCheckboxState({
+      adding: false, selectedId: 11, options, drafts: {}, currentText: 'Other', originalText: 'Other'
+    })).toMatchObject({ makePrimary: false, primaryDisabled: false })
+  })
+
+  test('moves the checked disabled primary to a pending selection and back when reselected', () => {
+    const options = [{ id: 10, isPrimary: true }, { id: 11, isPrimary: false }]
+    const pendingOther = {
+      '11': {
+        operation: 'edit' as const, pseudonymId: 11, pseudonym: 'Other', originalText: 'Other',
+        preserveHistory: false, makePrimary: true
+      }
+    }
+
+    expect(getArtistPseudonymCheckboxState({
+      adding: false, selectedId: 11, options, drafts: pendingOther, currentText: 'Other', originalText: 'Other'
+    })).toMatchObject({ makePrimary: true, primaryDisabled: true })
+    expect(getArtistPseudonymCheckboxState({
+      adding: false, selectedId: 10, options, drafts: pendingOther, currentText: 'Primary', originalText: 'Primary'
+    })).toMatchObject({ makePrimary: false, primaryDisabled: false })
+
+    const pendingReselected = {
+      ...pendingOther,
+      '10': {
+        operation: 'edit' as const, pseudonymId: 10, pseudonym: 'Primary', originalText: 'Primary',
+        preserveHistory: false, makePrimary: true
+      },
+      '11': { ...pendingOther['11'], makePrimary: false }
+    }
+    expect(getArtistPseudonymCheckboxState({
+      adding: false, selectedId: 10, options, drafts: pendingReselected, currentText: 'Primary', originalText: 'Primary'
+    })).toMatchObject({ makePrimary: true, primaryDisabled: true })
+  })
+
+  test('enables history only for normalized text changes and clears it on revert', () => {
+    const changedDraft = {
+      primary: {
+        operation: 'edit' as const, pseudonymId: null, pseudonym: 'Renamed', originalText: 'Original',
+        preserveHistory: true, makePrimary: false
+      }
+    }
+    const checkboxState = (currentText: string, drafts = changedDraft) => getArtistPseudonymCheckboxState({
+      adding: false, selectedId: null, options: [], drafts, currentText, originalText: 'Original'
+    })
+
+    expect(checkboxState('Original')).toMatchObject({ preserveHistory: false, historyDisabled: true })
+    expect(checkboxState('  Original  ')).toMatchObject({ preserveHistory: false, historyDisabled: true })
+    expect(preserveHistoryForPseudonymText('Original', 'Original', true)).toBe(false)
+    expect(checkboxState('Renamed')).toMatchObject({ preserveHistory: true, historyDisabled: false })
+    expect(preserveHistoryForPseudonymText('Renamed', 'Original', true)).toBe(true)
+  })
+
   test('retains text, history and primary choices independently for each pseudonym ID', () => {
     const first = {
       operation: 'edit' as const,
