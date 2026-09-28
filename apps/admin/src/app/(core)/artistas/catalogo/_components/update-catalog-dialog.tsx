@@ -10,6 +10,14 @@ import { Button } from '@/shared/components/ui/button'
 import { Switch } from '@/shared/components/ui/switch'
 import { Label } from '@/shared/components/ui/label'
 import { Textarea } from '@/shared/components/ui/textarea'
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList
+} from '@/shared/components/ui/combobox'
 import { Field, FieldGroup, FieldLabel } from '@/shared/components/ui/field'
 import {
   Tooltip,
@@ -74,12 +82,18 @@ function UpdateCatalogDialogForm({
     resolver: zodResolver(catalogUpdateFormSchema),
     values: {
       descripcion: catalog.descripcion ?? '',
+      pseudonimoId: catalog.pseudonimoId ?? 0,
       activo: catalog.activo ?? true,
       destacado: catalog.destacado ?? false,
       expectedActive: catalog.activeAvatar ?? null,
       intent: AVATAR_INTENT.UNCHANGED
     }
   })
+
+  const pseudonymOptions = (artist.activePseudonyms ?? []).map((pseudonym) => ({
+    label: pseudonym.pseudonimo,
+    value: pseudonym.id
+  }))
 
   const close = () => {
     controller.cancel()
@@ -213,6 +227,42 @@ function UpdateCatalogDialogForm({
           {history.error && <p role='alert'>{history.error}</p>}
 
           <FieldGroup>
+            <Field>
+              <FieldLabel>Pseudónimo para el catálogo</FieldLabel>
+              <Controller
+                name='pseudonimoId'
+                control={control}
+                render={({ field }) => {
+                  const selected = pseudonymOptions.find(
+                    (option) => option.value === field.value
+                  )
+                  return (
+                    <Combobox
+                      items={pseudonymOptions}
+                      value={selected ?? null}
+                      onValueChange={(value) => field.onChange(value?.value ?? 0)}
+                      itemToStringLabel={(item) => item?.label ?? ''}
+                    >
+                      <ComboboxInput
+                        placeholder='Buscar pseudónimo...'
+                        showTrigger
+                        showClear
+                      />
+                      <ComboboxContent>
+                        <ComboboxEmpty>No hay pseudónimos disponibles</ComboboxEmpty>
+                        <ComboboxList>
+                          {(option: (typeof pseudonymOptions)[number]) => (
+                            <ComboboxItem key={option.value} value={option}>
+                              {option.label}
+                            </ComboboxItem>
+                          )}
+                        </ComboboxList>
+                      </ComboboxContent>
+                    </Combobox>
+                  )
+                }}
+              />
+            </Field>
             <Field className='space-y-2'>
               <FieldLabel htmlFor='descripcion-textarea'>
                 Descripción

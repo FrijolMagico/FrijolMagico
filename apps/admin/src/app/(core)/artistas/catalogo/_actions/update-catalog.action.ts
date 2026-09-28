@@ -69,6 +69,7 @@ export async function updateCatalogAction(
   const {
     id,
     artistaId,
+    pseudonimoId,
     descripcion,
     activo,
     destacado,
@@ -81,6 +82,19 @@ export async function updateCatalogAction(
 
   try {
     const result = await db.transaction(async (tx) => {
+      const [ownedPseudonym] = await tx
+        .select({ id: artist.artistPseudonym.id })
+        .from(artist.artistPseudonym)
+        .where(
+          and(
+            eq(artist.artistPseudonym.id, pseudonimoId),
+            eq(artist.artistPseudonym.artistaId, artistaId),
+            isNull(artist.artistPseudonym.deletedAt)
+          )
+        )
+        .limit(1)
+      if (!ownedPseudonym) return null
+
       const [current] = await tx
         .select({
           id: artist.artistImage.id,
@@ -143,7 +157,7 @@ export async function updateCatalogAction(
 
       await tx
         .update(artist.catalogArtist)
-        .set({ descripcion, activo, destacado })
+        .set({ descripcion, activo, destacado, pseudonimoId })
         .where(eq(artist.catalogArtist.id, id))
 
       if (intent === AVATAR_INTENT.HISTORICAL && avatarId) {

@@ -2,7 +2,7 @@
 
 import 'server-only'
 import { updateTag } from 'next/cache'
-import { max } from 'drizzle-orm'
+import { and, eq, isNull, max } from 'drizzle-orm'
 import { generateKeyBetween } from 'fractional-indexing'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
@@ -72,11 +72,34 @@ export async function createCatalogAction(
       }
     }
 
-    const { artistaId, ...catalog } = parsed.data
+    const { artistaId, pseudonimoId, ...catalog } = parsed.data
+    const [ownedPseudonym] = await db
+      .select({ id: artist.artistPseudonym.id })
+      .from(artist.artistPseudonym)
+      .where(
+        and(
+          eq(artist.artistPseudonym.id, pseudonimoId),
+          eq(artist.artistPseudonym.artistaId, artistaId),
+          isNull(artist.artistPseudonym.deletedAt)
+        )
+      )
+      .limit(1)
+
+    if (!ownedPseudonym) {
+      return {
+        success: false,
+        errors: [
+          {
+            entityType: 'catalogo',
+            message: 'El pseudónimo seleccionado no está activo para este artista'
+          }
+        ]
+      }
+    }
 
     const [createdCatalog] = await db
       .insert(artist.catalogArtist)
-      .values({ ...catalog, artistaId, activo: false })
+      .values({ ...catalog, artistaId, pseudonimoId, activo: false })
       .returning({
         id: artist.catalogArtist.id,
         artistaId: artist.catalogArtist.artistaId

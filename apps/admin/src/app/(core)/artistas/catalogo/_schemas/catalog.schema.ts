@@ -25,6 +25,10 @@ export const catalogSelectSchema = createSelectSchema(artist.catalogArtist)
 export const catalogInsertSchema = createInsertSchema(artist.catalogArtist, {
   artistaId: (s) =>
     s.min(1, { error: 'El artista es obligatorio' }).nonoptional(),
+  pseudonimoId: z
+    .number()
+    .int()
+    .positive({ error: 'El pseudónimo es obligatorio' }),
   orden: (s) => s.min(1, { error: 'El orden es obligatorio' })
 }).omit({
   id: true,
@@ -41,9 +45,11 @@ export const catalogUpdateSchema = createUpdateSchema(artist.catalogArtist, {
     descripcion: true,
     activo: true,
     destacado: true,
-    artistaId: true
+    artistaId: true,
+    pseudonimoId: true
   })
   .extend({
+    pseudonimoId: z.number().int().positive({ error: 'El pseudónimo es obligatorio' }),
     expectedActive: activeAvatarSchema.nullable().optional(),
     intent: z
       .enum([
@@ -58,11 +64,13 @@ export const catalogUpdateSchema = createUpdateSchema(artist.catalogArtist, {
 export const catalogFormSchema = catalogInsertSchema
   .pick({
     artistaId: true,
+    pseudonimoId: true,
     orden: true,
     descripcion: true
   })
   .extend({
-    artistaId: z.string().min(1, { message: 'El artista es obligatorio' }),
+    artistaId: z.number().int().positive({ message: 'El artista es obligatorio' }),
+    pseudonimoId: z.number().int().positive({ message: 'El pseudónimo es obligatorio' }),
     destacado: z.boolean().default(false),
     activo: z.boolean().default(true)
   })

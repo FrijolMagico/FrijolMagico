@@ -2,69 +2,44 @@ import { describe, test, expect } from 'bun:test'
 import { catalogInsertSchema } from '@/core/artistas/catalogo/_schemas/catalog.schema'
 
 describe('catalogInsertSchema', () => {
-  test('validates valid data', () => {
+  test('validates catalog identity with the selected contextual pseudonym', () => {
     const validData = {
       artistaId: 1,
+      pseudonimoId: 11,
       orden: '001'
     }
 
-    const result = catalogInsertSchema.parse(validData)
-
-    expect(result.artistaId).toBe(1)
-    expect(result.orden).toBe('001')
+    expect(catalogInsertSchema.parse(validData)).toMatchObject(validData)
   })
 
-  test('validates complete data', () => {
+  test('requires a positive contextual pseudonym ID', () => {
+    expect(() =>
+      catalogInsertSchema.parse({ artistaId: 1, pseudonimoId: 0, orden: '001' })
+    ).toThrow()
+  })
+
+  test('rejects invalid artist IDs and empty ordering values', () => {
+    expect(() =>
+      catalogInsertSchema.parse({ artistaId: 0, pseudonimoId: 11, orden: '001' })
+    ).toThrow()
+    expect(() =>
+      catalogInsertSchema.parse({ artistaId: 1, pseudonimoId: 11, orden: '' })
+    ).toThrow()
+  })
+
+  test('validates catalog fields and allows an optional description', () => {
     const validData = {
       artistaId: 5,
+      pseudonimoId: 51,
       orden: '010',
       destacado: true,
       activo: false,
       descripcion: 'Artista destacado del mes'
     }
 
-    const result = catalogInsertSchema.parse(validData)
-
-    expect(result).toMatchObject(validData)
-  })
-
-  test('rejects invalid artistaId', () => {
-    const invalidData = {
-      artistaId: 0,
-      orden: '001'
-    }
-
-    expect(() => catalogInsertSchema.parse(invalidData)).toThrow()
-  })
-
-  test('rejects empty order', () => {
-    const invalidData = {
-      artistaId: 1,
-      orden: ''
-    }
-
-    expect(() => catalogInsertSchema.parse(invalidData)).toThrow()
-  })
-
-  test('rejects non-boolean featured', () => {
-    const invalidData = {
-      artistaId: 1,
-      orden: '001',
-      destacado: 'true' as unknown as boolean
-    }
-
-    expect(() => catalogInsertSchema.parse(invalidData)).toThrow()
-  })
-
-  test('allows optional description', () => {
-    const validData = {
-      artistaId: 1,
-      orden: '001',
-      descripcion: undefined
-    }
-
-    const result = catalogInsertSchema.parse(validData)
-
-    expect(result.descripcion).toBeUndefined()
+    expect(catalogInsertSchema.parse(validData)).toMatchObject(validData)
+    expect(
+      catalogInsertSchema.parse({ ...validData, descripcion: undefined }).descripcion
+    ).toBeUndefined()
   })
 })

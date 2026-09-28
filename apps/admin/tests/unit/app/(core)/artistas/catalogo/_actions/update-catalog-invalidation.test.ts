@@ -13,6 +13,7 @@ const buildWebInvalidationUrl = mock(() => 'https://example.com/api/revalidate')
 let dbTransaction: (
   cb: (tx: unknown) => Promise<unknown>
 ) => Promise<unknown> = async () => true
+let savedCatalogValues: Record<string, unknown> | null = null
 
 mock.module('server-only', () => ({}))
 mock.module('next/cache', () => ({ updateTag }))
@@ -38,6 +39,7 @@ const { updateCatalogAction } =
 const validInput = {
   id: 1,
   artistaId: 42,
+  pseudonimoId: 43,
   descripcion: 'Descripción actualizada',
   // Inactive on purpose: these tests cover cache invalidation, not the
   // avatar activation rule (activating without an avatar is rejected).
@@ -48,17 +50,21 @@ const validInput = {
 
 function makeTx() {
   return {
-    select: () => ({
+    select: (selection: Record<string, unknown>) => ({
       from: () => ({
         where: () => ({
-          limit: async () => [] as never[]
+          limit: async () => {
+            if (Object.keys(selection).length === 1) return [{ id: 43 }] as never[]
+            return [] as never[]
+          }
         })
       })
     }),
     update: () => ({
-      set: () => ({
-        where: () => Promise.resolve()
-      })
+      set: (values: Record<string, unknown>) => {
+        savedCatalogValues = values
+        return { where: () => Promise.resolve() }
+      }
     })
   }
 }
@@ -68,6 +74,7 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     updateTag.mockReset()
     requireAuth.mockReset()
     revalidateWebCache.mockReset()
+    savedCatalogValues = null
     dbTransaction = async (cb) => {
       const result = await cb(makeTx())
       return result
@@ -111,14 +118,18 @@ describe('update-catalog action — best-effort cache invalidation', () => {
 
   test('rejects an expected-none save after another session creates an active avatar', async () => {
     let catalogChanged = false
+    let selectCount = 0
     dbTransaction = async (callback) => {
       const result = await callback({
         select: () => ({
           from: () => ({
             where: () => ({
-              limit: async () => [
-                { id: 7, path: 'artistas/current.webp', version: 'v7' }
-              ]
+              limit: async () => {
+                selectCount += 1
+                return selectCount === 1
+                  ? [{ id: 43 }]
+                  : [{ id: 7, path: 'artistas/current.webp', version: 'v7' }]
+              }
             })
           })
         }),
@@ -160,8 +171,10 @@ describe('update-catalog action — best-effort cache invalidation', () => {
               limit: async () => {
                 selectCount += 1
                 return selectCount === 1
-                  ? [{ id: 7, path: 'artistas/current.webp', version: 'v7' }]
-                  : [{ id: 8, artistaId: 42, deletedAt: '2026-07-01' }]
+                  ? [{ id: 43 }]
+                  : selectCount === 2
+                    ? [{ id: 7, path: 'artistas/current.webp', version: 'v7' }]
+                    : [{ id: 8, artistaId: 42, deletedAt: '2026-07-01' }]
               }
             })
           })
@@ -215,8 +228,10 @@ describe('update-catalog action — best-effort cache invalidation', () => {
               limit: async () => {
                 selectCount += 1
                 return selectCount === 1
-                  ? [{ id: 7, path: 'artistas/current.webp', version: 'v7' }]
-                  : [{ id: 8, artistaId: 42, deletedAt: '2026-07-01' }]
+                  ? [{ id: 43 }]
+                  : selectCount === 2
+                    ? [{ id: 7, path: 'artistas/current.webp', version: 'v7' }]
+                    : [{ id: 8, artistaId: 42, deletedAt: '2026-07-01' }]
               }
             })
           })
@@ -255,6 +270,16 @@ describe('update-catalog action — best-effort cache invalidation', () => {
       errors: [{ entityType: 'AVATAR_CONFLICT', message: 'AVATAR_CONFLICT' }]
     })
     expect(committed).toEqual({ catalog: 'original', activeAvatarId: 7 })
+  })
+
+  test('persists a changed active contextual pseudonym on update', async () => {
+    const result = await updateCatalogAction(
+      { success: false },
+      { ...validInput, pseudonimoId: 44 }
+    )
+
+    expect(result).toEqual({ success: true })
+    expect(savedCatalogValues).toMatchObject({ pseudonimoId: 44 })
   })
 
   test('triggers web revalidation after successful update', async () => {

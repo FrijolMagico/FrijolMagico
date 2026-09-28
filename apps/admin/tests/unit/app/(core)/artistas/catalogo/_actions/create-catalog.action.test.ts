@@ -8,13 +8,24 @@ const revalidateWebCache = mock(async () => ({ revalidated: true }))
 const revalidateWebCacheBestEffort = mock(async () => {})
 const buildWebInvalidationUrl = mock(() => 'https://example.com/api/revalidate')
 const max = mock(() => 'max(orden)')
+const pseudonymTable = {
+  id: 'pseudonym.id',
+  artistaId: 'pseudonym.artistaId',
+  deletedAt: 'pseudonym.deletedAt'
+}
 let insertedValues: Record<string, unknown> | null = null
 let returningResult: unknown = [{ id: 9, artistaId: 42 }]
+let ownedPseudonym: unknown = { id: 43 }
 
 mock.restore()
 mock.module('server-only', () => ({}))
 mock.module('next/cache', () => ({ updateTag }))
-mock.module('drizzle-orm', () => ({ max }))
+mock.module('drizzle-orm', () => ({
+  max,
+  and: (...conditions: unknown[]) => conditions,
+  eq: (...values: unknown[]) => values,
+  isNull: (value: unknown) => value
+}))
 mock.module('@/shared/lib/auth/utils', () => ({
   getSession,
   requireAuth,
@@ -26,7 +37,10 @@ mock.module('@/shared/lib/web-invalidation', () => ({
   revalidateWebCacheBestEffort
 }))
 mock.module('@frijolmagico/database/schema', () => ({
-  artist: { catalogArtist: { orden: 'orden' } }
+  artist: {
+    catalogArtist: { orden: 'orden' },
+    artistPseudonym: pseudonymTable
+  }
 }))
 mock.module('@/core/artistas/catalogo/_schemas/catalog.schema', () => ({
   catalogInsertSchema: {
@@ -35,7 +49,12 @@ mock.module('@/core/artistas/catalogo/_schemas/catalog.schema', () => ({
 }))
 mock.module('@frijolmagico/database/orm', () => ({
   db: {
-    select: () => ({ from: () => Promise.resolve([{ maxOrden: null }]) }),
+    select: () => ({
+      from: (table: unknown) =>
+        table === pseudonymTable
+          ? { where: () => ({ limit: async () => ownedPseudonym ? [ownedPseudonym] : [] }) }
+          : Promise.resolve([{ maxOrden: null }])
+    }),
     insert: () => ({
       values: (values: Record<string, unknown>) => {
         insertedValues = values
@@ -56,6 +75,7 @@ describe('createCatalogAction', () => {
   beforeEach(() => {
     insertedValues = null
     returningResult = [{ id: 9, artistaId: 42 }]
+    ownedPseudonym = { id: 43 }
     updateTag.mockClear()
     revalidateWebCacheBestEffort.mockClear()
   })
@@ -63,20 +83,20 @@ describe('createCatalogAction', () => {
   test('returns the committed identifiers and keeps the row inactive', async () => {
     const result = await createCatalogAction(
       { success: false },
-      { artistaId: 42, descripcion: null, destacado: false, activo: true }
+      { artistaId: 42, pseudonimoId: 43, descripcion: null, destacado: false, activo: true }
     )
 
     expect(result).toEqual({
       success: true,
       data: { catalogId: 9, artistId: 42, requestedActive: true }
     })
-    expect(insertedValues).toMatchObject({ artistaId: 42, activo: false })
+    expect(insertedValues).toMatchObject({ artistaId: 42, pseudonimoId: 43, activo: false })
   })
 
   test('invokes internal best-effort revalidation after a committed create', async () => {
     const result = await createCatalogAction(
       { success: false },
-      { artistaId: 42, descripcion: null, destacado: true, activo: false }
+      { artistaId: 42, pseudonimoId: 43, descripcion: null, destacado: true, activo: false }
     )
 
     expect(result).toEqual({
@@ -96,7 +116,7 @@ describe('createCatalogAction', () => {
 
     const result = await createCatalogAction(
       { success: false },
-      { artistaId: 42, descripcion: null, destacado: false, activo: false }
+      { artistaId: 42, pseudonimoId: 43, descripcion: null, destacado: false, activo: false }
     )
 
     expect(result).toEqual({
@@ -105,12 +125,24 @@ describe('createCatalogAction', () => {
     })
   })
 
+  test('rejects a pseudonym that is inactive or owned by another artist', async () => {
+    ownedPseudonym = null
+
+    const result = await createCatalogAction(
+      { success: false },
+      { artistaId: 42, pseudonimoId: 43, descripcion: null, destacado: false, activo: false }
+    )
+
+    expect(result).toMatchObject({ success: false })
+    expect(insertedValues).toBeNull()
+  })
+
   test('returns an explicit creation failure when the insert confirms no identifiers', async () => {
     returningResult = []
 
     const result = await createCatalogAction(
       { success: false },
-      { artistaId: 42, descripcion: null, destacado: false, activo: false }
+      { artistaId: 42, pseudonimoId: 43, descripcion: null, destacado: false, activo: false }
     )
 
     expect(result).toEqual({
@@ -129,7 +161,7 @@ describe('createCatalogAction', () => {
 
     const result = await createCatalogAction(
       { success: false },
-      { artistaId: 42, descripcion: null, destacado: false, activo: false }
+      { artistaId: 42, pseudonimoId: 43, descripcion: null, destacado: false, activo: false }
     )
 
     expect(result).toEqual({
