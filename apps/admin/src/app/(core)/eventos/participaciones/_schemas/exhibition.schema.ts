@@ -74,6 +74,7 @@ export const exhibitionFormSchema = exhibitionInsertSchema
     participacionId: true
   })
   .extend({
+    pseudonimoId: positiveIdSchema.nullable().optional(),
     estado: z.enum(Object.values(PARTICIPATION_STATUS)),
     participantType: z.enum(Object.values(PARTICIPANT_TYPE)),
     entity: editionParticipationSelectSchema

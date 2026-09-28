@@ -94,6 +94,7 @@ export function CreateActivityDialog({
       notas: '',
       estado: PARTICIPATION_STATUS.SELECCIONADO,
       puntaje: null,
+      pseudonimoId: null,
       registration: EMPTY_REGISTRATION,
       occurrences: [],
       detail: {
@@ -134,6 +135,10 @@ export function CreateActivityDialog({
     name: 'registration.registrationEnabled'
   })
   const status = useWatch({ control: methods.control, name: 'estado' })
+  const selectedArtistId = useWatch({ control: methods.control, name: 'entity.artistaId' })
+  const selectedPseudonymId = useWatch({ control: methods.control, name: 'pseudonimoId' })
+  const selectedArtist = artistas.find((artist) => artist.id === selectedArtistId)
+  const activePseudonyms = selectedArtist?.pseudonyms ?? []
 
   const onSubmit = async (values: ActivityFormInput) => {
     const result = await createActivityAction({
@@ -144,6 +149,11 @@ export function CreateActivityDialog({
         bandaId: values.entity.bandaId,
         notas: values.notas
       },
+      pseudonimoId: tipo === PARTICIPANT_TYPE.ARTISTA
+        ? (activePseudonyms.some((item) => item.id === selectedPseudonymId)
+            ? selectedPseudonymId
+            : activePseudonyms.find((item) => item.isPrimary)?.id ?? activePseudonyms[0]?.id ?? null)
+        : null,
       activity: {
         tipoActividadId:
           tipo === PARTICIPANT_TYPE.BANDA
@@ -295,6 +305,7 @@ export function CreateActivityDialog({
           </Field>
 
           {tipo === PARTICIPANT_TYPE.ARTISTA && (
+            <>
             <ControllerCombobox
               label='Artista'
               name='entity.artistaId'
@@ -303,6 +314,35 @@ export function CreateActivityDialog({
               placeholder='Buscar artista...'
               emptyText='No hay artistas disponibles'
             />
+            <Field>
+              <FieldLabel>Pseudónimo para esta actividad</FieldLabel>
+              <Controller
+                name='pseudonimoId'
+                control={methods.control}
+                render={({ field }) => {
+                  const selected = activePseudonyms.some((item) => item.id === selectedPseudonymId)
+                    ? selectedPseudonymId
+                    : activePseudonyms.find((item) => item.isPrimary)?.id ?? activePseudonyms[0]?.id
+                  return (
+                    <Select
+                      value={selected == null ? '' : String(selected)}
+                      onValueChange={(value) => field.onChange(Number(value))}
+                      disabled={isSubmitting || activePseudonyms.length === 0}
+                    >
+                      <SelectTrigger><SelectValue placeholder='Elegir pseudónimo' /></SelectTrigger>
+                      <SelectContent>
+                        {activePseudonyms.map((pseudonym) => (
+                          <SelectItem key={pseudonym.id} value={String(pseudonym.id)}>
+                            {pseudonym.pseudonym}{pseudonym.isPrimary ? ' (principal)' : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )
+                }}
+              />
+            </Field>
+            </>
           )}
 
           {tipo === PARTICIPANT_TYPE.AGRUPACION && (
