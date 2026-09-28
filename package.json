@@ -1,7 +1,13 @@
 {
   "name": "frijolmagico",
-  "version": "4.9.0",
+  "version": "4.10.0",
   "private": true,
+  "devEngines": {
+    "packageManager": {
+      "name": "bun",
+      "version": "^1.0.0"
+    }
+  },
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
@@ -19,15 +25,11 @@
     "semver": "^7.8.5",
     "turbo": "^2.10.5"
   },
-  "packageManager": "bun@1.2.2",
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "overrides": {
     "eslint": "9.39.4"
-  },
-  "dependencies": {
-    "date-fns": "^4.4.0"
   }
 }
