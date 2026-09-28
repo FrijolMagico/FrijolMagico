@@ -20,11 +20,17 @@ describe('CATALOG_QUERY', () => {
     expect(CATALOG_QUERY).not.toContain('app.pseudonimo_id')
   })
 
-  test('includes public edition metadata only for visible participation', () => {
+  test('retains visible exhibition and activity categories for direct and collective paths', () => {
     const editionsQuery = CATALOG_QUERY.split("'editions',")[1]
 
     expect(editionsQuery).toBeDefined()
     expect(editionsQuery?.match(/pexp\.estado IN \('confirmado', 'completado'\)/g)).toHaveLength(2)
     expect(editionsQuery?.match(/pact\.estado IN \('confirmado', 'completado'\)/g)).toHaveLength(2)
+    expect(editionsQuery?.match(/'exhibicion' as tipo_participacion/g)).toHaveLength(2)
+    expect(editionsQuery?.match(/'actividad' as tipo_participacion/g)).toHaveLength(2)
+    expect(editionsQuery?.match(/d\.slug as categoria/g)).toHaveLength(2)
+    expect(editionsQuery?.match(/ta\.slug as categoria/g)).toHaveLength(2)
+    expect(editionsQuery).toContain('ee.evento_id')
+    expect(editionsQuery).toContain('ag.nombre as via_agrupacion')
   })
 })
