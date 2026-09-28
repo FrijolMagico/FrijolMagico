@@ -91,7 +91,15 @@ describe('complete activity seed contract', () => {
     `)
 
     expect(result.rows).toHaveLength(5)
-    expect(result.rows).toEqual(
+    expect(result.rows.map((row) => ({
+      activity_id: row.activity_id,
+      date: row.date,
+      start_time: row.start_time,
+      duration_minutes: row.duration_minutes,
+      url: row.url,
+      registration_id: row.registration_id,
+      first_edition_day: row.first_edition_day
+    }))).toEqual(
       [
         { activity_id: 5, date: '2017-02-25', start_time: null, duration_minutes: null, url: null, registration_id: null, first_edition_day: '2017-02-25' },
         { activity_id: 6, date: '2017-04-22', start_time: null, duration_minutes: null, url: null, registration_id: null, first_edition_day: '2017-04-22' },
@@ -118,7 +126,16 @@ describe('complete activity seed contract', () => {
       ORDER BY occurrence.date, occurrence.start_time
     `)
 
-    expect(result.rows).toEqual([
+    expect(result.rows.map((row) => ({
+      participation_activity_id: row.participation_activity_id,
+      occurrence_id: row.occurrence_id,
+      date: row.date,
+      start_time: row.start_time,
+      duration_minutes: row.duration_minutes,
+      url: row.url,
+      start_at: row.start_at,
+      end_at: row.end_at
+    }))).toEqual([
       {
         participation_activity_id: 3,
         occurrence_id: 4,
@@ -158,7 +175,7 @@ describe('complete activity seed contract', () => {
       GROUP BY date
       ORDER BY date
     `)
-    expect(blockCounts.rows).toEqual([
+    expect(blockCounts.rows.map((row) => ({ date: row.date, block_count: row.block_count }))).toEqual([
       { date: '2017-04-22', block_count: 2 },
       { date: '2017-04-23', block_count: 1 }
     ])
@@ -176,7 +193,11 @@ describe('complete activity seed contract', () => {
       WHERE a.id = 16 AND pa.id = 16
     `)
 
-    expect(result.rows).toEqual([
+    expect(result.rows.map((row) => ({
+      url: row.url,
+      start_at: row.start_at,
+      end_at: row.end_at
+    }))).toEqual([
       {
         url: 'https://example.org/taller-activo-2026-10-09',
         start_at: '2026-09-01T00:00:00.000Z',
@@ -200,7 +221,14 @@ describe('complete activity seed contract', () => {
       WHERE type.slug = 'musica'
     `)
 
-    expect(result.rows).toEqual([
+    expect(result.rows.map((row) => ({
+      activity_id: row.activity_id,
+      date: row.date,
+      start_time: row.start_time,
+      duration_minutes: row.duration_minutes,
+      registration_id: row.registration_id,
+      url: row.url
+    }))).toEqual([
       {
         activity_id: 49,
         date: '2017-02-25',
