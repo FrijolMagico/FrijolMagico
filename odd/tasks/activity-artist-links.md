@@ -1,0 +1,17 @@
+# Activity artist links
+
+Objective: Link each festival activity artist to their active catalog profile with the exhibition participant's hover avatar; otherwise Instagram, another valid social URL, email, or plain pseudonym in that order. Apply to music and non-music activities.
+
+Why: Activity participation currently displays names without a route to the artist.
+
+Workspace: `/home/strocs/dev/FrijolMagico-activity-artist-links`, branch `feat/activity-artist-links`, based on `dev` at `e9ee9ba1` (separate from dirty primary worktree).
+
+Constraints: Keep Spanish UI and English code. Preserve server-first components; reuse CatalogAvatarFollower and safe external links. Only use artist data associated with the activity participation; do not expose unrelated participants. No direct commits to dev. Tests via `bun run test --filter=@frijolmagico/web` (Turbo), plus relevant type/lint checks. TDD mode: not established from session/project configuration; ordinary checks, not claimed RED/GREEN. RDD switch: off. Delivery strategy: ask-on-risk; forecast ~250-380 authored diff lines, revisit if above ~400.
+
+Acceptance: Catalog profile takes precedence and shows existing hover avatar when available; absent catalog, Instagram then next valid social URL then valid email; absent contact, name only. Both music and non-music variants work; malformed and unsafe links never render; blank fields do not create links.
+
+- [x] A1: Extend festival detail activity data contract, query, mapper and mock to supply artist catalog slug, avatar, rrss and correo. Route: delegated writer (multi-file). Checks: focused query/mapper tests, web type check. Commit: `fefa53fca8bff622c9d6f8fa9a3bbeabb72bc6fb` (foundation).
+- [x] A2: Implement shared contact precedence and activity presentation in both variants; test fallbacks and avatar behavior. Route: delegated writer (multi-file). Checks: focused component tests, web suite and relevant lint/type checks. Commit: `fefa53fca8bff622c9d6f8fa9a3bbeabb72bc6fb` (contact resolver) and `ee8eaf9bae43899daa7178111a64e7edf90c996d` (UI).
+- [x] A3: Add visual link affordances: rotating ArrowRightIcon for catalog, ExternalLinkIcon for social, MailIcon for email, no icon for plain text. Keep icons decorative and avatar behavior intact. Route: delegated writer (component + tests). Checks: web tests, type-check, lint, diff check. Commit: `ee8eaf9bae43899daa7178111a64e7edf90c996d`.
+
+Current: A1–A3 implemented and verified. User authorized PR delivery as two stacked PRs to dev (A1 + contact resolver, then UI and icon integration); issue #205 created and labeled status:approved. Two scoped work-unit commits prepared (238 and 371 authored lines); PR publication pending. Independent verifier found an unnamed disclosure when title and registration were absent; fixed with an aria-label and regression test. Verification evidence: isolated `bun install --frozen-lockfile` passed; final web tests 179 passed, web type-check passed, web lint passed with 4 unrelated existing warnings; parent reran web tests (179 pass, uncached), and `git diff --check` passed. Native ASSESS unassessable due to untracked files; independent verification completed. Next: publish first PR from feat/activity-artist-links to dev, and dependent UI PR from feat/activity-artist-links-ui to feat/activity-artist-links; assign minor/type:feature, observe CI, retarget UI PR to dev after the first merges.
