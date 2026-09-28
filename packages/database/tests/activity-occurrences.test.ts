@@ -159,11 +159,18 @@ describe('activity occurrences additive migration', () => {
       tag: string
       breakpoints: boolean
     }[]
-    expect(entries.at(-1)).toEqual({
+    expect(entries[22]).toEqual({
       idx: 22,
       version: '7',
       when: 1785369600000,
       tag: '0022_activity_occurrences',
+      breakpoints: true
+    })
+    expect(entries.at(-1)).toEqual({
+      idx: 23,
+      version: '7',
+      when: 1785456000000,
+      tag: '0023_artist_pseudonyms',
       breakpoints: true
     })
     expect(entries.at(-1)!.when).toBeGreaterThan(entries.at(-2)!.when)
