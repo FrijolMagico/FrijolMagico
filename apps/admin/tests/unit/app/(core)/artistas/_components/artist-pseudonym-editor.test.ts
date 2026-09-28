@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import {
   addNewArtistPseudonym,
+  canAddNewArtistPseudonym,
   clearPseudonymDrafts,
   createNewArtistPseudonymState,
   getArtistPseudonymCheckboxState,
@@ -75,9 +76,9 @@ describe('artist pseudonym editor draft state', () => {
     ])
   })
 
-  test('dims the label only when its checkbox is disabled', () => {
-    expect(getPseudonymCheckboxLabelClass(true)).toContain('opacity-50')
-    expect(getPseudonymCheckboxLabelClass(false)).not.toContain('opacity-50')
+  test('dims disabled checkbox labels and leaves enabled labels undimmed', () => {
+    expect(getPseudonymCheckboxLabelClass(true)).toBe('flex items-center gap-2 text-sm opacity-50')
+    expect(getPseudonymCheckboxLabelClass(false)).toBe('flex items-center gap-2 text-sm')
   })
 
   test('enables history only for normalized text changes and clears it on revert', () => {
@@ -144,6 +145,30 @@ describe('artist pseudonym editor draft state', () => {
 
   test('clears pending edits when the dialog is cancelled or closed', () => {
     expect(clearPseudonymDrafts()).toEqual([])
+  })
+
+  test('allows adding only after every creation draft has non-empty trimmed text', () => {
+    const emptyInitial = createNewArtistPseudonymState()
+    expect(canAddNewArtistPseudonym(emptyInitial)).toBe(false)
+
+    const whitespaceInitial = updateNewArtistPseudonym(emptyInitial, 0, '  \t ')
+    expect(canAddNewArtistPseudonym(whitespaceInitial)).toBe(false)
+    expect(addNewArtistPseudonym(whitespaceInitial)).toBe(whitespaceInitial)
+
+    const filledInitial = updateNewArtistPseudonym(whitespaceInitial, 0, ' First ')
+    expect(canAddNewArtistPseudonym(filledInitial)).toBe(true)
+
+    const newBlankDraft = addNewArtistPseudonym(filledInitial)
+    expect(newBlankDraft.drafts).toHaveLength(2)
+    expect(canAddNewArtistPseudonym(newBlankDraft)).toBe(false)
+    expect(addNewArtistPseudonym(newBlankDraft)).toBe(newBlankDraft)
+
+    const switchedPrimary = makeNewArtistPseudonymPrimary(newBlankDraft, 1)
+    expect(switchedPrimary.primaryId).toBe(1)
+    expect(canAddNewArtistPseudonym(switchedPrimary)).toBe(false)
+
+    const completedSecond = updateNewArtistPseudonym(switchedPrimary, 1, 'Second')
+    expect(canAddNewArtistPseudonym(completedSecond)).toBe(true)
   })
 
   test('supports multiple creation drafts and switches the primary without losing their text', () => {

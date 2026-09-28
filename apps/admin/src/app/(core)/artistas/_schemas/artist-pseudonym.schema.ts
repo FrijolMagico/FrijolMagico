@@ -134,9 +134,15 @@ export function createNewArtistPseudonymState(): NewArtistPseudonymState {
   return { drafts: [{ id: 0, pseudonym: '' }], primaryId: 0, nextId: 1 }
 }
 
+export function canAddNewArtistPseudonym(state: NewArtistPseudonymState): boolean {
+  return state.drafts.every((draft) => normalizePseudonymText(draft.pseudonym).length > 0)
+}
+
 export function addNewArtistPseudonym(
   state: NewArtistPseudonymState
 ): NewArtistPseudonymState {
+  if (!canAddNewArtistPseudonym(state)) return state
+
   const id = state.nextId
   return {
     drafts: [...state.drafts, { id, pseudonym: '' }],

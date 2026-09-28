@@ -20,6 +20,7 @@ import {
 import { getArtistPseudonymsAction } from '../_actions/update-artista.action'
 import {
   addNewArtistPseudonym,
+  canAddNewArtistPseudonym,
   createNewArtistPseudonymState,
   getArtistPseudonymCheckboxState,
   getPseudonymCheckboxLabelClass,
@@ -300,6 +301,7 @@ export function CreateArtistPseudonymEditor({
                 type='button'
                 variant='ghost'
                 className='w-full justify-start border-t'
+                disabled={!canAddNewArtistPseudonym(state)}
                 onClick={() => {
                   const next = addNewArtistPseudonym(state)
                   const added = next.drafts[next.drafts.length - 1]
@@ -315,7 +317,7 @@ export function CreateArtistPseudonymEditor({
         </InputGroupAddon>
       </InputGroup>
       {errors.pseudonimo && <FieldError>{errors.pseudonimo.message}</FieldError>}
-      <label className='flex items-center gap-2 text-sm'>
+      <label className={getPseudonymCheckboxLabelClass(selected?.id === state.primaryId)}>
         <Checkbox
           checked={selected?.id === state.primaryId}
           disabled={selected?.id === state.primaryId}
