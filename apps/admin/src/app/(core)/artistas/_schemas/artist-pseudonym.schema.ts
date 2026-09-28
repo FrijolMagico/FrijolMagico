@@ -30,6 +30,93 @@ export const createArtistWithPseudonymsSchema = z
 const artistIdSchema = z.number().int().positive({ error: 'ID de artista inválido' })
 const pseudonymIdSchema = z.number().int().positive({ error: 'ID de pseudónimo inválido' })
 
+export const artistPseudonymDraftSchema = z.discriminatedUnion('operation', [
+  z.object({
+    operation: z.literal('edit'),
+    pseudonymId: pseudonymIdSchema.nullable(),
+    pseudonym: pseudonymTextSchema,
+    preserveHistory: z.boolean(),
+    makePrimary: z.boolean()
+  }),
+  z.object({
+    operation: z.literal('add'),
+    pseudonym: pseudonymTextSchema,
+    makePrimary: z.boolean()
+  })
+])
+
+export type ArtistPseudonymDraftInput = z.infer<typeof artistPseudonymDraftSchema>
+export type ArtistPseudonymEditorDraft = ArtistPseudonymDraftInput & {
+  originalText: string
+}
+export type ArtistPseudonymDraftState = Record<string, ArtistPseudonymEditorDraft>
+
+export interface NewArtistPseudonymDraft {
+  id: number
+  pseudonym: string
+}
+
+export interface NewArtistPseudonymState {
+  drafts: NewArtistPseudonymDraft[]
+  primaryId: number
+  nextId: number
+}
+
+export function createNewArtistPseudonymState(): NewArtistPseudonymState {
+  return { drafts: [{ id: 0, pseudonym: '' }], primaryId: 0, nextId: 1 }
+}
+
+export function addNewArtistPseudonym(
+  state: NewArtistPseudonymState
+): NewArtistPseudonymState {
+  const id = state.nextId
+  return {
+    drafts: [...state.drafts, { id, pseudonym: '' }],
+    primaryId: state.primaryId,
+    nextId: id + 1
+  }
+}
+
+export function updateNewArtistPseudonym(
+  state: NewArtistPseudonymState,
+  id: number,
+  pseudonym: string
+): NewArtistPseudonymState {
+  return {
+    ...state,
+    drafts: state.drafts.map((draft) => draft.id === id ? { ...draft, pseudonym } : draft)
+  }
+}
+
+export function makeNewArtistPseudonymPrimary(
+  state: NewArtistPseudonymState,
+  id: number
+): NewArtistPseudonymState {
+  return state.drafts.some((draft) => draft.id === id) ? { ...state, primaryId: id } : state
+}
+
+export function upsertPseudonymDraft(
+  drafts: ArtistPseudonymDraftState,
+  key: string,
+  draft: ArtistPseudonymEditorDraft
+): ArtistPseudonymDraftState {
+  return { ...drafts, [key]: draft }
+}
+
+export function clearPseudonymDrafts(): ArtistPseudonymDraftInput[] {
+  return []
+}
+
+export function persistablePseudonymDrafts(
+  drafts: ArtistPseudonymDraftState
+): ArtistPseudonymDraftInput[] {
+  return Object.values(drafts)
+    .filter((draft) => draft.operation === 'add'
+      ? draft.pseudonym.trim().length > 0
+      : draft.pseudonym.trim() !== draft.originalText || draft.makePrimary)
+    .map(({ originalText: _originalText, ...draft }) => draft)
+}
+
 export const artistPseudonymMutationSchema = z.discriminatedUnion('operation', [
   z.object({
     operation: z.literal('rename'),

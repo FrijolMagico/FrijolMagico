@@ -100,6 +100,9 @@ mock.module('@/shared/lib/auth/utils', () => ({ requireAuth }))
 const { createArtistWithPseudonymsAction, mutateArtistPseudonymAction } = await import(
   '@/core/artistas/_actions/artist-pseudonym-mutations.action'
 )
+const { updateArtistaWithPseudonymsAction } = await import(
+  '@/core/artistas/_actions/update-artista.action'
+)
 
 const tableName = (table: unknown) => getTableName(table as Parameters<typeof getTableName>[0])
 const pseudonym = { id: 10, pseudonimo: 'Old Name' }
@@ -139,7 +142,7 @@ describe('createArtistWithPseudonymsAction', () => {
       {
         operation: 'insert',
         table: tableName(artist),
-        value: expect.objectContaining({ pseudonimo: 'Primary Name' })
+        value: expect.objectContaining({ pseudonimo: 'Primary Name', slug: 'primary-name' })
       },
       {
         operation: 'insert',
@@ -165,6 +168,76 @@ describe('createArtistWithPseudonymsAction', () => {
 
     expect(result.success).toBe(true)
     expect(mockDb.state.writes.map(({ table }) => table)).toEqual([tableName(artist)])
+  })
+})
+
+describe('updateArtistaWithPseudonymsAction', () => {
+  test('renames the implicit primary and updates general artist fields in one transaction', async () => {
+    const mockDb = createDatabaseMock()
+    withActiveArtist(mockDb)
+    setSelects(mockDb, [
+      [artistPrimaryPseudonym, [[{ pseudonimoId: 10 }], [{ pseudonimoId: 10 }]]],
+      [artistPseudonym, [[pseudonym]]]
+    ])
+    currentDb = mockDb.db
+
+    const result = await updateArtistaWithPseudonymsAction(
+      { success: false, data: { id: 1 } } as never,
+      {
+        data: {
+          nombre: 'Updated artist', pseudonimo: 'Renamed primary', rut: null,
+          telefono: null, correo: null, ciudad: null, pais: null, rrss: null,
+          estadoId: 1,
+          historialFlags: { pseudonimo: false, correo: false, ciudad: false, pais: false, rrss: false }
+        },
+        pseudonymDrafts: [{
+          operation: 'edit', pseudonymId: null, pseudonym: 'Renamed primary',
+          preserveHistory: false, makePrimary: false
+        }]
+      } as never
+    )
+
+    expect(result.success).toBe(true)
+    expect(mockDb.state.committed).toBe(true)
+    expect(mockDb.state.writes).toContainEqual(expect.objectContaining({
+      operation: 'update', table: tableName(artistPseudonym),
+      value: expect.objectContaining({ pseudonimo: 'Renamed primary' })
+    }))
+    expect(mockDb.state.writes).toContainEqual(expect.objectContaining({
+      operation: 'update', table: tableName(artist),
+      value: expect.objectContaining({ nombre: 'Updated artist' })
+    }))
+  })
+
+  test('rolls back the whole submit when a general artist update fails', async () => {
+    const mockDb = createDatabaseMock()
+    withActiveArtist(mockDb)
+    setSelects(mockDb, [
+      [artistPrimaryPseudonym, [[{ pseudonimoId: 10 }]]],
+      [artistPseudonym, [[{ id: 20, pseudonimo: 'Secondary Name' }]]]
+    ])
+    mockDb.state.failUpdateTable = tableName(artist)
+    currentDb = mockDb.db
+
+    const result = await updateArtistaWithPseudonymsAction(
+      { success: false, data: { id: 1 } } as never,
+      {
+        data: {
+          nombre: 'Updated artist', pseudonimo: 'Renamed primary', rut: null,
+          telefono: null, correo: null, ciudad: null, pais: null, rrss: null,
+          estadoId: 1,
+          historialFlags: { pseudonimo: false, correo: false, ciudad: false, pais: false, rrss: false }
+        },
+        pseudonymDrafts: [{
+          operation: 'edit', pseudonymId: 20, pseudonym: 'Renamed secondary',
+          preserveHistory: false, makePrimary: false
+        }]
+      } as never
+    )
+
+    expect(result.success).toBe(false)
+    expect(mockDb.state.committed).toBe(false)
+    expect(mockDb.state.rolledBack).toBe(true)
   })
 })
 
