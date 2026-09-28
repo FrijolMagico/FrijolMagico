@@ -21,7 +21,7 @@ Fix duplicate festival edition badges by preserving and displaying real particip
 - [x] **T1 — Group catalog edition badges by participation category**
   - Extended query/schema data flow with exhibition discipline and activity-type categories; rendered festival → category → edition/year groups with stable keys; deduplicated duplicate category-edition rows across direct/collective paths.
   - Tests: `bun run test --filter=@frijolmagico/web` passed (202 tests); type-check passed; lint passed with 3 existing warnings in unrelated files; independent verifier found no mismatch. Parent spot-check passed; `git diff --check` passed.
-  - Commit pending.
+  - Work-unit commit `32be480f` (`feat(web): group catalog participation badges`).
 
 - [ ] **T2 — Redirect catalog aliases before streaming** (in progress)
   - Use a Next 16 request-stage mechanism compatible with the web app and database client to resolve aliases and issue an HTTP 308 with `Location` before page content streams.
