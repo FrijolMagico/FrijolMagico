@@ -43,7 +43,12 @@ const mockFestivales = [
       ]
     },
     resumen: {
-      total_participantes: { exponentes: 1, talleres: 0, musica: 0 },
+      total_participantes: {
+        exponentes: 1,
+        talleres: 0,
+        charlas: 0,
+        musica: 0
+      },
       por_disciplina: { ilustracion: 1 }
     }
   },
@@ -67,7 +72,12 @@ const mockFestivales = [
       ]
     },
     resumen: {
-      total_participantes: { exponentes: 1, talleres: 0, musica: 0 },
+      total_participantes: {
+        exponentes: 1,
+        talleres: 0,
+        charlas: 0,
+        musica: 0
+      },
       por_disciplina: { ilustracion: 1 }
     }
   }
