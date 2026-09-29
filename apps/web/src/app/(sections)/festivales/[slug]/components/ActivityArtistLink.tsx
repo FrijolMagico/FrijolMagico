@@ -34,19 +34,21 @@ export const ActivityArtistLink = ({
       <Link
         href={`/catalogo/${safeSlug}`}
         aria-label={`Ver perfil de ${pseudonym}`}
-        className={`${className} group hover:text-palette-accent inline-flex w-fit items-center gap-1 duration-200`}
+        className={`${className} group/artist hover:text-palette-accent inline-flex w-fit items-center gap-1 duration-200`}
       >
         {pseudonym}
         <ArrowRightIcon
           data-testid='activity-artist-catalog-icon'
           aria-hidden='true'
-          className='size-4 opacity-50 duration-200 group-hover:-rotate-45'
+          className='size-4 opacity-50 duration-200 group-hover/artist:-rotate-45'
         />
       </Link>
     )
 
     return avatarUrl ? (
-      <CatalogAvatarFollower avatarUrl={avatarUrl}>{link}</CatalogAvatarFollower>
+      <CatalogAvatarFollower avatarUrl={avatarUrl}>
+        {link}
+      </CatalogAvatarFollower>
     ) : (
       link
     )
@@ -62,7 +64,7 @@ export const ActivityArtistLink = ({
         ? { target: '_blank', rel: 'noopener noreferrer' }
         : {})}
       aria-label={`Abrir enlace de contacto de ${pseudonym}`}
-      className={`${className} group hover:text-palette-accent inline-flex w-fit items-center gap-1 duration-200`}
+      className={`${className} group/artist hover:text-palette-accent inline-flex w-fit items-center gap-1 duration-200`}
     >
       {pseudonym}
       {contact.kind === 'social' ? (

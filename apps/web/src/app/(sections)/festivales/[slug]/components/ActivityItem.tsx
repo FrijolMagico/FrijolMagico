@@ -29,9 +29,9 @@ const hasDescription = (description: string | null) =>
   )
 
 const getBadgeClassName = (type: string) => {
-  if (type === 'charla') return 'outline-palette-primary'
-  if (type === 'musica') return 'outline-palette-secondary'
-  return 'outline-palette-accent text-palette-primary'
+  if (type === 'charla') return 'bg-primary text-background'
+  if (type === 'musica') return 'bg-secondary text-primary'
+  return 'bg-accent text-primary'
 }
 
 export const ActivityItem = ({ activity, badge }: ActivityItemProps) => {
@@ -57,7 +57,7 @@ export const ActivityItem = ({ activity, badge }: ActivityItemProps) => {
       )}
 
       {activity.registration && occurrence && (
-        <div className='absolute -top-5 -right-3 z-30'>
+        <div className='absolute -top-6 right-4 z-30'>
           <ActivityRegistrationCta
             registration={activity.registration}
             url={occurrence.registration_url ?? null}
@@ -65,31 +65,29 @@ export const ActivityItem = ({ activity, badge }: ActivityItemProps) => {
         </div>
       )}
 
-      <div className='relative z-20 min-w-0 px-4'>
-        <ActivityArtistLink
-          pseudonym={activity.participante_pseudonimo}
-          catalogSlug={activity.catalogo_slug}
-          avatarUrl={activity.avatar_url}
-          rrss={activity.rrss}
-          email={activity.correo}
-          className='text-palette-primary/70 wrap-break-words max-w-full pt-6 pb-2 text-sm'
-        />
-        {activity.tipo === 'charla' && activity.presenter_nombre && (
-          <p className='mt-1 text-palette-primary/70 text-sm'>
-            Presenta:{' '}
-            <ActivityArtistLink
-              pseudonym={activity.presenter_nombre}
-              catalogSlug={activity.presenter_catalogo_slug}
-              className='max-w-full break-words text-palette-primary/70 text-sm'
-            />
-          </p>
-        )}
-      </div>
-
       {details ? (
         <details className='group/details'>
           <summary className="flex w-full cursor-pointer items-center justify-between gap-3 px-4 pb-4 text-left marker:content-none before:absolute before:inset-0 before:z-10 before:cursor-pointer before:content-['']">
             <div className='min-w-0 flex-1'>
+              <ActivityArtistLink
+                pseudonym={activity.participante_pseudonimo}
+                catalogSlug={activity.catalogo_slug}
+                avatarUrl={activity.avatar_url}
+                rrss={activity.rrss}
+                email={activity.correo}
+                className='text-palette-primary/70 wrap-break-words relative z-20 max-w-full pt-6 pb-2 text-sm'
+              />
+              {activity.tipo === 'charla' && activity.presenter_nombre && (
+                <p className='text-palette-primary/70 mt-1 text-sm'>
+                  Presenta:{' '}
+                  <ActivityArtistLink
+                    pseudonym={activity.presenter_nombre}
+                    catalogSlug={activity.presenter_catalogo_slug}
+                    className='text-palette-primary/70 wrap-break-words relative z-20 max-w-full text-sm'
+                  />
+                </p>
+              )}
+
               <div>
                 {activity.titulo && (
                   <h3 className='text-palette-foreground text-base leading-tight font-bold'>
@@ -128,6 +126,24 @@ export const ActivityItem = ({ activity, badge }: ActivityItemProps) => {
         </details>
       ) : (
         <div className='px-4 py-3'>
+          <ActivityArtistLink
+            pseudonym={activity.participante_pseudonimo}
+            catalogSlug={activity.catalogo_slug}
+            avatarUrl={activity.avatar_url}
+            rrss={activity.rrss}
+            email={activity.correo}
+            className='text-palette-primary/70 wrap-break-words relative z-20 max-w-full pt-6 pb-2 text-sm'
+          />
+          {activity.tipo === 'charla' && activity.presenter_nombre && (
+            <p className='text-palette-primary/70 mt-1 text-sm'>
+              Presenta:{' '}
+              <ActivityArtistLink
+                pseudonym={activity.presenter_nombre}
+                catalogSlug={activity.presenter_catalogo_slug}
+                className='text-palette-primary/70 wrap-break-words relative z-20 max-w-full text-sm'
+              />
+            </p>
+          )}
           <div>
             {activity.titulo && (
               <h3 className='text-palette-foreground text-base leading-none font-semibold'>

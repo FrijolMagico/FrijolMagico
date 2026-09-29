@@ -51,9 +51,9 @@ describe('ActivityItem', () => {
     expect(registrationLink.getAttribute('href')).toBe('https://example.org/one')
     const article = container.querySelector('article')!
     expect(registrationLink.tagName).toBe('A')
-    expect(screen.getByRole('link', { name: `Ver perfil de ${artistName}` }).getAttribute('href')).toBe(
-      '/catalogo/artista'
-    )
+    const artistLink = screen.getByRole('link', { name: `Ver perfil de ${artistName}` })
+    expect(artistLink.getAttribute('href')).toBe('/catalogo/artista')
+    expect(article.querySelector('details')).toBeNull()
     expect(article.querySelector('h3')?.textContent).toBe('Taller')
     expect(article.textContent).not.toContain('Inscripciones abiertas hasta el')
     expect(container.textContent).not.toContain('Inscripciones abiertas hasta el')
@@ -81,7 +81,9 @@ describe('ActivityItem', () => {
     expect(summarySchedule.className).toContain('leading-tight')
     expect(summarySchedule.children[0].className).toContain('text-palette-foreground/70')
     expect(summarySchedule.children[1].className).toContain('text-palette-foreground/60')
-    expect(summary.querySelector('a')).toBeNull()
+    const artistLink = summary.querySelector('a')!
+    expect(artistLink.getAttribute('href')).toBe('/catalogo/artista')
+    expect(artistLink.className).toContain('z-20')
     expect(summary.className).toContain('before:absolute')
     expect(summary.className).toContain('before:inset-0')
     expect(summary.className).toContain('before:z-10')
@@ -192,7 +194,7 @@ describe('ActivityItem', () => {
     expect(badge.textContent).toBe('Música')
     expect(badge.parentElement).toBe(article)
     expect(article.querySelector('h3')?.textContent).toBe('Taller')
-    expect(article.querySelector(':scope > div.min-w-0')).not.toBeNull()
+    expect(article.querySelector(':scope > div.px-4.py-3')).not.toBeNull()
     expect(article.querySelector('button')).toBeNull()
   })
 
@@ -211,7 +213,11 @@ describe('ActivityItem', () => {
       expect(badge.textContent).toBe('Charla')
       expect(badge.parentElement).toBe(article)
       expect(badge.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-      expect(article.querySelector(':scope > div.min-w-0')).not.toBeNull()
+      expect(
+        descripcion
+          ? article.querySelector(':scope > details')
+          : article.querySelector(':scope > div.px-4.py-3')
+      ).not.toBeNull()
       unmount()
     }
   })
@@ -227,13 +233,11 @@ describe('ActivityItem', () => {
     const artistLink = screen.getByRole('link', { name: 'Ver perfil de Artista' })
 
     expect(artistLink.getAttribute('href')).toBe('/catalogo/artista')
-    expect(artistLink.closest('summary')).toBeNull()
+    expect(artistLink.closest('summary')).toBe(summary)
     expect(details.open).toBe(false)
     expect(summary.tagName).toBe('SUMMARY')
     expect(summary.hasAttribute('tabindex')).toBe(false)
-    expect(artistLink.closest('summary')).toBeNull()
-    expect(artistLink.parentElement?.className).toContain('relative')
-    expect(artistLink.parentElement?.className).toContain('z-20')
+    expect(artistLink.className).toContain('z-20')
   })
 
   test('keeps the registration link independent from card-surface toggling', () => {

@@ -30,7 +30,7 @@ describe('ActivityArtistLink', () => {
 
     const icon = screen.getByTestId('activity-artist-catalog-icon')
     expect(icon.getAttribute('aria-hidden')).toBe('true')
-    expect(icon.getAttribute('class')).toContain('group-hover:-rotate-45')
+    expect(icon.getAttribute('class')).toContain('group-hover/artist:-rotate-45')
     expect(screen.queryByTestId('activity-artist-social-icon')).toBeNull()
     expect(screen.queryByTestId('activity-artist-email-icon')).toBeNull()
   })
