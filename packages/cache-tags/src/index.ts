@@ -9,6 +9,9 @@
 
 // ── Catálogo ──────────────────────────────────
 export const CATALOG_CACHE_TAG = 'catalogo:artistas'
+export const CATALOG_BASE_CACHE_TAG = 'catalogo:artistas:base'
+export const CATALOG_PARTICIPATION_CACHE_TAG = 'catalogo:artistas:participaciones'
+export const CATALOG_EDITION_DATES_CACHE_TAG = 'catalogo:artistas:fechas-edicion'
 
 // ── Home / Destacados ─────────────────────────
 export const FEATURED_ARTISTS_CACHE_TAG = 'home:destacados'

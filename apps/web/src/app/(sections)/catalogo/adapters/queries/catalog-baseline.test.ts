@@ -4,6 +4,7 @@ import { describe, expect, test } from 'bun:test'
 import { CATALOG_QUERY } from './catalogoQuery'
 import {
   CATALOG_BASE_QUERY,
+  CATALOG_EDITION_DATES_QUERY,
   CATALOG_PARTICIPATION_QUERY,
   composeCatalogRows
 } from './catalog-batched'
@@ -41,7 +42,7 @@ const createCatalogFixture = () => {
     INSERT INTO disciplina VALUES (1, 'pintura'), (2, 'escultura'), (3, 'grabado');
     INSERT INTO tipo_actividad VALUES (1, 'charla'), (2, 'taller');
     INSERT INTO agrupacion VALUES (1, 'Colectiva Sur');
-    INSERT INTO agrupacion_artista VALUES (1, 1, 1), (1, 2, 1);
+    INSERT INTO agrupacion_artista VALUES (1, 1, 1), (1, 2, 0);
     INSERT INTO evento VALUES (1, 'Festival Uno'), (2, 'Feria Dos'), (3, 'Encuentro Tres'), (4, 'Muestra Cuatro'), (5, 'Muestra Sin Fecha');
     INSERT INTO evento_edicion VALUES (1, 1, '1'), (2, 2, '2'), (3, 3, '3'), (4, 4, '4'), (5, 5, '5');
     INSERT INTO evento_edicion_dia VALUES (1, '2024-04-05'), (1, '2024-04-03'), (2, '2025-06-07'), (3, '2026-08-09');
@@ -87,7 +88,7 @@ describe('catalog SQL characterization baseline', () => {
         },
         {
           resultado:
-            '{"id":2,"name":"Beto Pseudónimo","slug":"beto","email":null,"rrss":null,"city":null,"country":null,"bio":null,"orden":"2","destacado":0,"avatar":null,"category":"escultura","collective":"Colectiva Sur","editions":[{"evento_id":2,"edicion":"2","evento":"Feria Dos","año":"2025","tipo_participacion":"exhibicion","categoria":"grabado","via_agrupacion":null},{"evento_id":3,"edicion":"3","evento":"Encuentro Tres","año":"2026","tipo_participacion":"actividad","categoria":"taller","via_agrupacion":null},{"evento_id":1,"edicion":"1","evento":"Festival Uno","año":"2024","tipo_participacion":"exhibicion","categoria":"pintura","via_agrupacion":"Colectiva Sur"},{"evento_id":3,"edicion":"3","evento":"Encuentro Tres","año":"2026","tipo_participacion":"exhibicion","categoria":"escultura","via_agrupacion":"Colectiva Sur"}]}'
+            '{"id":2,"name":"Beto Pseudónimo","slug":"beto","email":null,"rrss":null,"city":null,"country":null,"bio":null,"orden":"2","destacado":0,"avatar":null,"category":"escultura","collective":null,"editions":[{"evento_id":2,"edicion":"2","evento":"Feria Dos","año":"2025","tipo_participacion":"exhibicion","categoria":"grabado","via_agrupacion":null},{"evento_id":3,"edicion":"3","evento":"Encuentro Tres","año":"2026","tipo_participacion":"actividad","categoria":"taller","via_agrupacion":null},{"evento_id":1,"edicion":"1","evento":"Festival Uno","año":"2024","tipo_participacion":"exhibicion","categoria":"pintura","via_agrupacion":"Colectiva Sur"},{"evento_id":3,"edicion":"3","evento":"Encuentro Tres","año":"2026","tipo_participacion":"exhibicion","categoria":"escultura","via_agrupacion":"Colectiva Sur"}]}'
         }
       ].map(({ resultado }) => normalizeCatalogOutput(resultado)))
     } finally {
@@ -95,8 +96,9 @@ describe('catalog SQL characterization baseline', () => {
     }
   })
 
-  test('matches the legacy output with two set-based reads regardless of artist count', () => {
+  test('matches legacy date and participation semantics with three set-based reads', () => {
     const db = createCatalogFixture()
+    db.exec("INSERT INTO evento_edicion_dia VALUES (1, '2023-12-31')")
 
     try {
       let queryCount = 0
@@ -105,14 +107,44 @@ describe('catalog SQL characterization baseline', () => {
       queryCount += 1
       const participationRows = db.query(CATALOG_PARTICIPATION_QUERY).all() as Parameters<typeof composeCatalogRows>[1]
       queryCount += 1
-      const batched = composeCatalogRows(baseRows, participationRows)
+      const editionDateRows = db.query(CATALOG_EDITION_DATES_QUERY).all() as Parameters<typeof composeCatalogRows>[2]
+      queryCount += 1
+      const batched = composeCatalogRows(baseRows, participationRows, editionDateRows)
       const normalizedLegacy = legacy.map(({ resultado }) => normalizeCatalogOutput(resultado))
       const normalizedBatched = batched.map((result) => normalizeCatalogOutput(JSON.stringify(result)))
 
+      expect(batched.map(({ id }) => id)).toEqual(
+        legacy.map(({ resultado }) => JSON.parse(resultado).id)
+      )
+      expect(batched.map(({ editions }) => editions)).toEqual(
+        legacy.map(({ resultado }) => JSON.parse(resultado).editions)
+      )
+
       console.info(`catalog batched parity: ${baseRows.length} artists, ${queryCount} queries`)
       expect(normalizedBatched).toEqual(normalizedLegacy)
-      expect(queryCount).toBe(2)
-      expect(queryCount).toBeLessThanOrEqual(2)
+      expect(queryCount).toBe(3)
+      expect(normalizedBatched[0].editions).toContainEqual({
+        evento_id: 5,
+        edicion: '5',
+        evento: 'Muestra Sin Fecha',
+        año: null,
+        tipo_participacion: 'exhibicion',
+        categoria: 'pintura',
+        via_agrupacion: null
+      })
+      expect(normalizedBatched[0].category).toBe('escultura')
+      expect(normalizedBatched[0].editions.filter(({ evento_id, via_agrupacion }) =>
+        evento_id === 1 && via_agrupacion === null
+      )).toMatchObject([{ año: '2023' }])
+      expect(normalizedBatched[0].editions.filter(({ evento_id }) => evento_id === 1)).toHaveLength(2)
+      // Current roster status does not erase collective participation history.
+      for (const output of [normalizedLegacy[1], normalizedBatched[1]]) {
+        expect(output.collective).toBeNull()
+        expect(output.editions.filter(({ via_agrupacion }) => via_agrupacion === 'Colectiva Sur')).toMatchObject([
+          { evento_id: 1, tipo_participacion: 'exhibicion' },
+          { evento_id: 3, tipo_participacion: 'exhibicion' }
+        ])
+      }
     } finally {
       db.close()
     }
