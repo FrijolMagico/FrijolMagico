@@ -9,6 +9,7 @@ import { requireAuth } from '@/shared/lib/auth/utils'
 import type { ActionState } from '@/shared/types/actions'
 import { revalidateWebCache } from '@/shared/lib/web-invalidation'
 import {
+  CATALOG_CACHE_TAG,
   EDITION_CACHE_TAG,
   EDITION_DAY_CACHE_TAG
 } from '@frijolmagico/cache-tags'
@@ -29,7 +30,12 @@ export async function deleteEditionAction(
     }
   }
 
-  await db.delete(eventEdition).where(eq(eventEdition.id, id))
+  const deletedEditions = await db
+    .delete(eventEdition)
+    .where(eq(eventEdition.id, id))
+    .returning({ id: eventEdition.id })
+
+  if (deletedEditions.length === 0) return { success: true }
 
   updateTag(EDITION_CACHE_TAG)
   updateTag(EDITION_DAY_CACHE_TAG)
@@ -38,6 +44,13 @@ export async function deleteEditionAction(
   } catch {
     console.error('[delete-edition] Web cache sync failed', {
       tag: EDITION_CACHE_TAG
+    })
+  }
+  try {
+    await revalidateWebCache({ tag: CATALOG_CACHE_TAG })
+  } catch {
+    console.error('[delete-edition] Web cache sync failed', {
+      tag: CATALOG_CACHE_TAG
     })
   }
 

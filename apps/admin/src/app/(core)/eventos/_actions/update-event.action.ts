@@ -11,8 +11,14 @@ import {
   eventUpdateSchema
 } from '../_schemas/event.schema'
 import type { ActionState } from '@/shared/types/actions'
-import { EVENT_CACHE_TAG } from '@frijolmagico/cache-tags'
-import { revalidateWebCache } from '@/shared/lib/web-invalidation'
+import {
+  CATALOG_CACHE_TAG,
+  EVENT_CACHE_TAG
+} from '@frijolmagico/cache-tags'
+import {
+  revalidateWebCache,
+  revalidateWebCacheBestEffort
+} from '@/shared/lib/web-invalidation'
 
 const { event } = events
 
@@ -42,7 +48,20 @@ export async function updateEventAction(
       }
     }
 
+    const [existingEvent] = await db
+      .select({ nombre: event.nombre })
+      .from(event)
+      .where(eq(event.id, data.id))
+      .limit(1)
+
     await db.update(event).set(parsed.data).where(eq(event.id, data.id))
+
+    if (
+      parsed.data.nombre !== undefined &&
+      existingEvent?.nombre !== parsed.data.nombre
+    ) {
+      void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
+    }
 
     updateTag(EVENT_CACHE_TAG)
     try {

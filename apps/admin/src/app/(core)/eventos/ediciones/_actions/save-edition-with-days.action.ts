@@ -7,9 +7,13 @@ import { db } from '@frijolmagico/database/orm'
 import { events } from '@frijolmagico/database/schema'
 import { toSlug } from '@/shared/lib/utils'
 import { requireAuth } from '@/shared/lib/auth/utils'
-import { revalidateWebCache } from '@/shared/lib/web-invalidation'
+import {
+  revalidateWebCache,
+  revalidateWebCacheBestEffort
+} from '@/shared/lib/web-invalidation'
 import type { ActionState } from '@/shared/types/actions'
 import {
+  CATALOG_CACHE_TAG,
   EDITION_CACHE_TAG,
   EDITION_DAY_CACHE_TAG
 } from '@frijolmagico/cache-tags'
@@ -48,9 +52,38 @@ export async function saveEditionWithDaysAction(
       .limit(1)
 
     const slug = toSlug(`${evento?.slug ?? 'edicion'}-${numeroEdicion}`)
+    let catalogDatesChanged = id === null && days.length > 0
+    let catalogEditionChanged = false
 
     await db.transaction(async (tx) => {
       let edicionId = id
+      if (edicionId !== null) {
+        const [existingEdition] = await tx
+          .select({
+            eventoId: eventEdition.eventoId,
+            numeroEdicion: eventEdition.numeroEdicion
+          })
+          .from(eventEdition)
+          .where(eq(eventEdition.id, edicionId))
+          .limit(1)
+        catalogEditionChanged =
+          existingEdition !== undefined &&
+          (existingEdition.eventoId !== eventoId ||
+            existingEdition.numeroEdicion !== numeroEdicion)
+      }
+      const existingDates =
+        edicionId === null
+          ? []
+          : await tx
+              .select({ fecha: eventEditionDay.fecha })
+              .from(eventEditionDay)
+              .where(eq(eventEditionDay.eventoEdicionId, edicionId))
+      const nextDates = days.map((day) => day.fecha).sort()
+      const previousDates = existingDates.map((day) => day.fecha).sort()
+      catalogDatesChanged =
+        catalogDatesChanged ||
+        nextDates.length !== previousDates.length ||
+        nextDates.some((date, index) => date !== previousDates[index])
 
       if (edicionId !== null) {
         await tx
@@ -125,6 +158,9 @@ export async function saveEditionWithDaysAction(
       console.error('[save-edition] Web cache sync failed', {
         tag: EDITION_CACHE_TAG
       })
+    }
+    if (catalogDatesChanged || catalogEditionChanged) {
+      void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
     }
 
     return { success: true }
