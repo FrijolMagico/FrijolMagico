@@ -55,7 +55,10 @@ export function ActivityOccurrenceFields({
   }
 
   return (
-    <section aria-label='Sesiones' className='space-y-3 rounded-md border p-3'>
+    <section
+      aria-label='Sesiones'
+      className='w-full space-y-3 rounded-md border p-3'
+    >
       <h3 className='text-sm font-medium'>Fechas y sesiones</h3>
       {errors.occurrences?.message && (
         <FieldError>{errors.occurrences.message}</FieldError>
@@ -102,7 +105,7 @@ export function ActivityOccurrenceFields({
                     <IconChevronRight aria-hidden='true' />
                   )}
                   <span className='truncate'>
-                    {format(new Date(currentDate + 'T00:00:00'), "d MMM yyyy", {
+                    {format(new Date(currentDate + 'T00:00:00'), 'd MMM yyyy', {
                       locale: es
                     })}
                   </span>
@@ -166,7 +169,9 @@ export function ActivityOccurrenceFields({
                           )}
                         />
                         <Field>
-                          <FieldLabel htmlFor={`occurrence-duration-${row.rhfId}`}>
+                          <FieldLabel
+                            htmlFor={`occurrence-duration-${row.rhfId}`}
+                          >
                             Duración (min)
                           </FieldLabel>
                           <Input
@@ -183,7 +188,10 @@ export function ActivityOccurrenceFields({
                             }
                             {...methods.register(
                               `occurrences.${index}.durationMinutes`,
-                              { setValueAs: (value) => value === '' ? null : Number(value) }
+                              {
+                                setValueAs: (value) =>
+                                  value === '' ? null : Number(value)
+                              }
                             )}
                           />
                           {rowErrors?.durationMinutes && (
@@ -212,7 +220,9 @@ export function ActivityOccurrenceFields({
                               {...methods.register(`occurrences.${index}.url`)}
                             />
                             {rowErrors?.url && (
-                              <FieldError id={`occurrence-url-error-${row.rhfId}`}>
+                              <FieldError
+                                id={`occurrence-url-error-${row.rhfId}`}
+                              >
                                 {rowErrors.url.message}
                               </FieldError>
                             )}
