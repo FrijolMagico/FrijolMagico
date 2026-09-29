@@ -11,14 +11,14 @@
 
   /* Component-level palette tokens linked to dynamic CSS variables */
   --color-palette-foreground: var(--theme-palette-foreground,
-      var(--color-background));
+      var(--color-foreground));
   --color-palette-background: var(--theme-palette-background,
-      var(--color-accent));
+      var(--color-background));
   --color-palette-primary: var(--theme-palette-primary, var(--color-primary));
   --color-palette-secondary: var(--theme-palette-secondary,
       var(--color-secondary));
   --color-palette-accent: var(--theme-palette-accent, var(--color-accent));
-  --color-palette-outline: var(--theme-palette-outline, var(--color-accent));
+  --color-palette-outline: var(--theme-palette-outline, var(--color-border));
   --color-palette-link: var(--theme-palette-link, var(--color-link));
   --color-palette-shadow: var(--theme-palette-shadow, var(--color-shadow));
 }
