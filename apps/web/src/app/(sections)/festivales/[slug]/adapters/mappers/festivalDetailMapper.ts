@@ -49,6 +49,8 @@ export const mapFestivalDetail = (raw: FestivalDetail): FestivalDetail => {
         : null,
       rrss: activity.rrss ?? null,
       correo: activity.correo ?? null,
+      presenter_nombre: activity.presenter_nombre ?? null,
+      presenter_catalogo_slug: activity.presenter_catalogo_slug ?? null,
       registration: activity.registration ?? null
     }))
   }
