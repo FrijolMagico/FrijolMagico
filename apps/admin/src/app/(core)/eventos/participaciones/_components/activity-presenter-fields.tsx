@@ -1,6 +1,7 @@
 'use client'
 
-import { useId } from 'react'
+import { useId, useState } from 'react'
+import { useDebouncedCallback } from 'use-debounce'
 import { useWatch, type UseFormReturn } from 'react-hook-form'
 import {
   Combobox,
@@ -72,12 +73,27 @@ export function resolvePresenterText(
   return { type: 'free', presenterNombre }
 }
 
+export function applyPresenterOption(
+  methods: UseFormReturn<ActivityFormInput>,
+  option: Pick<PresenterOption, 'artistId' | 'pseudonymId'>,
+  cancelPending: () => void
+) {
+  cancelPending()
+  methods.setValue('detail', {
+    ...methods.getValues('detail'),
+    presenterNombre: '',
+    presenterArtistaId: option.artistId,
+    presenterPseudonimoId: option.pseudonymId
+  }, { shouldDirty: true, shouldValidate: true })
+}
+
 export function ActivityPresenterFields({
   methods,
   artistas,
   disabled = false
 }: ActivityPresenterFieldsProps) {
   const inputId = useId()
+  const [draft, setDraft] = useState<string | null>(null)
   const presenterNombre = useWatch({ control: methods.control, name: 'detail.presenterNombre' }) ?? ''
   const artistId = useWatch({ control: methods.control, name: 'detail.presenterArtistaId' })
   const pseudonymId = useWatch({ control: methods.control, name: 'detail.presenterPseudonimoId' })
@@ -93,7 +109,7 @@ export function ActivityPresenterFields({
   const selectedOption = options.find(
     (option) => option.artistId === artistId && option.pseudonymId === pseudonymId
   )
-  const inputValue = selectedOption?.pseudonym ?? presenterNombre
+  const inputValue = draft ?? selectedOption?.pseudonym ?? presenterNombre
   const presenterNombreError = errors?.presenterNombre?.message
   const presenterArtistaIdError = errors?.presenterArtistaId?.message
   const presenterPseudonimoIdError = errors?.presenterPseudonimoId?.message
@@ -103,33 +119,31 @@ export function ActivityPresenterFields({
     presenterPseudonimoIdError && `${inputId}-pseudonym-error`
   ].filter(Boolean).join(' ') || undefined
 
+  const setPresenter = (name: string, linkedArtistId: number | null, linkedPseudonymId: number | null) => {
+    methods.setValue('detail', {
+      ...methods.getValues('detail'),
+      presenterNombre: name,
+      presenterArtistaId: linkedArtistId,
+      presenterPseudonimoId: linkedPseudonymId
+    }, { shouldDirty: true, shouldValidate: true })
+  }
+
   const updateFromText = (value: string) => {
     const resolution = resolvePresenterText(value, artistas)
     if (resolution.type === 'linked') {
-      methods.setValue('detail.presenterNombre', '', { shouldDirty: true, shouldValidate: true })
-      methods.setValue('detail.presenterArtistaId', resolution.artistId, { shouldDirty: true, shouldValidate: true })
-      methods.setValue('detail.presenterPseudonimoId', resolution.pseudonymId, { shouldDirty: true, shouldValidate: true })
-      return
+      setPresenter('', resolution.artistId, resolution.pseudonymId)
+    } else {
+      setPresenter(resolution.type === 'free' ? resolution.presenterNombre : '', null, null)
     }
-
-    methods.setValue(
-      'detail.presenterNombre',
-      resolution.type === 'free' ? resolution.presenterNombre : '',
-      { shouldDirty: true, shouldValidate: true }
-    )
-    methods.setValue('detail.presenterArtistaId', null, { shouldDirty: true, shouldValidate: true })
-    methods.setValue('detail.presenterPseudonimoId', null, { shouldDirty: true, shouldValidate: true })
   }
+
+  const resolveDebounced = useDebouncedCallback(updateFromText, 300)
 
   const selectOption = (value: string | null) => {
     const option = options.find((candidate) => candidate.id === value)
-    if (!option) {
-      updateFromText('')
-      return
-    }
-    methods.setValue('detail.presenterNombre', '', { shouldDirty: true, shouldValidate: true })
-    methods.setValue('detail.presenterArtistaId', option.artistId, { shouldDirty: true, shouldValidate: true })
-    methods.setValue('detail.presenterPseudonimoId', option.pseudonymId, { shouldDirty: true, shouldValidate: true })
+    if (!option) return
+    setDraft(null)
+    applyPresenterOption(methods, option, () => resolveDebounced.cancel())
   }
 
   return (
@@ -142,7 +156,16 @@ export function ActivityPresenterFields({
         itemToStringLabel={(id) => options.find((option) => option.id === id)?.pseudonym ?? ''}
         onValueChange={selectOption}
         onInputValueChange={(value, { reason }) => {
-          if (reason !== 'item-press') updateFromText(value)
+          if (reason === 'input-clear') {
+            resolveDebounced.cancel()
+            setDraft(null)
+            setPresenter('', null, null)
+          } else if (reason === 'input-change') {
+            setDraft(value)
+            // Keep the form current for an immediate Save; normalization never controls the draft.
+            setPresenter(value, null, null)
+            resolveDebounced(value)
+          }
         }}
         filter={(id, query) =>
           options.find((option) => option.id === id)?.pseudonym.toLowerCase().includes(query.trim().toLowerCase()) ?? false
@@ -157,6 +180,13 @@ export function ActivityPresenterFields({
           placeholder='Buscar o escribir un presentador'
           showClear
           disabled={disabled}
+          onBlur={() => {
+            if (draft !== null) {
+              resolveDebounced.cancel()
+              updateFromText(draft)
+              setDraft(null)
+            }
+          }}
         />
         <ComboboxContent>
           <ComboboxEmpty>No se encontraron pseudónimos</ComboboxEmpty>
