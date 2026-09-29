@@ -22,7 +22,7 @@ globalThis.requestAnimationFrame = window.requestAnimationFrame.bind(window)
 globalThis.cancelAnimationFrame = window.cancelAnimationFrame.bind(window)
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 const { createRoot } = await import('react-dom/client')
-const { ActivityPresenterFields, applyPresenterOption } = await import(
+const { ActivityPresenterFields, applyPresenterOption, classifyPresenterInputAction } = await import(
   '@/core/eventos/participaciones/_components/activity-presenter-fields'
 )
 
@@ -133,6 +133,23 @@ describe('ActivityPresenterFields interactions', () => {
     await dispose()
   })
 
+  test('keeps an exact pseudonym as a free name after debounce, blur, and submit', async () => {
+    const submissions: ActivityFormInput[] = []
+    const { container, dispose } = await renderPresenterForm((value) => submissions.push(value))
+    const input = container.querySelector<HTMLInputElement>('input[role="combobox"]')!
+    await act(async () => input.focus())
+    await typeIn(input, 'Lovelace')
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 380)) })
+    expect(input.value).toBe('Lovelace')
+    await act(async () => input.blur())
+    await submit(container)
+    expect(submissions).toHaveLength(1)
+    expect(submissions[0]!.detail).toMatchObject({
+      presenterNombre: 'Lovelace', presenterArtistaId: null, presenterPseudonimoId: null
+    })
+    await dispose()
+  })
+
   test('keeps unmatched input through Base UI focus-out and submits it', async () => {
     const submissions: ActivityFormInput[] = []
     const { container, dispose } = await renderPresenterForm((value) => submissions.push(value))
@@ -229,34 +246,40 @@ describe('ActivityPresenterFields accessibility', () => {
   })
 })
 
+describe('presenter input intent', () => {
+  test('ignores Base UI input-clear but accepts explicit clear-press', () => {
+    expect(classifyPresenterInputAction('input-change')).toBe('type')
+    expect(classifyPresenterInputAction('input-clear')).toBe('ignore')
+    expect(classifyPresenterInputAction('clear-press')).toBe('clear')
+  })
+})
+
 describe('resolvePresenterText', () => {
-  test('matches trimmed pseudonym text case-insensitively when the match is unique', () => {
-    expect(resolvePresenterText('  Lovelace  ', artists)).toEqual({
-      type: 'linked',
-      artistId: 10,
-      pseudonymId: 102
+  test('keeps a unique case-insensitive pseudonym match as free text', () => {
+    expect(resolvePresenterText('  lovelace  ')).toEqual({
+      type: 'free', presenterNombre: 'lovelace'
     })
   })
 
   test('keeps unmatched and case-colliding text as a free presenter name', () => {
-    expect(resolvePresenterText('Someone new', artists)).toEqual({
+    expect(resolvePresenterText('Someone new')).toEqual({
       type: 'free',
       presenterNombre: 'Someone new'
     })
-    expect(resolvePresenterText(' ada ', artists)).toEqual({
+    expect(resolvePresenterText(' ada ')).toEqual({
       type: 'free',
       presenterNombre: 'ada'
     })
   })
 
-  test('does not match pseudonyms belonging to cancelled artists', () => {
-    expect(resolvePresenterText('Grace', artists)).toEqual({
+  test('keeps any typed pseudonym as free text regardless of artist status', () => {
+    expect(resolvePresenterText('Grace')).toEqual({
       type: 'free',
       presenterNombre: 'Grace'
     })
   })
 
   test('treats trimmed empty text as no presenter', () => {
-    expect(resolvePresenterText('  ', artists)).toEqual({ type: 'none' })
+    expect(resolvePresenterText('  ')).toEqual({ type: 'none' })
   })
 })

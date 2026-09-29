@@ -33,44 +33,15 @@ interface PresenterOption {
   pseudonym: string
 }
 
-type PresenterTextResolution =
-  | { type: 'none' }
-  | { type: 'free'; presenterNombre: string }
-  | { type: 'linked'; artistId: number; pseudonymId: number }
-
-export function resolvePresenterText(
-  value: string,
-  artists: ArtistLookup[]
-): PresenterTextResolution {
+export function resolvePresenterText(value: string) {
   const presenterNombre = value.trim()
-  if (!presenterNombre) return { type: 'none' }
+  return presenterNombre ? { type: 'free' as const, presenterNombre } : { type: 'none' as const }
+}
 
-  const matchingOptions = artists
-    .filter((artist) => artist.statusId !== ARTIST_STATUS.CANCELLED)
-    .flatMap((artist) => artist.pseudonyms.map((pseudonym) => ({
-      artistId: artist.id,
-      pseudonymId: pseudonym.id,
-      pseudonym: pseudonym.pseudonym
-    })))
-    .filter((option) => option.pseudonym.toLowerCase() === presenterNombre.toLowerCase())
-
-  if (matchingOptions.length === 1) {
-    const match = matchingOptions[0]!
-    return {
-      type: 'linked',
-      artistId: match.artistId,
-      pseudonymId: match.pseudonymId
-    }
-  }
-
-  if (
-    matchingOptions.length > 1 &&
-    matchingOptions.some((option) => option.pseudonym !== matchingOptions[0]!.pseudonym)
-  ) {
-    return { type: 'free', presenterNombre }
-  }
-
-  return { type: 'free', presenterNombre }
+export function classifyPresenterInputAction(reason: string): 'type' | 'clear' | 'ignore' {
+  if (reason === 'input-change') return 'type'
+  if (reason === 'clear-press') return 'clear'
+  return 'ignore'
 }
 
 export function applyPresenterOption(
@@ -129,12 +100,8 @@ export function ActivityPresenterFields({
   }
 
   const updateFromText = (value: string) => {
-    const resolution = resolvePresenterText(value, artistas)
-    if (resolution.type === 'linked') {
-      setPresenter('', resolution.artistId, resolution.pseudonymId)
-    } else {
-      setPresenter(resolution.type === 'free' ? resolution.presenterNombre : '', null, null)
-    }
+    const resolution = resolvePresenterText(value)
+    setPresenter(resolution.type === 'free' ? resolution.presenterNombre : '', null, null)
   }
 
   const resolveDebounced = useDebouncedCallback(updateFromText, 300)
@@ -156,11 +123,12 @@ export function ActivityPresenterFields({
         itemToStringLabel={(id) => options.find((option) => option.id === id)?.pseudonym ?? ''}
         onValueChange={selectOption}
         onInputValueChange={(value, { reason }) => {
-          if (reason === 'input-clear') {
+          const action = classifyPresenterInputAction(reason)
+          if (action === 'clear') {
             resolveDebounced.cancel()
             setDraft(null)
             setPresenter('', null, null)
-          } else if (reason === 'input-change') {
+          } else if (action === 'type') {
             setDraft(value)
             // Keep the form current for an immediate Save; normalization never controls the draft.
             setPresenter(value, null, null)

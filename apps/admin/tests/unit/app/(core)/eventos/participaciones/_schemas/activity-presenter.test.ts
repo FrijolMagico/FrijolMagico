@@ -1,7 +1,5 @@
 import { describe, expect, test } from 'bun:test'
 import { resolvePresenterText } from '@/core/eventos/participaciones/_components/activity-presenter-fields'
-import { ARTIST_STATUS } from '@/core/artistas/_constants'
-import type { ArtistLookup } from '@/core/eventos/participaciones/_types/participations.types'
 import {
   activityFormSchema,
   activityPresenterDatabaseValues,
@@ -32,41 +30,17 @@ const validTalk = {
 }
 
 describe('activity presenter validation', () => {
-  test('resolves unique exact pseudonyms and fails closed for case-insensitive collisions', () => {
-    const artists: ArtistLookup[] = [
-      {
-        id: 10,
-        pseudonym: 'Primary',
-        statusId: ARTIST_STATUS.ACTIVE,
-        pseudonyms: [
-          { id: 101, pseudonym: 'Ada', isPrimary: true },
-          { id: 102, pseudonym: 'Lovelace', isPrimary: false }
-        ]
-      },
-      {
-        id: 20,
-        pseudonym: 'Other',
-        statusId: ARTIST_STATUS.ACTIVE,
-        pseudonyms: [{ id: 201, pseudonym: 'ADA', isPrimary: true }]
-      },
-      {
-        id: 30,
-        pseudonym: 'Cancelled',
-        statusId: ARTIST_STATUS.CANCELLED,
-        pseudonyms: [{ id: 301, pseudonym: 'Grace', isPrimary: true }]
-      }
-    ]
-
-    expect(resolvePresenterText('  Lovelace  ', artists)).toEqual({
-      type: 'linked', artistId: 10, pseudonymId: 102
+  test('keeps typed pseudonym text free until an option is explicitly selected', () => {
+    expect(resolvePresenterText('  Lovelace  ')).toEqual({
+      type: 'free', presenterNombre: 'Lovelace'
     })
-    expect(resolvePresenterText(' ada ', artists)).toEqual({
+    expect(resolvePresenterText(' ada ')).toEqual({
       type: 'free', presenterNombre: 'ada'
     })
-    expect(resolvePresenterText('Grace', artists)).toEqual({
+    expect(resolvePresenterText('Grace')).toEqual({
       type: 'free', presenterNombre: 'Grace'
     })
-    expect(resolvePresenterText('  ', artists)).toEqual({ type: 'none' })
+    expect(resolvePresenterText('  ')).toEqual({ type: 'none' })
   })
 
   test('accepts either a free presenter name or a complete artist-pseudonym link', () => {
