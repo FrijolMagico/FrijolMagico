@@ -189,14 +189,17 @@ describe('createActivityAction aggregate', () => {
 
   test('persists distinct pseudonyms for multiple activities by the same artist', async () => {
     const harness = createHarness()
+    const occurrences = [{ date: '2026-06-10' }]
     const first = await createActivityAction({
       ...payload(),
-      pseudonimoId: 41
+      pseudonimoId: 41,
+      occurrences
     } as never)
     activePseudonymId = 42
     const second = await createActivityAction({
       ...payload(),
-      pseudonimoId: 42
+      pseudonimoId: 42,
+      occurrences
     } as never)
 
     expect(first.success).toBe(true)
