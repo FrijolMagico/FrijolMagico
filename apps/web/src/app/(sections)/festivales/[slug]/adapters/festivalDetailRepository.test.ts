@@ -122,6 +122,57 @@ describe('festivalDetailRepository', () => {
     expect(html).not.toContain('Inscríbete')
   })
 
+  test('returns presenter names and selected catalog slugs in activity results', async () => {
+    const payload = JSON.parse(baseRawResult.resultado)
+    payload.actividades = [
+      {
+        titulo: 'Charla libre',
+        descripcion: null,
+        ubicacion: null,
+        ocurrencias: [],
+        tipo: 'charla',
+        participante_pseudonimo: 'Speaker',
+        presenter_nombre: 'Invitada sin perfil',
+        presenter_catalogo_slug: null
+      },
+      {
+        titulo: 'Charla vinculada',
+        descripcion: null,
+        ubicacion: null,
+        ocurrencias: [],
+        tipo: 'charla',
+        participante_pseudonimo: 'Speaker',
+        presenter_nombre: 'Sol Alterna',
+        presenter_catalogo_slug: 'sol-artista'
+      },
+      {
+        titulo: 'Charla sin presentador',
+        descripcion: null,
+        ubicacion: null,
+        ocurrencias: [],
+        tipo: 'charla',
+        participante_pseudonimo: 'Speaker',
+        presenter_nombre: null,
+        presenter_catalogo_slug: null
+      }
+    ]
+    executeQueryMock.mockResolvedValueOnce({
+      data: [{ resultado: JSON.stringify(payload) }],
+      error: null
+    })
+
+    const result = await festivalDetailRepository('edicion-15-1')
+
+    expect(result?.actividades.map(({ presenter_nombre, presenter_catalogo_slug }) => ({
+      presenter_nombre,
+      presenter_catalogo_slug
+    }))).toEqual([
+      { presenter_nombre: 'Invitada sin perfil', presenter_catalogo_slug: null },
+      { presenter_nombre: 'Sol Alterna', presenter_catalogo_slug: 'sol-artista' },
+      { presenter_nombre: null, presenter_catalogo_slug: null }
+    ])
+  })
+
   test('returns null when no rows match', async () => {
     executeQueryMock.mockResolvedValueOnce({
       data: [],
