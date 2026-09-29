@@ -97,7 +97,11 @@ describe('upsertCollectiveWithMembersAction alias validation', () => {
         activo: true
       })
     )).toBe(true)
-    expect(webInvalidations).toHaveLength(1)
+    expect(webInvalidations).toEqual([
+      { tag: 'catalogo:artistas:base' },
+      { tag: 'catalogo:artistas:participaciones' },
+      { tag: 'catalogo:artistas' }
+    ])
   })
 
   test('reactivates an existing member and changes their alias', async () => {

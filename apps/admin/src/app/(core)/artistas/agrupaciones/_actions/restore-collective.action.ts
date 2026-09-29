@@ -7,7 +7,9 @@ import { artist } from '@frijolmagico/database/schema'
 import { and, eq, isNotNull } from 'drizzle-orm'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import {
+  CATALOG_BASE_CACHE_TAG,
   CATALOG_CACHE_TAG,
+  CATALOG_PARTICIPATION_CACHE_TAG,
   COLLECTIVE_ACTIVE_CACHE_TAG,
   COLLECTIVE_CACHE_TAG,
   COLLECTIVE_DELETED_CACHE_TAG
@@ -33,6 +35,8 @@ export async function restoreCollectiveAction(
       updateTag(COLLECTIVE_CACHE_TAG)
       updateTag(COLLECTIVE_ACTIVE_CACHE_TAG)
       updateTag(COLLECTIVE_DELETED_CACHE_TAG)
+      void revalidateWebCacheBestEffort({ tag: CATALOG_BASE_CACHE_TAG })
+      void revalidateWebCacheBestEffort({ tag: CATALOG_PARTICIPATION_CACHE_TAG })
       void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
     }
 

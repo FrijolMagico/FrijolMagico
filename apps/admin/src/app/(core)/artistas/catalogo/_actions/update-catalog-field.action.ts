@@ -6,7 +6,9 @@ import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { and, eq, isNull } from 'drizzle-orm'
 import {
+  CATALOG_BASE_CACHE_TAG,
   CATALOG_CACHE_TAG,
+  CATALOG_PARTICIPATION_CACHE_TAG,
   FEATURED_ARTISTS_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 import { requireAuth } from '@/shared/lib/auth/utils'
@@ -76,11 +78,12 @@ export async function updateCatalogFieldAction(
     .set(parsed.data)
     .where(eq(artist.catalogArtist.id, id))
 
-  updateTag(CATALOG_CACHE_TAG)
-  void revalidateWebCache({
-    tag: CATALOG_CACHE_TAG,
-    path: '/catalogo'
-  })
+  const catalogTags = [CATALOG_BASE_CACHE_TAG, CATALOG_CACHE_TAG]
+  if ('activo' in parsed.data) catalogTags.push(CATALOG_PARTICIPATION_CACHE_TAG)
+  for (const tag of catalogTags) {
+    updateTag(tag)
+    void revalidateWebCache({ tag, path: '/catalogo' })
+  }
 
   if ('destacado' in parsed.data) {
     console.log(

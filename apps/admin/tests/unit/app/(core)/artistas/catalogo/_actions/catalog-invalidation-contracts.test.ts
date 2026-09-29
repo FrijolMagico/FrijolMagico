@@ -85,14 +85,15 @@ describe('catalog server actions — web invalidation contracts', () => {
     expect(source).toContain("path: '/catalogo'")
   })
 
-  test('all three actions preserve existing updateTag() call', () => {
+  test('all three actions preserve legacy catalog invalidation', () => {
     const updateFieldSource = readFileSync(UPDATE_FIELD_PATH, 'utf8')
     const updateCatalogSource = readFileSync(UPDATE_CATALOG_PATH, 'utf8')
     const deleteCatalogSource = readFileSync(DELETE_CATALOG_PATH, 'utf8')
 
-    expect(updateFieldSource).toContain('updateTag(CATALOG_CACHE_TAG)')
-    expect(updateCatalogSource).toContain('updateTag(CATALOG_CACHE_TAG)')
-    expect(deleteCatalogSource).toContain('updateTag(CATALOG_CACHE_TAG)')
+    for (const source of [updateFieldSource, updateCatalogSource, deleteCatalogSource]) {
+      expect(source).toContain('CATALOG_CACHE_TAG')
+      expect(source).toContain('updateTag(tag)')
+    }
   })
 
   test('update-catalog.action uses one transaction for catalog and historical avatar activation', () => {

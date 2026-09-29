@@ -61,7 +61,10 @@ function makeTx() {
             if (table === artistTables.artistPseudonym) {
               return [{ id: 43, pseudonimo: 'Selected Artist' }] as never[]
             }
-            if (table === artistTables.catalogArtist) return [{ pseudonimoId: 43 }] as never[]
+            if (table === artistTables.catalogArtist) return [{ pseudonimoId: 43, activo: false }] as never[]
+            if (table === artistTables.artistImage) {
+              return [{ id: 7, path: 'artistas/current.webp', version: 'v7' }] as never[]
+            }
             if (table === artistTables.artist && initialArtistLookup) {
               initialArtistLookup = false
               return [{ slug: 'old-slug' }] as never[]
@@ -120,14 +123,16 @@ describe('update-catalog action — best-effort cache invalidation', () => {
 
     expect(result).toEqual({ success: true })
     expect(requireAuth).toHaveBeenCalledTimes(1)
-    expect(updateTag).toHaveBeenCalledTimes(1)
+    expect(updateTag).toHaveBeenCalledTimes(2)
   })
 
   test('returns success when cache invalidation succeeds', async () => {
     const result = await updateCatalogAction({ success: false }, validInput)
 
     expect(result).toEqual({ success: true })
-    expect(updateTag).toHaveBeenCalledTimes(1)
+    expect(updateTag).toHaveBeenCalledTimes(2)
+    expect(updateTag).toHaveBeenNthCalledWith(1, 'catalogo:artistas:base')
+    expect(updateTag).toHaveBeenNthCalledWith(2, 'catalogo:artistas')
   })
 
   test('returns conflict when transaction returns null', async () => {
@@ -314,11 +319,21 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     expect(savedAliases).toEqual([{ slug: 'old-slug', artistaId: 42 }])
   })
 
-  test('triggers web revalidation after successful update', async () => {
+  test('invalidates participation only when an active-state transition is requested', async () => {
+    await updateCatalogAction(
+      { success: false },
+      { ...validInput, activo: true }
+    )
+
+    expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:participaciones')
+  })
+
+  test('does not invalidate participation when active state is unchanged', async () => {
     await updateCatalogAction({ success: false }, validInput)
 
+    expect(updateTag).not.toHaveBeenCalledWith('catalogo:artistas:participaciones')
     expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: 'catalogo:artistas',
+      tag: 'catalogo:artistas:base',
       path: '/catalogo'
     })
   })

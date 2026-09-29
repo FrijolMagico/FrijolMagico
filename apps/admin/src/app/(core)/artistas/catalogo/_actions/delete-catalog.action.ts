@@ -7,7 +7,9 @@ import { requireAuth } from '@/shared/lib/auth/utils'
 import { revalidateWebCache } from '@/shared/lib/web-invalidation'
 import { deleteCatalogEntry } from '@/shared/lib/catalog-artist-deletion'
 import {
+  CATALOG_BASE_CACHE_TAG,
   CATALOG_CACHE_TAG,
+  CATALOG_PARTICIPATION_CACHE_TAG,
   FEATURED_ARTISTS_CACHE_TAG,
 } from '@frijolmagico/cache-tags'
 import type { ActionState } from '@/shared/types/actions'
@@ -20,8 +22,10 @@ export async function deleteCatalogAction(id: number): Promise<ActionState> {
       deleteCatalogEntry(tx, id),
     )
 
-    updateTag(CATALOG_CACHE_TAG)
-    void revalidateWebCache({ tag: CATALOG_CACHE_TAG, path: '/catalogo' })
+    for (const tag of [CATALOG_BASE_CACHE_TAG, CATALOG_PARTICIPATION_CACHE_TAG, CATALOG_CACHE_TAG]) {
+      updateTag(tag)
+      void revalidateWebCache({ tag, path: '/catalogo' })
+    }
 
     if (wasFeatured) {
       void revalidateWebCache({

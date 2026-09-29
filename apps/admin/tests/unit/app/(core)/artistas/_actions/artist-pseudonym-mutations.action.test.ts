@@ -259,6 +259,8 @@ describe('updateArtistaWithPseudonymsAction', () => {
     expect(mockDb.state.writes).toContainEqual(expect.objectContaining({
       operation: 'insert', table: tableName(artistSlugAlias), value: { slug: 'old-name', artistaId: 1 }
     }))
+    expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:base')
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas:base' })
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
   })
 

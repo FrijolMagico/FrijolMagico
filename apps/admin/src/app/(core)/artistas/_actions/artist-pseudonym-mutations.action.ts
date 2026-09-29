@@ -9,6 +9,7 @@ import { requireAuth } from '@/shared/lib/auth/utils'
 import {
   ARTIST_CACHE_TAG,
   ARTIST_HISTORY_CACHE_TAG,
+  CATALOG_BASE_CACHE_TAG,
   CATALOG_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 import { revalidateWebCache } from '@/shared/lib/web-invalidation'
@@ -297,7 +298,9 @@ export async function mutateArtistPseudonymAction(
     updateTag(ARTIST_CACHE_TAG)
     if (historyChanged) updateTag(ARTIST_HISTORY_CACHE_TAG)
     if (catalogSlugChanged || catalogDataChanged) {
+      updateTag(CATALOG_BASE_CACHE_TAG)
       updateTag(CATALOG_CACHE_TAG)
+      void revalidateWebCache({ tag: CATALOG_BASE_CACHE_TAG })
       void revalidateWebCache({ tag: CATALOG_CACHE_TAG, path: '/catalogo' })
     }
     return { success: true }

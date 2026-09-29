@@ -11,6 +11,7 @@ import { revalidateWebCache } from '@/shared/lib/web-invalidation'
 import { deleteCatalogEntry } from '@/shared/lib/catalog-artist-deletion'
 import {
   ARTIST_CACHE_TAG,
+  CATALOG_BASE_CACHE_TAG,
   CATALOG_CACHE_TAG,
   FEATURED_ARTISTS_CACHE_TAG,
 } from '@frijolmagico/cache-tags'
@@ -56,6 +57,8 @@ export async function deleteArtistaAction(id: number): Promise<ActionState> {
     })
 
     updateTag(ARTIST_CACHE_TAG)
+    updateTag(CATALOG_BASE_CACHE_TAG)
+    void revalidateWebCache({ tag: CATALOG_BASE_CACHE_TAG })
     void revalidateWebCache({ tag: CATALOG_CACHE_TAG, path: '/catalogo' })
 
     if (wasFeatured) {

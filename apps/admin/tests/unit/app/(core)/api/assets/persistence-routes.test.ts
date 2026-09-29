@@ -112,14 +112,20 @@ describe('asset persistence routes', () => {
     expect(discardResponse.status).toBe(204)
   })
 
-  test('expires catalog and artist tags after a successful persistence response', async () => {
+  test('expires the base catalog and artist tags after a successful persistence response', async () => {
     const response = await persist(request('/api/assets/persist'))
 
     expect(response.status).toBe(200)
+    expect(revalidateTag).toHaveBeenCalledWith('catalogo:artistas:base', {
+      expire: 0
+    })
     expect(revalidateTag).toHaveBeenCalledWith('catalogo:artistas', {
       expire: 0
     })
     expect(revalidateTag).toHaveBeenCalledWith('artistas', { expire: 0 })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: 'catalogo:artistas:base'
+    })
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: 'catalogo:artistas'
     })
@@ -146,6 +152,9 @@ describe('asset persistence routes', () => {
       expect.any(Error)
     )
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: 'catalogo:artistas:base'
+    })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: 'catalogo:artistas'
     })
     console.error = originalError
@@ -165,6 +174,7 @@ describe('asset persistence routes', () => {
     const discardResponse = await discard(request('/api/assets/discard'))
 
     expect(persistResponse.status).toBe(400)
+    expect(revalidateTag).not.toHaveBeenCalled()
     expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
     await expect(persistResponse.json()).resolves.toEqual({
       error: 'INVALID_RECEIPT'

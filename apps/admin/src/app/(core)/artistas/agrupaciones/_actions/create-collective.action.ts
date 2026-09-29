@@ -6,7 +6,9 @@ import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import {
+  CATALOG_BASE_CACHE_TAG,
   CATALOG_CACHE_TAG,
+  CATALOG_PARTICIPATION_CACHE_TAG,
   COLLECTIVE_ACTIVE_CACHE_TAG,
   COLLECTIVE_CACHE_TAG
 } from '@frijolmagico/cache-tags'
@@ -42,6 +44,8 @@ export async function createCollectiveAction(
 
     updateTag(COLLECTIVE_CACHE_TAG)
     updateTag(COLLECTIVE_ACTIVE_CACHE_TAG)
+    void revalidateWebCacheBestEffort({ tag: CATALOG_BASE_CACHE_TAG })
+    void revalidateWebCacheBestEffort({ tag: CATALOG_PARTICIPATION_CACHE_TAG })
     void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
 
     return { success: true }
