@@ -38,11 +38,10 @@ describe('ActivityItem', () => {
   test('shows the occurrence time and uses its URL for the eligible corner CTA', () => {
     jest.useFakeTimers()
     jest.setSystemTime(new Date('2026-09-05T16:30:00.000Z'))
-    const longArtistName =
-      'Artista con un nombre extraordinariamente extenso para esta tarjeta'
+    const artistName = 'Artista con un nombre extenso para esta tarjeta'
     const { container } = render(
       <ActivityItem
-        activity={{ ...baseActivity, participante_pseudonimo: longArtistName }}
+        activity={{ ...baseActivity, participante_pseudonimo: artistName }}
         isEditionPast={false}
       />
     )
@@ -51,20 +50,11 @@ describe('ActivityItem', () => {
     const registrationLink = screen.getByRole('link', { name: 'Inscríbete' })
     expect(registrationLink.getAttribute('href')).toBe('https://example.org/one')
     const article = container.querySelector('article')!
-    const ctaOffset = registrationLink.parentElement!
-    const artistHeader = article.querySelector(':scope > div.min-w-0')!
-    expect(ctaOffset.className).toContain('absolute')
-    expect(ctaOffset.className).toContain('-top-5')
-    expect(ctaOffset.className).toContain('-right-3')
-    expect(ctaOffset.className).toContain('z-30')
-    expect(registrationLink.className).toContain('pointer-events-auto')
-    expect(registrationLink.querySelector('[aria-hidden="true"]')?.className).toContain(
-      'translate-1'
+    expect(registrationLink.tagName).toBe('A')
+    expect(screen.getByRole('link', { name: `Ver perfil de ${artistName}` }).getAttribute('href')).toBe(
+      '/catalogo/artista'
     )
-    expect(artistHeader.className).toContain('pr-28')
-    expect(screen.getByRole('link', { name: `Ver perfil de ${longArtistName}` }).className).toContain(
-      'break-words'
-    )
+    expect(article.querySelector('h3')?.textContent).toBe('Taller')
     expect(article.textContent).not.toContain('Inscripciones abiertas hasta el')
     expect(container.textContent).not.toContain('Inscripciones abiertas hasta el')
     expect(container.textContent).not.toContain('2026-09-05')
@@ -99,9 +89,8 @@ describe('ActivityItem', () => {
     expect(container.textContent).not.toContain('Detalles')
     expect(details.open).toBe(false)
     const disclosureContent = details.querySelector('[data-disclosure-content]')!
-    expect(disclosureContent.className).toContain('z-20')
-    expect(disclosureContent.className).toContain('pointer-events-none')
-    expect(disclosureContent.className).toContain('[&>*]:pointer-events-auto')
+    expect(disclosureContent.hasAttribute('data-disclosure-content')).toBe(true)
+    expect(disclosureContent.textContent).toContain('Aprende técnicas')
     expect(disclosureContent.textContent).not.toContain('Sala A')
     expect(disclosureContent.querySelector('svg')).toBeNull()
     expect(details.textContent).toContain('Aprende técnicas')
@@ -200,18 +189,11 @@ describe('ActivityItem', () => {
     const article = container.querySelector('article')!
 
     expect(badge.tagName).toBe('SPAN')
-    expect(badge.className).toContain('rounded-full')
-    expect(badge.className).toContain('absolute')
-    expect(badge.className).toContain('-top-2')
-    expect(badge.className).toContain('-left-2')
-    expect(badge.className).toContain('bg-palette-accent/15')
-    expect(badge.className).toContain('text-palette-foreground')
-    expect(badge.className).toContain('border-palette-accent/40')
+    expect(badge.textContent).toBe('Música')
     expect(badge.parentElement).toBe(article)
     expect(article.querySelector('h3')?.textContent).toBe('Taller')
-    expect(article.querySelector(':scope > div.min-w-0')?.className).toContain('pt-6')
-    expect(article.className).toContain('w-full')
-    expect(article.className).not.toContain('max-w-')
+    expect(article.querySelector(':scope > div.min-w-0')).not.toBeNull()
+    expect(article.querySelector('button')).toBeNull()
   })
 
   test('places the type badge above the title for expandable and static cards', () => {
@@ -223,16 +205,13 @@ describe('ActivityItem', () => {
         />
       )
       const article = container.querySelector('article')!
-      const badge = article.querySelector(':scope > span.rounded-full')!
+      const badge = article.querySelector(':scope > span')!
       const title = article.querySelector('h3')!
 
       expect(badge.textContent).toBe('Charla')
-      expect(badge.className).toContain('bg-palette-secondary/15')
-      expect(badge.className).toContain('border-palette-secondary/40')
-      expect(badge.className).toContain('text-palette-foreground')
       expect(badge.parentElement).toBe(article)
       expect(badge.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-      expect(article.querySelector(':scope > div.min-w-0')?.className).toContain('pt-6')
+      expect(article.querySelector(':scope > div.min-w-0')).not.toBeNull()
       unmount()
     }
   })

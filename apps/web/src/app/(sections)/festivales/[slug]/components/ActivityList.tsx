@@ -6,9 +6,9 @@ import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 import { ActivityItem } from './ActivityItem'
-import { buildFestivalSchedule } from './festival-schedule'
+import { buildFestivalSchedule } from '../lib/festival-schedule'
 
-import type { FestivalScheduleEntry } from './festival-schedule'
+import type { FestivalScheduleEntry } from '../lib/festival-schedule'
 import type { FestivalActivity } from '../../types/festival'
 
 interface ActivityListProps {

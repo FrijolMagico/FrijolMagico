@@ -1,0 +1,13 @@
+# Festival detail module boundaries
+
+Objective: Move existing non-visual festival detail helpers and its CTA hook out of `[slug]/components/` into existing section-local `[slug]/lib/` and `[slug]/hooks/` without altering runtime behavior, public exports, presentation, schedule semantics or registration.
+
+Authority: User approved refactor after read-only architecture audit. Preserve pre-existing user edits: do not rewrite `AGENTS.md`, `apps/web/src/app/(sections)/festivales/[slug]/components/ActivityItem.tsx` styling or `apps/web/src/components/badge.tsx` styling/API. For `ActivityItem.tsx` refactor touched only the moved time-helper import. After the user selected test-only updates for those styles, the user explicitly authorized a combined commit including their ActivityItem/Badge styling and updated presentation tests along with the refactor; root AGENTS.md remains excluded. No unrelated cleanup or cross-project deduplication without exact semantic equivalence.
+
+Baseline: `feat/festival-schedule-ui`; target pattern per `apps/web/AGENTS.md` is UI under components, pure section-local logic under on-demand lib, UI hook under hooks. `activity-description.tsx` and `activity-registration-affordance.tsx` remain UI. No evidence that global date helpers or formatters match the domain-specific contracts. Existing source tests migrate with their modules. Next.js client boundaries and no direct new useEffect remain unchanged.
+
+TDD: no strict mode selected in existing timeline task; ordinary functional checks. Exact runner: `bun run test --filter=@frijolmagico/web`. Work unit: one cohesive move with tests, imports, type-check/lint; commit on feature branch. Browser check N/A because no UI behavior/style changes. No push or PR.
+
+## Tasks
+
+- [~] T1. Relocate `activity-artist-contact`, `activity-registration-time`, `festival-schedule` and tests to `[slug]/lib/`; relocate `use-activity-registration` and test to `[slug]/hooks/`; update direct imports; combine user-authorized existing ActivityItem/Badge design edits with test-only updates in one commit. Independent verifier confirmed moved files unchanged except imports; tests 223 passed, type-check passed, lint passed with 3 unrelated warnings, `git diff --check` passed. Risk: artist name may overlap offset registration CTA in visual layout; browser geometry not checked and no style correction authorized. Runtime harness N/A because refactor only relocates modules, while user styling remains to be browser-checked separately. Rollback boundary: relocated modules/consumer import paths plus user-approved ActivityItem/Badge styling and matching presentation tests, excluding root AGENTS.md. Commit: pending identity.

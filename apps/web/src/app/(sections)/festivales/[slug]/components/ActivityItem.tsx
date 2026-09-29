@@ -5,9 +5,10 @@ import { Badge } from '@/components/badge'
 import { ActivityRegistrationCta } from './activity-registration-affordance'
 import { ActivityDescription } from './activity-description'
 import { ActivityArtistLink } from './ActivityArtistLink'
-import { formatOccurrenceTimeRange } from './activity-registration-time'
+import { formatOccurrenceTimeRange } from '../lib/activity-registration-time'
 
 import type { FestivalActivity } from '../../types/festival'
+import { cn } from '@/utils/cn'
 
 interface ActivityItemProps {
   activity: FestivalActivity
@@ -28,9 +29,9 @@ const hasDescription = (description: string | null) =>
   )
 
 const getBadgeClassName = (type: string) => {
-  if (type === 'charla') return 'bg-palette-secondary/15 border-palette-secondary/40'
-  if (type === 'musica') return 'bg-palette-accent/15 border-palette-accent/40'
-  return 'bg-palette-primary/10 border-palette-primary/40'
+  if (type === 'charla') return 'outline-palette-primary'
+  if (type === 'musica') return 'outline-palette-secondary'
+  return 'outline-palette-accent text-palette-primary'
 }
 
 export const ActivityItem = ({ activity, badge }: ActivityItemProps) => {
@@ -48,7 +49,9 @@ export const ActivityItem = ({ activity, badge }: ActivityItemProps) => {
       <div className='bg-palette-primary absolute -z-10 size-full translate-x-1.5 translate-y-1.5 rounded-lg duration-300 group-hover:translate-0' />
 
       {badge && (
-        <Badge variant='activity-type' className={getBadgeClassName(activity.tipo)}>
+        <Badge
+          className={cn(getBadgeClassName(activity.tipo), '-top-3 left-4')}
+        >
           {badge}
         </Badge>
       )}
@@ -62,18 +65,14 @@ export const ActivityItem = ({ activity, badge }: ActivityItemProps) => {
         </div>
       )}
 
-      <div
-        className={`relative z-20 min-w-0 break-words px-4 ${badge ? 'pt-6' : 'pt-3'} ${
-          activity.registration && occurrence ? 'pr-28' : ''
-        }`}
-      >
+      <div className='relative z-20 min-w-0 px-4'>
         <ActivityArtistLink
           pseudonym={activity.participante_pseudonimo}
           catalogSlug={activity.catalogo_slug}
           avatarUrl={activity.avatar_url}
           rrss={activity.rrss}
           email={activity.correo}
-          className='max-w-full break-words text-palette-primary/70 text-sm'
+          className='text-palette-primary/70 wrap-break-words max-w-full pt-6 pb-2 text-sm'
         />
         {activity.tipo === 'charla' && activity.presenter_nombre && (
           <p className='mt-1 text-palette-primary/70 text-sm'>
@@ -89,11 +88,11 @@ export const ActivityItem = ({ activity, badge }: ActivityItemProps) => {
 
       {details ? (
         <details className='group/details'>
-          <summary className="before:content-[''] before:absolute before:inset-0 before:z-10 before:cursor-pointer flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-3 text-left marker:content-none">
+          <summary className="flex w-full cursor-pointer items-center justify-between gap-3 px-4 pb-4 text-left marker:content-none before:absolute before:inset-0 before:z-10 before:cursor-pointer before:content-['']">
             <div className='min-w-0 flex-1'>
               <div>
                 {activity.titulo && (
-                  <h3 className='text-palette-foreground text-base leading-none font-semibold'>
+                  <h3 className='text-palette-foreground text-base leading-tight font-bold'>
                     {activity.titulo}
                   </h3>
                 )}
@@ -103,12 +102,12 @@ export const ActivityItem = ({ activity, badge }: ActivityItemProps) => {
                   className={`${activity.titulo ? 'mt-2' : 'mt-1'} space-y-0.5 leading-tight`}
                 >
                   {timeRange && (
-                    <p className='text-palette-foreground/70 leading-tight text-sm'>
+                    <p className='text-palette-foreground/70 text-sm leading-tight'>
                       {timeRange}
                     </p>
                   )}
                   {activity.ubicacion && (
-                    <p className='text-palette-foreground/60 leading-tight text-sm'>
+                    <p className='text-palette-foreground/60 text-sm leading-tight'>
                       {activity.ubicacion}
                     </p>
                   )}
@@ -122,7 +121,7 @@ export const ActivityItem = ({ activity, badge }: ActivityItemProps) => {
           </summary>
           <div
             data-disclosure-content
-            className='relative z-20 pointer-events-none [&>*]:pointer-events-auto border-palette-primary/20 h-full overflow-hidden border-t px-4 pt-3 pb-4'
+            className='border-palette-primary/20 pointer-events-none relative z-20 h-full overflow-hidden border-t px-4 pt-3 pb-4 *:pointer-events-auto'
           >
             <ActivityDescription description={activity.descripcion} />
           </div>
@@ -141,12 +140,12 @@ export const ActivityItem = ({ activity, badge }: ActivityItemProps) => {
               className={`${activity.titulo ? 'mt-2' : 'mt-1'} space-y-0.5 leading-tight`}
             >
               {timeRange && (
-                <p className='text-palette-foreground/70 leading-tight text-sm'>
+                <p className='text-palette-foreground/70 text-sm leading-tight'>
                   {timeRange}
                 </p>
               )}
               {activity.ubicacion && (
-                <p className='text-palette-foreground/60 leading-tight text-sm'>
+                <p className='text-palette-foreground/60 text-sm leading-tight'>
                   {activity.ubicacion}
                 </p>
               )}

@@ -100,19 +100,13 @@ describe('ActivityList', () => {
 
     expect(container.querySelectorAll('article')).toHaveLength(3)
     expect(screen.getByText('19:00hrs a 20:00hrs')).toBeDefined()
-    expect(screen.getAllByText('Música').some((element) => element.tagName === 'SPAN')).toBe(true)
-    const badges = Array.from(container.querySelectorAll('article > span.rounded-full'))
+    const badges = Array.from(container.querySelectorAll('article > span'))
     expect(badges).toHaveLength(3)
     expect(badges.map((badge) => badge.textContent)).toEqual(['Charla', 'Taller', 'Música'])
-    expect(badges.map((badge) => badge.className)).toEqual([
-      expect.stringContaining('bg-palette-secondary/15'),
-      expect.stringContaining('bg-palette-primary/10'),
-      expect.stringContaining('bg-palette-accent/15')
-    ])
-    expect(badges.every((badge) => badge.className.includes('text-palette-foreground'))).toBe(true)
     expect(badges.every((badge) => badge.parentElement?.tagName === 'ARTICLE')).toBe(true)
-    expect(badges.every((badge) => badge.className.includes('-top-2') && badge.className.includes('-left-2'))).toBe(true)
-    expect(container.querySelectorAll('article h3 + span.rounded-full')).toHaveLength(0)
+    expect(badges.every((badge) => !badge.hasAttribute('role'))).toBe(true)
+    expect(badges.every((badge) => !badge.hasAttribute('tabindex'))).toBe(true)
+    expect(container.querySelectorAll('article h3 + span')).toHaveLength(0)
     const scroller = container.querySelector('[data-schedule-scroll-region]')!
     expect(scroller.getAttribute('tabindex')).toBe('0')
     expect(scroller.getAttribute('aria-label')).toContain('Cronograma')
@@ -296,7 +290,7 @@ describe('ActivityList', () => {
     expect(screen.getByText('Sin hora')).toBeDefined()
     expect(screen.getByText('Actividades sin fecha')).toBeDefined()
     expect(screen.getByText('Sin fecha')).toBeDefined()
-    expect(Array.from(container.querySelectorAll('article span.rounded-full')).map((badge) => badge.textContent)).toEqual([
+    expect(Array.from(container.querySelectorAll('article > span')).map((badge) => badge.textContent)).toEqual([
       'Taller',
       'Charla'
     ])

@@ -3,7 +3,7 @@ import { ArrowRightIcon, ExternalLinkIcon, MailIcon } from 'lucide-react'
 
 import { CatalogAvatarFollower } from '@/components/CatalogAvatarFollower'
 
-import { getActivityArtistContact } from './activity-artist-contact'
+import { getActivityArtistContact } from '../lib/activity-artist-contact'
 
 interface ActivityArtistLinkProps {
   pseudonym: string | null
