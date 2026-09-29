@@ -192,10 +192,43 @@ describe('ActivityItem', () => {
     expect(screen.queryByText('No corresponde')).toBeNull()
   })
 
-  test('renders an optional music badge in the shared activity card', () => {
-    render(<ActivityItem activity={{ ...baseActivity, tipo: 'musica' }} badge='Música' />)
-    expect(screen.getByText('Música').tagName).toBe('SPAN')
-    expect(screen.getByText('Música').className).toContain('rounded-full')
+  test('renders a readable type badge and lets the card fill its proportional grid column', () => {
+    const { container } = render(
+      <ActivityItem activity={{ ...baseActivity, tipo: 'musica' }} badge='Música' />
+    )
+    const badge = screen.getByText('Música')
+    const article = container.querySelector('article')!
+
+    expect(badge.tagName).toBe('SPAN')
+    expect(badge.className).toContain('rounded-full')
+    expect(badge.className).toContain('bg-palette-accent/15')
+    expect(badge.className).toContain('text-palette-foreground')
+    expect(badge.className).toContain('border-palette-accent/40')
+    expect(badge.nextElementSibling?.tagName).toBe('H3')
+    expect(article.className).toContain('w-full')
+    expect(article.className).not.toContain('max-w-')
+  })
+
+  test('places the type badge above the title for expandable and static cards', () => {
+    for (const descripcion of [null, 'Descripción']) {
+      const { container, unmount } = render(
+        <ActivityItem
+          activity={{ ...baseActivity, descripcion, tipo: 'charla' }}
+          badge='Charla'
+        />
+      )
+      const article = container.querySelector('article')!
+      const badge = article.querySelector('span.rounded-full')!
+      const title = article.querySelector('h3')!
+
+      expect(badge.textContent).toBe('Charla')
+      expect(badge.className).toContain('bg-palette-secondary/15')
+      expect(badge.className).toContain('border-palette-secondary/40')
+      expect(badge.className).toContain('text-palette-foreground')
+      expect(badge.parentElement).toBe(title.parentElement)
+      expect(badge.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      unmount()
+    }
   })
 
   test('keeps the artist link independent of the native disclosure control', () => {

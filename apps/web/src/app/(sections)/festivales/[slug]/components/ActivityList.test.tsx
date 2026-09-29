@@ -58,8 +58,12 @@ describe('ActivityList', () => {
     expect(container.querySelectorAll('article')).toHaveLength(2)
     expect(
       container.querySelectorAll('section[aria-label^="Actividades del"] > h3')
-    ).toHaveLength(1)
-    expect(screen.getAllByText('Taller')).toHaveLength(2)
+    ).toHaveLength(0)
+    expect(container.querySelectorAll('article h3')).toHaveLength(2)
+    expect(Array.from(container.querySelectorAll('article h3')).map((title) => title.textContent)).toEqual([
+      'Taller',
+      'Taller'
+    ])
     expect(screen.getByText('09:00hrs a 10:00hrs')).toBeDefined()
     expect(screen.getByText('12:00hrs a 13:00hrs')).toBeDefined()
     expect(
@@ -68,7 +72,7 @@ describe('ActivityList', () => {
     expect(container.textContent).not.toContain('2026-10-03')
     expect(container.textContent).not.toContain('2026-10-04')
 
-    fireEvent.click(screen.getByRole('button', { name: '4 oct' }))
+    fireEvent.click(screen.getByRole('button', { name: '4 Octubre' }))
     expect(container.querySelectorAll('article')).toHaveLength(1)
     expect(screen.getByText('10:00hrs a 11:00hrs')).toBeDefined()
     expect(container.querySelector('a')?.getAttribute('href')).toBe('https://example.org/three')
@@ -97,13 +101,27 @@ describe('ActivityList', () => {
     expect(container.querySelectorAll('article')).toHaveLength(3)
     expect(screen.getByText('19:00hrs a 20:00hrs')).toBeDefined()
     expect(screen.getAllByText('Música').some((element) => element.tagName === 'SPAN')).toBe(true)
+    const badges = Array.from(container.querySelectorAll('article span.rounded-full'))
+    expect(badges).toHaveLength(3)
+    expect(badges.map((badge) => badge.textContent)).toEqual(['Charla', 'Taller', 'Música'])
+    expect(badges.map((badge) => badge.className)).toEqual([
+      expect.stringContaining('bg-palette-secondary/15'),
+      expect.stringContaining('bg-palette-primary/10'),
+      expect.stringContaining('bg-palette-accent/15')
+    ])
+    expect(badges.every((badge) => badge.className.includes('text-palette-foreground'))).toBe(true)
+    expect(badges.every((badge) => badge.nextElementSibling?.tagName === 'H3')).toBe(true)
     const scroller = container.querySelector('[data-schedule-scroll-region]')!
     expect(scroller.getAttribute('tabindex')).toBe('0')
     expect(scroller.getAttribute('aria-label')).toContain('Cronograma')
     expect(scroller.className).toContain('overflow-y-auto')
     expect(scroller.contains(screen.getByRole('button', { name: 'Talleres' }))).toBe(false)
+    const heading = screen.getByRole('heading', { name: 'Actividades - 3' })
+    expect(heading.className).toContain('text-4xl')
+    expect(heading.className).toContain('md:text-5xl')
+    expect(heading.className).toContain('font-black')
     expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual([
-      '3 oct',
+      '3 Octubre',
       'Todos',
       'Talleres',
       'Charlas',
@@ -137,6 +155,10 @@ describe('ActivityList', () => {
     ])
     expect(rows.map((row) => row.getAttribute('data-column-count'))).toEqual(['3', '1', '2'])
     expect(rows.map((row) => row.querySelectorAll('article').length)).toEqual([3, 1, 2])
+    const cardGrids = rows.map((row) => row.querySelector<HTMLElement>(':scope > div:last-child')!)
+    expect(cardGrids.map((grid) => grid.style.getPropertyValue('--schedule-columns'))).toEqual(['3', '2', '2'])
+    expect(cardGrids.every((grid) => !grid.style.maxWidth)).toBe(true)
+    expect(cardGrids[0].className).toContain('[&:has(details[open])]:items-start')
     expect(rows[0].getAttribute('aria-label')).toBe('11:00 a 12:00')
     expect(rows[1].getAttribute('aria-label')).toBe('11:30 a 12:30')
     expect(container.querySelectorAll('[data-timeline-time]')).toHaveLength(3)
@@ -195,6 +217,33 @@ describe('ActivityList', () => {
     expect(timelineMarksBefore).toEqual(['10:00', '11:00'])
   })
 
+  test('lets a disclosure grow while a closed sibling in its row keeps its natural size', () => {
+    const date = '2026-10-03'
+    const { container } = render(
+      <ActivityList
+        actividades={[
+          {
+            ...makeActivity('Expandable', 'taller', [occurrence(1, date)]),
+            descripcion: 'Expanded content'
+          },
+          makeActivity('Closed sibling', 'charla', [occurrence(2, date)])
+        ]}
+        isEditionPast={false}
+      />
+    )
+
+    const grid = container.querySelector('[data-schedule-row] > div:last-child')!
+    const [expandable, sibling] = Array.from(grid.querySelectorAll('article'))
+    const details = expandable.querySelector('details')!
+
+    expect(grid.className).toContain('[&:has(details[open])]:items-start')
+    expect(details.open).toBe(false)
+    fireEvent.click(details.querySelector('summary')!)
+    expect(details.open).toBe(true)
+    expect(sibling.querySelector('details')).toBeNull()
+    expect(grid.className).toContain('[&:has(details[open])]:items-start')
+  })
+
   test('filters by type and changes the selected day', () => {
     const { container } = render(
       <ActivityList
@@ -213,8 +262,9 @@ describe('ActivityList', () => {
     expect(screen.queryByText('Primer día')).toBeNull()
     expect(container.querySelectorAll('[data-schedule-row]')).toHaveLength(0)
     scroller.scrollTop = 120
-    fireEvent.click(screen.getByRole('button', { name: '4 oct' }))
+    fireEvent.click(screen.getByRole('button', { name: '4 Octubre' }))
     expect(scroller.scrollTop).toBe(0)
+    expect(screen.getByRole('heading', { name: 'Actividades - 4' })).toBeDefined()
     expect(screen.getByText('Segundo día')).toBeDefined()
     expect(screen.queryByText('Primer día')).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Talleres' }))
@@ -235,6 +285,10 @@ describe('ActivityList', () => {
     expect(screen.getByText('Sin hora')).toBeDefined()
     expect(screen.getByText('Actividades sin fecha')).toBeDefined()
     expect(screen.getByText('Sin fecha')).toBeDefined()
+    expect(Array.from(container.querySelectorAll('article span.rounded-full')).map((badge) => badge.textContent)).toEqual([
+      'Taller',
+      'Charla'
+    ])
     expect(container.querySelector('section[aria-label="Actividades del 2026-10-03"]')).not.toBeNull()
     unmount()
     render(<ActivityList actividades={activities} isEditionPast />)

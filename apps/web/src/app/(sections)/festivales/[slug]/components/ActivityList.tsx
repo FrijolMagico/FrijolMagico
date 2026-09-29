@@ -39,6 +39,13 @@ function formatMinutes(minutes: number) {
   return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`
 }
 
+function getActivityTypeBadge(type: string) {
+  if (type === 'taller') return 'Taller'
+  if (type === 'charla') return 'Charla'
+  if (type === 'musica') return 'Música'
+  return type
+}
+
 export const ActivityList = ({ actividades, isEditionPast }: ActivityListProps) => {
   const schedule = buildFestivalSchedule(actividades, isEditionPast)
   const [selectedDate, setSelectedDate] = useState(schedule.days[0]?.date ?? '')
@@ -71,14 +78,14 @@ export const ActivityList = ({ actividades, isEditionPast }: ActivityListProps) 
 
   return (
     <section aria-labelledby='festival-activities-heading'>
-      <h2
-        id='festival-activities-heading'
-        className='text-palette-primary mb-5 w-full text-center text-4xl font-bold md:text-start'
-      >
-        Actividades
-      </h2>
+      <div className='mb-5 flex flex-wrap items-center gap-3'>
+        <h2
+          id='festival-activities-heading'
+          className='text-palette-primary text-4xl font-black md:text-5xl'
+        >
+          <span>Actividades</span>{selectedDay && ` - ${format(new Date(`${selectedDay.date}T00:00:00`), 'd', { locale: es })}`}
+        </h2>
 
-      <div className='mb-4 flex flex-wrap items-center justify-between gap-4'>
         {schedule.days.length > 0 && (
           <nav aria-label='Días del cronograma' className='flex flex-wrap gap-2'>
             {schedule.days.map(({ date }) => (
@@ -89,13 +96,13 @@ export const ActivityList = ({ actividades, isEditionPast }: ActivityListProps) 
                 onClick={() => selectDate(date)}
                 className={`rounded-full border px-4 py-2 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 ${selectedDate === date ? 'border-palette-primary bg-palette-primary text-palette-background' : 'border-palette-primary/30 text-palette-foreground'}`}
               >
-                {format(new Date(`${date}T00:00:00`), 'd MMM', { locale: es })}
+                {`${format(new Date(`${date}T00:00:00`), 'd', { locale: es })} ${format(new Date(`${date}T00:00:00`), 'MMMM', { locale: es }).replace(/^\p{Ll}/u, (letter) => letter.toLocaleUpperCase('es'))}`}
               </button>
             ))}
           </nav>
         )}
 
-        <div role='group' aria-label='Filtrar actividades por tipo' className='flex flex-wrap items-center gap-2'>
+        <div role='group' aria-label='Filtrar actividades por tipo' className='ml-auto flex flex-wrap items-center gap-2'>
           {TYPE_FILTERS.map(({ value, label }) => {
             const active = selectedType === value
             return (
@@ -127,10 +134,7 @@ export const ActivityList = ({ actividades, isEditionPast }: ActivityListProps) 
       >
         {selectedDay && (
           <section aria-label={`Actividades del ${selectedDay.date}`}>
-            <h3 className='text-palette-accent mb-4 font-mono text-xl font-bold'>
-              {format(new Date(`${selectedDay.date}T00:00:00`), 'd MMMM yyyy', { locale: es })}
-            </h3>
-            <ol className="relative space-y-3 before:absolute before:bottom-0 before:left-[4.25rem] before:top-0 before:w-px before:bg-palette-primary/30 before:content-['']">
+            <ol className="relative space-y-6 before:absolute before:bottom-0 before:left-[4.25rem] before:top-0 before:w-px before:bg-palette-primary/30 before:content-['']">
               {Array.from(rows, ([rowStart, row]) => {
                 const rowEnd = Math.max(...row.map((entry) => entry.endMinutes ?? entry.startMinutes))
                 const columnCount = row.length
@@ -147,7 +151,7 @@ export const ActivityList = ({ actividades, isEditionPast }: ActivityListProps) 
                       <time
                         data-timeline-time
                         dateTime={formatMinutes(rowStart)}
-                        className='text-palette-accent z-10 bg-palette-background px-1 font-mono text-xs font-semibold tabular-nums sm:text-sm'
+                        className='text-palette-accent z-10 bg-palette-background px-1 font-mono text-base font-bold tabular-nums sm:text-lg'
                       >
                         {formatMinutes(rowStart)}
                       </time>
@@ -158,18 +162,18 @@ export const ActivityList = ({ actividades, isEditionPast }: ActivityListProps) 
                       />
                     </div>
                     <div
-                      className='grid min-w-0 grid-cols-1 gap-3 md:[grid-template-columns:repeat(var(--schedule-columns),minmax(0,1fr))]'
-                      style={{ '--schedule-columns': columnCount } as CSSProperties}
+                      className='grid min-w-0 grid-cols-1 gap-3 md:[grid-template-columns:repeat(var(--schedule-columns),minmax(0,1fr))] [&:has(details[open])]:items-start'
+                      style={{ '--schedule-columns': Math.max(2, columnCount) } as CSSProperties}
                     >
                       {row.map((entry, index) => (
                         <div
                           key={`${entry.activityIndex}-${entry.occurrenceIndex}`}
-                          className='min-w-0 md:[grid-column:var(--schedule-column)]'
+                          className='flex min-w-0 md:[grid-column:var(--schedule-column)]'
                           style={{ '--schedule-column': index + 1 } as CSSProperties}
                         >
                           <ActivityItem
                             activity={{ ...entry.activity, ocurrencias: [entry.occurrence] }}
-                            badge={entry.activity.tipo === 'musica' ? 'Música' : undefined}
+                            badge={getActivityTypeBadge(entry.activity.tipo)}
                           />
                         </div>
                       ))}
@@ -191,7 +195,7 @@ export const ActivityList = ({ actividades, isEditionPast }: ActivityListProps) 
                 <li key={`${activityIndex}-${occurrenceIndex}`}>
                   <ActivityItem
                     activity={{ ...activity, ocurrencias: occurrence ? [occurrence] : [] }}
-                    badge={activity.tipo === 'musica' ? 'Música' : undefined}
+                    badge={getActivityTypeBadge(activity.tipo)}
                   />
                 </li>
               ))}
@@ -209,7 +213,7 @@ export const ActivityList = ({ actividades, isEditionPast }: ActivityListProps) 
                 <li key={`${activityIndex}-${occurrenceIndex ?? 'none'}`}>
                   <ActivityItem
                     activity={{ ...activity, ocurrencias: occurrence ? [occurrence] : [] }}
-                    badge={activity.tipo === 'musica' ? 'Música' : undefined}
+                    badge={getActivityTypeBadge(activity.tipo)}
                   />
                 </li>
               ))}

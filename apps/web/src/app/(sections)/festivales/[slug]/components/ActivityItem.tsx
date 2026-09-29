@@ -25,6 +25,12 @@ const hasDescription = (description: string | null) =>
       .trim()
   )
 
+const getBadgeClassName = (type: string) => {
+  if (type === 'charla') return 'bg-palette-secondary/15 border-palette-secondary/40'
+  if (type === 'musica') return 'bg-palette-accent/15 border-palette-accent/40'
+  return 'bg-palette-primary/10 border-palette-primary/40'
+}
+
 export const ActivityItem = ({ activity, badge }: ActivityItemProps) => {
   const details = hasDescription(activity.descripcion)
   const occurrence = activity.ocurrencias[0]
@@ -36,7 +42,7 @@ export const ActivityItem = ({ activity, badge }: ActivityItemProps) => {
     : null
 
   return (
-    <article className='bg-palette-background border-palette-primary group relative w-full min-w-0 max-w-none rounded-lg border'>
+    <article className='bg-palette-background border-palette-primary group relative w-full min-w-0 rounded-lg border'>
       <div className='bg-palette-primary absolute -z-10 size-full translate-x-1.5 translate-y-1.5 rounded-lg duration-300 group-hover:translate-0' />
 
       {activity.registration && occurrence && (
@@ -77,16 +83,18 @@ export const ActivityItem = ({ activity, badge }: ActivityItemProps) => {
         <details className='group/details'>
           <summary className="before:content-[''] before:absolute before:inset-0 before:z-10 before:cursor-pointer flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-3 text-left marker:content-none">
             <div className='min-w-0 flex-1'>
-              <div className='flex flex-wrap items-center gap-2'>
+              <div>
+                {badge && (
+                  <span
+                    className={`text-palette-foreground mb-2 inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${getBadgeClassName(activity.tipo)}`}
+                  >
+                    {badge}
+                  </span>
+                )}
                 {activity.titulo && (
                   <h3 className='text-palette-foreground text-base leading-none font-semibold'>
                     {activity.titulo}
                   </h3>
-                )}
-                {badge && (
-                  <span className='bg-palette-accent/15 text-palette-accent rounded-full px-2 py-0.5 text-xs font-semibold'>
-                    {badge}
-                  </span>
                 )}
               </div>
               {(timeRange || activity.ubicacion) && (
@@ -120,16 +128,18 @@ export const ActivityItem = ({ activity, badge }: ActivityItemProps) => {
         </details>
       ) : (
         <div className='px-4 py-3'>
-          <div className='flex flex-wrap items-center gap-2'>
+          <div>
+            {badge && (
+              <span
+                className={`text-palette-foreground mb-2 inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${getBadgeClassName(activity.tipo)}`}
+              >
+                {badge}
+              </span>
+            )}
             {activity.titulo && (
               <h3 className='text-palette-foreground text-base leading-none font-semibold'>
                 {activity.titulo}
               </h3>
-            )}
-            {badge && (
-              <span className='bg-palette-accent/15 text-palette-accent rounded-full px-2 py-0.5 text-xs font-semibold'>
-                {badge}
-              </span>
             )}
           </div>
           {(timeRange || activity.ubicacion) && (
