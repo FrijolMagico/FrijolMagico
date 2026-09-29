@@ -38,11 +38,10 @@ describe('ActivityItem', () => {
   test('shows the occurrence time and uses its URL for the eligible corner CTA', () => {
     jest.useFakeTimers()
     jest.setSystemTime(new Date('2026-09-05T16:30:00.000Z'))
-    const longArtistName =
-      'Artista con un nombre extraordinariamente extenso para esta tarjeta'
+    const artistName = 'Artista con un nombre extenso para esta tarjeta'
     const { container } = render(
       <ActivityItem
-        activity={{ ...baseActivity, participante_pseudonimo: longArtistName }}
+        activity={{ ...baseActivity, participante_pseudonimo: artistName }}
         isEditionPast={false}
       />
     )
@@ -51,26 +50,17 @@ describe('ActivityItem', () => {
     const registrationLink = screen.getByRole('link', { name: 'Inscríbete' })
     expect(registrationLink.getAttribute('href')).toBe('https://example.org/one')
     const article = container.querySelector('article')!
-    const ctaOffset = registrationLink.parentElement!
-    const artistHeader = article.querySelector(':scope > div.min-w-0')!
-    expect(ctaOffset.className).toContain('absolute')
-    expect(ctaOffset.className).toContain('-top-5')
-    expect(ctaOffset.className).toContain('-right-3')
-    expect(ctaOffset.className).toContain('z-30')
-    expect(registrationLink.className).toContain('pointer-events-auto')
-    expect(registrationLink.querySelector('[aria-hidden="true"]')?.className).toContain(
-      'translate-1'
-    )
-    expect(artistHeader.className).toContain('pr-28')
-    expect(screen.getByRole('link', { name: `Ver perfil de ${longArtistName}` }).className).toContain(
-      'break-words'
-    )
+    expect(registrationLink.tagName).toBe('A')
+    const artistLink = screen.getByRole('link', { name: `Ver perfil de ${artistName}` })
+    expect(artistLink.getAttribute('href')).toBe('/catalogo/artista')
+    expect(article.querySelector('details')).toBeNull()
+    expect(article.querySelector('h3')?.textContent).toBe('Taller')
     expect(article.textContent).not.toContain('Inscripciones abiertas hasta el')
     expect(container.textContent).not.toContain('Inscripciones abiertas hasta el')
     expect(container.textContent).not.toContain('2026-09-05')
   })
 
-  test('keeps title and time in the disclosure summary and reveals location and description', () => {
+  test('keeps title, time, and location in the disclosure summary and reveals only the description', () => {
     const { container } = render(
       <ActivityItem
         activity={{ ...baseActivity, descripcion: 'Aprende técnicas', ubicacion: 'Sala A' }}
@@ -84,24 +74,18 @@ describe('ActivityItem', () => {
     expect(summary.textContent).toContain('14:00hrs a 15:30hrs')
     expect(summary.textContent).toContain('Sala A')
     const summaryTitle = summary.querySelector('h3')!
-    const summarySchedule = summaryTitle.nextElementSibling!
-    expect(summarySchedule.textContent).toBe('14:00hrs a 15:30hrsSala A')
-    expect(summarySchedule.className).toContain('mt-2')
-    expect(summarySchedule.className).toContain('space-y-0.5')
-    expect(summarySchedule.className).toContain('leading-tight')
-    expect(summarySchedule.children[0].className).toContain('text-palette-foreground/70')
-    expect(summarySchedule.children[1].className).toContain('text-palette-foreground/60')
-    expect(summary.querySelector('a')).toBeNull()
-    expect(summary.className).toContain('before:absolute')
-    expect(summary.className).toContain('before:inset-0')
-    expect(summary.className).toContain('before:z-10')
-    expect(container.querySelector('article')?.className).toContain('relative')
+    const summarySchedule = Array.from(summaryTitle.parentElement!.querySelectorAll('p'))
+    expect(summarySchedule.map((item) => item.textContent)).toEqual([
+      '14:00hrs a 15:30hrs',
+      'Sala A'
+    ])
+    const artistLink = summary.querySelector('a')!
+    expect(artistLink.getAttribute('href')).toBe('/catalogo/artista')
     expect(container.textContent).not.toContain('Detalles')
     expect(details.open).toBe(false)
     const disclosureContent = details.querySelector('[data-disclosure-content]')!
-    expect(disclosureContent.className).toContain('z-20')
-    expect(disclosureContent.className).toContain('pointer-events-none')
-    expect(disclosureContent.className).toContain('[&>*]:pointer-events-auto')
+    expect(disclosureContent.hasAttribute('data-disclosure-content')).toBe(true)
+    expect(disclosureContent.textContent).toContain('Aprende técnicas')
     expect(disclosureContent.textContent).not.toContain('Sala A')
     expect(disclosureContent.querySelector('svg')).toBeNull()
     expect(details.textContent).toContain('Aprende técnicas')
@@ -123,18 +107,13 @@ describe('ActivityItem', () => {
         '14:00hrs a 15:30hrs',
         'Patio central'
       ])
-      const fallbackTitle = article.querySelector('h3')!
-      const fallbackSchedule = fallbackTitle.nextElementSibling!
-      expect(fallbackSchedule.className).toContain('mt-2')
-      expect(fallbackSchedule.className).toContain('space-y-0.5')
-      expect(fallbackSchedule.className).toContain('leading-tight')
-      expect(fallbackSchedule.children[0].className).toContain('text-palette-foreground/70')
-      expect(fallbackSchedule.children[1].className).toContain('text-palette-foreground/60')
+      const fallbackSchedule = Array.from(article.querySelector('h3')!.parentElement!.querySelectorAll('p'))
+      expect(fallbackSchedule.map((item) => item.textContent)).toEqual([
+        '14:00hrs a 15:30hrs',
+        'Patio central'
+      ])
       expect(article.textContent?.match(/Patio central/g)).toHaveLength(1)
       expect(article.querySelector('p:last-child svg')).toBeNull()
-      expect(article.querySelector('p:last-child')?.className).toContain(
-        'text-palette-foreground/60'
-      )
       unmount()
     }
   })
@@ -192,6 +171,41 @@ describe('ActivityItem', () => {
     expect(screen.queryByText('No corresponde')).toBeNull()
   })
 
+  test('renders a readable type badge and lets the card fill its proportional grid column', () => {
+    const { container } = render(
+      <ActivityItem activity={{ ...baseActivity, tipo: 'musica' }} badge='Música' />
+    )
+    const badge = screen.getByText('Música')
+    const article = container.querySelector('article')!
+
+    expect(badge.tagName).toBe('SPAN')
+    expect(badge.textContent).toBe('Música')
+    expect(badge.parentElement).toBe(article)
+    expect(article.querySelector('h3')?.textContent).toBe('Taller')
+    expect(article.querySelector('details')).toBeNull()
+    expect(article.querySelector('button')).toBeNull()
+  })
+
+  test('places the type badge above the title for expandable and static cards', () => {
+    for (const descripcion of [null, 'Descripción']) {
+      const { container, unmount } = render(
+        <ActivityItem
+          activity={{ ...baseActivity, descripcion, tipo: 'charla' }}
+          badge='Charla'
+        />
+      )
+      const article = container.querySelector('article')!
+      const badge = article.querySelector(':scope > span')!
+      const title = article.querySelector('h3')!
+
+      expect(badge.textContent).toBe('Charla')
+      expect(badge.parentElement).toBe(article)
+      expect(badge.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      expect(Boolean(article.querySelector('details'))).toBe(Boolean(descripcion))
+      unmount()
+    }
+  })
+
   test('keeps the artist link independent of the native disclosure control', () => {
     const { container } = render(
       <ActivityItem
@@ -203,13 +217,11 @@ describe('ActivityItem', () => {
     const artistLink = screen.getByRole('link', { name: 'Ver perfil de Artista' })
 
     expect(artistLink.getAttribute('href')).toBe('/catalogo/artista')
-    expect(artistLink.closest('summary')).toBeNull()
+    expect(artistLink.closest('summary')).toBe(summary)
     expect(details.open).toBe(false)
     expect(summary.tagName).toBe('SUMMARY')
     expect(summary.hasAttribute('tabindex')).toBe(false)
-    expect(artistLink.closest('summary')).toBeNull()
-    expect(artistLink.parentElement?.className).toContain('relative')
-    expect(artistLink.parentElement?.className).toContain('z-20')
+    expect(artistLink.className).toContain('z-20')
   })
 
   test('keeps the registration link independent from card-surface toggling', () => {

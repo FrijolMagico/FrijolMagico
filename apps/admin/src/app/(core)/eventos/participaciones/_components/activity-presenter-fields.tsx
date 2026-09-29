@@ -1,14 +1,16 @@
 'use client'
 
-import { Controller, useWatch, type UseFormReturn } from 'react-hook-form'
-import { Input } from '@/shared/components/ui/input'
+import { useId, useState } from 'react'
+import { useDebouncedCallback } from 'use-debounce'
+import { useWatch, type UseFormReturn } from 'react-hook-form'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/shared/components/ui/select'
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList
+} from '@/shared/components/ui/combobox'
 import {
   Field,
   FieldError,
@@ -24,115 +26,154 @@ interface ActivityPresenterFieldsProps {
   disabled?: boolean
 }
 
+interface PresenterOption {
+  id: string
+  artistId: number
+  pseudonymId: number
+  pseudonym: string
+}
+
+export function resolvePresenterText(value: string) {
+  const presenterNombre = value.trim()
+  return presenterNombre ? { type: 'free' as const, presenterNombre } : { type: 'none' as const }
+}
+
+export function classifyPresenterInputAction(reason: string): 'type' | 'clear' | 'ignore' {
+  if (reason === 'input-change') return 'type'
+  if (reason === 'clear-press') return 'clear'
+  return 'ignore'
+}
+
+export function applyPresenterOption(
+  methods: UseFormReturn<ActivityFormInput>,
+  option: Pick<PresenterOption, 'artistId' | 'pseudonymId'>,
+  cancelPending: () => void
+) {
+  cancelPending()
+  methods.setValue('detail', {
+    ...methods.getValues('detail'),
+    presenterNombre: '',
+    presenterArtistaId: option.artistId,
+    presenterPseudonimoId: option.pseudonymId
+  }, { shouldDirty: true, shouldValidate: true })
+}
+
 export function ActivityPresenterFields({
   methods,
   artistas,
   disabled = false
 }: ActivityPresenterFieldsProps) {
-  const mode = useWatch({ control: methods.control, name: 'detail.presenterMode' })
+  const inputId = useId()
+  const [draft, setDraft] = useState<string | null>(null)
+  const presenterNombre = useWatch({ control: methods.control, name: 'detail.presenterNombre' }) ?? ''
   const artistId = useWatch({ control: methods.control, name: 'detail.presenterArtistaId' })
-  const options = artistas.filter(
-    (artist) => artist.statusId !== ARTIST_STATUS.CANCELLED && artist.pseudonyms.length > 0
-  )
-  const pseudonyms = options.find((artist) => artist.id === artistId)?.pseudonyms ?? []
+  const pseudonymId = useWatch({ control: methods.control, name: 'detail.presenterPseudonimoId' })
   const errors = methods.formState.errors.detail
+  const options: PresenterOption[] = artistas
+    .filter((artist) => artist.statusId !== ARTIST_STATUS.CANCELLED)
+    .flatMap((artist) => artist.pseudonyms.map((pseudonym) => ({
+      id: String(pseudonym.id),
+      artistId: artist.id,
+      pseudonymId: pseudonym.id,
+      pseudonym: pseudonym.pseudonym
+    })))
+  const selectedOption = options.find(
+    (option) => option.artistId === artistId && option.pseudonymId === pseudonymId
+  )
+  const inputValue = draft ?? selectedOption?.pseudonym ?? presenterNombre
+  const presenterNombreError = errors?.presenterNombre?.message
+  const presenterArtistaIdError = errors?.presenterArtistaId?.message
+  const presenterPseudonimoIdError = errors?.presenterPseudonimoId?.message
+  const describedBy = [
+    presenterNombreError && `${inputId}-presenter-name-error`,
+    presenterArtistaIdError && `${inputId}-artist-error`,
+    presenterPseudonimoIdError && `${inputId}-pseudonym-error`
+  ].filter(Boolean).join(' ') || undefined
+
+  const setPresenter = (name: string, linkedArtistId: number | null, linkedPseudonymId: number | null) => {
+    methods.setValue('detail', {
+      ...methods.getValues('detail'),
+      presenterNombre: name,
+      presenterArtistaId: linkedArtistId,
+      presenterPseudonimoId: linkedPseudonymId
+    }, { shouldDirty: true, shouldValidate: true })
+  }
+
+  const updateFromText = (value: string) => {
+    const resolution = resolvePresenterText(value)
+    setPresenter(resolution.type === 'free' ? resolution.presenterNombre : '', null, null)
+  }
+
+  const resolveDebounced = useDebouncedCallback(updateFromText, 300)
+
+  const selectOption = (value: string | null) => {
+    const option = options.find((candidate) => candidate.id === value)
+    if (!option) return
+    setDraft(null)
+    applyPresenterOption(methods, option, () => resolveDebounced.cancel())
+  }
 
   return (
     <Field>
-      <FieldLabel>Presentador (opcional)</FieldLabel>
-      <Controller
-        name='detail.presenterMode'
-        control={methods.control}
-        render={({ field }) => (
-          <Select
-            value={field.value}
-            onValueChange={(value) => {
-              field.onChange(value)
-              methods.setValue('detail.presenterNombre', '', { shouldDirty: true, shouldValidate: true })
-              methods.setValue('detail.presenterArtistaId', null, { shouldDirty: true, shouldValidate: true })
-              methods.setValue('detail.presenterPseudonimoId', null, { shouldDirty: true, shouldValidate: true })
+      <FieldLabel htmlFor={inputId}>Presentador (opcional)</FieldLabel>
+      <Combobox
+        items={options.map((option) => option.id)}
+        value={selectedOption?.id ?? null}
+        inputValue={inputValue}
+        itemToStringLabel={(id) => options.find((option) => option.id === id)?.pseudonym ?? ''}
+        onValueChange={selectOption}
+        onInputValueChange={(value, { reason }) => {
+          const action = classifyPresenterInputAction(reason)
+          if (action === 'clear') {
+            resolveDebounced.cancel()
+            setDraft(null)
+            setPresenter('', null, null)
+          } else if (action === 'type') {
+            setDraft(value)
+            // Keep the form current for an immediate Save; normalization never controls the draft.
+            setPresenter(value, null, null)
+            resolveDebounced(value)
+          }
+        }}
+        filter={(id, query) =>
+          options.find((option) => option.id === id)?.pseudonym.toLowerCase().includes(query.trim().toLowerCase()) ?? false
+        }
+        disabled={disabled}
+      >
+        <ComboboxInput
+          id={inputId}
+          aria-label='Presentador (opcional)'
+          aria-invalid={describedBy ? true : undefined}
+          aria-describedby={describedBy}
+          placeholder='Buscar o escribir un presentador'
+          showClear
+          disabled={disabled}
+          onBlur={() => {
+            if (draft !== null) {
+              resolveDebounced.cancel()
+              updateFromText(draft)
+              setDraft(null)
+            }
+          }}
+        />
+        <ComboboxContent>
+          <ComboboxEmpty>No se encontraron pseudónimos</ComboboxEmpty>
+          <ComboboxList>
+            {(id: string) => {
+              const option = options.find((candidate) => candidate.id === id)
+              if (!option) return null
+              return (
+                <ComboboxItem key={id} value={id}>
+                  {option.pseudonym}
+                </ComboboxItem>
+              )
             }}
-            disabled={disabled}
-          >
-            <SelectTrigger aria-label='Tipo de presentador'>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value='none'>Sin presentador</SelectItem>
-              <SelectItem value='name'>Nombre libre</SelectItem>
-              <SelectItem value='artist'>Artista existente</SelectItem>
-            </SelectContent>
-          </Select>
-        )}
-      />
-
-      {mode === 'name' && (
-        <>
-          <Input
-            {...methods.register('detail.presenterNombre')}
-            aria-label='Nombre del presentador'
-            placeholder='Nombre de la persona'
-            disabled={disabled}
-          />
-          {errors?.presenterNombre?.message && <FieldError>{errors.presenterNombre.message}</FieldError>}
-        </>
-      )}
-
-      {mode === 'artist' && (
-        <>
-          <Controller
-            name='detail.presenterArtistaId'
-            control={methods.control}
-            render={({ field }) => (
-              <Select
-                value={field.value == null ? '' : String(field.value)}
-                onValueChange={(value) => {
-                  field.onChange(Number(value))
-                  methods.setValue('detail.presenterPseudonimoId', null, { shouldDirty: true, shouldValidate: true })
-                }}
-                disabled={disabled || options.length === 0}
-              >
-                <SelectTrigger aria-label='Artista presentador'>
-                  <SelectValue placeholder='Elegir artista'>
-                    {options.find((artist) => artist.id === field.value)?.pseudonym ?? 'Elegir artista'}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {options.map((artist) => (
-                    <SelectItem key={artist.id} value={String(artist.id)}>{artist.pseudonym}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-          <Controller
-            name='detail.presenterPseudonimoId'
-            control={methods.control}
-            render={({ field }) => (
-              <Select
-                value={field.value == null ? '' : String(field.value)}
-                onValueChange={(value) => field.onChange(Number(value))}
-                disabled={disabled || pseudonyms.length === 0}
-              >
-                <SelectTrigger aria-label='Pseudónimo del presentador'>
-                  <SelectValue placeholder='Elegir pseudónimo'>
-                    {pseudonyms.find((pseudonym) => pseudonym.id === field.value)?.pseudonym ?? 'Elegir pseudónimo'}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {pseudonyms.map((pseudonym) => (
-                    <SelectItem key={pseudonym.id} value={String(pseudonym.id)}>
-                      {pseudonym.pseudonym}{pseudonym.isPrimary ? ' (principal)' : ' (secundario)'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-          {errors?.presenterArtistaId?.message && <FieldError>{errors.presenterArtistaId.message}</FieldError>}
-          {errors?.presenterPseudonimoId?.message && <FieldError>{errors.presenterPseudonimoId.message}</FieldError>}
-        </>
-      )}
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
+      {presenterNombreError && <FieldError id={`${inputId}-presenter-name-error`}>{presenterNombreError}</FieldError>}
+      {presenterArtistaIdError && <FieldError id={`${inputId}-artist-error`}>{presenterArtistaIdError}</FieldError>}
+      {presenterPseudonimoIdError && <FieldError id={`${inputId}-pseudonym-error`}>{presenterPseudonimoIdError}</FieldError>}
     </Field>
   )
 }

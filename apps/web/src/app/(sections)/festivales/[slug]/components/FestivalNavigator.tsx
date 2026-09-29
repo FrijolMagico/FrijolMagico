@@ -20,12 +20,12 @@ const NavigatorCard = ({ festival, direction }: NavigatorCardProps) => {
   return (
     <Link
       href={href}
-      className='group border-palette-foreground bg-palette-primary relative rounded-lg border'
+      className='group border-palette-foreground bg-palette-primary relative w-full max-w-sm rounded-lg border'
     >
       {/* Backlight — same pattern as ActivityItem */}
       <div className='bg-foreground absolute -z-10 size-full translate-x-1.5 translate-y-1.5 rounded-lg transition-transform duration-300 group-hover:translate-x-0 group-hover:translate-y-0' />
 
-      <div className='flex items-center gap-3 p-4'>
+      <div className='flex items-center gap-4 p-4'>
         {isPrev && (
           <ArrowLeft
             className='text-palette-background size-5 shrink-0'
@@ -33,7 +33,7 @@ const NavigatorCard = ({ festival, direction }: NavigatorCardProps) => {
           />
         )}
 
-        <div className='min-w-0 flex-1'>
+        <div className='-mb-1 min-w-0 flex-1'>
           <p className='text-palette-background text-lg leading-none font-bold'>
             {festival.evento_nombre}{' '}
             <span className='text-palette-secondary'>
@@ -41,7 +41,7 @@ const NavigatorCard = ({ festival, direction }: NavigatorCardProps) => {
             </span>
           </p>
           {festival.edicion_nombre && (
-            <p className='text-palette-accent text-sm font-semibold'>
+            <p className='text-palette-accent text-sm'>
               {festival.edicion_nombre}
             </p>
           )}
@@ -72,14 +72,14 @@ export const FestivalNavigator = async ({ slug }: FestivalNavigatorProps) => {
 
   return (
     <nav
-      className='container mx-auto max-w-6xl'
+      className='container space-y-2'
       aria-label='Navegación entre ediciones'
     >
-      <h2 className='text-palette-primary mb-6 w-full text-center text-4xl font-bold md:text-start'>
+      <h2 className='text-palette-primary text-center text-4xl font-bold'>
         Otras ediciones
       </h2>
 
-      <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+      <div className='flex items-center justify-center gap-4'>
         {prev ? (
           <NavigatorCard festival={prev} direction='prev' />
         ) : (

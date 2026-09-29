@@ -651,7 +651,7 @@ VALUES (7, 4, '2017-04-23', '14:00', 50);
 --   - Posters: festivales/frijol-magico/{i|ii}/afiche-123456789.webp
 --   - Avatares: artistas/{slug}/avatar-123456789.webp (rotando los 15 existentes)
 --
--- La edición VII (Recolectando Semillas) queda como la edición ACTIVA:
+-- La edición TEST (Recolectando Semillas) queda como la edición ACTIVA:
 --   published = 1 y fechas futuras (2026-10-09/10) para que getActiveFestival()
 --   la seleccione.
 -- =============================================================================
@@ -1104,7 +1104,7 @@ VALUES (75, 80, 'a75', 0, 1, 'Creadora de contenido visual para redes, con enfoq
 -- =============================================================================
 -- EVENTO EDICIONES (III–VII) — 5 festivales nuevos
 -- Posters reutilizados del CDN dev (i / ii).
--- VII es la edición ACTIVA: published=1 y fechas futuras.
+-- TEST es la edición ACTIVA: published=1 y fechas futuras.
 -- =============================================================================
 INSERT INTO evento_edicion (id, evento_id, nombre, numero_edicion, slug, poster_url, poster_path, poster_version, published, created_at, updated_at)
 VALUES (3, 1, NULL, 'III', 'frijol-magico-iii', 'festivales/frijol-magico/i/afiche-123456789.webp', 'festivales/frijol-magico/i/afiche-123456789.webp', '123456789', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
@@ -1115,7 +1115,7 @@ VALUES (5, 1, 'I Aniversario', 'V', 'frijol-magico-v', 'festivales/frijol-magico
 INSERT INTO evento_edicion (id, evento_id, nombre, numero_edicion, slug, poster_url, poster_path, poster_version, published, created_at, updated_at)
 VALUES (6, 1, 'Descubriendo nuevas raíces', 'VI', 'frijol-magico-vi', 'festivales/frijol-magico/ii/afiche-123456789.webp', 'festivales/frijol-magico/ii/afiche-123456789.webp', '123456789', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
 INSERT INTO evento_edicion (id, evento_id, nombre, numero_edicion, slug, poster_url, poster_path, poster_version, published, created_at, updated_at)
-VALUES (7, 1, 'Recolectando Semillas', 'VII', 'frijol-magico-vii', 'festivales/frijol-magico/i/afiche-123456789.webp', 'festivales/frijol-magico/i/afiche-123456789.webp', '123456789', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
+VALUES (7, 1, 'Recolectando Semillas', 'TEST', 'frijol-magico-test', 'festivales/frijol-magico/i/afiche-123456789.webp', 'festivales/frijol-magico/i/afiche-123456789.webp', '123456789', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
 
 -- =============================================================================
 -- EVENTO EDICION DIAS
@@ -1275,9 +1275,9 @@ VALUES (37, 46, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (16, 46, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (16, 16, 'Diseño de personajes: del boceto al color', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 60, '17:00', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (16, 16, 'Diseño de personajes: del boceto al color', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 60, '12:30', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes, url)
-VALUES (14, 16, '2026-10-09', '17:00', 60, 'https://example.org/taller-activo-2026-10-09');
+VALUES (14, 16, '2026-10-09', '12:30', 60, 'https://example.org/taller-activo-2026-10-09');
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (47, 7, 2, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1285,9 +1285,9 @@ VALUES (38, 47, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (17, 47, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (17, 17, 'Acuarela sin miedo: texturas y transparencias', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 90, '18:30', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (17, 17, 'Acuarela sin miedo: texturas y transparencias', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 90, '11:00', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (15, 17, '2026-10-10', '18:30', 90);
+VALUES (15, 17, '2026-10-10', '11:00', 90);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (48, 7, 3, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1305,9 +1305,9 @@ VALUES (40, 49, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (19, 49, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (19, 19, 'Animación cuadro a cuadro con tu celular', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 60, '12:30', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (19, 19, 'Animación cuadro a cuadro con tu celular', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 60, '11:00', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (17, 19, '2026-10-10', '12:30', 60);
+VALUES (17, 19, '2026-10-10', '11:00', 60);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (50, 7, 5, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1315,9 +1315,9 @@ VALUES (41, 50, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (20, 50, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (20, 20, 'Pixel art para principiantes', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 90, '14:00', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (20, 20, 'Pixel art para principiantes', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 90, '15:00', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (18, 20, '2026-10-09', '14:00', 90);
+VALUES (18, 20, '2026-10-09', '15:00', 90);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (51, 7, 6, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1325,9 +1325,9 @@ VALUES (42, 51, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (21, 51, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (21, 21, 'Cómic autobiográfico: me acuerdo', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 120, '15:30', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (21, 21, 'Cómic autobiográfico: me acuerdo', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 120, '12:30', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (19, 21, '2026-10-10', '15:30', 120);
+VALUES (19, 21, '2026-10-10', '12:30', 120);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (52, 7, 7, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1335,9 +1335,9 @@ VALUES (43, 52, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (22, 52, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (22, 22, 'Encuadernación artesanal paso a paso', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 60, '17:00', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (22, 22, 'Encuadernación artesanal paso a paso', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 60, '15:00', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (20, 22, '2026-10-09', '17:00', 60);
+VALUES (20, 22, '2026-10-09', '15:00', 60);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (53, 7, 8, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1345,9 +1345,9 @@ VALUES (44, 53, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (23, 53, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (23, 23, 'Ilustración botánica del semidesierto', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 90, '18:30', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (23, 23, 'Ilustración botánica del semidesierto', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 90, '12:00', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (21, 23, '2026-10-10', '18:30', 90);
+VALUES (21, 23, '2026-10-10', '12:00', 90);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (54, 7, 9, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1355,9 +1355,9 @@ VALUES (45, 54, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (24, 54, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (24, 24, 'Narrativa visual en cuatro viñetas', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 120, '11:00', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (24, 24, 'Narrativa visual en cuatro viñetas', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 120, '13:00', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (22, 24, '2026-10-09', '11:00', 120);
+VALUES (22, 24, '2026-10-09', '13:00', 120);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (55, 7, 10, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1365,9 +1365,9 @@ VALUES (46, 55, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (25, 55, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (25, 25, 'Entintado con tinta china', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 60, '12:30', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (25, 25, 'Entintado con tinta china', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 60, '11:00', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (23, 25, '2026-10-10', '12:30', 60);
+VALUES (23, 25, '2026-10-10', '11:00', 60);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (56, 7, 11, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1375,9 +1375,9 @@ VALUES (47, 56, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (26, 56, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (26, 26, 'Color digital con paletas limitadas', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 90, '14:00', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (26, 26, 'Color digital con paletas limitadas', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 90, '16:30', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (24, 26, '2026-10-09', '14:00', 90);
+VALUES (24, 26, '2026-10-09', '16:30', 90);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (57, 7, 12, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1385,9 +1385,9 @@ VALUES (48, 57, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (27, 57, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (27, 27, 'Sketchbook urbano: dibujar la ciudad', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 120, '15:30', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (27, 27, 'Sketchbook urbano: dibujar la ciudad', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 120, '13:30', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (25, 27, '2026-10-10', '15:30', 120);
+VALUES (25, 27, '2026-10-10', '13:30', 120);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (58, 7, 13, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1395,9 +1395,9 @@ VALUES (49, 58, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (28, 58, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (28, 28, 'Creación de criaturas fantásticas', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 60, '17:00', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (28, 28, 'Creación de criaturas fantásticas', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 60, '16:00', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (26, 28, '2026-10-09', '17:00', 60);
+VALUES (26, 28, '2026-10-09', '16:00', 60);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (59, 7, 14, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1405,9 +1405,9 @@ VALUES (50, 59, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (29, 59, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (29, 29, 'Storyboard para cortometrajes', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 90, '18:30', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (29, 29, 'Storyboard para cortometrajes', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 90, '12:00', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (27, 29, '2026-10-10', '18:30', 90);
+VALUES (27, 29, '2026-10-10', '12:00', 90);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (60, 7, 15, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1425,9 +1425,9 @@ VALUES (52, 61, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (31, 61, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (31, 31, 'Collage y técnicas mixtas', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 60, '12:30', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (31, 31, 'Collage y técnicas mixtas', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 60, '15:30', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (29, 31, '2026-10-10', '12:30', 60);
+VALUES (29, 31, '2026-10-10', '15:30', 60);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (62, 7, 17, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1435,9 +1435,9 @@ VALUES (53, 62, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (32, 62, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (32, 32, 'Ilustración editorial para público infantil', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 90, '14:00', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (32, 32, 'Ilustración editorial para público infantil', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 90, '11:00', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (30, 32, '2026-10-09', '14:00', 90);
+VALUES (30, 32, '2026-10-09', '11:00', 90);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (63, 7, 18, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1445,9 +1445,9 @@ VALUES (54, 63, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (33, 63, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (33, 33, 'Lettering para portadas', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 120, '15:30', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (33, 33, 'Lettering para portadas', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 120, '13:30', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (31, 33, '2026-10-10', '15:30', 120);
+VALUES (31, 33, '2026-10-10', '13:30', 120);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (64, 7, 19, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1465,9 +1465,9 @@ VALUES (56, 65, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (35, 65, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (35, 35, 'Del 2D al 3D en videojuegos', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 90, '18:30', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (35, 35, 'Del 2D al 3D en videojuegos', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 90, '14:30', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (33, 35, '2026-10-10', '18:30', 90);
+VALUES (33, 35, '2026-10-10', '14:30', 90);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (66, 7, 21, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1475,9 +1475,9 @@ VALUES (57, 66, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (36, 66, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (36, 36, 'Creación de stickers digitales', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 120, '11:00', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (36, 36, 'Creación de stickers digitales', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 120, '13:00', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (34, 36, '2026-10-09', '11:00', 120);
+VALUES (34, 36, '2026-10-09', '13:00', 120);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (67, 7, 22, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1485,9 +1485,9 @@ VALUES (58, 67, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (37, 67, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (37, 37, 'Portafolio artístico: cómo mostrarlo', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 60, '12:30', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (37, 37, 'Portafolio artístico: cómo mostrarlo', 'Taller práctico y guiado donde las y los participantes desarrollan un ejercicio completo, con materiales incluidos y acompañamiento paso a paso.', 60, '15:30', 'Mall Vivo Coquimbo', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (35, 37, '2026-10-10', '12:30', 60);
+VALUES (35, 37, '2026-10-10', '15:30', 60);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (68, 7, 23, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1495,9 +1495,9 @@ VALUES (59, 68, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (38, 68, 2, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (38, 38, 'Procesos creativos al ilustrar un libro', 'Charla abierta sobre trayectoria, procesos y aprendizajes, con espacio para preguntas del público.', 45, '14:00', NULL, NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (38, 38, 'Procesos creativos al ilustrar un libro', 'Charla abierta sobre trayectoria, procesos y aprendizajes, con espacio para preguntas del público.', 45, '13:30', NULL, NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (36, 38, '2026-10-09', '14:00', 45);
+VALUES (36, 38, '2026-10-09', '13:30', 45);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (69, 7, 24, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1505,9 +1505,9 @@ VALUES (60, 69, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (39, 69, 2, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (39, 39, 'Cómo se hace una novela gráfica histórica', 'Charla abierta sobre trayectoria, procesos y aprendizajes, con espacio para preguntas del público.', 45, '15:30', NULL, NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (39, 39, 'Cómo se hace una novela gráfica histórica', 'Charla abierta sobre trayectoria, procesos y aprendizajes, con espacio para preguntas del público.', 45, '16:00', NULL, NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (37, 39, '2026-10-10', '15:30', 45);
+VALUES (37, 39, '2026-10-10', '16:00', 45);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (70, 7, 25, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1515,9 +1515,9 @@ VALUES (61, 70, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (40, 70, 2, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (40, 40, 'Construir comunidad en entornos creativos', 'Charla abierta sobre trayectoria, procesos y aprendizajes, con espacio para preguntas del público.', 45, '17:00', NULL, NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (40, 40, 'Construir comunidad en entornos creativos', 'Charla abierta sobre trayectoria, procesos y aprendizajes, con espacio para preguntas del público.', 45, '14:15', NULL, NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (38, 40, '2026-10-09', '17:00', 45);
+VALUES (38, 40, '2026-10-09', '14:15', 45);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (71, 7, 26, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1525,9 +1525,9 @@ VALUES (62, 71, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (41, 71, 2, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (41, 41, 'Cómo concretar proyectos sin recursos', 'Charla abierta sobre trayectoria, procesos y aprendizajes, con espacio para preguntas del público.', 45, '18:30', NULL, NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (41, 41, 'Cómo concretar proyectos sin recursos', 'Charla abierta sobre trayectoria, procesos y aprendizajes, con espacio para preguntas del público.', 45, '16:30', NULL, NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (39, 41, '2026-10-10', '18:30', 45);
+VALUES (39, 41, '2026-10-10', '16:30', 45);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (72, 7, 27, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1535,9 +1535,9 @@ VALUES (63, 72, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (42, 72, 2, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (42, 42, 'Comprendiendo el Pixel Art', 'Charla abierta sobre trayectoria, procesos y aprendizajes, con espacio para preguntas del público.', 45, '11:00', NULL, NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (42, 42, 'Comprendiendo el Pixel Art', 'Charla abierta sobre trayectoria, procesos y aprendizajes, con espacio para preguntas del público.', 45, '15:00', NULL, NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (40, 42, '2026-10-09', '11:00', 45);
+VALUES (40, 42, '2026-10-09', '15:00', 45);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (73, 7, 28, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1545,9 +1545,9 @@ VALUES (64, 73, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (43, 73, 2, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (43, 43, '¿Por qué dibujar? Reflexiones sobre el oficio', 'Charla abierta sobre trayectoria, procesos y aprendizajes, con espacio para preguntas del público.', 45, '12:30', NULL, NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (43, 43, '¿Por qué dibujar? Reflexiones sobre el oficio', 'Charla abierta sobre trayectoria, procesos y aprendizajes, con espacio para preguntas del público.', 45, '16:30', NULL, NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (41, 43, '2026-10-10', '12:30', 45);
+VALUES (41, 43, '2026-10-10', '16:30', 45);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (74, 7, 29, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1555,9 +1555,9 @@ VALUES (65, 74, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (44, 74, 2, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (44, 44, 'Cómic, memoria y derechos humanos', 'Charla abierta sobre trayectoria, procesos y aprendizajes, con espacio para preguntas del público.', 45, '14:00', NULL, NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (44, 44, 'Cómic, memoria y derechos humanos', 'Charla abierta sobre trayectoria, procesos y aprendizajes, con espacio para preguntas del público.', 45, '15:45', NULL, NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (42, 44, '2026-10-09', '14:00', 45);
+VALUES (42, 44, '2026-10-09', '15:45', 45);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (75, 7, 30, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1565,9 +1565,9 @@ VALUES (66, 75, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (45, 75, 2, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (45, 45, 'Creación artística vs creación de contenido en redes', 'Charla abierta sobre trayectoria, procesos y aprendizajes, con espacio para preguntas del público.', 45, '15:30', NULL, NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (45, 45, 'Creación artística vs creación de contenido en redes', 'Charla abierta sobre trayectoria, procesos y aprendizajes, con espacio para preguntas del público.', 45, '16:45', NULL, NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (43, 45, '2026-10-10', '15:30', 45);
+VALUES (43, 45, '2026-10-10', '16:45', 45);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (76, 7, 31, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1575,9 +1575,9 @@ VALUES (67, 76, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (46, 76, 2, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (46, 46, 'Usted habla dos idiomas: español y dibujo', 'Charla abierta sobre trayectoria, procesos y aprendizajes, con espacio para preguntas del público.', 45, '17:00', NULL, NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (46, 46, 'Usted habla dos idiomas: español y dibujo', 'Charla abierta sobre trayectoria, procesos y aprendizajes, con espacio para preguntas del público.', 45, '16:30', NULL, NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (44, 46, '2026-10-09', '17:00', 45);
+VALUES (44, 46, '2026-10-09', '16:30', 45);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (77, 7, 32, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1585,9 +1585,9 @@ VALUES (68, 77, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (47, 77, 2, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (47, 47, 'Vivir del arte: experiencias y aprendizajes', 'Charla abierta sobre trayectoria, procesos y aprendizajes, con espacio para preguntas del público.', 45, '18:30', NULL, NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (47, 47, 'Vivir del arte: experiencias y aprendizajes', 'Charla abierta sobre trayectoria, procesos y aprendizajes, con espacio para preguntas del público.', 45, '17:15', NULL, NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (45, 47, '2026-10-10', '18:30', 45);
+VALUES (45, 47, '2026-10-10', '17:15', 45);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (78, 7, 33, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1595,9 +1595,9 @@ VALUES (69, 78, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (48, 78, 2, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (48, 48, 'Ilustración y territorio: narrar la Región de Coquimbo', 'Charla abierta sobre trayectoria, procesos y aprendizajes, con espacio para preguntas del público.', 45, '11:00', NULL, NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (48, 48, 'Ilustración y territorio: narrar la Región de Coquimbo', 'Charla abierta sobre trayectoria, procesos y aprendizajes, con espacio para preguntas del público.', 45, '17:15', NULL, NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (46, 48, '2026-10-09', '11:00', 45);
+VALUES (46, 48, '2026-10-09', '17:15', 45);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (79, 7, 34, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
