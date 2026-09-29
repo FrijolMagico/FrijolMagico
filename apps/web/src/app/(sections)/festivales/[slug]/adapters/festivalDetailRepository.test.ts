@@ -114,12 +114,25 @@ describe('festivalDetailRepository', () => {
       participante_pseudonimo: 'Músico',
       ocurrencias: []
     })
-    const html = renderToStaticMarkup(
-      createElement(ActivityList, { actividades: result?.actividades ?? [], isEditionPast: false })
+    const pastHtml = renderToStaticMarkup(
+      createElement(ActivityList, {
+        actividades: result?.actividades ?? [],
+        isEditionPast: result?.is_edition_past ?? false
+      })
     )
-    expect(html).not.toContain('Músico')
-    expect(html).not.toContain('Concierto reservado')
-    expect(html).not.toContain('Inscríbete')
+    expect(pastHtml).not.toContain('Músico')
+    expect(pastHtml).not.toContain('Concierto reservado')
+    expect(pastHtml).not.toContain('Inscríbete')
+
+    const activeHtml = renderToStaticMarkup(
+      createElement(ActivityList, {
+        actividades: result?.actividades ?? [],
+        isEditionPast: false
+      })
+    )
+    expect(activeHtml).toContain('Concierto reservado')
+    expect(activeHtml).toContain('Actividades sin fecha')
+    expect(activeHtml).not.toContain('Inscríbete')
   })
 
   test('returns presenter names and selected catalog slugs in activity results', async () => {

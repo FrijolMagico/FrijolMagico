@@ -118,7 +118,7 @@ describe('buildFestivalSchedule', () => {
     ])
   })
 
-  test('keeps null or invalid times as active-edition unscheduled entries only', () => {
+  test('keeps dated unscheduled entries under their occurrence day and undated entries separate', () => {
     const dated = makeActivity('Dated', 'charla', [occurrence(1, '2026-10-03', null, null)])
     const undated = makeActivity('Undated', 'taller', [])
     const invalidDuration = makeActivity('No duration', 'musica', [
@@ -126,11 +126,15 @@ describe('buildFestivalSchedule', () => {
     ])
     const active = buildFestivalSchedule([dated, undated, invalidDuration], false)
 
-    expect(active.days).toEqual([])
-    expect(active.unscheduled.map(({ activity, occurrence: item }) => [activity.titulo, item?.id ?? null])).toEqual([
+    expect(active.days).toHaveLength(1)
+    expect(active.days[0].date).toBe('2026-10-03')
+    expect(active.days[0].groups).toEqual([])
+    expect(active.days[0].unscheduled.map(({ activity, occurrence: item }) => [activity.titulo, item?.id])).toEqual([
       ['Dated', 1],
-      ['Undated', null],
       ['No duration', 2]
+    ])
+    expect(active.unscheduled.map(({ activity, occurrence: item }) => [activity.titulo, item?.id ?? null])).toEqual([
+      ['Undated', null]
     ])
 
     const past = buildFestivalSchedule([dated, undated, invalidDuration], true)

@@ -84,7 +84,7 @@ describe('ActivityItem', () => {
     expect(summary.textContent).toContain('14:00hrs a 15:30hrs')
     expect(summary.textContent).toContain('Sala A')
     const summaryTitle = summary.querySelector('h3')!
-    const summarySchedule = summaryTitle.nextElementSibling!
+    const summarySchedule = summaryTitle.parentElement!.nextElementSibling!
     expect(summarySchedule.textContent).toBe('14:00hrs a 15:30hrsSala A')
     expect(summarySchedule.className).toContain('mt-2')
     expect(summarySchedule.className).toContain('space-y-0.5')
@@ -124,7 +124,7 @@ describe('ActivityItem', () => {
         'Patio central'
       ])
       const fallbackTitle = article.querySelector('h3')!
-      const fallbackSchedule = fallbackTitle.nextElementSibling!
+      const fallbackSchedule = fallbackTitle.parentElement!.nextElementSibling!
       expect(fallbackSchedule.className).toContain('mt-2')
       expect(fallbackSchedule.className).toContain('space-y-0.5')
       expect(fallbackSchedule.className).toContain('leading-tight')
@@ -190,6 +190,12 @@ describe('ActivityItem', () => {
       />
     )
     expect(screen.queryByText('No corresponde')).toBeNull()
+  })
+
+  test('renders an optional music badge in the shared activity card', () => {
+    render(<ActivityItem activity={{ ...baseActivity, tipo: 'musica' }} badge='Música' />)
+    expect(screen.getByText('Música').tagName).toBe('SPAN')
+    expect(screen.getByText('Música').className).toContain('rounded-full')
   })
 
   test('keeps the artist link independent of the native disclosure control', () => {

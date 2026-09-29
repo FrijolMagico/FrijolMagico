@@ -113,7 +113,22 @@ describe('FestivalDetailContent', () => {
     expect(container.querySelector('[data-spoiler-global-toggle]')).toBeNull()
   })
 
-  test('places the navigator slot after participant and activity content in the right column', async () => {
+  test('places the activity timeline at full article width below the poster/participants grid', async () => {
+    const { container } = await renderAsync(
+      FestivalDetailContent({ detail: baseDetail })
+    )
+    const article = container.querySelector('article')!
+    const activitySection = screen.getByText('Actividades').closest('section')!
+    const identityGrid = container.querySelector('.md\\:grid-cols-8')!
+
+    expect(article.className).toContain('max-w-6xl')
+    expect(identityGrid.contains(activitySection)).toBe(false)
+    expect(activitySection.parentElement?.parentElement).toBe(article)
+    expect(container.querySelector('aside')).not.toBeNull()
+    expect(screen.getByText('Participantes')).toBeDefined()
+  })
+
+  test('places the navigator slot after participant and activity content', async () => {
     const { container } = await renderAsync(
       FestivalDetailContent({
         detail: baseDetail,
@@ -124,14 +139,15 @@ describe('FestivalDetailContent', () => {
     )
 
     const leftColumn = container.querySelector('aside')
-    const rightColumn = container.querySelector('.md\\:col-span-5')
+    const article = container.querySelector('article')!
+    const activitySection = screen.getByText('Actividades').closest('section')!
     const navigator = screen.getByRole('navigation', {
       name: 'Navegación entre ediciones'
     })
 
     expect(leftColumn?.contains(navigator)).toBe(false)
-    expect(rightColumn?.contains(navigator)).toBe(true)
-    expect(rightColumn?.lastElementChild?.contains(navigator)).toBe(true)
+    expect(activitySection.compareDocumentPosition(navigator) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(article.lastElementChild?.contains(navigator)).toBe(true)
   })
 
   test('adds spoiler and entry markers only in active animation mode', async () => {

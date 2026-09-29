@@ -98,12 +98,18 @@ export const FestivalDetailContent = ({
             participantes={detail.participantes}
             animationMode={animationMode}
           />
-          {detail.actividades.length > 0 && (
-            <ActivityList actividades={detail.actividades} isEditionPast={detail.is_edition_past} />
-          )}
-          {navigator && <div className='pt-10'>{navigator}</div>}
         </div>
       </div>
+
+      {detail.actividades.length > 0 && (
+        <div className='mt-10'>
+          <ActivityList
+            actividades={detail.actividades}
+            isEditionPast={detail.is_edition_past}
+          />
+        </div>
+      )}
+      {navigator && <div className='mt-10'>{navigator}</div>}
     </article>
   )
 }

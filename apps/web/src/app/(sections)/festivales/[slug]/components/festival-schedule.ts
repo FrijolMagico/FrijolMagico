@@ -19,6 +19,7 @@ export interface FestivalScheduleGroup {
 export interface FestivalScheduleDay {
   date: string
   groups: FestivalScheduleGroup[]
+  unscheduled: FestivalUnscheduledEntry[]
 }
 
 export interface FestivalUnscheduledEntry {
@@ -71,7 +72,10 @@ export function buildFestivalSchedule(
   activities: FestivalActivity[],
   isEditionPast: boolean
 ): FestivalSchedule {
-  const days = new Map<string, Map<string, FestivalScheduleEntry[]>>()
+  const days = new Map<
+    string,
+    { groups: Map<string, FestivalScheduleEntry[]>; unscheduled: FestivalUnscheduledEntry[] }
+  >()
   const unscheduled: FestivalUnscheduledEntry[] = []
 
   activities.forEach((activity, activityIndex) => {
@@ -93,20 +97,30 @@ export function buildFestivalSchedule(
         startMinutes + duration > 24 * 60
       ) {
         if (!isEditionPast) {
-          unscheduled.push({ activity, occurrence, activityIndex, occurrenceIndex })
+          const entry = { activity, occurrence, activityIndex, occurrenceIndex }
+          if (occurrence.fecha) {
+            let day = days.get(occurrence.fecha)
+            if (!day) {
+              day = { groups: new Map(), unscheduled: [] }
+              days.set(occurrence.fecha, day)
+            }
+            day.unscheduled.push(entry)
+          } else {
+            unscheduled.push(entry)
+          }
         }
         return
       }
 
-      let types = days.get(occurrence.fecha)
-      if (!types) {
-        types = new Map()
-        days.set(occurrence.fecha, types)
+      let day = days.get(occurrence.fecha)
+      if (!day) {
+        day = { groups: new Map(), unscheduled: [] }
+        days.set(occurrence.fecha, day)
       }
-      let entries = types.get(activity.tipo)
+      let entries = day.groups.get(activity.tipo)
       if (!entries) {
         entries = []
-        types.set(activity.tipo, entries)
+        day.groups.set(activity.tipo, entries)
       }
       entries.push({
         activity,
@@ -123,12 +137,13 @@ export function buildFestivalSchedule(
   const scheduleDays = [...days.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([date, types]) => {
-      const allEntries = [...types.values()].flat().sort(compareEntries)
+      const allEntries = [...types.groups.values()].flat().sort(compareEntries)
       const columnCount = assignColumns(allEntries)
 
       return {
         date,
-        groups: [...types.entries()]
+        unscheduled: types.unscheduled,
+        groups: [...types.groups.entries()]
           .sort(([a], [b]) => (TYPE_ORDER[a] ?? 99) - (TYPE_ORDER[b] ?? 99) || a.localeCompare(b))
           .map(([type, entries]) => ({
             type,

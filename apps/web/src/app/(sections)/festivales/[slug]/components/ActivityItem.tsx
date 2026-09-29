@@ -10,6 +10,7 @@ import type { FestivalActivity } from '../../types/festival'
 interface ActivityItemProps {
   activity: FestivalActivity
   isEditionPast?: boolean
+  badge?: string
 }
 
 const EMPTY_EDITOR_MARKUP =
@@ -24,7 +25,7 @@ const hasDescription = (description: string | null) =>
       .trim()
   )
 
-export const ActivityItem = ({ activity }: ActivityItemProps) => {
+export const ActivityItem = ({ activity, badge }: ActivityItemProps) => {
   const details = hasDescription(activity.descripcion)
   const occurrence = activity.ocurrencias[0]
   const timeRange = occurrence
@@ -35,7 +36,7 @@ export const ActivityItem = ({ activity }: ActivityItemProps) => {
     : null
 
   return (
-    <article className='bg-palette-background border-palette-primary group relative max-w-[calc(100%-1rem)] min-w-[16rem] rounded-lg border sm:max-w-xs'>
+    <article className='bg-palette-background border-palette-primary group relative w-full min-w-0 max-w-none rounded-lg border'>
       <div className='bg-palette-primary absolute -z-10 size-full translate-x-1.5 translate-y-1.5 rounded-lg duration-300 group-hover:translate-0' />
 
       {activity.registration && occurrence && (
@@ -76,11 +77,18 @@ export const ActivityItem = ({ activity }: ActivityItemProps) => {
         <details className='group/details'>
           <summary className="before:content-[''] before:absolute before:inset-0 before:z-10 before:cursor-pointer flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-3 text-left marker:content-none">
             <div className='min-w-0 flex-1'>
-              {activity.titulo && (
-                <h3 className='text-palette-foreground text-base leading-none font-semibold'>
-                  {activity.titulo}
-                </h3>
-              )}
+              <div className='flex flex-wrap items-center gap-2'>
+                {activity.titulo && (
+                  <h3 className='text-palette-foreground text-base leading-none font-semibold'>
+                    {activity.titulo}
+                  </h3>
+                )}
+                {badge && (
+                  <span className='bg-palette-accent/15 text-palette-accent rounded-full px-2 py-0.5 text-xs font-semibold'>
+                    {badge}
+                  </span>
+                )}
+              </div>
               {(timeRange || activity.ubicacion) && (
                 <div
                   className={`${activity.titulo ? 'mt-2' : 'mt-1'} space-y-0.5 leading-tight`}
@@ -112,11 +120,18 @@ export const ActivityItem = ({ activity }: ActivityItemProps) => {
         </details>
       ) : (
         <div className='px-4 py-3'>
-          {activity.titulo && (
-            <h3 className='text-palette-foreground text-base leading-none font-semibold'>
-              {activity.titulo}
-            </h3>
-          )}
+          <div className='flex flex-wrap items-center gap-2'>
+            {activity.titulo && (
+              <h3 className='text-palette-foreground text-base leading-none font-semibold'>
+                {activity.titulo}
+              </h3>
+            )}
+            {badge && (
+              <span className='bg-palette-accent/15 text-palette-accent rounded-full px-2 py-0.5 text-xs font-semibold'>
+                {badge}
+              </span>
+            )}
+          </div>
           {(timeRange || activity.ubicacion) && (
             <div
               className={`${activity.titulo ? 'mt-2' : 'mt-1'} space-y-0.5 leading-tight`}
