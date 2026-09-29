@@ -538,7 +538,7 @@ INSERT INTO artista_historial (id, artista_id, pseudonimo, correo, rrss, ciudad,
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (12, 1, 16, NULL, NULL, 'Fuera de catálogo — fotografía', '2026-01-20 03:39:15', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
-VALUES (7, 12, 4, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:57', '2026-03-05 23:48:57');
+VALUES (7, 12, 3, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:57', '2026-03-05 23:48:57');
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (5, 12, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
@@ -547,7 +547,7 @@ VALUES (5, 5, 'Fotografía experimental con luz natural', 'Taller de técnicas f
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (13, 2, 16, NULL, NULL, 'Fuera de catálogo — fotografía', '2026-01-20 03:39:15', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
-VALUES (8, 13, 4, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:57', '2026-03-05 23:48:57');
+VALUES (8, 13, 3, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:57', '2026-03-05 23:48:57');
 
 -- Artista 17 — Tinta Negra: Ed I → ilustración (selección), Ed II → narrativa-gráfica (selección + charla)
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
@@ -598,7 +598,7 @@ VALUES (8, 8, 'Storytelling visual para redes sociales', 'Charla sobre cómo con
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (20, 1, 20, NULL, NULL, 'Fuera de catálogo — fotografía', '2026-01-20 03:39:15', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
-VALUES (15, 20, 4, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:57', '2026-03-05 23:48:57');
+VALUES (15, 20, 3, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:57', '2026-03-05 23:48:57');
 
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (21, 2, 20, NULL, NULL, 'Fuera de catálogo — manualidades', '2026-01-20 03:39:15', '2026-03-05 23:48:56');
@@ -1181,7 +1181,7 @@ VALUES (9, 11, '2019-02-24', '18:30', 90);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (28, 4, 8, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
-VALUES (22, 28, 4, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:56', '2026-03-05 23:48:56');
+VALUES (22, 28, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:56', '2026-03-05 23:48:56');
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (29, 4, NULL, 1, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1213,7 +1213,7 @@ VALUES (27, 34, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (35, 5, 15, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
-VALUES (28, 35, 4, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:56', '2026-03-05 23:48:56');
+VALUES (28, 35, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:56', '2026-03-05 23:48:56');
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (36, 6, 1, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1231,7 +1231,7 @@ VALUES (30, 37, 2, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (38, 6, 16, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
-VALUES (31, 38, 4, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '2026-03-05 23:48:56');
+VALUES (31, 38, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '2026-03-05 23:48:56');
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (39, 6, 17, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1705,7 +1705,7 @@ VALUES (95, 104, 3, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '2
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (105, 7, 60, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
-VALUES (96, 105, 4, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:56', '2026-03-05 23:48:56');
+VALUES (96, 105, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:56', '2026-03-05 23:48:56');
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (106, 7, 61, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
