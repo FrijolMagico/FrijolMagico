@@ -70,6 +70,18 @@ const HISTORIAL_FIELDS = [
   'rrss'
 ] as const
 
+const CATALOG_ARTIST_FIELDS = ['nombre', 'correo', 'rrss', 'ciudad', 'pais'] as const
+
+type CatalogArtistField = typeof CATALOG_ARTIST_FIELDS[number]
+
+type CatalogArtistValues = Partial<Record<CatalogArtistField, unknown>>
+
+function catalogFieldsChanged(previous: Artist, next: CatalogArtistValues) {
+  return CATALOG_ARTIST_FIELDS.some((field) =>
+    next[field] !== undefined && JSON.stringify(previous[field]) !== JSON.stringify(next[field])
+  )
+}
+
 export async function updateArtistaWithPseudonymsAction(
   { data: prevData }: ActionState<Artist>,
   input: { data: ArtistUpdateFormInput; pseudonymDrafts: ArtistPseudonymDraftInput[] }
@@ -117,7 +129,7 @@ export async function updateArtistaWithPseudonymsAction(
   }
 
   try {
-    const { historyChanged, catalogSlugChanged } = await db.transaction(async (tx) => {
+    const { historyChanged, catalogSlugChanged, catalogDataChanged } = await db.transaction(async (tx) => {
       const pseudonymResult = await applyArtistPseudonymDrafts(
         tx,
         prevData.id,
@@ -137,13 +149,14 @@ export async function updateArtistaWithPseudonymsAction(
       }
       return {
         historyChanged: pseudonymResult.historyChanged,
-        catalogSlugChanged: pseudonymResult.catalogSlugChanged
+        catalogSlugChanged: pseudonymResult.catalogSlugChanged,
+        catalogDataChanged: pseudonymResult.catalogDataChanged
       }
     })
 
     updateTag(ARTIST_CACHE_TAG)
     if (historialInsert || historyChanged) updateTag(ARTIST_HISTORY_CACHE_TAG)
-    if (catalogSlugChanged) {
+    if (catalogSlugChanged || catalogDataChanged || catalogFieldsChanged(prevData, parsedArtist.data)) {
       updateTag(CATALOG_CACHE_TAG)
       void revalidateWebCache({ tag: CATALOG_CACHE_TAG, path: '/catalogo' })
     }
@@ -212,7 +225,7 @@ export async function updateArtistaAction(
     }
   }
 
-  const catalogSlugChanged = await db.transaction(async (tx) => {
+  const { catalogSlugChanged, catalogDataChanged } = await db.transaction(async (tx) => {
     await tx
       .update(artist)
       .set(parsed.data)
@@ -240,19 +253,27 @@ export async function updateArtistaAction(
       .select({ pseudonimoId: artistTables.artistPrimaryPseudonym.pseudonimoId })
       .from(artistTables.artistPrimaryPseudonym)
       .where(eq(artistTables.artistPrimaryPseudonym.artistaId, prevData.id))
-    if (
+    const pseudonymIsDisplayed =
+      catalogSelection?.pseudonimoId == null ||
+      catalogSelection.pseudonimoId === primary?.pseudonimoId
+    const pseudonymChanged =
+      pseudonymIsDisplayed && parsed.data.pseudonimo !== undefined &&
+      parsed.data.pseudonimo !== prevData.pseudonimo
+    const catalogSlugChanged =
       catalogSelection?.pseudonimoId != null &&
       catalogSelection.pseudonimoId === primary?.pseudonimoId &&
       parsed.data.pseudonimo !== undefined
-    ) {
-      return allocateCatalogSlug(tx, prevData.id, parsed.data.pseudonimo)
+        ? await allocateCatalogSlug(tx, prevData.id, parsed.data.pseudonimo)
+        : false
+    return {
+      catalogSlugChanged,
+      catalogDataChanged: catalogFieldsChanged(prevData, parsed.data) || pseudonymChanged
     }
-    return false
   })
 
   updateTag(ARTIST_CACHE_TAG)
   if (historialInsert) updateTag(ARTIST_HISTORY_CACHE_TAG)
-  if (catalogSlugChanged) {
+  if (catalogSlugChanged || catalogDataChanged) {
     updateTag(CATALOG_CACHE_TAG)
     void revalidateWebCache({ tag: CATALOG_CACHE_TAG, path: '/catalogo' })
   }

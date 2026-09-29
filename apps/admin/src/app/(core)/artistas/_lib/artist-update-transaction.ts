@@ -11,11 +11,12 @@ const { artist, artistPseudonym, artistPrimaryPseudonym, artistHistory, catalogA
 
 async function requireActiveArtist(transaction: ArtistTransaction, artistId: number) {
   const [activeArtist] = await transaction
-    .select({ id: artist.id })
+    .select({ id: artist.id, pseudonimo: artist.pseudonimo })
     .from(artist)
     .where(and(eq(artist.id, artistId), isNull(artist.deletedAt)))
 
   if (!activeArtist) throw new Error('El artista no existe o está eliminado')
+  return activeArtist
 }
 
 async function requireOwnedActivePseudonym(
@@ -57,9 +58,11 @@ export async function applyArtistPseudonymDrafts(
   artistId: number,
   drafts: ArtistPseudonymDraftInput[]
 ) {
-  await requireActiveArtist(transaction, artistId)
+  const activeArtist = await requireActiveArtist(transaction, artistId)
+  let artistFallback = activeArtist.pseudonimo
   let historyChanged = false
   let catalogSlugChanged = false
+  let catalogDataChanged = false
 
   for (const draft of drafts) {
     if (draft.operation === 'add') {
@@ -68,7 +71,17 @@ export async function applyArtistPseudonymDrafts(
         .values({ artistaId: artistId, pseudonimo: draft.pseudonym })
         .returning({ id: artistPseudonym.id, pseudonimo: artistPseudonym.pseudonimo })
       if (!added) throw new Error('No se pudo crear el pseudónimo')
-      if (draft.makePrimary) await setPrimary(transaction, artistId, added.id, added.pseudonimo)
+      if (draft.makePrimary) {
+        const [catalogSelection] = await transaction
+          .select({ pseudonimoId: catalogArtist.pseudonimoId })
+          .from(catalogArtist)
+          .where(eq(catalogArtist.artistaId, artistId))
+        if (catalogSelection?.pseudonimoId == null && artistFallback !== added.pseudonimo) {
+          catalogDataChanged = true
+        }
+        await setPrimary(transaction, artistId, added.id, added.pseudonimo)
+        artistFallback = added.pseudonimo
+      }
       continue
     }
 
@@ -109,15 +122,22 @@ export async function applyArtistPseudonymDrafts(
         .select({ pseudonimoId: artistPrimaryPseudonym.pseudonimoId })
         .from(artistPrimaryPseudonym)
         .where(eq(artistPrimaryPseudonym.artistaId, artistId))
+      const primaryFallbackChanged =
+        primary?.pseudonimoId === pseudonym.id && artistFallback !== draft.pseudonym
       if (primary?.pseudonimoId === pseudonym.id) {
         await transaction.update(artist).set({ pseudonimo: draft.pseudonym }).where(eq(artist.id, artistId))
+        artistFallback = draft.pseudonym
       }
 
       const [catalogSelection] = await transaction
         .select({ pseudonimoId: catalogArtist.pseudonimoId })
         .from(catalogArtist)
         .where(eq(catalogArtist.artistaId, artistId))
+      if (catalogSelection?.pseudonimoId == null && primaryFallbackChanged) {
+        catalogDataChanged = true
+      }
       if (catalogSelection?.pseudonimoId === pseudonym.id) {
+        catalogDataChanged = true
         catalogSlugChanged = await allocateCatalogSlug(
           transaction,
           artistId,
@@ -127,9 +147,17 @@ export async function applyArtistPseudonymDrafts(
     }
 
     if (draft.makePrimary) {
+      const [catalogSelection] = await transaction
+        .select({ pseudonimoId: catalogArtist.pseudonimoId })
+        .from(catalogArtist)
+        .where(eq(catalogArtist.artistaId, artistId))
+      if (catalogSelection?.pseudonimoId == null && artistFallback !== draft.pseudonym) {
+        catalogDataChanged = true
+      }
       await setPrimary(transaction, artistId, pseudonym.id, draft.pseudonym)
+      artistFallback = draft.pseudonym
     }
   }
 
-  return { historyChanged, catalogSlugChanged }
+  return { historyChanged, catalogSlugChanged, catalogDataChanged }
 }

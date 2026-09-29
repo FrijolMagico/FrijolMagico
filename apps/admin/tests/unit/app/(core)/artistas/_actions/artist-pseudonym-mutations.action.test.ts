@@ -130,7 +130,7 @@ function setSelects(
 }
 
 function withActiveArtist(mockDb: ReturnType<typeof createDatabaseMock>) {
-  setSelects(mockDb, [[artist, [[{ id: 1 }]]]])
+  setSelects(mockDb, [[artist, [[{ id: 1, pseudonimo: 'Fallback' }]]]])
 }
 
 beforeEach(() => {
@@ -228,10 +228,10 @@ describe('updateArtistaWithPseudonymsAction', () => {
   test('renaming the catalog-selected pseudonym updates the slug and invalidates catalog caches', async () => {
     const mockDb = createDatabaseMock()
     setSelects(mockDb, [
-      [artist, [[{ id: 1 }], [{ slug: 'old-name' }], []]],
+      [artist, [[{ id: 1, pseudonimo: 'Old Name' }], [{ slug: 'old-name' }], []]],
       [artistPrimaryPseudonym, [[{ pseudonimoId: 10 }]]],
       [artistPseudonym, [[pseudonym]]],
-      [catalogArtist, [[{ pseudonimoId: 10 }]]],
+      [catalogArtist, [[{ pseudonimoId: 10 }], [{ pseudonimoId: 10 }]]],
       [artistSlugAlias, [[]]]
     ])
     currentDb = mockDb.db
@@ -260,6 +260,242 @@ describe('updateArtistaWithPseudonymsAction', () => {
       operation: 'insert', table: tableName(artistSlugAlias), value: { slug: 'old-name', artistaId: 1 }
     }))
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+  })
+
+  test('renaming the catalog-selected pseudonym invalidates catalog when its slug stays the same', async () => {
+    const mockDb = createDatabaseMock()
+    withActiveArtist(mockDb)
+    setSelects(mockDb, [
+      [artistPseudonym, [[pseudonym]]],
+      [artistPrimaryPseudonym, [[]]],
+      [catalogArtist, [[{ pseudonimoId: 10 }], [{ pseudonimoId: 10 }]]],
+      [artist, [[{ id: 1, pseudonimo: 'Fallback' }], [{ slug: 'old-name' }], []]],
+      [artistSlugAlias, [[]]]
+    ])
+    currentDb = mockDb.db
+
+    const result = await updateArtistaWithPseudonymsAction(
+      { success: false, data: {
+        id: 1, nombre: 'Artist', pseudonimo: 'Fallback', correo: null,
+        rrss: null, ciudad: null, pais: null
+      } } as never,
+      {
+        data: {
+          nombre: 'Artist', pseudonimo: 'Fallback', rut: null,
+          telefono: null, correo: null, ciudad: null, pais: null,
+          rrss: null, estadoId: 1,
+          historialFlags: { pseudonimo: false, correo: false, ciudad: false, pais: false, rrss: false }
+        },
+        pseudonymDrafts: [{
+          operation: 'edit', pseudonymId: 10, pseudonym: 'OLD NAME',
+          preserveHistory: false, makePrimary: false
+        }]
+      } as never
+    )
+
+    expect(result.success).toBe(true)
+    expect(mockDb.state.writes.some(({ value }) => (value as { slug?: string }).slug !== undefined)).toBe(false)
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+  })
+
+  test('renaming the primary invalidates catalog when the null selection displays its fallback', async () => {
+    const mockDb = createDatabaseMock()
+    withActiveArtist(mockDb)
+    setSelects(mockDb, [
+      [artistPseudonym, [[pseudonym]]],
+      [artistPrimaryPseudonym, [[{ pseudonimoId: 10 }]]],
+      [catalogArtist, [[{ pseudonimoId: null }], [{ pseudonimoId: null }]]]
+    ])
+    currentDb = mockDb.db
+
+    const result = await updateArtistaWithPseudonymsAction(
+      { success: false, data: { id: 1, pseudonimo: 'Old Name' } } as never,
+      {
+        data: {
+          nombre: 'Artist', pseudonimo: 'Old Name', rut: null,
+          telefono: null, correo: null, ciudad: null, pais: null,
+          rrss: null, estadoId: 1,
+          historialFlags: { pseudonimo: false, correo: false, ciudad: false, pais: false, rrss: false }
+        },
+        pseudonymDrafts: [{
+          operation: 'edit', pseudonymId: 10, pseudonym: 'Renamed primary',
+          preserveHistory: false, makePrimary: false
+        }]
+      } as never
+    )
+
+    expect(result.success).toBe(true)
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+  })
+
+  test('changing primary invalidates catalog when the null selection displays its new fallback', async () => {
+    const mockDb = createDatabaseMock()
+    withActiveArtist(mockDb)
+    setSelects(mockDb, [
+      [artistPseudonym, [[{ id: 20, pseudonimo: 'Secondary Name' }]]],
+      [catalogArtist, [[{ pseudonimoId: null }]]]
+    ])
+    currentDb = mockDb.db
+
+    const result = await updateArtistaWithPseudonymsAction(
+      { success: false, data: {
+        id: 1, nombre: 'Artist', pseudonimo: 'Fallback', correo: null,
+        rrss: null, ciudad: null, pais: null
+      } } as never,
+      {
+        data: {
+          nombre: 'Artist', pseudonimo: 'Fallback', rut: null,
+          telefono: null, correo: null, ciudad: null, pais: null,
+          rrss: null, estadoId: 1,
+          historialFlags: { pseudonimo: false, correo: false, ciudad: false, pais: false, rrss: false }
+        },
+        pseudonymDrafts: [{
+          operation: 'edit', pseudonymId: 20, pseudonym: 'Secondary Name',
+          preserveHistory: false, makePrimary: true
+        }]
+      } as never
+    )
+
+    expect(result.success).toBe(true)
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+  })
+
+  test('renaming a non-selected pseudonym does not invalidate catalog', async () => {
+    const mockDb = createDatabaseMock()
+    withActiveArtist(mockDb)
+    setSelects(mockDb, [
+      [artistPseudonym, [[pseudonym]]],
+      [artistPrimaryPseudonym, [[]]],
+      [catalogArtist, [[{ pseudonimoId: 99 }]]]
+    ])
+    currentDb = mockDb.db
+
+    const result = await updateArtistaWithPseudonymsAction(
+      { success: false, data: {
+        id: 1, nombre: 'Artist', pseudonimo: 'Fallback', correo: null,
+        rrss: null, ciudad: null, pais: null
+      } } as never,
+      {
+        data: {
+          nombre: 'Artist', pseudonimo: 'Fallback', rut: null,
+          telefono: null, correo: null, ciudad: null, pais: null,
+          rrss: null, estadoId: 1,
+          historialFlags: { pseudonimo: false, correo: false, ciudad: false, pais: false, rrss: false }
+        },
+        pseudonymDrafts: [{
+          operation: 'edit', pseudonymId: 10, pseudonym: 'Renamed secondary',
+          preserveHistory: false, makePrimary: false
+        }]
+      } as never
+    )
+
+    expect(result.success).toBe(true)
+    expect(revalidateWebCache).not.toHaveBeenCalled()
+    expect(updateTag).not.toHaveBeenCalledWith('catalogo:artistas')
+  })
+
+  test('updates with pseudonym drafts invalidate catalog when projected artist fields change', async () => {
+    const mockDb = createDatabaseMock()
+    withActiveArtist(mockDb)
+    currentDb = mockDb.db
+
+    const result = await updateArtistaWithPseudonymsAction(
+      { success: false, data: {
+        id: 1, nombre: 'Old Name', pseudonimo: 'Fallback', correo: null,
+        rrss: null, ciudad: null, pais: null
+      } } as never,
+      {
+        data: {
+          nombre: 'New Name', pseudonimo: 'Fallback', rut: null,
+          telefono: null, correo: null, ciudad: null, pais: null, rrss: null,
+          estadoId: 1,
+          historialFlags: { pseudonimo: false, correo: false, ciudad: false, pais: false, rrss: false }
+        },
+        pseudonymDrafts: []
+      } as never
+    )
+
+    expect(result.success).toBe(true)
+    expect(mockDb.state.committed).toBe(true)
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+  })
+
+  test('updates with pseudonym drafts do not invalidate catalog for unchanged projected fields', async () => {
+    const mockDb = createDatabaseMock()
+    withActiveArtist(mockDb)
+    currentDb = mockDb.db
+
+    const result = await updateArtistaWithPseudonymsAction(
+      { success: false, data: {
+        id: 1, nombre: 'Same Name', pseudonimo: 'Fallback', correo: null,
+        rrss: null, ciudad: null, pais: null
+      } } as never,
+      {
+        data: {
+          nombre: 'Same Name', pseudonimo: 'Fallback', rut: null,
+          telefono: null, correo: null, ciudad: null, pais: null, rrss: null,
+          estadoId: 1,
+          historialFlags: { pseudonimo: false, correo: false, ciudad: false, pais: false, rrss: false }
+        },
+        pseudonymDrafts: []
+      } as never
+    )
+
+    expect(result.success).toBe(true)
+    expect(mockDb.state.committed).toBe(true)
+    expect(revalidateWebCache).not.toHaveBeenCalled()
+    expect(updateTag).not.toHaveBeenCalledWith('catalogo:artistas')
+  })
+
+  test('legacy artist updates invalidate catalog when projected artist fields change without a slug change', async () => {
+    const mockDb = createDatabaseMock()
+    setSelects(mockDb, [
+      [artist, [[{ slug: 'same-slug' }], []]],
+      [catalogArtist, [[{ pseudonimoId: null }]]],
+      [artistPrimaryPseudonym, [[]]]
+    ])
+    currentDb = mockDb.db
+
+    const result = await updateArtistaAction(
+      { success: false, data: { id: 1, nombre: 'Old Name', pseudonimo: 'Fallback' } } as never,
+      {
+        nombre: 'New Name', pseudonimo: 'Fallback', rut: null,
+        telefono: null, correo: null, ciudad: null, pais: null, rrss: null,
+        estadoId: 1,
+        historialFlags: { pseudonimo: false, correo: false, ciudad: false, pais: false, rrss: false }
+      } as never
+    )
+
+    expect(result.success).toBe(true)
+    expect(mockDb.state.writes.some(({ value }) => (value as { slug?: string }).slug !== undefined)).toBe(false)
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+  })
+
+  test('legacy artist updates do not invalidate catalog for unchanged projected fields', async () => {
+    const mockDb = createDatabaseMock()
+    setSelects(mockDb, [
+      [artist, [[{ slug: 'same-slug' }], []]],
+      [catalogArtist, [[{ pseudonimoId: null }]]],
+      [artistPrimaryPseudonym, [[]]]
+    ])
+    currentDb = mockDb.db
+
+    const result = await updateArtistaAction(
+      { success: false, data: {
+        id: 1, nombre: 'Same Name', pseudonimo: 'Fallback', correo: null,
+        rrss: null, ciudad: null, pais: null
+      } } as never,
+      {
+        nombre: 'Same Name', pseudonimo: 'Fallback', rut: null,
+        telefono: null, correo: null, ciudad: null, pais: null, rrss: null,
+        estadoId: 1,
+        historialFlags: { pseudonimo: false, correo: false, ciudad: false, pais: false, rrss: false }
+      } as never
+    )
+
+    expect(result.success).toBe(true)
+    expect(revalidateWebCache).not.toHaveBeenCalled()
+    expect(updateTag).not.toHaveBeenCalledWith('catalogo:artistas')
   })
 
   test('legacy artist updates invalidate catalog when the selected primary pseudonym is renamed', async () => {
@@ -373,6 +609,71 @@ describe('mutateArtistPseudonymAction', () => {
     ])
     expect(mockDb.state.committed).toBe(true)
     expect(updateTag).toHaveBeenCalledTimes(1)
+  })
+
+  test('invalidates catalog for a selected pseudonym rename even when its slug is unchanged', async () => {
+    const mockDb = createDatabaseMock()
+    withActiveArtist(mockDb)
+    setSelects(mockDb, [
+      [artistPseudonym, [[{ id: 10, pseudonimo: 'Old Name' }]]],
+      [artistPrimaryPseudonym, [[]]],
+      [catalogArtist, [[{ pseudonimoId: 10 }]]],
+      [artist, [[{ id: 1 }], [{ slug: 'old-name' }], [], []]],
+      [artistSlugAlias, [[]]]
+    ])
+    currentDb = mockDb.db
+
+    const result = await mutateArtistPseudonymAction(null as never, {
+      operation: 'rename', artistId: 1, pseudonymId: 10,
+      pseudonym: 'OLD NAME', preserveHistory: false
+    })
+
+    expect(result.success).toBe(true)
+    expect(mockDb.state.writes.some(({ value }) => (value as { slug?: string }).slug !== undefined)).toBe(false)
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+  })
+
+  test('does not invalidate catalog when a catalog-visible pseudonym rename rolls back', async () => {
+    const mockDb = createDatabaseMock()
+    withActiveArtist(mockDb)
+    setSelects(mockDb, [
+      [artistPseudonym, [[{ id: 10, pseudonimo: 'Old Name' }]]],
+      [artistPrimaryPseudonym, [[{ pseudonimoId: 10 }]]]
+    ])
+    mockDb.state.failUpdateTable = tableName(artist)
+    currentDb = mockDb.db
+
+    const result = await mutateArtistPseudonymAction(null as never, {
+      operation: 'rename', artistId: 1, pseudonymId: 10,
+      pseudonym: 'New Name', preserveHistory: false
+    })
+
+    expect(result.success).toBe(false)
+    expect(mockDb.state.rolledBack).toBe(true)
+    expect(revalidateWebCache).not.toHaveBeenCalled()
+    expect(updateTag).not.toHaveBeenCalledWith('catalogo:artistas')
+  })
+
+  test('does not invalidate catalog for a no-op selected pseudonym rename', async () => {
+    const mockDb = createDatabaseMock()
+    withActiveArtist(mockDb)
+    setSelects(mockDb, [
+      [artistPseudonym, [[{ id: 10, pseudonimo: 'Old Name' }]]],
+      [artistPrimaryPseudonym, [[]]],
+      [catalogArtist, [[{ pseudonimoId: 10 }]]],
+      [artist, [[{ id: 1 }], [{ slug: 'old-name' }], [], []]],
+      [artistSlugAlias, [[]]]
+    ])
+    currentDb = mockDb.db
+
+    const result = await mutateArtistPseudonymAction(null as never, {
+      operation: 'rename', artistId: 1, pseudonymId: 10,
+      pseudonym: 'Old Name', preserveHistory: false
+    })
+
+    expect(result.success).toBe(true)
+    expect(revalidateWebCache).not.toHaveBeenCalled()
+    expect(updateTag).not.toHaveBeenCalledWith('catalogo:artistas')
   })
 
   test('renames the selected identity and records old text only when requested', async () => {
@@ -495,5 +796,7 @@ describe('mutateArtistPseudonymAction', () => {
     expect(mockDb.state.committed).toBe(false)
     expect(mockDb.state.rolledBack).toBe(true)
     expect(mockDb.state.writes.some(({ table }) => table === tableName(artistPseudonym))).toBe(false)
+    expect(revalidateWebCache).not.toHaveBeenCalled()
+    expect(updateTag).not.toHaveBeenCalledWith('catalogo:artistas')
   })
 })

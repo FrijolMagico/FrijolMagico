@@ -132,6 +132,7 @@ export async function mutateArtistPseudonymAction(
 ): Promise<ActionState> {
   let historyChanged = false
   let catalogSlugChanged = false
+  let catalogDataChanged = false
   try {
     await requireAuth()
     const parsed = artistPseudonymMutationSchema.safeParse(data)
@@ -148,6 +149,17 @@ export async function mutateArtistPseudonymAction(
           .returning({ id: artistPseudonym.id, pseudonimo: artistPseudonym.pseudonimo })
         if (!added) throw new Error('No se pudo crear el pseudónimo')
         if (mutation.makePrimary) {
+          const [previousArtist] = await transaction
+            .select({ pseudonimo: artist.pseudonimo })
+            .from(artist)
+            .where(eq(artist.id, mutation.artistId))
+          const [catalogSelection] = await transaction
+            .select({ pseudonimoId: catalogArtist.pseudonimoId })
+            .from(catalogArtist)
+            .where(eq(catalogArtist.artistaId, mutation.artistId))
+          if (catalogSelection?.pseudonimoId == null && previousArtist?.pseudonimo !== added.pseudonimo) {
+            catalogDataChanged = true
+          }
           await setPrimary(transaction, mutation.artistId, added.id, added.pseudonimo)
         }
         return
@@ -187,6 +199,12 @@ export async function mutateArtistPseudonymAction(
           .select({ pseudonimoId: catalogArtist.pseudonimoId })
           .from(catalogArtist)
           .where(eq(catalogArtist.artistaId, mutation.artistId))
+        if (
+          (catalogSelection?.pseudonimoId == null || catalogSelection.pseudonimoId === pseudonym.id) &&
+          mutation.pseudonym !== pseudonym.pseudonimo
+        ) {
+          catalogDataChanged = true
+        }
         if (catalogSelection?.pseudonimoId === pseudonym.id) {
           catalogSlugChanged = await allocateCatalogSlug(
             transaction,
@@ -198,6 +216,17 @@ export async function mutateArtistPseudonymAction(
       }
 
       if (mutation.operation === 'set-primary') {
+        const [previousArtist] = await transaction
+          .select({ pseudonimo: artist.pseudonimo })
+          .from(artist)
+          .where(eq(artist.id, mutation.artistId))
+        const [catalogSelection] = await transaction
+          .select({ pseudonimoId: catalogArtist.pseudonimoId })
+          .from(catalogArtist)
+          .where(eq(catalogArtist.artistaId, mutation.artistId))
+        if (catalogSelection?.pseudonimoId == null && previousArtist?.pseudonimo !== pseudonym.pseudonimo) {
+          catalogDataChanged = true
+        }
         await setPrimary(transaction, mutation.artistId, pseudonym.id, pseudonym.pseudonimo)
         return
       }
@@ -237,6 +266,7 @@ export async function mutateArtistPseudonymAction(
         await transaction.update(participationExhibition).set({ pseudonimoId: replacement.id }).where(and(eq(participationExhibition.artistaId, mutation.artistId), eq(participationExhibition.pseudonimoId, pseudonym.id)))
         await transaction.update(participationActivity).set({ pseudonimoId: replacement.id }).where(and(eq(participationActivity.artistaId, mutation.artistId), eq(participationActivity.pseudonimoId, pseudonym.id)))
         if (catalogReference) {
+          if (replacement.pseudonimo !== pseudonym.pseudonimo) catalogDataChanged = true
           catalogSlugChanged = await allocateCatalogSlug(
             transaction,
             mutation.artistId,
@@ -244,6 +274,17 @@ export async function mutateArtistPseudonymAction(
           )
         }
         if (primary?.pseudonimoId === pseudonym.id) {
+          const [previousArtist] = await transaction
+            .select({ pseudonimo: artist.pseudonimo })
+            .from(artist)
+            .where(eq(artist.id, mutation.artistId))
+          const [catalogSelection] = await transaction
+            .select({ pseudonimoId: catalogArtist.pseudonimoId })
+            .from(catalogArtist)
+            .where(eq(catalogArtist.artistaId, mutation.artistId))
+          if (catalogSelection?.pseudonimoId == null && previousArtist?.pseudonimo !== replacement.pseudonimo) {
+            catalogDataChanged = true
+          }
           await setPrimary(transaction, mutation.artistId, replacement.id, replacement.pseudonimo)
         }
       }
@@ -255,7 +296,7 @@ export async function mutateArtistPseudonymAction(
 
     updateTag(ARTIST_CACHE_TAG)
     if (historyChanged) updateTag(ARTIST_HISTORY_CACHE_TAG)
-    if (catalogSlugChanged) {
+    if (catalogSlugChanged || catalogDataChanged) {
       updateTag(CATALOG_CACHE_TAG)
       void revalidateWebCache({ tag: CATALOG_CACHE_TAG, path: '/catalogo' })
     }

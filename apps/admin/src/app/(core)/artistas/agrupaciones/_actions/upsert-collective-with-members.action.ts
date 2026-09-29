@@ -7,11 +7,13 @@ import { artist } from '@frijolmagico/database/schema'
 import { and, eq, isNull, sql } from 'drizzle-orm'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import {
+  CATALOG_CACHE_TAG,
   COLLECTIVE_ACTIVE_CACHE_TAG,
   COLLECTIVE_CACHE_TAG,
   COLLECTIVE_DELETED_CACHE_TAG,
   getCollectiveMembersCacheTag
 } from '@frijolmagico/cache-tags'
+import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
 import type { ActionState } from '@/shared/types/actions'
 import {
   upsertCollectivePayloadSchema,
@@ -52,7 +54,54 @@ export async function upsertCollectiveWithMembersAction(
       pendingRemovals
     } = parsedPayload.data
 
+    let catalogChanged = false
     await db.transaction(async (transaction) => {
+      const [existingCollective] = await transaction
+        .select({ nombre: collective.nombre, activo: collective.activo })
+        .from(collective)
+        .where(eq(collective.id, collectiveId))
+      const existingMembers = await transaction
+        .select({
+          artistId: collectiveArtist.artistaId,
+          pseudonymId: collectiveArtist.pseudonimoId,
+          role: collectiveArtist.rol,
+          active: collectiveArtist.activo
+        })
+        .from(collectiveArtist)
+        .where(eq(collectiveArtist.agrupacionId, collectiveId))
+      const memberByArtist = new Map(
+        existingMembers.map((member) => [member.artistId, member])
+      )
+      catalogChanged =
+        existingCollective !== undefined &&
+        (existingCollective.nombre !== fields.nombre.trim() ||
+          existingCollective.activo !== fields.activo)
+      for (const add of pendingAdds) {
+        const member = memberByArtist.get(add.artistId)
+        if (
+          !member ||
+          member.pseudonymId !== add.pseudonymId ||
+          !member.active ||
+          member.role !== add.role
+        ) {
+          catalogChanged = true
+        }
+      }
+      for (const update of pendingUpdates) {
+        const member = memberByArtist.get(update.artistId)
+        if (
+          member &&
+          (member.pseudonymId !== update.pseudonymId ||
+            member.role !== update.role ||
+            member.active !== update.active)
+        ) {
+          catalogChanged = true
+        }
+      }
+      for (const artistId of pendingRemovals) {
+        if (memberByArtist.get(artistId)?.active) catalogChanged = true
+      }
+
       const validatePseudonym = async (
         artistId: number,
         pseudonymId: number | null
@@ -166,6 +215,9 @@ export async function upsertCollectiveWithMembersAction(
     updateTag(COLLECTIVE_ACTIVE_CACHE_TAG)
     updateTag(COLLECTIVE_DELETED_CACHE_TAG)
     updateTag(getCollectiveMembersCacheTag(collectiveId))
+    if (catalogChanged) {
+      void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
+    }
 
     return { success: true }
   } catch (error) {

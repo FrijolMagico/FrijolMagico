@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server'
 import { ARTIST_CACHE_TAG, ARTIST_DETAIL_CACHE_TAG, CATALOG_CACHE_TAG } from '@frijolmagico/cache-tags'
 import { persistArtistAvatarAction } from '@/core/artistas/_actions/persist-artist-avatar.action'
 import { getSession } from '@/shared/lib/auth/utils'
+import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
 
 function invalidateCatalogCache(): void {
   for (const tag of [CATALOG_CACHE_TAG, ARTIST_CACHE_TAG, ARTIST_DETAIL_CACHE_TAG]) {
@@ -30,5 +31,6 @@ export async function POST(request: Request) {
     )
   }
   invalidateCatalogCache()
+  void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
   return NextResponse.json(result.data)
 }
