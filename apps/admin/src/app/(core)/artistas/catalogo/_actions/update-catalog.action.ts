@@ -27,6 +27,7 @@ import {
   type CatalogUpdateInput,
   catalogUpdateSchema
 } from '../_schemas/catalog.schema'
+import { allocateCatalogSlug } from '../_lib/catalog-slug'
 
 function conflict(): ActionState {
   return {
@@ -69,6 +70,7 @@ export async function updateCatalogAction(
   const {
     id,
     artistaId,
+    pseudonimoId,
     descripcion,
     activo,
     destacado,
@@ -81,6 +83,19 @@ export async function updateCatalogAction(
 
   try {
     const result = await db.transaction(async (tx) => {
+      const [ownedPseudonym] = await tx
+        .select({ id: artist.artistPseudonym.id, pseudonimo: artist.artistPseudonym.pseudonimo })
+        .from(artist.artistPseudonym)
+        .where(
+          and(
+            eq(artist.artistPseudonym.id, pseudonimoId),
+            eq(artist.artistPseudonym.artistaId, artistaId),
+            isNull(artist.artistPseudonym.deletedAt)
+          )
+        )
+        .limit(1)
+      if (!ownedPseudonym) return null
+
       const [current] = await tx
         .select({
           id: artist.artistImage.id,
@@ -141,9 +156,18 @@ export async function updateCatalogAction(
           return null
       }
 
+      const [currentCatalog] = await tx
+        .select({ pseudonimoId: artist.catalogArtist.pseudonimoId })
+        .from(artist.catalogArtist)
+        .where(eq(artist.catalogArtist.id, id))
+        .limit(1)
+      if (currentCatalog && currentCatalog.pseudonimoId !== pseudonimoId) {
+        await allocateCatalogSlug(tx, artistaId, ownedPseudonym.pseudonimo)
+      }
+
       await tx
         .update(artist.catalogArtist)
-        .set({ descripcion, activo, destacado })
+        .set({ descripcion, activo, destacado, pseudonimoId })
         .where(eq(artist.catalogArtist.id, id))
 
       if (intent === AVATAR_INTENT.HISTORICAL && avatarId) {

@@ -1,6 +1,6 @@
 export const CATALOG_QUERY = `SELECT json_object(
   'id', a.id,
-  'name', COALESCE(a.pseudonimo, a.nombre),
+  'name', COALESCE(catalog_pseudonym.pseudonimo, a.pseudonimo, a.nombre),
   'slug', a.slug,
   'email', a.correo,
   'rrss', a.rrss,
@@ -62,72 +62,102 @@ export const CATALOG_QUERY = `SELECT json_object(
   'editions', COALESCE((
     SELECT json_group_array(
       json_object(
+        'evento_id', sub.evento_id,
         'edicion', sub.numero_edicion,
         'evento', sub.evento_nombre,
         'año', sub.año,
+        'tipo_participacion', sub.tipo_participacion,
+        'categoria', sub.categoria,
         'via_agrupacion', sub.via_agrupacion
       )
     )
     FROM (
-      SELECT DISTINCT
+      SELECT
+        ee.evento_id,
         ee.numero_edicion,
         ev.nombre as evento_nombre,
         SUBSTR(MIN(eed.fecha), 1, 4) as año,
+        'exhibicion' as tipo_participacion,
+        d.slug as categoria,
         NULL as via_agrupacion
       FROM participacion_edicion ped
+      JOIN participacion_exposicion pexp ON pexp.participacion_id = ped.id
+      JOIN disciplina d ON pexp.disciplina_id = d.id
       JOIN evento_edicion ee ON ped.edicion_id = ee.id
       JOIN evento ev ON ee.evento_id = ev.id
       LEFT JOIN evento_edicion_dia eed ON ee.id = eed.evento_edicion_id
       WHERE ped.artista_id = a.id
-        AND (
-          EXISTS (
-            SELECT 1
-            FROM participacion_exposicion pexp
-            WHERE pexp.participacion_id = ped.id
-              AND pexp.estado IN ('confirmado', 'completado')
-          )
-          OR EXISTS (
-            SELECT 1
-            FROM participacion_actividad pact
-            WHERE pact.participacion_id = ped.id
-              AND pact.estado IN ('confirmado', 'completado')
-          )
-        )
-      GROUP BY ee.id, ee.numero_edicion, ev.nombre
+        AND pexp.estado IN ('confirmado', 'completado')
+      GROUP BY ee.id, ee.evento_id, ee.numero_edicion, ev.nombre, d.slug
 
       UNION ALL
 
-      SELECT DISTINCT
+      SELECT
+        ee.evento_id,
         ee.numero_edicion,
         ev.nombre as evento_nombre,
         SUBSTR(MIN(eed.fecha), 1, 4) as año,
+        'actividad' as tipo_participacion,
+        ta.slug as categoria,
+        NULL as via_agrupacion
+      FROM participacion_edicion ped
+      JOIN participacion_actividad pact ON pact.participacion_id = ped.id
+      JOIN tipo_actividad ta ON pact.tipo_actividad_id = ta.id
+      JOIN evento_edicion ee ON ped.edicion_id = ee.id
+      JOIN evento ev ON ee.evento_id = ev.id
+      LEFT JOIN evento_edicion_dia eed ON ee.id = eed.evento_edicion_id
+      WHERE ped.artista_id = a.id
+        AND pact.estado IN ('confirmado', 'completado')
+      GROUP BY ee.id, ee.evento_id, ee.numero_edicion, ev.nombre, ta.slug
+
+      UNION ALL
+
+      SELECT
+        ee.evento_id,
+        ee.numero_edicion,
+        ev.nombre as evento_nombre,
+        SUBSTR(MIN(eed.fecha), 1, 4) as año,
+        'exhibicion' as tipo_participacion,
+        d.slug as categoria,
         ag.nombre as via_agrupacion
       FROM agrupacion_artista aa
       JOIN participacion_edicion ped ON ped.agrupacion_id = aa.agrupacion_id
       JOIN agrupacion ag ON aa.agrupacion_id = ag.id
+      JOIN participacion_exposicion pexp ON pexp.participacion_id = ped.id
+      JOIN disciplina d ON pexp.disciplina_id = d.id
       JOIN evento_edicion ee ON ped.edicion_id = ee.id
       JOIN evento ev ON ee.evento_id = ev.id
       LEFT JOIN evento_edicion_dia eed ON ee.id = eed.evento_edicion_id
       WHERE aa.artista_id = a.id
-        AND (
-          EXISTS (
-            SELECT 1
-            FROM participacion_exposicion pexp
-            WHERE pexp.participacion_id = ped.id
-              AND pexp.estado IN ('confirmado', 'completado')
-          )
-          OR EXISTS (
-            SELECT 1
-            FROM participacion_actividad pact
-            WHERE pact.participacion_id = ped.id
-              AND pact.estado IN ('confirmado', 'completado')
-          )
-        )
-      GROUP BY ee.id, ee.numero_edicion, ev.nombre, ag.nombre
+        AND pexp.estado IN ('confirmado', 'completado')
+      GROUP BY ee.id, ee.evento_id, ee.numero_edicion, ev.nombre, d.slug, ag.nombre
+
+      UNION ALL
+
+      SELECT
+        ee.evento_id,
+        ee.numero_edicion,
+        ev.nombre as evento_nombre,
+        SUBSTR(MIN(eed.fecha), 1, 4) as año,
+        'actividad' as tipo_participacion,
+        ta.slug as categoria,
+        ag.nombre as via_agrupacion
+      FROM agrupacion_artista aa
+      JOIN participacion_edicion ped ON ped.agrupacion_id = aa.agrupacion_id
+      JOIN agrupacion ag ON aa.agrupacion_id = ag.id
+      JOIN participacion_actividad pact ON pact.participacion_id = ped.id
+      JOIN tipo_actividad ta ON pact.tipo_actividad_id = ta.id
+      JOIN evento_edicion ee ON ped.edicion_id = ee.id
+      JOIN evento ev ON ee.evento_id = ev.id
+      LEFT JOIN evento_edicion_dia eed ON ee.id = eed.evento_edicion_id
+      WHERE aa.artista_id = a.id
+        AND pact.estado IN ('confirmado', 'completado')
+      GROUP BY ee.id, ee.evento_id, ee.numero_edicion, ev.nombre, ta.slug, ag.nombre
     ) sub
   ), '[]')
 ) as resultado
 FROM catalogo_artista ca
 JOIN artista a ON ca.artista_id = a.id
+LEFT JOIN artista_pseudonimo catalog_pseudonym ON catalog_pseudonym.id = ca.pseudonimo_id
 WHERE ca.activo = 1 AND ca.deleted_at IS NULL
 ORDER BY ca.orden ASC`

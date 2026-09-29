@@ -331,9 +331,11 @@ const { CreateCatalogDialog } =
   await import('@/core/artistas/catalogo/_components/create-catalog-dialog')
 
 const availableArtists = [
-  { id: 1, pseudonimo: 'Luna Roja', nombre: 'Ana Pérez', slug: 'luna-roja' },
+  { id: 1, pseudonimoId: 101, pseudonimo: 'Luna Roja', nombre: 'Ana Pérez', slug: 'luna-roja' },
+  { id: 1, pseudonimoId: 102, pseudonimo: 'Sol Azul', nombre: 'Ana Pérez', slug: 'luna-roja' },
   {
     id: 2,
+    pseudonimoId: 201,
     pseudonimo: 'Bosque Azul',
     nombre: 'María Soto',
     slug: 'bosque-azul'
@@ -375,6 +377,16 @@ afterEach(() => {
 // ── Tests ───────────────────────────────────────────────────────────
 
 describe('CreateCatalogDialog avatar integration', () => {
+  test('offers every active pseudonym, including multiple names for one artist', async () => {
+    await act(async () => {
+      root?.render(createElement(CreateCatalogDialog, { availableArtists }))
+    })
+
+    expect(container.textContent).toContain('Luna Roja')
+    expect(container.textContent).toContain('Sol Azul')
+    expect(container.textContent).toContain('Bosque Azul')
+  })
+
   test('R3: select artist with avatar displays existing avatar', async () => {
     await act(async () => {
       root?.render(createElement(CreateCatalogDialog, { availableArtists }))
@@ -455,7 +467,10 @@ describe('CreateCatalogDialog avatar integration', () => {
     // Wait for async submit
     await new Promise((resolve) => setTimeout(resolve, 10))
 
-    expect(mockCreateCatalogAction).toHaveBeenCalled()
+    expect(mockCreateCatalogAction).toHaveBeenCalledWith(
+      { success: false },
+      expect.objectContaining({ artistaId: 1, pseudonimoId: 101 })
+    )
     // enqueue should have been called on success
     expect(mockEnqueue).toHaveBeenCalledWith(88, {
       activation: { catalogId: 9, requestedActive: true }

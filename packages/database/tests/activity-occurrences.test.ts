@@ -24,7 +24,7 @@ const journalPath = join(migrationsDirectory, 'meta/_journal.json')
 const directories: string[] = []
 type Database = ReturnType<typeof createClient>
 
-async function setup() {
+async function setup(options: { applyRegistrationMigration?: boolean } = {}) {
   const directory = await mkdtemp(join(tmpdir(), 'activity-occurrences-'))
   directories.push(directory)
   const db = createClient({ url: `file:${join(directory, 'test.db')}` })
@@ -48,8 +48,10 @@ async function setup() {
     await db.execute(statement)
   }
   await db.execute("INSERT INTO activity_occurrence (activity_id, date, start_time, duration_minutes) VALUES (1, '2026-09-06', '10:00', 60)")
-  for (const statement of registrationMigration.split('--> statement-breakpoint').map((part) => part.trim()).filter(Boolean)) {
-    await db.execute(statement)
+  if (options.applyRegistrationMigration !== false) {
+    for (const statement of registrationMigration.split('--> statement-breakpoint').map((part) => part.trim()).filter(Boolean)) {
+      await db.execute(statement)
+    }
   }
   return db
 }
@@ -177,7 +179,17 @@ describe('activity occurrences additive migration', () => {
     await add(db, 1, '2026-09-08', '10:00', 60)
   })
 
-  test('journal exposes 0023 and the local Drizzle migrator applies it exactly once', async () => {
+  test('preserves pre-0023 occurrence schema and cleanup behavior', async () => {
+    const db = await setup({ applyRegistrationMigration: false })
+    const columns = await db.execute('PRAGMA table_info(activity_occurrence)')
+    expect(columns.rows.map((column) => column.name)).not.toContain('url')
+    await expect(add(db, 3, '2026-09-05', '09:00', 60)).rejects.toThrow()
+    expect((await db.execute('SELECT count(*) AS n FROM activity_occurrence WHERE activity_id = 1')).rows[0]?.n).toBe(2)
+    await db.execute('UPDATE participacion_actividad SET tipo_actividad_id = 3 WHERE id = 1')
+    expect((await db.execute('SELECT count(*) AS n FROM activity_occurrence WHERE activity_id = 1')).rows[0]?.n).toBe(0)
+  })
+
+  test('journal exposes activity occurrence migrations and the local Drizzle migrator applies them exactly once', async () => {
     const entries = JSON.parse(readFileSync(journalPath, 'utf8')).entries as {
       idx: number
       version: string
@@ -185,18 +197,32 @@ describe('activity occurrences additive migration', () => {
       tag: string
       breakpoints: boolean
     }[]
-    expect(entries.at(-2)).toEqual({
+    expect(entries[22]).toEqual({
       idx: 22,
       version: '7',
       when: 1785369600000,
       tag: '0022_activity_occurrences',
       breakpoints: true
     })
-    expect(entries.at(-1)).toEqual({
+    expect(entries[23]).toEqual({
       idx: 23,
       version: '7',
       when: 1785456000000,
       tag: '0023_activity_occurrence_registration',
+      breakpoints: true
+    })
+    expect(entries[24]).toEqual({
+      idx: 24,
+      version: '7',
+      when: 1785542400000,
+      tag: '0024_artist_pseudonyms',
+      breakpoints: true
+    })
+    expect(entries.at(-1)).toEqual({
+      idx: 25,
+      version: '7',
+      when: 1785628800000,
+      tag: '0025_catalog_slug_aliases',
       breakpoints: true
     })
     expect(entries.at(-1)!.when).toBeGreaterThan(entries.at(-2)!.when)

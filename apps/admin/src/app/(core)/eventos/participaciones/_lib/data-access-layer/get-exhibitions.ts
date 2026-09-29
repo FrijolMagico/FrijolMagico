@@ -29,6 +29,8 @@ export async function getExhibitions(
   const result = await db
     .select({
       id: participationExhibition.id,
+      artistaId: participationExhibition.artistaId,
+      pseudonimoId: participationExhibition.pseudonimoId,
       participacionId: participationExhibition.participacionId,
       disciplinaId: participationExhibition.disciplinaId,
       postulacionId: participationExhibition.postulacionId,

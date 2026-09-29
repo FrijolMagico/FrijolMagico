@@ -33,6 +33,7 @@ import {
   artistStatus,
   artistHistory,
   artistImage,
+  artistSlugAlias,
   catalogArtist,
   band
 } from './schema/artist'
@@ -82,11 +83,19 @@ export const artistRelations = relations(artist, ({ one, many }) => ({
   }),
   imagenes: many(artistImage),
   historial: many(artistHistory),
+  slugAliases: many(artistSlugAlias),
   catalogoArtista: one(catalogArtist, {
     fields: [artist.id],
     references: [catalogArtist.artistaId]
   }),
   participaciones: many(editionParticipation)
+}))
+
+export const artistSlugAliasRelations = relations(artistSlugAlias, ({ one }) => ({
+  artist: one(artist, {
+    fields: [artistSlugAlias.artistaId],
+    references: [artist.id]
+  })
 }))
 
 export const artistImageRelations = relations(artistImage, ({ one }) => ({

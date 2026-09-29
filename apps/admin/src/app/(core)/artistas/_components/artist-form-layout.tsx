@@ -21,10 +21,19 @@ import type {
   ArtistUpdateFormInput,
   HistorialFlags
 } from '../_schemas/artista.schema'
+import type { ArtistPseudonymDraftInput } from '../_schemas/artist-pseudonym.schema'
 import { RRSSManager } from '@/shared/components/rrss/rrss-manager'
+import {
+  ArtistPseudonymEditor,
+  CreateArtistPseudonymEditor
+} from './artist-pseudonym-editor'
 
 interface ArtistFormLayoutProps {
   check?: boolean
+  artistId?: number
+  onPseudonymDraftChange?: (drafts: ArtistPseudonymDraftInput[]) => void
+  pseudonymEditorKey?: string
+  onCreatePseudonymsChange?: (value: { pseudonyms: string[]; primaryPseudonym: string }) => void
 }
 
 function HistorialCheck({ name }: { name: keyof HistorialFlags & string }) {
@@ -49,10 +58,17 @@ function HistorialCheck({ name }: { name: keyof HistorialFlags & string }) {
   )
 }
 
-export function ArtistFormLayout({ check }: ArtistFormLayoutProps) {
+export function ArtistFormLayout({
+  check,
+  artistId,
+  onPseudonymDraftChange,
+  pseudonymEditorKey,
+  onCreatePseudonymsChange
+}: ArtistFormLayoutProps) {
   const {
     register,
     control,
+    getValues,
     formState: { errors }
   } = useFormContext<ArtistUpdateFormInput>()
 
@@ -67,23 +83,16 @@ export function ArtistFormLayout({ check }: ArtistFormLayoutProps) {
         />
       </Field>
 
-      <Field>
-        <div className='flex items-center justify-between'>
-          <FieldLabel htmlFor='pseudonimo'>
-            Pseudónimo <span className='text-destructive'>*</span>
-          </FieldLabel>
-          {check && <HistorialCheck name='pseudonimo' />}
-        </div>
-        <Input
-          id='pseudonimo'
-          {...register('pseudonimo')}
-          placeholder='Pseudónimo artístico'
-          aria-invalid={!!errors.pseudonimo}
+      {check && artistId ? (
+        <ArtistPseudonymEditor
+          key={`${artistId}-${pseudonymEditorKey ?? 'default'}`}
+          artistId={artistId}
+          initialPseudonym={String(getValues('pseudonimo') ?? '')}
+          onDraftsChange={onPseudonymDraftChange ?? (() => {})}
         />
-        {errors.pseudonimo && (
-          <FieldError>{errors.pseudonimo.message}</FieldError>
-        )}
-      </Field>
+      ) : (
+        <CreateArtistPseudonymEditor onChange={onCreatePseudonymsChange ?? (() => {})} />
+      )}
 
       <div className='grid grid-cols-2 gap-4'>
         <Field>

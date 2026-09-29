@@ -1,6 +1,6 @@
 import 'server-only'
 import { cacheTag } from 'next/cache'
-import { and, asc, count, eq, inArray, notExists, sql } from 'drizzle-orm'
+import { and, asc, count, eq, inArray, isNull, notExists, sql } from 'drizzle-orm'
 
 import { isNotDeleted } from '@frijolmagico/database/filters'
 import { db } from '@frijolmagico/database/orm'
@@ -26,7 +26,12 @@ import type {
 } from '../_types/catalog-list-item'
 import type { ActiveAvatar } from './avatar-history-contracts'
 
-const { catalogArtist, artistImage, artist: artistTable } = artist
+const {
+  catalogArtist,
+  artistImage,
+  artist: artistTable,
+  artistPseudonym
+} = artist
 
 interface CatalogArtistRow {
   id: number
@@ -44,6 +49,7 @@ interface CatalogArtistRow {
 
 interface CatalogResultRow {
   id: number
+  pseudonimoId: number | null
   artistaId: number
   orden: string
   destacado: boolean
@@ -94,6 +100,7 @@ export async function getCatalogData(
   const catalogResults: CatalogResultRow[] = await db
     .select({
       id: catalogArtist.id,
+      pseudonimoId: catalogArtist.pseudonimoId,
       artistaId: catalogArtist.artistaId,
       orden: catalogArtist.orden,
       destacado: catalogArtist.destacado,
@@ -143,6 +150,31 @@ export async function getCatalogData(
           .orderBy(asc(artistImage.orden))
       : []
 
+  const pseudonyms =
+    artistIds.length > 0
+      ? await db
+          .select({
+            id: artistPseudonym.id,
+            artistaId: artistPseudonym.artistaId,
+            pseudonimo: artistPseudonym.pseudonimo
+          })
+          .from(artistPseudonym)
+          .where(
+            and(
+              inArray(artistPseudonym.artistaId, artistIds),
+              isNull(artistPseudonym.deletedAt)
+            )
+          )
+          .orderBy(asc(artistPseudonym.pseudonimo))
+      : []
+
+  const pseudonymMap = new Map<number, Array<{ id: number; pseudonimo: string }>>()
+  for (const pseudonym of pseudonyms) {
+    const active = pseudonymMap.get(pseudonym.artistaId) ?? []
+    active.push({ id: pseudonym.id, pseudonimo: pseudonym.pseudonimo })
+    pseudonymMap.set(pseudonym.artistaId, active)
+  }
+
   const avatarMap = new Map<number, ActiveAvatar>()
   for (const avatar of avatars) {
     if (!avatarMap.has(avatar.artistaId)) {
@@ -160,7 +192,10 @@ export async function getCatalogData(
 
   const results = catalogResults.map((row) => ({
     ...row,
-    artist: mapCatalogArtist(row.artist),
+    artist: {
+      ...mapCatalogArtist(row.artist),
+      activePseudonyms: pseudonymMap.get(row.artistaId) ?? []
+    },
     activeAvatar: avatarMap.get(row.artistaId) ?? null
   }))
 
@@ -187,11 +222,19 @@ export async function getArtistsNotInCatalog(): Promise<
   const artists = await db
     .select({
       id: artistTable.id,
-      pseudonimo: artistTable.pseudonimo,
+      pseudonimoId: artistPseudonym.id,
+      pseudonimo: artistPseudonym.pseudonimo,
       nombre: artistTable.nombre,
       slug: artistTable.slug
     })
     .from(artistTable)
+    .innerJoin(
+      artistPseudonym,
+      and(
+        eq(artistPseudonym.artistaId, artistTable.id),
+        isNull(artistPseudonym.deletedAt)
+      )
+    )
     .where(
       and(
         isNotDeleted(artistTable.deletedAt),
@@ -208,7 +251,7 @@ export async function getArtistsNotInCatalog(): Promise<
         )
       )
     )
-    .orderBy(asc(artistTable.pseudonimo), asc(artistTable.nombre))
+    .orderBy(asc(artistPseudonym.pseudonimo), asc(artistTable.nombre))
 
   return artists
 }

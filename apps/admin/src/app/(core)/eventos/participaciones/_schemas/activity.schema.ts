@@ -275,6 +275,7 @@ export const activityFormSchema = activityInsertSchema
     detail: activityDetailInsertSchema.omit({
       participacionActividadId: true
     }),
+    pseudonimoId: positiveIdSchema.nullable().optional(),
     participantType: z.enum(Object.values(PARTICIPANT_TYPE)),
     entity: editionParticipationEntitySchema,
     registration: validatedRegistrationSchema.optional(),

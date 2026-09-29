@@ -27,6 +27,8 @@ export async function getActivitiesWithDetails(
   const rows = await db
     .select({
       id: participationActivity.id,
+      artistaId: participationActivity.artistaId,
+      pseudonimoId: participationActivity.pseudonimoId,
       participacionId: participationActivity.participacionId,
       tipoActividadId: participationActivity.tipoActividadId,
       postulacionId: participationActivity.postulacionId,
@@ -113,6 +115,8 @@ export async function getActivitiesWithDetails(
 
     return {
       id: row.id,
+      artistaId: row.artistaId,
+      pseudonimoId: row.pseudonimoId,
       participacionId: row.participacionId,
       tipoActividadId: row.tipoActividadId,
       postulacionId: row.postulacionId,
