@@ -8,10 +8,15 @@ import { requireAuth } from '@/shared/lib/auth/utils'
 import { ActionState } from '@/shared/types/actions'
 import {
   ARTIST_DETAIL_CACHE_TAG,
+  CATALOG_CACHE_TAG,
+  EDITION_CACHE_TAG,
+  EVENT_CACHE_TAG,
+  FESTIVALES_CACHE_TAG,
   getEditionParticipationsCacheTag,
   getParticipationExhibitionsCacheTag
 } from '@frijolmagico/cache-tags'
 import { findOrCreateEditionParticipation } from '../_lib/find-or-create-edition-participation'
+import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
 import { resolveActiveArtistPseudonym } from '../_lib/resolve-artist-pseudonym'
 import {
   type ExhibitionInsertInput,
@@ -23,6 +28,7 @@ import {
 } from '../../_schemas/edition-participation.schema'
 
 const { participationExhibition } = participations
+const PUBLIC_EXHIBITION_TAGS = [FESTIVALES_CACHE_TAG, EVENT_CACHE_TAG, EDITION_CACHE_TAG]
 
 export async function createExhibitionAction(data: {
   participation: ParticipationInsertInput
@@ -46,6 +52,7 @@ export async function createExhibitionAction(data: {
     }
 
     let participationId: number | null = null
+    let catalogChanged = false
 
     await db.transaction(async (tx) => {
       const participationRecord = await findOrCreateEditionParticipation(
@@ -74,6 +81,9 @@ export async function createExhibitionAction(data: {
       })
 
       await tx.insert(participationExhibition).values(exhibitionValues)
+      catalogChanged = ['confirmado', 'completado'].includes(
+        exhibitionValues.estado ?? ''
+      )
     })
 
     updateTag(getEditionParticipationsCacheTag(data.participation.edicionId))
@@ -81,6 +91,17 @@ export async function createExhibitionAction(data: {
       updateTag(getParticipationExhibitionsCacheTag(participationId))
     }
     updateTag(ARTIST_DETAIL_CACHE_TAG)
+    for (const tag of PUBLIC_EXHIBITION_TAGS) {
+      try {
+        updateTag(tag)
+      } catch (error) {
+        console.error('[createExhibitionAction] Local invalidation failed', { tag, error })
+      }
+      void revalidateWebCacheBestEffort({ tag })
+    }
+    if (catalogChanged) {
+      void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
+    }
 
     return { success: true }
   } catch (error) {

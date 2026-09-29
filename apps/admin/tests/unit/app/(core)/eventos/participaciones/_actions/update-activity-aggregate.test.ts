@@ -7,6 +7,10 @@ let parentEditionId = 7
 let activityTypeSlug = 'taller'
 let activityExists = true
 let activityParticipationId = 11
+let storedActivityStatus = 'confirmado'
+let storedActivityTypeId = 1
+let storedParticipationArtistId = 5
+let storedParticipationCollectiveId: number | null = null
 let storedSessions: { id?: number; url?: string | null; date: string; startTime: string | null; durationMinutes: number | null }[] = []
 let invalidations: string[]
 let committed = false
@@ -51,13 +55,19 @@ function createHarness() {
             ? {
                 id: 22,
                 participacionId: activityParticipationId,
-                tipoActividadId: 1,
+                tipoActividadId: storedActivityTypeId,
+                estado: storedActivityStatus,
                 pseudonimoId: 41
               }
             : undefined
       },
       editionParticipation: {
-        findFirst: async () => ({ id: 11, edicionId: parentEditionId })
+        findFirst: async () => ({
+          id: 11,
+          edicionId: parentEditionId,
+          artistaId: storedParticipationArtistId,
+          agrupacionId: storedParticipationCollectiveId
+        })
       },
       activityType: {
         findFirst: async () => ({
@@ -173,6 +183,10 @@ beforeEach(async () => {
   activityTypeSlug = 'taller'
   activityExists = true
   activityParticipationId = 11
+  storedActivityStatus = 'confirmado'
+  storedActivityTypeId = 1
+  storedParticipationArtistId = 5
+  storedParticipationCollectiveId = null
   storedSessions = [{
     id: 44,
     url: null,
@@ -223,8 +237,17 @@ describe('updateActivityAggregateAction', () => {
       'artistas:detalle',
       'festivales',
       'eventos',
-      'ediciones'
+      'ediciones',
+      'catalogo:artistas'
     ])
+  })
+
+  test('does not invalidate the web catalog when a non-public activity remains unchanged', async () => {
+    storedActivityStatus = 'seleccionado'
+    const result = await action(input)
+
+    expect(result.success).toBe(true)
+    expect(invalidations).not.toContain('catalogo:artistas')
   })
 
   test('rejects edition and activity ownership mismatches before mutations', async () => {

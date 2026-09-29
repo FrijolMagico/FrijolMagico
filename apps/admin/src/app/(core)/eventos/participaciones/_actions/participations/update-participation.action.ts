@@ -11,7 +11,12 @@ import {
   editionParticipationUpdateSchema,
   type ParticipationUpdateInput
 } from '../../_schemas/edition-participation.schema'
-import { ARTIST_DETAIL_CACHE_TAG, getEditionParticipationsCacheTag } from '@frijolmagico/cache-tags'
+import {
+  ARTIST_DETAIL_CACHE_TAG,
+  CATALOG_CACHE_TAG,
+  getEditionParticipationsCacheTag
+} from '@frijolmagico/cache-tags'
+import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
 
 const { editionParticipation } = participations
 
@@ -33,13 +38,42 @@ export async function updateParticipationAction(
       }
     }
 
-    await db
-      .update(editionParticipation)
-      .set(parsed.data)
-      .where(eq(editionParticipation.id, parsed.data.id))
+    let oldEditionId: number | null = null
+    let changed = false
+    let catalogChanged = false
+    await db.transaction(async (tx) => {
+      const existing = await tx.query.editionParticipation.findFirst({
+        where: (table, operators) => operators.eq(table.id, parsed.data.id),
+      })
+      if (!existing) throw new Error('No se encontró la participación')
 
-    updateTag(getEditionParticipationsCacheTag(parsed.data.edicionId))
+      oldEditionId = existing.edicionId
+      changed = Object.entries(parsed.data).some(
+        ([key, value]) => existing[key as keyof typeof existing] !== value
+      )
+      if (!changed) return
+
+      catalogChanged =
+        existing.edicionId !== parsed.data.edicionId ||
+        existing.artistaId !== parsed.data.artistaId ||
+        existing.agrupacionId !== parsed.data.agrupacionId
+      await tx
+        .update(editionParticipation)
+        .set(parsed.data)
+        .where(eq(editionParticipation.id, parsed.data.id))
+    })
+
+    if (!changed) return { success: true }
+    if (oldEditionId !== null) {
+      updateTag(getEditionParticipationsCacheTag(oldEditionId))
+    }
+    if (oldEditionId !== parsed.data.edicionId) {
+      updateTag(getEditionParticipationsCacheTag(parsed.data.edicionId))
+    }
     updateTag(ARTIST_DETAIL_CACHE_TAG)
+    if (catalogChanged) {
+      void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
+    }
 
     return { success: true }
   } catch (error) {

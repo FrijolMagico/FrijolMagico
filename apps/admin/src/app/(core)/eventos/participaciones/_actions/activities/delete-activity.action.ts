@@ -9,12 +9,18 @@ import { requireAuth } from '@/shared/lib/auth/utils'
 import type { ActionState } from '@/shared/types/actions'
 import {
   ARTIST_DETAIL_CACHE_TAG,
+  CATALOG_CACHE_TAG,
+  EDITION_CACHE_TAG,
+  EVENT_CACHE_TAG,
+  FESTIVALES_CACHE_TAG,
   getEditionParticipationsCacheTag,
   getParticipationActivitiesCacheTag
 } from '@frijolmagico/cache-tags'
+import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
 import { deleteOrphanedEditionParticipation } from '../participations/delete-orphaned-edition-participation'
 
 const { participationActivity } = participations
+const PUBLIC_ACTIVITY_TAGS = [FESTIVALES_CACHE_TAG, EVENT_CACHE_TAG, EDITION_CACHE_TAG]
 
 interface DeleteActivityInput {
   id: number
@@ -47,6 +53,7 @@ export async function deleteActivityAction(
     let editionId: number | null = null
     let alreadyAbsent = false
     let participationDeleted = false
+    let isPublicActivity = false
 
     await db.transaction(async (tx) => {
       const activity = await tx.query.participationActivity.findFirst({
@@ -57,6 +64,8 @@ export async function deleteActivityAction(
       if (activity) {
         participationId = activity.participacionId
         editionId = activity.participacion?.edicionId ?? null
+        isPublicActivity =
+          activity.estado === 'confirmado' || activity.estado === 'completado'
         if (editionId === null) throw new Error('Participación no encontrada')
 
         await tx
@@ -80,9 +89,26 @@ export async function deleteActivityAction(
       throw new Error('Participación no encontrada')
     }
 
-    updateTag(getEditionParticipationsCacheTag(editionId))
-    updateTag(getParticipationActivitiesCacheTag(participationId))
-    updateTag(ARTIST_DETAIL_CACHE_TAG)
+    try {
+      updateTag(getEditionParticipationsCacheTag(editionId))
+      updateTag(getParticipationActivitiesCacheTag(participationId))
+      updateTag(ARTIST_DETAIL_CACHE_TAG)
+    } catch (error) {
+      console.error('[deleteActivityAction] Local invalidation failed', error)
+    }
+    for (const tag of PUBLIC_ACTIVITY_TAGS) {
+      try {
+        updateTag(tag)
+      } catch (error) {
+        console.error('[deleteActivityAction] Local invalidation failed', { tag, error })
+      }
+    }
+    for (const tag of PUBLIC_ACTIVITY_TAGS) {
+      void revalidateWebCacheBestEffort({ tag })
+    }
+    if (isPublicActivity) {
+      void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
+    }
 
     return { success: true, data: { alreadyAbsent, participationDeleted } }
   } catch (error) {

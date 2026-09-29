@@ -9,6 +9,7 @@ import { requireAuth } from '@/shared/lib/auth/utils'
 import type { ActionState } from '@/shared/types/actions'
 import {
   ARTIST_DETAIL_CACHE_TAG,
+  CATALOG_CACHE_TAG,
   EDITION_CACHE_TAG,
   EVENT_CACHE_TAG,
   FESTIVALES_CACHE_TAG,
@@ -64,6 +65,7 @@ export async function updateActivityAggregateAction(
     }
 
     let effectiveParticipationId: number | null = null
+    let catalogChanged = false
     await db.transaction(async (tx) => {
       const existingActivity = await tx.query.participationActivity.findFirst({
         where: (table, operators) => operators.eq(table.id, activityInput.id)
@@ -94,6 +96,13 @@ export async function updateActivityAggregateAction(
             : operators.eq(table.id, submittedTypeId)
       })
       if (!effectiveType) throw new Error('El tipo de actividad no existe')
+      catalogChanged =
+        (['confirmado', 'completado'].includes(existingActivity.estado ?? '') ||
+          ['confirmado', 'completado'].includes(activityInput.estado ?? '')) &&
+        (existingActivity.estado !== activityInput.estado ||
+          existingActivity.tipoActividadId !== effectiveType.id ||
+          existingParticipation.artistaId !== participation.artistaId ||
+          existingParticipation.agrupacionId !== participation.agrupacionId)
       if (!['taller', 'charla', 'musica'].includes(effectiveType.slug)) {
         throw new Error(
           'Este tipo de actividad no admite sesiones y no se puede crear o editar hasta que el modelo lo soporte'
@@ -297,6 +306,9 @@ export async function updateActivityAggregateAction(
       }
     }
     for (const tag of PUBLIC_TAGS) void revalidateWebCacheBestEffort({ tag })
+    if (catalogChanged) {
+      void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
+    }
     return { success: true }
   } catch (error) {
     console.error('[updateActivityAggregateAction]', error)

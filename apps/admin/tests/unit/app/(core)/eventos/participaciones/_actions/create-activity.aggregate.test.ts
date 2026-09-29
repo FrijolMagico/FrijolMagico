@@ -372,6 +372,25 @@ describe('createActivityAction aggregate', () => {
       [{ tag: 'ediciones' }]
     ])
     expect(invalidationCommitStates).toEqual(Array(9).fill(true))
+    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalledWith({
+      tag: 'catalogo:artistas'
+    })
+  })
+
+  test('invalidates the remote catalog after creating a public activity', async () => {
+    const input = payload()
+    input.activity.estado = 'confirmado'
+    const result = await createActivityAction({
+      ...input,
+      occurrences: [{ date: '2026-06-10' }]
+    } as never)
+
+    expect(result.success).toBe(true)
+    expect(transactionCommitted).toBe(true)
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: 'catalogo:artistas'
+    })
+    expect(invalidationCommitStates).toEqual(Array(10).fill(true))
   })
 
   test('does not invalidate any cache after a later detail mutation fails', async () => {

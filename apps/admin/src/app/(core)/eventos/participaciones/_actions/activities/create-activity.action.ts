@@ -8,6 +8,7 @@ import { requireAuth } from '@/shared/lib/auth/utils'
 import { ActionState } from '@/shared/types/actions'
 import {
   ARTIST_DETAIL_CACHE_TAG,
+  CATALOG_CACHE_TAG,
   EDITION_CACHE_TAG,
   EVENT_CACHE_TAG,
   FESTIVALES_CACHE_TAG,
@@ -68,6 +69,8 @@ export async function createActivityAction(
     }
 
     let participationId: number | null = null
+    const isPublicActivity =
+      data.activity.estado === 'confirmado' || data.activity.estado === 'completado'
 
     await db.transaction(async (tx) => {
       const participationRecord = await findOrCreateEditionParticipation(
@@ -193,6 +196,9 @@ export async function createActivityAction(
     }
     for (const tag of PUBLIC_ACTIVITY_TAGS) {
       void revalidateWebCacheBestEffort({ tag })
+    }
+    if (isPublicActivity) {
+      void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
     }
 
     return { success: true }

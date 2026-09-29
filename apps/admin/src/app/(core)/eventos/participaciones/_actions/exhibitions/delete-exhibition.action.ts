@@ -9,12 +9,18 @@ import { requireAuth } from '@/shared/lib/auth/utils'
 import type { ActionState } from '@/shared/types/actions'
 import {
   ARTIST_DETAIL_CACHE_TAG,
+  CATALOG_CACHE_TAG,
+  EDITION_CACHE_TAG,
+  EVENT_CACHE_TAG,
+  FESTIVALES_CACHE_TAG,
   getEditionParticipationsCacheTag,
   getParticipationExhibitionsCacheTag
 } from '@frijolmagico/cache-tags'
 import { deleteOrphanedEditionParticipation } from '../participations/delete-orphaned-edition-participation'
+import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
 
 const { participationExhibition } = participations
+const PUBLIC_EXHIBITION_TAGS = [FESTIVALES_CACHE_TAG, EVENT_CACHE_TAG, EDITION_CACHE_TAG]
 
 interface DeleteExhibitionInput {
   id: number
@@ -48,15 +54,20 @@ export async function deleteExhibitionAction(
     let editionId: number | null = null
     let alreadyAbsent = false
     let participationDeleted = false
+    let catalogChanged = false
 
     await db.transaction(async (tx) => {
       const exhibition = await tx.query.participationExhibition.findFirst({
         where: (table, { eq }) => eq(table.id, id),
+        columns: { id: true, participacionId: true, estado: true },
         with: { participacion: { columns: { edicionId: true } } }
       })
 
       if (exhibition) {
         participationId = exhibition.participacionId
+        catalogChanged = ['confirmado', 'completado'].includes(
+          exhibition.estado ?? ''
+        )
         editionId = exhibition.participacion?.edicionId ?? null
         if (editionId === null) throw new Error('Participación no encontrada')
 
@@ -81,9 +92,26 @@ export async function deleteExhibitionAction(
       throw new Error('Participación no encontrada')
     }
 
-    updateTag(getEditionParticipationsCacheTag(editionId))
-    updateTag(getParticipationExhibitionsCacheTag(participationId))
-    updateTag(ARTIST_DETAIL_CACHE_TAG)
+    try {
+      updateTag(getEditionParticipationsCacheTag(editionId))
+      updateTag(getParticipationExhibitionsCacheTag(participationId))
+      updateTag(ARTIST_DETAIL_CACHE_TAG)
+    } catch (error) {
+      console.error('[deleteExhibitionAction] Local invalidation failed', error)
+    }
+    for (const tag of PUBLIC_EXHIBITION_TAGS) {
+      try {
+        updateTag(tag)
+      } catch (error) {
+        console.error('[deleteExhibitionAction] Local invalidation failed', { tag, error })
+      }
+    }
+    for (const tag of PUBLIC_EXHIBITION_TAGS) {
+      void revalidateWebCacheBestEffort({ tag })
+    }
+    if (catalogChanged) {
+      void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
+    }
 
     return { success: true, data: { alreadyAbsent, participationDeleted } }
   } catch (error) {
