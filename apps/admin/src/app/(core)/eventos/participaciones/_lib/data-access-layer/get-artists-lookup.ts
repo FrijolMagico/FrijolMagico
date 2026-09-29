@@ -12,7 +12,6 @@ import type { ArtistLookup } from '@/core/eventos/participaciones/_types/partici
 
 const {
   artist: artistTable,
-  artistStatus,
   artistPseudonym,
   artistPrimaryPseudonym
 } = artist
@@ -25,13 +24,12 @@ export async function getArtistsLookup(): Promise<Map<number, ArtistLookup>> {
     .select({
       id: artistTable.id,
       pseudonym: artistTable.pseudonimo,
-      statusId: artistStatus.id,
+      statusId: artistTable.estadoId,
       pseudonymId: artistPseudonym.id,
       pseudonymName: artistPseudonym.pseudonimo,
       primaryId: artistPrimaryPseudonym.pseudonimoId
     })
     .from(artistTable)
-    .leftJoin(artistStatus, eq(artistTable.estadoId, artistStatus.id))
     .leftJoin(
       artistPseudonym,
       and(
@@ -51,7 +49,7 @@ export async function getArtistsLookup(): Promise<Map<number, ArtistLookup>> {
     const entry = lookup.get(row.id) ?? {
       id: row.id,
       pseudonym: row.pseudonym,
-      statusId: row.statusId ?? 1,
+      statusId: row.statusId,
       pseudonyms: []
     }
     if (row.pseudonymId !== null && row.pseudonymName !== null) {

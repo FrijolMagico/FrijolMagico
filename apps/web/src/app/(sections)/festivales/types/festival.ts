@@ -76,6 +76,8 @@ export interface FestivalActivity {
   avatar_url?: string | null
   rrss?: string | null
   correo?: string | null
+  presenter_nombre?: string | null
+  presenter_catalogo_slug?: string | null
   registration: ActivityRegistration | null
 }
 

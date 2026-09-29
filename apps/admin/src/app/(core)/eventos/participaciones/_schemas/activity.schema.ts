@@ -9,6 +9,7 @@ import { participations } from '@frijolmagico/database/schema'
 import { parseChileLocalInstant } from '../_lib/activity-registration-local'
 import { editionParticipationEntitySchema } from './edition-participation.schema'
 import {
+  ACTIVITY_TYPES,
   PARTICIPANT_TYPE,
   PARTICIPATION_STATUS
 } from '../_constants/participations.constants'
@@ -272,16 +273,34 @@ export const activityFormSchema = activityInsertSchema
   .extend({
     modoIngresoId: positiveIdSchema,
     estado: z.enum(Object.values(PARTICIPATION_STATUS)),
-    detail: activityDetailInsertSchema.omit({
-      participacionActividadId: true
-    }),
     pseudonimoId: positiveIdSchema.nullable().optional(),
     participantType: z.enum(Object.values(PARTICIPANT_TYPE)),
     entity: editionParticipationEntitySchema,
     registration: validatedRegistrationSchema.optional(),
-    occurrences: activityOccurrencesSchema.optional()
+    occurrences: activityOccurrencesSchema.optional(),
+    detail: activityDetailInsertSchema.omit({
+      participacionActividadId: true,
+      presenterNombre: true,
+      presenterArtistaId: true,
+      presenterPseudonimoId: true
+    }).extend({
+      presenterNombre: z.string().optional(),
+      presenterArtistaId: positiveIdSchema.nullable().optional(),
+      presenterPseudonimoId: positiveIdSchema.nullable().optional()
+    })
   })
   .superRefine((value, context) => {
+    const presenter = {
+      presenterNombre: value.detail.presenterNombre,
+      presenterArtistaId: value.detail.presenterArtistaId,
+      presenterPseudonimoId: value.detail.presenterPseudonimoId
+    }
+    const isTalk = value.tipoActividadId === ACTIVITY_TYPES.CHARLA &&
+      value.participantType !== PARTICIPANT_TYPE.BANDA
+    validateActivityPresenterShape(presenter, context, ['detail'])
+    if (!isTalk && hasActivityPresenter(presenter)) {
+      context.addIssue({ code: 'custom', path: ['detail', 'presenterNombre'], message: 'Solo las charlas pueden tener presentador' })
+    }
     const occurrences = value.occurrences ?? []
     if (occurrences.length === 0) {
       context.addIssue({
@@ -302,6 +321,80 @@ export const activityFormSchema = activityInsertSchema
       })
     }
   })
+
+type ActivityPresenterShape = {
+  presenterNombre?: string | null
+  presenterArtistaId?: number | null
+  presenterPseudonimoId?: number | null
+}
+
+function hasActivityPresenter(presenter: ActivityPresenterShape): boolean {
+  return Boolean(presenter.presenterNombre?.trim()) ||
+    presenter.presenterArtistaId != null ||
+    presenter.presenterPseudonimoId != null
+}
+
+function validateActivityPresenterShape(
+  presenter: ActivityPresenterShape,
+  context: z.RefinementCtx,
+  path: (string | number)[]
+) {
+  const hasName = Boolean(presenter.presenterNombre?.trim())
+  const hasArtist = presenter.presenterArtistaId != null
+  const hasPseudonym = presenter.presenterPseudonimoId != null
+  if ((hasName && (hasArtist || hasPseudonym)) || hasArtist !== hasPseudonym) {
+    context.addIssue({
+      code: 'custom',
+      path: [...path, 'presenterArtistaId'],
+      message: 'El presentador debe ser un nombre libre o un artista con pseudónimo'
+    })
+  }
+}
+
+const activityPresenterDatabaseSchema = z.object({
+  presenterNombre: z.string().trim().min(1).nullable().default(null),
+  presenterArtistaId: positiveIdSchema.nullable().default(null),
+  presenterPseudonimoId: positiveIdSchema.nullable().default(null)
+}).superRefine((presenter, context) => {
+  validateActivityPresenterShape(presenter, context, [])
+})
+
+export function parseActivityPresenterDatabaseValues(value: unknown, isTalk: boolean) {
+  const presenter = activityPresenterDatabaseSchema.parse(value)
+  if (!isTalk && (presenter.presenterNombre !== null || presenter.presenterArtistaId !== null || presenter.presenterPseudonimoId !== null)) {
+    throw new Error('Solo las charlas pueden tener presentador')
+  }
+  return presenter
+}
+
+export function activityPresenterDatabaseValues(
+  presenter: Pick<
+    ActivityFormInput['detail'],
+    'presenterNombre' | 'presenterArtistaId' | 'presenterPseudonimoId'
+  >,
+  isTalk: boolean
+) {
+  const presenterNombre = presenter.presenterNombre?.trim() ?? ''
+  if (!isTalk || !hasActivityPresenter(presenter)) {
+    return {
+      presenterNombre: null,
+      presenterArtistaId: null,
+      presenterPseudonimoId: null
+    }
+  }
+  if (presenterNombre) {
+    return {
+      presenterNombre,
+      presenterArtistaId: null,
+      presenterPseudonimoId: null
+    }
+  }
+  return {
+    presenterNombre: null,
+    presenterArtistaId: presenter.presenterArtistaId ?? null,
+    presenterPseudonimoId: presenter.presenterPseudonimoId ?? null
+  }
+}
 
 // ============================================================================
 // EXPORTED TYPES

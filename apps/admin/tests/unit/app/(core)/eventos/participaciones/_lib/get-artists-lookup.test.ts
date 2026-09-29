@@ -1,10 +1,16 @@
 import { describe, expect, mock, test } from 'bun:test'
+import { artist } from '@frijolmagico/database/schema'
 
 const cacheTag = mock(() => {})
 let rows: Array<Record<string, unknown>> = []
+let projection: Record<string, unknown> = {}
+let leftJoinCount = 0
 const query = {
   from: () => query,
-  leftJoin: () => query,
+  leftJoin: () => {
+    leftJoinCount += 1
+    return query
+  },
   where: () => query,
   orderBy: async () => rows
 }
@@ -12,7 +18,11 @@ const query = {
 mock.module('server-only', () => ({}))
 mock.module('next/cache', () => ({ cacheTag }))
 mock.module('@frijolmagico/database/orm', () => ({
-  db: { select: () => query }
+  db: { select: (selected: Record<string, unknown>) => {
+    projection = selected
+    leftJoinCount = 0
+    return query
+  } }
 }))
 
 const { getArtistsLookup } = await import(
@@ -51,5 +61,7 @@ describe('getArtistsLookup primary pseudonym projection', () => {
         { id: 91, pseudonym: 'Other alias', isPrimary: false }
       ]
     })
+    expect(projection.statusId).toBe(artist.artist.estadoId)
+    expect(leftJoinCount).toBe(2)
   })
 })

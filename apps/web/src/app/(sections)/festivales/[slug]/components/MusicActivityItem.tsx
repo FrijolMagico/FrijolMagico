@@ -1,5 +1,5 @@
 import { ActivityArtistLink } from './ActivityArtistLink'
-import { formatOccurrenceTimeRange } from './activity-registration-time'
+import { formatOccurrenceTimeRange } from '../lib/activity-registration-time'
 
 import type { FestivalActivity } from '../../types/festival'
 

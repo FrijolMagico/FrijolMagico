@@ -142,6 +142,38 @@ describe('mapFestivalDetail', () => {
     })
   })
 
+  test('preserves free presenter text and resolves the selected pseudonym name and catalog slug', () => {
+    const result = mapFestivalDetail({
+      ...baseRaw,
+      actividades: [
+        {
+          ...baseRaw.actividades[0],
+          presenter_nombre: 'Invitada sin perfil',
+          presenter_catalogo_slug: null
+        },
+        {
+          ...baseRaw.actividades[0],
+          presenter_nombre: 'Sol Alterna',
+          presenter_catalogo_slug: 'sol-artista'
+        },
+        {
+          ...baseRaw.actividades[0],
+          presenter_nombre: null,
+          presenter_catalogo_slug: null
+        }
+      ]
+    } as FestivalDetail)
+
+    expect(result.actividades.map(({ presenter_nombre, presenter_catalogo_slug }) => ({
+      presenter_nombre,
+      presenter_catalogo_slug
+    }))).toEqual([
+      { presenter_nombre: 'Invitada sin perfil', presenter_catalogo_slug: null },
+      { presenter_nombre: 'Sol Alterna', presenter_catalogo_slug: 'sol-artista' },
+      { presenter_nombre: null, presenter_catalogo_slug: null }
+    ])
+  })
+
   test('preserves configured registration even when its window is inactive', () => {
     const registration = {
       url: 'https://example.org/inscripcion',

@@ -20,7 +20,8 @@ import { useParticipationsStore } from '../_store/use-participations-store'
 import { createActivityAction } from '../_actions/activities/create-activity.action'
 import {
   type ActivityFormInput,
-  activityFormSchema
+  activityFormSchema,
+  activityPresenterDatabaseValues
 } from '../_schemas/activity.schema'
 import {
   ACTIVITY_IDS,
@@ -58,6 +59,7 @@ import {
   clearRegistration
 } from './activity-registration-fields'
 import { ActivityOccurrenceFields } from './activity-occurrence-fields'
+import { ActivityPresenterFields } from './activity-presenter-fields'
 
 interface CreateActivityDialogProps {
   edition: {
@@ -101,6 +103,9 @@ export function CreateActivityDialog({
         titulo: '',
         descripcion: '',
         duracionMinutos: null,
+        presenterNombre: '',
+        presenterArtistaId: null,
+        presenterPseudonimoId: null,
         cupos: null,
         horaInicio: '',
         ubicacion: ''
@@ -171,7 +176,11 @@ export function CreateActivityDialog({
         duracionMinutos: values.detail.duracionMinutos,
         ubicacion: values.detail.ubicacion,
         horaInicio: values.detail.horaInicio,
-        cupos: values.detail.cupos
+        cupos: values.detail.cupos,
+        ...activityPresenterDatabaseValues(
+          values.detail,
+          tipo !== PARTICIPANT_TYPE.BANDA && values.tipoActividadId === ACTIVITY_TYPES.CHARLA
+        )
       }
     })
 
@@ -244,6 +253,9 @@ export function CreateActivityDialog({
                     field.onChange(nextTipo)
                     if (nextTipo === PARTICIPANT_TYPE.BANDA) {
                       clearRegistration(methods)
+                      methods.setValue('detail.presenterNombre', '', { shouldDirty: true })
+                      methods.setValue('detail.presenterArtistaId', null, { shouldDirty: true })
+                      methods.setValue('detail.presenterPseudonimoId', null, { shouldDirty: true })
                     }
 
                     if (nextTipo === PARTICIPANT_TYPE.ARTISTA) {
@@ -347,6 +359,9 @@ export function CreateActivityDialog({
                 }}
               />
             </Field>
+            {selectedType === ACTIVITY_TYPES.CHARLA && (
+              <ActivityPresenterFields methods={methods} artistas={artistas} disabled={isSubmitting} />
+            )}
             </>
           )}
 
@@ -359,6 +374,10 @@ export function CreateActivityDialog({
               placeholder='Buscar agrupación...'
               emptyText='No hay agrupaciones disponibles'
             />
+          )}
+
+          {selectedType === ACTIVITY_TYPES.CHARLA && tipo === PARTICIPANT_TYPE.AGRUPACION && (
+            <ActivityPresenterFields methods={methods} artistas={artistas} disabled={isSubmitting} />
           )}
 
           {tipo === PARTICIPANT_TYPE.BANDA && (
@@ -388,6 +407,11 @@ export function CreateActivityDialog({
                     field.onChange(Number(val))
                     if (Number(val) === ACTIVITY_TYPES.MUSICA) {
                       clearRegistration(methods)
+                    }
+                    if (Number(val) !== ACTIVITY_TYPES.CHARLA) {
+                      methods.setValue('detail.presenterNombre', '', { shouldDirty: true })
+                      methods.setValue('detail.presenterArtistaId', null, { shouldDirty: true })
+                      methods.setValue('detail.presenterPseudonimoId', null, { shouldDirty: true })
                     }
                   }}
                   disabled={isSubmitting || tipo === PARTICIPANT_TYPE.BANDA}

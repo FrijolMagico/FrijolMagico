@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 
-import { getRegistrationWindow } from './activity-registration-time'
+import { getRegistrationWindow } from '../lib/activity-registration-time'
 
 import type { ActivityRegistration } from '../../types/festival'
 
