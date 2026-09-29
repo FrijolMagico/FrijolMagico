@@ -6,9 +6,12 @@ import { z } from 'zod'
  * fue a través de una agrupación.
  */
 export const EditionParticipationSchema = z.object({
+  evento_id: z.number().optional(),
   edicion: z.string(),
   evento: z.string(),
   año: z.string().nullable().optional(),
+  tipo_participacion: z.enum(['exhibicion', 'actividad']).optional(),
+  categoria: z.string().optional(),
   via_agrupacion: z.string().nullable().optional()
 })
 

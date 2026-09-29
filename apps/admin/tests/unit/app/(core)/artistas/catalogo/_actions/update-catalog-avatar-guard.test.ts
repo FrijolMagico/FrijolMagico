@@ -39,10 +39,15 @@ const CURRENT_AVATAR = { id: 7, path: 'artistas/current.webp', version: 'v7' }
 
 function createTx(rows: unknown[], onUpdate?: () => void) {
   return {
-    select: () => ({
+    select: (selection: Record<string, unknown>) => ({
       from: () => ({
         where: () => ({
-          limit: async () => rows
+          limit: async () => {
+            if ('pseudonimo' in selection) return [{ id: 43, pseudonimo: 'Selected Artist' }]
+            if ('pseudonimoId' in selection) return [{ pseudonimoId: 43 }]
+            if ('slug' in selection) return [{ slug: 'old-slug' }]
+            return rows
+          }
         })
       })
     }),
@@ -60,6 +65,7 @@ function createTx(rows: unknown[], onUpdate?: () => void) {
 const baseInput = {
   id: 1,
   artistaId: 42,
+  pseudonimoId: 43,
   descripcion: 'Descripción actualizada',
   destacado: false,
   avatarUrl: null

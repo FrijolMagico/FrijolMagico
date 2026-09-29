@@ -58,9 +58,11 @@ export interface ActivityRegistration {
 }
 
 export interface FestivalActivityOccurrence {
+  id?: number
   fecha: string
-  hora_inicio: string
-  duracion_minutos: number
+  hora_inicio: string | null
+  duracion_minutos: number | null
+  registration_url?: string | null
 }
 
 export interface FestivalActivity {

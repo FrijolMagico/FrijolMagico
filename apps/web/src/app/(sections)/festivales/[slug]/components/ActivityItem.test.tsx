@@ -1,351 +1,207 @@
 import { afterEach, describe, expect, jest, test } from 'bun:test'
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import { renderToString } from 'react-dom/server'
-import { useLayoutEffect } from 'react'
 
 import { ActivityItem } from './ActivityItem'
+
+import type { FestivalActivity } from '../../types/festival'
+
+const registration = {
+  start_at: '2026-09-05T16:30:00.000Z',
+  end_at: '2026-09-05T17:30:00.000Z'
+}
+const baseActivity: FestivalActivity = {
+  titulo: 'Taller',
+  descripcion: null,
+  ubicacion: null,
+  ocurrencias: [
+    {
+      id: 1,
+      fecha: '2026-09-05',
+      hora_inicio: '14:00',
+      duracion_minutos: 90,
+      registration_url: 'https://example.org/one'
+    }
+  ],
+  tipo: 'taller',
+  participante_pseudonimo: 'Artista',
+  catalogo_slug: 'artista',
+  registration: { ...registration, url: 'https://example.org/legacy' }
+}
 
 afterEach(() => {
   cleanup()
   jest.useRealTimers()
 })
 
-import type { FestivalActivity } from '../../types/festival'
-
 describe('ActivityItem', () => {
-  const baseActivity: FestivalActivity = {
-    titulo: 'Taller',
-    descripcion: 'Aprende',
-    ubicacion: null,
-    ocurrencias: [],
-    tipo: 'taller',
-    participante_pseudonimo: 'Artista',
-    catalogo_slug: null,
-    avatar_url: null,
-    rrss: null,
-    correo: null,
-    registration: {
-      url: 'https://example.org/signup',
-      start_at: '2026-09-05T16:30:00.000Z',
-      end_at: '2026-09-05T17:30:00.000Z'
-    }
-  }
-
-  const baseProps = { activity: baseActivity, isEditionPast: false }
-
-  test('shows only the Chilean local deadline while preserving the UTC DTO', () => {
-    const html = renderToString(<ActivityItem {...baseProps} />)
-    expect(html).toContain('Inscripciones abiertas hasta el')
-    expect(html.replaceAll('<!-- -->', '')).toContain('05/09/2026 13:30hrs')
-    expect(html).not.toContain(baseActivity.registration!.end_at)
-    expect(baseActivity.registration!.end_at).toBe('2026-09-05T17:30:00.000Z')
-  })
-
-  test('hides the registration CTA in server output and shows the top-right link after activation', () => {
-    expect(renderToString(<ActivityItem {...baseProps} />)).not.toContain(
-      'Inscríbete'
+  test('shows the occurrence time and uses its URL for the eligible corner CTA', () => {
+    jest.useFakeTimers()
+    jest.setSystemTime(new Date('2026-09-05T16:30:00.000Z'))
+    const longArtistName =
+      'Artista con un nombre extraordinariamente extenso para esta tarjeta'
+    const { container } = render(
+      <ActivityItem
+        activity={{ ...baseActivity, participante_pseudonimo: longArtistName }}
+        isEditionPast={false}
+      />
     )
-    jest.useFakeTimers()
-    jest.setSystemTime(new Date('2026-09-05T16:30:00.000Z'))
-    const { container } = render(<ActivityItem {...baseProps} />)
-    const link = screen.getByRole('link', { name: 'Inscríbete' })
-    const article = container.querySelector('article')!
 
-    expect(link.parentElement).toBe(article)
-    expect(link.closest('summary, details')).toBeNull()
-    expect(container.querySelector('details')?.open).toBe(false)
+    expect(screen.getByText('14:00hrs a 15:30hrs')).toBeDefined()
+    const registrationLink = screen.getByRole('link', { name: 'Inscríbete' })
+    expect(registrationLink.getAttribute('href')).toBe('https://example.org/one')
+    const article = container.querySelector('article')!
+    const ctaOffset = registrationLink.parentElement!
+    const artistHeader = article.querySelector(':scope > div.min-w-0')!
+    expect(ctaOffset.className).toContain('absolute')
+    expect(ctaOffset.className).toContain('-top-5')
+    expect(ctaOffset.className).toContain('-right-3')
+    expect(ctaOffset.className).toContain('z-30')
+    expect(registrationLink.className).toContain('pointer-events-auto')
+    expect(registrationLink.querySelector('[aria-hidden="true"]')?.className).toContain(
+      'translate-1'
+    )
+    expect(artistHeader.className).toContain('pr-28')
+    expect(screen.getByRole('link', { name: `Ver perfil de ${longArtistName}` }).className).toContain(
+      'break-words'
+    )
+    expect(article.textContent).not.toContain('Inscripciones abiertas hasta el')
+    expect(container.textContent).not.toContain('Inscripciones abiertas hasta el')
+    expect(container.textContent).not.toContain('2026-09-05')
   })
 
-  test('keeps the top-right CTA outside disclosure details with safe anchor semantics', () => {
-    jest.useFakeTimers()
-    jest.setSystemTime(new Date('2026-09-05T16:30:00.000Z'))
-    const { container } = render(<ActivityItem {...baseProps} />)
+  test('keeps title and time in the disclosure summary and reveals location and description', () => {
+    const { container } = render(
+      <ActivityItem
+        activity={{ ...baseActivity, descripcion: 'Aprende técnicas', ubicacion: 'Sala A' }}
+        isEditionPast={false}
+      />
+    )
     const details = container.querySelector('details')!
     const summary = details.querySelector('summary')!
-    const link = screen.getByRole('link', { name: 'Inscríbete' })
 
+    expect(summary.textContent).toContain('Taller')
+    expect(summary.textContent).toContain('14:00hrs a 15:30hrs')
+    expect(summary.textContent).toContain('Sala A')
+    const summaryTitle = summary.querySelector('h3')!
+    const summarySchedule = summaryTitle.nextElementSibling!
+    expect(summarySchedule.textContent).toBe('14:00hrs a 15:30hrsSala A')
+    expect(summarySchedule.className).toContain('mt-2')
+    expect(summarySchedule.className).toContain('space-y-0.5')
+    expect(summarySchedule.className).toContain('leading-tight')
+    expect(summarySchedule.children[0].className).toContain('text-palette-foreground/70')
+    expect(summarySchedule.children[1].className).toContain('text-palette-foreground/60')
+    expect(summary.querySelector('a')).toBeNull()
+    expect(summary.className).toContain('before:absolute')
+    expect(summary.className).toContain('before:inset-0')
+    expect(summary.className).toContain('before:z-10')
+    expect(container.querySelector('article')?.className).toContain('relative')
+    expect(container.textContent).not.toContain('Detalles')
     expect(details.open).toBe(false)
-    expect(link.parentElement).toBe(container.querySelector('article'))
-    expect(summary.contains(link)).toBe(false)
-    expect(link.closest('details')).toBeNull()
-    expect(link.getAttribute('href')).toBe('https://example.org/signup')
-    expect(link.getAttribute('target')).toBe('_blank')
-    expect(link.getAttribute('rel')).toBe('noopener noreferrer')
-    expect(link.querySelector('button')).toBeNull()
-    expect(link.className).toContain('focus-visible:ring-2')
-    expect(link.innerHTML).toContain('group-hover/btn:bg-palette-primary')
-    expect(link.innerHTML).toContain('group-focus-visible/btn:text-palette-background')
-
-    fireEvent.click(summary)
-    expect(details.open).toBe(true)
-    expect(screen.getByRole('link', { name: 'Inscríbete' })).toBe(link)
+    const disclosureContent = details.querySelector('[data-disclosure-content]')!
+    expect(disclosureContent.className).toContain('z-20')
+    expect(disclosureContent.className).toContain('pointer-events-none')
+    expect(disclosureContent.className).toContain('[&>*]:pointer-events-auto')
+    expect(disclosureContent.textContent).not.toContain('Sala A')
+    expect(disclosureContent.querySelector('svg')).toBeNull()
+    expect(details.textContent).toContain('Aprende técnicas')
   })
 
-  test('renders no CTA on the server or outside the window and hides it for malformed data', () => {
-    const serverHtml = renderToString(<ActivityItem {...baseProps} />)
-    expect(serverHtml).not.toContain('Inscríbete')
-    jest.useFakeTimers()
-    jest.setSystemTime(new Date('2026-09-05T17:30:00.001Z'))
-    const { rerender, container } = render(<ActivityItem {...baseProps} />)
-    expect(container.querySelector('details')).not.toBeNull()
-    expect(screen.queryByRole('link', { name: 'Inscríbete' })).toBeNull()
+  test('shows location in the fallback without opening an empty description disclosure', () => {
+    const emptyDescriptions = [null, '', '  \n ', '<p></p>', '<p><br></p>', '<p>&nbsp;</p>']
 
-    jest.setSystemTime(new Date('2026-09-05T16:30:00.000Z'))
-    rerender(
+    for (const descripcion of emptyDescriptions) {
+      const { container, unmount } = render(
+        <ActivityItem
+          activity={{ ...baseActivity, descripcion, ubicacion: 'Patio central' }}
+        />
+      )
+      const article = container.querySelector('article')!
+
+      expect(article.querySelector('details')).toBeNull()
+      expect(Array.from(article.querySelectorAll('p')).map((item) => item.textContent)).toEqual([
+        '14:00hrs a 15:30hrs',
+        'Patio central'
+      ])
+      const fallbackTitle = article.querySelector('h3')!
+      const fallbackSchedule = fallbackTitle.nextElementSibling!
+      expect(fallbackSchedule.className).toContain('mt-2')
+      expect(fallbackSchedule.className).toContain('space-y-0.5')
+      expect(fallbackSchedule.className).toContain('leading-tight')
+      expect(fallbackSchedule.children[0].className).toContain('text-palette-foreground/70')
+      expect(fallbackSchedule.children[1].className).toContain('text-palette-foreground/60')
+      expect(article.textContent?.match(/Patio central/g)).toHaveLength(1)
+      expect(article.querySelector('p:last-child svg')).toBeNull()
+      expect(article.querySelector('p:last-child')?.className).toContain(
+        'text-palette-foreground/60'
+      )
+      unmount()
+    }
+  })
+
+  test('keeps the artist link independent of the native disclosure control', () => {
+    const { container } = render(
       <ActivityItem
-        {...baseProps}
-        activity={{
-          ...baseActivity,
-          registration: {
-            ...baseActivity.registration!,
-            url: 'javascript:alert(1)'
-          }
-        }}
+        activity={{ ...baseActivity, descripcion: 'Descripción', ubicacion: 'Sala A' }}
       />
     )
-    expect(screen.queryByRole('link', { name: 'Inscríbete' })).toBeNull()
-  })
-
-  test('never commits a replacement URL with the prior active window before passive reconciliation', () => {
-    jest.useFakeTimers()
-    jest.setSystemTime(new Date('2026-09-05T16:30:00.000Z'))
-    const commits: { href: string | null; cta: boolean }[] = []
-
-    function ObserveCommit({ value }: { value: FestivalActivity }) {
-      useLayoutEffect(() => {
-        const link = document.querySelector('article > a')
-        commits.push({
-          href: link?.getAttribute('href') ?? null,
-          cta: Boolean(link)
-        })
-      }, [value])
-      return <ActivityItem {...baseProps} activity={value} />
-    }
-
-    const { rerender } = render(<ObserveCommit value={baseActivity} />)
-    expect(
-      screen.getByRole('link', { name: 'Inscríbete' }).getAttribute('href')
-    ).toBe('https://example.org/signup')
-    const malicious = {
-      ...baseActivity,
-      registration: { ...baseActivity.registration!, url: 'javascript:alert(1)' }
-    }
-    rerender(<ObserveCommit value={malicious} />)
-    expect(commits.at(-1)).toEqual({ href: null, cta: false })
-    expect(document.querySelector('article > a')).toBeNull()
-
-    const replacement = {
-      ...baseActivity,
-      registration: {
-        ...baseActivity.registration!,
-        url: 'https://example.org/new'
-      }
-    }
-    rerender(<ObserveCommit value={replacement} />)
-    expect(commits.at(-1)).toEqual({ href: null, cta: false })
-    expect(document.querySelector('article > a')?.getAttribute('href')).toBe(
-      'https://example.org/new'
-    )
-
-    const invalidWindow = {
-      ...baseActivity,
-      registration: { ...baseActivity.registration!, end_at: 'invalid' }
-    }
-    rerender(<ObserveCommit value={invalidWindow} />)
-    expect(commits.at(-1)).toEqual({ href: null, cta: false })
-    expect(document.querySelector('article > a')).toBeNull()
-  })
-
-  test('reconciles the CTA at start, inclusive end, post-end and focus without a request', () => {
-    jest.useFakeTimers()
-    jest.setSystemTime(new Date('2026-09-05T16:29:59.999Z'))
-    const fetchSpy = jest.spyOn(globalThis, 'fetch')
-    try {
-      const { container } = render(<ActivityItem {...baseProps} />)
-      const link = () => container.querySelector('article > a')
-      expect(link()).toBeNull()
-      act(() => jest.advanceTimersByTime(1))
-      expect(link()?.textContent).toBe('Inscríbete')
-      jest.setSystemTime(new Date('2026-09-05T17:30:00.000Z'))
-      act(() => window.dispatchEvent(new window.Event('focus')))
-      expect(link()?.getAttribute('href')).toBe('https://example.org/signup')
-      act(() => jest.advanceTimersByTime(1))
-      expect(link()).toBeNull()
-      expect(fetchSpy).not.toHaveBeenCalled()
-    } finally {
-      fetchSpy.mockRestore()
-    }
-  })
-
-  test('shows the CTA on a minimal non-music card but never on a music item', () => {
-    jest.useFakeTimers()
-    jest.setSystemTime(new Date('2026-09-05T17:30:00.000Z'))
-    const { container } = render(
-      <ActivityItem {...baseProps} activity={{ ...baseActivity, descripcion: null }} />
-    )
-    expect(container.querySelector('details')).toBeNull()
-    expect(screen.getByRole('link', { name: 'Inscríbete' })).toBeDefined()
-
-    const music = render(
-      <ActivityItem {...baseProps} activity={{ ...baseActivity, tipo: 'musica' }} />
-    )
-    expect(music.container.querySelector('article > a')).toBeNull()
-  })
-
-  test('renders title and participant, expands to show details', () => {
-    const activity: FestivalActivity = {
-      titulo: 'Taller de Acuarela',
-      descripcion: 'Introducción a acuarela',
-      ubicacion: 'Sala A',
-      ocurrencias: [{ fecha: '2025-01-15', hora_inicio: '18:00', duracion_minutos: 90 }],
-      tipo: 'taller',
-      participante_pseudonimo: 'Artista Ejemplo',
-      registration: null
-    }
-
-    render(<ActivityItem activity={activity} isEditionPast={false} />)
-
-    // Always visible
-    expect(screen.getByText('Taller de Acuarela')).toBeDefined()
-    expect(screen.getByText('Artista Ejemplo')).toBeDefined()
-
-    // Chevron exists (has details)
-    const details = document.querySelector('details')!
-    expect(details).toBeDefined()
-    expect(details.open).toBe(false)
-
-    // Expand via summary click
+    const details = container.querySelector('details')!
     const summary = details.querySelector('summary')!
-    fireEvent.click(summary)
-    expect(details.open).toBe(true)
+    const artistLink = screen.getByRole('link', { name: 'Ver perfil de Artista' })
 
-    expect(screen.getByText('15 ene 2025 — 18:00hrs')).toBeDefined()
-    expect(screen.getByText('Sala A')).toBeDefined()
-    expect(screen.getByText('Introducción a acuarela')).toBeDefined()
-    expect(screen.getByText('(90 min)')).toBeDefined()
+    expect(artistLink.getAttribute('href')).toBe('/catalogo/artista')
+    expect(artistLink.closest('summary')).toBeNull()
+    expect(details.open).toBe(false)
+    expect(summary.tagName).toBe('SUMMARY')
+    expect(summary.hasAttribute('tabindex')).toBe(false)
+    expect(artistLink.closest('summary')).toBeNull()
+    expect(artistLink.parentElement?.className).toContain('relative')
+    expect(artistLink.parentElement?.className).toContain('z-20')
   })
 
-  test('lists Chile-local sessions across days and within a day without timezone conversion', () => {
-    const html = renderToString(<ActivityItem activity={{
+  test('keeps the registration link independent from card-surface toggling', () => {
+    jest.useFakeTimers()
+    jest.setSystemTime(new Date('2026-09-05T16:30:00.000Z'))
+    const { container } = render(
+      <ActivityItem
+        activity={{ ...baseActivity, descripcion: 'Descripción', ubicacion: 'Sala A' }}
+      />
+    )
+    const details = container.querySelector('details')!
+    const registrationLink = screen.getByRole('link', { name: 'Inscríbete' })
+
+    expect(details.open).toBe(false)
+    expect(registrationLink.closest('summary')).toBeNull()
+    expect(registrationLink.parentElement?.className).toContain('z-30')
+  })
+
+  test('hides the CTA without an occurrence URL or outside the registration window', () => {
+    jest.useFakeTimers()
+    jest.setSystemTime(new Date('2026-09-05T16:30:00.000Z'))
+    const untimed = {
       ...baseActivity,
-      registration: null,
       ocurrencias: [
-        { fecha: '2026-09-05', hora_inicio: '09:00', duracion_minutos: 45 },
-        { fecha: '2026-09-05', hora_inicio: '12:30', duracion_minutos: 60 },
-        { fecha: '2026-09-07', hora_inicio: '10:00', duracion_minutos: 90 }
+        {
+          id: 3,
+          fecha: '2026-09-05',
+          hora_inicio: null,
+          duracion_minutos: null,
+          registration_url: null
+        }
       ]
-    }} isEditionPast={false} />)
-    const text = html.replaceAll('<!-- -->', '')
-    expect(text).toContain('5 sep 2026 — 09:00')
-    expect(text).toContain('5 sep 2026 — 12:30')
-    expect(text).toContain('7 sep 2026 — 10:00')
-    expect(text).toContain('(45 min)')
-    expect(text).toContain('(60 min)')
-    expect(text).toContain('(90 min)')
-    expect(html).not.toContain('Fecha y horario por confirmar')
-  })
-
-  test('shows exact unscheduled copy without invented date or duration', () => {
-    const html = renderToString(<ActivityItem activity={{ ...baseActivity, registration: null }} isEditionPast={false} />)
-    expect(html).toContain('Fecha y horario por confirmar')
-    expect(html).not.toContain('<time')
-    expect(html).not.toContain('Duración:')
-  })
-
-  test('gives a title-less details summary an accessible name without nesting the artist link', () => {
-    const { container } = render(
-      <ActivityItem
-        activity={{
-          ...baseActivity,
-          titulo: null,
-          registration: null,
-          catalogo_slug: 'artista-slug',
-          descripcion: 'Detalles de la actividad'
-        }}
-        isEditionPast={false}
-      />
-    )
-
-    const summary = container.querySelector('summary')!
-    expect(summary.getAttribute('aria-label')).toBe('Artista')
-    expect(screen.getByLabelText('Artista')).toBe(summary)
-    expect(summary.textContent).toBe('')
-    expect(summary.contains(screen.getByText('Artista'))).toBe(false)
-    expect(
-      screen.getByRole('link', { name: 'Ver perfil de Artista' }).closest('summary')
-    ).toBeNull()
-  })
-
-  test('renders rich description inside details without nesting paragraphs', () => {
-    const html = renderToString(
-      <ActivityItem
-        activity={{
-          ...baseActivity,
-          registration: null,
-          descripcion: '<p>Vení al <strong>taller</strong></p><ul><li>Gratis</li></ul>'
-        }}
-        isEditionPast={false}
-      />
-    )
-
-    expect(html).toContain('<p>Vení al <strong>taller</strong></p>')
-    expect(html).toContain('<ul><li>Gratis</li></ul>')
-    expect(html).not.toMatch(/<p[^>]*>\s*<p/)
-  })
-
-  test('links the artist outside the summary, including the no-details branch', () => {
-    const { container } = render(
-      <ActivityItem
-        activity={{
-          ...baseActivity,
-          descripcion: null,
-          catalogo_slug: null,
-          rrss: null,
-          correo: 'artista@example.org'
-        }}
-        isEditionPast={false}
-      />
-    )
-
-    expect(container.querySelector('details')).toBeNull()
-    const link = screen.getByRole('link', {
-      name: 'Abrir enlace de contacto de Artista'
-    })
-    expect(link.getAttribute('href')).toBe('mailto:artista@example.org')
-    expect(link.closest('summary')).toBeNull()
-  })
-
-  test('keeps artist link outside the interactive disclosure summary', () => {
-    const { container } = render(
-      <ActivityItem
-        activity={{
-          ...baseActivity,
-          catalogo_slug: 'artista-slug',
-          avatar_url: 'https://example.org/avatar.jpg'
-        }}
-        isEditionPast={false}
-      />
-    )
-    const link = screen.getByRole('link', { name: 'Ver perfil de Artista' })
-    expect(link.getAttribute('href')).toBe('/catalogo/artista-slug')
-    expect(container.querySelector('summary')?.contains(link)).toBe(false)
-  })
-
-  test('renders minimal with participant name, no title or chevron', () => {
-    const activity: FestivalActivity = {
-      titulo: null,
-      descripcion: null,
-      ubicacion: null,
-      ocurrencias: [],
-      tipo: 'musica',
-      participante_pseudonimo: 'Banda X',
-      registration: null
     }
+    const { unmount } = render(<ActivityItem activity={untimed} />)
+    expect(screen.queryByRole('link', { name: 'Inscríbete' })).toBeNull()
+    unmount()
 
-    render(<ActivityItem activity={activity} isEditionPast={false} />)
+    jest.setSystemTime(new Date('2026-09-05T17:30:00.001Z'))
+    render(<ActivityItem activity={baseActivity} />)
+    expect(screen.queryByRole('link', { name: 'Inscríbete' })).toBeNull()
+  })
 
-    expect(screen.getByText('Banda X')).toBeDefined()
-    expect(screen.queryByRole('heading')).toBeNull()
-    expect(document.querySelector('details')).toBeNull()
+  test('keeps registration CTAs hidden during server render', () => {
+    expect(
+      renderToString(<ActivityItem activity={baseActivity} isEditionPast={false} />)
+    ).not.toContain('Inscríbete')
   })
 })

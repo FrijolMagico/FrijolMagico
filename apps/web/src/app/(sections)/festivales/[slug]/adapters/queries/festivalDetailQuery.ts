@@ -26,7 +26,7 @@ export const FESTIVAL_DETAIL_QUERY = `SELECT json_object(
   ), '[]'),
   'participantes', COALESCE((
     SELECT json_group_array(json_object(
-      'pseudonimo', COALESCE(a.pseudonimo, ag.nombre, b.name),
+      'pseudonimo', COALESCE(exhibition_pseudonym.pseudonimo, a.pseudonimo, ag.nombre, b.name),
       'disciplina_slug', d.slug,
 'catalogo_slug', CASE WHEN ca.id IS NOT NULL THEN a.slug ELSE NULL END,
           'rrss', a.rrss,
@@ -45,13 +45,14 @@ export const FESTIVAL_DETAIL_QUERY = `SELECT json_object(
     JOIN participacion_exposicion pexp ON pexp.participacion_id = ped.id
     JOIN disciplina d ON pexp.disciplina_id = d.id
     LEFT JOIN artista a ON ped.artista_id = a.id
+    LEFT JOIN artista_pseudonimo exhibition_pseudonym ON exhibition_pseudonym.id = pexp.pseudonimo_id
     LEFT JOIN agrupacion ag ON ped.agrupacion_id = ag.id
     LEFT JOIN band b ON ped.banda_id = b.id
     LEFT JOIN catalogo_artista ca ON ca.artista_id = a.id
       AND ca.activo = 1 AND ca.deleted_at IS NULL
     WHERE ped.edicion_id = ee.id
       AND pexp.estado IN ('confirmado', 'completado')
-    ORDER BY d.slug, COALESCE(a.pseudonimo, ag.nombre, b.name)
+    ORDER BY d.slug, COALESCE(exhibition_pseudonym.pseudonimo, a.pseudonimo, ag.nombre, b.name)
   ), '[]'),
   'actividades', COALESCE((
     SELECT json_group_array(json_object(
@@ -61,18 +62,20 @@ export const FESTIVAL_DETAIL_QUERY = `SELECT json_object(
       'tipo', ta.slug,
       'ocurrencias', COALESCE((
         SELECT json_group_array(json_object(
+          'id', scheduled.id,
           'fecha', scheduled.date,
           'hora_inicio', scheduled.start_time,
-          'duracion_minutos', scheduled.duration_minutes
+          'duracion_minutos', scheduled.duration_minutes,
+          'registration_url', scheduled.url
         ))
         FROM (
-          SELECT ao.date, ao.start_time, ao.duration_minutes
+          SELECT ao.id, ao.date, ao.start_time, ao.duration_minutes, ao.url
           FROM activity_occurrence ao
           WHERE ao.activity_id = ac.id
           ORDER BY ao.date, ao.start_time, ao.id
         ) scheduled
       ), '[]'),
-      'participante_pseudonimo', COALESCE(a2.pseudonimo, ag2.nombre, b2.name),
+      'participante_pseudonimo', COALESCE(activity_pseudonym.pseudonimo, a2.pseudonimo, ag2.nombre, b2.name),
       'catalogo_slug', CASE WHEN ca2.id IS NOT NULL THEN a2.slug ELSE NULL END,
       'avatar_url', CASE WHEN ca2.id IS NOT NULL THEN (
         SELECT ai.imagen_url
@@ -100,6 +103,7 @@ export const FESTIVAL_DETAIL_QUERY = `SELECT json_object(
     LEFT JOIN activity_registration ar ON ar.participation_activity_id = pact.id
     JOIN tipo_actividad ta ON pact.tipo_actividad_id = ta.id
     LEFT JOIN artista a2 ON ped2.artista_id = a2.id
+    LEFT JOIN artista_pseudonimo activity_pseudonym ON activity_pseudonym.id = pact.pseudonimo_id
     LEFT JOIN catalogo_artista ca2 ON ca2.artista_id = a2.id
       AND ca2.activo = 1 AND ca2.deleted_at IS NULL
     LEFT JOIN agrupacion ag2 ON ped2.agrupacion_id = ag2.id

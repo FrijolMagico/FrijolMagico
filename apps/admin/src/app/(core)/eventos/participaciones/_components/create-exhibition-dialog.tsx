@@ -64,6 +64,7 @@ export function CreateExhibitionDialog({
       notas: '',
       estado: PARTICIPATION_STATUS.SELECCIONADO,
       puntaje: null,
+      pseudonimoId: null,
       entity: {
         artistaId: null,
         agrupacionId: null
@@ -81,6 +82,10 @@ export function CreateExhibitionDialog({
     name: 'participantType'
   })
   const status = useWatch({ control: methods.control, name: 'estado' })
+  const selectedArtistId = useWatch({ control: methods.control, name: 'entity.artistaId' })
+  const selectedPseudonymId = useWatch({ control: methods.control, name: 'pseudonimoId' })
+  const selectedArtist = artistas.find((artist) => artist.id === selectedArtistId)
+  const activePseudonyms = selectedArtist?.pseudonyms ?? []
 
   const onSubmit = async (values: ExhibitionFormInput) => {
     const result = await createExhibitionAction({
@@ -95,7 +100,12 @@ export function CreateExhibitionDialog({
         disciplinaId: values.disciplinaId,
         modoIngresoId: values.modoIngresoId,
         estado: values.estado,
-        notas: values.notas
+        notas: values.notas,
+        pseudonimoId: values.entity.artistaId
+          ? (activePseudonyms.some((item) => item.id === values.pseudonimoId)
+              ? values.pseudonimoId
+              : activePseudonyms.find((item) => item.isPrimary)?.id ?? activePseudonyms[0]?.id ?? null)
+          : null
       }
     })
 
@@ -188,6 +198,7 @@ export function CreateExhibitionDialog({
         </Field>
 
         {tipo === PARTICIPANT_TYPE.ARTISTA ? (
+          <>
           <ControllerCombobox
             label='Artista'
             name='entity.artistaId'
@@ -196,6 +207,44 @@ export function CreateExhibitionDialog({
             placeholder='Buscar artista...'
             emptyText='No hay artistas disponibles'
           />
+          <Field>
+            <FieldLabel>Pseudónimo para esta exhibición</FieldLabel>
+            <Controller
+              name='pseudonimoId'
+              control={methods.control}
+              render={({ field }) => {
+                const selected = activePseudonyms.some((item) => item.id === selectedPseudonymId)
+                  ? selectedPseudonymId
+                  : activePseudonyms.find((item) => item.isPrimary)?.id ?? activePseudonyms[0]?.id
+                const selectedPseudonym = activePseudonyms.find(
+                  (item) => item.id === selected
+                )
+                return (
+                  <Select
+                    value={selected == null ? '' : String(selected)}
+                    onValueChange={(value) => field.onChange(Number(value))}
+                    disabled={isSubmitting || activePseudonyms.length === 0}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder='Elegir pseudónimo'>
+                        {selectedPseudonym
+                          ? `${selectedPseudonym.pseudonym}${selectedPseudonym.isPrimary ? ' (principal)' : ''}`
+                          : 'Elegir pseudónimo'}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {activePseudonyms.map((pseudonym) => (
+                        <SelectItem key={pseudonym.id} value={String(pseudonym.id)}>
+                          {pseudonym.pseudonym}{pseudonym.isPrimary ? ' (principal)' : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )
+              }}
+            />
+          </Field>
+          </>
         ) : (
           <ControllerCombobox
             label='Agrupación'

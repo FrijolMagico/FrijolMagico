@@ -170,6 +170,7 @@ export function ParticipationsContainer({
       )}
 
       <UpdateExhibitionDialog
+        artistas={data.artists}
         edition={{
           id: data.edition.id,
           editionNumber: data.edition.editionNumber,
@@ -177,6 +178,7 @@ export function ParticipationsContainer({
         }}
       />
       <UpdateActivityDialog
+        artistas={data.artists}
         edition={{
           id: data.edition.id,
           editionNumber: data.edition.editionNumber,

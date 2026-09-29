@@ -4,7 +4,8 @@ import {
   text,
   integer,
   index,
-  uniqueIndex
+  uniqueIndex,
+  foreignKey
 } from 'drizzle-orm/sqlite-core'
 
 /**
@@ -59,6 +60,64 @@ export const artist = sqliteTable(
     index('idx_artist_deleted_at').on(table.deletedAt),
     index('idx_artista_deleted_created').on(table.deletedAt, table.createdAt),
     index('idx_artista_telefono').on(table.telefono)
+  ]
+)
+
+/**
+ * Stable artist pseudonyms. A soft-retired name may be retained while active
+ * pseudonyms remain globally unique.
+ */
+export const artistSlugAlias = sqliteTable(
+  'artista_slug_alias',
+  {
+    slug: text('slug').primaryKey(),
+    artistaId: integer('artista_id')
+      .notNull()
+      .references(() => artist.id, { onDelete: 'cascade' })
+  },
+  (table) => [index('idx_artist_slug_alias_artist').on(table.artistaId)]
+)
+
+export const artistPseudonym = sqliteTable(
+  'artista_pseudonimo',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    artistaId: integer('artista_id')
+      .notNull()
+      .references(() => artist.id, { onDelete: 'cascade' }),
+    pseudonimo: text('pseudonimo').notNull(),
+    deletedAt: text('deleted_at'),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text('updated_at')
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`)
+  },
+  (table) => [
+    uniqueIndex('uq_artist_pseudonym_id_artist').on(table.id, table.artistaId),
+    uniqueIndex('uq_artist_pseudonym_active_text')
+      .on(table.pseudonimo)
+      .where(sql`${table.deletedAt} IS NULL`),
+    index('idx_artist_pseudonym_artist').on(table.artistaId)
+  ]
+)
+
+/** One current primary pseudonym per artist, with ownership enforced by FK. */
+export const artistPrimaryPseudonym = sqliteTable(
+  'artista_pseudonimo_principal',
+  {
+    artistaId: integer('artista_id')
+      .primaryKey()
+      .references(() => artist.id, { onDelete: 'cascade' }),
+    pseudonimoId: integer('pseudonimo_id').notNull().unique()
+  },
+  (table) => [
+    foreignKey({
+      name: 'fk_artist_primary_pseudonym_owner',
+      columns: [table.pseudonimoId, table.artistaId],
+      foreignColumns: [artistPseudonym.id, artistPseudonym.artistaId]
+    })
   ]
 )
 
@@ -145,6 +204,7 @@ export const catalogArtist = sqliteTable(
       .notNull()
       .unique()
       .references(() => artist.id),
+    pseudonimoId: integer('pseudonimo_id'),
     orden: text('orden').notNull(),
     destacado: integer('destacado', { mode: 'boolean' })
       .notNull()
@@ -160,6 +220,11 @@ export const catalogArtist = sqliteTable(
       .default(sql`CURRENT_TIMESTAMP`)
   },
   (table) => [
+    foreignKey({
+      name: 'fk_catalog_artist_pseudonym_owner',
+      columns: [table.pseudonimoId, table.artistaId],
+      foreignColumns: [artistPseudonym.id, artistPseudonym.artistaId]
+    }),
     index('idx_catalog_artist_orden').on(table.orden),
     index('idx_catalog_artist_activo').on(table.activo),
     index('idx_catalog_artist_destacado').on(table.destacado),

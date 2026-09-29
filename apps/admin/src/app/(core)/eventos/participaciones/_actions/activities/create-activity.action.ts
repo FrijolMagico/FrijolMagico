@@ -16,6 +16,7 @@ import {
 } from '@frijolmagico/cache-tags'
 import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
 import { findOrCreateEditionParticipation } from '../_lib/find-or-create-edition-participation'
+import { resolveActiveArtistPseudonym } from '../_lib/resolve-artist-pseudonym'
 import { registrationWindowToUtc } from '../../_lib/activity-registration-time'
 import {
   type ActivityDetailInsertInput,
@@ -40,6 +41,7 @@ const PUBLIC_ACTIVITY_TAGS = [
 interface CreateActivityActionInput {
   participation: ParticipationInsertInput
   activity: Omit<ActivityInsertInput, 'participacionId'>
+  pseudonimoId?: number | null
   detail: Omit<ActivityDetailInsertInput, 'participacionActividadId'>
   registration?: unknown
   occurrences?: unknown
@@ -88,6 +90,11 @@ export async function createActivityAction(
       })
       if (!effectiveType) throw new Error('El tipo de actividad no existe')
 
+      if (!['taller', 'charla', 'musica'].includes(effectiveType.slug)) {
+        throw new Error(
+          'Este tipo de actividad no admite sesiones y no se puede crear o editar hasta que el modelo lo soporte'
+        )
+      }
       const occurrences = parseActivityOccurrencesInput(
         data.occurrences,
         effectiveType.slug
@@ -96,6 +103,15 @@ export async function createActivityAction(
         data.registration,
         effectiveType.slug
       )
+      const occurrenceValues = occurrences.map((occurrence) => ({
+        date: occurrence.date,
+        startTime: occurrence.startTime || null,
+        durationMinutes: occurrence.durationMinutes ?? null,
+        url: registration ? occurrence.url || registration.url || null : null
+      }))
+      if (registration && occurrenceValues.some(({ url }) => !url)) {
+        throw new Error('Cada sesión debe tener una URL de inscripción')
+      }
       const registrationInstants = registration
         ? registrationWindowToUtc(
             registration.startDate,
@@ -105,8 +121,17 @@ export async function createActivityAction(
           )
         : null
 
+      const pseudonimoId = parsed.data.artistaId
+        ? await resolveActiveArtistPseudonym(
+            tx,
+            parsed.data.artistaId,
+            data.pseudonimoId
+          )
+        : null
       const participationActivityValues = activityInsertSchema.parse({
         ...data.activity,
+        artistaId: parsed.data.artistaId ?? null,
+        pseudonimoId,
         tipoActividadId: effectiveType.id,
         participacionId: participationRecord.id
       })
@@ -125,13 +150,12 @@ export async function createActivityAction(
         .values(activityDetailsValues)
         .returning({ id: activity.id })
 
-      if (occurrences.length) {
+      if (occurrenceValues.length) {
         await tx.insert(activityOccurrence).values(
-          occurrences.map((occurrence) => ({
+          occurrenceValues.map(({ url, ...occurrence }) => ({
             activityId: insertedDetail.id,
-            date: occurrence.date,
-            startTime: occurrence.startTime ?? null,
-            durationMinutes: occurrence.durationMinutes ?? null
+            ...occurrence,
+            ...(url ? { url } : {})
           }))
         )
       }
@@ -139,7 +163,8 @@ export async function createActivityAction(
       if (registration && registrationInstants) {
         await tx.insert(activityRegistration).values({
           participationActivityId: insertedActivity.id,
-          url: registration.url,
+          // Retained for compatibility with legacy readers; occurrence URLs are authoritative.
+          url: occurrenceValues[0]!.url!,
           ...registrationInstants
         })
       }

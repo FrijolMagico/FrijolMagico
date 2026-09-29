@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
 
 import { getAvatarUrl } from '@frijolmagico/utils/cdn'
+import { artist as artistTables } from '@frijolmagico/database/schema'
 
 const updateTag = mock(() => {})
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
@@ -13,6 +14,9 @@ const buildWebInvalidationUrl = mock(() => 'https://example.com/api/revalidate')
 let dbTransaction: (
   cb: (tx: unknown) => Promise<unknown>
 ) => Promise<unknown> = async () => true
+let savedCatalogValues: Record<string, unknown> | null = null
+let savedSlugValues: Record<string, unknown>[] = []
+let savedAliases: Record<string, unknown>[] = []
 
 mock.module('server-only', () => ({}))
 mock.module('next/cache', () => ({ updateTag }))
@@ -38,6 +42,7 @@ const { updateCatalogAction } =
 const validInput = {
   id: 1,
   artistaId: 42,
+  pseudonimoId: 43,
   descripcion: 'Descripción actualizada',
   // Inactive on purpose: these tests cover cache invalidation, not the
   // avatar activation rule (activating without an avatar is rejected).
@@ -47,17 +52,42 @@ const validInput = {
 }
 
 function makeTx() {
+  let initialArtistLookup = true
   return {
-    select: () => ({
-      from: () => ({
+    select: (_selection: Record<string, unknown>) => ({
+      from: (table: unknown) => ({
         where: () => ({
-          limit: async () => [] as never[]
+          limit: async () => {
+            if (table === artistTables.artistPseudonym) {
+              return [{ id: 43, pseudonimo: 'Selected Artist' }] as never[]
+            }
+            if (table === artistTables.catalogArtist) return [{ pseudonimoId: 43 }] as never[]
+            if (table === artistTables.artist && initialArtistLookup) {
+              initialArtistLookup = false
+              return [{ slug: 'old-slug' }] as never[]
+            }
+            return [] as never[]
+          }
         })
       })
     }),
-    update: () => ({
-      set: () => ({
-        where: () => Promise.resolve()
+    delete: () => ({ where: async () => undefined }),
+    insert: (table: unknown) => ({
+      values: (values: Record<string, unknown>) => {
+        if (table === artistTables.artistSlugAlias) {
+          savedAliases.push(values)
+          return Promise.resolve()
+        }
+        return Promise.resolve()
+      }
+    }),
+    update: (table: unknown) => ({
+      set: (values: Record<string, unknown>) => ({
+        where: () => {
+          if (table === artistTables.artist) savedSlugValues.push(values)
+          else savedCatalogValues = values
+          return Promise.resolve()
+        }
       })
     })
   }
@@ -68,6 +98,9 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     updateTag.mockReset()
     requireAuth.mockReset()
     revalidateWebCache.mockReset()
+    savedCatalogValues = null
+    savedSlugValues = []
+    savedAliases = []
     dbTransaction = async (cb) => {
       const result = await cb(makeTx())
       return result
@@ -111,14 +144,18 @@ describe('update-catalog action — best-effort cache invalidation', () => {
 
   test('rejects an expected-none save after another session creates an active avatar', async () => {
     let catalogChanged = false
+    let selectCount = 0
     dbTransaction = async (callback) => {
       const result = await callback({
         select: () => ({
           from: () => ({
             where: () => ({
-              limit: async () => [
-                { id: 7, path: 'artistas/current.webp', version: 'v7' }
-              ]
+              limit: async () => {
+                selectCount += 1
+                return selectCount === 1
+                  ? [{ id: 43 }]
+                  : [{ id: 7, path: 'artistas/current.webp', version: 'v7' }]
+              }
             })
           })
         }),
@@ -160,8 +197,12 @@ describe('update-catalog action — best-effort cache invalidation', () => {
               limit: async () => {
                 selectCount += 1
                 return selectCount === 1
-                  ? [{ id: 7, path: 'artistas/current.webp', version: 'v7' }]
-                  : [{ id: 8, artistaId: 42, deletedAt: '2026-07-01' }]
+                  ? [{ id: 43 }]
+                  : selectCount === 2
+                    ? [{ id: 7, path: 'artistas/current.webp', version: 'v7' }]
+                    : selectCount === 3
+                      ? [{ id: 8, artistaId: 42, deletedAt: '2026-07-01' }]
+                      : [{ pseudonimoId: 43 }]
               }
             })
           })
@@ -215,8 +256,12 @@ describe('update-catalog action — best-effort cache invalidation', () => {
               limit: async () => {
                 selectCount += 1
                 return selectCount === 1
-                  ? [{ id: 7, path: 'artistas/current.webp', version: 'v7' }]
-                  : [{ id: 8, artistaId: 42, deletedAt: '2026-07-01' }]
+                  ? [{ id: 43 }]
+                  : selectCount === 2
+                    ? [{ id: 7, path: 'artistas/current.webp', version: 'v7' }]
+                    : selectCount === 3
+                      ? [{ id: 8, artistaId: 42, deletedAt: '2026-07-01' }]
+                      : [{ pseudonimoId: 43 }]
               }
             })
           })
@@ -255,6 +300,18 @@ describe('update-catalog action — best-effort cache invalidation', () => {
       errors: [{ entityType: 'AVATAR_CONFLICT', message: 'AVATAR_CONFLICT' }]
     })
     expect(committed).toEqual({ catalog: 'original', activeAvatarId: 7 })
+  })
+
+  test('persists a changed active contextual pseudonym and updates its canonical catalog slug', async () => {
+    const result = await updateCatalogAction(
+      { success: false },
+      { ...validInput, pseudonimoId: 44 }
+    )
+
+    expect(result).toEqual({ success: true })
+    expect(savedCatalogValues).toMatchObject({ pseudonimoId: 44 })
+    expect(savedSlugValues).toEqual([{ slug: 'selected-artist' }])
+    expect(savedAliases).toEqual([{ slug: 'old-slug', artistaId: 42 }])
   })
 
   test('triggers web revalidation after successful update', async () => {

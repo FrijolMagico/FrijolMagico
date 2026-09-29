@@ -43,6 +43,10 @@ export function CatalogRow({
     (s) => s.openUpdateCatalogDialog
   )
   const artist = catalog.artist
+  const displayPseudonym =
+    artist.activePseudonyms?.find(
+      (pseudonym) => pseudonym.id === catalog.pseudonimoId
+    )?.pseudonimo ?? artist.pseudonimo
   const hasAvatar = catalog.activeAvatar != null
   const observedPendingAvatar = useCatalogAvatarPending(artist.id)
   const hasPendingAvatar = pendingAvatarOverride ?? observedPendingAvatar
@@ -94,7 +98,7 @@ export function CatalogRow({
         {hasAvatar ? (
           <ArtistAvatar
             src={catalog.activeAvatar?.path ?? null}
-            alt={artist.pseudonimo}
+            alt={displayPseudonym}
             size='sm'
           />
         ) : (
@@ -104,7 +108,7 @@ export function CatalogRow({
                 <div>
                   <ArtistAvatar
                     src={catalog.activeAvatar?.path ?? null}
-                    alt={artist.pseudonimo}
+                    alt={displayPseudonym}
                     size='sm'
                     status={
                       hasRecentCompletion || hasPendingAvatar
@@ -126,7 +130,7 @@ export function CatalogRow({
 
       <TableCell className='flex-1'>
         <div className='flex flex-col'>
-          <span className='font-medium'>{artist.pseudonimo}</span>
+          <span className='font-medium'>{displayPseudonym}</span>
           {artist.nombre && (
             <span className='text-muted-foreground text-sm'>
               {artist.nombre}

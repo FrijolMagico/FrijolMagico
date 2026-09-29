@@ -25,20 +25,29 @@ globalThis.Event = window.Event as typeof Event
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 const { createRoot } = await import('react-dom/client')
 
-function Schedule({ initial = [] }: { initial?: NonNullable<ActivityFormInput['occurrences']> }) {
+function Schedule({
+  initial = [],
+  registrationEnabled = false
+}: {
+  initial?: NonNullable<ActivityFormInput['occurrences']>
+  registrationEnabled?: boolean
+}) {
   const methods = useForm<ActivityFormInput>({ defaultValues: { occurrences: initial } })
   return createElement('form', null,
-    createElement(ActivityOccurrenceFields, { methods, disabled: false }),
+    createElement(ActivityOccurrenceFields, { methods, disabled: false, registrationEnabled }),
     createElement('button', { type: 'button', onClick: () => methods.setError('occurrences.0.durationMinutes', { message: 'La duración debe ser positiva' }) }, 'Mostrar error'),
     createElement('output', { 'data-values': true }, JSON.stringify(methods.watch('occurrences')))
   )
 }
 
-async function render(initial?: NonNullable<ActivityFormInput['occurrences']>) {
+async function render(
+  initial?: NonNullable<ActivityFormInput['occurrences']>,
+  registrationEnabled = false
+) {
   const container = document.createElement('main')
   document.body.append(container)
   const root = createRoot(container)
-  await act(async () => root.render(createElement(Schedule, { initial })))
+  await act(async () => root.render(createElement(Schedule, { initial, registrationEnabled })))
   return { container, dispose: async () => { await act(async () => root.unmount()); container.remove() } }
 }
 
@@ -68,7 +77,9 @@ test('editing an existing occurrence never leaves its previous valid start in RH
     await enter(input, text)
     const current = JSON.parse(container.querySelector('output')!.textContent!)
     expect(current[0].startTime).toBe(expected)
-    expect(activityOccurrencesSchema.safeParse(current).success).toBe(expected === '10:30')
+    expect(activityOccurrencesSchema.safeParse(current).success).toBe(
+      expected === '10:30' || expected === ''
+    )
   }
   await dispose()
 })
@@ -153,6 +164,28 @@ test('removing one of multiple sessions retains the date and other indexed dates
   expect(container.querySelector('output')?.textContent).toContain('12:00')
   expect(container.querySelector('output')?.textContent).toContain('2027-01-02')
   expect(container.querySelectorAll('[aria-controls^="occurrence-date-"]')).toHaveLength(2)
+  await dispose()
+})
+
+test('occurrence URL fields hydrate custom URLs and preserve database IDs', async () => {
+  const { container, dispose } = await render([
+    {
+      id: 81,
+      date: '2026-11-28',
+      startTime: null,
+      durationMinutes: null,
+      url: 'https://example.org/custom'
+    }
+  ], true)
+  const url = container.querySelector<HTMLInputElement>('[name="occurrences.0.url"]')
+  expect(url?.value).toBe('https://example.org/custom')
+  const submitted = JSON.parse(container.querySelector('output')!.textContent!)
+  expect(submitted[0]).toMatchObject({
+    id: 81,
+    url: 'https://example.org/custom',
+    date: '2026-11-28'
+  })
+  expect(submitted[0].rhfId).toBeUndefined()
   await dispose()
 })
 

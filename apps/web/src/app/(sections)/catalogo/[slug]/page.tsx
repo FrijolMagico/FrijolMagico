@@ -45,11 +45,15 @@ export async function generateMetadata({
   return {
     title: `${artist.name} | Catálogo — Frijol Mágico`,
     description,
+    alternates: {
+      canonical: `/catalogo/${artist.slug}`
+    },
     openGraph: {
       title: artist.name,
       description,
       images: artist.avatar ? [{ url: artist.avatar }] : [],
-      type: 'profile'
+      type: 'profile',
+      url: `/catalogo/${artist.slug}`
     }
   }
 }
@@ -71,7 +75,7 @@ export default async function ArtistPage({
     <>
       <TrackPageView
         sectionName={`Catálogo - ${artist.name}`}
-        sectionPath={`/catalogo/${slug}`}
+        sectionPath={`/catalogo/${artist.slug}`}
       />
       <article className='container mx-auto max-w-4xl px-4 py-16'>
         <div className='flex flex-col gap-8 md:flex-row'>

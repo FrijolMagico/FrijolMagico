@@ -5,11 +5,12 @@ import {
   integer,
   index,
   check,
-  uniqueIndex
+  uniqueIndex,
+  foreignKey
 } from 'drizzle-orm/sqlite-core'
 
 import { eventEdition, eventEditionApplication } from './events'
-import { collective, artist, band } from './artist'
+import { collective, artist, artistPseudonym, band } from './artist'
 import { discipline } from './core'
 
 /**
@@ -70,6 +71,7 @@ export const editionParticipation = sqliteTable(
       .default(sql`CURRENT_TIMESTAMP`)
   },
   (table) => [
+    uniqueIndex('uq_participation_id_artist').on(table.id, table.artistaId),
     uniqueIndex('uq_participacion_artista')
       .on(table.edicionId, table.artistaId)
       .where(sql`${table.artistaId} IS NOT NULL`),
@@ -100,6 +102,10 @@ export const participationExhibition = sqliteTable(
     disciplinaId: integer('disciplina_id')
       .notNull()
       .references(() => discipline.id, { onDelete: 'restrict' }),
+    artistaId: integer('artista_id').references(() => artist.id, {
+      onDelete: 'restrict'
+    }),
+    pseudonimoId: integer('pseudonimo_id'),
     postulacionId: integer('postulacion_id').references(
       () => eventEditionApplication.id,
       { onDelete: 'restrict' }
@@ -130,6 +136,16 @@ export const participationExhibition = sqliteTable(
       .default(sql`CURRENT_TIMESTAMP`)
   },
   (table) => [
+    foreignKey({
+      name: 'fk_exhibition_artist_pseudonym_owner',
+      columns: [table.pseudonimoId, table.artistaId],
+      foreignColumns: [artistPseudonym.id, artistPseudonym.artistaId]
+    }),
+    foreignKey({
+      name: 'fk_exhibition_participation_artist',
+      columns: [table.participacionId, table.artistaId],
+      foreignColumns: [editionParticipation.id, editionParticipation.artistaId]
+    }),
     index('idx_pexp_participacion').on(table.participacionId),
     index('idx_pexp_disciplina').on(table.disciplinaId),
     index('idx_pexp_estado').on(table.estado)
@@ -149,6 +165,10 @@ export const participationActivity = sqliteTable(
     tipoActividadId: integer('tipo_actividad_id')
       .notNull()
       .references(() => activityType.id, { onDelete: 'restrict' }),
+    artistaId: integer('artista_id').references(() => artist.id, {
+      onDelete: 'restrict'
+    }),
+    pseudonimoId: integer('pseudonimo_id'),
     postulacionId: integer('postulacion_id').references(
       () => eventEditionApplication.id,
       { onDelete: 'restrict' }
@@ -179,6 +199,16 @@ export const participationActivity = sqliteTable(
       .default(sql`CURRENT_TIMESTAMP`)
   },
   (table) => [
+    foreignKey({
+      name: 'fk_activity_artist_pseudonym_owner',
+      columns: [table.pseudonimoId, table.artistaId],
+      foreignColumns: [artistPseudonym.id, artistPseudonym.artistaId]
+    }),
+    foreignKey({
+      name: 'fk_activity_participation_artist',
+      columns: [table.participacionId, table.artistaId],
+      foreignColumns: [editionParticipation.id, editionParticipation.artistaId]
+    }),
     index('idx_pact_participacion').on(table.participacionId),
     index('idx_pact_tipo_actividad').on(table.tipoActividadId),
     index('idx_pact_estado').on(table.estado)
@@ -239,6 +269,7 @@ export const activityOccurrence = sqliteTable(
       .notNull()
       .references(() => activity.id, { onDelete: 'cascade' }),
     date: text('date').notNull(),
+    url: text('url'),
     startTime: text('start_time'),
     durationMinutes: integer('duration_minutes'),
     createdAt: text('created_at')
@@ -258,6 +289,10 @@ export const activityOccurrence = sqliteTable(
     check(
       'chk_activity_occurrence_date',
       sql`${table.date} GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' AND julianday(${table.date}) IS NOT NULL AND date(julianday(${table.date})) = ${table.date}`
+    ),
+    check(
+      'chk_activity_occurrence_https',
+      sql`${table.url} IS NULL OR (${table.url} LIKE 'https://_%' COLLATE BINARY AND substr(${table.url}, 1, 8) = 'https://')`
     ),
     check(
       'chk_activity_occurrence_start_time',

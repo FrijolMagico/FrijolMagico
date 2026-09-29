@@ -18,6 +18,7 @@ import {
 
 import {
   activity,
+  activityOccurrence,
   activityRegistration,
   editionParticipation,
   admissionMode,
@@ -32,6 +33,7 @@ import {
   artistStatus,
   artistHistory,
   artistImage,
+  artistSlugAlias,
   catalogArtist,
   band
 } from './schema/artist'
@@ -81,11 +83,19 @@ export const artistRelations = relations(artist, ({ one, many }) => ({
   }),
   imagenes: many(artistImage),
   historial: many(artistHistory),
+  slugAliases: many(artistSlugAlias),
   catalogoArtista: one(catalogArtist, {
     fields: [artist.id],
     references: [catalogArtist.artistaId]
   }),
   participaciones: many(editionParticipation)
+}))
+
+export const artistSlugAliasRelations = relations(artistSlugAlias, ({ one }) => ({
+  artist: one(artist, {
+    fields: [artistSlugAlias.artistaId],
+    references: [artist.id]
+  })
 }))
 
 export const artistImageRelations = relations(artistImage, ({ one }) => ({
@@ -295,12 +305,23 @@ export const activityRegistrationRelations = relations(
   })
 )
 
-export const activityRelations = relations(activity, ({ one }) => ({
+export const activityRelations = relations(activity, ({ one, many }) => ({
   participacionActividad: one(participationActivity, {
     fields: [activity.participacionActividadId],
     references: [participationActivity.id]
-  })
+  }),
+  occurrences: many(activityOccurrence)
 }))
+
+export const activityOccurrenceRelations = relations(
+  activityOccurrence,
+  ({ one }) => ({
+    activity: one(activity, {
+      fields: [activityOccurrence.activityId],
+      references: [activity.id]
+    })
+  })
+)
 
 // ============================================
 // Auth Relations (Better Auth)

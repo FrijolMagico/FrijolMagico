@@ -1,12 +1,9 @@
 import type { UseFormReturn } from 'react-hook-form'
 import { Controller, useFormState } from 'react-hook-form'
 import {
-  Field,
-  FieldError,
   FieldGroup,
   FieldLabel
 } from '@/shared/components/ui/field'
-import { Input } from '@/shared/components/ui/input'
 import { DatePickerField } from '@/shared/components/date-picker-field'
 import { TimePickerField } from '@/shared/components/time-picker-field'
 import type { ActivityFormInput } from '../_schemas/activity.schema'
@@ -64,22 +61,6 @@ export function ActivityRegistrationFields({
   return (
     <FieldGroup>
       <p className='font-medium'>Inscripción</p>
-      <Field>
-        <FieldLabel htmlFor='registration-url'>
-          Enlace de inscripción <span className='text-destructive'>*</span>
-        </FieldLabel>
-        <Input
-          id='registration-url'
-          type='url'
-          {...methods.register('registration.url')}
-          disabled={disabled}
-          aria-invalid={Boolean(registrationErrors?.url)}
-          required
-        />
-        {registrationErrors?.url && (
-          <FieldError>{registrationErrors.url.message}</FieldError>
-        )}
-      </Field>
       <FieldGroup>
         <FieldLabel>
           Inicio <span className='text-destructive'>*</span>

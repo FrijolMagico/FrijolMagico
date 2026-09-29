@@ -94,6 +94,7 @@ export function CreateActivityDialog({
       notas: '',
       estado: PARTICIPATION_STATUS.SELECCIONADO,
       puntaje: null,
+      pseudonimoId: null,
       registration: EMPTY_REGISTRATION,
       occurrences: [],
       detail: {
@@ -134,6 +135,10 @@ export function CreateActivityDialog({
     name: 'registration.registrationEnabled'
   })
   const status = useWatch({ control: methods.control, name: 'estado' })
+  const selectedArtistId = useWatch({ control: methods.control, name: 'entity.artistaId' })
+  const selectedPseudonymId = useWatch({ control: methods.control, name: 'pseudonimoId' })
+  const selectedArtist = artistas.find((artist) => artist.id === selectedArtistId)
+  const activePseudonyms = selectedArtist?.pseudonyms ?? []
 
   const onSubmit = async (values: ActivityFormInput) => {
     const result = await createActivityAction({
@@ -144,6 +149,11 @@ export function CreateActivityDialog({
         bandaId: values.entity.bandaId,
         notas: values.notas
       },
+      pseudonimoId: tipo === PARTICIPANT_TYPE.ARTISTA
+        ? (activePseudonyms.some((item) => item.id === selectedPseudonymId)
+            ? selectedPseudonymId
+            : activePseudonyms.find((item) => item.isPrimary)?.id ?? activePseudonyms[0]?.id ?? null)
+        : null,
       activity: {
         tipoActividadId:
           tipo === PARTICIPANT_TYPE.BANDA
@@ -234,10 +244,6 @@ export function CreateActivityDialog({
                     field.onChange(nextTipo)
                     if (nextTipo === PARTICIPANT_TYPE.BANDA) {
                       clearRegistration(methods)
-                      methods.setValue('occurrences', [], {
-                        shouldDirty: true,
-                        shouldValidate: true
-                      })
                     }
 
                     if (nextTipo === PARTICIPANT_TYPE.ARTISTA) {
@@ -295,6 +301,7 @@ export function CreateActivityDialog({
           </Field>
 
           {tipo === PARTICIPANT_TYPE.ARTISTA && (
+            <>
             <ControllerCombobox
               label='Artista'
               name='entity.artistaId'
@@ -303,6 +310,44 @@ export function CreateActivityDialog({
               placeholder='Buscar artista...'
               emptyText='No hay artistas disponibles'
             />
+            <Field>
+              <FieldLabel>Pseudónimo para esta actividad</FieldLabel>
+              <Controller
+                name='pseudonimoId'
+                control={methods.control}
+                render={({ field }) => {
+                  const selected = activePseudonyms.some((item) => item.id === selectedPseudonymId)
+                    ? selectedPseudonymId
+                    : activePseudonyms.find((item) => item.isPrimary)?.id ?? activePseudonyms[0]?.id
+                  const selectedPseudonym = activePseudonyms.find(
+                    (item) => item.id === selected
+                  )
+                  return (
+                    <Select
+                      value={selected == null ? '' : String(selected)}
+                      onValueChange={(value) => field.onChange(Number(value))}
+                      disabled={isSubmitting || activePseudonyms.length === 0}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder='Elegir pseudónimo'>
+                          {selectedPseudonym
+                            ? `${selectedPseudonym.pseudonym}${selectedPseudonym.isPrimary ? ' (principal)' : ''}`
+                            : 'Elegir pseudónimo'}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {activePseudonyms.map((pseudonym) => (
+                          <SelectItem key={pseudonym.id} value={String(pseudonym.id)}>
+                            {pseudonym.pseudonym}{pseudonym.isPrimary ? ' (principal)' : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )
+                }}
+              />
+            </Field>
+            </>
           )}
 
           {tipo === PARTICIPANT_TYPE.AGRUPACION && (
@@ -343,10 +388,6 @@ export function CreateActivityDialog({
                     field.onChange(Number(val))
                     if (Number(val) === ACTIVITY_TYPES.MUSICA) {
                       clearRegistration(methods)
-                      methods.setValue('occurrences', [], {
-                        shouldDirty: true,
-                        shouldValidate: true
-                      })
                     }
                   }}
                   disabled={isSubmitting || tipo === PARTICIPANT_TYPE.BANDA}
@@ -543,18 +584,20 @@ export function CreateActivityDialog({
               </Field>
             )}
           </FieldGroup>
-          {!isMusic && <ActivityOccurrenceFields methods={methods} disabled={isSubmitting} />}
-        </FieldGroup>
-
-        {registrationEnabled && (
-          <>
-            <Separator orientation='vertical' className='hidden md:block' />
+          {registrationEnabled && !isMusic && (
             <ActivityRegistrationFields
               methods={methods}
               disabled={isSubmitting}
             />
-          </>
-        )}
+          )}
+        </FieldGroup>
+
+        <Separator orientation='vertical' className='hidden md:block' />
+        <ActivityOccurrenceFields
+          methods={methods}
+          disabled={isSubmitting}
+          registrationEnabled={Boolean(registrationEnabled && !isMusic)}
+        />
       </form>
     </EntityFormDialog>
   )

@@ -176,22 +176,25 @@ describe('mapFestivalDetail', () => {
     ])
   })
 
-  test('orders multi-day and same-day sessions without inferring an edition date', () => {
+  test('preserves occurrence identity, URLs and nullable time while sorting dated blocks', () => {
     const result = mapFestivalDetail({
       ...baseRaw,
       actividades: [
         { ...baseRaw.actividades[0], ocurrencias: [
-          { fecha: '2025-10-05', hora_inicio: '11:00', duracion_minutos: 30 },
-          { fecha: '2025-10-03', hora_inicio: '18:00', duracion_minutos: 60 },
-          { fecha: '2025-10-03', hora_inicio: '09:00', duracion_minutos: 45 }
+          { id: 3, fecha: '2025-10-05', hora_inicio: '11:00', duracion_minutos: 30, registration_url: 'https://example.org/three' },
+          { id: 2, fecha: '2025-10-03', hora_inicio: '18:00', duracion_minutos: 60, registration_url: 'https://example.org/two' },
+          { id: 1, fecha: '2025-10-03', hora_inicio: '09:00', duracion_minutos: 45, registration_url: 'https://example.org/one' },
+          { id: 4, fecha: '2025-10-03', hora_inicio: null, duracion_minutos: null, registration_url: null }
         ] },
         { ...baseRaw.actividades[0], ocurrencias: [] }
       ]
     } as FestivalDetail)
 
-    expect(result.actividades[0].ocurrencias.map(({ fecha, hora_inicio }) => `${fecha} ${hora_inicio}`)).toEqual([
-      '2025-10-03 09:00', '2025-10-03 18:00', '2025-10-05 11:00'
+    expect(result.actividades[0].ocurrencias.map(({ id, fecha, hora_inicio }) => `${id} ${fecha} ${hora_inicio ?? 'untimed'}`)).toEqual([
+      '1 2025-10-03 09:00', '2 2025-10-03 18:00', '4 2025-10-03 untimed', '3 2025-10-05 11:00'
     ])
+    expect(result.actividades[0].ocurrencias[0].registration_url).toBe('https://example.org/one')
+    expect(result.actividades[0].ocurrencias[2].duracion_minutos).toBeNull()
     expect(result.actividades[1].ocurrencias).toEqual([])
   })
 

@@ -1,120 +1,102 @@
-import { ChevronDown, Clock, MapPin } from 'lucide-react'
-import { formatSantiagoDateTime } from '@frijolmagico/utils/santiago-date-format'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
+import { ChevronDown } from 'lucide-react'
 
 import { ActivityRegistrationCta } from './activity-registration-affordance'
 import { ActivityDescription } from './activity-description'
 import { ActivityArtistLink } from './ActivityArtistLink'
+import { formatOccurrenceTimeRange } from './activity-registration-time'
 
 import type { FestivalActivity } from '../../types/festival'
 
 interface ActivityItemProps {
   activity: FestivalActivity
-  isEditionPast: boolean
+  isEditionPast?: boolean
 }
 
-const hasDetails = (a: FestivalActivity) =>
-  Boolean(a.ocurrencias.length || a.ubicacion || a.descripcion)
+const EMPTY_EDITOR_MARKUP =
+  /<\/?(?:p|ul|ol|li|strong|em|s|code|a)\b[^>]*>|<br\b[^>]*\/?>/gi
+const EMPTY_EDITOR_SPACE = /(?:&nbsp;|&#160;|&#xA0;)/gi
 
-const formatSessionDate = (date: string) =>
-  format(new Date(date + 'T00:00:00'), 'd MMM yyyy', { locale: es })
+const hasDescription = (description: string | null) =>
+  Boolean(
+    description
+      ?.replace(EMPTY_EDITOR_MARKUP, '')
+      .replace(EMPTY_EDITOR_SPACE, '')
+      .trim()
+  )
 
-export const ActivityItem = ({
-  activity,
-  isEditionPast
-}: ActivityItemProps) => {
-  const details = hasDetails(activity)
+export const ActivityItem = ({ activity }: ActivityItemProps) => {
+  const details = hasDescription(activity.descripcion)
+  const occurrence = activity.ocurrencias[0]
+  const timeRange = occurrence
+    ? formatOccurrenceTimeRange(
+        occurrence.hora_inicio,
+        occurrence.duracion_minutos
+      )
+    : null
 
   return (
     <article className='bg-palette-background border-palette-primary group relative max-w-[calc(100%-1rem)] min-w-[16rem] rounded-lg border sm:max-w-xs'>
       <div className='bg-palette-primary absolute -z-10 size-full translate-x-1.5 translate-y-1.5 rounded-lg duration-300 group-hover:translate-0' />
-      {activity.tipo !== 'musica' && activity.registration && (
-        <ActivityRegistrationCta registration={activity.registration} />
+
+      {activity.registration && occurrence && (
+        <div className='absolute -top-5 -right-3 z-30'>
+          <ActivityRegistrationCta
+            registration={activity.registration}
+            url={occurrence.registration_url ?? null}
+          />
+        </div>
       )}
 
-      <div className='px-4 pt-3'>
+      <div
+        className={`relative z-20 min-w-0 break-words px-4 pt-3 ${
+          activity.registration && occurrence ? 'pr-28' : ''
+        }`}
+      >
         <ActivityArtistLink
           pseudonym={activity.participante_pseudonimo}
           catalogSlug={activity.catalogo_slug}
           avatarUrl={activity.avatar_url}
           rrss={activity.rrss}
           email={activity.correo}
+          className='max-w-full break-words text-palette-primary/70 text-sm'
         />
       </div>
 
       {details ? (
         <details className='group/details'>
-          <summary
-            aria-label={
-              !activity.titulo && !activity.registration
-                ? activity.participante_pseudonimo ??
-                  'Ver detalles de la actividad'
-                : undefined
-            }
-            className='flex w-full cursor-pointer items-center justify-between px-4 py-3 text-left marker:content-none'
-          >
+          <summary className="before:content-[''] before:absolute before:inset-0 before:z-10 before:cursor-pointer flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-3 text-left marker:content-none">
             <div className='min-w-0 flex-1'>
               {activity.titulo && (
                 <h3 className='text-palette-foreground text-base leading-none font-semibold'>
                   {activity.titulo}
                 </h3>
               )}
-
-              {activity.registration && (
-                <span className='text-palette-foreground/50 mt-1 inline-block text-sm leading-none'>
-                  Inscripciones abiertas hasta el{' '}
-                  <strong>
-                    {formatSantiagoDateTime(activity.registration.end_at)}hrs
-                  </strong>
-                </span>
+              {(timeRange || activity.ubicacion) && (
+                <div
+                  className={`${activity.titulo ? 'mt-2' : 'mt-1'} space-y-0.5 leading-tight`}
+                >
+                  {timeRange && (
+                    <p className='text-palette-foreground/70 leading-tight text-sm'>
+                      {timeRange}
+                    </p>
+                  )}
+                  {activity.ubicacion && (
+                    <p className='text-palette-foreground/60 leading-tight text-sm'>
+                      {activity.ubicacion}
+                    </p>
+                  )}
+                </div>
               )}
             </div>
-
             <ChevronDown
               className='text-palette-foreground/40 size-5 shrink-0 transition-transform duration-200 group-open/details:rotate-180'
               aria-hidden='true'
             />
           </summary>
-
-          <div className='border-palette-primary/20 h-full overflow-hidden border-t px-4 pt-3 pb-4'>
-            <div className='text-foreground/60 flex flex-wrap gap-4 text-sm'>
-              {activity.ocurrencias.length > 0 ? (
-                <div className='space-y-1'>
-                  <h4 className='text-palette-foreground text-sm font-medium'>
-                    Horarios
-                  </h4>
-                  <ul className='space-y-1'>
-                    {activity.ocurrencias.map((occurrence) => (
-                      <li
-                        key={`${occurrence.fecha}-${occurrence.hora_inicio}`}
-                        className='flex items-center gap-1.5'
-                      >
-                        <Clock className='size-4' aria-hidden='true' />
-                        <time
-                          dateTime={`${occurrence.fecha}T${occurrence.hora_inicio}:00`}
-                          className='-mb-.5'
-                        >
-                          {formatSessionDate(occurrence.fecha)} —{' '}
-                          {occurrence.hora_inicio}hrs
-                        </time>
-                        <span className='-mb-.5'>
-                          ({occurrence.duracion_minutos} min)
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : !isEditionPast ? (
-                <span>Fecha y horario por confirmar</span>
-              ) : null}
-              {activity.ubicacion && (
-                <div className='flex items-center gap-1.5'>
-                  <MapPin className='size-4' aria-hidden='true' />
-                  <span>{activity.ubicacion}</span>
-                </div>
-              )}
-            </div>
+          <div
+            data-disclosure-content
+            className='relative z-20 pointer-events-none [&>*]:pointer-events-auto border-palette-primary/20 h-full overflow-hidden border-t px-4 pt-3 pb-4'
+          >
             <ActivityDescription description={activity.descripcion} />
           </div>
         </details>
@@ -125,10 +107,21 @@ export const ActivityItem = ({
               {activity.titulo}
             </h3>
           )}
-          {activity.tipo !== 'musica' && !isEditionPast && (
-            <p className='text-palette-foreground/60 mt-2 text-sm'>
-              Fecha y horario por confirmar
-            </p>
+          {(timeRange || activity.ubicacion) && (
+            <div
+              className={`${activity.titulo ? 'mt-2' : 'mt-1'} space-y-0.5 leading-tight`}
+            >
+              {timeRange && (
+                <p className='text-palette-foreground/70 leading-tight text-sm'>
+                  {timeRange}
+                </p>
+              )}
+              {activity.ubicacion && (
+                <p className='text-palette-foreground/60 leading-tight text-sm'>
+                  {activity.ubicacion}
+                </p>
+              )}
+            </div>
           )}
         </div>
       )}

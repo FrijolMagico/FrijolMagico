@@ -66,7 +66,6 @@ export const activityDetailUpdateSchema = createUpdateSchema(activityDetail)
 // ============================================================================
 
 const registrationFields = [
-  'url',
   'startDate',
   'startTime',
   'endDate',
@@ -74,7 +73,7 @@ const registrationFields = [
 ] as const
 
 const registrationInputSchema = z.object({
-  url: z.string().trim(),
+  url: z.string().trim().optional(),
   startDate: z.string().trim(),
   startTime: z.string().trim(),
   endDate: z.string().trim(),
@@ -101,21 +100,23 @@ const validatedRegistrationSchema = registrationInputSchema.superRefine(
       }
       return
     }
-    try {
-      const url = new URL(value.url)
-      if (
-        url.protocol !== 'https:' ||
-        !url.hostname ||
-        url.username ||
-        url.password
-      )
-        throw new Error()
-    } catch {
-      context.addIssue({
-        code: 'custom',
-        path: ['url'],
-        message: 'Ingresa una URL HTTPS válida'
-      })
+    if (value.url) {
+      try {
+        const url = new URL(value.url)
+        if (
+          url.protocol !== 'https:' ||
+          !url.hostname ||
+          url.username ||
+          url.password
+        )
+          throw new Error()
+      } catch {
+        context.addIssue({
+          code: 'custom',
+          path: ['url'],
+          message: 'Ingresa una URL HTTPS válida'
+        })
+      }
     }
     try {
       const start = parseChileLocalInstant(value.startDate, value.startTime)
@@ -163,6 +164,7 @@ export type ActivityRegistrationInput = Exclude<
 >
 
 const occurrenceSchema = z.object({
+  id: positiveIdSchema.optional(),
   date: z.string().refine((date) => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return false
     try {
@@ -172,8 +174,17 @@ const occurrenceSchema = z.object({
       return false
     }
   }, 'Ingresa una fecha de calendario válida'),
-  startTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Ingresa una hora válida (HH:mm)').nullable().optional(),
-  durationMinutes: z.number().int().positive('La duración debe ser positiva').nullable().optional()
+  startTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Ingresa una hora válida (HH:mm)').or(z.literal('')).nullable().optional(),
+  durationMinutes: z.number().int().positive('La duración debe ser positiva').nullable().optional(),
+  url: z.string().trim().nullable().optional().refine((url) => {
+    if (!url) return true
+    try {
+      const parsed = new URL(url)
+      return parsed.protocol === 'https:' && !parsed.username && !parsed.password
+    } catch {
+      return false
+    }
+  }, 'Ingresa una URL HTTPS válida')
 })
 
 export const activityOccurrencesSchema = z.array(occurrenceSchema).superRefine(
@@ -201,14 +212,14 @@ export const activityOccurrencesSchema = z.array(occurrenceSchema).superRefine(
 
 export type ActivityOccurrenceInput = z.infer<typeof activityOccurrencesSchema>[number]
 
-// Schedule order is presentation-only; compare the complete date/time/duration tuple.
+// Occurrence order is presentation-only; compare schedule and URL content, not persisted IDs.
 export function sameActivitySchedule(
   left: ActivityOccurrenceInput[],
   right: ActivityOccurrenceInput[]
 ): boolean {
   const keys = (rows: ActivityOccurrenceInput[]) => rows
-    .map(({ date, startTime, durationMinutes }) =>
-      JSON.stringify([date, startTime, durationMinutes]))
+    .map(({ date, startTime, durationMinutes, url }) =>
+      JSON.stringify([date, startTime ?? null, durationMinutes ?? null, url ?? null]))
     .sort()
   return JSON.stringify(keys(left)) === JSON.stringify(keys(right))
 }
@@ -218,14 +229,35 @@ export function activityScheduleUpdate(
   desired: ActivityOccurrenceInput[],
   switchingToMusic: boolean
 ): { occurrences: ActivityOccurrenceInput[]; expectedOccurrences: ActivityOccurrenceInput[] } | Record<string, never> {
-  if (!switchingToMusic && sameActivitySchedule(original, desired)) return {}
+  const sameOccurrenceAssignments = (left: ActivityOccurrenceInput[], right: ActivityOccurrenceInput[]) => {
+    const keys = (rows: ActivityOccurrenceInput[]) => rows
+      .map(({ id, date, startTime, durationMinutes, url }) =>
+        JSON.stringify([id ?? null, date, startTime ?? null, durationMinutes ?? null, url ?? null]))
+      .sort()
+    return JSON.stringify(keys(left)) === JSON.stringify(keys(right))
+  }
+  if (
+    !switchingToMusic &&
+    sameActivitySchedule(original, desired) &&
+    sameOccurrenceAssignments(original, desired)
+  ) return {}
   return { occurrences: desired, expectedOccurrences: original }
 }
 
-export function parseActivityOccurrencesInput(value: unknown, effectiveTypeSlug: string): ActivityOccurrenceInput[] {
+export function parseActivityOccurrencesInput(
+  value: unknown,
+  effectiveTypeSlug: string,
+  requireDate = true
+): ActivityOccurrenceInput[] {
   const occurrences = activityOccurrencesSchema.parse(value ?? [])
-  if (occurrences.length && !['taller', 'charla'].includes(effectiveTypeSlug)) {
-    throw new Error('Solo talleres y charlas pueden tener sesiones')
+  const supportsOccurrences = ['taller', 'charla', 'musica'].includes(effectiveTypeSlug)
+  if (!supportsOccurrences && occurrences.length) {
+    throw new Error(
+      'Este tipo de actividad no admite sesiones y no se puede crear o editar hasta que el modelo lo soporte'
+    )
+  }
+  if (requireDate && supportsOccurrences && occurrences.length === 0) {
+    throw new Error('Agregá al menos una fecha para la actividad')
   }
   return occurrences
 }
@@ -243,10 +275,32 @@ export const activityFormSchema = activityInsertSchema
     detail: activityDetailInsertSchema.omit({
       participacionActividadId: true
     }),
+    pseudonimoId: positiveIdSchema.nullable().optional(),
     participantType: z.enum(Object.values(PARTICIPANT_TYPE)),
     entity: editionParticipationEntitySchema,
     registration: validatedRegistrationSchema.optional(),
     occurrences: activityOccurrencesSchema.optional()
+  })
+  .superRefine((value, context) => {
+    const occurrences = value.occurrences ?? []
+    if (occurrences.length === 0) {
+      context.addIssue({
+        code: 'custom',
+        path: ['occurrences'],
+        message: 'Agregá al menos una fecha para la actividad'
+      })
+    }
+    if (value.registration?.registrationEnabled) {
+      occurrences.forEach((occurrence, index) => {
+        if (!occurrence.url) {
+          context.addIssue({
+            code: 'custom',
+            path: ['occurrences', index, 'url'],
+            message: 'Agregá una URL de inscripción para cada sesión'
+          })
+        }
+      })
+    }
   })
 
 // ============================================================================
