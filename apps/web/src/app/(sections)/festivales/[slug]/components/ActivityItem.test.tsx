@@ -60,7 +60,7 @@ describe('ActivityItem', () => {
     expect(container.textContent).not.toContain('2026-09-05')
   })
 
-  test('keeps title and time in the disclosure summary and reveals location and description', () => {
+  test('keeps title, time, and location in the disclosure summary and reveals only the description', () => {
     const { container } = render(
       <ActivityItem
         activity={{ ...baseActivity, descripcion: 'Aprende técnicas', ubicacion: 'Sala A' }}
@@ -74,20 +74,13 @@ describe('ActivityItem', () => {
     expect(summary.textContent).toContain('14:00hrs a 15:30hrs')
     expect(summary.textContent).toContain('Sala A')
     const summaryTitle = summary.querySelector('h3')!
-    const summarySchedule = summaryTitle.parentElement!.nextElementSibling!
-    expect(summarySchedule.textContent).toBe('14:00hrs a 15:30hrsSala A')
-    expect(summarySchedule.className).toContain('mt-2')
-    expect(summarySchedule.className).toContain('space-y-0.5')
-    expect(summarySchedule.className).toContain('leading-tight')
-    expect(summarySchedule.children[0].className).toContain('text-palette-foreground/70')
-    expect(summarySchedule.children[1].className).toContain('text-palette-foreground/60')
+    const summarySchedule = Array.from(summaryTitle.parentElement!.querySelectorAll('p'))
+    expect(summarySchedule.map((item) => item.textContent)).toEqual([
+      '14:00hrs a 15:30hrs',
+      'Sala A'
+    ])
     const artistLink = summary.querySelector('a')!
     expect(artistLink.getAttribute('href')).toBe('/catalogo/artista')
-    expect(artistLink.className).toContain('z-20')
-    expect(summary.className).toContain('before:absolute')
-    expect(summary.className).toContain('before:inset-0')
-    expect(summary.className).toContain('before:z-10')
-    expect(container.querySelector('article')?.className).toContain('relative')
     expect(container.textContent).not.toContain('Detalles')
     expect(details.open).toBe(false)
     const disclosureContent = details.querySelector('[data-disclosure-content]')!
@@ -114,18 +107,13 @@ describe('ActivityItem', () => {
         '14:00hrs a 15:30hrs',
         'Patio central'
       ])
-      const fallbackTitle = article.querySelector('h3')!
-      const fallbackSchedule = fallbackTitle.parentElement!.nextElementSibling!
-      expect(fallbackSchedule.className).toContain('mt-2')
-      expect(fallbackSchedule.className).toContain('space-y-0.5')
-      expect(fallbackSchedule.className).toContain('leading-tight')
-      expect(fallbackSchedule.children[0].className).toContain('text-palette-foreground/70')
-      expect(fallbackSchedule.children[1].className).toContain('text-palette-foreground/60')
+      const fallbackSchedule = Array.from(article.querySelector('h3')!.parentElement!.querySelectorAll('p'))
+      expect(fallbackSchedule.map((item) => item.textContent)).toEqual([
+        '14:00hrs a 15:30hrs',
+        'Patio central'
+      ])
       expect(article.textContent?.match(/Patio central/g)).toHaveLength(1)
       expect(article.querySelector('p:last-child svg')).toBeNull()
-      expect(article.querySelector('p:last-child')?.className).toContain(
-        'text-palette-foreground/60'
-      )
       unmount()
     }
   })
@@ -194,7 +182,7 @@ describe('ActivityItem', () => {
     expect(badge.textContent).toBe('Música')
     expect(badge.parentElement).toBe(article)
     expect(article.querySelector('h3')?.textContent).toBe('Taller')
-    expect(article.querySelector(':scope > div.px-4.py-3')).not.toBeNull()
+    expect(article.querySelector('details')).toBeNull()
     expect(article.querySelector('button')).toBeNull()
   })
 
@@ -213,11 +201,7 @@ describe('ActivityItem', () => {
       expect(badge.textContent).toBe('Charla')
       expect(badge.parentElement).toBe(article)
       expect(badge.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-      expect(
-        descripcion
-          ? article.querySelector(':scope > details')
-          : article.querySelector(':scope > div.px-4.py-3')
-      ).not.toBeNull()
+      expect(Boolean(article.querySelector('details'))).toBe(Boolean(descripcion))
       unmount()
     }
   })

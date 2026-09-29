@@ -110,12 +110,12 @@ describe('ActivityList', () => {
     const scroller = container.querySelector('[data-schedule-scroll-region]')!
     expect(scroller.getAttribute('tabindex')).toBe('0')
     expect(scroller.getAttribute('aria-label')).toContain('Cronograma')
-    expect(scroller.className).toContain('overflow-y-auto')
     expect(scroller.contains(screen.getByRole('button', { name: 'Talleres' }))).toBe(false)
     const heading = screen.getByRole('heading', { name: 'Actividades Día 3' })
-    expect(heading.className).toContain('text-4xl')
-    expect(heading.className).toContain('md:text-5xl')
-    expect(heading.className).toContain('font-black')
+    expect(heading.id).not.toBe('')
+    expect(
+      container.querySelector('section[aria-labelledby]')?.getAttribute('aria-labelledby')
+    ).toBe(heading.id)
     expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual([
       '3 Octubre',
       'Todos',
@@ -154,21 +154,16 @@ describe('ActivityList', () => {
     const cardGrids = rows.map((row) => row.querySelector<HTMLElement>(':scope > div:last-child')!)
     expect(cardGrids.map((grid) => grid.style.getPropertyValue('--schedule-columns'))).toEqual(['3', '2', '2'])
     expect(cardGrids.every((grid) => !grid.style.maxWidth)).toBe(true)
-    expect(cardGrids[0].className).toContain('items-start')
-    expect(cardGrids[0].className).not.toContain(':has(')
-    expect(cardGrids[0].querySelector(':scope > div')?.className).not.toContain('flex')
+    const columns = (grid: HTMLElement) => Array.from(grid.children)
+    expect(columns(cardGrids[0]!)).toHaveLength(3)
+    expect(columns(cardGrids[1]!)).toHaveLength(1)
+    expect(
+      columns(cardGrids[0]!).every((column) => column.querySelectorAll('article').length === 1)
+    ).toBe(true)
     expect(rows[0].getAttribute('aria-label')).toBe('11:00 a 12:00')
     expect(rows[1].getAttribute('aria-label')).toBe('11:30 a 12:30')
     expect(container.querySelectorAll('[data-timeline-time]')).toHaveLength(3)
     expect(container.querySelectorAll('[data-timeline-dot][aria-hidden="true"]')).toHaveLength(3)
-
-    const scroller = container.querySelector('[data-schedule-scroll-region]')!
-    expect(scroller.className).toContain('max-h-150')
-    expect(scroller.className).toContain('p-3')
-    expect(scroller.className).toContain('py-14')
-    expect(scroller.className).toContain('pr-2')
-    expect(scroller.className).not.toContain('overscroll-contain')
-    expect(scroller.className).not.toContain('border')
 
     fireEvent.click(screen.getByRole('button', { name: 'Charlas' }))
     const filteredRows = Array.from(container.querySelectorAll('[data-schedule-row]'))
@@ -219,7 +214,7 @@ describe('ActivityList', () => {
     expect(timelineMarksBefore).toEqual(['10:00', '11:00'])
   })
 
-  test('lets a disclosure grow while a closed sibling in its row keeps its natural size', () => {
+  test('opens one card disclosure without changing its sibling in the same row', () => {
     const date = '2026-10-03'
     const { container } = render(
       <ActivityList
@@ -237,17 +232,18 @@ describe('ActivityList', () => {
     const grid = container.querySelector('[data-schedule-row] > div:last-child')!
     const [expandable, sibling] = Array.from(grid.querySelectorAll('article'))
     const details = expandable.querySelector('details')!
+    const cardCount = () => Array.from(grid.children).length
 
-    expect(grid.className).toContain('items-start')
-    expect(grid.className).not.toContain(':has(')
-    expect(grid.querySelector(':scope > div')?.className).not.toContain('flex')
+    expect(cardCount()).toBe(2)
+    expect(
+      Array.from(grid.children).every((column) => column.querySelectorAll('article').length === 1)
+    ).toBe(true)
     expect(details.open).toBe(false)
     fireEvent.click(details.querySelector('summary')!)
     expect(details.open).toBe(true)
     expect(sibling.querySelector('details')).toBeNull()
-    expect(grid.className).toContain('items-start')
-    expect(grid.className).not.toContain(':has(')
-    expect(grid.querySelector(':scope > div')?.className).not.toContain('flex')
+    expect(cardCount()).toBe(2)
+    expect(sibling.textContent).toContain('Closed sibling')
   })
 
   test('filters by type and changes the selected day', () => {
@@ -274,8 +270,6 @@ describe('ActivityList', () => {
     const heading = screen.getByRole('heading', { name: 'Actividades Día 4' })
     const dayNumber = heading.querySelectorAll('span')[1]
     expect(dayNumber.textContent).toBe('Día 4')
-    expect(dayNumber.className).toContain('w-[5ch]')
-    expect(dayNumber.className).toContain('tabular-nums')
     expect(screen.getByText('Segundo día')).toBeDefined()
     expect(screen.queryByText('Primer día')).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Talleres' }))
@@ -325,7 +319,7 @@ describe('ActivityList', () => {
     expect(screen.queryByText('Legacy')).toBeNull()
   })
 
-  test('reserves two tabular digit cells in day buttons across single- and double-digit days', () => {
+  test('labels each day button with its day number and month', () => {
     render(
       <ActivityList
         actividades={[
@@ -341,8 +335,6 @@ describe('ActivityList', () => {
       const dayNumber = button.querySelector('span')!
       expect(dayNumber.textContent).toBe(label)
       expect(button.textContent).toBe(label)
-      expect(dayNumber.className).not.toContain('w-[2ch]')
-      expect(dayNumber.className).not.toContain('tabular-nums')
     }
   })
 

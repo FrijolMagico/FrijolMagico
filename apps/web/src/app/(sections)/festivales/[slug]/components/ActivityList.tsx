@@ -94,7 +94,8 @@ export const ActivityList = ({
     [selectedDate, selectedType, updateScrollCue]
   )
   const selectedDay = schedule.days.find((day) => day.date === selectedDate)
-  const isVisibleType = (type: string) => activeType === 'all' || activeType === type
+  const isVisibleType = (type: string) =>
+    activeType === 'all' || activeType === type
   const selectedEntries = (
     selectedDay?.groups.flatMap((group) => group.entries) ?? []
   )
@@ -130,10 +131,10 @@ export const ActivityList = ({
       aria-labelledby='festival-activities-heading'
       className='space-y-4'
     >
-      <div className='flex flex-wrap items-center'>
+      <div className='flex flex-wrap items-center gap-y-4'>
         <h2
           id='festival-activities-heading'
-          className='text-palette-primary text-4xl font-black md:text-5xl'
+          className='text-palette-primary text-center text-4xl font-black md:text-start md:text-5xl'
         >
           <span>Actividades</span>
           {selectedDay && (
@@ -152,7 +153,7 @@ export const ActivityList = ({
         {schedule.days.length > 0 && (
           <nav
             aria-label='Días del cronograma'
-            className='flex flex-wrap gap-2'
+            className='mx-auto flex items-center gap-2'
           >
             {schedule.days.map(({ date }) => (
               <Button
@@ -180,7 +181,7 @@ export const ActivityList = ({
         <div
           role='group'
           aria-label='Filtrar actividades por tipo'
-          className='ml-auto flex flex-wrap items-center gap-2'
+          className='mx-auto ml-auto flex flex-wrap items-center gap-2 md:mr-0'
         >
           {visibleTypeFilters.map(({ value, label }) => {
             const active = activeType === value
@@ -217,11 +218,11 @@ export const ActivityList = ({
           role='region'
           aria-label='Cronograma de actividades. Desplazate para ver más horarios.'
           tabIndex={0}
-          className='max-h-150 overflow-y-auto p-3 py-14 pr-2 focus-visible:outline-2 focus-visible:outline-offset-2'
+          className='max-h-150 overflow-y-auto py-10 pr-2 focus-visible:outline-2 focus-visible:outline-offset-2 md:p-3 md:py-14'
         >
           {selectedDay && (
             <section aria-label={`Actividades del ${selectedDay.date}`}>
-              <ol className="before:bg-palette-primary/30 relative space-y-16 before:absolute before:top-0 before:bottom-0 before:left-17 before:w-px before:content-['']">
+              <ol className="before:bg-palette-primary/30 relative space-y-12 before:absolute before:top-0 before:bottom-0 before:left-17 before:w-px before:content-['']">
                 {Array.from(rows, ([rowStart, row]) => {
                   const rowEnd = Math.max(
                     ...row.map(
@@ -243,7 +244,7 @@ export const ActivityList = ({
                           <time
                             data-timeline-time
                             dateTime={formatMinutes(rowStart)}
-                            className='text-palette-primary z-10 font-mono font-bold tabular-nums sm:text-2xl'
+                            className='text-palette-primary z-10 font-mono text-lg font-bold tabular-nums sm:text-2xl'
                           >
                             {formatMinutes(rowStart)}
                           </time>
@@ -255,7 +256,7 @@ export const ActivityList = ({
                         </div>
                       </div>
                       <div
-                        className='grid min-w-0 grid-cols-1 items-start gap-3 md:grid-cols-[repeat(var(--schedule-columns),minmax(0,1fr))]'
+                        className='grid min-w-0 grid-cols-1 items-start gap-x-4 gap-y-8 md:grid-cols-[repeat(var(--schedule-columns),minmax(0,1fr))]'
                         style={
                           {
                             '--schedule-columns': Math.max(2, columnCount)
