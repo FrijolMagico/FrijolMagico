@@ -240,6 +240,66 @@ describe('complete activity seed contract', () => {
     ])
   })
 
+  test('festival VII scheduled occurrences fit the three-lane daily window', async () => {
+    const client = await freshSeededDatabase()
+    const result = await client.execute(`
+      SELECT occurrence.id AS occurrence_id, a.id AS activity_id,
+        occurrence.date, occurrence.start_time, occurrence.duration_minutes,
+        a.hora_inicio AS legacy_start_time
+      FROM activity_occurrence occurrence
+      JOIN actividad a ON a.id = occurrence.activity_id
+      JOIN participacion_actividad pa ON pa.id = a.participacion_actividad_id
+      JOIN participacion_edicion pe ON pe.id = pa.participacion_id
+      WHERE pe.edicion_id = 7
+        AND occurrence.date IN ('2026-10-09', '2026-10-10')
+      ORDER BY occurrence.id
+    `)
+
+    expect(result.rows).toHaveLength(33)
+    expect(result.rows.map((row) => Number(row.occurrence_id))).toEqual(
+      Array.from({ length: 33 }, (_, index) => index + 14)
+    )
+    expect(result.rows.map((row) => Number(row.activity_id))).toEqual(
+      Array.from({ length: 33 }, (_, index) => index + 16)
+    )
+
+    const totalsByDay = new Map<string, number>()
+    const intervalsByDay = new Map<string, { start: number; end: number }[]>()
+    for (const row of result.rows) {
+      const date = String(row.date)
+      const startTime = String(row.start_time)
+      const duration = Number(row.duration_minutes)
+      const [hours, minutes] = startTime.split(':').map(Number)
+      const start = hours * 60 + minutes
+      const end = start + duration
+
+      expect(row.legacy_start_time).toBe(startTime)
+      expect(start).toBeGreaterThanOrEqual(11 * 60)
+      expect(end).toBeLessThanOrEqual(18 * 60)
+      totalsByDay.set(date, (totalsByDay.get(date) ?? 0) + duration)
+      const intervals = intervalsByDay.get(date) ?? []
+      intervals.push({ start, end })
+      intervalsByDay.set(date, intervals)
+    }
+
+    expect(totalsByDay).toEqual(new Map([
+      ['2026-10-09', 1260],
+      ['2026-10-10', 1185]
+    ]))
+    for (const intervals of intervalsByDay.values()) {
+      const boundaries = intervals
+        .flatMap(({ start, end }) => [[start, 1], [end, -1]] as const)
+        .sort(([timeA, deltaA], [timeB, deltaB]) => timeA - timeB || deltaA - deltaB)
+      let concurrent = 0
+      let peak = 0
+      for (const [, delta] of boundaries) {
+        concurrent += delta
+        peak = Math.max(peak, concurrent)
+      }
+      expect(peak).toBeLessThanOrEqual(3)
+    }
+  })
+
   test('complete seed preserves foreign-key integrity', async () => {
     const client = await freshSeededDatabase()
     const violations = await client.execute('PRAGMA foreign_key_check')
