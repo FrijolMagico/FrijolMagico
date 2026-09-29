@@ -10,6 +10,7 @@ import type { ActionState } from '@/shared/types/actions'
 import {
   ARTIST_DETAIL_CACHE_TAG,
   CATALOG_CACHE_TAG,
+  CATALOG_PARTICIPATION_CACHE_TAG,
   EDITION_CACHE_TAG,
   EVENT_CACHE_TAG,
   FESTIVALES_CACHE_TAG,
@@ -101,7 +102,10 @@ export async function updateActivityAction(
       }
       void revalidateWebCacheBestEffort({ tag })
     }
-    if (catalogChanged) void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
+    if (catalogChanged) {
+      void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
+      void revalidateWebCacheBestEffort({ tag: CATALOG_PARTICIPATION_CACHE_TAG })
+    }
 
     return { success: true }
   } catch (error) {

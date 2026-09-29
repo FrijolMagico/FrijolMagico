@@ -85,12 +85,14 @@ describe('updateActivityAction catalog freshness', () => {
 
     expect(result.success).toBe(true)
     expect(invalidations).toContain('web:catalogo:artistas')
+    expect(invalidations).toContain('web:catalogo:artistas:participaciones')
     expect(invalidations).toContain('local:actividades:participacion:11')
     expect(invalidations).toContain('local:participaciones:edicion:7')
     expect(invalidations).toContain('local:artistas:detalle')
     expect(invalidations).toContain('local:festivales')
     expect(invalidations).toContain('web:festivales')
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: 'catalogo:artistas' })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: 'catalogo:artistas:participaciones' })
   })
 
   test('does not invalidate caches for a no-op update', async () => {
@@ -108,6 +110,7 @@ describe('updateActivityAction catalog freshness', () => {
     expect(result.success).toBe(true)
     expect(invalidations).toEqual([])
     expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
+    expect(invalidations).not.toContain('web:catalogo:artistas:participaciones')
   })
 
   test('does not invalidate caches when the database mutation fails', async () => {

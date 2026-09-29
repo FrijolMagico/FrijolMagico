@@ -67,6 +67,7 @@ describe('updateParticipationAction cache freshness', () => {
     expect(invalidations).toContain('participaciones:edicion:7')
     expect(invalidations).toContain('participaciones:edicion:8')
     expect(invalidations).toContain('catalogo:artistas')
+    expect(invalidations).toContain('catalogo:artistas:participaciones')
   })
 
   test('does not invalidate caches when no values changed', async () => {
@@ -75,6 +76,7 @@ describe('updateParticipationAction cache freshness', () => {
     expect(result.success).toBe(true)
     expect(invalidations).toEqual([])
     expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
+    expect(invalidations).not.toContain('catalogo:artistas:participaciones')
   })
 
   test('does not invalidate caches when the database mutation fails', async () => {

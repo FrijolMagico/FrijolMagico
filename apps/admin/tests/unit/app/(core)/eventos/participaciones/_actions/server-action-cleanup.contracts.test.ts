@@ -121,6 +121,28 @@ describe('participation server action cleanup contracts', () => {
     expect(updateActivityAggregateSource).toContain("['confirmado', 'completado']")
   })
 
+  test('participation-domain catalog invalidation wires only the participation tag', () => {
+    const actionPaths = [
+      CREATE_ACTIVITY_PATH,
+      `${ACTIONS_DIR}/activities/delete-activity.action.ts`,
+      UPDATE_ACTIVITY_PATH,
+      UPDATE_ACTIVITY_AGGREGATE_PATH,
+      CREATE_EXHIBITION_PATH,
+      DELETE_EXHIBITION_PATH,
+      UPDATE_EXHIBITION_PATH,
+      UPDATE_PARTICIPATION_PATH
+    ]
+
+    for (const path of actionPaths) {
+      const source = readFileSync(path, 'utf8')
+      expect(source).toContain('CATALOG_CACHE_TAG')
+      expect(source).toContain('CATALOG_PARTICIPATION_CACHE_TAG')
+      expect(source).toContain('revalidateWebCacheBestEffort({ tag: CATALOG_PARTICIPATION_CACHE_TAG })')
+      expect(source).not.toContain('CATALOG_BASE_CACHE_TAG')
+      expect(source).not.toContain('CATALOG_EDITION_DATES_CACHE_TAG')
+    }
+  })
+
   test('updateExhibitionAction updates exhibition fields', () => {
     const updateExhibitionSource = readFileSync(UPDATE_EXHIBITION_PATH, 'utf8')
 

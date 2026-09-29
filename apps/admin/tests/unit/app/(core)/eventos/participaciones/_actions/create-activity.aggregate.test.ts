@@ -375,6 +375,9 @@ describe('createActivityAction aggregate', () => {
     expect(revalidateWebCacheBestEffort).not.toHaveBeenCalledWith({
       tag: 'catalogo:artistas'
     })
+    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalledWith({
+      tag: 'catalogo:artistas:participaciones'
+    })
   })
 
   test('invalidates the remote catalog after creating a public activity', async () => {
@@ -390,7 +393,10 @@ describe('createActivityAction aggregate', () => {
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: 'catalogo:artistas'
     })
-    expect(invalidationCommitStates).toEqual(Array(10).fill(true))
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: 'catalogo:artistas:participaciones'
+    })
+    expect(invalidationCommitStates).toEqual(Array(11).fill(true))
   })
 
   test('does not invalidate any cache after a later detail mutation fails', async () => {

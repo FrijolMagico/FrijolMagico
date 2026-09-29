@@ -14,6 +14,7 @@ import {
 import {
   ARTIST_DETAIL_CACHE_TAG,
   CATALOG_CACHE_TAG,
+  CATALOG_PARTICIPATION_CACHE_TAG,
   getEditionParticipationsCacheTag
 } from '@frijolmagico/cache-tags'
 import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
@@ -73,6 +74,7 @@ export async function updateParticipationAction(
     updateTag(ARTIST_DETAIL_CACHE_TAG)
     if (catalogChanged) {
       void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
+      void revalidateWebCacheBestEffort({ tag: CATALOG_PARTICIPATION_CACHE_TAG })
     }
 
     return { success: true }

@@ -238,7 +238,8 @@ describe('updateActivityAggregateAction', () => {
       'festivales',
       'eventos',
       'ediciones',
-      'catalogo:artistas'
+      'catalogo:artistas',
+      'catalogo:artistas:participaciones'
     ])
   })
 
@@ -248,6 +249,7 @@ describe('updateActivityAggregateAction', () => {
 
     expect(result.success).toBe(true)
     expect(invalidations).not.toContain('catalogo:artistas')
+    expect(invalidations).not.toContain('catalogo:artistas:participaciones')
   })
 
   test('rejects edition and activity ownership mismatches before mutations', async () => {
