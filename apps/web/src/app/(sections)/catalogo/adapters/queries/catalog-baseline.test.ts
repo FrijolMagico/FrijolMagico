@@ -2,6 +2,11 @@ import { Database } from 'bun:sqlite'
 import { describe, expect, test } from 'bun:test'
 
 import { CATALOG_QUERY } from './catalogoQuery'
+import {
+  CATALOG_BASE_QUERY,
+  CATALOG_PARTICIPATION_QUERY,
+  composeCatalogRows
+} from './catalog-batched'
 
 const createCatalogFixture = () => {
   const db = new Database(':memory:')
@@ -85,6 +90,29 @@ describe('catalog SQL characterization baseline', () => {
             '{"id":2,"name":"Beto Pseudónimo","slug":"beto","email":null,"rrss":null,"city":null,"country":null,"bio":null,"orden":"2","destacado":0,"avatar":null,"category":"escultura","collective":"Colectiva Sur","editions":[{"evento_id":2,"edicion":"2","evento":"Feria Dos","año":"2025","tipo_participacion":"exhibicion","categoria":"grabado","via_agrupacion":null},{"evento_id":3,"edicion":"3","evento":"Encuentro Tres","año":"2026","tipo_participacion":"actividad","categoria":"taller","via_agrupacion":null},{"evento_id":1,"edicion":"1","evento":"Festival Uno","año":"2024","tipo_participacion":"exhibicion","categoria":"pintura","via_agrupacion":"Colectiva Sur"},{"evento_id":3,"edicion":"3","evento":"Encuentro Tres","año":"2026","tipo_participacion":"exhibicion","categoria":"escultura","via_agrupacion":"Colectiva Sur"}]}'
         }
       ].map(({ resultado }) => normalizeCatalogOutput(resultado)))
+    } finally {
+      db.close()
+    }
+  })
+
+  test('matches the legacy output with two set-based reads regardless of artist count', () => {
+    const db = createCatalogFixture()
+
+    try {
+      let queryCount = 0
+      const legacy = db.query<{ resultado: string }, []>(CATALOG_QUERY).all()
+      const baseRows = db.query(CATALOG_BASE_QUERY).all() as Parameters<typeof composeCatalogRows>[0]
+      queryCount += 1
+      const participationRows = db.query(CATALOG_PARTICIPATION_QUERY).all() as Parameters<typeof composeCatalogRows>[1]
+      queryCount += 1
+      const batched = composeCatalogRows(baseRows, participationRows)
+      const normalizedLegacy = legacy.map(({ resultado }) => normalizeCatalogOutput(resultado))
+      const normalizedBatched = batched.map((result) => normalizeCatalogOutput(JSON.stringify(result)))
+
+      console.info(`catalog batched parity: ${baseRows.length} artists, ${queryCount} queries`)
+      expect(normalizedBatched).toEqual(normalizedLegacy)
+      expect(queryCount).toBe(2)
+      expect(queryCount).toBeLessThanOrEqual(2)
     } finally {
       db.close()
     }
