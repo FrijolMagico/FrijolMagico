@@ -1,5 +1,6 @@
 'use client'
 
+import { useId } from 'react'
 import { useWatch, type UseFormReturn } from 'react-hook-form'
 import {
   Combobox,
@@ -76,6 +77,7 @@ export function ActivityPresenterFields({
   artistas,
   disabled = false
 }: ActivityPresenterFieldsProps) {
+  const inputId = useId()
   const presenterNombre = useWatch({ control: methods.control, name: 'detail.presenterNombre' }) ?? ''
   const artistId = useWatch({ control: methods.control, name: 'detail.presenterArtistaId' })
   const pseudonymId = useWatch({ control: methods.control, name: 'detail.presenterPseudonimoId' })
@@ -92,6 +94,14 @@ export function ActivityPresenterFields({
     (option) => option.artistId === artistId && option.pseudonymId === pseudonymId
   )
   const inputValue = selectedOption?.pseudonym ?? presenterNombre
+  const presenterNombreError = errors?.presenterNombre?.message
+  const presenterArtistaIdError = errors?.presenterArtistaId?.message
+  const presenterPseudonimoIdError = errors?.presenterPseudonimoId?.message
+  const describedBy = [
+    presenterNombreError && `${inputId}-presenter-name-error`,
+    presenterArtistaIdError && `${inputId}-artist-error`,
+    presenterPseudonimoIdError && `${inputId}-pseudonym-error`
+  ].filter(Boolean).join(' ') || undefined
 
   const updateFromText = (value: string) => {
     const resolution = resolvePresenterText(value, artistas)
@@ -124,7 +134,7 @@ export function ActivityPresenterFields({
 
   return (
     <Field>
-      <FieldLabel>Presentador (opcional)</FieldLabel>
+      <FieldLabel htmlFor={inputId}>Presentador (opcional)</FieldLabel>
       <Combobox
         items={options.map((option) => option.id)}
         value={selectedOption?.id ?? null}
@@ -140,7 +150,10 @@ export function ActivityPresenterFields({
         disabled={disabled}
       >
         <ComboboxInput
+          id={inputId}
           aria-label='Presentador (opcional)'
+          aria-invalid={describedBy ? true : undefined}
+          aria-describedby={describedBy}
           placeholder='Buscar o escribir un presentador'
           showClear
           disabled={disabled}
@@ -160,9 +173,9 @@ export function ActivityPresenterFields({
           </ComboboxList>
         </ComboboxContent>
       </Combobox>
-      {errors?.presenterNombre?.message && <FieldError>{errors.presenterNombre.message}</FieldError>}
-      {errors?.presenterArtistaId?.message && <FieldError>{errors.presenterArtistaId.message}</FieldError>}
-      {errors?.presenterPseudonimoId?.message && <FieldError>{errors.presenterPseudonimoId.message}</FieldError>}
+      {presenterNombreError && <FieldError id={`${inputId}-presenter-name-error`}>{presenterNombreError}</FieldError>}
+      {presenterArtistaIdError && <FieldError id={`${inputId}-artist-error`}>{presenterArtistaIdError}</FieldError>}
+      {presenterPseudonimoIdError && <FieldError id={`${inputId}-pseudonym-error`}>{presenterPseudonimoIdError}</FieldError>}
     </Field>
   )
 }
