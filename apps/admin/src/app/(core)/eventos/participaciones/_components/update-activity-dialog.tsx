@@ -16,6 +16,7 @@ import { RichTextarea } from '@/shared/components/rich-textarea'
 import {
   type ActivityFormInput,
   activityFormSchema,
+  activityPresenterDatabaseValues,
   activityScheduleUpdate
 } from '../_schemas/activity.schema'
 import { EntityFormDialog } from '@/shared/components/entity-form/entity-form-dialog'
@@ -49,6 +50,7 @@ import {
   clearRegistration
 } from './activity-registration-fields'
 import { ActivityOccurrenceFields } from './activity-occurrence-fields'
+import { ActivityPresenterFields } from './activity-presenter-fields'
 import type { ArtistLookup } from '../_types/participations.types'
 
 interface UpdateActivityDialogProps {
@@ -103,6 +105,12 @@ export function UpdateActivityDialog({
         titulo: activity?.detail?.titulo ?? '',
         descripcion: activity?.detail?.descripcion ?? '',
         duracionMinutos: activity?.detail?.duracionMinutos ?? null,
+        presenterMode: activity?.detail?.presenterNombre
+          ? 'name'
+          : activity?.detail?.presenterArtistaId != null ? 'artist' : 'none',
+        presenterNombre: activity?.detail?.presenterNombre ?? '',
+        presenterArtistaId: activity?.detail?.presenterArtistaId ?? null,
+        presenterPseudonimoId: activity?.detail?.presenterPseudonimoId ?? null,
         cupos: activity?.detail?.cupos ?? null,
         horaInicio: activity?.detail?.horaInicio ?? '',
         ubicacion: activity?.detail?.ubicacion ?? ''
@@ -178,7 +186,11 @@ export function UpdateActivityDialog({
         duracionMinutos: values.detail.duracionMinutos,
         cupos: values.detail.cupos,
         horaInicio: values.detail.horaInicio,
-        ubicacion: values.detail.ubicacion
+        ubicacion: values.detail.ubicacion,
+        ...activityPresenterDatabaseValues(
+          values.detail,
+          !isBand && values.tipoActividadId === ACTIVITY_TYPES.CHARLA
+        )
       }
     })
 
@@ -294,6 +306,12 @@ export function UpdateActivityDialog({
                     field.onChange(Number(val))
                     if (Number(val) === ACTIVITY_TYPES.MUSICA) {
                       clearRegistration(methods)
+                    }
+                    if (Number(val) !== ACTIVITY_TYPES.CHARLA) {
+                      methods.setValue('detail.presenterMode', 'none', { shouldDirty: true, shouldValidate: true })
+                      methods.setValue('detail.presenterNombre', '', { shouldDirty: true })
+                      methods.setValue('detail.presenterArtistaId', null, { shouldDirty: true })
+                      methods.setValue('detail.presenterPseudonimoId', null, { shouldDirty: true })
                     }
                   }}
                   disabled={isBand || isSubmitting}
@@ -520,6 +538,9 @@ export function UpdateActivityDialog({
               methods={methods}
               disabled={isSubmitting}
             />
+          )}
+          {!isBand && selectedType === ACTIVITY_TYPES.CHARLA && (
+            <ActivityPresenterFields methods={methods} artistas={artistas} disabled={isSubmitting} />
           )}
         </FieldGroup>
 
