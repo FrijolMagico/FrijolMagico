@@ -26,7 +26,7 @@ const TYPE_ORDER: Record<string, number> = {
 export const ActivityList = ({ actividades }: ActivityListProps) => {
   const days = new Map<
     string,
-    Map<string, Map<FestivalActivity, FestivalActivity>>
+    Map<string, Array<{ activity: FestivalActivity; occurrence: FestivalActivity['ocurrencias'][number] }>>
   >()
 
   actividades.forEach((activity) => {
@@ -36,22 +36,12 @@ export const ActivityList = ({ actividades }: ActivityListProps) => {
         types = new Map()
         days.set(occurrence.fecha, types)
       }
-      let activities = types.get(activity.tipo)
-      if (!activities) {
-        activities = new Map()
-        types.set(activity.tipo, activities)
+      let occurrences = types.get(activity.tipo)
+      if (!occurrences) {
+        occurrences = []
+        types.set(activity.tipo, occurrences)
       }
-      let dayActivity = activities.get(activity)
-      if (!dayActivity) {
-        dayActivity = { ...activity, ocurrencias: [] }
-        activities.set(activity, dayActivity)
-      }
-      if (
-        occurrence.id === undefined ||
-        !dayActivity.ocurrencias.some(({ id }) => id === occurrence.id)
-      ) {
-        dayActivity.ocurrencias.push(occurrence)
-      }
+      occurrences.push({ activity, occurrence })
     })
   })
 
@@ -71,21 +61,29 @@ export const ActivityList = ({ actividades }: ActivityListProps) => {
               <div className='flex flex-wrap gap-12'>
                 {[...types.entries()]
                   .sort(([a], [b]) => (TYPE_ORDER[a] ?? 99) - (TYPE_ORDER[b] ?? 99))
-                  .map(([type, group]) => (
+                  .map(([type, occurrences]) => (
                     <section key={type} className='flex-1'>
                       <h4 className='text-palette-accent mb-3 text-center font-mono text-xl font-bold md:text-start'>
                         {TYPE_LABELS[type] ?? type}
                       </h4>
                       <ul className={type === 'musica' ? 'space-y-2' : 'space-y-8'}>
-                        {[...group.values()].map((activity, index) => (
-                          <li key={`${type}-${activity.titulo ?? index}-${index}`}>
-                            {type === 'musica' ? (
-                              <MusicActivityItem activity={activity} />
-                            ) : (
-                              <ActivityItem activity={activity} />
-                            )}
-                          </li>
-                        ))}
+                        {occurrences.map(({ activity, occurrence }, index) => {
+                          const occurrenceActivity = {
+                            ...activity,
+                            ocurrencias: [occurrence]
+                          }
+                          return (
+                            <li
+                              key={`${type}-${activity.titulo ?? index}-${occurrence.id ?? index}-${index}`}
+                            >
+                              {type === 'musica' ? (
+                                <MusicActivityItem activity={occurrenceActivity} />
+                              ) : (
+                                <ActivityItem activity={occurrenceActivity} />
+                              )}
+                            </li>
+                          )
+                        })}
                       </ul>
                     </section>
                   ))}
