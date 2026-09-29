@@ -23,22 +23,15 @@ const TYPE_FILTERS = [
   { value: 'musica', label: 'Música' }
 ] as const
 
-function getOverlappingRows(entries: FestivalScheduleEntry[]) {
-  const rows: FestivalScheduleEntry[][] = []
-  let row: FestivalScheduleEntry[] = []
-  let rowEnd = -1
+function groupEntriesByStart(entries: FestivalScheduleEntry[]) {
+  const rows = new Map<number, FestivalScheduleEntry[]>()
 
   for (const entry of entries) {
-    if (row.length > 0 && entry.startMinutes >= rowEnd) {
-      rows.push(row)
-      row = []
-      rowEnd = -1
-    }
+    const row = rows.get(entry.startMinutes) ?? []
     row.push(entry)
-    rowEnd = Math.max(rowEnd, entry.endMinutes ?? entry.startMinutes)
+    rows.set(entry.startMinutes, row)
   }
 
-  if (row.length > 0) rows.push(row)
   return rows
 }
 
@@ -56,7 +49,7 @@ export const ActivityList = ({ actividades, isEditionPast }: ActivityListProps) 
   const selectedEntries = (selectedDay?.groups.flatMap((group) => group.entries) ?? [])
     .filter((entry) => isVisibleType(entry.activity.tipo))
     .sort((a, b) => a.startMinutes - b.startMinutes || a.activityIndex - b.activityIndex || a.occurrenceIndex - b.occurrenceIndex)
-  const rows = getOverlappingRows(selectedEntries)
+  const rows = groupEntriesByStart(selectedEntries)
   const visibleDatedUnscheduled = (selectedDay?.unscheduled ?? []).filter((entry) =>
     isVisibleType(entry.activity.tipo)
   )
@@ -138,11 +131,9 @@ export const ActivityList = ({ actividades, isEditionPast }: ActivityListProps) 
               {format(new Date(`${selectedDay.date}T00:00:00`), 'd MMMM yyyy', { locale: es })}
             </h3>
             <ol className="relative space-y-3 before:absolute before:bottom-0 before:left-[4.25rem] before:top-0 before:w-px before:bg-palette-primary/30 before:content-['']">
-              {rows.map((row) => {
-                const rowStart = Math.min(...row.map((entry) => entry.startMinutes))
+              {Array.from(rows, ([rowStart, row]) => {
                 const rowEnd = Math.max(...row.map((entry) => entry.endMinutes ?? entry.startMinutes))
-                const visibleColumns = [...new Set(row.map((entry) => entry.column))].sort((a, b) => a - b)
-                const columnCount = visibleColumns.length
+                const columnCount = row.length
                 return (
                   <li
                     key={`${selectedDay.date}-${rowStart}`}
@@ -170,11 +161,11 @@ export const ActivityList = ({ actividades, isEditionPast }: ActivityListProps) 
                       className='grid min-w-0 grid-cols-1 gap-3 md:[grid-template-columns:repeat(var(--schedule-columns),minmax(0,1fr))]'
                       style={{ '--schedule-columns': columnCount } as CSSProperties}
                     >
-                      {row.map((entry) => (
+                      {row.map((entry, index) => (
                         <div
                           key={`${entry.activityIndex}-${entry.occurrenceIndex}`}
                           className='min-w-0 md:[grid-column:var(--schedule-column)]'
-                          style={{ '--schedule-column': visibleColumns.indexOf(entry.column) + 1 } as CSSProperties}
+                          style={{ '--schedule-column': index + 1 } as CSSProperties}
                         >
                           <ActivityItem
                             activity={{ ...entry.activity, ocurrencias: [entry.occurrence] }}

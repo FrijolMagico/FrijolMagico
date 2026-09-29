@@ -112,39 +112,87 @@ describe('ActivityList', () => {
     expect(screen.queryByRole('link', { name: 'Inscríbete' })).toBeNull()
   })
 
-  test('lays out all overlapping types side by side and reflows expanded cards naturally', () => {
+  test('groups cards only by unique start time, regardless of overlapping durations', () => {
     const date = '2026-10-03'
     const { container } = render(
       <ActivityList
         actividades={[
-          makeActivity('Taller', 'taller', [occurrence(1, date, '10:00')]),
-          makeActivity('Charla', 'charla', [occurrence(2, date, '10:30')]),
-          makeActivity('Música', 'musica', [occurrence(3, date, '10:45')]),
-          makeActivity('Después', 'taller', [occurrence(4, date, '12:00')])
+          makeActivity('Taller 11', 'taller', [occurrence(1, date, '11:00')]),
+          makeActivity('Charla 11', 'charla', [occurrence(2, date, '11:00')]),
+          makeActivity('Música 11', 'musica', [occurrence(3, date, '11:00')]),
+          makeActivity('Taller 11:30', 'taller', [occurrence(4, date, '11:30')]),
+          makeActivity('Charla 12:30', 'charla', [occurrence(5, date, '12:30')]),
+          makeActivity('Taller 12:30', 'taller', [occurrence(6, date, '12:30')])
         ]}
         isEditionPast={false}
       />
     )
 
-    const overlapRow = screen.getByRole('group', { name: /10:00.*11:45/i })
-    expect(overlapRow.querySelectorAll('article')).toHaveLength(3)
-    expect(overlapRow.getAttribute('data-column-count')).toBe('3')
-    expect(container.querySelector('[data-schedule-row] [data-schedule-row]')).toBeNull()
-    expect(screen.getByText('Después').closest('[data-schedule-row]')).not.toBe(overlapRow)
+    const rows = Array.from(container.querySelectorAll('[data-schedule-row]'))
+    expect(rows).toHaveLength(3)
+    expect(rows.map((row) => row.querySelector('[data-timeline-time]')?.textContent)).toEqual([
+      '11:00',
+      '11:30',
+      '12:30'
+    ])
+    expect(rows.map((row) => row.getAttribute('data-column-count'))).toEqual(['3', '1', '2'])
+    expect(rows.map((row) => row.querySelectorAll('article').length)).toEqual([3, 1, 2])
+    expect(rows[0].getAttribute('aria-label')).toBe('11:00 a 12:00')
+    expect(rows[1].getAttribute('aria-label')).toBe('11:30 a 12:30')
+    expect(container.querySelectorAll('[data-timeline-time]')).toHaveLength(3)
+    expect(container.querySelectorAll('[data-timeline-dot][aria-hidden="true"]')).toHaveLength(3)
 
     const scroller = container.querySelector('[data-schedule-scroll-region]')!
     expect(scroller.className).toContain('max-h-[34rem]')
     expect(scroller.className).not.toContain('border')
-    expect(Array.from(container.querySelectorAll('[data-timeline-time]')).map((time) => time.textContent)).toEqual([
-      '10:00',
-      '12:00'
-    ])
-    expect(container.querySelectorAll('[data-timeline-dot][aria-hidden="true"]')).toHaveLength(2)
-    expect(overlapRow.querySelector('[data-timeline-time]')?.getAttribute('datetime')).toBe('10:00')
 
     fireEvent.click(screen.getByRole('button', { name: 'Charlas' }))
-    const filteredRow = screen.getByText('Charla').closest('[data-schedule-row]')!
-    expect(filteredRow.getAttribute('data-column-count')).toBe('1')
+    const filteredRows = Array.from(container.querySelectorAll('[data-schedule-row]'))
+    expect(filteredRows).toHaveLength(2)
+    expect(filteredRows.map((row) => row.querySelector('[data-timeline-time]')?.textContent)).toEqual([
+      '11:00',
+      '12:30'
+    ])
+    expect(filteredRows.map((row) => row.getAttribute('data-column-count'))).toEqual(['1', '1'])
+    expect(container.querySelectorAll('[data-timeline-time]')).toHaveLength(2)
+    expect(screen.queryByText('Taller 11:30')).toBeNull()
+  })
+
+  test('opens an earlier card without changing later rows or timeline marks', () => {
+    const date = '2026-10-03'
+    const { container } = render(
+      <ActivityList
+        actividades={[
+          {
+            ...makeActivity('Earlier activity', 'taller', [occurrence(1, date, '10:00')]),
+            descripcion: 'Details for the earlier activity'
+          },
+          {
+            ...makeActivity('Later activity', 'charla', [occurrence(2, date, '11:00')]),
+            descripcion: 'Details for the later activity'
+          }
+        ]}
+        isEditionPast={false}
+      />
+    )
+
+    const rowsBefore = Array.from(container.querySelectorAll('[data-schedule-row]'))
+    const timelineMarksBefore = Array.from(container.querySelectorAll('[data-timeline-time]')).map(
+      (time) => time.textContent
+    )
+    expect(rowsBefore).toHaveLength(2)
+
+    const earlierDetails = rowsBefore[0].querySelector('details')!
+    fireEvent.click(earlierDetails.querySelector('summary')!)
+
+    const rowsAfter = Array.from(container.querySelectorAll('[data-schedule-row]'))
+    expect(earlierDetails.open).toBe(true)
+    expect(rowsAfter).toEqual(rowsBefore)
+    expect(rowsAfter[0].compareDocumentPosition(rowsAfter[1]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(
+      Array.from(container.querySelectorAll('[data-timeline-time]')).map((time) => time.textContent)
+    ).toEqual(timelineMarksBefore)
+    expect(timelineMarksBefore).toEqual(['10:00', '11:00'])
   })
 
   test('filters by type and changes the selected day', () => {
