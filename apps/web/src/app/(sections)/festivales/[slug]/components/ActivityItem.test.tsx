@@ -201,10 +201,15 @@ describe('ActivityItem', () => {
 
     expect(badge.tagName).toBe('SPAN')
     expect(badge.className).toContain('rounded-full')
+    expect(badge.className).toContain('absolute')
+    expect(badge.className).toContain('-top-2')
+    expect(badge.className).toContain('-left-2')
     expect(badge.className).toContain('bg-palette-accent/15')
     expect(badge.className).toContain('text-palette-foreground')
     expect(badge.className).toContain('border-palette-accent/40')
-    expect(badge.nextElementSibling?.tagName).toBe('H3')
+    expect(badge.parentElement).toBe(article)
+    expect(article.querySelector('h3')?.textContent).toBe('Taller')
+    expect(article.querySelector(':scope > div.min-w-0')?.className).toContain('pt-6')
     expect(article.className).toContain('w-full')
     expect(article.className).not.toContain('max-w-')
   })
@@ -218,15 +223,16 @@ describe('ActivityItem', () => {
         />
       )
       const article = container.querySelector('article')!
-      const badge = article.querySelector('span.rounded-full')!
+      const badge = article.querySelector(':scope > span.rounded-full')!
       const title = article.querySelector('h3')!
 
       expect(badge.textContent).toBe('Charla')
       expect(badge.className).toContain('bg-palette-secondary/15')
       expect(badge.className).toContain('border-palette-secondary/40')
       expect(badge.className).toContain('text-palette-foreground')
-      expect(badge.parentElement).toBe(title.parentElement)
+      expect(badge.parentElement).toBe(article)
       expect(badge.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      expect(article.querySelector(':scope > div.min-w-0')?.className).toContain('pt-6')
       unmount()
     }
   })

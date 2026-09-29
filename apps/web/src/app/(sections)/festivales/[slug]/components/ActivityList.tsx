@@ -83,7 +83,15 @@ export const ActivityList = ({ actividades, isEditionPast }: ActivityListProps) 
           id='festival-activities-heading'
           className='text-palette-primary text-4xl font-black md:text-5xl'
         >
-          <span>Actividades</span>{selectedDay && ` - ${format(new Date(`${selectedDay.date}T00:00:00`), 'd', { locale: es })}`}
+          <span>Actividades</span>
+          {selectedDay && (
+            <>
+              {' - '}
+              <span className='inline-block w-[2ch] text-center tabular-nums'>
+                {format(new Date(`${selectedDay.date}T00:00:00`), 'd', { locale: es })}
+              </span>
+            </>
+          )}
         </h2>
 
         {schedule.days.length > 0 && (
@@ -96,7 +104,15 @@ export const ActivityList = ({ actividades, isEditionPast }: ActivityListProps) 
                 onClick={() => selectDate(date)}
                 className={`rounded-full border px-4 py-2 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 ${selectedDate === date ? 'border-palette-primary bg-palette-primary text-palette-background' : 'border-palette-primary/30 text-palette-foreground'}`}
               >
-                {`${format(new Date(`${date}T00:00:00`), 'd', { locale: es })} ${format(new Date(`${date}T00:00:00`), 'MMMM', { locale: es }).replace(/^\p{Ll}/u, (letter) => letter.toLocaleUpperCase('es'))}`}
+                <>
+                  <span className='inline-block w-[2ch] text-center tabular-nums'>
+                    {format(new Date(`${date}T00:00:00`), 'd', { locale: es })}
+                  </span>{' '}
+                  {format(new Date(`${date}T00:00:00`), 'MMMM', { locale: es }).replace(
+                    /^\p{Ll}/u,
+                    (letter) => letter.toLocaleUpperCase('es')
+                  )}
+                </>
               </button>
             ))}
           </nav>
@@ -162,13 +178,13 @@ export const ActivityList = ({ actividades, isEditionPast }: ActivityListProps) 
                       />
                     </div>
                     <div
-                      className='grid min-w-0 grid-cols-1 gap-3 md:[grid-template-columns:repeat(var(--schedule-columns),minmax(0,1fr))] [&:has(details[open])]:items-start'
+                      className='grid min-w-0 grid-cols-1 items-start gap-3 md:[grid-template-columns:repeat(var(--schedule-columns),minmax(0,1fr))]'
                       style={{ '--schedule-columns': Math.max(2, columnCount) } as CSSProperties}
                     >
                       {row.map((entry, index) => (
                         <div
                           key={`${entry.activityIndex}-${entry.occurrenceIndex}`}
-                          className='flex min-w-0 md:[grid-column:var(--schedule-column)]'
+                          className='min-w-0 md:[grid-column:var(--schedule-column)]'
                           style={{ '--schedule-column': index + 1 } as CSSProperties}
                         >
                           <ActivityItem

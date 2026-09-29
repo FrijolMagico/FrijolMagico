@@ -1,5 +1,7 @@
 import { ChevronDown } from 'lucide-react'
 
+import { Badge } from '@/components/badge'
+
 import { ActivityRegistrationCta } from './activity-registration-affordance'
 import { ActivityDescription } from './activity-description'
 import { ActivityArtistLink } from './ActivityArtistLink'
@@ -45,6 +47,12 @@ export const ActivityItem = ({ activity, badge }: ActivityItemProps) => {
     <article className='bg-palette-background border-palette-primary group relative w-full min-w-0 rounded-lg border'>
       <div className='bg-palette-primary absolute -z-10 size-full translate-x-1.5 translate-y-1.5 rounded-lg duration-300 group-hover:translate-0' />
 
+      {badge && (
+        <Badge variant='activity-type' className={getBadgeClassName(activity.tipo)}>
+          {badge}
+        </Badge>
+      )}
+
       {activity.registration && occurrence && (
         <div className='absolute -top-5 -right-3 z-30'>
           <ActivityRegistrationCta
@@ -55,7 +63,7 @@ export const ActivityItem = ({ activity, badge }: ActivityItemProps) => {
       )}
 
       <div
-        className={`relative z-20 min-w-0 break-words px-4 pt-3 ${
+        className={`relative z-20 min-w-0 break-words px-4 ${badge ? 'pt-6' : 'pt-3'} ${
           activity.registration && occurrence ? 'pr-28' : ''
         }`}
       >
@@ -84,13 +92,6 @@ export const ActivityItem = ({ activity, badge }: ActivityItemProps) => {
           <summary className="before:content-[''] before:absolute before:inset-0 before:z-10 before:cursor-pointer flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-3 text-left marker:content-none">
             <div className='min-w-0 flex-1'>
               <div>
-                {badge && (
-                  <span
-                    className={`text-palette-foreground mb-2 inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${getBadgeClassName(activity.tipo)}`}
-                  >
-                    {badge}
-                  </span>
-                )}
                 {activity.titulo && (
                   <h3 className='text-palette-foreground text-base leading-none font-semibold'>
                     {activity.titulo}
@@ -129,13 +130,6 @@ export const ActivityItem = ({ activity, badge }: ActivityItemProps) => {
       ) : (
         <div className='px-4 py-3'>
           <div>
-            {badge && (
-              <span
-                className={`text-palette-foreground mb-2 inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${getBadgeClassName(activity.tipo)}`}
-              >
-                {badge}
-              </span>
-            )}
             {activity.titulo && (
               <h3 className='text-palette-foreground text-base leading-none font-semibold'>
                 {activity.titulo}

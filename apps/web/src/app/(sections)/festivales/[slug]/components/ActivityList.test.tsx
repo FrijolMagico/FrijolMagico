@@ -101,7 +101,7 @@ describe('ActivityList', () => {
     expect(container.querySelectorAll('article')).toHaveLength(3)
     expect(screen.getByText('19:00hrs a 20:00hrs')).toBeDefined()
     expect(screen.getAllByText('Música').some((element) => element.tagName === 'SPAN')).toBe(true)
-    const badges = Array.from(container.querySelectorAll('article span.rounded-full'))
+    const badges = Array.from(container.querySelectorAll('article > span.rounded-full'))
     expect(badges).toHaveLength(3)
     expect(badges.map((badge) => badge.textContent)).toEqual(['Charla', 'Taller', 'Música'])
     expect(badges.map((badge) => badge.className)).toEqual([
@@ -110,7 +110,9 @@ describe('ActivityList', () => {
       expect.stringContaining('bg-palette-accent/15')
     ])
     expect(badges.every((badge) => badge.className.includes('text-palette-foreground'))).toBe(true)
-    expect(badges.every((badge) => badge.nextElementSibling?.tagName === 'H3')).toBe(true)
+    expect(badges.every((badge) => badge.parentElement?.tagName === 'ARTICLE')).toBe(true)
+    expect(badges.every((badge) => badge.className.includes('-top-2') && badge.className.includes('-left-2'))).toBe(true)
+    expect(container.querySelectorAll('article h3 + span.rounded-full')).toHaveLength(0)
     const scroller = container.querySelector('[data-schedule-scroll-region]')!
     expect(scroller.getAttribute('tabindex')).toBe('0')
     expect(scroller.getAttribute('aria-label')).toContain('Cronograma')
@@ -158,7 +160,9 @@ describe('ActivityList', () => {
     const cardGrids = rows.map((row) => row.querySelector<HTMLElement>(':scope > div:last-child')!)
     expect(cardGrids.map((grid) => grid.style.getPropertyValue('--schedule-columns'))).toEqual(['3', '2', '2'])
     expect(cardGrids.every((grid) => !grid.style.maxWidth)).toBe(true)
-    expect(cardGrids[0].className).toContain('[&:has(details[open])]:items-start')
+    expect(cardGrids[0].className).toContain('items-start')
+    expect(cardGrids[0].className).not.toContain(':has(')
+    expect(cardGrids[0].querySelector(':scope > div')?.className).not.toContain('flex')
     expect(rows[0].getAttribute('aria-label')).toBe('11:00 a 12:00')
     expect(rows[1].getAttribute('aria-label')).toBe('11:30 a 12:30')
     expect(container.querySelectorAll('[data-timeline-time]')).toHaveLength(3)
@@ -236,12 +240,16 @@ describe('ActivityList', () => {
     const [expandable, sibling] = Array.from(grid.querySelectorAll('article'))
     const details = expandable.querySelector('details')!
 
-    expect(grid.className).toContain('[&:has(details[open])]:items-start')
+    expect(grid.className).toContain('items-start')
+    expect(grid.className).not.toContain(':has(')
+    expect(grid.querySelector(':scope > div')?.className).not.toContain('flex')
     expect(details.open).toBe(false)
     fireEvent.click(details.querySelector('summary')!)
     expect(details.open).toBe(true)
     expect(sibling.querySelector('details')).toBeNull()
-    expect(grid.className).toContain('[&:has(details[open])]:items-start')
+    expect(grid.className).toContain('items-start')
+    expect(grid.className).not.toContain(':has(')
+    expect(grid.querySelector(':scope > div')?.className).not.toContain('flex')
   })
 
   test('filters by type and changes the selected day', () => {
@@ -264,7 +272,10 @@ describe('ActivityList', () => {
     scroller.scrollTop = 120
     fireEvent.click(screen.getByRole('button', { name: '4 Octubre' }))
     expect(scroller.scrollTop).toBe(0)
-    expect(screen.getByRole('heading', { name: 'Actividades - 4' })).toBeDefined()
+    const heading = screen.getByRole('heading', { name: 'Actividades - 4' })
+    const dayNumber = heading.querySelectorAll('span')[1]
+    expect(dayNumber.className).toContain('w-[2ch]')
+    expect(dayNumber.className).toContain('tabular-nums')
     expect(screen.getByText('Segundo día')).toBeDefined()
     expect(screen.queryByText('Primer día')).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Talleres' }))
@@ -312,6 +323,26 @@ describe('ActivityList', () => {
     expect(container.querySelectorAll('article')).toHaveLength(2)
     expect(screen.getAllByText('Duplicado')).toHaveLength(2)
     expect(screen.queryByText('Legacy')).toBeNull()
+  })
+
+  test('reserves two tabular digit cells in day buttons across single- and double-digit days', () => {
+    render(
+      <ActivityList
+        actividades={[
+          makeActivity('Día nueve', 'taller', [occurrence(1, '2026-10-09')]),
+          makeActivity('Día diez', 'taller', [occurrence(2, '2026-10-10')])
+        ]}
+        isEditionPast={false}
+      />
+    )
+
+    for (const label of ['9 Octubre', '10 Octubre']) {
+      const button = screen.getByRole('button', { name: label })
+      const dayNumber = button.querySelector('span')!
+      expect(dayNumber.textContent).toBe(label.startsWith('9 ') ? '9' : '10')
+      expect(dayNumber.className).toContain('w-[2ch]')
+      expect(dayNumber.className).toContain('tabular-nums')
+    }
   })
 
   test('renders only the section heading when no dated activities exist', () => {
