@@ -187,6 +187,36 @@ describe('createActivityAction aggregate', () => {
     expect(transactionCommitted).toBe(true)
   })
 
+  test('persists a presenter for talks and rejects it for non-talk activities', async () => {
+    let harness = createHarness()
+    effectiveTypeSlug = 'charla'
+    const presenter = await createActivityAction({
+      ...payload(),
+      detail: {
+        ...payload().detail,
+        presenterArtistaId: 18,
+        presenterPseudonimoId: 29
+      },
+      occurrences: [{ date: '2026-06-10', startTime: '', durationMinutes: null }]
+    } as never)
+    expect(presenter.success).toBe(true)
+    expect(harness.pending.get(tables.activity)?.[0]).toMatchObject({
+      presenterNombre: null,
+      presenterArtistaId: 18,
+      presenterPseudonimoId: 29
+    })
+
+    effectiveTypeSlug = 'taller'
+    harness = createHarness()
+    const rejected = await createActivityAction({
+      ...payload(),
+      detail: { ...payload().detail, presenterNombre: 'Ada' },
+      occurrences: [{ date: '2026-06-10', startTime: '', durationMinutes: null }]
+    } as never)
+    expect(rejected.success).toBe(false)
+    expect(harness.pending.has(tables.activity)).toBe(false)
+  })
+
   test('persists distinct pseudonyms for multiple activities by the same artist', async () => {
     const harness = createHarness()
     const occurrences = [{ date: '2026-06-10' }]
