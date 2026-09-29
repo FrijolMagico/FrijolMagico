@@ -139,6 +139,59 @@ describe('ActivityItem', () => {
     }
   })
 
+  test('shows a free presenter as plain text beneath the speaker without contact fallback', () => {
+    const { container } = render(
+      <ActivityItem
+        activity={{
+          ...baseActivity,
+          tipo: 'charla',
+          rrss: '{"instagram":"https://instagram.com/speaker"}',
+          correo: 'speaker@example.org',
+          presenter_nombre: 'Invitada sin perfil',
+          presenter_catalogo_slug: null
+        }}
+      />
+    )
+    const presenter = screen.getByText('Invitada sin perfil')
+    const speaker = screen.getByRole('link', { name: 'Ver perfil de Artista' })
+
+    expect(presenter.tagName).toBe('SPAN')
+    expect(presenter.closest('p')?.textContent).toBe('Presenta: Invitada sin perfil')
+    expect(presenter.closest('p')?.previousElementSibling).toBe(speaker)
+    expect(screen.queryByRole('link', { name: 'Abrir enlace de contacto de Invitada sin perfil' })).toBeNull()
+    expect(container.textContent).not.toContain('speaker@example.org')
+  })
+
+  test('links a catalog presenter by the selected pseudonym and hides absent or non-talk presenters', () => {
+    const linked = render(
+      <ActivityItem
+        activity={{
+          ...baseActivity,
+          tipo: 'charla',
+          presenter_nombre: 'Sol Alterna',
+          presenter_catalogo_slug: 'sol-artista'
+        }}
+      />
+    )
+    const presenterLink = screen.getByRole('link', { name: 'Ver perfil de Sol Alterna' })
+    expect(presenterLink.getAttribute('href')).toBe('/catalogo/sol-artista')
+    expect(presenterLink.closest('p')?.textContent).toBe('Presenta: Sol Alterna')
+    linked.unmount()
+
+    const absent = render(
+      <ActivityItem activity={{ ...baseActivity, tipo: 'charla', presenter_nombre: null }} />
+    )
+    expect(screen.queryByText(/Presenta:/)).toBeNull()
+    absent.unmount()
+
+    render(
+      <ActivityItem
+        activity={{ ...baseActivity, tipo: 'taller', presenter_nombre: 'No corresponde' }}
+      />
+    )
+    expect(screen.queryByText('No corresponde')).toBeNull()
+  })
+
   test('keeps the artist link independent of the native disclosure control', () => {
     const { container } = render(
       <ActivityItem

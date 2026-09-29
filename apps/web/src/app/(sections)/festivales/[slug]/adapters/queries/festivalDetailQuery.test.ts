@@ -60,6 +60,29 @@ describe('FESTIVAL_DETAIL_QUERY', () => {
     )
   })
 
+  test('resolves a presenter name and catalog link from the selected presenter pseudonym', () => {
+    expect(FESTIVAL_DETAIL_QUERY).toContain(
+      "'presenter_nombre', COALESCE(ac.presenter_nombre, presenter_pseudonym.pseudonimo)"
+    )
+    expect(FESTIVAL_DETAIL_QUERY).toContain(
+      'LEFT JOIN artista presenter_artist ON presenter_artist.id = ac.presenter_artista_id'
+    )
+    expect(FESTIVAL_DETAIL_QUERY).toContain(
+      'LEFT JOIN artista_pseudonimo presenter_pseudonym ON presenter_pseudonym.id = ac.presenter_pseudonimo_id'
+    )
+    expect(FESTIVAL_DETAIL_QUERY).toContain(
+      "'presenter_catalogo_slug', CASE WHEN presenter_catalog.id IS NOT NULL THEN presenter_artist.slug ELSE NULL END"
+    )
+    expect(FESTIVAL_DETAIL_QUERY).toContain(
+      'LEFT JOIN catalogo_artista presenter_catalog ON presenter_catalog.artista_id = presenter_artist.id'
+    )
+    expect(FESTIVAL_DETAIL_QUERY).toContain(
+      'AND presenter_catalog.activo = 1 AND presenter_catalog.deleted_at IS NULL'
+    )
+    expect(FESTIVAL_DETAIL_QUERY).not.toContain("'presenter_rrss'")
+    expect(FESTIVAL_DETAIL_QUERY).not.toContain("'presenter_correo'")
+  })
+
   test('returns ordered occurrence rows per activity without inventing an edition date', () => {
     expect(FESTIVAL_DETAIL_QUERY).toContain('FROM activity_occurrence ao')
     expect(FESTIVAL_DETAIL_QUERY).toContain("'id', scheduled.id")

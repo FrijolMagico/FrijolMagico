@@ -60,6 +60,16 @@ export const ActivityItem = ({ activity }: ActivityItemProps) => {
           email={activity.correo}
           className='max-w-full break-words text-palette-primary/70 text-sm'
         />
+        {activity.tipo === 'charla' && activity.presenter_nombre && (
+          <p className='mt-1 text-palette-primary/70 text-sm'>
+            Presenta:{' '}
+            <ActivityArtistLink
+              pseudonym={activity.presenter_nombre}
+              catalogSlug={activity.presenter_catalogo_slug}
+              className='max-w-full break-words text-palette-primary/70 text-sm'
+            />
+          </p>
+        )}
       </div>
 
       {details ? (
