@@ -123,7 +123,9 @@ describe('FestivalDetailContent', () => {
 
     expect(article.className).toContain('max-w-6xl')
     expect(identityGrid.contains(activitySection)).toBe(false)
-    expect(activitySection.parentElement?.parentElement).toBe(article)
+    expect(article.firstElementChild?.contains(identityGrid)).toBe(true)
+    expect(activitySection.parentElement).toBe(article)
+    expect(article.children[1]).toBe(activitySection)
     expect(container.querySelector('aside')).not.toBeNull()
     expect(screen.getByText('Participantes')).toBeDefined()
   })

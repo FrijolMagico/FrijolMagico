@@ -112,7 +112,7 @@ describe('ActivityList', () => {
     expect(scroller.getAttribute('aria-label')).toContain('Cronograma')
     expect(scroller.className).toContain('overflow-y-auto')
     expect(scroller.contains(screen.getByRole('button', { name: 'Talleres' }))).toBe(false)
-    const heading = screen.getByRole('heading', { name: 'Actividades - 3' })
+    const heading = screen.getByRole('heading', { name: 'Actividades Día 3' })
     expect(heading.className).toContain('text-4xl')
     expect(heading.className).toContain('md:text-5xl')
     expect(heading.className).toContain('font-black')
@@ -163,7 +163,11 @@ describe('ActivityList', () => {
     expect(container.querySelectorAll('[data-timeline-dot][aria-hidden="true"]')).toHaveLength(3)
 
     const scroller = container.querySelector('[data-schedule-scroll-region]')!
-    expect(scroller.className).toContain('max-h-[34rem]')
+    expect(scroller.className).toContain('max-h-150')
+    expect(scroller.className).toContain('p-3')
+    expect(scroller.className).toContain('py-14')
+    expect(scroller.className).toContain('pr-2')
+    expect(scroller.className).not.toContain('overscroll-contain')
     expect(scroller.className).not.toContain('border')
 
     fireEvent.click(screen.getByRole('button', { name: 'Charlas' }))
@@ -263,12 +267,14 @@ describe('ActivityList', () => {
     expect(scroller.scrollTop).toBe(0)
     expect(screen.queryByText('Primer día')).toBeNull()
     expect(container.querySelectorAll('[data-schedule-row]')).toHaveLength(0)
+    expect(screen.queryByRole('button', { name: 'Música' })).toBeNull()
     scroller.scrollTop = 120
     fireEvent.click(screen.getByRole('button', { name: '4 Octubre' }))
     expect(scroller.scrollTop).toBe(0)
-    const heading = screen.getByRole('heading', { name: 'Actividades - 4' })
+    const heading = screen.getByRole('heading', { name: 'Actividades Día 4' })
     const dayNumber = heading.querySelectorAll('span')[1]
-    expect(dayNumber.className).toContain('w-[2ch]')
+    expect(dayNumber.textContent).toBe('Día 4')
+    expect(dayNumber.className).toContain('w-[5ch]')
     expect(dayNumber.className).toContain('tabular-nums')
     expect(screen.getByText('Segundo día')).toBeDefined()
     expect(screen.queryByText('Primer día')).toBeNull()
@@ -333,15 +339,75 @@ describe('ActivityList', () => {
     for (const label of ['9 Octubre', '10 Octubre']) {
       const button = screen.getByRole('button', { name: label })
       const dayNumber = button.querySelector('span')!
-      expect(dayNumber.textContent).toBe(label.startsWith('9 ') ? '9' : '10')
-      expect(dayNumber.className).toContain('w-[2ch]')
-      expect(dayNumber.className).toContain('tabular-nums')
+      expect(dayNumber.textContent).toBe(label)
+      expect(button.textContent).toBe(label)
+      expect(dayNumber.className).not.toContain('w-[2ch]')
+      expect(dayNumber.className).not.toContain('tabular-nums')
     }
   })
 
-  test('renders only the section heading when no dated activities exist', () => {
+  test('shows music when it exists only in an undated activity', () => {
+    const { container } = render(
+      <ActivityList
+        actividades={[makeActivity('Undated music', 'musica', [])]}
+        isEditionPast={false}
+      />
+    )
+
+    expect(screen.getByRole('button', { name: 'Música' })).toBeDefined()
+    expect(screen.getByText('Undated music')).toBeDefined()
+    fireEvent.click(screen.getByRole('button', { name: 'Música' }))
+    expect(screen.getByText('Undated music')).toBeDefined()
+    expect(container.querySelectorAll('article')).toHaveLength(1)
+  })
+
+  test('keeps a valid selected type on prop changes and falls back to all when it disappears', () => {
+    const workshop = makeActivity('Workshop', 'taller', [occurrence(1, '2026-10-03')])
+    const talk = makeActivity('Talk', 'charla', [occurrence(2, '2026-10-03')])
+    const { rerender } = render(
+      <ActivityList actividades={[workshop, talk]} isEditionPast={false} />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Charlas' }))
+    expect(screen.getByRole('button', { name: 'Charlas' }).getAttribute('aria-pressed')).toBe('true')
+    expect(screen.queryByText('Workshop')).toBeNull()
+
+    rerender(<ActivityList actividades={[talk]} isEditionPast={false} />)
+    expect(screen.getByRole('button', { name: 'Charlas' }).getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByText('Talk')).toBeDefined()
+    expect(screen.queryByText('Workshop')).toBeNull()
+
+    rerender(<ActivityList actividades={[workshop]} isEditionPast={false} />)
+    expect(screen.getByRole('button', { name: 'Todos' }).getAttribute('aria-pressed')).toBe('true')
+    expect(screen.queryByRole('button', { name: 'Charlas' })).toBeNull()
+    expect(screen.getByText('Workshop')).toBeDefined()
+
+    rerender(<ActivityList actividades={[workshop, talk]} isEditionPast={false} />)
+    expect(screen.getByRole('button', { name: 'Todos' }).getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByRole('button', { name: 'Charlas' }).getAttribute('aria-pressed')).toBe('false')
+    expect(screen.getByText('Workshop')).toBeDefined()
+    expect(screen.getByText('Talk')).toBeDefined()
+  })
+
+  test('renders only Todos when the edition has no recognized activity types', () => {
+    render(
+      <ActivityList
+        actividades={[makeActivity('Other activity', 'otro', [])]}
+        isEditionPast={false}
+      />
+    )
+
+    expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual([
+      'Todos'
+    ])
+  })
+
+  test('renders only the section heading and Todos when the edition is empty', () => {
     render(<ActivityList actividades={[]} isEditionPast={false} />)
     expect(screen.getByText('Actividades')).toBeDefined()
+    expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual([
+      'Todos'
+    ])
     expect(screen.queryAllByRole('listitem')).toHaveLength(0)
   })
 })
