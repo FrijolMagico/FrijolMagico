@@ -18,6 +18,7 @@ import {
 
 import {
   activity,
+  activityOccurrence,
   activityRegistration,
   editionParticipation,
   admissionMode,
@@ -304,12 +305,23 @@ export const activityRegistrationRelations = relations(
   })
 )
 
-export const activityRelations = relations(activity, ({ one }) => ({
+export const activityRelations = relations(activity, ({ one, many }) => ({
   participacionActividad: one(participationActivity, {
     fields: [activity.participacionActividadId],
     references: [participationActivity.id]
-  })
+  }),
+  occurrences: many(activityOccurrence)
 }))
+
+export const activityOccurrenceRelations = relations(
+  activityOccurrence,
+  ({ one }) => ({
+    activity: one(activity, {
+      fields: [activityOccurrence.activityId],
+      references: [activity.id]
+    })
+  })
+)
 
 // ============================================
 // Auth Relations (Better Auth)

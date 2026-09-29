@@ -32,3 +32,33 @@ export function getRegistrationWindow(
   if (now <= end) return { active: true, nextAt: end + 1 }
   return inactive
 }
+
+export function formatOccurrenceTimeRange(
+  startTime: string | null,
+  durationMinutes: number | null
+): string | null {
+  if (
+    !startTime ||
+    !/^([01]\d|2[0-3]):[0-5]\d$/.test(startTime) ||
+    durationMinutes === null ||
+    !Number.isInteger(durationMinutes) ||
+    durationMinutes <= 0
+  ) {
+    return null
+  }
+
+  const [hours, minutes] = startTime.split(':').map(Number)
+  const startMinutes = hours * 60 + minutes
+  const endMinutes = startMinutes + durationMinutes
+  if (endMinutes > 24 * 60) return null
+
+  const formatTime = (totalMinutes: number) => {
+    const hour = Math.floor(totalMinutes / 60)
+      .toString()
+      .padStart(2, '0')
+    const minute = (totalMinutes % 60).toString().padStart(2, '0')
+    return `${hour}:${minute}hrs`
+  }
+
+  return `${formatTime(startMinutes)} a ${formatTime(endMinutes)}`
+}

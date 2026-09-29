@@ -223,16 +223,8 @@ test('renders shared registration controls with empty defaults', async () => {
   document.body.append(container)
   const root = createRoot(container)
   await act(async () => root.render(createElement(RegistrationForm)))
-  expect(
-    container.querySelector<HTMLInputElement>('#registration-url')?.value
-  ).toBe('')
-  expect(
-    container.querySelector<HTMLLabelElement>('label[for="registration-url"]')
-      ?.textContent
-  ).toBe('Enlace de inscripción *')
-  expect(
-    container.querySelector<HTMLInputElement>('#registration-url')?.type
-  ).toBe('url')
+  expect(container.querySelector<HTMLInputElement>('#registration-url')).toBeNull()
+  expect(container.querySelector('#registration-startDate')).not.toBeNull()
   // Form renders without errors (pickers tested in integration)
   await act(async () => root.unmount())
   container.remove()
@@ -287,6 +279,7 @@ test('renders update Chile-local defaults and submits absent registration after 
         horaInicio: '',
         ubicacion: ''
       },
+      occurrences: [{ id: 71, date: '2026-07-01', startTime: '12:00', durationMinutes: 60, url: 'https://example.org/registro' }],
       registration: {
         url: 'https://example.org/registro',
         startDate: '2026-07-01',
@@ -315,16 +308,8 @@ test('renders update Chile-local defaults and submits absent registration after 
       })
     )
   )
-  // Check URL input (registration enabled by default for existing registration)
-  let urlInput = container.querySelector<HTMLInputElement>('[name="registration.url"]')
-  if (!urlInput) {
-    const toggle = container.querySelector<HTMLButtonElement>('#registration-enabled')
-    if (toggle) {
-      await act(async () => toggle.click())
-      urlInput = container.querySelector<HTMLInputElement>('[name="registration.url"]')
-    }
-  }
-  expect(urlInput).not.toBeNull()
+  // Per-occurrence URL is hydrated independently from the global registration window.
+  const urlInput = container.querySelector<HTMLInputElement>('[name="occurrences.0.url"]')
   expect(urlInput?.value).toBe('https://example.org/registro')
   expect(container.querySelector<HTMLInputElement>('#registration-startTime-hour')?.value).toBe('12')
   expect(container.querySelector<HTMLInputElement>('#registration-startTime-minute')?.value).toBe('00')
@@ -390,9 +375,9 @@ async function enterRegistration(container: HTMLElement) {
 
   // URL input
   const urlInput = container.querySelector<HTMLInputElement>(
-    `[name="registration.url"]`
+    `[name="occurrences.0.url"]`
   )
-  if (!urlInput) throw new Error('Missing registration.url')
+  if (!urlInput) throw new Error('Missing occurrence URL')
   await enter(urlInput, values.url)
   // For date/time pickers, we simulate by directly setting form values via RHF
   // Since the pickers use Controller, we need to trigger onChange on the picker buttons
@@ -536,7 +521,7 @@ test('activity status guidance follows the selected state in create and update f
   selectedActivity = { entity: null, activity: null }
 })
 
-test('create band selection hides, clears and submits absent registration', async () => {
+test('music hides registration, keeps date selection visible, and cannot submit without a date', async () => {
   createAction.mockClear()
   const { CreateActivityDialog } =
     await import('@/core/eventos/participaciones/_components/create-activity-dialog')
@@ -553,52 +538,20 @@ test('create band selection hides, clears and submits absent registration', asyn
       })
     )
   )
-  await enterRegistration(container)
   await act(async () =>
     Array.from(container.querySelectorAll<HTMLButtonElement>('button'))
       .find((button) => button.textContent === 'Cambiar participante')
       ?.click()
   )
-  // When banda is selected, registration pickers are hidden
   expect(findPickerButton(container, 'Inicio: fecha')).toBeNull()
-  expect(container.textContent).toContain('Las bandas solo pueden participar')
+  expect(container.querySelector('#occurrence-new-date')).not.toBeNull()
+  expect(container.querySelector<HTMLInputElement>('[name="registration.url"]')).toBeNull()
   await act(async () =>
-    Array.from(container.querySelectorAll<HTMLButtonElement>('button'))
-      .find((button) => button.textContent === 'Cambiar participante')
-      ?.click()
+    container.querySelector<HTMLFormElement>('form')?.dispatchEvent(
+      new window.Event('submit', { bubbles: true, cancelable: true })
+    )
   )
-  await act(async () =>
-    Array.from(container.querySelectorAll<HTMLButtonElement>('button'))
-      .find((button) => button.textContent === 'Cambiar tipo')
-      ?.click()
-  )
-  // When banda is selected, registration section is hidden
-  expect(
-    container.querySelector<HTMLInputElement>('[name="registration.url"]')
-  ).toBeNull()
-  await act(async () =>
-    Array.from(container.querySelectorAll<HTMLButtonElement>('button'))
-      .find((button) => button.textContent === 'Cambiar participante')
-      ?.click()
-  )
-  await act(async () =>
-    Array.from(container.querySelectorAll<HTMLButtonElement>('button'))
-      .find((button) => button.textContent === 'Elegir participante')
-      ?.click()
-  )
-  await act(async () =>
-    container
-      .querySelector<HTMLFormElement>('form')
-      ?.dispatchEvent(
-        new window.Event('submit', { bubbles: true, cancelable: true })
-      )
-  )
-  expect(createAction).toHaveBeenCalledWith(
-    expect.objectContaining({
-      activity: expect.objectContaining({ tipoActividadId: 3 }),
-      registration: { ...EMPTY_REGISTRATION, registrationEnabled: false }
-    })
-  )
+  expect(createAction).not.toHaveBeenCalled()
   await act(async () => root.unmount())
   container.remove()
 })
@@ -630,6 +583,7 @@ test('submits complete update registration and refreshes after success', async (
         horaInicio: '',
         ubicacion: ''
       },
+      occurrences: [{ id: 71, date: '2026-07-01', startTime: '12:00', durationMinutes: 60, url: 'https://example.org/registro' }],
       registration: {
         url: 'https://example.org/registro',
         startDate: '2026-07-01',
@@ -673,7 +627,7 @@ test('submits complete update registration and refreshes after success', async (
       ?.disabled
   ).toBe(true)
   expect(
-    container.querySelector<HTMLInputElement>('[name="registration.url"]')
+    container.querySelector<HTMLInputElement>('[name="occurrences.0.url"]')
       ?.value
   ).toBe('https://example.org/registro')
   await act(async () => root.unmount())

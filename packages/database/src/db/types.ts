@@ -18,6 +18,7 @@ import {
 
 import {
   activity,
+  activityOccurrence,
   activityRegistration,
   editionParticipation,
   admissionMode,
@@ -141,6 +142,9 @@ export type NewActivityRegistration = InferInsertModel<
 
 export type Activity = InferSelectModel<typeof activity>
 export type NewActivity = InferInsertModel<typeof activity>
+
+export type ActivityOccurrence = InferSelectModel<typeof activityOccurrence>
+export type NewActivityOccurrence = InferInsertModel<typeof activityOccurrence>
 
 // ============================================
 // Auth Types

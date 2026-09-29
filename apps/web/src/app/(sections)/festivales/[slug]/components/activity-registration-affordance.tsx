@@ -7,20 +7,24 @@ import { useActivityRegistration } from './use-activity-registration'
 import type { ActivityRegistration } from '../../types/festival'
 
 export function ActivityRegistrationCta({
-  registration
+  registration,
+  url
 }: {
-  registration: ActivityRegistration
+  registration: Omit<ActivityRegistration, 'url'>
+  url: string | null
 }) {
-  const active = useActivityRegistration(registration)
-  if (!active) return null
+  const active = useActivityRegistration(
+    url ? { ...registration, url } : null
+  )
+  if (!active || !url) return null
 
   return (
     <LinkCta
-      href={registration.url}
+      href={url}
       variant='offset'
       target='_blank'
       rel='noopener noreferrer'
-      className='absolute -top-4 -right-4 z-20'
+      className='mt-2 inline-flex'
     >
       Inscríbete
     </LinkCta>

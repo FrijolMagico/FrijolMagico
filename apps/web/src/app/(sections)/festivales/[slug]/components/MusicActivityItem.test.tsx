@@ -20,6 +20,80 @@ const baseActivity: FestivalActivity = {
 }
 
 describe('MusicActivityItem', () => {
+  test('shows a single timed occurrence without a block number or date', () => {
+    const { container } = render(
+      <MusicActivityItem
+        activity={{
+          ...baseActivity,
+          ocurrencias: [
+            {
+              id: 1,
+              fecha: '2026-10-03',
+              hora_inicio: '18:30',
+              duracion_minutos: 90,
+              registration_url: null
+            }
+          ]
+        }}
+      />
+    )
+
+    expect(screen.getByText('18:30hrs a 20:00hrs')).toBeDefined()
+    expect(screen.queryByText(/Bloque/)).toBeNull()
+    expect(container.querySelector('article')?.textContent).not.toContain('2026-10-03')
+  })
+
+  test('numbers multiple occurrences and omits time for an untimed block', () => {
+    render(
+      <MusicActivityItem
+        activity={{
+          ...baseActivity,
+          ocurrencias: [
+            {
+              id: 1,
+              fecha: '2026-10-03',
+              hora_inicio: '18:30',
+              duracion_minutos: 90,
+              registration_url: null
+            },
+            {
+              id: 2,
+              fecha: '2026-10-03',
+              hora_inicio: null,
+              duracion_minutos: null,
+              registration_url: null
+            }
+          ]
+        }}
+      />
+    )
+
+    expect(screen.getByText('Bloque 1: 18:30hrs a 20:00hrs')).toBeDefined()
+    expect(screen.getByText('Bloque 2')).toBeDefined()
+    expect(screen.queryByText(/Bloque 2:.*hrs/)).toBeNull()
+  })
+
+  test('does not invent a time for a single untimed occurrence', () => {
+    render(
+      <MusicActivityItem
+        activity={{
+          ...baseActivity,
+          ocurrencias: [
+            {
+              id: 1,
+              fecha: '2026-10-03',
+              hora_inicio: null,
+              duracion_minutos: null,
+              registration_url: null
+            }
+          ]
+        }}
+      />
+    )
+
+    expect(screen.queryByText(/hrs/)).toBeNull()
+  })
+
   test('links to the catalog profile before social and email contacts', () => {
     render(
       <MusicActivityItem

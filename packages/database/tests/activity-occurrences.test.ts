@@ -15,12 +15,16 @@ const migration = readFileSync(
   join(import.meta.dir, '../migrations/0022_activity_occurrences.sql'),
   'utf8'
 )
+const registrationMigration = readFileSync(
+  join(import.meta.dir, '../migrations/0023_activity_occurrence_registration.sql'),
+  'utf8'
+)
 const migrationsDirectory = join(import.meta.dir, '../migrations')
 const journalPath = join(migrationsDirectory, 'meta/_journal.json')
 const directories: string[] = []
 type Database = ReturnType<typeof createClient>
 
-async function setup() {
+async function setup(options: { applyRegistrationMigration?: boolean } = {}) {
   const directory = await mkdtemp(join(tmpdir(), 'activity-occurrences-'))
   directories.push(directory)
   const db = createClient({ url: `file:${join(directory, 'test.db')}` })
@@ -37,10 +41,17 @@ async function setup() {
     'INSERT INTO participacion_actividad VALUES (1, 1, 1), (2, 1, 2), (3, 1, 3), (4, 2, 1), (5, 3, 1), (6, 4, 1), (7, 1, 1), (8, 1, 1), (9, 1, 1), (10, 5, 1), (11, 6, 1), (12, 7, 1)',
     "INSERT INTO actividad VALUES (1, 1, '09:00', 60, 'hall'), (2, 2, '10:00', 60, 'hall'), (3, 3, '11:00', 60, 'hall'), (4, 4, '12:00', 60, 'hall'), (5, 5, '13:00', 60, 'hall'), (6, 6, '14:00', 60, 'hall'), (7, 7, NULL, 60, 'hall'), (8, 8, '23:30', 60, 'hall'), (9, 9, 'invalid', 60, 'hall'), (10, 10, '08:00', 45, 'hall'), (11, 11, '08:00', 45, 'hall'), (12, 12, '08:00', 45, 'hall')",
     "INSERT INTO evento_edicion_dia VALUES (1, 10, '2026-09-05'), (2, 20, '2026-09-05'), (3, 20, '2026-09-06'), (4, 40, '2026-02-30'), (5, 50, '2028-02-29'), (6, 60, '2026-13-01'), (7, 70, '2026-02-29')",
-    "INSERT INTO activity_registration VALUES (1, 1, 'https://example.org')"
+    "INSERT INTO activity_registration VALUES (1, 1, 'https://example.org')",
+    "INSERT INTO activity_registration VALUES (2, 9, 'https://legacy.example.org')"
   ]) await db.execute(statement)
   for (const statement of migration.split('--> statement-breakpoint').map((part) => part.trim()).filter(Boolean)) {
     await db.execute(statement)
+  }
+  await db.execute("INSERT INTO activity_occurrence (activity_id, date, start_time, duration_minutes) VALUES (1, '2026-09-06', '10:00', 60)")
+  if (options.applyRegistrationMigration !== false) {
+    for (const statement of registrationMigration.split('--> statement-breakpoint').map((part) => part.trim()).filter(Boolean)) {
+      await db.execute(statement)
+    }
   }
   return db
 }
@@ -61,17 +72,33 @@ describe('activity occurrences additive migration', () => {
     const db = await setup()
     expect(getTableName(activityOccurrence)).toBe('activity_occurrence')
     expect(Object.values(getTableColumns(activityOccurrence)).map((column) => column.name)).toEqual([
-      'id', 'activity_id', 'date', 'start_time', 'duration_minutes', 'created_at', 'updated_at'
+      'id', 'activity_id', 'date', 'url', 'start_time', 'duration_minutes', 'created_at', 'updated_at'
     ])
     const rows = await db.execute('SELECT activity_id, date, start_time, duration_minutes FROM activity_occurrence')
     expect(rows.rows.map(({ activity_id, date, start_time, duration_minutes }) => ({ activity_id, date, start_time, duration_minutes }))).toEqual([
       { activity_id: 1, date: '2026-09-05', start_time: '09:00', duration_minutes: 60 },
-      { activity_id: 10, date: '2028-02-29', start_time: '08:00', duration_minutes: 45 }
+      { activity_id: 10, date: '2028-02-29', start_time: '08:00', duration_minutes: 45 },
+      { activity_id: 1, date: '2026-09-06', start_time: '10:00', duration_minutes: 60 }
     ])
     expect((await db.execute('SELECT count(*) AS n FROM actividad')).rows[0]?.n).toBe(12)
     const originalActivity = (await db.execute('SELECT hora_inicio, ubicacion FROM actividad WHERE id = 1')).rows[0]
     expect(originalActivity && { hora_inicio: originalActivity.hora_inicio, ubicacion: originalActivity.ubicacion }).toEqual({ hora_inicio: '09:00', ubicacion: 'hall' })
-    expect((await db.execute('SELECT url FROM activity_registration')).rows[0]?.url).toBe('https://example.org')
+    expect((await db.execute('SELECT url FROM activity_registration WHERE id = 1')).rows[0]?.url).toBe('https://example.org')
+    expect((await db.execute('SELECT DISTINCT url FROM activity_occurrence WHERE activity_id = 1')).rows[0]?.url).toBe('https://example.org')
+    const copiedUrls = await db.execute('SELECT id, url FROM activity_occurrence WHERE activity_id = 1 ORDER BY id')
+    expect(copiedUrls.rows.map(({ url }) => url)).toEqual([
+      'https://example.org',
+      'https://example.org'
+    ])
+    const secondOccurrenceId = copiedUrls.rows[1]?.id
+    await db.execute({
+      sql: 'UPDATE activity_occurrence SET url = ? WHERE id = ?',
+      args: ['https://example.org/second', secondOccurrenceId]
+    })
+    expect((await db.execute('SELECT url FROM activity_occurrence WHERE id = 1')).rows[0]?.url).toBe('https://example.org')
+    await expect(db.execute("UPDATE activity_occurrence SET url = 'http://insecure.example.org' WHERE id = 1")).rejects.toThrow()
+    expect((await db.execute('SELECT count(*) AS n FROM activity_occurrence WHERE activity_id = 9')).rows[0]?.n).toBe(0)
+    expect((await db.execute('SELECT url FROM activity_registration WHERE id = 2')).rows[0]?.url).toBe('https://legacy.example.org')
     const fk = await db.execute('PRAGMA foreign_key_list(activity_occurrence)')
     expect(fk.rows[0]?.on_delete).toBe('CASCADE')
     const indexes = await db.execute('PRAGMA index_list(activity_occurrence)')
@@ -91,7 +118,7 @@ describe('activity occurrences additive migration', () => {
     expect((await db.execute('SELECT count(*) AS n FROM activity_occurrence WHERE activity_id = 2')).rows[0]?.n).toBe(0)
   })
 
-  test('rejects missing, malformed, impossible dates/times, midnight overflow and music', async () => {
+  test('rejects missing, malformed, impossible dates/times and midnight overflow while allowing music', async () => {
     const db = await setup()
     for (const date of ['2026-02-30', '2026-02-29', '2028-02-30', '2026-13-01', '2026-00-01', '2026-9-05', 'not-a-date']) {
       await expect(add(db, 2, date, '09:00', 60)).rejects.toThrow()
@@ -103,7 +130,7 @@ describe('activity occurrences additive migration', () => {
     for (const duration of [0, -1, 61]) {
       await expect(add(db, 2, '2026-09-05', '23:00', duration)).rejects.toThrow()
     }
-    await expect(add(db, 3, '2026-09-05', '09:00', 60)).rejects.toThrow()
+    await add(db, 3, '2026-09-05', '09:00', 60)
     await expect(add(db, 999, '2026-09-05', '09:00', 60)).rejects.toThrow()
     // date + start_time without duration is now allowed (nullable)
     await db.execute("INSERT INTO activity_occurrence (activity_id, date, start_time) VALUES (2, '2026-09-05', '09:00')")
@@ -125,30 +152,41 @@ describe('activity occurrences additive migration', () => {
     await add(db, 2, '2026-09-06', '10:00', 60)
   })
 
-  test('clears sessions when parent type or catalog slug ceases to be schedulable', async () => {
+  test('retains sessions when activity types or catalog slugs change', async () => {
     const db = await setup()
     await add(db, 2, '2026-09-05', '10:00', 60)
     await db.execute('UPDATE participacion_actividad SET tipo_actividad_id = 3 WHERE id = 2')
-    expect((await db.execute('SELECT count(*) AS n FROM activity_occurrence WHERE activity_id = 2')).rows[0]?.n).toBe(0)
-    await expect(add(db, 2, '2026-09-05', '11:00', 60)).rejects.toThrow()
+    expect((await db.execute('SELECT count(*) AS n FROM activity_occurrence WHERE activity_id = 2')).rows[0]?.n).toBe(1)
+    await add(db, 2, '2026-09-05', '11:00', 60)
     await db.execute("UPDATE tipo_actividad SET slug = 'otro' WHERE id = 1")
-    expect((await db.execute('SELECT count(*) AS n FROM activity_occurrence')).rows[0]?.n).toBe(0)
+    expect((await db.execute('SELECT count(*) AS n FROM activity_occurrence WHERE activity_id = 1')).rows[0]?.n).toBe(2)
     await expect(add(db, 4, '2026-09-05', '11:00', 60)).rejects.toThrow()
   })
 
-  test('retains sessions on schedulable participation reassignment and clears them on music reassignment', async () => {
+  test('retains sessions on schedulable participation reassignment and music reassignment', async () => {
     const db = await setup()
     await db.execute('UPDATE actividad SET participacion_actividad_id = 2 WHERE id = 1')
     const retained = await db.execute('SELECT activity_id, date, start_time FROM activity_occurrence WHERE activity_id = 1')
     expect(retained.rows.map(({ activity_id, date, start_time }) => ({ activity_id, date, start_time }))).toEqual([
-      { activity_id: 1, date: '2026-09-05', start_time: '09:00' }
+      { activity_id: 1, date: '2026-09-05', start_time: '09:00' },
+      { activity_id: 1, date: '2026-09-06', start_time: '10:00' }
     ])
-    await add(db, 1, '2026-09-06', '10:00', 60)
+    await add(db, 1, '2026-09-07', '10:00', 60)
     await db.execute('UPDATE actividad SET participacion_actividad_id = 3 WHERE id = 1')
-    expect((await db.execute('SELECT count(*) AS n FROM activity_occurrence WHERE activity_id = 1')).rows[0]?.n).toBe(0)
+    expect((await db.execute('SELECT count(*) AS n FROM activity_occurrence WHERE activity_id = 1')).rows[0]?.n).toBe(3)
     expect((await db.execute('SELECT count(*) AS n FROM activity_occurrence WHERE activity_id = 10')).rows[0]?.n).toBe(1)
     expect((await db.execute('SELECT url FROM activity_registration')).rows[0]?.url).toBe('https://example.org')
-    await expect(add(db, 1, '2026-09-07', '10:00', 60)).rejects.toThrow()
+    await add(db, 1, '2026-09-08', '10:00', 60)
+  })
+
+  test('preserves pre-0023 occurrence schema and cleanup behavior', async () => {
+    const db = await setup({ applyRegistrationMigration: false })
+    const columns = await db.execute('PRAGMA table_info(activity_occurrence)')
+    expect(columns.rows.map((column) => column.name)).not.toContain('url')
+    await expect(add(db, 3, '2026-09-05', '09:00', 60)).rejects.toThrow()
+    expect((await db.execute('SELECT count(*) AS n FROM activity_occurrence WHERE activity_id = 1')).rows[0]?.n).toBe(2)
+    await db.execute('UPDATE participacion_actividad SET tipo_actividad_id = 3 WHERE id = 1')
+    expect((await db.execute('SELECT count(*) AS n FROM activity_occurrence WHERE activity_id = 1')).rows[0]?.n).toBe(0)
   })
 
   test('journal exposes activity occurrence migrations and the local Drizzle migrator applies them exactly once', async () => {
@@ -171,6 +209,13 @@ describe('activity occurrences additive migration', () => {
       version: '7',
       when: 1785456000000,
       tag: '0023_activity_occurrence_registration',
+      breakpoints: true
+    })
+    expect(entries[24]).toEqual({
+      idx: 24,
+      version: '7',
+      when: 1785542400000,
+      tag: '0024_artist_pseudonyms',
       breakpoints: true
     })
     expect(entries.at(-1)).toEqual({

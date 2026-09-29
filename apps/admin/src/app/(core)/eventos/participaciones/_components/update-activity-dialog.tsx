@@ -274,10 +274,6 @@ export function UpdateActivityDialog({ edition, artistas = [] }: UpdateActivityD
                     field.onChange(Number(val))
                     if (Number(val) === ACTIVITY_TYPES.MUSICA) {
                       clearRegistration(methods)
-                      methods.setValue('occurrences', [], {
-                        shouldDirty: true,
-                        shouldValidate: true
-                      })
                     }
                   }}
                   disabled={isBand || isSubmitting}
@@ -492,18 +488,20 @@ export function UpdateActivityDialog({ edition, artistas = [] }: UpdateActivityD
               </div>
             </Field>
           )}
-          {!isMusic && <ActivityOccurrenceFields methods={methods} disabled={isSubmitting} />}
-        </FieldGroup>
-
-        {registrationEnabled && (
-          <>
-            <Separator orientation='vertical' className='hidden md:block' />
+          {registrationEnabled && !isMusic && (
             <ActivityRegistrationFields
               methods={methods}
               disabled={isSubmitting}
             />
-          </>
-        )}
+          )}
+        </FieldGroup>
+
+        <Separator orientation='vertical' className='hidden md:block' />
+        <ActivityOccurrenceFields
+          methods={methods}
+          disabled={isSubmitting}
+          registrationEnabled={Boolean(registrationEnabled && !isMusic)}
+        />
       </form>
     </EntityFormDialog>
   )

@@ -77,6 +77,21 @@ describe('activity registration input', () => {
     }
   })
 
+  test('requires at least one valid occurrence date in the form', () => {
+    const form = {
+      participantType: 'artista',
+      modoIngresoId: 1,
+      tipoActividadId: 1,
+      notas: '',
+      estado: 'seleccionado',
+      puntaje: null,
+      detail: { titulo: '', descripcion: '', duracionMinutos: null, cupos: null, horaInicio: '', ubicacion: '' },
+      entity: { artistaId: 1, agrupacionId: null, bandaId: null }
+    }
+    expect(activityFormSchema.safeParse(form).success).toBe(false)
+    expect(activityFormSchema.safeParse({ ...form, occurrences: [{ date: '2026-07-01' }] }).success).toBe(true)
+  })
+
   test('enclosing form passes empty, omitted and complete registration through the action-input boundary', () => {
     const form = {
       participantType: 'artista',
@@ -93,7 +108,8 @@ describe('activity registration input', () => {
         horaInicio: '',
         ubicacion: ''
       },
-      entity: { artistaId: 1, agrupacionId: null, bandaId: null }
+      entity: { artistaId: 1, agrupacionId: null, bandaId: null },
+      occurrences: [{ date: '2026-07-01', startTime: null, durationMinutes: null, url: complete.url }]
     }
     const emptyForm = activityFormSchema.parse({
       ...form,

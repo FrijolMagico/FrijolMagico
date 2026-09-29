@@ -64,10 +64,12 @@ export async function getActivitiesWithDetails(
   const detailIds = rows.flatMap((row) => row.detalleId === null ? [] : [row.detalleId])
   const occurrences = detailIds.length === 0 ? [] : await db
     .select({
+      id: activityOccurrence.id,
       activityId: activityOccurrence.activityId,
       date: activityOccurrence.date,
       startTime: activityOccurrence.startTime,
-      durationMinutes: activityOccurrence.durationMinutes
+      durationMinutes: activityOccurrence.durationMinutes,
+      url: activityOccurrence.url
     })
     .from(activityOccurrence)
     .where(inArray(activityOccurrence.activityId, detailIds))
@@ -125,7 +127,13 @@ export async function getActivitiesWithDetails(
       detail,
       registration,
       occurrences: occurrences.filter((occurrence) => occurrence.activityId === row.detalleId)
-        .map(({ date, startTime, durationMinutes }) => ({ date, startTime, durationMinutes }))
+        .map(({ id, date, startTime, durationMinutes, url }) => ({
+          ...(id === undefined ? {} : { id }),
+          date,
+          startTime,
+          durationMinutes,
+          ...(url === undefined ? {} : { url })
+        }))
     }
   })
 }

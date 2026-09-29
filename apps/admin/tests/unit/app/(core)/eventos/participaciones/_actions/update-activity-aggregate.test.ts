@@ -7,7 +7,7 @@ let parentEditionId = 7
 let activityTypeSlug = 'taller'
 let activityExists = true
 let activityParticipationId = 11
-let storedSessions: { date: string; startTime: string; durationMinutes: number }[] = []
+let storedSessions: { id?: number; url?: string | null; date: string; startTime: string | null; durationMinutes: number | null }[] = []
 let invalidations: string[]
 let committed = false
 let operations: string[]
@@ -129,6 +129,8 @@ mock.module('@/shared/lib/web-invalidation', () => ({
   revalidateWebCacheBestEffort
 }))
 
+const initialSchedule = [{ date: '2026-06-12', startTime: '11:00', durationMinutes: 60 }]
+
 const input = {
   editionId: 7,
   participation: {
@@ -171,7 +173,13 @@ beforeEach(async () => {
   activityTypeSlug = 'taller'
   activityExists = true
   activityParticipationId = 11
-  storedSessions = []
+  storedSessions = [{
+    id: 44,
+    url: null,
+    date: '2026-06-12',
+    startTime: '11:00',
+    durationMinutes: 60
+  }]
   invalidations = []
   committed = false
   operations = []
@@ -232,60 +240,174 @@ describe('updateActivityAggregateAction', () => {
     expect(invalidations).toEqual([])
   })
 
-  test('rejects forged music registration and clears registration when becoming music', async () => {
+  test('allows music updates with occurrences while rejecting unsupported types', async () => {
     activityTypeSlug = 'musica'
-    const rejected = await action(input)
-    expect(rejected.success).toBe(false)
+    const music = await action({ ...input, registration: null })
+    expect(music.success).toBe(true)
+    expect(operations).not.toContain('occurrence:delete')
+    expect(operations).not.toContain('occurrence:insert')
+
+    activityTypeSlug = 'teatro'
+    operations = []
+    const unsupported = await action({ ...input, registration: null })
+    expect(unsupported.success).toBe(false)
+    expect(unsupported.errors?.[0]?.message).toContain('no se puede crear o editar')
     expect(operations).toEqual([])
-    const cleared = await action({ ...input, registration: undefined, expectedOccurrences: [] })
-    expect(cleared.success).toBe(true)
-    expect(operations).toContain('registration:delete')
-    expect(operations).toContain('activity:update')
   })
 
-  test('normalizes band activity to music and clears absent registration', async () => {
+  test('rejects music updates when the existing activity has no date', async () => {
     activityTypeSlug = 'musica'
-    const result = await action({
-      ...input,
-      participation: { ...input.participation, artistaId: null, bandaId: 4 },
-      registration: null,
-      expectedOccurrences: []
-    })
-    expect(result.success).toBe(true)
-    expect(
-      writes.find((write) => write.table === 'activity')?.values.tipoActividadId
-    ).toBe(3)
-    expect(operations).toContain('registration:delete')
+    storedSessions = []
+    const result = await action({ ...input, registration: null })
+    expect(result.success).toBe(false)
+    expect(result.errors?.[0]?.message).toContain('al menos una fecha')
+    expect(operations).toEqual([])
   })
 
-  test('replaces sessions explicitly and clears them when becoming music', async () => {
+  test('reconciles additions and removals while preserving occurrences on music transition', async () => {
     const sessions = [
       { date: '2026-06-10', startTime: '09:00', durationMinutes: 45 },
       { date: '2026-06-11', startTime: '10:00', durationMinutes: 60 }
     ]
-    expect((await action({ ...input, occurrences: sessions, expectedOccurrences: [] })).success).toBe(true)
+    expect((await action({ ...input, occurrences: sessions, expectedOccurrences: initialSchedule })).success).toBe(true)
     expect(operations).toContain('occurrence:delete')
     expect(operations).toContain('occurrence:insert')
     expect(writes.filter((write) => write.table === 'occurrence').map((write) => write.values))
-      .toEqual(sessions.map((session) => ({ activityId: 33, ...session })))
-    expect((await action({ ...input, occurrences: [], expectedOccurrences: [] })).success).toBe(true)
-    expect(operations).toContain('occurrence:delete')
+      .toEqual(sessions.map((session) => ({
+        activityId: 33,
+        ...session,
+        url: 'https://example.org/register'
+      })))
+    expect((await action({ ...input, occurrences: [], expectedOccurrences: sessions })).success).toBe(false)
+    expect(operations).not.toContain('occurrence:delete')
     expect(operations).not.toContain('occurrence:insert')
     activityTypeSlug = 'musica'
-    expect((await action({ ...input, registration: null, expectedOccurrences: [] })).success).toBe(true)
-    expect(operations).toContain('occurrence:delete')
-    expect((await action({ ...input, registration: null, occurrences: sessions })).success).toBe(false)
+    operations = []
+    storedSessions = [{ id: 44, date: sessions[0]!.date, startTime: sessions[0]!.startTime, durationMinutes: sessions[0]!.durationMinutes }]
+    const musicTransition = await action({
+      ...input,
+      registration: null,
+      occurrences: sessions,
+      expectedOccurrences: storedSessions
+    })
+    expect(musicTransition.success).toBe(true)
+    expect(operations).not.toContain('occurrence:delete')
+    expect(operations).toContain('occurrence:insert')
+    expect(operations).toContain('registration:delete')
+  })
+
+  test('preserves the occurrence ID when only its per-block URL changes', async () => {
+    storedSessions = [{
+      id: 71,
+      url: 'https://example.org/old',
+      date: '2026-06-12',
+      startTime: '11:00',
+      durationMinutes: 60
+    }]
+    const result = await action({
+      ...input,
+      occurrences: [{
+        id: 71,
+        date: '2026-06-13',
+        startTime: '12:00',
+        durationMinutes: 60,
+        url: 'https://example.org/new'
+      }],
+      expectedOccurrences: [{
+        date: '2026-06-12',
+        startTime: '11:00',
+        durationMinutes: 60,
+        url: 'https://example.org/old'
+      }]
+    })
+    expect(result.success).toBe(true)
+    expect(operations).toContain('occurrence:update')
+    expect(operations).not.toContain('occurrence:delete')
+    expect(operations).not.toContain('occurrence:insert')
+    expect(writes.find((write) => write.table === 'occurrence')?.values).toMatchObject({
+      date: '2026-06-13',
+      startTime: '12:00',
+      durationMinutes: 60,
+      url: 'https://example.org/new'
+    })
+  })
+
+  test('rejects a stale per-occurrence URL snapshot before any database write', async () => {
+    storedSessions = [{
+      id: 74,
+      url: 'https://example.org/newer',
+      date: '2026-06-12',
+      startTime: '11:00',
+      durationMinutes: 60
+    }]
+    const result = await action({
+      ...input,
+      occurrences: [{
+        date: '2026-06-12',
+        startTime: '11:00',
+        durationMinutes: 60,
+        url: 'https://example.org/stale'
+      }],
+      expectedOccurrences: [{
+        date: '2026-06-12',
+        startTime: '11:00',
+        durationMinutes: 60,
+        url: 'https://example.org/stale'
+      }]
+    })
+    expect(result.success).toBe(false)
+    expect(result.errors?.[0]?.message).toContain('Recargá')
+    expect(operations).toEqual([])
+    expect(writes).toEqual([])
+  })
+
+  test('allows an own URL-only edit with a legacy snapshot that omits the occurrence ID', async () => {
+    storedSessions = [{
+      id: 75,
+      url: 'https://example.org/old',
+      date: '2026-06-12',
+      startTime: '11:00',
+      durationMinutes: 60
+    }]
+    const result = await action({
+      ...input,
+      occurrences: [{
+        date: '2026-06-12',
+        startTime: '11:00',
+        durationMinutes: 60,
+        url: 'https://example.org/own-edit'
+      }],
+      expectedOccurrences: [{
+        date: '2026-06-12',
+        startTime: '11:00',
+        durationMinutes: 60,
+        url: 'https://example.org/old'
+      }]
+    })
+    expect(result.success).toBe(true)
+    expect(operations).toContain('occurrence:update')
+    expect(operations).not.toContain('occurrence:delete')
+    expect(operations).not.toContain('occurrence:insert')
+    expect(writes.find((write) => write.table === 'occurrence')?.values.url).toBe('https://example.org/own-edit')
   })
 
   test('preserves a newer schedule when an unrelated edit omits occurrences', async () => {
-    storedSessions = [{ date: '2026-06-12', startTime: '11:00', durationMinutes: 60 }]
+    storedSessions = [{ id: 72, date: '2026-06-12', startTime: '11:00', durationMinutes: 60 }]
     expect((await action(input)).success).toBe(true)
     expect(operations).not.toContain('occurrence:delete')
     expect(storedSessions).toHaveLength(1)
   })
 
+  test('rejects editing a legacy schedulable activity until it has a date', async () => {
+    storedSessions = []
+    const result = await action(input)
+    expect(result.success).toBe(false)
+    expect(result.errors?.[0]?.message).toContain('al menos una fecha')
+    expect(operations).toEqual([])
+  })
+
   test('rejects stale and unguarded schedule writes before any aggregate mutation', async () => {
-    storedSessions = [{ date: '2026-06-12', startTime: '11:00', durationMinutes: 60 }]
+    storedSessions = [{ id: 73, date: '2026-06-12', startTime: '11:00', durationMinutes: 60 }]
     const desired = [{ date: '2026-06-13', startTime: '12:00', durationMinutes: 45 }]
     const unguarded = await action({ ...input, occurrences: desired })
     expect(unguarded.success).toBe(false)
@@ -312,7 +434,7 @@ describe('updateActivityAggregateAction', () => {
     failAt = 'occurrence'
     const result = await action({ ...input, occurrences: [
       { date: '2026-06-10', startTime: '09:00', durationMinutes: 45 }
-    ], expectedOccurrences: [] })
+    ], expectedOccurrences: initialSchedule })
     expect(result.success).toBe(false)
     expect(committed).toBe(false)
     expect(committedState).toEqual(['prior-state'])

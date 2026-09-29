@@ -40,7 +40,8 @@ export const mapFestivalDetail = (raw: FestivalDetail): FestivalDetail => {
       ocurrencias: [...activity.ocurrencias].sort(
         (a, b) =>
           a.fecha.localeCompare(b.fecha) ||
-          a.hora_inicio.localeCompare(b.hora_inicio)
+          (a.hora_inicio ?? '99:99').localeCompare(b.hora_inicio ?? '99:99') ||
+          (a.id ?? 0) - (b.id ?? 0)
       ),
       catalogo_slug: activity.catalogo_slug ?? null,
       avatar_url: activity.catalogo_slug

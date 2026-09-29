@@ -94,9 +94,12 @@ export async function updateActivityAggregateAction(
             : operators.eq(table.id, submittedTypeId)
       })
       if (!effectiveType) throw new Error('El tipo de actividad no existe')
-      const switchingToMusic = effectiveType.slug === 'musica' &&
-        existingActivity.tipoActividadId !== effectiveType.id
-      const replacingSchedule = input.occurrences !== undefined || switchingToMusic
+      if (!['taller', 'charla', 'musica'].includes(effectiveType.slug)) {
+        throw new Error(
+          'Este tipo de actividad no admite sesiones y no se puede crear o editar hasta que el modelo lo soporte'
+        )
+      }
+      const replacingSchedule = input.occurrences !== undefined
       if (replacingSchedule && input.expectedOccurrences === undefined) {
         throw new Error('Falta la versión original de las sesiones. Recargá la actividad e intentá de nuevo.')
       }
@@ -106,26 +109,37 @@ export async function updateActivityAggregateAction(
       const occurrences = replacingSchedule
         ? parseActivityOccurrencesInput(input.occurrences, effectiveType.slug)
         : null
-      if (replacingSchedule) {
-        const expected = parseActivityOccurrencesInput(input.expectedOccurrences, 'taller')
-        const existingDetail = await tx.query.activity.findFirst({
-          where: (table, operators) =>
-            operators.eq(table.participacionActividadId, activityInput.id)
-        })
-        const current = existingDetail
-          ? await tx.query.activityOccurrence.findMany({
-              where: (table, operators) => operators.eq(table.activityId, existingDetail.id),
-              columns: { date: true, startTime: true, durationMinutes: true }
-            })
-          : []
-        if (!sameActivitySchedule(current, expected)) {
-          throw new Error('Las sesiones cambiaron mientras editabas. Recargá la actividad e intentá de nuevo.')
-        }
+      const expected = replacingSchedule
+        ? parseActivityOccurrencesInput(input.expectedOccurrences, 'taller', false)
+        : null
+      const existingDetail = await tx.query.activity.findFirst({
+        where: (table, operators) =>
+          operators.eq(table.participacionActividadId, activityInput.id)
+      })
+      const current = existingDetail
+        ? await tx.query.activityOccurrence.findMany({
+            where: (table, operators) => operators.eq(table.activityId, existingDetail.id),
+            columns: { id: true, url: true, date: true, startTime: true, durationMinutes: true }
+          })
+        : []
+      if (!replacingSchedule && current.length === 0) {
+        throw new Error('Agregá al menos una fecha para la actividad')
+      }
+      if (replacingSchedule && !sameActivitySchedule(current, expected ?? [])) {
+        throw new Error('Las sesiones cambiaron mientras editabas. Recargá la actividad e intentá de nuevo.')
       }
       const registration = parseActivityRegistrationInput(
         input.registration,
         effectiveType.slug
       )
+      const occurrenceValues = occurrences?.map((occurrence) => ({
+        ...occurrence,
+        startTime: occurrence.startTime || null,
+        url: occurrence.url || (registration ? registration.url || null : null)
+      })) ?? null
+      if (registration && occurrenceValues?.some(({ url }) => !url)) {
+        throw new Error('Cada sesión debe tener una URL de inscripción')
+      }
       const instants = registration
         ? registrationWindowToUtc(
             registration.startDate,
@@ -182,35 +196,77 @@ export async function updateActivityAggregateAction(
         target: activity.participacionActividadId,
         set: detailValues
       })
-      if (occurrences !== null) {
-        const detail = await tx.query.activity.findFirst({
-          where: (table, operators) =>
-            operators.eq(table.participacionActividadId, activityInput.id)
-        })
-        if (!detail) throw new Error('No se encontraron los detalles de la actividad')
-        await tx.delete(activityOccurrence).where(eq(activityOccurrence.activityId, detail.id))
-        if (occurrences.length) {
-          await tx.insert(activityOccurrence).values(
-            occurrences.map((occurrence) => ({
-              activityId: detail.id,
-              date: occurrence.date,
-              startTime: occurrence.startTime ?? null,
-              durationMinutes: occurrence.durationMinutes ?? null
-            }))
-          )
+      if (occurrenceValues !== null) {
+        if (!existingDetail) throw new Error('No se encontraron los detalles de la actividad')
+        const key = (occurrence: { date: string; startTime?: string | null; durationMinutes?: number | null }) =>
+          JSON.stringify([occurrence.date, occurrence.startTime ?? null, occurrence.durationMinutes ?? null])
+        const remaining = [...current]
+        const retained: { stored: (typeof current)[number]; desired: (typeof occurrenceValues)[number] }[] = []
+        const added: (typeof occurrenceValues)[number][] = []
+        for (const occurrence of occurrenceValues) {
+          const matchIndex = occurrence.id === undefined
+            ? remaining.findIndex((stored) => key(stored) === key(occurrence))
+            : remaining.findIndex((stored) => stored.id === occurrence.id)
+          if (matchIndex >= 0) {
+            const [stored] = remaining.splice(matchIndex, 1)
+            retained.push({ stored: stored!, desired: occurrence })
+          } else if (occurrence.id !== undefined) {
+            throw new Error('Una sesión ya no existe. Recargá la actividad e intentá de nuevo.')
+          } else {
+            added.push(occurrence)
+          }
+        }
+        for (const removed of remaining) {
+          await tx.delete(activityOccurrence).where(eq(activityOccurrence.id, removed.id))
+        }
+        for (const { stored, desired } of retained) {
+          if (
+            stored.date !== desired.date ||
+            stored.startTime !== (desired.startTime ?? null) ||
+            stored.durationMinutes !== (desired.durationMinutes ?? null) ||
+            stored.url !== desired.url
+          ) {
+            await tx.update(activityOccurrence)
+              .set({
+                date: desired.date,
+                startTime: desired.startTime ?? null,
+                durationMinutes: desired.durationMinutes ?? null,
+                url: desired.url
+              })
+              .where(eq(activityOccurrence.id, stored.id))
+          }
+        }
+        for (const occurrence of added) {
+          await tx.insert(activityOccurrence).values({
+            activityId: existingDetail.id,
+            date: occurrence.date,
+            startTime: occurrence.startTime ?? null,
+            durationMinutes: occurrence.durationMinutes ?? null,
+            ...(occurrence.url ? { url: occurrence.url } : {})
+          })
         }
       }
       if (registration && instants) {
+        const registrationUrl =
+          occurrenceValues?.[0]?.url ||
+          registration.url ||
+          current.find(({ url }) => url)?.url
+        if (!registrationUrl) {
+          throw new Error('Cada sesión debe tener una URL de inscripción')
+        }
         await tx
           .insert(activityRegistration)
           .values({
             participationActivityId: activityInput.id,
-            url: registration.url,
+            url: registrationUrl,
             ...instants
           })
           .onConflictDoUpdate({
             target: activityRegistration.participationActivityId,
-            set: { url: registration.url, ...instants }
+            set: {
+              url: registrationUrl,
+              ...instants
+            }
           })
       } else {
         // Keep explicit domain cleanup in addition to the database music trigger.

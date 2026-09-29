@@ -20,22 +20,25 @@ import type { ActivityFormInput } from '../_schemas/activity.schema'
 
 export function ActivityOccurrenceFields({
   methods,
-  disabled
+  disabled,
+  registrationEnabled = false
 }: {
   methods: UseFormReturn<ActivityFormInput>
   disabled: boolean
+  registrationEnabled?: boolean
 }) {
   const [date, setDate] = useState('')
   const [collapsed, setCollapsed] = useState<string[]>([])
   const { fields, append, remove } = useFieldArray({
     control: methods.control,
-    name: 'occurrences'
+    name: 'occurrences',
+    keyName: 'rhfId'
   })
   const { errors } = useFormState({ control: methods.control })
   const dates = [...new Set(fields.map((field) => field.date))]
 
   const addSession = (selectedDate: string) => {
-    append({ date: selectedDate, startTime: '', durationMinutes: 0 })
+    append({ date: selectedDate, startTime: null, durationMinutes: null })
     setCollapsed((previous) => previous.filter((item) => item !== selectedDate))
   }
 
@@ -53,7 +56,10 @@ export function ActivityOccurrenceFields({
 
   return (
     <section aria-label='Sesiones' className='space-y-3 rounded-md border p-3'>
-      <h3 className='text-sm font-medium'>Sesiones (opcional)</h3>
+      <h3 className='text-sm font-medium'>Fechas y sesiones</h3>
+      {errors.occurrences?.message && (
+        <FieldError>{errors.occurrences.message}</FieldError>
+      )}
       <DatePickerField
         id='occurrence-new-date'
         label='Fecha de nueva sesión'
@@ -140,7 +146,7 @@ export function ActivityOccurrenceFields({
                   const row = fields[index]
                   const rowErrors = errors.occurrences?.[index]
                   return (
-                    <div key={row.id} className='space-y-1'>
+                    <div key={row.rhfId} className='space-y-1'>
                       {rowErrors?.date && (
                         <FieldError>{rowErrors.date.message}</FieldError>
                       )}
@@ -150,7 +156,7 @@ export function ActivityOccurrenceFields({
                           control={methods.control}
                           render={({ field }) => (
                             <TimePickerField
-                              id={`occurrence-time-${row.id}`}
+                              id={`occurrence-time-${row.rhfId}`}
                               label='Inicio'
                               value={field.value ?? ''}
                               onChange={field.onChange}
@@ -160,11 +166,11 @@ export function ActivityOccurrenceFields({
                           )}
                         />
                         <Field>
-                          <FieldLabel htmlFor={`occurrence-duration-${row.id}`}>
+                          <FieldLabel htmlFor={`occurrence-duration-${row.rhfId}`}>
                             Duración (min)
                           </FieldLabel>
                           <Input
-                            id={`occurrence-duration-${row.id}`}
+                            id={`occurrence-duration-${row.rhfId}`}
                             type='number'
                             min={1}
                             step={1}
@@ -172,22 +178,46 @@ export function ActivityOccurrenceFields({
                             aria-invalid={Boolean(rowErrors?.durationMinutes)}
                             aria-describedby={
                               rowErrors?.durationMinutes
-                                ? `occurrence-duration-error-${row.id}`
+                                ? `occurrence-duration-error-${row.rhfId}`
                                 : undefined
                             }
                             {...methods.register(
                               `occurrences.${index}.durationMinutes`,
-                              { valueAsNumber: true }
+                              { setValueAs: (value) => value === '' ? null : Number(value) }
                             )}
                           />
                           {rowErrors?.durationMinutes && (
                             <FieldError
-                              id={`occurrence-duration-error-${row.id}`}
+                              id={`occurrence-duration-error-${row.rhfId}`}
                             >
                               {rowErrors.durationMinutes.message}
                             </FieldError>
                           )}
                         </Field>
+                        {registrationEnabled && (
+                          <Field className='sm:col-span-2'>
+                            <FieldLabel htmlFor={`occurrence-url-${row.rhfId}`}>
+                              Enlace de inscripción
+                            </FieldLabel>
+                            <Input
+                              id={`occurrence-url-${row.rhfId}`}
+                              type='url'
+                              disabled={disabled}
+                              aria-invalid={Boolean(rowErrors?.url)}
+                              aria-describedby={
+                                rowErrors?.url
+                                  ? `occurrence-url-error-${row.rhfId}`
+                                  : undefined
+                              }
+                              {...methods.register(`occurrences.${index}.url`)}
+                            />
+                            {rowErrors?.url && (
+                              <FieldError id={`occurrence-url-error-${row.rhfId}`}>
+                                {rowErrors.url.message}
+                              </FieldError>
+                            )}
+                          </Field>
+                        )}
                         <Button
                           type='button'
                           variant='ghost'
