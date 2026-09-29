@@ -60,7 +60,10 @@ interface UpdateActivityDialogProps {
   }
 }
 
-export function UpdateActivityDialog({ edition, artistas = [] }: UpdateActivityDialogProps) {
+export function UpdateActivityDialog({
+  edition,
+  artistas = []
+}: UpdateActivityDialogProps) {
   const router = useRouter()
   const selectedActivity = useParticipationsStore((s) => s.selectedActivity)
   const isUpdateActivityDialogOpen = useParticipationsStore(
@@ -124,8 +127,13 @@ export function UpdateActivityDialog({ edition, artistas = [] }: UpdateActivityD
     name: 'registration.registrationEnabled'
   })
   const status = useWatch({ control: methods.control, name: 'estado' })
-  const selectedPseudonymId = useWatch({ control: methods.control, name: 'pseudonimoId' })
-  const artistOptions = artistas.find((artist) => artist.id === entity?.artist?.id)?.pseudonyms ?? []
+  const selectedPseudonymId = useWatch({
+    control: methods.control,
+    name: 'pseudonimoId'
+  })
+  const artistOptions =
+    artistas.find((artist) => artist.id === entity?.artist?.id)?.pseudonyms ??
+    []
 
   if (!entity || !activity) return null
 
@@ -133,7 +141,8 @@ export function UpdateActivityDialog({ edition, artistas = [] }: UpdateActivityD
     const schedule = activityScheduleUpdate(
       activity.occurrences ?? [],
       values.occurrences ?? [],
-      !isBand && activity.tipoActividadId !== ACTIVITY_TYPES.MUSICA &&
+      !isBand &&
+        activity.tipoActividadId !== ACTIVITY_TYPES.MUSICA &&
         values.tipoActividadId === ACTIVITY_TYPES.MUSICA
     )
     const result = await updateActivityAggregateAction({
@@ -153,9 +162,13 @@ export function UpdateActivityDialog({ edition, artistas = [] }: UpdateActivityD
         notas: values.notas,
         estado: values.estado,
         puntaje: values.puntaje,
-        pseudonimoId: artistOptions.some((item) => item.id === values.pseudonimoId)
+        pseudonimoId: artistOptions.some(
+          (item) => item.id === values.pseudonimoId
+        )
           ? values.pseudonimoId
-          : artistOptions.find((item) => item.isPrimary)?.id ?? artistOptions[0]?.id ?? null
+          : (artistOptions.find((item) => item.isPrimary)?.id ??
+            artistOptions[0]?.id ??
+            null)
       },
       registration: values.registration,
       ...schedule,
@@ -219,7 +232,7 @@ export function UpdateActivityDialog({ edition, artistas = [] }: UpdateActivityD
     >
       <form
         id='update-activity-form'
-        className='flex min-w-0 max-w-full flex-col gap-4 md:w-6xl md:flex-row'
+        className='flex max-w-full flex-1 flex-col gap-4 md:w-7xl md:flex-row'
         onSubmit={methods.handleSubmit(onSubmit)}
       >
         <FieldGroup>
@@ -230,9 +243,12 @@ export function UpdateActivityDialog({ edition, artistas = [] }: UpdateActivityD
                 name='pseudonimoId'
                 control={methods.control}
                 render={({ field }) => {
-                  const selected = artistOptions.some((item) => item.id === selectedPseudonymId)
+                  const selected = artistOptions.some(
+                    (item) => item.id === selectedPseudonymId
+                  )
                     ? selectedPseudonymId
-                    : artistOptions.find((item) => item.isPrimary)?.id ?? artistOptions[0]?.id
+                    : (artistOptions.find((item) => item.isPrimary)?.id ??
+                      artistOptions[0]?.id)
                   const selectedPseudonym = artistOptions.find(
                     (item) => item.id === selected
                   )
@@ -251,8 +267,12 @@ export function UpdateActivityDialog({ edition, artistas = [] }: UpdateActivityD
                       </SelectTrigger>
                       <SelectContent>
                         {artistOptions.map((pseudonym) => (
-                          <SelectItem key={pseudonym.id} value={String(pseudonym.id)}>
-                            {pseudonym.pseudonym}{pseudonym.isPrimary ? ' (principal)' : ''}
+                          <SelectItem
+                            key={pseudonym.id}
+                            value={String(pseudonym.id)}
+                          >
+                            {pseudonym.pseudonym}
+                            {pseudonym.isPrimary ? ' (principal)' : ''}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -332,7 +352,8 @@ export function UpdateActivityDialog({ edition, artistas = [] }: UpdateActivityD
             {status !== PARTICIPATION_STATUS.CONFIRMADO &&
               status !== PARTICIPATION_STATUS.COMPLETADO && (
                 <p className='text-muted-foreground text-xs'>
-                  Esta actividad no se mostrará en la web a menos que tenga estado Confirmado o Completado.
+                  Esta actividad no se mostrará en la web a menos que tenga
+                  estado Confirmado o Completado.
                 </p>
               )}
             {errors.estado && <FieldError>{errors.estado.message}</FieldError>}
@@ -473,10 +494,14 @@ export function UpdateActivityDialog({ edition, artistas = [] }: UpdateActivityD
                   id='registration-enabled'
                   checked={registrationEnabled}
                   onCheckedChange={(checked) => {
-                    methods.setValue('registration.registrationEnabled', checked, {
-                      shouldDirty: true,
-                      shouldValidate: true
-                    })
+                    methods.setValue(
+                      'registration.registrationEnabled',
+                      checked,
+                      {
+                        shouldDirty: true,
+                        shouldValidate: true
+                      }
+                    )
                     if (!checked) {
                       clearRegistration(methods)
                     }
@@ -484,7 +509,9 @@ export function UpdateActivityDialog({ edition, artistas = [] }: UpdateActivityD
                   disabled={isSubmitting}
                   aria-label='Habilitar inscripción'
                 />
-                <span className='text-sm'>{registrationEnabled ? 'Activado' : 'Desactivado'}</span>
+                <span className='text-sm'>
+                  {registrationEnabled ? 'Activado' : 'Desactivado'}
+                </span>
               </div>
             </Field>
           )}

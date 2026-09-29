@@ -41,7 +41,9 @@ describe('EntityFormDialog layout contract', () => {
   test('constrains activity forms and stacks columns on narrow devices', () => {
     for (const form of activityForms) {
       expect(form).not.toContain("className='md:max-w-6xl md:min-w-3xl'")
-      expect(form).toMatch(/<form[\s\S]*?className='[^']*max-w-full[^']*flex-col[^']*md:w-6xl[^']*md:flex-row/)
+      expect(form).toMatch(
+        /<form[\s\S]*?className='[^']*max-w-full[^']*flex-col[^']*md:w-(?:6xl|7xl)[^']*md:flex-row/
+      )
       expect(form.match(/className='hidden md:block'/g)?.length).toBe(2)
     }
   })
