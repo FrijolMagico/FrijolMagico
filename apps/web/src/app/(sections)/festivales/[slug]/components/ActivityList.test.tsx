@@ -1,9 +1,13 @@
-import { describe, expect, test } from 'bun:test'
+import { afterEach, describe, expect, jest, test } from 'bun:test'
 import { render, screen } from '@testing-library/react'
 
 import { ActivityList } from './ActivityList'
 
 import type { FestivalActivity } from '../../types/festival'
+
+afterEach(() => {
+  jest.useRealTimers()
+})
 
 const makeActivity = (
   title: string,
@@ -32,23 +36,40 @@ const occurrence = (
 })
 
 describe('ActivityList', () => {
-  test('renders one activity card per distinct day and keeps same-day blocks together', () => {
-    const activity = makeActivity('Taller', 'taller', [
-      occurrence(1, '2026-10-03', '09:00'),
-      occurrence(2, '2026-10-03', '12:00'),
-      occurrence(3, '2026-10-04', '10:00')
-    ])
+  test('renders each occurrence as a separate card, including same-day blocks', () => {
+    jest.useFakeTimers()
+    jest.setSystemTime(new Date('2026-10-03T16:30:00.000Z'))
+    const activity = {
+      ...makeActivity('Taller', 'taller', [
+        { ...occurrence(1, '2026-10-03', '09:00'), registration_url: 'https://example.org/one' },
+        { ...occurrence(2, '2026-10-03', '12:00'), registration_url: 'https://example.org/two' },
+        { ...occurrence(3, '2026-10-04', '10:00'), registration_url: 'https://example.org/three' }
+      ]),
+      registration: {
+        url: 'https://example.org/legacy',
+        start_at: '2026-10-01T00:00:00.000Z',
+        end_at: '2026-10-05T00:00:00.000Z'
+      }
+    }
     const { container } = render(
       <ActivityList actividades={[activity]} isEditionPast={false} />
     )
 
-    expect(container.querySelectorAll('article')).toHaveLength(2)
+    expect(container.querySelectorAll('article')).toHaveLength(3)
     expect(
       container.querySelectorAll('section[aria-label^="Actividades del"] > h3')
     ).toHaveLength(2)
-    expect(screen.getAllByText('Taller')).toHaveLength(2)
-    expect(screen.getByText('Bloque 1: 09:00hrs a 10:00hrs')).toBeDefined()
-    expect(screen.getByText('Bloque 2: 12:00hrs a 13:00hrs')).toBeDefined()
+    expect(screen.getAllByText('Taller')).toHaveLength(3)
+    expect(screen.getByText('09:00hrs a 10:00hrs')).toBeDefined()
+    expect(screen.getByText('12:00hrs a 13:00hrs')).toBeDefined()
+    expect(screen.getByText('10:00hrs a 11:00hrs')).toBeDefined()
+    expect(
+      Array.from(container.querySelectorAll('a')).map((link) => link.getAttribute('href'))
+    ).toEqual([
+      'https://example.org/one',
+      'https://example.org/two',
+      'https://example.org/three'
+    ])
     expect(container.textContent).not.toContain('2026-10-03')
     expect(container.textContent).not.toContain('2026-10-04')
   })

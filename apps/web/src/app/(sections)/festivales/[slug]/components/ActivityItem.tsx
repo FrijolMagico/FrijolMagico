@@ -1,4 +1,4 @@
-import { ChevronDown, MapPin } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 
 import { ActivityRegistrationCta } from './activity-registration-affordance'
 import { ActivityDescription } from './activity-description'
@@ -12,81 +12,118 @@ interface ActivityItemProps {
   isEditionPast?: boolean
 }
 
-const hasDetails = (activity: FestivalActivity) =>
-  Boolean(activity.ubicacion || activity.descripcion)
+const EMPTY_EDITOR_MARKUP =
+  /<\/?(?:p|ul|ol|li|strong|em|s|code|a)\b[^>]*>|<br\b[^>]*\/?>/gi
+const EMPTY_EDITOR_SPACE = /(?:&nbsp;|&#160;|&#xA0;)/gi
+
+const hasDescription = (description: string | null) =>
+  Boolean(
+    description
+      ?.replace(EMPTY_EDITOR_MARKUP, '')
+      .replace(EMPTY_EDITOR_SPACE, '')
+      .trim()
+  )
 
 export const ActivityItem = ({ activity }: ActivityItemProps) => {
-  const details = hasDetails(activity)
-  const multipleOccurrences = activity.ocurrencias.length > 1
+  const details = hasDescription(activity.descripcion)
+  const occurrence = activity.ocurrencias[0]
+  const timeRange = occurrence
+    ? formatOccurrenceTimeRange(
+        occurrence.hora_inicio,
+        occurrence.duracion_minutos
+      )
+    : null
 
   return (
     <article className='bg-palette-background border-palette-primary group relative max-w-[calc(100%-1rem)] min-w-[16rem] rounded-lg border sm:max-w-xs'>
       <div className='bg-palette-primary absolute -z-10 size-full translate-x-1.5 translate-y-1.5 rounded-lg duration-300 group-hover:translate-0' />
 
-      <div className='px-4 pt-3'>
+      {activity.registration && occurrence && (
+        <div className='absolute -top-5 -right-3 z-30'>
+          <ActivityRegistrationCta
+            registration={activity.registration}
+            url={occurrence.registration_url ?? null}
+          />
+        </div>
+      )}
+
+      <div
+        className={`relative z-20 min-w-0 break-words px-4 pt-3 ${
+          activity.registration && occurrence ? 'pr-28' : ''
+        }`}
+      >
         <ActivityArtistLink
           pseudonym={activity.participante_pseudonimo}
           catalogSlug={activity.catalogo_slug}
           avatarUrl={activity.avatar_url}
           rrss={activity.rrss}
           email={activity.correo}
+          className='max-w-full break-words text-palette-primary/70 text-sm'
         />
       </div>
 
-      <div className='px-4 py-3'>
-        {activity.titulo && (
-          <h3 className='text-palette-foreground text-base leading-none font-semibold'>
-            {activity.titulo}
-          </h3>
-        )}
-
-        <ul className='mt-2 space-y-3'>
-          {activity.ocurrencias.map((occurrence, index) => {
-            const timeRange = formatOccurrenceTimeRange(
-              occurrence.hora_inicio,
-              occurrence.duracion_minutos
-            )
-            return (
-              <li key={occurrence.id ?? `${occurrence.fecha}-${index}`}>
-                {multipleOccurrences && (
-                  <p className='text-palette-foreground text-sm'>
-                    Bloque {index + 1}:{timeRange ? ` ${timeRange}` : ''}
-                  </p>
-                )}
-                {!multipleOccurrences && timeRange && (
-                  <p className='text-palette-foreground text-sm'>{timeRange}</p>
-                )}
-                {activity.registration && (
-                  <ActivityRegistrationCta
-                    registration={activity.registration}
-                    url={occurrence.registration_url ?? null}
-                  />
-                )}
-              </li>
-            )
-          })}
-        </ul>
-      </div>
-
-      {details && (
+      {details ? (
         <details className='group/details'>
-          <summary className='flex w-full cursor-pointer items-center justify-between border-t px-4 py-2 text-left marker:content-none'>
-            <span className='text-palette-foreground/70 text-sm'>Detalles</span>
+          <summary className="before:content-[''] before:absolute before:inset-0 before:z-10 before:cursor-pointer flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-3 text-left marker:content-none">
+            <div className='min-w-0 flex-1'>
+              {activity.titulo && (
+                <h3 className='text-palette-foreground text-base leading-none font-semibold'>
+                  {activity.titulo}
+                </h3>
+              )}
+              {(timeRange || activity.ubicacion) && (
+                <div
+                  className={`${activity.titulo ? 'mt-2' : 'mt-1'} space-y-0.5 leading-tight`}
+                >
+                  {timeRange && (
+                    <p className='text-palette-foreground/70 leading-tight text-sm'>
+                      {timeRange}
+                    </p>
+                  )}
+                  {activity.ubicacion && (
+                    <p className='text-palette-foreground/60 leading-tight text-sm'>
+                      {activity.ubicacion}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
             <ChevronDown
               className='text-palette-foreground/40 size-5 shrink-0 transition-transform duration-200 group-open/details:rotate-180'
               aria-hidden='true'
             />
           </summary>
-          <div className='border-palette-primary/20 h-full overflow-hidden border-t px-4 pt-3 pb-4'>
-            {activity.ubicacion && (
-              <div className='mb-2 flex items-center gap-1.5 text-sm'>
-                <MapPin className='size-4' aria-hidden='true' />
-                <span>{activity.ubicacion}</span>
-              </div>
-            )}
+          <div
+            data-disclosure-content
+            className='relative z-20 pointer-events-none [&>*]:pointer-events-auto border-palette-primary/20 h-full overflow-hidden border-t px-4 pt-3 pb-4'
+          >
             <ActivityDescription description={activity.descripcion} />
           </div>
         </details>
+      ) : (
+        <div className='px-4 py-3'>
+          {activity.titulo && (
+            <h3 className='text-palette-foreground text-base leading-none font-semibold'>
+              {activity.titulo}
+            </h3>
+          )}
+          {(timeRange || activity.ubicacion) && (
+            <div
+              className={`${activity.titulo ? 'mt-2' : 'mt-1'} space-y-0.5 leading-tight`}
+            >
+              {timeRange && (
+                <p className='text-palette-foreground/70 leading-tight text-sm'>
+                  {timeRange}
+                </p>
+              )}
+              {activity.ubicacion && (
+                <p className='text-palette-foreground/60 leading-tight text-sm'>
+                  {activity.ubicacion}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
       )}
     </article>
   )
