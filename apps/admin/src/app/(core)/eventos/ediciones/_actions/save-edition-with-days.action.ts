@@ -14,6 +14,8 @@ import {
 import type { ActionState } from '@/shared/types/actions'
 import {
   CATALOG_CACHE_TAG,
+  CATALOG_EDITION_DATES_CACHE_TAG,
+  CATALOG_PARTICIPATION_CACHE_TAG,
   EDITION_CACHE_TAG,
   EDITION_DAY_CACHE_TAG
 } from '@frijolmagico/cache-tags'
@@ -53,7 +55,7 @@ export async function saveEditionWithDaysAction(
 
     const slug = toSlug(`${evento?.slug ?? 'edicion'}-${numeroEdicion}`)
     let catalogDatesChanged = id === null && days.length > 0
-    let catalogEditionChanged = false
+    let catalogEditionChanged = id === null
 
     await db.transaction(async (tx) => {
       let edicionId = id
@@ -159,8 +161,16 @@ export async function saveEditionWithDaysAction(
         tag: EDITION_CACHE_TAG
       })
     }
-    if (catalogDatesChanged || catalogEditionChanged) {
+    if (catalogEditionChanged) {
       void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
+      void revalidateWebCacheBestEffort({
+        tag: CATALOG_PARTICIPATION_CACHE_TAG
+      })
+    }
+    if (catalogDatesChanged) {
+      void revalidateWebCacheBestEffort({
+        tag: CATALOG_EDITION_DATES_CACHE_TAG
+      })
     }
 
     return { success: true }

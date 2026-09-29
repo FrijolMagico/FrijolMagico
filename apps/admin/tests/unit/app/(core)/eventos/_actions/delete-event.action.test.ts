@@ -56,6 +56,13 @@ describe('deleteEventAction catalog freshness', () => {
     expect(invalidations).toContain('web:catalogo:artistas')
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'eventos' })
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas' })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: 'catalogo:artistas:participaciones'
+    })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: 'catalogo:artistas:fechas-edicion'
+    })
+    expect(revalidateWebCache).toHaveBeenCalledTimes(4)
   })
 
   test('does not invalidate tags when the event ID does not exist', async () => {

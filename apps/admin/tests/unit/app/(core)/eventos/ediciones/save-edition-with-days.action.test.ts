@@ -115,6 +115,12 @@ describe('saveEditionWithDaysAction catalog freshness', () => {
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: 'catalogo:artistas'
     })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: 'catalogo:artistas:participaciones'
+    })
+    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalledWith({
+      tag: 'catalogo:artistas:fechas-edicion'
+    })
     expect(invalidations).toContain('local:ediciones')
     expect(invalidations).toContain('local:ediciones:dias')
   })
@@ -128,6 +134,39 @@ describe('saveEditionWithDaysAction catalog freshness', () => {
     expect(result.success).toBe(true)
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: 'catalogo:artistas'
+    })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: 'catalogo:artistas:participaciones'
+    })
+    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalledWith({
+      tag: 'catalogo:artistas:fechas-edicion'
+    })
+  })
+
+  test('invalidates only edition-date catalog data when a date changes', async () => {
+    existingDates = [{ fecha: '2026-06-10' }]
+    const result = await saveEditionWithDaysAction(
+      { success: true },
+      {
+        ...payload,
+        days: [
+          {
+            tempId: 'day-1',
+            existingId: 9,
+            fecha: '2026-06-11',
+            horaInicio: '10:00',
+            horaFin: '18:00',
+            modalidad: 'presencial',
+            lugarId: null
+          }
+        ]
+      }
+    )
+
+    expect(result.success).toBe(true)
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledTimes(1)
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: 'catalogo:artistas:fechas-edicion'
     })
   })
 

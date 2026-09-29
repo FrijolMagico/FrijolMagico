@@ -57,6 +57,13 @@ describe('deleteEditionAction catalog freshness', () => {
     expect(invalidations).toContain('web:catalogo:artistas')
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'ediciones' })
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas' })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: 'catalogo:artistas:participaciones'
+    })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: 'catalogo:artistas:fechas-edicion'
+    })
+    expect(revalidateWebCache).toHaveBeenCalledTimes(4)
   })
 
   test('does not invalidate tags when the edition ID does not exist', async () => {

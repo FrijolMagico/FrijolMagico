@@ -16,10 +16,13 @@ const db = {
   }),
   update: () => ({
     set: (values: { nombre?: string }) => ({
-      where: async () => {
-        if (failUpdate) throw new Error('database update failed')
-        if (values.nombre !== undefined) eventName = values.nombre
-      }
+      where: () => ({
+        returning: async () => {
+          if (failUpdate) throw new Error('database update failed')
+          if (values.nombre !== undefined) eventName = values.nombre
+          return [{ id: 1 }]
+        }
+      })
     })
   })
 }
@@ -59,6 +62,10 @@ describe('updateEventAction catalog freshness', () => {
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: 'catalogo:artistas'
     })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: 'catalogo:artistas:participaciones'
+    })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledTimes(2)
     expect(updateTag).toHaveBeenCalledWith('eventos')
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'eventos' })
   })

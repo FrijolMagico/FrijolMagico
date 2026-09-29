@@ -13,6 +13,7 @@ import {
 import type { ActionState } from '@/shared/types/actions'
 import {
   CATALOG_CACHE_TAG,
+  CATALOG_PARTICIPATION_CACHE_TAG,
   EVENT_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 import {
@@ -54,13 +55,21 @@ export async function updateEventAction(
       .where(eq(event.id, data.id))
       .limit(1)
 
-    await db.update(event).set(parsed.data).where(eq(event.id, data.id))
+    const updatedEvents = await db
+      .update(event)
+      .set(parsed.data)
+      .where(eq(event.id, data.id))
+      .returning({ id: event.id })
 
     if (
+      updatedEvents.length > 0 &&
       parsed.data.nombre !== undefined &&
       existingEvent?.nombre !== parsed.data.nombre
     ) {
       void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
+      void revalidateWebCacheBestEffort({
+        tag: CATALOG_PARTICIPATION_CACHE_TAG
+      })
     }
 
     updateTag(EVENT_CACHE_TAG)

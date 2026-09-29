@@ -10,6 +10,8 @@ import type { ActionState } from '@/shared/types/actions'
 import { revalidateWebCache } from '@/shared/lib/web-invalidation'
 import {
   CATALOG_CACHE_TAG,
+  CATALOG_EDITION_DATES_CACHE_TAG,
+  CATALOG_PARTICIPATION_CACHE_TAG,
   EDITION_CACHE_TAG,
   EDITION_DAY_CACHE_TAG
 } from '@frijolmagico/cache-tags'
@@ -46,12 +48,16 @@ export async function deleteEditionAction(
       tag: EDITION_CACHE_TAG
     })
   }
-  try {
-    await revalidateWebCache({ tag: CATALOG_CACHE_TAG })
-  } catch {
-    console.error('[delete-edition] Web cache sync failed', {
-      tag: CATALOG_CACHE_TAG
-    })
+  for (const tag of [
+    CATALOG_CACHE_TAG,
+    CATALOG_PARTICIPATION_CACHE_TAG,
+    CATALOG_EDITION_DATES_CACHE_TAG
+  ]) {
+    try {
+      await revalidateWebCache({ tag })
+    } catch {
+      console.error('[delete-edition] Web cache sync failed', { tag })
+    }
   }
 
   return { success: true }

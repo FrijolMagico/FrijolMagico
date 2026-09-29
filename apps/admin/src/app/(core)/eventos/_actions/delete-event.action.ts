@@ -7,7 +7,12 @@ import { db } from '@frijolmagico/database/orm'
 import { events } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import type { ActionState } from '@/shared/types/actions'
-import { CATALOG_CACHE_TAG, EVENT_CACHE_TAG } from '@frijolmagico/cache-tags'
+import {
+  CATALOG_CACHE_TAG,
+  CATALOG_EDITION_DATES_CACHE_TAG,
+  CATALOG_PARTICIPATION_CACHE_TAG,
+  EVENT_CACHE_TAG
+} from '@frijolmagico/cache-tags'
 import { revalidateWebCache } from '@/shared/lib/web-invalidation'
 
 const { event } = events
@@ -38,12 +43,16 @@ export async function deleteEventAction(id: number): Promise<ActionState> {
         tag: EVENT_CACHE_TAG
       })
     }
-    try {
-      await revalidateWebCache({ tag: CATALOG_CACHE_TAG })
-    } catch {
-      console.error('[event-crud] Web cache sync failed', {
-        tag: CATALOG_CACHE_TAG
-      })
+    for (const tag of [
+      CATALOG_CACHE_TAG,
+      CATALOG_PARTICIPATION_CACHE_TAG,
+      CATALOG_EDITION_DATES_CACHE_TAG
+    ]) {
+      try {
+        await revalidateWebCache({ tag })
+      } catch {
+        console.error('[event-crud] Web cache sync failed', { tag })
+      }
     }
     return { success: true }
   } catch (error) {
