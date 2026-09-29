@@ -1,6 +1,10 @@
 import { describe, expect, test } from 'bun:test'
+import { resolvePresenterText } from '@/core/eventos/participaciones/_components/activity-presenter-fields'
+import { ARTIST_STATUS } from '@/core/artistas/_constants'
+import type { ArtistLookup } from '@/core/eventos/participaciones/_types/participations.types'
 import {
   activityFormSchema,
+  activityPresenterDatabaseValues,
   parseActivityPresenterDatabaseValues
 } from '@/core/eventos/participaciones/_schemas/activity.schema'
 
@@ -20,7 +24,6 @@ const validTalk = {
     cupos: null,
     horaInicio: '',
     ubicacion: '',
-    presenterMode: 'none',
     presenterNombre: '',
     presenterArtistaId: null,
     presenterPseudonimoId: null
@@ -29,38 +32,116 @@ const validTalk = {
 }
 
 describe('activity presenter validation', () => {
-  test('accepts a free presenter name for a talk', () => {
-    const result = activityFormSchema.safeParse({
-      ...validTalk,
-      detail: { ...validTalk.detail, presenterMode: 'name', presenterNombre: '  Ada Lovelace  ' }
+  test('resolves unique exact pseudonyms and fails closed for case-insensitive collisions', () => {
+    const artists: ArtistLookup[] = [
+      {
+        id: 10,
+        pseudonym: 'Primary',
+        statusId: ARTIST_STATUS.ACTIVE,
+        pseudonyms: [
+          { id: 101, pseudonym: 'Ada', isPrimary: true },
+          { id: 102, pseudonym: 'Lovelace', isPrimary: false }
+        ]
+      },
+      {
+        id: 20,
+        pseudonym: 'Other',
+        statusId: ARTIST_STATUS.ACTIVE,
+        pseudonyms: [{ id: 201, pseudonym: 'ADA', isPrimary: true }]
+      },
+      {
+        id: 30,
+        pseudonym: 'Cancelled',
+        statusId: ARTIST_STATUS.CANCELLED,
+        pseudonyms: [{ id: 301, pseudonym: 'Grace', isPrimary: true }]
+      }
+    ]
+
+    expect(resolvePresenterText('  Lovelace  ', artists)).toEqual({
+      type: 'linked', artistId: 10, pseudonymId: 102
     })
-    expect(result.success).toBe(true)
+    expect(resolvePresenterText(' ada ', artists)).toEqual({
+      type: 'free', presenterNombre: 'ada'
+    })
+    expect(resolvePresenterText('Grace', artists)).toEqual({
+      type: 'free', presenterNombre: 'Grace'
+    })
+    expect(resolvePresenterText('  ', artists)).toEqual({ type: 'none' })
   })
 
-  test('requires a name or a complete artist and pseudonym selection', () => {
+  test('accepts either a free presenter name or a complete artist-pseudonym link', () => {
     expect(activityFormSchema.safeParse({
       ...validTalk,
-      detail: { ...validTalk.detail, presenterMode: 'name' }
+      detail: { ...validTalk.detail, presenterNombre: '  Ada Lovelace  ' }
+    }).success).toBe(true)
+    expect(activityFormSchema.safeParse({
+      ...validTalk,
+      detail: {
+        ...validTalk.detail,
+        presenterArtistaId: 10,
+        presenterPseudonimoId: 21
+      }
+    }).success).toBe(true)
+  })
+
+  test('rejects incomplete or mixed presenter shapes', () => {
+    expect(activityFormSchema.safeParse({
+      ...validTalk,
+      detail: { ...validTalk.detail, presenterNombre: 'Ada', presenterArtistaId: 10 }
     }).success).toBe(false)
     expect(activityFormSchema.safeParse({
       ...validTalk,
-      detail: { ...validTalk.detail, presenterMode: 'artist', presenterArtistaId: 10 }
+      detail: { ...validTalk.detail, presenterArtistaId: 10 }
     }).success).toBe(false)
+    expect(activityFormSchema.safeParse({
+      ...validTalk,
+      detail: { ...validTalk.detail, presenterNombre: '   ' }
+    }).success).toBe(true)
   })
 
   test('rejects presenters on non-talk activities and for bands', () => {
     expect(activityFormSchema.safeParse({
       ...validTalk,
       tipoActividadId: 1,
-      detail: { ...validTalk.detail, presenterMode: 'name', presenterNombre: 'Ada' }
+      detail: { ...validTalk.detail, presenterNombre: 'Ada' }
     }).success).toBe(false)
     expect(activityFormSchema.safeParse({
       ...validTalk,
       participantType: 'banda',
       tipoActividadId: 3,
       entity: { artistaId: null, agrupacionId: null, bandaId: 2 },
-      detail: { ...validTalk.detail, presenterMode: 'name', presenterNombre: 'Ada' }
+      detail: { ...validTalk.detail, presenterNombre: 'Ada' }
     }).success).toBe(false)
+  })
+
+  test('maps form presenter data to the mutually exclusive database shape', () => {
+    expect(activityPresenterDatabaseValues({
+      presenterNombre: '  Ada Lovelace  ',
+      presenterArtistaId: null,
+      presenterPseudonimoId: null
+    }, true)).toEqual({
+      presenterNombre: 'Ada Lovelace',
+      presenterArtistaId: null,
+      presenterPseudonimoId: null
+    })
+    expect(activityPresenterDatabaseValues({
+      presenterNombre: '',
+      presenterArtistaId: 10,
+      presenterPseudonimoId: 21
+    }, true)).toEqual({
+      presenterNombre: null,
+      presenterArtistaId: 10,
+      presenterPseudonimoId: 21
+    })
+    expect(activityPresenterDatabaseValues({
+      presenterNombre: 'Ada',
+      presenterArtistaId: null,
+      presenterPseudonimoId: null
+    }, false)).toEqual({
+      presenterNombre: null,
+      presenterArtistaId: null,
+      presenterPseudonimoId: null
+    })
   })
 
   test('server parser rejects malformed links and non-talk presenter values', () => {

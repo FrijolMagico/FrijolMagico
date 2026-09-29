@@ -103,7 +103,6 @@ export function CreateActivityDialog({
         titulo: '',
         descripcion: '',
         duracionMinutos: null,
-        presenterMode: 'none',
         presenterNombre: '',
         presenterArtistaId: null,
         presenterPseudonimoId: null,
@@ -254,7 +253,6 @@ export function CreateActivityDialog({
                     field.onChange(nextTipo)
                     if (nextTipo === PARTICIPANT_TYPE.BANDA) {
                       clearRegistration(methods)
-                      methods.setValue('detail.presenterMode', 'none', { shouldDirty: true, shouldValidate: true })
                       methods.setValue('detail.presenterNombre', '', { shouldDirty: true })
                       methods.setValue('detail.presenterArtistaId', null, { shouldDirty: true })
                       methods.setValue('detail.presenterPseudonimoId', null, { shouldDirty: true })
@@ -361,6 +359,9 @@ export function CreateActivityDialog({
                 }}
               />
             </Field>
+            {selectedType === ACTIVITY_TYPES.CHARLA && (
+              <ActivityPresenterFields methods={methods} artistas={artistas} disabled={isSubmitting} />
+            )}
             </>
           )}
 
@@ -373,6 +374,10 @@ export function CreateActivityDialog({
               placeholder='Buscar agrupación...'
               emptyText='No hay agrupaciones disponibles'
             />
+          )}
+
+          {selectedType === ACTIVITY_TYPES.CHARLA && tipo === PARTICIPANT_TYPE.AGRUPACION && (
+            <ActivityPresenterFields methods={methods} artistas={artistas} disabled={isSubmitting} />
           )}
 
           {tipo === PARTICIPANT_TYPE.BANDA && (
@@ -404,7 +409,6 @@ export function CreateActivityDialog({
                       clearRegistration(methods)
                     }
                     if (Number(val) !== ACTIVITY_TYPES.CHARLA) {
-                      methods.setValue('detail.presenterMode', 'none', { shouldDirty: true, shouldValidate: true })
                       methods.setValue('detail.presenterNombre', '', { shouldDirty: true })
                       methods.setValue('detail.presenterArtistaId', null, { shouldDirty: true })
                       methods.setValue('detail.presenterPseudonimoId', null, { shouldDirty: true })
@@ -609,9 +613,6 @@ export function CreateActivityDialog({
               methods={methods}
               disabled={isSubmitting}
             />
-          )}
-          {tipo !== PARTICIPANT_TYPE.BANDA && selectedType === ACTIVITY_TYPES.CHARLA && (
-            <ActivityPresenterFields methods={methods} artistas={artistas} disabled={isSubmitting} />
           )}
         </FieldGroup>
 

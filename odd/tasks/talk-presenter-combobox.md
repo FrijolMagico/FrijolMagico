@@ -1,0 +1,16 @@
+# Talk presenter combobox
+
+Objective: Replace the talk presenter mode + name/artist selectors in admin participaciones with one editable combobox, placed under the activity artist pseudonym (first column), or under the participant selector when the participation is not an individual artist. A chosen pseudonym stores both its artist and pseudonym IDs so public links resolve to the artist; unmatched typed text remains a free name.
+
+User decisions: list all active pseudonyms of eligible non-cancelled artists; exact selection writes artist+pseudonym; typed exact match ignores case (trim whitespace); unmatched text is free name; remove explicit presenterMode select and derive values; non-individual talk placement directly under participant selector. If case-insensitive matching is ambiguous across case-distinct active pseudonyms, fail closed to free name rather than linking the wrong artist. Keep all existing active-pseudonym/server validation.
+
+DAL constraints: no DB query per keystroke, no full-table search, no new LIKE/subquery, no extra rows read for combobox search. Reuse page's existing `getArtistsLookup()` cached lookup and filter/resolve in memory. User approved debt scope: unify duplicated presenter-shape validation, replace literal activity type 2 with ACTIVITY_TYPES.CHARLA, remove redundant artistStatus join in getArtistsLookup after checking artist.estadoId NOT NULL/FK. Do not restructure other DALs or narrow shared artists RSC payload in this task (used by other dialogs). No new migration; presenter columns already exist. Public web query already links through presenter artist catalog slug.
+
+Branch/delivery: continue on active `feat/festival-schedule-ui`, accumulating task commits on the same branch; no new branch/worktree. No push/PR. Keep reviewable work units and tests alongside behavior.
+
+TDD: strict TDD because target files have existing tests; record RED/GREEN/refactor evidence. Exact admin runner: `bun run test --filter=@frijolmagico/admin` from repository root. Then `bun run type-check --filter=@frijolmagico/admin`, `bun run lint --filter=@frijolmagico/admin`, `git diff --check`. Never run DB seed/migration or connect to live DB.
+
+## Tasks
+
+- [x] T1. Replace presenter mode with editable pseudonym/free-text combobox; show all active pseudonyms for eligible artists; unique trimmed case-insensitive match stores artist+pseudonym IDs; unmatched/ambiguous casing stays free text; clear means none. Place beneath activity artist pseudonym, or beneath participant selector for collective talks; preserve non-talk/band restrictions. Remove mode resets/hydration, unify presenter shape validation and use ACTIVITY_TYPES.CHARLA. Strict TDD RED observed; admin suite 672 passed, type-check passed, lint 0 errors/3 unrelated artist warnings, diff-check passed; independent verifier confirmed placement, form mapping, no per-keystroke query, and test discovery after moving under tests/unit. No browser interaction test; resolver logic is unit-tested. Commit pending.
+- [~] T2. Make `getArtistsLookup` select `artist.estadoId` directly and remove only redundant status join; contract verifies direct projection and remaining joins. `estadoId` is NOT NULL FK. No new query/search/subquery; no query-plan rows-read measurement run. Admin suite 672 passed, type-check/lint and diff-check passed. Commit pending.

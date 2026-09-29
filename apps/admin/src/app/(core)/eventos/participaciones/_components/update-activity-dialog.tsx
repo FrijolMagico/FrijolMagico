@@ -105,9 +105,6 @@ export function UpdateActivityDialog({
         titulo: activity?.detail?.titulo ?? '',
         descripcion: activity?.detail?.descripcion ?? '',
         duracionMinutos: activity?.detail?.duracionMinutos ?? null,
-        presenterMode: activity?.detail?.presenterNombre
-          ? 'name'
-          : activity?.detail?.presenterArtistaId != null ? 'artist' : 'none',
         presenterNombre: activity?.detail?.presenterNombre ?? '',
         presenterArtistaId: activity?.detail?.presenterArtistaId ?? null,
         presenterPseudonimoId: activity?.detail?.presenterPseudonimoId ?? null,
@@ -294,6 +291,9 @@ export function UpdateActivityDialog({
               />
             </Field>
           )}
+          {!isBand && selectedType === ACTIVITY_TYPES.CHARLA && (
+            <ActivityPresenterFields methods={methods} artistas={artistas} disabled={isSubmitting} />
+          )}
           <Field>
             <FieldLabel>Tipo</FieldLabel>
             <Controller
@@ -308,7 +308,6 @@ export function UpdateActivityDialog({
                       clearRegistration(methods)
                     }
                     if (Number(val) !== ACTIVITY_TYPES.CHARLA) {
-                      methods.setValue('detail.presenterMode', 'none', { shouldDirty: true, shouldValidate: true })
                       methods.setValue('detail.presenterNombre', '', { shouldDirty: true })
                       methods.setValue('detail.presenterArtistaId', null, { shouldDirty: true })
                       methods.setValue('detail.presenterPseudonimoId', null, { shouldDirty: true })
@@ -538,9 +537,6 @@ export function UpdateActivityDialog({
               methods={methods}
               disabled={isSubmitting}
             />
-          )}
-          {!isBand && selectedType === ACTIVITY_TYPES.CHARLA && (
-            <ActivityPresenterFields methods={methods} artistas={artistas} disabled={isSubmitting} />
           )}
         </FieldGroup>
 
