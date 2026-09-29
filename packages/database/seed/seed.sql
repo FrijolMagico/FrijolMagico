@@ -651,7 +651,7 @@ VALUES (7, 4, '2017-04-23', '14:00', 50);
 --   - Posters: festivales/frijol-magico/{i|ii}/afiche-123456789.webp
 --   - Avatares: artistas/{slug}/avatar-123456789.webp (rotando los 15 existentes)
 --
--- La edición VII (Recolectando Semillas) queda como la edición ACTIVA:
+-- La edición TEST (Recolectando Semillas) queda como la edición ACTIVA:
 --   published = 1 y fechas futuras (2026-10-09/10) para que getActiveFestival()
 --   la seleccione.
 -- =============================================================================
@@ -1104,7 +1104,7 @@ VALUES (75, 80, 'a75', 0, 1, 'Creadora de contenido visual para redes, con enfoq
 -- =============================================================================
 -- EVENTO EDICIONES (III–VII) — 5 festivales nuevos
 -- Posters reutilizados del CDN dev (i / ii).
--- VII es la edición ACTIVA: published=1 y fechas futuras.
+-- TEST es la edición ACTIVA: published=1 y fechas futuras.
 -- =============================================================================
 INSERT INTO evento_edicion (id, evento_id, nombre, numero_edicion, slug, poster_url, poster_path, poster_version, published, created_at, updated_at)
 VALUES (3, 1, NULL, 'III', 'frijol-magico-iii', 'festivales/frijol-magico/i/afiche-123456789.webp', 'festivales/frijol-magico/i/afiche-123456789.webp', '123456789', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
@@ -1115,7 +1115,7 @@ VALUES (5, 1, 'I Aniversario', 'V', 'frijol-magico-v', 'festivales/frijol-magico
 INSERT INTO evento_edicion (id, evento_id, nombre, numero_edicion, slug, poster_url, poster_path, poster_version, published, created_at, updated_at)
 VALUES (6, 1, 'Descubriendo nuevas raíces', 'VI', 'frijol-magico-vi', 'festivales/frijol-magico/ii/afiche-123456789.webp', 'festivales/frijol-magico/ii/afiche-123456789.webp', '123456789', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
 INSERT INTO evento_edicion (id, evento_id, nombre, numero_edicion, slug, poster_url, poster_path, poster_version, published, created_at, updated_at)
-VALUES (7, 1, 'Recolectando Semillas', 'VII', 'frijol-magico-vii', 'festivales/frijol-magico/i/afiche-123456789.webp', 'festivales/frijol-magico/i/afiche-123456789.webp', '123456789', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
+VALUES (7, 1, 'Recolectando Semillas', 'TEST', 'frijol-magico-test', 'festivales/frijol-magico/i/afiche-123456789.webp', 'festivales/frijol-magico/i/afiche-123456789.webp', '123456789', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
 
 -- =============================================================================
 -- EVENTO EDICION DIAS

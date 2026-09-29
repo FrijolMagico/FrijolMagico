@@ -240,7 +240,7 @@ describe('complete activity seed contract', () => {
     ])
   })
 
-  test('festival VII scheduled occurrences fit the three-lane daily window', async () => {
+  test('TEST edition scheduled occurrences fit the three-lane daily window', async () => {
     const client = await freshSeededDatabase()
     const result = await client.execute(`
       SELECT occurrence.id AS occurrence_id, a.id AS activity_id,
@@ -298,6 +298,33 @@ describe('complete activity seed contract', () => {
       }
       expect(peak).toBeLessThanOrEqual(3)
     }
+  })
+
+  test('seeded TEST edition preserves its public identity', async () => {
+    const client = await freshSeededDatabase()
+    const result = await client.execute(`
+      SELECT id, numero_edicion, slug, nombre, published
+      FROM evento_edicion
+      WHERE id = 7
+    `)
+
+    expect(
+      result.rows.map((row) => ({
+        id: Number(row.id),
+        numero_edicion: String(row.numero_edicion),
+        slug: String(row.slug),
+        nombre: String(row.nombre),
+        published: Number(row.published)
+      }))
+    ).toEqual([
+      {
+        id: 7,
+        numero_edicion: 'TEST',
+        slug: 'frijol-magico-test',
+        nombre: 'Recolectando Semillas',
+        published: 1
+      }
+    ])
   })
 
   test('complete seed preserves foreign-key integrity', async () => {

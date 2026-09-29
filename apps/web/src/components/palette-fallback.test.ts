@@ -73,5 +73,9 @@ describe('palette CSS fallbacks', () => {
       '--theme-palette-link': '#e664cd',
       '--theme-palette-shadow': '#003c91'
     })
+
+    expect(declarationsFor("[data-palette='ffm-test']")).toEqual(
+      declarationsFor("[data-palette='ffm-xvi']")
+    )
   })
 })
