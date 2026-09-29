@@ -2,6 +2,8 @@ import { create } from 'zustand'
 import type { ArtistOption, MemberDraftItem } from '../_types/collective.types'
 
 interface UpdateMemberPatch {
+  pseudonymId?: number | null
+  pseudonym?: string
   role?: string | null
   active?: boolean
 }

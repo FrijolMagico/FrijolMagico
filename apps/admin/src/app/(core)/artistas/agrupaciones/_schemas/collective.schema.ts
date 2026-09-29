@@ -40,6 +40,14 @@ export const collectiveFormSchema = z.object({
 
 export const memberDraftItemSchema = z.object({
   artistId: z.number().int().positive(),
+  pseudonymId: z
+    .number()
+    .int()
+    .positive()
+    .nullable()
+    .refine((pseudonymId) => pseudonymId !== null, {
+      error: 'El pseudónimo es obligatorio'
+    }),
   role: z.string().nullable(),
   active: z.boolean()
 })
@@ -55,7 +63,7 @@ export const upsertCollectivePayloadSchema = z.object({
 export type CollectiveInsertInput = z.infer<typeof collectiveInsertSchema>
 export type CollectiveUpdateInput = z.infer<typeof collectiveUpdateSchema>
 export type CollectiveFormInput = z.infer<typeof collectiveFormSchema>
-export type MemberDraftItemInput = z.infer<typeof memberDraftItemSchema>
-export type UpsertCollectivePayloadInput = z.infer<
+export type MemberDraftItemInput = z.input<typeof memberDraftItemSchema>
+export type UpsertCollectivePayloadInput = z.input<
   typeof upsertCollectivePayloadSchema
 >

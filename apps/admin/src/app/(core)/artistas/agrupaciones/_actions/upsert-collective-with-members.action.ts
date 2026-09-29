@@ -4,7 +4,7 @@ import 'server-only'
 import { updateTag } from 'next/cache'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
-import { and, eq, sql } from 'drizzle-orm'
+import { and, eq, isNull, sql } from 'drizzle-orm'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import {
   COLLECTIVE_ACTIVE_CACHE_TAG,
@@ -18,7 +18,7 @@ import {
   type UpsertCollectivePayloadInput
 } from '../_schemas/collective.schema'
 
-const { collective, collectiveArtist } = artist
+const { collective, collectiveArtist, artistPseudonym } = artist
 
 function normalizeOptionalText(value: string) {
   const trimmedValue = value.trim()
@@ -53,6 +53,30 @@ export async function upsertCollectiveWithMembersAction(
     } = parsedPayload.data
 
     await db.transaction(async (transaction) => {
+      const validatePseudonym = async (
+        artistId: number,
+        pseudonymId: number | null
+      ) => {
+        if (pseudonymId === null) {
+          throw new Error('El pseudónimo es obligatorio')
+        }
+
+        const [activePseudonym] = await transaction
+          .select({ id: artistPseudonym.id })
+          .from(artistPseudonym)
+          .where(
+            and(
+              eq(artistPseudonym.id, pseudonymId),
+              eq(artistPseudonym.artistaId, artistId),
+              isNull(artistPseudonym.deletedAt)
+            )
+          )
+
+        if (!activePseudonym) {
+          throw new Error('El pseudónimo seleccionado no pertenece al artista o está inactivo')
+        }
+      }
+
       await transaction
         .update(collective)
         .set({
@@ -65,6 +89,8 @@ export async function upsertCollectiveWithMembersAction(
         .where(eq(collective.id, collectiveId))
 
       for (const pendingAdd of pendingAdds) {
+        await validatePseudonym(pendingAdd.artistId, pendingAdd.pseudonymId)
+
         const [existingCollectiveMember] = await transaction
           .select({
             collectiveId: collectiveArtist.agrupacionId,
@@ -82,6 +108,7 @@ export async function upsertCollectiveWithMembersAction(
           await transaction
             .update(collectiveArtist)
             .set({
+              pseudonimoId: pendingAdd.pseudonymId,
               activo: true,
               rol: pendingAdd.role
             })
@@ -98,15 +125,19 @@ export async function upsertCollectiveWithMembersAction(
         await transaction.insert(collectiveArtist).values({
           agrupacionId: collectiveId,
           artistaId: pendingAdd.artistId,
+          pseudonimoId: pendingAdd.pseudonymId,
           rol: pendingAdd.role,
           activo: true
         })
       }
 
       for (const pendingUpdate of pendingUpdates) {
+        await validatePseudonym(pendingUpdate.artistId, pendingUpdate.pseudonymId)
+
         await transaction
           .update(collectiveArtist)
           .set({
+            pseudonimoId: pendingUpdate.pseudonymId,
             rol: pendingUpdate.role,
             activo: pendingUpdate.active
           })

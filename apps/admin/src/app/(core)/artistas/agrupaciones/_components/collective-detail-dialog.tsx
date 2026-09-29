@@ -50,6 +50,7 @@ function getDefaultValues(
 function mapMemberToPayload(member: MemberDraftItem): MemberDraftItemInput {
   return {
     artistId: member.artistId,
+    pseudonymId: member.pseudonymId,
     role: member.role,
     active: member.active
   }
@@ -82,7 +83,8 @@ function getPendingUpdates(
 
       return Boolean(
         originalMember &&
-        (originalMember.role !== currentMember.role ||
+        (originalMember.pseudonymId !== currentMember.pseudonymId ||
+          originalMember.role !== currentMember.role ||
           originalMember.active !== currentMember.active)
       )
     })
