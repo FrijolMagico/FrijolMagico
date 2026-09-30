@@ -25,8 +25,9 @@
     }
   },
   "scripts": {
-    "migrate": "bun run --env-file .env.local drizzle-kit migrate --config drizzle.config.ts",
-    "new": "bun run --env-file .env.local drizzle-kit generate --custom --name",
+    "migrate:staging": "bun run scripts/migrate-target.ts staging",
+    "migrate:production": "bun run scripts/migrate-target.ts production",
+    "new": "bun run drizzle-kit generate --custom --name",
     "seed": "bun run scripts/seed.ts",
     "reset:dev-r2": "NODE_ENV=development bun run --env-file .env.local scripts/clean-devr2/reset-dev-r2.ts",
     "dev": "turso dev --db-file local.dev.db",
