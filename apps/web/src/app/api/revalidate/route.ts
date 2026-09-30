@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
   const path = request.nextUrl.searchParams.get('path')
 
   if (tag) {
-    revalidateTag(tag, { expire: 0 })
+    revalidateTag(tag, 'max')
   }
   if (path) {
     revalidatePath(path)

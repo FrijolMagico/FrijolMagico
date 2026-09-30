@@ -1,6 +1,22 @@
-import { describe, expect, test } from 'bun:test'
+import { describe, expect, mock, test } from 'bun:test'
 
-import { FEATURED_ARTISTS_QUERY } from './getFeaturedArtists'
+import { FEATURED_ARTISTS_CACHE_TAG } from '@frijolmagico/cache-tags'
+
+let cacheOptions: unknown
+const unstableCacheMock = mock(
+  (
+    callback: () => Promise<unknown>,
+    _keyParts: string[],
+    options: unknown
+  ) => {
+    cacheOptions = options
+    return callback
+  }
+)
+
+mock.module('next/cache', () => ({ unstable_cache: unstableCacheMock }))
+
+const { FEATURED_ARTISTS_QUERY } = await import('./getFeaturedArtists')
 
 describe('FEATURED_ARTISTS_QUERY', () => {
   test('resolves featured artist names from the primary pseudonym association', () => {
@@ -14,5 +30,13 @@ describe('FEATURED_ARTISTS_QUERY', () => {
       'LEFT JOIN artista_pseudonimo primary_pseudonym ON primary_pseudonym.id = app.pseudonimo_id'
     )
     expect(FEATURED_ARTISTS_QUERY).not.toContain('ac.pseudonimo_id')
+  })
+
+  test('configures tagged caching without a timed revalidation interval', () => {
+    expect(cacheOptions).toEqual({
+      tags: [FEATURED_ARTISTS_CACHE_TAG],
+      revalidate: false
+    })
+    expect(unstableCacheMock).toHaveBeenCalledTimes(1)
   })
 })
