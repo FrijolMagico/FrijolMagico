@@ -7,7 +7,9 @@ import { z } from 'zod'
 
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
+import { CATALOG_BASE_CACHE_TAG } from '@frijolmagico/cache-tags'
 import { toRawAssetPath } from '@frijolmagico/utils/cdn'
+import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
 import {
   INVALID_RECEIPT,
   verifyArtistAvatarUploadReceipt
@@ -29,6 +31,15 @@ function receiptSecret(): string {
     return getAssetReceiptSecret()
   } catch {
     throw new Error(INVALID_RECEIPT)
+  }
+}
+
+async function invalidateActivatedCatalog(claims: {
+  requestedActive?: boolean
+  catalogId?: number
+}): Promise<void> {
+  if (claims.requestedActive && claims.catalogId) {
+    await revalidateWebCacheBestEffort({ tag: CATALOG_BASE_CACHE_TAG })
   }
 }
 
@@ -102,7 +113,10 @@ export async function persistArtistAvatarAction(
       claims.path,
       claims.version
     )
-    if (committed) return { success: true, data: committed }
+    if (committed) {
+      await invalidateActivatedCatalog(claims)
+      return { success: true, data: committed }
+    }
 
     let avatar: UploadArtistAvatarData
     try {
@@ -170,6 +184,7 @@ export async function persistArtistAvatarAction(
       if (!recovered) throw error
       avatar = recovered
     }
+    await invalidateActivatedCatalog(claims)
     return { success: true, data: avatar }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Error desconocido'

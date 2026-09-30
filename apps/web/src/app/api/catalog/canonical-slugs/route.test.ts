@@ -1,6 +1,53 @@
-import { describe, expect, test } from 'bun:test'
+import { describe, expect, mock, test } from 'bun:test'
 
-import { CANONICAL_CATALOG_SLUGS_QUERY, createCanonicalSlugsGet } from './route'
+import { CATALOG_BASE_CACHE_TAG } from '@frijolmagico/cache-tags'
+
+const cacheConfigurations: unknown[] = []
+const executeQuery = mock(async () => ({ data: [{ slug: 'current-name' }] }))
+
+mock.module('next/cache', () => ({
+  unstable_cache: (
+    callback: () => Promise<unknown>,
+    keyParts: string[],
+    options: unknown
+  ) => {
+    cacheConfigurations.push({ keyParts, options })
+    let cached = false
+    let value: unknown
+    return async () => {
+      if (!cached) {
+        value = await callback()
+        cached = true
+      }
+      return value
+    }
+  }
+}))
+mock.module('next/cache.js', () => ({
+  unstable_cache: (
+    callback: () => Promise<unknown>,
+    keyParts: string[],
+    options: unknown
+  ) => {
+    cacheConfigurations.push({ keyParts, options })
+    let cached = false
+    let value: unknown
+    return async () => {
+      if (!cached) {
+        value = await callback()
+        cached = true
+      }
+      return value
+    }
+  }
+}))
+mock.module('@frijolmagico/database/client', () => ({ executeQuery }))
+
+const {
+  CANONICAL_CATALOG_SLUGS_QUERY,
+  createCanonicalSlugsGet,
+  getCachedCanonicalCatalogSlugs
+} = await import('./route')
 
 describe('canonical catalog slugs route', () => {
   test('selects only active nondeleted canonical slugs without reading full catalog rows', () => {
@@ -10,57 +57,46 @@ describe('canonical catalog slugs route', () => {
     expect(CANONICAL_CATALOG_SLUGS_QUERY).not.toMatch(/correo|imagen|participacion/i)
   })
 
-  test('serves a fresh snapshot with only public slugs', async () => {
-    let freshReads = 0
-    const get = createCanonicalSlugsGet(
-      async () => ({ slugs: ['current-name'], loadedAt: 10_000 }),
-      async () => { freshReads++; return { slugs: [], loadedAt: 10_000 } },
-      () => 60_000
-    )
-    const response = await get()
+  test('uses the shared cache tag without a time-based TTL', () => {
+    expect(cacheConfigurations).toContainEqual({
+      keyParts: ['canonical-catalog-slugs'],
+      options: {
+        tags: [CATALOG_BASE_CACHE_TAG],
+        revalidate: false
+      }
+    })
+  })
+
+  test('serves the cached compact slug list with no-store response headers', async () => {
+    const response = await createCanonicalSlugsGet(async () => ['current-name'])()
     expect(response.status).toBe(200)
     expect(response.headers.get('cache-control')).toBe('no-store')
     expect(await response.json()).toEqual({ slugs: ['current-name'] })
-    expect(freshReads).toBe(0)
   })
 
-  test('runs a fresh compact SELECT if the cached snapshot is older than 60 seconds', async () => {
-    let freshReads = 0
-    const get = createCanonicalSlugsGet(
-      async () => ({ slugs: ['reassigned-name'], loadedAt: 1000 }),
-      async () => { freshReads++; return { slugs: ['current-name'], loadedAt: 61_002 } },
-      () => 61_002
-    )
-    const response = await get()
-    expect(response.status).toBe(200)
-    expect(await response.json()).toEqual({ slugs: ['current-name'] })
-    expect(freshReads).toBe(1)
+  test('elapsed time does not trigger another database query', async () => {
+    executeQuery.mockClear()
+    const originalDateNow = Date.now
+    let elapsed = 0
+    Date.now = () => elapsed
+    try {
+      const get = createCanonicalSlugsGet(getCachedCanonicalCatalogSlugs)
+      await get()
+      elapsed = 60_001
+      await get()
+      expect(executeQuery).toHaveBeenCalledTimes(1)
+    } finally {
+      Date.now = originalDateNow
+    }
   })
 
-  test('fails closed with 503 if the fresh read fails instead of returning stale slugs', async () => {
-    const get = createCanonicalSlugsGet(
-      async () => ({ slugs: ['reassigned-name'], loadedAt: 1000 }),
-      async () => { throw new Error('private database connection') },
-      () => 61_002
-    )
+  test('fails closed with 503 if the cached database read fails', async () => {
+    const get = createCanonicalSlugsGet(async () => {
+      throw new Error('private database connection')
+    })
     const response = await get()
     expect(response.status).toBe(503)
     expect(response.headers.get('cache-control')).toBe('no-store')
     expect(await response.text()).not.toContain('private database connection')
-  })
-
-  test('rejects a still-expired fresh result and does not serve future-dated snapshots', async () => {
-    const expired = createCanonicalSlugsGet(
-      async () => ({ slugs: ['old'], loadedAt: 0 }),
-      async () => ({ slugs: ['old'], loadedAt: 0 }),
-      () => 60_001
-    )
-    expect((await expired()).status).toBe(503)
-    const future = createCanonicalSlugsGet(
-      async () => ({ slugs: ['old'], loadedAt: 60_002 }),
-      async () => ({ slugs: ['new'], loadedAt: 60_001 }),
-      () => 60_001
-    )
-    expect(await (await future()).json()).toEqual({ slugs: ['new'] })
   })
 })
