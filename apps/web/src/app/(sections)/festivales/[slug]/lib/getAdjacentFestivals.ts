@@ -1,4 +1,4 @@
-import { cacheTag } from 'next/cache'
+import { cacheLife, cacheTag } from 'next/cache'
 
 import {
   EDITION_CACHE_TAG,
@@ -15,7 +15,8 @@ export type { AdjacentFestival } from '../adapters/adjacentFestivalsRepository'
 export async function getAdjacentFestivals(
   slug: string
 ): Promise<AdjacentFestivalsResult> {
-  'use cache'
+  'use cache: remote'
+  cacheLife({ stale: 5 * 60, revalidate: Infinity, expire: Infinity })
   cacheTag(FESTIVALES_CACHE_TAG)
   cacheTag(EDITION_CACHE_TAG)
 

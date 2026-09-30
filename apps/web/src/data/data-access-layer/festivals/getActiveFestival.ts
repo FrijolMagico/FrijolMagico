@@ -1,4 +1,4 @@
-import { cacheTag } from 'next/cache'
+import { cacheLife, cacheTag } from 'next/cache'
 import { EDITION_CACHE_TAG, EVENT_CACHE_TAG } from '@frijolmagico/cache-tags'
 import { executeQuery } from '@frijolmagico/database/client'
 
@@ -12,7 +12,8 @@ export interface ActiveFestivalData {
 }
 
 export async function getActiveFestival() {
-  'use cache'
+  'use cache: remote'
+  cacheLife({ stale: 5 * 60, revalidate: Infinity, expire: Infinity })
   cacheTag(EDITION_CACHE_TAG)
   cacheTag(EVENT_CACHE_TAG)
 

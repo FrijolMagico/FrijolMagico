@@ -5,6 +5,7 @@ import { executeQueryMock } from '@/test-utils/mockDatabase'
 import { getActiveFestival } from './getActiveFestival'
 
 mock.module('next/cache', () => ({
+  cacheLife: mock(() => {}),
   cacheTag: mock(() => {})
 }))
 

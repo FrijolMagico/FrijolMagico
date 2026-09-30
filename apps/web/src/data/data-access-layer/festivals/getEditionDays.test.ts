@@ -5,6 +5,7 @@ import { executeQueryMock } from '@/test-utils/mockDatabase'
 import { getEditionDays } from './getEditionDays'
 
 mock.module('next/cache', () => ({
+  cacheLife: mock(() => {}),
   cacheTag: mock(() => {})
 }))
 

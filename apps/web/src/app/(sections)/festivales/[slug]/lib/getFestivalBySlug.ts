@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { cacheTag } from 'next/cache'
+import { cacheLife, cacheTag } from 'next/cache'
 
 import {
   EDITION_CACHE_TAG,
@@ -12,7 +12,8 @@ import { festivalDetailRepository } from '../adapters/festivalDetailRepository'
 import type { FestivalDetail } from '../../types/festival'
 
 export async function getFestivalBySlug(slug: string): Promise<FestivalDetail> {
-  'use cache'
+  'use cache: remote'
+  cacheLife({ stale: 5 * 60, revalidate: Infinity, expire: Infinity })
   cacheTag(FESTIVALES_CACHE_TAG)
   cacheTag(EVENT_CACHE_TAG)
   cacheTag(EDITION_CACHE_TAG)

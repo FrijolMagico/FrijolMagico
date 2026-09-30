@@ -7,7 +7,10 @@ const getDataSourceMock = mock(() => 'database' as 'database' | 'local')
 mock.module('@/infra/config/dataSourceConfig', () => ({
   getDataSource: getDataSourceMock
 }))
-mock.module('next/cache', () => ({ cacheTag: mock() }))
+mock.module('next/cache', () => ({
+  cacheLife: mock(),
+  cacheTag: mock()
+}))
 
 import { catalogRepository } from './catalogRepository'
 import {
