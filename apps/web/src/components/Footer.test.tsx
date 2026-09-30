@@ -66,4 +66,22 @@ describe('Footer', () => {
     expect(versionText).toBeDefined()
     expect(versionText.textContent).not.toBe('v4.0.0')
   })
+
+  test('keeps branded footer content and only social links during maintenance', () => {
+    const { container } = render(<Footer />)
+
+    expect(screen.getByAltText('Logo de la Asociación Cultural Frijol Mágico')).toBeDefined()
+    expect(screen.getByText(/Frijol Mágico es un espacio/)).toBeDefined()
+
+    const links = Array.from(container.querySelectorAll('a'))
+    expect(links.map((link) => link.textContent?.trim())).toEqual([
+      'Instagram',
+      'Facebook',
+      'Youtube',
+      'Spotify'
+    ])
+    expect(links.every((link) => link.getAttribute('href')?.startsWith('https://'))).toBe(true)
+    expect(screen.queryByText('Navegar')).toBeNull()
+    expect(screen.queryByText('contacto@frijolmagico.cl')).toBeNull()
+  })
 })

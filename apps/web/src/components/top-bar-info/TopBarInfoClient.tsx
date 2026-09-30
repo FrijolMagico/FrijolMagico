@@ -17,9 +17,13 @@ export interface TopBarData {
 
 interface TopBarInfoClientProps {
   data: TopBarData
+  disableInternalCta?: boolean
 }
 
-export const TopBarInfoClient = ({ data }: TopBarInfoClientProps) => {
+export const TopBarInfoClient = ({
+  data,
+  disableInternalCta = false
+}: TopBarInfoClientProps) => {
   const visible = useScrollHide(100)
 
   return (
@@ -41,11 +45,13 @@ export const TopBarInfoClient = ({ data }: TopBarInfoClientProps) => {
           </ReactMarkdown>
         </h2>
       </div>
-      {data.button.active && (
-        <LinkCta href={data.button.href ?? '#'} variant='solid'>
-          {data.button.text}
-        </LinkCta>
-      )}
+      {data.button.active &&
+        data.button.href &&
+        !(disableInternalCta && data.button.href.startsWith('/')) && (
+          <LinkCta href={data.button.href} variant='solid'>
+            {data.button.text}
+          </LinkCta>
+        )}
     </section>
   )
 }

@@ -17,7 +17,6 @@ import { Background } from '@/components/Background'
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
-
 import { cn } from '@/utils/cn'
 import { Footer } from '@/components/Footer'
 

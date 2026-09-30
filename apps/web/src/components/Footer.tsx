@@ -1,7 +1,6 @@
 import { useId } from 'react'
 import Image from 'next/image'
 
-import { paths } from '@/config/paths'
 import siteData from '@/data/site.json'
 import { FissureEdgeDecoration } from '@/components/fissure/FissureEdgeDecoration'
 import { createFissureMaskStyle } from '@/components/fissure/mask'
@@ -11,19 +10,7 @@ import { APP_VERSION } from '@frijolmagico/utils/version'
 import { BackToTop } from './BackToTop'
 import { LinkBtn } from './LinkBtn'
 
-/**
- * Altura del viewBox para el mask y la decoración.
- * Ambos usan el mismo valor para que el estiramiento con
- * preserveAspectRatio="none" sea idéntico y los paths se alineen.
- */
 const FISSURE_VIEWBOX_HEIGHT = 400
-
-const navLinks = [
-  { name: 'Inicio', href: paths.home.path },
-  { name: 'Festivales', href: paths.home.sub.festival.path },
-  { name: 'Catálogo', href: paths.home.sub.catalog.path },
-  { name: 'Nosotros', href: paths.home.sub.about.path }
-]
 
 const socialLinks = [
   { name: 'Instagram', href: siteData.social_media.ig },
@@ -65,7 +52,10 @@ export const Footer = () => {
                     instancias que ayuden a potenciar su trabajo.
                   </p>
                 </section>
-                <nav className='mt-4 flex w-fit flex-col items-center'>
+                <nav
+                  aria-label='Redes sociales'
+                  className='mt-4 flex w-fit flex-col items-center'
+                >
                   <div className='text-background/80 flex items-center justify-center gap-12'>
                     <div className='space-y-2'>
                       <h4 className='wavy-underline text-background uppercase'>
@@ -85,37 +75,14 @@ export const Footer = () => {
                         ))}
                       </ul>
                     </div>
-                    <div className='space-y-2'>
-                      <h4 className='wavy-underline text-background uppercase'>
-                        Navegar
-                      </h4>
-                      <ul>
-                        {navLinks.map((link) => (
-                          <li key={link.name}>
-                            <LinkBtn href={link.href}>{link.name}</LinkBtn>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
                   </div>
-
-                  <a
-                    aria-label=''
-                    className='font-roboto-mono text-background/80 mt-2 text-xs underline-offset-2 hover:underline'
-                    href='mailto:contacto@frijolmagico.cl'
-                  >
-                    contacto@frijolmagico.cl
-                  </a>
                 </nav>
               </div>
               <div className='border-background/20 text-background/50 font-roboto-mono mt-auto grid h-fit border-t py-4 text-center text-xs md:grid-cols-3 md:text-left'>
                 <p>2026 | Asociación Cultural Frijol Mágico </p>
                 <p className='text-center'>v{APP_VERSION}</p>
                 <p className='text-center md:text-right'>
-                  Desarrollado por{' '}
-                  <a target='_blank' href='https://github.com/Strocs'>
-                    Strocsdev
-                  </a>
+                  Desarrollado por Strocsdev
                 </p>
               </div>
             </div>

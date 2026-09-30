@@ -1,21 +1,4 @@
-import { LinkBtn } from '@/components/LinkBtn'
-import { paths } from '@/config/paths'
-import { cn } from '@/utils/cn'
 import Image from 'next/image'
-
-const navItems = [
-  {
-    prefix: 'Historia',
-    name: 'Festivales',
-    href: paths.home.sub.festival.path
-  },
-  {
-    prefix: 'Asociación Cultural',
-    name: 'Nosotros',
-    href: paths.home.sub.about.path
-  },
-  { prefix: 'Artistas', name: 'Catálogo', href: paths.home.sub.catalog.path }
-]
 
 export function HeroSection() {
   return (
@@ -37,27 +20,17 @@ export function HeroSection() {
           generando distintas instancias que ayuden a potenciar su trabajo.
         </p>
       </section>
-      <nav>
-        <ul className='grid gap-4 px-4 md:grid-cols-3'>
-          {navItems.map((item) => {
-            return (
-              <li key={item.name} className={cn('relative text-center')}>
-                <span className='font-roboto-mono text-sm font-light'>
-                  {item.prefix}
-                </span>
-                <LinkBtn
-                  href={item.href}
-                  className='mx-auto'
-                  size='xl'
-                  withArrow
-                >
-                  {item.name}
-                </LinkBtn>
-              </li>
-            )
-          })}
-        </ul>
-      </nav>
+      <section
+        aria-labelledby='maintenance-title'
+        className='space-y-4 px-4 text-center'
+      >
+        <h1 id='maintenance-title' className='text-3xl font-semibold md:text-4xl'>
+          Estamos realizando tareas de mantenimiento
+        </h1>
+        <p className='text-lg text-foreground/70'>
+          Volveremos pronto. Gracias por tu paciencia.
+        </p>
+      </section>
     </header>
   )
 }

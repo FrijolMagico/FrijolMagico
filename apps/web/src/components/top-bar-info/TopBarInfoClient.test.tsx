@@ -21,6 +21,21 @@ describe('TopBarInfoClient', () => {
     expect(html).not.toContain('<button')
   })
 
+  test('maintenance mode suppresses internal CTAs without changing the generic default', () => {
+    const html = renderToStaticMarkup(
+      <TopBarInfoClient
+        data={{
+          text: 'Festival',
+          button: { active: true, text: 'Participa', href: '/participa' }
+        }}
+        disableInternalCta
+      />
+    )
+
+    expect(html).not.toContain('href="/participa"')
+    expect(html).not.toContain('>Participa</a>')
+  })
+
   test('does not insert an inactive CTA', () => {
     const html = renderToStaticMarkup(
       <TopBarInfoClient
