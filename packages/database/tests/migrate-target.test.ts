@@ -16,6 +16,13 @@ const original = Object.fromEntries(keys.map((key) => [key, process.env[key]]))
 const originalPath = process.env.PATH
 const roots: string[] = []
 
+// Test subprocesses use explicit allow-lists and must not inherit NODE_ENV.
+function childEnvironment(values: Omit<NodeJS.ProcessEnv, 'NODE_ENV'>): NodeJS.ProcessEnv {
+  const environment: NodeJS.ProcessEnv = { ...values, NODE_ENV: 'test' }
+  Reflect.deleteProperty(environment, 'NODE_ENV')
+  return environment
+}
+
 async function setup() {
   const root = await mkdtemp(join(tmpdir(), 'migrate-target-test-'))
   roots.push(root)
@@ -76,6 +83,7 @@ describe('explicit migration target', () => {
     expect(env).toContain('TURSO_STAGING_DATABASE_URL=libsql://safe-staging-team.turso.io\n')
     expect(env).toContain('TURSO_STAGING_AUTH_TOKEN=staging-secret\n')
     expect(env).not.toContain('TURSO_MIGRATION_VERIFIED=')
+    expect(env).not.toContain('NODE_ENV=')
     for (const secret of ['production-secret', 'TURSO_PRODUCTION_MIGRATION_CONFIRM=', 'TURSO_DATABASE_URL=', 'TURSO_AUTH_TOKEN=']) {
       expect(env).not.toContain(secret)
     }
@@ -163,7 +171,7 @@ describe('explicit migration target', () => {
       const result = spawnSync(process.execPath, ['--no-env-file', '-e',
         'process.argv = [process.execPath, "drizzle-kit", ' + JSON.stringify(command) + ']; await import("./drizzle.config.ts")'], {
         cwd: join(import.meta.dir, '..'),
-        env: {
+        env: childEnvironment({
           PATH: process.env.PATH,
           TURSO_MIGRATION_TARGET: target,
           TURSO_MIGRATION_VERIFIED: verified,
@@ -174,7 +182,7 @@ describe('explicit migration target', () => {
           TURSO_STAGING_AUTH_TOKEN: process.env.TURSO_STAGING_AUTH_TOKEN,
           TURSO_PRODUCTION_AUTH_TOKEN: process.env.TURSO_PRODUCTION_AUTH_TOKEN,
           TURSO_PRODUCTION_MIGRATION_CONFIRM: process.env.TURSO_PRODUCTION_MIGRATION_CONFIRM
-        },
+        }),
         encoding: 'utf8'
       })
       return result.status
@@ -202,7 +210,7 @@ describe('explicit migration target', () => {
     const result = spawnSync(process.execPath, ['--no-env-file', '-e',
       'process.argv = [process.execPath, "drizzle-kit", "generate"]; const { default: config } = await import("./drizzle.config.ts"); if ("dbCredentials" in config) process.exit(2)'], {
       cwd: join(import.meta.dir, '..'),
-      env: { PATH: process.env.PATH },
+      env: childEnvironment({ PATH: process.env.PATH }),
       encoding: 'utf8'
     })
     expect(result.status).toBe(0)

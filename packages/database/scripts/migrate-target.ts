@@ -17,6 +17,13 @@ const TARGETS = {
 
 type Target = keyof typeof TARGETS
 
+// Preserve the allow-list despite the admin ambient type requiring a NODE_ENV we must omit.
+function filteredEnvironment(values: Omit<NodeJS.ProcessEnv, 'NODE_ENV'>): NodeJS.ProcessEnv {
+  const environment: NodeJS.ProcessEnv = { ...values, NODE_ENV: 'test' }
+  Reflect.deleteProperty(environment, 'NODE_ENV')
+  return environment
+}
+
 function name(value: string | undefined): string {
   if (!value || !/^[a-zA-Z][a-zA-Z0-9_-]*$/.test(value)) {
     throw new Error('Missing or invalid explicit database name')
@@ -82,7 +89,7 @@ export function verifyRemoteName(target: Target, configuredUrl: string, env: Nod
     timeout: 15000,
     maxBuffer: 2048,
     stdio: ['ignore', 'pipe', 'ignore'],
-    env: { PATH: env.PATH || '', HOME: env.HOME || '' }
+    env: filteredEnvironment({ PATH: env.PATH || '', HOME: env.HOME || '' })
   })
   // Do not forward CLI output, stderr, or spawn errors: they may contain secrets.
   if (result.error || result.status !== 0 || !result.stdout) {
@@ -102,8 +109,8 @@ export async function migrateTarget(target: Target, root = PACKAGE_ROOT): Promis
     ['migrate', '--config', 'drizzle.config.ts'], {
       cwd: root,
       shell: false,
-      stdio: ['ignore', 'ignore', 'ignore'],
-      env: {
+      stdio: 'ignore',
+      env: filteredEnvironment({
         PATH: process.env.PATH || '',
         HOME: process.env.HOME || '',
         TURSO_MIGRATION_TARGET: target,
@@ -115,7 +122,7 @@ export async function migrateTarget(target: Target, root = PACKAGE_ROOT): Promis
           TURSO_PRODUCTION_MIGRATION_CONFIRM: process.env.TURSO_PRODUCTION_MIGRATION_CONFIRM
         } : {}),
         [TARGETS[target].token]: credentials.authToken
-      }
+      })
     })
   const code = await new Promise<number | null>((resolveExit, reject) => {
     child.once('error', reject)
