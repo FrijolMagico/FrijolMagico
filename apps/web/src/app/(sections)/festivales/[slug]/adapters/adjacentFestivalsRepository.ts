@@ -38,34 +38,32 @@ export async function adjacentFestivalsRepository(
       [slug]
     )
 
-    if (!error && data && data.length > 0) {
-      const prevRow = data.find((r) => r.direction === 'prev')
-      const nextRow = data.find((r) => r.direction === 'next')
-
-      return {
-        prev: prevRow
-          ? {
-              slug: prevRow.slug,
-              numero_edicion: prevRow.numero_edicion,
-              edicion_nombre: prevRow.edicion_nombre,
-              evento_nombre: prevRow.evento_nombre
-            }
-          : null,
-        next: nextRow
-          ? {
-              slug: nextRow.slug,
-              numero_edicion: nextRow.numero_edicion,
-              edicion_nombre: nextRow.edicion_nombre,
-              evento_nombre: nextRow.evento_nombre
-            }
-          : null
-      }
+    if (error) {
+      throw error
     }
 
-    console.warn(
-      '⚠️ Database query failed for adjacent festivals, returning empty'
-    )
+    const prevRow = data?.find((r) => r.direction === 'prev')
+    const nextRow = data?.find((r) => r.direction === 'next')
+
+    return {
+      prev: prevRow
+        ? {
+            slug: prevRow.slug,
+            numero_edicion: prevRow.numero_edicion,
+            edicion_nombre: prevRow.edicion_nombre,
+            evento_nombre: prevRow.evento_nombre
+          }
+        : null,
+      next: nextRow
+        ? {
+            slug: nextRow.slug,
+            numero_edicion: nextRow.numero_edicion,
+            edicion_nombre: nextRow.edicion_nombre,
+            evento_nombre: nextRow.evento_nombre
+          }
+        : null
+    }
   }
 
-  return { prev: null, next: null }
+  throw new Error(`Unsupported data source: ${source}`)
 }

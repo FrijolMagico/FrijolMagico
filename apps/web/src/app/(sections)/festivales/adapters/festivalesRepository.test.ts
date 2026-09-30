@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, mock, test } from 'bun:test'
+import { beforeEach, describe, expect, test } from 'bun:test'
 
 import { executeQueryMock } from '@/test-utils/mockDatabase'
 
@@ -51,19 +51,11 @@ describe('festivalesRepository', () => {
     expect(result).toEqual([])
   })
 
-  test('returns empty array when query fails (no mock fallback)', async () => {
-    const consoleSpy = mock(() => {})
-    globalThis.console.warn = consoleSpy
+  test('propagates query failures', async () => {
+    const failure = new Error('DB connection failed')
+    executeQueryMock.mockResolvedValueOnce({ data: [], error: failure })
 
-    executeQueryMock.mockResolvedValueOnce({
-      data: [],
-      error: new Error('DB connection failed')
-    })
-
-    const result = await festivalesRepository()
-
-    expect(result).toEqual([])
-    expect(consoleSpy).toHaveBeenCalled()
+    await expect(festivalesRepository()).rejects.toBe(failure)
   })
 
 

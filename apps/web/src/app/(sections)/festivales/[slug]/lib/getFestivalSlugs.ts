@@ -7,17 +7,6 @@ JOIN evento e ON e.id = ee.evento_id
 WHERE ee.published = 1
 ORDER BY ee.id DESC`
 
-/**
- * Slugs mock que corresponden a las claves existentes en
- * `festivalDetailData.mock.ts`, usados como fallback cuando
- * source='local' y la DB no esta disponible (dev/CI sin local.db).
- *
- * Para source='database' (produccion) fail closed: si la DB remota
- * no responde, retorna [] para que el build falle y no se silencie
- * un error real con datos mock.
- */
-const MOCK_FESTIVAL_SLUGS = ['edicion-xv-1', 'edicion-3-2']
-
 export async function getFestivalSlugs(): Promise<string[]> {
   const source = getDataSource({ prod: 'database' })
 
@@ -27,30 +16,14 @@ export async function getFestivalSlugs(): Promise<string[]> {
       []
     )
 
-    if (!error && data && data.length > 0) {
-      return data
-        .map((row) => row.slug)
-        .filter((slug): slug is string => Boolean(slug && slug.trim()))
-    }
-
     if (error) {
-      console.warn(
-        '⚠️ Database query failed for festival slugs:',
-        error.message
-      )
-    } else {
-      console.warn('⚠️ No festival slugs found in database')
+      throw error
     }
 
-    // En desarrollo (source='local'): si la DB no esta disponible,
-    // cae a mock para que el build funcione sin local.db.
-    if (source === 'local') {
-      return MOCK_FESTIVAL_SLUGS
-    }
-
-    // En produccion (source='database'): fail closed.
-    return []
+    return (data ?? [])
+      .map((row) => row.slug)
+      .filter((slug): slug is string => Boolean(slug && slug.trim()))
   }
 
-  return []
+  throw new Error(`Unsupported data source: ${source}`)
 }

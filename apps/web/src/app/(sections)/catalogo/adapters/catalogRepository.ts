@@ -14,26 +14,14 @@ export async function catalogRepository(): Promise<CatalogArtist[]> {
   const source = getDataSource({ prod: 'database', dev: 'local' })
 
   if (source === 'local' || source === 'database') {
-    let rows: [CatalogBaseRow[], ParticipationRow[], EditionDateRow[]]
-    try {
-      rows = await Promise.all([
-        getCachedCatalogBaseRows(),
-        getCachedCatalogParticipationRows(),
-        getCachedCatalogEditionDateRows()
-      ])
-    } catch (error) {
-      console.warn(
-        '⚠️ Database query failed, falling back to mock data:',
-        error instanceof Error ? error.message : error
-      )
-      return getDataFromCatalogMock()
-    }
-
-    const [baseRows, participationRows, editionDateRows] = rows
+    const [baseRows, participationRows, editionDateRows] = await Promise.all([
+      getCachedCatalogBaseRows(),
+      getCachedCatalogParticipationRows(),
+      getCachedCatalogEditionDateRows()
+    ])
 
     if (baseRows.length === 0) {
-      console.warn('⚠️ No data found in database, falling back to mock data')
-      return getDataFromCatalogMock()
+      return []
     }
 
     return mapCatalogArtists(

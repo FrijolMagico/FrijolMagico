@@ -86,15 +86,21 @@ describe('catalogRepository', () => {
     }])
   })
 
-  test('falls back to mock data when any cached query reports an error', async () => {
+  test('propagates cached query failures', async () => {
+    const failure = new Error('date query failed')
     executeQueryMock.mockImplementation(async (query) => ({
       data: [],
-      error: query === CATALOG_EDITION_DATES_QUERY ? new Error('date query failed') : null
+      error: query === CATALOG_EDITION_DATES_QUERY ? failure : null
     }))
 
-    const artists = await catalogRepository()
+    await expect(catalogRepository()).rejects.toBe(failure)
+    expect(executeQueryMock).toHaveBeenCalledTimes(3)
+  })
 
-    expect(artists.length).toBeGreaterThan(0)
+  test('returns an empty list when the successful base query has no rows', async () => {
+    executeQueryMock.mockResolvedValue({ data: [], error: null })
+
+    await expect(catalogRepository()).resolves.toEqual([])
     expect(executeQueryMock).toHaveBeenCalledTimes(3)
   })
 })
