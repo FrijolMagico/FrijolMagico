@@ -1,120 +1,64 @@
 import { describe, expect, test } from 'bun:test'
 import { NextRequest } from 'next/server'
 
-import { createCatalogAliasProxy } from './proxy'
+import { createMaintenanceProxy } from './proxy'
 
-const loadCanonicalSlugs = async () => ['current-name']
+describe('maintenance proxy', () => {
+  const proxy = createMaintenanceProxy()
 
-describe('catalog alias proxy', () => {
-  test('skips the alias resolver for an active canonical slug, even on alias conflict', async () => {
-    let resolverCalls = 0
-    const proxy = createCatalogAliasProxy(async () => {
-      resolverCalls++
-      return 'another-name'
-    }, loadCanonicalSlugs)
-
-    const response = await proxy(
-      new NextRequest('https://example.test/catalogo/current-name?ref=campaign')
+  test('redirects every ordinary subroute to the maintenance page at root', () => {
+    const response = proxy(
+      new NextRequest('https://example.test/catalogo/artist?ref=campaign')
     )
 
-    expect(response.status).toBe(200)
-    expect(response.headers.get('location')).toBeNull()
-    expect(resolverCalls).toBe(0)
+    expect(response.status).toBe(307)
+    expect(response.headers.get('location')).toBe('https://example.test/')
   })
 
-  test('returns an HTTP 308 with the canonical Location for an active alias', async () => {
-    const proxy = createCatalogAliasProxy(
-      async (slug) => (slug === 'old-name' ? 'current-name' : null),
-      loadCanonicalSlugs
-    )
-
-    const response = await proxy(
-      new NextRequest('https://example.test/catalogo/old-name')
-    )
-
-    expect(response.status).toBe(308)
-    expect(response.headers.get('location')).toBe(
-      'https://example.test/catalogo/current-name'
-    )
-  })
-
-  test('preserves the original query string when redirecting', async () => {
-    const proxy = createCatalogAliasProxy(
-      async () => 'current-name',
-      loadCanonicalSlugs
-    )
-
-    const response = await proxy(
-      new NextRequest('https://example.test/catalogo/old-name?ref=campaign&page=2')
-    )
-
-    expect(response.status).toBe(308)
-    expect(response.headers.get('location')).toBe(
-      'https://example.test/catalogo/current-name?ref=campaign&page=2'
-    )
-  })
-
-  test('passes through when the resolver returns the incoming slug', async () => {
-    const proxy = createCatalogAliasProxy(async (slug) => slug, async () => [])
-
-    const response = await proxy(
-      new NextRequest('https://example.test/catalogo/current-name')
-    )
+  test('keeps the root page available', () => {
+    const response = proxy(new NextRequest('https://example.test/'))
 
     expect(response.status).toBe(200)
     expect(response.headers.get('location')).toBeNull()
   })
 
-  test('passes missing aliases through without redirecting', async () => {
-    let resolverCalls = 0
-    const proxy = createCatalogAliasProxy(async () => {
-      resolverCalls++
-      return null
-    }, loadCanonicalSlugs)
-
-    const response = await proxy(
-      new NextRequest('https://example.test/catalogo/unknown-name')
-    )
+  test.each([
+    '/_next/static/chunks/app.js',
+    '/_next/image?url=%2Flogo.png',
+    '/OG.png',
+    '/favicon.ico',
+    '/robots.txt',
+    '/fonts/canarina/Canarina-Chica.woff2',
+    '/fonts/canarina/Canarina-Grande.woff2',
+    '/fonts/canarina/Canarina-Mediana.woff2',
+    '/fonts/sections/festivales/2025/SuperFortress.woff2',
+    '/sections/banner/banner-xvi.png',
+    '/sections/festivales/2025/images/BACK.webp',
+    '/sections/festivales/2025/images/CITY.webp',
+    '/sections/festivales/2025/images/GROUND.webp',
+    '/sections/festivales/2025/images/PJ.webp',
+    '/sections/festivales/2025/images/ROCKS.webp',
+    '/sections/nosotros/equipo.webp',
+    '/sections/nosotros/frijol-1.webp',
+    '/sections/nosotros/frijol-2.webp'
+  ])('keeps required framework and public static resources available: %s', (pathname) => {
+    const response = proxy(new NextRequest(`https://example.test${pathname}`))
 
     expect(response.status).toBe(200)
     expect(response.headers.get('location')).toBeNull()
-    expect(resolverCalls).toBe(1)
   })
 
-  test('falls back to the alias resolver when the internal endpoint fails', async () => {
-    let resolverCalls = 0
-    const proxy = createCatalogAliasProxy(
-      async () => {
-        resolverCalls++
-        return 'current-name'
-      },
-      async () => { throw new Error('Timeout') }
-    )
-    const response = await proxy(
-      new NextRequest('https://example.test/catalogo/old-name?ref=campaign')
-    )
+  test.each([
+    '/api',
+    '/api/health',
+    '/api/catalog/canonical-slugs',
+    '/catalogo/artist.json',
+    '/private/report.csv',
+    '/unknown/logo.svg'
+  ])('redirects API and non-public dotted routes to root: %s', (pathname) => {
+    const response = proxy(new NextRequest(`https://example.test${pathname}`))
 
-    expect(resolverCalls).toBe(1)
-    expect(response.status).toBe(308)
-    expect(response.headers.get('location')).toBe(
-      'https://example.test/catalogo/current-name?ref=campaign'
-    )
-  })
-
-  test('a refreshed canonical set after reassignment restores alias resolution', async () => {
-    let slugs = ['old-name']
-    const proxy = createCatalogAliasProxy(
-      async () => 'current-name',
-      async () => slugs
-    )
-    const request = () => new NextRequest('https://example.test/catalogo/old-name')
-
-    expect((await proxy(request())).status).toBe(200)
-    slugs = ['current-name']
-    const response = await proxy(request())
-    expect(response.status).toBe(308)
-    expect(response.headers.get('location')).toBe(
-      'https://example.test/catalogo/current-name'
-    )
+    expect(response.status).toBe(307)
+    expect(response.headers.get('location')).toBe('https://example.test/')
   })
 })
