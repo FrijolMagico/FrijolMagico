@@ -23,7 +23,7 @@ describe('catalog read cache boundaries', () => {
 
     expect(new Set(layers.map(([, tag]) => tag)).size).toBe(3)
 
-    for (const [functionName, tagConstant, tag] of layers) {
+    for (const [functionName, tagConstant] of layers) {
       const functionSource = cacheSource.match(
         new RegExp(`export async function ${functionName}\\([\\s\\S]*?\\n}`)
       )?.[0]

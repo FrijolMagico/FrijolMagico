@@ -127,6 +127,7 @@ export function ActiveFestivalBanner({
           />
           <img
             {...compactImgProps}
+            alt='Banner Festival Frijol Mágico XVI'
             fetchPriority='high'
             className={`h-full w-full object-cover transition-[scale,filter] duration-500 group-hover:scale-105 group-hover:blur-sm motion-reduce:transition-none ${mobileActiveClasses}`}
           />

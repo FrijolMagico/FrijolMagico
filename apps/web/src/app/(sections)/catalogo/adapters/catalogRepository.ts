@@ -1,15 +1,9 @@
 import { getDataSource } from '@/infra/config/dataSourceConfig'
 
 import { mapCatalogArtists } from './mappers/catalogMapper'
-import { getDataFromCatalogMock } from './mocks/catalogData.mock'
 
 import type { CatalogArtist } from '../types/catalog'
 import { composeCatalogRows } from './queries/catalog-batched'
-import type {
-  CatalogBaseRow,
-  EditionDateRow,
-  ParticipationRow
-} from './queries/catalog-batched'
 import {
   getCachedCatalogBaseRows,
   getCachedCatalogEditionDateRows,

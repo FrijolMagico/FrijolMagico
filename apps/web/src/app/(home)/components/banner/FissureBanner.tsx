@@ -11,7 +11,6 @@ import {
 import { createFissureMaskStyle } from '@/components/fissure/mask'
 
 const DEFAULT_LANDSCAPE_HEIGHT = 640
-const DEFAULT_COMPACT_HEIGHT = 840
 
 interface FissureBannerProps {
   children?: ReactNode

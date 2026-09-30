@@ -103,7 +103,8 @@ export async function updateArtistaWithPseudonymsAction(
   }
 
   const { historialFlags, ...updateFields } = input.data
-  const { pseudonimo: _pseudonimo, ...generalFields } = updateFields
+  const { pseudonimo, ...generalFields } = updateFields
+  void pseudonimo
   const parsedArtist = artistUpdateSchema.safeParse(generalFields)
   if (!parsedArtist.success) {
     return {

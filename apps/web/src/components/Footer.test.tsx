@@ -1,6 +1,6 @@
 import { describe, expect, mock, test } from 'bun:test'
 import { createElement } from 'react'
-import type { FC, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { render, screen } from '@testing-library/react'
 
 // ── Mock deep dependencies ──
