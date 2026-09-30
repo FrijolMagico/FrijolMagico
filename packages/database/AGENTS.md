@@ -5,21 +5,27 @@ Drizzle ORM + Turso (libSQL) database package.
 ## Tech Stack
 
 - **ORM:** Drizzle ORM
-- **Database:** Turso (libSQL) - SQLite for production, local file for dev
+- **Database:** Turso (libSQL) for staging and production; separate local snapshots for dev and production-data inspection
 - **Client:** @libsql/client
 - **Schema:** TypeScript with drizzle-orm/sqlite-core
 
 ## Commands
 
 ```bash
-bun run migrate
+bun run pull:staging       # read staging into local.dev.db
+bun run pull:production    # read production into local.db
+bun run dev                # serve local.dev.db
+bun run prod               # serve local.db
+bun run migrate:staging    # remote write: staging only
+bun run migrate:production # remote write: production only, separately authorized
 bun run new <name>
-bun run seed
 bun run lint
 bun run type-check
 ```
 
-- **migrate/seed:** Destructive. See Security in root AGENTS.md.
+- Stop all local database users before pulling. Pulls overwrite only the selected local file after validation; keep a private backup if rollback matters. Never commit snapshots, dumps, credentials, or SQLite WAL/SHM sidecars.
+- Remote migrations require separate human authorization for staging and then production. Production also requires `TURSO_PRODUCTION_MIGRATION_CONFIRM=migrate:<production-name>`; this confirmation is not authorization. Verify identity, pending migrations, backup and remote state before writes or retries. Do not run destructive remote database operations without explicit permission. See [README.md](./README.md) for variables, CLI login, and rollback.
+- No public seed, generic migrate, or dev R2 reset command. `seed/seed.sql` remains a test fixture/reference only. The legacy `scripts/clean-devr2/reset-dev-r2.ts` preserves seed assets, not real staging snapshot assets; never run it manually against `local.dev.db`. It aborts before R2 activity when that file exists. Any replacement cleanup needs snapshot-aware review and separate authorization.
 
 ## Architecture
 
@@ -63,7 +69,7 @@ data/                          # Reference SQL files (not migrations)
 └── ...
 
 seed/
-└── seed.sql                   # Seed data
+└── seed.sql                   # Test fixture/reference, not a local refresh workflow
 ```
 
 ### Dual Client Pattern
@@ -83,10 +89,9 @@ Tables via `drizzle-orm/sqlite-core`.
 
 ## Environment Variables
 
-```bash
-TURSO_DATABASE_URL=https://[org].turso.io  # or file:local.db
-TURSO_AUTH_TOKEN=your-auth-token           # Required for remote
-```
+- Pull: `TURSO_STAGING_DATABASE_NAME` or `TURSO_PRODUCTION_DATABASE_NAME` and separate Turso CLI authentication (`turso auth login`). No app URL or token.
+- Migrate: both `TURSO_STAGING_DATABASE_NAME` / `TURSO_PRODUCTION_DATABASE_NAME` and `TURSO_STAGING_DATABASE_URL` / `TURSO_PRODUCTION_DATABASE_URL`, plus the selected destination's `TURSO_STAGING_AUTH_TOKEN` or `TURSO_PRODUCTION_AUTH_TOKEN`. Production additionally requires `TURSO_PRODUCTION_MIGRATION_CONFIRM`.
+- Generic `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN` are rejected for pulls and migrations. Keep all credentials private.
 
 ## Data Files (Reference)
 

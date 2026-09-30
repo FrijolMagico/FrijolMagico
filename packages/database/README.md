@@ -1,206 +1,62 @@
 # @frijolmagico/database
 
-Database package for the Frijol Mágico monorepo. Provides access to Turso/libSQL via two interfaces:
+Acceso a Turso/libSQL desde el monorepo: Drizzle ORM para consultas relacionales y cliente SQL para consultas directas. Para desarrollo, `local.dev.db` es una copia real de **staging** y `local.db` una copia real de **producción**; no son bases de datos de prueba generadas con seed.
 
-- **Raw Client (libSQL)**: Direct SQL queries
-- **Drizzle ORM Client**: Type-safe queries with relations
+## Camino rápido: copiar staging para desarrollo
 
-## Installation
+Desde `packages/database/`, con `turso`, `sqlite3` y `bun` disponibles:
 
-This is an internal monorepo package:
+1. Cerrá `bun run dev`/`bun run prod` y cualquier otro proceso que use los archivos locales. No actualices una base abierta.
+2. Autenticate en la CLI con `turso auth login` (sesión de CLI separada de los tokens de la app) y verificá por fuera del dump que estás en la organización y base esperadas. Configurá `TURSO_STAGING_DATABASE_NAME` con el nombre exacto de staging. No configures `TURSO_DATABASE_URL` ni `TURSO_AUTH_TOKEN` para el pull.
+3. Con autorización para leer staging, ejecutá `bun run pull:staging`. El comando obtiene `turso db shell <nombre> .dump`, importa con `sqlite3`, verifica integridad, claves foráneas, metadatos de migración y un esquema mínimo, y recién entonces reemplaza `local.dev.db`.
+4. Verificá el origen y los datos localmente antes de ejecutar `bun run dev` (`turso dev --db-file local.dev.db`). La validación estructural no demuestra de qué base vino el dump.
 
-```bash
-bun install
-```
+Para una copia de producción, obtené **autorización de lectura de producción por separado**, configurá `TURSO_PRODUCTION_DATABASE_NAME`, cerrá ambos servidores locales y ejecutá `bun run pull:production`; verificá origen y contenido antes de `bun run prod` (`turso dev --db-file local.db`). Los nombres de staging y producción deben ser distintos. Un pull no migra ni escribe en Turso remoto; **sí reemplaza el archivo local seleccionado**. Si falla antes del reemplazo, conserva el archivo anterior. Un dump válido pero del origen equivocado no se puede detectar solo por el esquema.
 
-## Package Exports
+## Comandos y destinos
 
-```typescript
-import { db } from '@frijolmagico/database/orm' // Drizzle ORM client
-import { executeQuery } from '@frijolmagico/database/client' // Raw SQL client
-import { schema } from '@frijolmagico/database/schema' // Schema exports
-```
+| Comando (desde `packages/database/`) | Destino / efecto |
+| --- | --- |
+| `bun run pull:staging` | Lee staging; valida y reemplaza solo `local.dev.db`. |
+| `bun run pull:production` | Lee producción; valida y reemplaza solo `local.db`. |
+| `bun run dev` / `bun run prod` | Sirve el archivo local de staging / producción, respectivamente. No conecta a Turso Cloud. |
+| `bun run migrate:staging` | **Escribe** migraciones versionadas en staging remoto, con autorización específica. |
+| `bun run migrate:production` | **Escribe** migraciones versionadas en producción remota, con autorización humana nueva y confirmación explícita. |
+| `bun run new <name>` | Genera una migración SQL custom para editar y revisar. |
+| `bun run test --filter=@frijolmagico/database` (desde la raíz) | Ejecuta los tests del paquete vía Turbo. |
 
-## Project Structure
+No existe `bun run seed`, `bun run migrate` genérico ni `bun run reset:dev-r2` público. `seed/seed.sql` se conserva como fixture de tests y referencia histórica, **no** como procedimiento de desarrollo ni como datos para sincronizar con Turso. El script heredado `scripts/clean-devr2/reset-dev-r2.ts` solo protege assets del seed, no los del snapshot real: **no lo ejecutes manualmente contra `local.dev.db`**. Si ese archivo existe, el script aborta antes de cualquier acción R2; para limpiar el bucket necesitás un plan nuevo, revisado contra los assets del snapshot y autorizado por separado.
 
-```
-src/                           # Source code
-├── client.ts                  # Raw SQL client (Turso/libSQL)
-├── drizzle.ts                 # Drizzle ORM client
-└── db/
-    ├── schema/                # Table definitions
-    │   ├── core.ts            # Organization, lugar, disciplina
-    │   ├── artist.ts          # Artista, catalogo, agrupacion
-    │   ├── events.ts          # Evento, edicion, actividades
-    │   ├── participations.ts  # Participantes, exposiciones
-    │   ├── auth.ts            # Better Auth tables
-    │   └── index.ts           # Schema exports
-    ├── relations.ts           # Drizzle relations
-    └── types.ts               # Custom types
+## Configuración y migraciones remotas
 
-migrations/                    # Drizzle Kit migrations
-data/                          # Reference SQL files
-seed/                          # Seed data
-scripts/                       # Automation scripts
-├── seed.ts                    # Create local.dev.db from scratch
-```
+La CLI `turso` usa su propia autenticación (`turso auth login`); los tokens de Drizzle **no** la autentican. Guardá credenciales solo en un entorno privado, nunca en Git ni en comandos compartidos. Los pulls requieren únicamente el nombre `TURSO_STAGING_DATABASE_NAME` o `TURSO_PRODUCTION_DATABASE_NAME` del destino correspondiente; rechazan `TURSO_DATABASE_URL` y `TURSO_AUTH_TOKEN` ambientales. No hay que configurar tokens para servir los archivos locales.
 
-## Commands
+Para migrar, configurá **ambos** juegos de identidad y URL, y el token solo del destino que vas a migrar:
 
-```bash
-# Run from packages/database/
+| Destino | Identidad CLI | URL remota (libsql:// o https://) | Token de migración |
+| --- | --- | --- | --- |
+| Staging | `TURSO_STAGING_DATABASE_NAME` | `TURSO_STAGING_DATABASE_URL` | `TURSO_STAGING_AUTH_TOKEN` |
+| Producción | `TURSO_PRODUCTION_DATABASE_NAME` | `TURSO_PRODUCTION_DATABASE_URL` | `TURSO_PRODUCTION_AUTH_TOKEN` |
 
-# Desarrollar con datos curados (seed)
-bun run seed                # Crea local.dev.db: schema + datos mínimos realistas
-bun run dev                 # turso dev --db-file local.dev.db
+Las URL deben identificar el host de la base nombrada y los destinos deben ser distintos. `TURSO_DATABASE_URL` y `TURSO_AUTH_TOKEN` ambientales se rechazan también en migraciones. El wrapper verifica además la URL de la CLI (`turso db show <nombre> --url`) antes de aplicar el mismo directorio `migrations/` al destino seleccionado. Producción requiere `TURSO_PRODUCTION_MIGRATION_CONFIRM=migrate:<nombre-de-producción>`; esta marca **no sustituye** la autorización humana.
 
-# Desarrollar con datos reales (dump de Turso)
-bun run prod                # turso dev --db-file local.db (requiere dump previo)
+Secuencia operativa: revisar el SQL pendiente y el destino, obtener autorización para **staging**, ejecutar `bun run migrate:staging`, verificar el estado remoto; luego solicitar **otra autorización** para producción, revisar respaldo/rollback y ejecutar `bun run migrate:production` con su confirmación exacta. Nunca ejecutes los dos destinos como una sola operación implícita. Un pull posterior permite obtener snapshots compatibles con las migraciones. Ningún comando de este documento se ejecutó contra Turso al actualizar la documentación.
 
-# Migraciones (para deploy a Turso remoto)
-bun run migrate             # Aplica migrations pendientes contra Turso Cloud
-bun run new <name>          # Crea migration custom nueva
+## Privacidad, fallas y rollback
 
-# Utilidades
-bun run lint                # ESLint
-bun run type-check          # TypeScript check
-```
+- `local.dev.db` y `local.db` contienen datos reales privados. No los subas a Git ni compartas dumps, tokens, URLs con secretos o logs con filas. Protegé también cualquier copia, temporal y archivo SQLite `-wal`/`-shm`; cerrá servidores y escritores antes del pull. El comando rechaza sidecars existentes y crea un directorio temporal privado para importar y validar.
+- Antes de reemplazar una copia local útil, conservá un respaldo **privado** fuera del repositorio conforme a la política de datos. Si el contenido nuevo es incorrecto, cerrá los procesos locales y restaurá la copia anterior de forma segura o volvé a obtener el snapshot del origen verificado. No confundas esa recuperación local con rollback remoto.
+- Si una migración remota falla, **detenete** y verificá el estado de migraciones y datos en el destino; no reintentes a ciegas ni ejecutes producción automáticamente. Un rollback remoto exige plan, respaldo y autorización específicos: las migraciones ya aplicadas no se revierten por restaurar un archivo local.
+- La facturación por filas leídas de `.dump` frente a `turso db export` **no está documentada aquí ni verificada por el proveedor**; no prometemos que uno sea más barato. `.dump` omite tablas internas de SQLite; la importación exige metadatos de migración y esquema mínimo, por lo que algunos dumps pueden fallar la validación. Un snapshot de `db export` puede estar desactualizado. Validá frescura, identidad, integridad, esquema y datos antes de usar cualquier exportación alternativa; este script utiliza `.dump`, no `db export`.
 
-### Workflows
-
-#### Desarrollo con datos curados (default)
-
-```bash
-# 1. Crear DB con datos de desarrollo (2 artistas, 1 evento, participaciones)
-bun run seed
-
-# 2. Iniciar servidor local
-bun run dev
-
-# La app apunta a http://127.0.0.1:8080 (local.dev.db)
-```
-
-#### Desarrollo con datos reales (dump de producción)
-
-```bash
-# 1. Dump de Turso remoto a archivo local
-#    (documentado en db/shell de Turso CLI)
-
-# 2. Iniciar servidor local con dump
-bun run prod
-```
-
-> ⚠️ `local.dev.db` y `local.db` son archivos separados. `bun run seed` solo
-> modifica `local.dev.db`. El dump de prod va a `local.db` y nunca es pisado
-> por el seed.
-
-## Usage
-
-### Drizzle ORM Client
+## Uso en código
 
 ```typescript
 import { db } from '@frijolmagico/database/orm'
-import { artista } from '@frijolmagico/database/schema'
-import { eq } from 'drizzle-orm'
-
-// Simple query
-const artistas = await db.select().from(artista)
-
-// With filters
-const activos = await db.select().from(artista).where(eq(artista.estadoId, 1))
-
-// With relations
-const conImagenes = await db.query.artista.findMany({
-  with: {
-    imagenes: true,
-    estado: true
-  }
-})
-
-// Insert
-const [nuevo] = await db
-  .insert(artista)
-  .values({ pseudonimo: 'Nombre', slug: 'nombre' })
-  .returning()
+import { executeQuery } from '@frijolmagico/database/client'
+import { schema } from '@frijolmagico/database/schema'
+import { isNotDeleted } from '@frijolmagico/database/filters'
+import { loadSql } from '@frijolmagico/database/sql'
 ```
 
-### Raw SQL Client
-
-```typescript
-import {
-  executeQuery,
-  executeBatch,
-  executeInsert
-} from '@frijolmagico/database/client'
-
-// Query
-const { data, error } = await executeQuery<{ id: number; nombre: string }>(
-  'SELECT id, nombre FROM artista WHERE estado_id = ?',
-  [1]
-)
-
-// Insert with ID
-const { lastInsertRowid, error } = await executeInsert(
-  'INSERT INTO artista (pseudonimo, slug) VALUES (?, ?)',
-  ['Nombre', 'slug']
-)
-
-// Batch
-await executeBatch([
-  { sql: 'UPDATE artista SET ciudad = ? WHERE id = ?', params: ['Santiago', 1] }
-])
-```
-
-## Schema
-
-26 tables organized by domain:
-
-- **Core**: organizacion, organizacion_equipo, lugar, disciplina
-- **Artists**: artista, artista_imagen, artista_historial, catalogo_artista, agrupacion
-- **Events**: evento, evento_edicion, evento_edicion_dia, evento_edicon_metrica, evento_edicion_snapshot, evento_edicion_postulacion
-- **Participations**: tipo_actividad, modo_ingreso, evento_edicion_participante, participante_exposicion, participante_actividad, actividad
-- **Auth**: user, session, account, verification (Better Auth)
-
-## Migrations
-
-Uses drizzle-kit with custom SQL:
-
-```bash
-# Create migration
-bun run new nombre-migracion
-
-# Edit migrations/000N_nombre-migracion.sql
-# Use --> statement-breakpoint between statements
-
-# Apply
-bun run migrate
-```
-
-## Environment Variables
-
-See `.env.example` in this directory for required variables.
-
-```bash
-cp .env.example .env.local
-```
-
-Key variables:
-
-- `TURSO_DATABASE_URL` - URL de Turso Cloud (para deploy via `migrate`)
-- `TURSO_AUTH_TOKEN` - Token de autenticación para Turso Cloud
-- `TURSO_DATABASE_NAME` - Nombre de la DB en Turso Cloud (para CLI)
-
-  > Para desarrollo local (`seed` + `dev`/`prod`) no se necesita ninguna variable.
-  > El seed usa `file:local.dev.db` directo y `turso dev` no requiere configuración.
-
-## Dual Client Pattern
-
-- **Admin app**: Uses Drizzle ORM for complex relational queries
-- **Web app**: Uses raw SQL for optimized manual queries
-- Both share the same underlying libSQL connection
-
-## See Also
-
-- [Root README](../../README.md) - Project overview
-- [Drizzle ORM Docs](https://orm.drizzle.team/docs/overview)
-- [Turso Docs](https://docs.turso.tech/)
+El esquema vive en `src/db/schema/`; `migrations/` contiene las migraciones versionadas, `data/` SQL de referencia (no migraciones) y `seed/seed.sql` una fixture de tests. Admin utiliza Drizzle ORM; web utiliza el cliente SQL para consultas especializadas. Ver [README raíz](../../README.md) para el resto del monorepo.

@@ -80,11 +80,9 @@ This is a **Turborepo** monorepo with the following architecture:
 
    See each app's README for environment variable details.
 
-4. **Run database migrations**
+4. **Prepare the local staging snapshot**
 
-   ```bash
-   bun run db:migrate
-   ```
+   From `packages/database/`, and only after authorization to read staging, run `bun run pull:staging` to refresh `local.dev.db`. Check [database setup and privacy guidance](packages/database/README.md) first. Remote migrations are separate writes: `bun run migrate:staging` and `bun run migrate:production` each require separate authorization. Do not use the old `bun run db:migrate` command; it fails closed.
 
 5. **Run development servers**
 
@@ -113,8 +111,12 @@ bun run lint:fix               # ESLint with auto-fix
 bun run type-check             # TypeScript check all packages
 bun run format                 # Prettier format
 
-# Database
-bun run db:migrate             # Run pending migrations
+# Database (from packages/database/; remote writes require separate authorization)
+bun run pull:staging           # Refresh local.dev.db from staging (authorized read)
+bun run pull:production        # Refresh local.db from production (separate authorized read)
+bun run migrate:staging        # Remote write to staging only (separate authorization)
+bun run migrate:production     # Remote write to production only (new authorization)
+# bun run db:migrate fails closed; it does not migrate any target
 ```
 
 ### Per-App Commands

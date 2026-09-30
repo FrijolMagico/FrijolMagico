@@ -6,19 +6,21 @@
  *   when preserveSeedAssets is enabled; and
  * - any object under a folder listed in config's excludedFolders.
  *
+ * Retired from public package commands: seed assets are not a safe preserve
+ * set for a real staging snapshot. Never run this script against local.dev.db.
  * Safety guards (fail-closed, in order):
- * 1. Must be invoked from packages/database (`bun run reset:dev-r2`).
- * 2. Development only, strictly: NODE_ENV exactly 'development' (provided
- *    explicitly by the package script) and VERCEL_ENV absent.
- * 3. R2_BUCKET_NAME must match config.devBucketName and R2_ACCOUNT_ID must be
+ * 1. Must be invoked from packages/database.
+ * 2. Abort when local.dev.db exists, before any R2 request or client creation.
+ * 3. Development only: NODE_ENV exactly 'development', VERCEL_ENV absent.
+ * 4. R2_BUCKET_NAME must match config.devBucketName and R2_ACCOUNT_ID must be
  *    a valid https://<account>.r2.cloudflarestorage.com endpoint.
- * 4. There must be something to preserve (seed assets or excluded folders) —
+ * 5. There must be something to preserve (seed assets or excluded folders) —
  *    never clean "blind".
- * 5. Deletion requires an explicit "yes" answer on a TTY; non-TTY aborts.
+ * 6. Deletion requires an explicit "yes" answer on a TTY; non-TTY aborts.
  *
  * After deletion, preserved seed keys are verified with HEAD requests.
  */
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, lstatSync, readFileSync } from 'node:fs'
 import { createInterface } from 'node:readline/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -41,6 +43,7 @@ import {
 // Script lives at scripts/clean-devr2/, so the package root is two levels up.
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const SEED_PATH = join(PACKAGE_ROOT, 'seed', 'seed.sql')
+const DEV_SNAPSHOT_PATH = join(PACKAGE_ROOT, 'local.dev.db')
 const S3_DELETE_HARD_LIMIT = 1000
 
 interface R2Config {
@@ -59,24 +62,38 @@ function fail(message: string): never {
 function assertRunsFromDatabasePackage(): void {
   if (resolve(process.cwd()) !== PACKAGE_ROOT) {
     fail(
-      'This script can only be run from packages/database: ' +
-        'bun run reset:dev-r2',
+      'This script can only be run from packages/database.',
     )
   }
 }
 
-/** Guard 2: development only, strictly (fail-closed). */
+/** Guard 2: never plan a seed-based cleanup when a real snapshot is present. */
+export function assertNoDevSnapshot(snapshotPath: string): void {
+  try {
+    lstatSync(snapshotPath) // Reject files and symlinks, including dangling ones.
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return
+    throw error // Permission and other filesystem failures must not permit R2 access.
+  }
+  throw new Error(
+    'local.dev.db exists: this legacy reset preserves only seed assets and ' +
+      'could delete assets referenced by the staging snapshot. No R2 action was taken. ' +
+      'Do not run this script against a real snapshot; use a separately reviewed ' +
+      'snapshot-aware cleanup plan instead.',
+  )
+}
+
+/** Guard 3: development only, strictly (fail-closed). */
 function assertDevEnvironment(): void {
   if (!isDevEnvironment(process.env)) {
     fail(
       'This script can only run in local development: NODE_ENV must be ' +
-        'exactly "development" and VERCEL_ENV must be absent. Run it via ' +
-        '`bun run reset:dev-r2`, which sets NODE_ENV=development.',
+        'exactly "development" and VERCEL_ENV must be absent.',
     )
   }
 }
 
-/** Guard 3: bucket must be the dev bucket; endpoint must look like R2. */
+/** Guard 4: bucket must be the dev bucket; endpoint must look like R2. */
 function assertDevBucketConfig(): R2Config {
   const endpoint = process.env.R2_ACCOUNT_ID
   const bucketName = process.env.R2_BUCKET_NAME
@@ -136,7 +153,7 @@ function readPreservedKeys(): string[] {
 }
 
 /**
- * Guard 5: deletion requires an explicit "yes" answer on a TTY.
+ * Guard 6: deletion requires an explicit "yes" answer on a TTY.
  * No default: anything other than exactly "yes"/"no" re-prompts.
  */
 async function confirmDeletion(
@@ -171,10 +188,11 @@ async function main(): Promise<void> {
   console.log('\n  Dev R2 bucket reset\n')
 
   assertRunsFromDatabasePackage()
+  assertNoDevSnapshot(DEV_SNAPSHOT_PATH)
   assertDevEnvironment()
   const config = assertDevBucketConfig()
 
-  // Guard 4: never clean "blind" — there must be something to preserve.
+  // Guard 5: never clean "blind" — there must be something to preserve.
   const preserved = devR2Config.preserveSeedAssets ? readPreservedKeys() : []
   if (devR2Config.preserveSeedAssets && preserved.length === 0) {
     fail(
@@ -348,9 +366,11 @@ async function main(): Promise<void> {
   client.destroy()
 }
 
-main().catch((error) => {
-  console.error(
-    `\n  ✗ Reset failed: ${error instanceof Error ? error.message : String(error)}`,
-  )
-  process.exit(1)
-})
+if (import.meta.main) {
+  main().catch((error) => {
+    console.error(
+      `\n  ✗ Reset failed: ${error instanceof Error ? error.message : String(error)}`,
+    )
+    process.exit(1)
+  })
+}
