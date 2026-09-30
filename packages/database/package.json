@@ -31,6 +31,8 @@
     "reset:dev-r2": "NODE_ENV=development bun run --env-file .env.local scripts/clean-devr2/reset-dev-r2.ts",
     "dev": "turso dev --db-file local.dev.db",
     "prod": "turso dev --db-file local.db",
+    "pull:staging": "bun run scripts/pull-snapshot.ts staging",
+    "pull:production": "bun run scripts/pull-snapshot.ts production",
     "lint": "eslint .",
     "test": "bun test",
     "type-check": "tsc --noEmit"
