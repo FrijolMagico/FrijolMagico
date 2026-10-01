@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { spawnSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const packageRoot = join(import.meta.dir, '..')
@@ -32,8 +33,15 @@ function checkConfig(config: string, values: Record<string, string>) {
 }
 
 describe('Drizzle target configs', () => {
-  test('Node Drizzle config loader accepts offline generate and selected staging config', () => {
+  test('Node Drizzle config loader accepts offline generation and fixed local CI config', () => {
     expect(checkConfig('drizzle.config.ts', {}).status).toBe(0)
+    expect(checkConfig('drizzle-ci.config.ts', {
+      TURSO_DATABASE_URL: 'libsql://must-not-be-used.turso.io',
+      TURSO_AUTH_TOKEN: 'must-not-be-used'
+    }).status).toBe(0)
+    expect(readFileSync(join(packageRoot, 'drizzle-ci.config.ts'), 'utf8')).toContain(
+      "url: 'file:./mock.local.db'"
+    )
     expect(checkConfig('drizzle-staging.config.ts', stagingValues).status).toBe(0)
   }, 60_000)
 

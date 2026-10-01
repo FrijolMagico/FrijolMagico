@@ -17,6 +17,8 @@ Antes de refrescar, detené los procesos de web/admin y cualquier otro proceso q
 
 Los pulls obtienen un dump, lo importan y validan antes de reemplazar el archivo seleccionado. No migran ni escriben en Turso remoto; sí reemplazan el snapshot local. No configures `TURSO_DATABASE_URL` ni `TURSO_AUTH_TOKEN` para el pull. Verificá el origen independientemente del dump: un dump válido pero del origen equivocado no se puede detectar solo por el esquema.
 
+CI aplica las mismas migraciones versionadas únicamente al archivo aislado `mock.local.db` mediante `bun run migrate:ci` y `drizzle-ci.config.ts`. Esa configuración fija `file:./mock.local.db`, no usa `TURSO_DATABASE_URL` ni tokens y corre con `--no-env-file`; CI no migra bases remotas. Las migraciones de producción son una operación manual fuera de CI que requiere autorización humana separada.
+
 ## Comandos y destinos
 
 | Comando (desde `packages/database/`) | Destino / efecto |
@@ -27,6 +29,7 @@ Los pulls obtienen un dump, lo importan y validan antes de reemplazar el archivo
 | `bun run dev:real` (desde la raíz) | Web + admin con URL `file:` a `packages/database/local.db`; permite escrituras locales. |
 | `bun run migrate:staging` | **Escribe** migraciones versionadas en staging remoto, con autorización específica. |
 | `bun run migrate:production` | **Escribe** migraciones versionadas en producción remota, con autorización humana nueva y confirmación explícita. |
+| `bun run migrate:ci` | Aplica las migraciones versionadas solo a `mock.local.db` mediante `drizzle-ci.config.ts`; no lee URL ni token del entorno. |
 | `bun run new <name>` | Genera una migración SQL custom para editar y revisar. |
 | `bun run test --filter=@frijolmagico/database` (desde la raíz) | Ejecuta los tests del paquete vía Turbo. |
 
@@ -59,7 +62,7 @@ Para migrar, configurá únicamente el juego de identidad, URL y token del desti
 
 La URL debe tener esquema `libsql:` o `https:`, sin credenciales, puerto, ruta, query ni fragmento; su hostname debe ser de Turso y empezar con el nombre exacto seleccionado seguido del separador `-`, no solo contenerlo en otra parte. Cada config pasa a Drizzle las credenciales del destino seleccionado. Producción requiere `TURSO_PRODUCTION_MIGRATION_CONFIRM=migrate:<nombre-de-producción>`; la confirmación exacta **no sustituye** la autorización humana. Las dos configs comparten `./migrations/`, pero Drizzle mantiene su registro de migraciones aplicado por separado en cada base.
 
-Secuencia operativa: revisar el SQL pendiente y el destino, obtener autorización para **staging**, ejecutar `bun run migrate:staging` y verificar el estado remoto; luego solicitar **otra autorización** para producción, revisar respaldo/rollback y ejecutar `bun run migrate:production` con su confirmación exacta. Nunca ejecutes los dos destinos como una sola operación implícita. Un pull posterior permite obtener snapshots compatibles con las migraciones. La migración y carga iniciales de staging ya se completaron con autorizaciones separadas; estos comandos siguen disponibles solo para nuevas migraciones autorizadas.
+Secuencia operativa: revisar el SQL pendiente y el destino, obtener autorización para **staging**, ejecutar `bun run migrate:staging` y verificar el estado remoto; luego solicitar **otra autorización** para producción, revisar respaldo/rollback y ejecutar `bun run migrate:production` con su confirmación exacta. Nunca ejecutes los dos destinos como una sola operación implícita. Producción se migra manualmente, fuera de CI, y requiere autorización humana separada; ningún PR ni workflow aplica migraciones remotas. Un pull posterior permite obtener snapshots compatibles con las migraciones. La migración y carga iniciales de staging ya se completaron con autorizaciones separadas; estos comandos siguen disponibles solo para nuevas migraciones autorizadas.
 
 ## Privacidad, fallas y rollback
 
