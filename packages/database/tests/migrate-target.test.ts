@@ -1,312 +1,105 @@
 import { afterEach, describe, expect, test } from 'bun:test'
 import { spawnSync } from 'node:child_process'
-import { chmod, copyFile, mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { chmod, mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 
-import { migrateTarget } from '../scripts/migrate-target'
-
-const keys = [
-  'TURSO_STAGING_DATABASE_NAME', 'TURSO_PRODUCTION_DATABASE_NAME',
-  'TURSO_STAGING_DATABASE_URL', 'TURSO_PRODUCTION_DATABASE_URL',
-  'TURSO_STAGING_AUTH_TOKEN', 'TURSO_PRODUCTION_AUTH_TOKEN',
-  'TURSO_PRODUCTION_MIGRATION_CONFIRM', 'TURSO_DATABASE_URL', 'TURSO_AUTH_TOKEN'
-] as const
-const original = Object.fromEntries(keys.map((key) => [key, process.env[key]]))
-const originalPath = process.env.PATH
 const roots: string[] = []
+const originalPath = process.env.PATH
 
-function childEnvironment(values: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
-  const environment: NodeJS.ProcessEnv = { ...values, NODE_ENV: 'test' }
+function childEnvironment(values: Record<string, string | undefined>): NodeJS.ProcessEnv {
+  const environment = { ...values, NODE_ENV: 'test' } as NodeJS.ProcessEnv
   Reflect.deleteProperty(environment, 'NODE_ENV')
   return environment
 }
 
 async function setup() {
-  const root = await mkdtemp(join(tmpdir(), 'migrate-target-test-'))
+  const root = await mkdtemp(join(tmpdir(), 'drizzle-migrate-command-test-'))
   roots.push(root)
   const bin = join(root, 'node_modules/.bin')
   await mkdir(bin, { recursive: true })
-  const fake = join(bin, 'drizzle-kit')
-  await writeFile(fake, `#!/bin/sh
+  const fakeCli = join(bin, 'drizzle-kit')
+  await writeFile(fakeCli, `#!/bin/sh
 printf '%s\\n' "$@" > '${join(root, 'args')}'
 /usr/bin/env > '${join(root, 'child-env')}'
 `)
-  await chmod(fake, 0o700)
-  process.env.PATH = '/usr/bin:/bin'
-  for (const key of keys) delete process.env[key]
-  process.env.TURSO_STAGING_DATABASE_NAME = 'safe-staging'
-  process.env.TURSO_PRODUCTION_DATABASE_NAME = 'safe-production'
-  process.env.TURSO_STAGING_DATABASE_URL = 'libsql://safe-staging-team.turso.io'
-  process.env.TURSO_PRODUCTION_DATABASE_URL = 'libsql://safe-production-team.turso.io'
-  process.env.TURSO_STAGING_AUTH_TOKEN = 'staging-secret'
-  process.env.TURSO_PRODUCTION_AUTH_TOKEN = 'production-secret'
+  await chmod(fakeCli, 0o700)
+  await writeFile(join(root, 'package.json'), JSON.stringify({
+    name: 'offline-migration-command-test',
+    scripts: {
+      'migrate:staging': 'bun --env-file=.env.local run drizzle-kit migrate --config=drizzle-staging.config.ts',
+      'migrate:production': 'bun --env-file=.env.local run drizzle-kit migrate --config=drizzle-production.config.ts'
+    }
+  }))
   return root
-}
-
-async function notRun(root: string) {
-  await expect(readFile(join(root, 'args'))).rejects.toMatchObject({ code: 'ENOENT' })
 }
 
 afterEach(async () => {
   process.env.PATH = originalPath
-  for (const key of keys) {
-    if (original[key] === undefined) delete process.env[key]
-    else process.env[key] = original[key]
-  }
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })))
 })
 
-describe('target-scoped migrations', () => {
-  test('staging runs with only selected destination credentials', async () => {
+describe('direct Drizzle migration commands', () => {
+  test('staging command loads package env file and selects its config without embedding credentials', async () => {
     const root = await setup()
-    process.env.TURSO_PRODUCTION_MIGRATION_CONFIRM = 'migrate:safe-production'
-    process.env.TURSO_DATABASE_URL = 'libsql://unrelated-generic.turso.io'
-    process.env.TURSO_AUTH_TOKEN = 'unrelated-generic-secret'
-
-    await migrateTarget('staging', root)
-    expect(await readFile(join(root, 'args'), 'utf8')).toBe('migrate\n--config\ndrizzle.config.ts\n')
-    const env = await readFile(join(root, 'child-env'), 'utf8')
-    expect(env).toContain('TURSO_MIGRATION_TARGET=staging\n')
-    expect(env).toContain('TURSO_STAGING_DATABASE_NAME=safe-staging\n')
-    expect(env).toContain('TURSO_STAGING_DATABASE_URL=libsql://safe-staging-team.turso.io\n')
-    expect(env).toContain('TURSO_STAGING_AUTH_TOKEN=staging-secret\n')
-    for (const secret of [
-      'production-secret', 'TURSO_PRODUCTION_DATABASE_NAME=', 'TURSO_PRODUCTION_DATABASE_URL=',
-      'TURSO_PRODUCTION_MIGRATION_CONFIRM=', 'TURSO_DATABASE_URL=', 'TURSO_AUTH_TOKEN='
-    ]) expect(env).not.toContain(secret)
-  })
-
-  test('shows bounded ordinary Drizzle output while redacting credentials and suspicious lines', async () => {
-    const root = await setup()
-    const fake = join(root, 'node_modules/.bin/drizzle-kit')
-    await writeFile(fake, `#!/bin/sh
-printf '%s\\n' 'Applying migrations to safe-staging'
-printf '%s' 'URL split: libsql://safe-staging-'
-printf '%s\\n' 'team.turso.io'
-printf '%s\\n' 'token=unknown-secret-must-not-appear'
-printf '%s\\n' 'JWT eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.signature-value'
-printf '%020000d' 0
-printf '%s\\n' 'ordinary stderr diagnostic' >&2
-exit 1
-`)
-    await chmod(fake, 0o700)
-
-    const messages: string[] = []
-    const originalError = console.error
-    console.error = (message?: unknown) => messages.push(String(message))
-    try {
-      await expect(migrateTarget('staging', root)).rejects.toThrow()
-    } finally {
-      console.error = originalError
-    }
-
-    const output = messages.join('\\n')
-    expect(output).toContain('Applying migrations to safe-staging')
-    expect(output).toContain('ordinary stderr diagnostic')
-    expect(output).toContain('[REDACTED]')
-    expect(output).toContain('[sensitive diagnostic line omitted]')
-    expect(output).toContain('[diagnostic output truncated]')
-    for (const secret of [
-      'safe-staging-team.turso.io', 'staging-secret', 'unknown-secret-must-not-appear',
-      'eyJhbGciOiJIUzI1NiJ9', 'signature-value'
-    ]) expect(output).not.toContain(secret)
-  })
-
-  test('omits the whole stream when an unknown credential value follows a label', async () => {
-    const root = await setup()
-    const fake = join(root, 'node_modules/.bin/drizzle-kit')
-    await writeFile(fake, `#!/bin/sh
-printf '%s\\n' 'ordinary stdout that must be omitted with its stream'
-printf '%s\\n' 'token:'
-printf '%s\\n' 'unknown-next-line-secret'
-printf '%s\\n' 'ordinary stderr remains visible' >&2
-exit 1
-`)
-    await chmod(fake, 0o700)
-
-    const messages: string[] = []
-    const originalError = console.error
-    console.error = (message?: unknown) => messages.push(String(message))
-    try {
-      await expect(migrateTarget('staging', root)).rejects.toThrow()
-    } finally {
-      console.error = originalError
-    }
-
-    const output = messages.join('\\n')
-    expect(output).toContain('[sensitive diagnostic stream omitted]')
-    expect(output).toContain('ordinary stderr remains visible')
-    expect(output).not.toContain('ordinary stdout that must be omitted')
-    expect(output).not.toContain('unknown-next-line-secret')
-  })
-
-  test('production requires its exact confirmation and selected credentials only', async () => {
-    const root = await setup()
-    await expect(migrateTarget('production', root)).rejects.toThrow('preflight')
-    process.env.TURSO_PRODUCTION_MIGRATION_CONFIRM = 'migrate:safe-staging'
-    await expect(migrateTarget('production', root)).rejects.toThrow('preflight')
-    await notRun(root)
-    process.env.TURSO_PRODUCTION_MIGRATION_CONFIRM = 'migrate:safe-production'
-    await migrateTarget('production', root)
-    const env = await readFile(join(root, 'child-env'), 'utf8')
-    expect(env).toContain('TURSO_PRODUCTION_AUTH_TOKEN=production-secret\n')
-    expect(env).toContain('TURSO_PRODUCTION_MIGRATION_CONFIRM=migrate:safe-production\n')
-    expect(env).not.toContain('staging-secret')
-    expect(env).not.toContain('TURSO_STAGING_')
-  })
-
-  test('requires only selected target name, URL, token, and production confirmation', async () => {
-    for (const key of [
-      'TURSO_STAGING_DATABASE_NAME', 'TURSO_STAGING_DATABASE_URL', 'TURSO_STAGING_AUTH_TOKEN'
-    ] as const) {
-      const root = await setup()
-      delete process.env[key]
-      delete process.env.TURSO_PRODUCTION_DATABASE_NAME
-      delete process.env.TURSO_PRODUCTION_DATABASE_URL
-      delete process.env.TURSO_PRODUCTION_AUTH_TOKEN
-      await expect(migrateTarget('staging', root)).rejects.toThrow()
-      await notRun(root)
-    }
-  })
-
-  test('rejects malformed URL components and a hostname not bound to selected name', async () => {
-    for (const url of [
-      'libsql://safe-staging-team.turso.io/path',
-      'libsql://safe-staging-team.turso.io?auth=leak',
-      'libsql://safe-staging-team.turso.io#fragment',
-      'libsql://user@safe-staging-team.turso.io',
-      'libsql://user:pass@safe-staging-team.turso.io',
-      'libsql://safe-staging-team.turso.io:443',
-      'http://safe-staging-team.turso.io',
-      'file:local.dev.db',
-      'libsql://safe-staging-team.evilturso.io',
-      'libsql://safe-staging-team.turso.io.evil.example',
-      'libsql://safe-production-team.turso.io',
-      'libsql://wrong-staging-team.turso.io'
-    ]) {
-      const root = await setup()
-      process.env.TURSO_STAGING_DATABASE_URL = url
-      await expect(migrateTarget('staging', root)).rejects.toThrow()
-      await notRun(root)
-    }
-  })
-
-  test('direct drizzle config independently validates target and production confirmation', async () => {
-    await setup()
-    const configPath = join(import.meta.dir, '../drizzle.config.ts')
-    function importConfig(target?: string, confirmation?: string) {
-      return spawnSync(process.execPath, ['--no-env-file', '-e',
-        'process.argv = [process.execPath, "drizzle-kit", "migrate"]; await import(' + JSON.stringify(configPath) + ')'], {
-        cwd: dirname(configPath),
-        env: childEnvironment({
-          PATH: process.env.PATH,
-          TURSO_MIGRATION_TARGET: target,
-          TURSO_STAGING_DATABASE_NAME: process.env.TURSO_STAGING_DATABASE_NAME,
-          TURSO_STAGING_DATABASE_URL: process.env.TURSO_STAGING_DATABASE_URL,
-          TURSO_STAGING_AUTH_TOKEN: process.env.TURSO_STAGING_AUTH_TOKEN,
-          TURSO_PRODUCTION_DATABASE_NAME: process.env.TURSO_PRODUCTION_DATABASE_NAME,
-          TURSO_PRODUCTION_DATABASE_URL: process.env.TURSO_PRODUCTION_DATABASE_URL,
-          TURSO_PRODUCTION_AUTH_TOKEN: process.env.TURSO_PRODUCTION_AUTH_TOKEN,
-          TURSO_PRODUCTION_MIGRATION_CONFIRM: confirmation,
-          TURSO_DATABASE_URL: 'libsql://unrelated-generic.turso.io',
-          TURSO_AUTH_TOKEN: 'unrelated-generic-secret'
-        }),
-        encoding: 'utf8'
-      })
-    }
-    expect(importConfig(undefined).status).not.toBe(0)
-    expect(importConfig('production').status).not.toBe(0)
-    expect(importConfig('production', 'migrate:safe-staging').status).not.toBe(0)
-    expect(importConfig('production', 'migrate:safe-production').status).toBe(0)
-    process.env.TURSO_STAGING_DATABASE_URL = 'libsql://safe-staging-team.evil.example'
-    expect(importConfig('staging').status).not.toBe(0)
-  })
-
-  test('bare package script loads fixture .env.local and targets only staging', async () => {
-    const root = await setup()
-    const manifest = JSON.parse(await readFile(join(import.meta.dir, '../package.json'), 'utf8')) as {
-      scripts: Record<string, string>
-    }
-    await mkdir(join(root, 'scripts'))
-    await copyFile(join(import.meta.dir, '../scripts/migrate-target.ts'), join(root, 'scripts/migrate-target.ts'))
-    await writeFile(join(root, 'package.json'), JSON.stringify({
-      name: 'offline-migrate-test',
-      scripts: { 'migrate:staging': manifest.scripts['migrate:staging'] }
-    }))
     await writeFile(join(root, '.env.local'), [
       'TURSO_STAGING_DATABASE_NAME=safe-staging',
       'TURSO_STAGING_DATABASE_URL=libsql://safe-staging-team.turso.io',
       'TURSO_STAGING_AUTH_TOKEN=staging-secret',
-      'TURSO_DATABASE_URL=libsql://unrelated-generic.turso.io',
-      'TURSO_AUTH_TOKEN=unrelated-generic-secret'
+      'TURSO_PRODUCTION_DATABASE_NAME=safe-production',
+      'TURSO_PRODUCTION_DATABASE_URL=libsql://safe-production-team.turso.io',
+      'TURSO_PRODUCTION_AUTH_TOKEN=production-secret',
+      'TURSO_DATABASE_URL=libsql://generic-team.turso.io',
+      'TURSO_AUTH_TOKEN=generic-secret'
     ].join('\n'))
+
     const result = spawnSync(process.execPath, ['run', 'migrate:staging'], {
       cwd: root,
-      env: childEnvironment({ PATH: `${process.env.PATH}:${dirname(process.execPath)}:/usr/bin` }),
+      env: childEnvironment({ PATH: `${dirname(process.execPath)}:/usr/bin:/bin` }),
       encoding: 'utf8'
     })
-    if (result.status !== 0) throw new Error(`${result.stdout}\n${result.stderr}`)
+    expect(result.status).toBe(0)
+    expect(await readFile(join(root, 'args'), 'utf8')).toBe(
+      'migrate\n--config=drizzle-staging.config.ts\n'
+    )
     const env = await readFile(join(root, 'child-env'), 'utf8')
-    expect(env).toContain('TURSO_STAGING_AUTH_TOKEN=staging-secret\n')
-    expect(env).not.toContain('TURSO_PRODUCTION_')
-    expect(env).not.toContain('TURSO_DATABASE_URL=')
-    expect(env).not.toContain('TURSO_AUTH_TOKEN=')
-  })
+    for (const value of ['safe-staging', 'safe-production', 'staging-secret', 'production-secret', 'generic-secret']) {
+      expect(env).toContain(value)
+    }
 
-  test('bare package production command refuses to migrate without its name-bound confirmation', async () => {
-    const root = await setup()
     const manifest = JSON.parse(await readFile(join(import.meta.dir, '../package.json'), 'utf8')) as {
       scripts: Record<string, string>
     }
-    await mkdir(join(root, 'scripts'))
-    await copyFile(join(import.meta.dir, '../scripts/migrate-target.ts'), join(root, 'scripts/migrate-target.ts'))
-    await writeFile(join(root, 'package.json'), JSON.stringify({
-      name: 'offline-migrate-test',
-      scripts: { 'migrate:production': manifest.scripts['migrate:production'] }
-    }))
+    expect(manifest.scripts['migrate:staging']).toBe(
+      'bun --env-file=.env.local run drizzle-kit migrate --config=drizzle-staging.config.ts'
+    )
+    expect(manifest.scripts['migrate:staging']).not.toMatch(/(?:https?:|libsql:|token\s*=)/i)
+  })
+
+  test('production command selects only the production config', async () => {
+    const root = await setup()
     await writeFile(join(root, '.env.local'), [
       'TURSO_PRODUCTION_DATABASE_NAME=safe-production',
       'TURSO_PRODUCTION_DATABASE_URL=libsql://safe-production-team.turso.io',
-      'TURSO_PRODUCTION_AUTH_TOKEN=production-secret'
+      'TURSO_PRODUCTION_AUTH_TOKEN=production-secret',
+      'TURSO_PRODUCTION_MIGRATION_CONFIRM=migrate:safe-production'
     ].join('\n'))
+
     const result = spawnSync(process.execPath, ['run', 'migrate:production'], {
       cwd: root,
-      env: childEnvironment({ PATH: `${process.env.PATH}:${dirname(process.execPath)}:/usr/bin` }),
+      env: childEnvironment({ PATH: `${dirname(process.execPath)}:/usr/bin:/bin` }),
       encoding: 'utf8'
     })
-    expect(result.status).toBe(1)
-    expect(result.stderr).toContain('Migration preflight failed; verify target configuration')
-    await notRun(root)
-  })
-
-  test('CLI failure reports its fixed stage and redacts emitted output', async () => {
-    const root = await setup()
-    const fake = join(root, 'node_modules/.bin/drizzle-kit')
-    await writeFile(fake, `#!/bin/sh
-printf '%s\\n' 'Drizzle is applying migrations'
-printf '%s\\n' 'secret=unrecognized-secret-value' >&2
-exit 1
-`)
-    await chmod(fake, 0o700)
-    const source = join(import.meta.dir, '../scripts/migrate-target.ts')
-    await mkdir(join(root, 'scripts'))
-    await copyFile(source, join(root, 'scripts/migrate-target.ts'))
-    const result = spawnSync(process.execPath, ['--no-env-file', 'scripts/migrate-target.ts', 'staging'], {
-      cwd: root,
-      env: childEnvironment({
-        PATH: `${process.env.PATH}:${dirname(process.execPath)}:/usr/bin`,
-        TURSO_STAGING_DATABASE_NAME: 'safe-staging',
-        TURSO_STAGING_DATABASE_URL: 'libsql://safe-staging-team.turso.io',
-        TURSO_STAGING_AUTH_TOKEN: 'staging-secret'
-      }),
-      encoding: 'utf8'
-    })
-    expect(result.status).toBe(1)
-    expect(result.stderr).toContain('Drizzle is applying migrations')
-    expect(result.stderr).toContain('Drizzle migration CLI failed; verify remote state before retrying')
-    expect(result.stderr).toContain('[sensitive diagnostic line omitted]')
-    expect(result.stderr).not.toContain('unrecognized-secret-value')
-    expect(result.stderr).not.toContain('staging-secret')
+    expect(result.status).toBe(0)
+    expect(await readFile(join(root, 'args'), 'utf8')).toBe(
+      'migrate\n--config=drizzle-production.config.ts\n'
+    )
+    const manifest = JSON.parse(await readFile(join(import.meta.dir, '../package.json'), 'utf8')) as {
+      scripts: Record<string, string>
+    }
+    expect(manifest.scripts['migrate:production']).toBe(
+      'bun --env-file=.env.local run drizzle-kit migrate --config=drizzle-production.config.ts'
+    )
+    expect(manifest.scripts['migrate:production']).not.toMatch(/(?:https?:|libsql:|token\s*=)/i)
   })
 })

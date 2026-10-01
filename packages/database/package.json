@@ -25,8 +25,8 @@
     }
   },
   "scripts": {
-    "migrate:staging": "bun --env-file=.env.local scripts/migrate-target.ts staging",
-    "migrate:production": "bun --env-file=.env.local scripts/migrate-target.ts production",
+    "migrate:staging": "bun --env-file=.env.local run drizzle-kit migrate --config=drizzle-staging.config.ts",
+    "migrate:production": "bun --env-file=.env.local run drizzle-kit migrate --config=drizzle-production.config.ts",
     "new": "bun run drizzle-kit generate --custom --name",
     "dev": "turso dev --db-file local.dev.db",
     "prod": "turso dev --db-file local.db",
