@@ -22,3 +22,7 @@ A read-only query for the user-named `staged-frijolmagico` returned `database no
 
 ## Evidence
 - Integration merge commit: `f802d465fe738b3fa6374537aa34a9130bccdebd` (`merge(dev): integrate remote dev updates`).
+- Validation and follow-up record: `09feaacb8ed2aba850e33ca3f1600951a2eda6c2` (`docs(odd): record dev integration evidence`).
+
+## Native review status
+The native preflight rejected the branch-wide candidate with `lens_context_budget_exceeded` before creating review authority. It requires smaller review candidates; no review was started or acknowledged.
