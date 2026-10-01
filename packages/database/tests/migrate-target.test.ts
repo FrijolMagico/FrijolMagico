@@ -77,11 +77,75 @@ describe('target-scoped migrations', () => {
     ]) expect(env).not.toContain(secret)
   })
 
+  test('shows bounded ordinary Drizzle output while redacting credentials and suspicious lines', async () => {
+    const root = await setup()
+    const fake = join(root, 'node_modules/.bin/drizzle-kit')
+    await writeFile(fake, `#!/bin/sh
+printf '%s\\n' 'Applying migrations to safe-staging'
+printf '%s' 'URL split: libsql://safe-staging-'
+printf '%s\\n' 'team.turso.io'
+printf '%s\\n' 'token=unknown-secret-must-not-appear'
+printf '%s\\n' 'JWT eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.signature-value'
+printf '%020000d' 0
+printf '%s\\n' 'ordinary stderr diagnostic' >&2
+exit 1
+`)
+    await chmod(fake, 0o700)
+
+    const messages: string[] = []
+    const originalError = console.error
+    console.error = (message?: unknown) => messages.push(String(message))
+    try {
+      await expect(migrateTarget('staging', root)).rejects.toThrow()
+    } finally {
+      console.error = originalError
+    }
+
+    const output = messages.join('\\n')
+    expect(output).toContain('Applying migrations to safe-staging')
+    expect(output).toContain('ordinary stderr diagnostic')
+    expect(output).toContain('[REDACTED]')
+    expect(output).toContain('[sensitive diagnostic line omitted]')
+    expect(output).toContain('[diagnostic output truncated]')
+    for (const secret of [
+      'safe-staging-team.turso.io', 'staging-secret', 'unknown-secret-must-not-appear',
+      'eyJhbGciOiJIUzI1NiJ9', 'signature-value'
+    ]) expect(output).not.toContain(secret)
+  })
+
+  test('omits the whole stream when an unknown credential value follows a label', async () => {
+    const root = await setup()
+    const fake = join(root, 'node_modules/.bin/drizzle-kit')
+    await writeFile(fake, `#!/bin/sh
+printf '%s\\n' 'ordinary stdout that must be omitted with its stream'
+printf '%s\\n' 'token:'
+printf '%s\\n' 'unknown-next-line-secret'
+printf '%s\\n' 'ordinary stderr remains visible' >&2
+exit 1
+`)
+    await chmod(fake, 0o700)
+
+    const messages: string[] = []
+    const originalError = console.error
+    console.error = (message?: unknown) => messages.push(String(message))
+    try {
+      await expect(migrateTarget('staging', root)).rejects.toThrow()
+    } finally {
+      console.error = originalError
+    }
+
+    const output = messages.join('\\n')
+    expect(output).toContain('[sensitive diagnostic stream omitted]')
+    expect(output).toContain('ordinary stderr remains visible')
+    expect(output).not.toContain('ordinary stdout that must be omitted')
+    expect(output).not.toContain('unknown-next-line-secret')
+  })
+
   test('production requires its exact confirmation and selected credentials only', async () => {
     const root = await setup()
-    await expect(migrateTarget('production', root)).rejects.toThrow('explicit confirmation')
+    await expect(migrateTarget('production', root)).rejects.toThrow('preflight')
     process.env.TURSO_PRODUCTION_MIGRATION_CONFIRM = 'migrate:safe-staging'
-    await expect(migrateTarget('production', root)).rejects.toThrow('explicit confirmation')
+    await expect(migrateTarget('production', root)).rejects.toThrow('preflight')
     await notRun(root)
     process.env.TURSO_PRODUCTION_MIGRATION_CONFIRM = 'migrate:safe-production'
     await migrateTarget('production', root)
@@ -212,7 +276,37 @@ describe('target-scoped migrations', () => {
       encoding: 'utf8'
     })
     expect(result.status).toBe(1)
-    expect(result.stderr).toContain('Migration refused or failed')
+    expect(result.stderr).toContain('Migration preflight failed; verify target configuration')
     await notRun(root)
+  })
+
+  test('CLI failure reports its fixed stage and redacts emitted output', async () => {
+    const root = await setup()
+    const fake = join(root, 'node_modules/.bin/drizzle-kit')
+    await writeFile(fake, `#!/bin/sh
+printf '%s\\n' 'Drizzle is applying migrations'
+printf '%s\\n' 'secret=unrecognized-secret-value' >&2
+exit 1
+`)
+    await chmod(fake, 0o700)
+    const source = join(import.meta.dir, '../scripts/migrate-target.ts')
+    await mkdir(join(root, 'scripts'))
+    await copyFile(source, join(root, 'scripts/migrate-target.ts'))
+    const result = spawnSync(process.execPath, ['--no-env-file', 'scripts/migrate-target.ts', 'staging'], {
+      cwd: root,
+      env: childEnvironment({
+        PATH: `${process.env.PATH}:${dirname(process.execPath)}:/usr/bin`,
+        TURSO_STAGING_DATABASE_NAME: 'safe-staging',
+        TURSO_STAGING_DATABASE_URL: 'libsql://safe-staging-team.turso.io',
+        TURSO_STAGING_AUTH_TOKEN: 'staging-secret'
+      }),
+      encoding: 'utf8'
+    })
+    expect(result.status).toBe(1)
+    expect(result.stderr).toContain('Drizzle is applying migrations')
+    expect(result.stderr).toContain('Drizzle migration CLI failed; verify remote state before retrying')
+    expect(result.stderr).toContain('[sensitive diagnostic line omitted]')
+    expect(result.stderr).not.toContain('unrecognized-secret-value')
+    expect(result.stderr).not.toContain('staging-secret')
   })
 })
