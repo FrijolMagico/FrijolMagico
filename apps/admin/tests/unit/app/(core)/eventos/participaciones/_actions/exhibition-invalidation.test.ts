@@ -74,7 +74,7 @@ const exhibition = {
   disciplinaId: 1,
   modoIngresoId: 1,
   estado: 'confirmado'
-}
+} as const
 
 const successfulPublicInvalidation = () => {
   expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({

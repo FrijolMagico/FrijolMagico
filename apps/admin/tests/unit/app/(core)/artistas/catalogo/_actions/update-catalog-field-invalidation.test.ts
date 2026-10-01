@@ -7,8 +7,12 @@ import {
 } from '@frijolmagico/cache-tags'
 
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
-const updateTag = mock(() => {})
-const revalidateWebCache = mock(async () => ({ revalidated: true }))
+const updateTag = mock((_tag: string) => {})
+const revalidateWebCache = mock(
+  async (_options: { tag?: string; path?: string; mode?: 'immediate' | 'swr' }) => ({
+    revalidated: true
+  })
+)
 let storedActivo = false
 let storedDestacado = false
 let storedDeletedAt: Date | null = null

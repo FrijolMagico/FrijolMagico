@@ -12,7 +12,11 @@ const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
 const revalidateWebCache = mock(async () => ({ revalidated: true }))
 const deleteCatalogEntry = mock(async () => ({ wasFeatured: false }))
 
-let catalogEntries: { id: number; activo?: boolean }[] = []
+let catalogEntries: {
+  id: number
+  activo?: boolean
+  deletedAt?: Date | null
+}[] = []
 
 const transaction = {
   update: () => ({

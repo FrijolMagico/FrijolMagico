@@ -42,7 +42,7 @@ describe('createEventAction public cache freshness', () => {
   test('invalidates festival-critical and discovery tags after creating an event', async () => {
     const result = await createEventAction(
       { success: true },
-      { nombre: 'Festival nuevo', slug: 'festival-nuevo' }
+      { nombre: 'Festival nuevo', slug: 'festival-nuevo', organizacionId: null }
     )
 
     expect(result.success).toBe(true)

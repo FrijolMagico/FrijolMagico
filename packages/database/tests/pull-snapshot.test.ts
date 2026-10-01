@@ -140,7 +140,7 @@ describe('explicit snapshot pull', () => {
     const path = `${process.env.PATH}:${dirname(process.execPath)}:/usr/bin`
     const defaultCommand = spawnSync(process.execPath, ['run', 'pull:staging'], {
       cwd: root,
-      env: { PATH: path },
+      env: { PATH: path, NODE_ENV: 'test' },
       encoding: 'utf8'
     })
     expect(defaultCommand.status).toBe(1)
@@ -150,7 +150,7 @@ describe('explicit snapshot pull', () => {
 
     const explicitCommand = spawnSync(process.execPath, ['--no-env-file', 'run', 'pull:staging'], {
       cwd: root,
-      env: { PATH: path, TURSO_STAGING_DATABASE_NAME: 'safe-staging' },
+      env: { PATH: path, NODE_ENV: 'test', TURSO_STAGING_DATABASE_NAME: 'safe-staging' },
       encoding: 'utf8'
     })
     expect(explicitCommand.status).toBe(0)
