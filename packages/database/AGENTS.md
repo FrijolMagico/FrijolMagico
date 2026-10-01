@@ -12,8 +12,8 @@ Drizzle ORM + Turso (libSQL) database package.
 ## Commands
 
 ```bash
-bun run pull:staging       # read staging into local.dev.db
-bun run pull:production    # read production into local.db
+bun --no-env-file run pull:staging    # read staging into local.dev.db
+bun --no-env-file run pull:production # read production into local.db
 bun run dev                # serve local.dev.db
 bun run prod               # serve local.db
 bun run migrate:staging    # remote write: staging only
@@ -90,8 +90,8 @@ Tables via `drizzle-orm/sqlite-core`.
 ## Environment Variables
 
 - Pull: `TURSO_STAGING_DATABASE_NAME` or `TURSO_PRODUCTION_DATABASE_NAME` and separate Turso CLI authentication (`turso auth login`). No app URL or token.
-- Migrate: both `TURSO_STAGING_DATABASE_NAME` / `TURSO_PRODUCTION_DATABASE_NAME` and `TURSO_STAGING_DATABASE_URL` / `TURSO_PRODUCTION_DATABASE_URL`, plus the selected destination's `TURSO_STAGING_AUTH_TOKEN` or `TURSO_PRODUCTION_AUTH_TOKEN`. Production additionally requires `TURSO_PRODUCTION_MIGRATION_CONFIRM`.
-- Generic `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN` are rejected for pulls and migrations. Keep all credentials private.
+- Migrate: `bun run migrate:staging` and `bun run migrate:production` load the ignored package `.env.local`. Each command requires only its selected destination's `TURSO_STAGING_DATABASE_NAME` / `TURSO_STAGING_DATABASE_URL` / `TURSO_STAGING_AUTH_TOKEN` or corresponding `TURSO_PRODUCTION_*` keys. Production additionally requires `TURSO_PRODUCTION_MIGRATION_CONFIRM=migrate:<production-name>`. Drizzle Kit applies the same versioned migrations but tracks applied revisions separately within each database.
+- Generic `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN` are ignored by migrations; pulls still reject them. Keep all credentials private and never execute remote migrations without destination-specific human authorization.
 
 ## Data Files (Reference)
 

@@ -29,8 +29,8 @@ bun run type-check
 # bun run db:migrate fails closed; do not use it.
 # Remote migrations write to Turso and require separate human authorization per target.
 cd packages/database
-bun run pull:staging       # authorized read; refreshes local.dev.db
-bun run pull:production    # separately authorized read; refreshes local.db
+bun --no-env-file run pull:staging    # authorized read; refreshes local.dev.db
+bun --no-env-file run pull:production # separately authorized read; refreshes local.db
 bun run migrate:staging    # separately authorized remote write
 bun run migrate:production # new authorization for production remote write
 ```

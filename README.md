@@ -78,7 +78,7 @@ This is a **Turborepo** monorepo with the following architecture:
    cp packages/database/.env.example packages/database/.env.local
    ```
 
-   See each app's README for environment variable details.
+   See each app's README for environment variable details. For remote database migrations, add the selected target's credentials manually to the ignored `packages/database/.env.local`; `bun run migrate:staging` and `bun run migrate:production` load it explicitly. Production also requires the exact `TURSO_PRODUCTION_MIGRATION_CONFIRM=migrate:<database-name>` confirmation. Pull commands remain `bun --no-env-file run pull:<target>` and do not load this file.
 
 4. **Prepare the local staging snapshot**
 

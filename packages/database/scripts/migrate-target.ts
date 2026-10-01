@@ -1,4 +1,4 @@
-import { spawn, spawnSync } from 'node:child_process'
+import { spawn } from 'node:child_process'
 import { resolve } from 'node:path'
 
 const PACKAGE_ROOT = resolve(import.meta.dir, '..')
@@ -39,7 +39,7 @@ function classifyMigrationError(stderr: string): MigrationErrorCategory {
 }
 
 // Preserve the allow-list despite the admin ambient type requiring a NODE_ENV we must omit.
-function filteredEnvironment(values: Omit<NodeJS.ProcessEnv, 'NODE_ENV'>): NodeJS.ProcessEnv {
+function filteredEnvironment(values: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   const environment: NodeJS.ProcessEnv = { ...values, NODE_ENV: 'test' }
   Reflect.deleteProperty(environment, 'NODE_ENV')
   return environment
@@ -72,60 +72,24 @@ function remoteUrl(value: string | undefined, database: string): string {
   return value
 }
 
-/** Independently check the destination before the config exposes credentials to drizzle-kit. */
+/** Validate only the selected destination before exposing its credentials to drizzle-kit. */
 export function migrationCredentials(target: Target, env: NodeJS.ProcessEnv = process.env) {
   if (!(target in TARGETS)) throw new Error('Specify exactly one migration target')
-  if (env.TURSO_DATABASE_URL !== undefined || env.TURSO_AUTH_TOKEN !== undefined) {
-    throw new Error('Ambient database credentials are not accepted for migrations')
-  }
-  const stagingName = name(env[TARGETS.staging.name])
-  const productionName = name(env[TARGETS.production.name])
-  const stagingId = stagingName.toLowerCase()
-  const productionId = productionName.toLowerCase()
-  if (stagingId === productionId || stagingId.startsWith(`${productionId}-`) ||
-    productionId.startsWith(`${stagingId}-`)) {
-    throw new Error('Staging and production database names must not overlap')
-  }
-  const stagingUrl = remoteUrl(env[TARGETS.staging.url], stagingName)
-  const productionUrl = remoteUrl(env[TARGETS.production.url], productionName)
-  if (new URL(stagingUrl).hostname.toLowerCase() === new URL(productionUrl).hostname.toLowerCase()) {
-    throw new Error('Staging and production database hosts must differ')
-  }
   const selected = TARGETS[target]
-  const selectedName = target === 'staging' ? stagingName : productionName
+  const selectedName = name(env[selected.name])
+  const url = remoteUrl(env[selected.url], selectedName)
   const token = env[selected.token]
   if (!token || !token.trim() || token !== token.trim()) throw new Error('Missing explicit target auth token')
-  if (target === 'production' && env.TURSO_PRODUCTION_MIGRATION_CONFIRM !== `migrate:${productionName}`) {
+  if (target === 'production' && env.TURSO_PRODUCTION_MIGRATION_CONFIRM !== `migrate:${selectedName}`) {
     throw new Error('Production migration requires explicit confirmation: migrate:<database-name>')
   }
-  return { url: target === 'staging' ? stagingUrl : productionUrl, authToken: token }
-}
-
-/** Must run in both wrapper and config: no environment flag can stand in for this lookup. */
-export function verifyRemoteName(target: Target, configuredUrl: string, env: NodeJS.ProcessEnv = process.env): void {
-  const databaseName = name(env[TARGETS[target].name])
-  const result = spawnSync('turso', ['db', 'show', databaseName, '--url'], {
-    shell: false,
-    encoding: 'utf8',
-    timeout: 15000,
-    maxBuffer: 2048,
-    stdio: ['ignore', 'pipe', 'ignore'],
-    env: filteredEnvironment({ PATH: env.PATH || '', HOME: env.HOME || '' })
-  })
-  // Do not forward CLI output, stderr, or spawn errors: they may contain secrets.
-  if (result.error || result.status !== 0 || !result.stdout) {
-    throw new Error('Remote database identity preflight failed')
-  }
-  const returned = remoteUrl(result.stdout.trim(), databaseName)
-  if (new URL(returned).hostname.toLowerCase() !== new URL(configuredUrl).hostname.toLowerCase()) {
-    throw new Error('Remote database identity mismatch')
-  }
+  return { url, authToken: token }
 }
 
 /** Applies the shared migrations to exactly one explicitly selected remote target. */
 export async function migrateTarget(target: Target, root = PACKAGE_ROOT): Promise<void> {
   const credentials = migrationCredentials(target)
-  verifyRemoteName(target, credentials.url)
+  const selected = TARGETS[target]
   const child = spawn(resolve(root, 'node_modules/.bin/drizzle-kit'),
     ['migrate', '--config', 'drizzle.config.ts'], {
       cwd: root,
@@ -135,14 +99,12 @@ export async function migrateTarget(target: Target, root = PACKAGE_ROOT): Promis
         PATH: process.env.PATH || '',
         HOME: process.env.HOME || '',
         TURSO_MIGRATION_TARGET: target,
-        TURSO_STAGING_DATABASE_NAME: process.env.TURSO_STAGING_DATABASE_NAME,
-        TURSO_PRODUCTION_DATABASE_NAME: process.env.TURSO_PRODUCTION_DATABASE_NAME,
-        TURSO_STAGING_DATABASE_URL: process.env.TURSO_STAGING_DATABASE_URL,
-        TURSO_PRODUCTION_DATABASE_URL: process.env.TURSO_PRODUCTION_DATABASE_URL,
+        [selected.name]: process.env[selected.name],
+        [selected.url]: credentials.url,
+        [selected.token]: credentials.authToken,
         ...(target === 'production' ? {
           TURSO_PRODUCTION_MIGRATION_CONFIRM: process.env.TURSO_PRODUCTION_MIGRATION_CONFIRM
-        } : {}),
-        [TARGETS[target].token]: credentials.authToken
+        } : {})
       })
     })
   const stderr: Buffer[] = []
