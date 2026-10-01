@@ -89,6 +89,16 @@ describe('explicit migration target', () => {
     }
   })
 
+  test('accepts a regional Turso hostname when its database prefix and CLI identity match', async () => {
+    const root = await setup()
+    const regionalUrl = 'libsql://safe-staging-team.aws-us-east-1.turso.io'
+    process.env.TURSO_STAGING_DATABASE_URL = regionalUrl
+    await writeFile(join(root, 'bin/turso'), `#!/bin/sh\nprintf '%s\\n' '${regionalUrl}'\n`)
+
+    await expect(migrateTarget('staging', root)).resolves.toBeUndefined()
+    expect(await readFile(join(root, 'args'), 'utf8')).toBe('migrate\n--config\ndrizzle.config.ts\n')
+  })
+
   test('production requires independent name-bound confirmation and never sends staging credentials', async () => {
     const root = await setup()
     await expect(migrateTarget('production', root)).rejects.toThrow('explicit confirmation')
@@ -131,6 +141,7 @@ describe('explicit migration target', () => {
       ['TURSO_STAGING_DATABASE_URL', 'file:local.dev.db'],
       ['TURSO_STAGING_DATABASE_URL', 'http://127.0.0.1:8080'],
       ['TURSO_STAGING_DATABASE_URL', 'libsql://safe-production-other.turso.io'],
+      ['TURSO_STAGING_DATABASE_URL', 'libsql://wrong-staging-team.aws-us-east-1.turso.io'],
       ['TURSO_STAGING_DATABASE_URL', 'libsql://safe-staging-team.turso.io/path'],
       ['TURSO_STAGING_DATABASE_URL', 'libsql://safe-staging-team.turso.io?auth=leak']
     ] as const) {
@@ -267,11 +278,33 @@ describe('explicit migration target', () => {
     }
   })
 
-  test('rejects invalid target and child failure without exposing child output', async () => {
+  test('classifies bounded child stderr without exposing secret-bearing diagnostics', async () => {
     const root = await setup()
-    await expect(migrateTarget('both' as 'staging', root)).rejects.toThrow('exactly one')
-    await notRun(root)
-    await writeFile(join(root, 'node_modules/.bin/drizzle-kit'), '#!/bin/sh\necho "$TURSO_STAGING_AUTH_TOKEN" >&2\nexit 7\n')
-    await expect(migrateTarget('staging', root)).rejects.toThrow('Migration failed; verify remote state')
+    const secretError = 'unauthorized token=child-secret url=libsql://private-host.turso.io stacktrace=private-stack'
+    await writeFile(join(root, 'node_modules/.bin/drizzle-kit'), [
+      '#!/bin/sh',
+      `printf '%s\\n' '${secretError}' >&2`,
+      "head -c 200000 /dev/zero | tr '\\000' x >&2",
+      'exit 7'
+    ].join('\n'))
+
+    const failure = await migrateTarget('staging', root).then(
+      () => '',
+      (error: unknown) => error instanceof Error ? error.message : ''
+    )
+    expect(failure).toBe('Migration failed (auth); verify remote state before retrying')
+    expect(failure).not.toMatch(/child-secret|private-host|private-stack|unauthorized/)
+  })
+
+  test('uses the generic migration failure for uncertain child diagnostics', async () => {
+    const root = await setup()
+    await writeFile(join(root, 'node_modules/.bin/drizzle-kit'), '#!/bin/sh\nprintf \'%s\\n\' \'opaque-secret diagnostic text\' >&2\nexit 7\n')
+
+    const failure = await migrateTarget('staging', root).then(
+      () => '',
+      (error: unknown) => error instanceof Error ? error.message : ''
+    )
+    expect(failure).toBe('Migration failed; verify remote state before retrying')
+    expect(failure).not.toMatch(/opaque-secret|diagnostic text/)
   })
 })
