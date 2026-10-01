@@ -84,7 +84,9 @@ export async function updateParticipationAction(
     if (relationshipChanged) {
       void revalidateWebCacheBestEffort({
         tag: FESTIVAL_CRITICAL_CACHE_TAG,
-        mode: 'immediate'
+        mode: 'immediate',
+        path: '/festivales/[slug]',
+        pathType: 'page'
       })
     }
     if (editionChanged) {

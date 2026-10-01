@@ -115,7 +115,9 @@ describe('createActivityDetailAction', () => {
     expect(updateTag).toHaveBeenCalledTimes(1)
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate'
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
     })
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledTimes(1)
   })

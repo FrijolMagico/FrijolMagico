@@ -42,7 +42,9 @@ export async function createActivityDetailAction(
     updateTag(getParticipationActivitiesCacheTag(participationId))
     void revalidateWebCacheBestEffort({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate'
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
     })
 
     return { success: true }

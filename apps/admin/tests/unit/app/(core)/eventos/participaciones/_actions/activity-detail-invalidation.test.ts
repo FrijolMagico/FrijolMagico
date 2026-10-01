@@ -46,7 +46,9 @@ describe('activity detail Web invalidation', () => {
     expect(result.success).toBe(true)
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate'
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
     })
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledTimes(1)
     expect(updateTag).toHaveBeenCalledTimes(1)

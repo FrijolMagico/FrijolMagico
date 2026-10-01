@@ -71,7 +71,12 @@ describe('updateParticipationAction cache freshness', () => {
     expect(invalidations).toContain('participaciones:edicion:8')
     expect(invalidations).toContain('catalogo:artistas')
     expect(invalidations).toContain('catalogo:artistas:participaciones')
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
+    })
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: FESTIVALES_CACHE_TAG, mode: 'swr' })
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: 'catalogo:artistas' })
   })
@@ -80,7 +85,12 @@ describe('updateParticipationAction cache freshness', () => {
     const result = await updateParticipationAction({ ...payload, edicionId: 7, artistaId: 9 })
 
     expect(result.success).toBe(true)
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
+    })
     expect(revalidateWebCacheBestEffort).not.toHaveBeenCalledWith({ tag: FESTIVALES_CACHE_TAG, mode: 'swr' })
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: 'catalogo:artistas' })
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: 'catalogo:artistas:participaciones' })
