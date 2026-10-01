@@ -27,6 +27,7 @@ import {
   activityUpdateSchema,
   parseActivityRegistrationInput,
   parseActivityOccurrencesInput,
+  parseActivityPresenterDatabaseValues,
   sameActivitySchedule
 } from '../../_schemas/activity.schema'
 import { editionParticipationUpdateSchema } from '../../_schemas/edition-participation.schema'
@@ -177,8 +178,14 @@ export async function updateActivityAggregateAction(
       if (typeof input.detail !== 'object' || input.detail === null) {
         throw new Error('Los detalles de actividad no son válidos')
       }
+      const detailPayload = input.detail as Record<string, unknown>
+      const presenterValues = parseActivityPresenterDatabaseValues(
+        detailPayload,
+        effectiveType.slug === 'charla'
+      )
       const detailValues = activityDetailInsertSchema.parse({
-        ...(input.detail as Record<string, unknown>),
+        ...detailPayload,
+        ...presenterValues,
         participacionActividadId: activityInput.id
       })
       effectiveParticipationId = participation.id

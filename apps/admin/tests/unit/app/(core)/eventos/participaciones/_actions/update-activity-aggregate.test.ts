@@ -288,6 +288,57 @@ describe('updateActivityAggregateAction', () => {
     expect(operations).toEqual([])
   })
 
+  test('persists, changes, and removes a talk presenter independently of the speaker', async () => {
+    activityTypeSlug = 'charla'
+    const linked = await action({
+      ...input,
+      detail: {
+        ...input.detail,
+        presenterNombre: null,
+        presenterArtistaId: 81,
+        presenterPseudonimoId: 92
+      }
+    })
+    expect(linked.success).toBe(true)
+    expect(writes.find((write) => write.table === 'detail')?.values).toMatchObject({
+      presenterNombre: null,
+      presenterArtistaId: 81,
+      presenterPseudonimoId: 92
+    })
+
+    writes = []
+    const freeName = await action({
+      ...input,
+      detail: {
+        ...input.detail,
+        presenterNombre: 'Ada Lovelace',
+        presenterArtistaId: null,
+        presenterPseudonimoId: null
+      }
+    })
+    expect(freeName.success).toBe(true)
+    expect(writes.find((write) => write.table === 'detail')?.values.presenterNombre).toBe('Ada Lovelace')
+
+    writes = []
+    const removed = await action({ ...input, detail: input.detail })
+    expect(removed.success).toBe(true)
+    expect(writes.find((write) => write.table === 'detail')?.values).toMatchObject({
+      presenterNombre: null,
+      presenterArtistaId: null,
+      presenterPseudonimoId: null
+    })
+  })
+
+  test('server rejects presenters on non-talk submissions before mutation', async () => {
+    const result = await action({
+      ...input,
+      detail: { ...input.detail, presenterNombre: 'Ada' }
+    })
+    expect(result.success).toBe(false)
+    expect(result.errors?.[0]?.message).toContain('Solo las charlas')
+    expect(operations).toEqual([])
+  })
+
   test('rejects music updates when the existing activity has no date', async () => {
     activityTypeSlug = 'musica'
     storedSessions = []

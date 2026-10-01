@@ -22,7 +22,7 @@ describe('participation pseudonym selectors', () => {
         /<SelectValue placeholder='Elegir pseudónimo'>\s*\{selectedPseudonym\s*\?\s*`\$\{selectedPseudonym\.pseudonym\}\$\{selectedPseudonym\.isPrimary \? ' \(principal\)' : ''\}`\s*:\s*'Elegir pseudónimo'\s*\}/
       )
       expect(source).toMatch(
-        /<SelectItem\s+key=\{pseudonym\.id\}\s+value=\{String\(pseudonym\.id\)\}\s*>/
+        /<SelectItem\s+key=\{pseudonym\.id\}[^>]*value=\{String\(pseudonym\.id\)\}[^>]*>/
       )
       expect(source).toMatch(
         />\s*\{pseudonym\.pseudonym\}\s*\{pseudonym\.isPrimary \? ' \(principal\)' : ''\}\s*<\/SelectItem>/

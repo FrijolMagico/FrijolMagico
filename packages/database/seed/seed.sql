@@ -885,9 +885,9 @@ VALUES (37, 46, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (16, 46, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (16, 16,'Fixture Activity 016','Synthetic activity description for test data.', 60, '17:00','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (16, 16,'Fixture Activity 016','Synthetic activity description for test data.', 60, '12:30','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes, url)
-VALUES (14, 16, '2026-10-09', '17:00', 60, 'https://example.org/taller-activo-2026-10-09');
+VALUES (14, 16, '2026-10-09', '12:30', 60, 'https://example.org/taller-activo-2026-10-09');
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (47, 7, 2, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -895,9 +895,9 @@ VALUES (38, 47, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (17, 47, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (17, 17,'Fixture Activity 017','Synthetic activity description for test data.', 90, '18:30','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (17, 17,'Fixture Activity 017','Synthetic activity description for test data.', 90, '11:00','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (15, 17, '2026-10-10', '18:30', 90);
+VALUES (15, 17, '2026-10-10', '11:00', 90);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (48, 7, 3, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -915,9 +915,9 @@ VALUES (40, 49, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (19, 49, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (19, 19,'Fixture Activity 019','Synthetic activity description for test data.', 60, '12:30','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (19, 19,'Fixture Activity 019','Synthetic activity description for test data.', 60, '11:00','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (17, 19, '2026-10-10', '12:30', 60);
+VALUES (17, 19, '2026-10-10', '11:00', 60);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (50, 7, 5, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -925,9 +925,9 @@ VALUES (41, 50, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (20, 50, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (20, 20,'Fixture Activity 020','Synthetic activity description for test data.', 90, '14:00','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (20, 20,'Fixture Activity 020','Synthetic activity description for test data.', 90, '15:00','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (18, 20, '2026-10-09', '14:00', 90);
+VALUES (18, 20, '2026-10-09', '15:00', 90);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (51, 7, 6, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -935,9 +935,9 @@ VALUES (42, 51, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (21, 51, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (21, 21,'Fixture Activity 021','Synthetic activity description for test data.', 120, '15:30','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (21, 21,'Fixture Activity 021','Synthetic activity description for test data.', 120, '12:30','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (19, 21, '2026-10-10', '15:30', 120);
+VALUES (19, 21, '2026-10-10', '12:30', 120);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (52, 7, 7, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -945,9 +945,9 @@ VALUES (43, 52, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (22, 52, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (22, 22,'Fixture Activity 022','Synthetic activity description for test data.', 60, '17:00','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (22, 22,'Fixture Activity 022','Synthetic activity description for test data.', 60, '15:00','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (20, 22, '2026-10-09', '17:00', 60);
+VALUES (20, 22, '2026-10-09', '15:00', 60);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (53, 7, 8, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -955,9 +955,9 @@ VALUES (44, 53, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (23, 53, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (23, 23,'Fixture Activity 023','Synthetic activity description for test data.', 90, '18:30','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (23, 23,'Fixture Activity 023','Synthetic activity description for test data.', 90, '12:00','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (21, 23, '2026-10-10', '18:30', 90);
+VALUES (21, 23, '2026-10-10', '12:00', 90);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (54, 7, 9, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -965,9 +965,9 @@ VALUES (45, 54, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (24, 54, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (24, 24,'Fixture Activity 024','Synthetic activity description for test data.', 120, '11:00','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (24, 24,'Fixture Activity 024','Synthetic activity description for test data.', 120, '13:00','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (22, 24, '2026-10-09', '11:00', 120);
+VALUES (22, 24, '2026-10-09', '13:00', 120);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (55, 7, 10, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -975,9 +975,9 @@ VALUES (46, 55, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (25, 55, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (25, 25,'Fixture Activity 025','Synthetic activity description for test data.', 60, '12:30','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (25, 25,'Fixture Activity 025','Synthetic activity description for test data.', 60, '11:00','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (23, 25, '2026-10-10', '12:30', 60);
+VALUES (23, 25, '2026-10-10', '11:00', 60);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (56, 7, 11, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -985,9 +985,9 @@ VALUES (47, 56, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (26, 56, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (26, 26,'Fixture Activity 026','Synthetic activity description for test data.', 90, '14:00','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (26, 26,'Fixture Activity 026','Synthetic activity description for test data.', 90, '16:30','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (24, 26, '2026-10-09', '14:00', 90);
+VALUES (24, 26, '2026-10-09', '16:30', 90);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (57, 7, 12, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -995,9 +995,9 @@ VALUES (48, 57, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (27, 57, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (27, 27,'Fixture Activity 027','Synthetic activity description for test data.', 120, '15:30','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (27, 27,'Fixture Activity 027','Synthetic activity description for test data.', 120, '13:30','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (25, 27, '2026-10-10', '15:30', 120);
+VALUES (25, 27, '2026-10-10', '13:30', 120);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (58, 7, 13, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1005,9 +1005,9 @@ VALUES (49, 58, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (28, 58, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (28, 28,'Fixture Activity 028','Synthetic activity description for test data.', 60, '17:00','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (28, 28,'Fixture Activity 028','Synthetic activity description for test data.', 60, '16:00','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (26, 28, '2026-10-09', '17:00', 60);
+VALUES (26, 28, '2026-10-09', '16:00', 60);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (59, 7, 14, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1015,9 +1015,9 @@ VALUES (50, 59, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (29, 59, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (29, 29,'Fixture Activity 029','Synthetic activity description for test data.', 90, '18:30','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (29, 29,'Fixture Activity 029','Synthetic activity description for test data.', 90, '12:00','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (27, 29, '2026-10-10', '18:30', 90);
+VALUES (27, 29, '2026-10-10', '12:00', 90);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (60, 7, 15, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1035,9 +1035,9 @@ VALUES (52, 61, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (31, 61, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (31, 31,'Fixture Activity 031','Synthetic activity description for test data.', 60, '12:30','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (31, 31,'Fixture Activity 031','Synthetic activity description for test data.', 60, '15:30','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (29, 31, '2026-10-10', '12:30', 60);
+VALUES (29, 31, '2026-10-10', '15:30', 60);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (62, 7, 17, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1045,9 +1045,9 @@ VALUES (53, 62, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (32, 62, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (32, 32,'Fixture Activity 032','Synthetic activity description for test data.', 90, '14:00','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (32, 32,'Fixture Activity 032','Synthetic activity description for test data.', 90, '11:00','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (30, 32, '2026-10-09', '14:00', 90);
+VALUES (30, 32, '2026-10-09', '11:00', 90);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (63, 7, 18, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1055,9 +1055,9 @@ VALUES (54, 63, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (33, 63, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (33, 33,'Fixture Activity 033','Synthetic activity description for test data.', 120, '15:30','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (33, 33,'Fixture Activity 033','Synthetic activity description for test data.', 120, '13:30','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (31, 33, '2026-10-10', '15:30', 120);
+VALUES (31, 33, '2026-10-10', '13:30', 120);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (64, 7, 19, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1075,9 +1075,9 @@ VALUES (56, 65, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (35, 65, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (35, 35,'Fixture Activity 035','Synthetic activity description for test data.', 90, '18:30','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (35, 35,'Fixture Activity 035','Synthetic activity description for test data.', 90, '14:30','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (33, 35, '2026-10-10', '18:30', 90);
+VALUES (33, 35, '2026-10-10', '14:30', 90);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (66, 7, 21, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1085,9 +1085,9 @@ VALUES (57, 66, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (36, 66, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (36, 36,'Fixture Activity 036','Synthetic activity description for test data.', 120, '11:00','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (36, 36,'Fixture Activity 036','Synthetic activity description for test data.', 120, '13:00','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (34, 36, '2026-10-09', '11:00', 120);
+VALUES (34, 36, '2026-10-09', '13:00', 120);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (67, 7, 22, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1095,9 +1095,9 @@ VALUES (58, 67, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (37, 67, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (37, 37,'Fixture Activity 037','Synthetic activity description for test data.', 60, '12:30','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (37, 37,'Fixture Activity 037','Synthetic activity description for test data.', 60, '15:30','Fixture Venue', 20, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (35, 37, '2026-10-10', '12:30', 60);
+VALUES (35, 37, '2026-10-10', '15:30', 60);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (68, 7, 23, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1105,9 +1105,9 @@ VALUES (59, 68, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (38, 68, 2, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (38, 38,'Fixture Activity 038','Synthetic activity description for test data.', 45, '14:00','Fixture Venue', NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (38, 38,'Fixture Activity 038','Synthetic activity description for test data.', 45, '13:30','Fixture Venue', NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (36, 38, '2026-10-09', '14:00', 45);
+VALUES (36, 38, '2026-10-09', '13:30', 45);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (69, 7, 24, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1115,9 +1115,9 @@ VALUES (60, 69, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (39, 69, 2, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (39, 39,'Fixture Activity 039','Synthetic activity description for test data.', 45, '15:30','Fixture Venue', NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (39, 39,'Fixture Activity 039','Synthetic activity description for test data.', 45, '16:00','Fixture Venue', NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (37, 39, '2026-10-10', '15:30', 45);
+VALUES (37, 39, '2026-10-10', '16:00', 45);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (70, 7, 25, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1125,9 +1125,9 @@ VALUES (61, 70, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (40, 70, 2, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (40, 40,'Fixture Activity 040','Synthetic activity description for test data.', 45, '17:00','Fixture Venue', NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (40, 40,'Fixture Activity 040','Synthetic activity description for test data.', 45, '14:15','Fixture Venue', NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (38, 40, '2026-10-09', '17:00', 45);
+VALUES (38, 40, '2026-10-09', '14:15', 45);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (71, 7, 26, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1135,9 +1135,9 @@ VALUES (62, 71, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (41, 71, 2, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (41, 41,'Fixture Activity 041','Synthetic activity description for test data.', 45, '18:30','Fixture Venue', NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (41, 41,'Fixture Activity 041','Synthetic activity description for test data.', 45, '16:30','Fixture Venue', NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (39, 41, '2026-10-10', '18:30', 45);
+VALUES (39, 41, '2026-10-10', '16:30', 45);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (72, 7, 27, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1145,9 +1145,9 @@ VALUES (63, 72, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (42, 72, 2, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (42, 42,'Fixture Activity 042','Synthetic activity description for test data.', 45, '11:00','Fixture Venue', NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (42, 42,'Fixture Activity 042','Synthetic activity description for test data.', 45, '15:00','Fixture Venue', NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (40, 42, '2026-10-09', '11:00', 45);
+VALUES (40, 42, '2026-10-09', '15:00', 45);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (73, 7, 28, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1155,9 +1155,9 @@ VALUES (64, 73, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (43, 73, 2, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (43, 43,'Fixture Activity 043','Synthetic activity description for test data.', 45, '12:30','Fixture Venue', NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (43, 43,'Fixture Activity 043','Synthetic activity description for test data.', 45, '16:30','Fixture Venue', NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (41, 43, '2026-10-10', '12:30', 45);
+VALUES (41, 43, '2026-10-10', '16:30', 45);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (74, 7, 29, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1165,9 +1165,9 @@ VALUES (65, 74, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (44, 74, 2, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (44, 44,'Fixture Activity 044','Synthetic activity description for test data.', 45, '14:00','Fixture Venue', NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (44, 44,'Fixture Activity 044','Synthetic activity description for test data.', 45, '15:45','Fixture Venue', NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (42, 44, '2026-10-09', '14:00', 45);
+VALUES (42, 44, '2026-10-09', '15:45', 45);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (75, 7, 30, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1175,9 +1175,9 @@ VALUES (66, 75, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (45, 75, 2, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (45, 45,'Fixture Activity 045','Synthetic activity description for test data.', 45, '15:30','Fixture Venue', NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (45, 45,'Fixture Activity 045','Synthetic activity description for test data.', 45, '16:45','Fixture Venue', NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (43, 45, '2026-10-10', '15:30', 45);
+VALUES (43, 45, '2026-10-10', '16:45', 45);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (76, 7, 31, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1185,9 +1185,9 @@ VALUES (67, 76, 1, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (46, 76, 2, NULL, 1, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (46, 46,'Fixture Activity 046','Synthetic activity description for test data.', 45, '17:00','Fixture Venue', NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (46, 46,'Fixture Activity 046','Synthetic activity description for test data.', 45, '16:30','Fixture Venue', NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (44, 46, '2026-10-09', '17:00', 45);
+VALUES (44, 46, '2026-10-09', '16:30', 45);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (77, 7, 32, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1195,9 +1195,9 @@ VALUES (68, 77, 1, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (47, 77, 2, NULL, 2, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (47, 47,'Fixture Activity 047','Synthetic activity description for test data.', 45, '18:30','Fixture Venue', NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (47, 47,'Fixture Activity 047','Synthetic activity description for test data.', 45, '17:15','Fixture Venue', NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (45, 47, '2026-10-10', '18:30', 45);
+VALUES (45, 47, '2026-10-10', '17:15', 45);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (78, 7, 33, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
@@ -1205,9 +1205,9 @@ VALUES (69, 78, 1, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:56', '20
 INSERT INTO participacion_actividad (id, participacion_id, tipo_actividad_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)
 VALUES (48, 78, 2, NULL, 3, NULL, 'completado', NULL, '2026-03-05 23:48:59', '2026-03-05 23:48:59');
 INSERT INTO actividad (id, participacion_actividad_id, titulo, descripcion, duracion_minutos, hora_inicio, ubicacion, cupos, created_at, updated_at)
-VALUES (48, 48,'Fixture Activity 048','Synthetic activity description for test data.', 45, '11:00','Fixture Venue', NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
+VALUES (48, 48,'Fixture Activity 048','Synthetic activity description for test data.', 45, '17:15','Fixture Venue', NULL, '2026-07-04 04:18:40', '2026-07-04 04:18:40');
 INSERT INTO activity_occurrence (id, activity_id, date, start_time, duration_minutes)
-VALUES (46, 48, '2026-10-09', '11:00', 45);
+VALUES (46, 48, '2026-10-09', '17:15', 45);
 INSERT INTO participacion_edicion (id, edicion_id, artista_id, agrupacion_id, banda_id, notas, created_at, updated_at)
 VALUES (79, 7, 34, NULL, NULL, NULL, '2026-01-20 03:39:14', '2026-03-05 23:48:56');
 INSERT INTO participacion_exposicion (id, participacion_id, disciplina_id, postulacion_id, modo_ingreso_id, puntaje, estado, notas, created_at, updated_at)

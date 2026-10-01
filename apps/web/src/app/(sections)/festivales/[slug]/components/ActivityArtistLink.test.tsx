@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 
 import { ActivityArtistLink } from './ActivityArtistLink'
 
@@ -14,8 +14,8 @@ const renderArtist = (props: Partial<React.ComponentProps<typeof ActivityArtistL
   )
 
 describe('ActivityArtistLink', () => {
-  test('prefers the catalog profile and wraps it with the avatar follower', () => {
-    const { container } = renderArtist({
+  test('prefers the catalog profile and reveals the avatar on hover', () => {
+    const { container, unmount } = renderArtist({
       catalogSlug: 'artista-slug',
       avatarUrl: 'https://example.org/avatar.jpg',
       rrss: '{"instagram":"https://instagram.com/artista"}',
@@ -25,14 +25,18 @@ describe('ActivityArtistLink', () => {
 
     expect(link.getAttribute('href')).toBe('/catalogo/artista-slug')
     expect(container.querySelector('img')).toBeNull()
-    expect(link.parentElement?.className).toContain('inline-flex')
-    expect(link.className).toContain('group')
 
     const icon = screen.getByTestId('activity-artist-catalog-icon')
     expect(icon.getAttribute('aria-hidden')).toBe('true')
-    expect(icon.getAttribute('class')).toContain('group-hover:-rotate-45')
     expect(screen.queryByTestId('activity-artist-social-icon')).toBeNull()
     expect(screen.queryByTestId('activity-artist-email-icon')).toBeNull()
+
+    fireEvent.mouseEnter(link.parentElement!)
+    expect(
+      document.querySelector('img[src="https://example.org/avatar.jpg"]')
+    ).not.toBeNull()
+    unmount()
+    expect(document.querySelector('img[src="https://example.org/avatar.jpg"]')).toBeNull()
   })
 
   test('links to the first valid Instagram URL, then another valid social URL in object order', () => {

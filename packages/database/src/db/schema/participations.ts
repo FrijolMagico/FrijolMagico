@@ -318,6 +318,15 @@ export const activity = sqliteTable(
       .references(() => participationActivity.id, { onDelete: 'cascade' }),
     titulo: text('titulo'),
     descripcion: text('descripcion'),
+    presenterNombre: text('presenter_nombre'),
+    presenterArtistaId: integer('presenter_artista_id').references(
+      () => artist.id,
+      { onDelete: 'restrict' }
+    ),
+    presenterPseudonimoId: integer('presenter_pseudonimo_id').references(
+      () => artistPseudonym.id,
+      { onDelete: 'restrict' }
+    ),
     duracionMinutos: integer('duracion_minutos'),
     ubicacion: text('ubicacion'),
     horaInicio: text('hora_inicio'),
@@ -330,6 +339,10 @@ export const activity = sqliteTable(
       .default(sql`CURRENT_TIMESTAMP`)
   },
   (table) => [
+    check(
+      'chk_activity_presenter_shape',
+      sql`(${table.presenterNombre} IS NULL AND ${table.presenterArtistaId} IS NULL AND ${table.presenterPseudonimoId} IS NULL) OR (${table.presenterNombre} IS NOT NULL AND length(trim(${table.presenterNombre})) > 0 AND ${table.presenterArtistaId} IS NULL AND ${table.presenterPseudonimoId} IS NULL) OR (${table.presenterNombre} IS NULL AND ${table.presenterArtistaId} IS NOT NULL AND ${table.presenterPseudonimoId} IS NOT NULL)`
+    ),
     index('idx_actividad_participacion_actividad').on(
       table.participacionActividadId
     )

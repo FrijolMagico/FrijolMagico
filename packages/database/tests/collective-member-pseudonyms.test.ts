@@ -10,7 +10,7 @@ import { collectiveArtist } from '../src/db/schema/artist'
 const migrations = [
   '0024_artist_pseudonyms.sql',
   '0025_catalog_slug_aliases.sql',
-  '0026_collective_member_pseudonyms.sql'
+  '0027_collective_member_pseudonyms.sql'
 ].map((filename) =>
   readFileSync(join(import.meta.dir, '../migrations', filename), 'utf8')
 )

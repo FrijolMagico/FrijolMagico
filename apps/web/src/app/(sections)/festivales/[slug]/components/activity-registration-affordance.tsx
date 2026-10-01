@@ -2,7 +2,7 @@
 
 import { LinkCta } from '@/components/link-cta'
 
-import { useActivityRegistration } from './use-activity-registration'
+import { useActivityRegistration } from '../hooks/use-activity-registration'
 
 import type { ActivityRegistration } from '../../types/festival'
 

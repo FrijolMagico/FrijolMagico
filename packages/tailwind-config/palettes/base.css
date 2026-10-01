@@ -11,14 +11,14 @@
 
   /* Component-level palette tokens linked to dynamic CSS variables */
   --color-palette-foreground: var(--theme-palette-foreground,
-      var(--color-background));
+      var(--color-foreground));
   --color-palette-background: var(--theme-palette-background,
-      var(--color-accent));
+      var(--color-background));
   --color-palette-primary: var(--theme-palette-primary, var(--color-primary));
   --color-palette-secondary: var(--theme-palette-secondary,
       var(--color-secondary));
   --color-palette-accent: var(--theme-palette-accent, var(--color-accent));
-  --color-palette-outline: var(--theme-palette-outline, var(--color-accent));
+  --color-palette-outline: var(--theme-palette-outline, var(--color-border));
   --color-palette-link: var(--theme-palette-link, var(--color-link));
   --color-palette-shadow: var(--theme-palette-shadow, var(--color-shadow));
 }
@@ -46,6 +46,17 @@
 }
 
 [data-palette='ffm-xvi'] {
+  --theme-palette-background: #ffffff;
+  --theme-palette-foreground: #003c91;
+  --theme-palette-primary: #e664cd;
+  --theme-palette-secondary: #0073b8;
+  --theme-palette-accent: #a0c85a;
+  --theme-palette-outline: #003c91;
+  --theme-palette-link: #e664cd;
+  --theme-palette-shadow: #003c91;
+}
+
+[data-palette='ffm-test'] {
   --theme-palette-background: #ffffff;
   --theme-palette-foreground: #003c91;
   --theme-palette-primary: #e664cd;

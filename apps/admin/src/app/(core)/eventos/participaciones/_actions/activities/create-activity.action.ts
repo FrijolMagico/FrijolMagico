@@ -27,7 +27,8 @@ import {
   type ActivityInsertInput,
   activityInsertSchema,
   parseActivityRegistrationInput,
-  parseActivityOccurrencesInput
+  parseActivityOccurrencesInput,
+  parseActivityPresenterDatabaseValues
 } from '../../_schemas/activity.schema'
 import {
   editionParticipationInsertSchema,
@@ -146,9 +147,14 @@ export async function createActivityAction(
         .values(participationActivityValues)
         .returning({ id: participationActivity.id })
 
+      const presenterValues = parseActivityPresenterDatabaseValues(
+        data.detail,
+        effectiveType.slug === 'charla'
+      )
       const activityDetailsValues = activityDetailInsertSchema.parse({
         participacionActividadId: insertedActivity.id,
-        ...data.detail
+        ...data.detail,
+        ...presenterValues
       })
 
       const [insertedDetail] = await tx.insert(activity)

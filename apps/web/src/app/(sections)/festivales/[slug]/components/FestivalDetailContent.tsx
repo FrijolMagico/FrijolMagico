@@ -31,57 +31,50 @@ export const FestivalDetailContent = ({
   return (
     <article
       data-palette={palette}
-      className='container mx-auto max-w-6xl px-4 pt-24 pb-32'
+      className='container mx-auto max-w-6xl space-y-24 px-4 pt-24 pb-32'
     >
-      <header
-        className='mb-8'
-        data-festival-entry={animationMode === 'active' ? 'header' : undefined}
-      >
-        {animationMode === 'active' ? (
-          <h1 className='text-palette-primary text-4xl leading-none font-black tracking-tight md:text-5xl'>
-            <span className='text-palette-secondary'>{numero_edicion}</span>{' '}
-            {evento.nombre}
-          </h1>
-        ) : (
-          <h1 className='text-palette-primary text-4xl leading-none font-black tracking-tight md:text-5xl'>
-            {evento.nombre}{' '}
-            <span className='text-palette-secondary'>{numero_edicion}</span>
-          </h1>
-        )}
-        {edicion_nombre && (
-          <p className='text-palette-accent text-xl font-semibold'>
-            {edicion_nombre}
-          </p>
-        )}
-
-        <div className='mt-4 space-y-2'>
-          {daysDisplay && (
-            <div className='text-palette-foreground/70 flex items-center gap-2'>
-              <Calendar className='size-5' aria-hidden='true' />
-              <span>{daysDisplay}</span>
-            </div>
-          )}
-          {locationDisplay && (
-            <div className='text-palette-foreground/70 flex items-center gap-2'>
-              <MapPin className='size-5' aria-hidden='true' />
-              <span>{locationDisplay}</span>
-            </div>
-          )}
-        </div>
-      </header>
-
-      <div className='grid gap-10 md:grid-cols-8 lg:gap-20'>
-        <aside className='md:sticky md:top-24 md:col-span-3 md:self-start'>
+      <div className='space-y-8'>
+        <header
+          data-festival-entry={
+            animationMode === 'active' ? 'header' : undefined
+          }
+        >
           {animationMode === 'active' ? (
-            <FestivalDetailPoster
-              posterUrl={poster_url}
-              eventName={evento.nombre}
-              editionName={numero_edicion}
-              priority
-              animationMode={animationMode}
-            />
+            <h1 className='text-palette-primary text-4xl leading-none font-black tracking-tight md:text-5xl'>
+              <span className='text-palette-secondary'>{numero_edicion}</span>{' '}
+              {evento.nombre}
+            </h1>
           ) : (
-            <FestivalPosterTransition slug={detail.slug}>
+            <h1 className='text-palette-primary text-4xl leading-none font-black tracking-tight md:text-5xl'>
+              {evento.nombre}{' '}
+              <span className='text-palette-secondary'>{numero_edicion}</span>
+            </h1>
+          )}
+          {edicion_nombre && (
+            <p className='text-palette-accent text-xl font-semibold'>
+              {edicion_nombre}
+            </p>
+          )}
+
+          <div className='mt-4 space-y-2'>
+            {daysDisplay && (
+              <div className='text-palette-foreground/70 flex items-center gap-2'>
+                <Calendar className='size-5' aria-hidden='true' />
+                <span>{daysDisplay}</span>
+              </div>
+            )}
+            {locationDisplay && (
+              <div className='text-palette-foreground/70 flex items-center gap-2'>
+                <MapPin className='size-5' aria-hidden='true' />
+                <span>{locationDisplay}</span>
+              </div>
+            )}
+          </div>
+        </header>
+
+        <div className='grid gap-10 md:grid-cols-8 lg:gap-20'>
+          <aside className='md:sticky md:top-24 md:col-span-3 md:self-start'>
+            {animationMode === 'active' ? (
               <FestivalDetailPoster
                 posterUrl={poster_url}
                 eventName={evento.nombre}
@@ -89,21 +82,35 @@ export const FestivalDetailContent = ({
                 priority
                 animationMode={animationMode}
               />
-            </FestivalPosterTransition>
-          )}
-        </aside>
+            ) : (
+              <FestivalPosterTransition slug={detail.slug}>
+                <FestivalDetailPoster
+                  posterUrl={poster_url}
+                  eventName={evento.nombre}
+                  editionName={numero_edicion}
+                  priority
+                  animationMode={animationMode}
+                />
+              </FestivalPosterTransition>
+            )}
+          </aside>
 
-        <div className='min-w-0 space-y-8 md:col-span-5'>
-          <ParticipantList
-            participantes={detail.participantes}
-            animationMode={animationMode}
-          />
-          {detail.actividades.length > 0 && (
-            <ActivityList actividades={detail.actividades} isEditionPast={detail.is_edition_past} />
-          )}
-          {navigator && <div className='pt-10'>{navigator}</div>}
+          <div className='min-w-0 space-y-8 md:col-span-5'>
+            <ParticipantList
+              participantes={detail.participantes}
+              animationMode={animationMode}
+            />
+          </div>
         </div>
       </div>
+
+      {detail.actividades.length > 0 && (
+        <ActivityList
+          actividades={detail.actividades}
+          isEditionPast={detail.is_edition_past}
+        />
+      )}
+      {navigator && <div className='mt-10'>{navigator}</div>}
     </article>
   )
 }
