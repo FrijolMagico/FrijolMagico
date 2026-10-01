@@ -4,6 +4,7 @@ const writes: Array<{ table: unknown; values?: unknown; update?: unknown }> = []
 const selectResults: unknown[][] = []
 const webInvalidations: unknown[] = []
 let selectCount = 0
+let transactionFailure: Error | null = null
 
 const transaction = {
   select: () => {
@@ -24,7 +25,9 @@ const transaction = {
         writes.push({ table, update: values })
         return builder
       },
-      where: async () => undefined
+      where: async () => {
+        if (transactionFailure) throw transactionFailure
+      }
     }
     return builder
   },
@@ -70,6 +73,7 @@ beforeEach(() => {
   selectResults.length = 0
   webInvalidations.length = 0
   selectCount = 0
+  transactionFailure = null
 })
 
 describe('upsertCollectiveWithMembersAction alias validation', () => {
@@ -143,6 +147,57 @@ describe('upsertCollectiveWithMembersAction alias validation', () => {
       JSON.stringify(write.update) ===
       JSON.stringify({ pseudonimoId: 33, rol: 'Bajo', activo: false })
     )).toBe(true)
+  })
+
+  test('immediately invalidates festivals when the collective name changes', async () => {
+    const result = await upsertCollectiveWithMembersAction(
+      { success: false },
+      {
+        ...basePayload,
+        fields: { ...basePayload.fields, nombre: 'New Collective' }
+      }
+    )
+
+    expect(result.success).toBe(true)
+    expect(webInvalidations).toContainEqual({
+      tag: 'festivales:critico',
+      mode: 'immediate'
+    })
+    expect(webInvalidations.filter((invalidation) =>
+      (invalidation as { tag: string }).tag !== 'festivales:critico'
+    )).toEqual([
+      { tag: 'catalogo:artistas:base' },
+      { tag: 'catalogo:artistas:participaciones' },
+      { tag: 'catalogo:artistas' }
+    ])
+  })
+
+  test('does not invalidate festivals when unchanged name accompanies a description update', async () => {
+    const result = await upsertCollectiveWithMembersAction(
+      { success: false },
+      {
+        ...basePayload,
+        fields: { ...basePayload.fields, descripcion: 'Updated description' }
+      }
+    )
+
+    expect(result.success).toBe(true)
+    expect(webInvalidations).toEqual([])
+  })
+
+  test('does not invalidate festivals when the transaction fails after a name change', async () => {
+    transactionFailure = new Error('Transaction failed')
+
+    const result = await upsertCollectiveWithMembersAction(
+      { success: false },
+      {
+        ...basePayload,
+        fields: { ...basePayload.fields, nombre: 'New Collective' }
+      }
+    )
+
+    expect(result.success).toBe(false)
+    expect(webInvalidations).toEqual([])
   })
 
   test('does not invalidate the catalog for a non-catalog field-only update', async () => {

@@ -13,6 +13,7 @@ import {
   COLLECTIVE_ACTIVE_CACHE_TAG,
   COLLECTIVE_CACHE_TAG,
   COLLECTIVE_DELETED_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG,
   getCollectiveMembersCacheTag
 } from '@frijolmagico/cache-tags'
 import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
@@ -57,6 +58,7 @@ export async function upsertCollectiveWithMembersAction(
     } = parsedPayload.data
 
     let catalogChanged = false
+    let collectiveNameChanged = false
     await db.transaction(async (transaction) => {
       const [existingCollective] = await transaction
         .select({ nombre: collective.nombre, activo: collective.activo })
@@ -74,10 +76,12 @@ export async function upsertCollectiveWithMembersAction(
       const memberByArtist = new Map(
         existingMembers.map((member) => [member.artistId, member])
       )
+      collectiveNameChanged =
+        existingCollective !== undefined &&
+        existingCollective.nombre !== fields.nombre.trim()
       catalogChanged =
         existingCollective !== undefined &&
-        (existingCollective.nombre !== fields.nombre.trim() ||
-          existingCollective.activo !== fields.activo)
+        (collectiveNameChanged || existingCollective.activo !== fields.activo)
       for (const add of pendingAdds) {
         const member = memberByArtist.get(add.artistId)
         if (
@@ -217,6 +221,12 @@ export async function upsertCollectiveWithMembersAction(
     updateTag(COLLECTIVE_ACTIVE_CACHE_TAG)
     updateTag(COLLECTIVE_DELETED_CACHE_TAG)
     updateTag(getCollectiveMembersCacheTag(collectiveId))
+    if (collectiveNameChanged) {
+      void revalidateWebCacheBestEffort({
+        tag: FESTIVAL_CRITICAL_CACHE_TAG,
+        mode: 'immediate'
+      })
+    }
     if (catalogChanged) {
       void revalidateWebCacheBestEffort({ tag: CATALOG_BASE_CACHE_TAG })
       void revalidateWebCacheBestEffort({ tag: CATALOG_PARTICIPATION_CACHE_TAG })
