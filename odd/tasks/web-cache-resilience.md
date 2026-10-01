@@ -220,7 +220,7 @@ Acceptance: Admin URL tests cover `page`, `layout`, legacy path-only, and invali
 
 Verification so far: TDD RED — Admin helper 22 passed/4 failed; Web route 5 passed/4 failed. Focused GREEN — Admin helper 26/0 (34 expectations), Web route 9/0 (32 assertions). Full Web Turbo suite passed on retry: 249/0 across 57 files (a prior run hit a non-reproducible Bun SIGSEGV in an unrelated festival-types test). Full Admin Turbo suite is blocked by five unhandled `Missing Turso database URL` errors across unrelated test files (748 pass/5 errors); root `bun run type-check` reports 10 errors in test files and none in the Stage4.1 source or direct tests. No database URL was supplied and no DB/remote access was made.
 
-- [ ] **In progress:** Implement and verify validated `pathType` transport for route-output invalidation.
+- [ ] **In progress:** Implement and verify validated `pathType` transport for route-output invalidation. Implementation commit: `d64468bf feat(cache): support typed route revalidation`; remains in progress pending broad verification blockers.
 - [ ] **Blocked follow-up:** Resolve or safely isolate full Admin test environment/type-check blockers before starting Preview verification.
 
 ### Staging validation runbook (prepared, not executed)
