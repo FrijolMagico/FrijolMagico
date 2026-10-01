@@ -1,16 +1,21 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
 
+import { FESTIVAL_CRITICAL_CACHE_TAG } from '@frijolmagico/cache-tags'
+
 import { executeQueryMock } from '@/test-utils/mockDatabase'
 
 import { getEditionDays } from './getEditionDays'
 
+const cacheTagMock = mock((_tag: string) => {})
+
 mock.module('next/cache', () => ({
   cacheLife: mock(() => {}),
-  cacheTag: mock(() => {})
+  cacheTag: cacheTagMock
 }))
 
 beforeEach(() => {
   executeQueryMock.mockReset()
+  cacheTagMock.mockClear()
 })
 
 describe('getEditionDays', () => {
@@ -29,6 +34,9 @@ describe('getEditionDays', () => {
     expect(result.data).toHaveLength(3)
     expect(result.data![0].fecha).toBe('2026-10-09')
     expect(result.data![0].lugar).toBe('Mall VIVO Coquimbo')
+    expect(cacheTagMock.mock.calls.map(([tag]) => tag)).toEqual([
+      FESTIVAL_CRITICAL_CACHE_TAG
+    ])
   })
 
   test('returns days with null venue when no place is set', async () => {

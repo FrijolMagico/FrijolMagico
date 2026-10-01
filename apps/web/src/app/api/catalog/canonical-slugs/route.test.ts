@@ -1,6 +1,9 @@
 import { describe, expect, mock, test } from 'bun:test'
 
-import { CATALOG_BASE_CACHE_TAG } from '@frijolmagico/cache-tags'
+import {
+  CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+  CATALOG_BASE_CACHE_TAG
+} from '@frijolmagico/cache-tags'
 
 const cacheConfigurations: unknown[] = []
 const executeQuery = mock(async () => ({ data: [{ slug: 'current-name' }] }))
@@ -57,14 +60,15 @@ describe('canonical catalog slugs route', () => {
     expect(CANONICAL_CATALOG_SLUGS_QUERY).not.toMatch(/correo|imagen|participacion/i)
   })
 
-  test('uses the shared cache tag without a time-based TTL', () => {
+  test('uses the canonical-slugs tag instead of the catalog-base tag', () => {
     expect(cacheConfigurations).toContainEqual({
       keyParts: ['canonical-catalog-slugs'],
       options: {
-        tags: [CATALOG_BASE_CACHE_TAG],
+        tags: [CANONICAL_CATALOG_SLUGS_CACHE_TAG],
         revalidate: false
       }
     })
+    expect(CANONICAL_CATALOG_SLUGS_CACHE_TAG).not.toBe(CATALOG_BASE_CACHE_TAG)
   })
 
   test('serves the cached compact slug list with no-store response headers', async () => {

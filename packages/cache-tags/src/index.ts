@@ -12,6 +12,7 @@ export const CATALOG_CACHE_TAG = 'catalogo:artistas'
 export const CATALOG_BASE_CACHE_TAG = 'catalogo:artistas:base'
 export const CATALOG_PARTICIPATION_CACHE_TAG = 'catalogo:artistas:participaciones'
 export const CATALOG_EDITION_DATES_CACHE_TAG = 'catalogo:artistas:fechas-edicion'
+export const CANONICAL_CATALOG_SLUGS_CACHE_TAG = 'catalogo:artistas:slugs'
 
 // ── Home / Destacados ─────────────────────────
 export const FEATURED_ARTISTS_CACHE_TAG = 'home:destacados'
@@ -19,6 +20,7 @@ export const FEATURED_ARTISTS_CACHE_TAG = 'home:destacados'
 // ── Páginas estáticas ─────────────────────────
 export const NOSOTROS_CACHE_TAG = 'nosotros'
 export const FESTIVALES_CACHE_TAG = 'festivales'
+export const FESTIVAL_CRITICAL_CACHE_TAG = 'festivales:critico'
 
 // ── Artistas ──────────────────────────────────
 export const ARTIST_CACHE_TAG = 'artistas'

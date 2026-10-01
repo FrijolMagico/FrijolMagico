@@ -1,16 +1,21 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
 
+import { FESTIVAL_CRITICAL_CACHE_TAG } from '@frijolmagico/cache-tags'
+
 import { executeQueryMock } from '@/test-utils/mockDatabase'
 
 import { getActiveFestival } from './getActiveFestival'
 
+const cacheTagMock = mock((_tag: string) => {})
+
 mock.module('next/cache', () => ({
   cacheLife: mock(() => {}),
-  cacheTag: mock(() => {})
+  cacheTag: cacheTagMock
 }))
 
 beforeEach(() => {
   executeQueryMock.mockReset()
+  cacheTagMock.mockClear()
 })
 
 describe('getActiveFestival', () => {
@@ -34,6 +39,9 @@ describe('getActiveFestival', () => {
     expect(result.data).toHaveLength(1)
     expect(result.data![0].slug).toBe('edicion-15-1')
     expect(result.data![0].event_name).toBe('Festival Frijol Mágico')
+    expect(cacheTagMock.mock.calls.map(([tag]) => tag)).toEqual([
+      FESTIVAL_CRITICAL_CACHE_TAG
+    ])
   })
 
   test('returns empty data when no festival is active', async () => {

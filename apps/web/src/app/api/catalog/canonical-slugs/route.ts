@@ -1,5 +1,5 @@
 import { executeQuery } from '@frijolmagico/database/client'
-import { CATALOG_BASE_CACHE_TAG } from '@frijolmagico/cache-tags'
+import { CANONICAL_CATALOG_SLUGS_CACHE_TAG } from '@frijolmagico/cache-tags'
 import { unstable_cache } from 'next/cache'
 import { NextResponse } from 'next/server'
 
@@ -20,7 +20,7 @@ export async function selectCanonicalCatalogSlugs(): Promise<string[]> {
 export const getCachedCanonicalCatalogSlugs = unstable_cache(
   selectCanonicalCatalogSlugs,
   ['canonical-catalog-slugs'],
-  { tags: [CATALOG_BASE_CACHE_TAG], revalidate: false }
+  { tags: [CANONICAL_CATALOG_SLUGS_CACHE_TAG], revalidate: false }
 )
 
 export function createCanonicalSlugsGet(loadCached: LoadSlugs) {
