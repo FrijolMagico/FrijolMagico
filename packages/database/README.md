@@ -2,16 +2,20 @@
 
 Acceso a Turso/libSQL desde el monorepo: Drizzle ORM para consultas relacionales y cliente SQL para consultas directas. Para desarrollo, `local.dev.db` es una copia real de **staging** y `local.db` una copia real de **producción**; no son bases de datos de prueba generadas con seed.
 
-## Camino rápido: copiar staging para desarrollo
+## Desarrollo local con snapshots
 
-Desde `packages/database/`, con `turso`, `sqlite3` y `bun` disponibles:
+Desde la raíz, `bun run dev` inicia web y admin con una URL `file:` directa a `packages/database/local.dev.db`; `bun run dev:real` usa `packages/database/local.db`. Ambos preservan los filtros Turbo pasados, por ejemplo `bun run dev --filter=@frijolmagico/web` o `bun run dev:real --filter=@frijolmagico/admin`. No inician un servidor Turso local, sincronizan snapshots automáticamente ni leen Turso Cloud. `dev:real` solo apunta al archivo local `local.db` —nunca a una base remota—, pero el admin puede escribir en ese archivo con datos reales de producción.
 
-1. Cerrá `bun run dev`/`bun run prod` y cualquier otro proceso que use los archivos locales. No actualices una base abierta.
-2. Autenticate en la CLI con `turso auth login` (sesión de CLI separada de los tokens de la app) y verificá por fuera del dump que estás en la organización y base esperadas. Configurá `TURSO_STAGING_DATABASE_NAME` con el nombre exacto de staging. No configures `TURSO_DATABASE_URL` ni `TURSO_AUTH_TOKEN` para el pull.
-3. Con autorización para leer staging, ejecutá `bun --no-env-file run pull:staging`. El comando obtiene `turso db shell <nombre> .dump`, importa con `sqlite3`, verifica integridad, claves foráneas, metadatos de migración y un esquema mínimo, y recién entonces reemplaza `local.dev.db`.
-4. Verificá el origen y los datos localmente antes de ejecutar `bun run dev` (`turso dev --db-file local.dev.db`). La validación estructural no demuestra de qué base vino el dump.
+Los antiguos scripts locales de desarrollo y producción del paquete de base de datos ya no existen. Si iniciás `bun run dev` directamente desde `apps/web/` o `apps/admin/`, configurá explícitamente `TURSO_DATABASE_URL` con la URL `file:` absoluta del snapshot elegido; sin esa variable el acceso a la base falla cerrado.
 
-Para una copia de producción, obtené **autorización de lectura de producción por separado**, configurá `TURSO_PRODUCTION_DATABASE_NAME`, cerrá ambos servidores locales y ejecutá `bun --no-env-file run pull:production`; verificá origen y contenido antes de `bun run prod` (`turso dev --db-file local.db`). Los nombres de staging y producción deben ser distintos. Un pull no migra ni escribe en Turso remoto; **sí reemplaza el archivo local seleccionado**. Si falla antes del reemplazo, conserva el archivo anterior. Un dump válido pero del origen equivocado no se puede detectar solo por el esquema.
+## Refrescar un snapshot (opcional)
+
+Antes de refrescar, detené los procesos de web/admin y cualquier otro proceso que use los archivos locales. Desde `packages/database/`, obtené autorización de lectura para el destino específico:
+
+- Staging: autenticar la CLI con `turso auth login`, configurar `TURSO_STAGING_DATABASE_NAME` con el nombre exacto y ejecutar `bun --no-env-file run pull:staging` para reemplazar `local.dev.db`.
+- Producción: obtener autorización de lectura separada, configurar `TURSO_PRODUCTION_DATABASE_NAME` y ejecutar `bun --no-env-file run pull:production` para reemplazar `local.db`.
+
+Los pulls obtienen un dump, lo importan y validan antes de reemplazar el archivo seleccionado. No migran ni escriben en Turso remoto; sí reemplazan el snapshot local. No configures `TURSO_DATABASE_URL` ni `TURSO_AUTH_TOKEN` para el pull. Verificá el origen independientemente del dump: un dump válido pero del origen equivocado no se puede detectar solo por el esquema.
 
 ## Comandos y destinos
 
@@ -19,7 +23,8 @@ Para una copia de producción, obtené **autorización de lectura de producción
 | --- | --- |
 | `bun --no-env-file run pull:staging` | Lee staging; valida y reemplaza solo `local.dev.db`. |
 | `bun --no-env-file run pull:production` | Lee producción; valida y reemplaza solo `local.db`. |
-| `bun run dev` / `bun run prod` | Sirve el archivo local de staging / producción, respectivamente. No conecta a Turso Cloud. |
+| `bun run dev` (desde la raíz) | Web + admin con URL `file:` a `packages/database/local.dev.db`; sin servidor local ni conexión/sync a Turso Cloud. |
+| `bun run dev:real` (desde la raíz) | Web + admin con URL `file:` a `packages/database/local.db`; permite escrituras locales. |
 | `bun run migrate:staging` | **Escribe** migraciones versionadas en staging remoto, con autorización específica. |
 | `bun run migrate:production` | **Escribe** migraciones versionadas en producción remota, con autorización humana nueva y confirmación explícita. |
 | `bun run new <name>` | Genera una migración SQL custom para editar y revisar. |

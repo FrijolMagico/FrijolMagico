@@ -47,7 +47,7 @@ This is a **Turborepo** monorepo with the following architecture:
 
 - Node.js (v18 or later)
 - Bun package manager (v1.2.2 or later)
-- Turso CLI (for database management) - [Installation guide](https://docs.turso.tech/cli/installation)
+- Turso CLI (only for authorized snapshot pulls or database management) - [Installation guide](https://docs.turso.tech/cli/installation)
 
 ### Installation
 
@@ -80,17 +80,19 @@ This is a **Turborepo** monorepo with the following architecture:
 
    See each app's README for environment variable details. For remote database migrations, add the selected target's credentials manually to the ignored `packages/database/.env.local`; `bun run migrate:staging` and `bun run migrate:production` load it and select separate Drizzle configs for the same migration directory. Production also requires the exact `TURSO_PRODUCTION_MIGRATION_CONFIRM=migrate:<database-name>` confirmation. Direct Drizzle CLI output may include URLs or tokens; do not run with real credentials in shared logs. Pull commands remain `bun --no-env-file run pull:<target>` and do not load this file.
 
-4. **Prepare the local staging snapshot**
+4. **Prepare a local snapshot (optional)**
 
-   From `packages/database/`, and only after authorization to read staging, run `bun run pull:staging` to refresh `local.dev.db`. Check [database setup and privacy guidance](packages/database/README.md) first. Remote migrations are separate writes: `bun run migrate:staging` and `bun run migrate:production` each require separate authorization. Do not use the old `bun run db:migrate` command; it fails closed.
+   Root `bun run dev` uses `packages/database/local.dev.db`; `bun run dev:real` uses `packages/database/local.db`. To refresh either snapshot, stop all app processes first. From `packages/database/`, run the matching pull only after obtaining authorization to read that target: `bun --no-env-file run pull:staging` or, with separate production-read authorization, `bun --no-env-file run pull:production`. See [database setup and privacy guidance](packages/database/README.md). These pulls are explicit; app startup neither syncs snapshots nor reads Turso Cloud. Remote migrations are separate writes: `bun run migrate:staging` and `bun run migrate:production` each require separate authorization. Do not use the old `bun run db:migrate` command; it fails closed.
 
 5. **Run development servers**
 
    ```bash
-   bun run dev
+   bun run dev       # Uses local.dev.db
+   bun run dev:real  # Uses local.db
    ```
 
-   This starts all apps via Turborepo:
+   Both commands start the web and admin apps via Turborepo and inject a direct `file:` URL to the selected local SQLite snapshot. They preserve forwarded Turbo filters, for example `bun run dev -- --filter=@frijolmagico/web`. No local Turso database server is started, and neither command automatically refreshes or syncs a snapshot. `dev:real` still accesses only local `local.db`, never a remote database; the admin app can write to that file. Treat it as production data and use it carefully.
+
    - Web app: http://localhost:3000
    - Admin app: http://localhost:3001
 
@@ -100,7 +102,8 @@ This is a **Turborepo** monorepo with the following architecture:
 
 ```bash
 # Development
-bun run dev                    # Start all apps with Turborepo
+bun run dev                    # Web + admin against packages/database/local.dev.db
+bun run dev:real               # Web + admin against packages/database/local.db (admin can write)
 
 # Build
 bun run build                  # Production build (all apps)
@@ -130,6 +133,8 @@ bun run lint                   # ESLint
 bun run lint:fix               # ESLint --fix
 bun run type-check             # tsc --noEmit
 ```
+
+Running an app's `bun run dev` directly from its app directory does not inherit the root script's database URL. Set `TURSO_DATABASE_URL` explicitly to the intended absolute `file:` URL first; without it, database access fails closed.
 
 ## Apps & Packages Documentation
 

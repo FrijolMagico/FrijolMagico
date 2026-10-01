@@ -14,8 +14,9 @@ Drizzle ORM + Turso (libSQL) database package.
 ```bash
 bun --no-env-file run pull:staging    # read staging into local.dev.db
 bun --no-env-file run pull:production # read production into local.db
-bun run dev                # serve local.dev.db
-bun run prod               # serve local.db
+# From the repository root:
+bun run dev                # web + admin against packages/database/local.dev.db
+bun run dev:real           # web + admin against packages/database/local.db (admin can write)
 bun run migrate:staging    # remote write: staging only
 bun run migrate:production # remote write: production only, separately authorized
 bun run new <name>
@@ -23,7 +24,8 @@ bun run lint
 bun run type-check
 ```
 
-- Stop all local database users before pulling. Pulls overwrite only the selected local file after validation; keep a private backup if rollback matters. Never commit snapshots, dumps, credentials, or SQLite WAL/SHM sidecars.
+- Root `bun run dev` and `bun run dev:real` inject direct `file:` URLs for `local.dev.db` and `local.db`; they do not start a Turso server, automatically sync snapshots, or read Turso Cloud. `dev:real` is still local-only, but admin can write the production-data snapshot. App-specific `bun run dev` needs an explicitly configured absolute `TURSO_DATABASE_URL`; otherwise database access fails closed. The database package's former local development and production scripts no longer exist.
+- Stop all app processes and other local database users before pulling. Pulls overwrite only the selected local file after validation; keep a private backup if rollback matters. Never commit snapshots, dumps, credentials, or SQLite WAL/SHM sidecars.
 - Remote migrations require separate human authorization for staging and then production. Production also requires `TURSO_PRODUCTION_MIGRATION_CONFIRM=migrate:<production-name>`; this confirmation is not authorization. Verify identity, pending migrations, backup and remote state before writes or retries. Do not run destructive remote database operations without explicit permission. See [README.md](./README.md) for variables, CLI login, and rollback.
 - No public seed, generic migrate, or dev R2 reset command. `seed/seed.sql` remains a test fixture/reference only. The legacy `scripts/clean-devr2/reset-dev-r2.ts` preserves seed assets, not real staging snapshot assets; never run it manually against `local.dev.db`. It aborts before R2 activity when that file exists. Any replacement cleanup needs snapshot-aware review and separate authorization.
 

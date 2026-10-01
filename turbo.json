@@ -35,7 +35,15 @@
       "outputs": [".next/**", "!.next/cache/**"]
     },
 
-    "dev": {
+    "@frijolmagico/admin#dev": {
+      "env": ["TURSO_DATABASE_URL"],
+      "cache": false,
+      "persistent": true,
+      "interactive": true
+    },
+
+    "@frijolmagico/web#dev": {
+      "env": ["TURSO_DATABASE_URL"],
       "cache": false,
       "persistent": true,
       "interactive": true

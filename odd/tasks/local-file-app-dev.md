@@ -1,0 +1,8 @@
+# Local file app development
+
+Goal: Run web and admin locally against explicit SQLite snapshots through the existing @libsql/client; root `bun run dev` selects `packages/database/local.dev.db`, and `bun run dev:real` selects `packages/database/local.db`. Both preserve Turbo `--filter` passthrough and do not contact Turso Cloud on startup.
+
+Constraints: Never change CI mock database selection or release migration jobs, Vercel remote URL/token behavior, snapshot pull commands or real snapshots. No DB remote reads/writes, push or deployment. Preserve unrelated user changes. Local admin writes to selected snapshot are acceptable by user. Existing `.github/workflows/pr-checks.yml` references a missing database `migrate` script; record as pre-existing, not silently repair within this feature.
+
+- [x] L1 Wire root app dev modes to explicit absolute `file:` URL, retain forwarded Turbo filters, remove local Turso database server tasks and fail closed when no URL is configured; update run documentation in the same work unit. Check: database 105 tests and scoped type-check passed, admin/web-only and unfiltered Turbo dry runs selected only expected apps and passed the URL allowlist. Commit evidence: pending.
+- [ ] L2 Check CI config remains unchanged and execute independent focused tests/type-check plus a local web+admin read/cache smoke test if feasible without touching actual snapshots; record evidence separately. Commit evidence: pending.

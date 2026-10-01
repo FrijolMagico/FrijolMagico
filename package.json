@@ -10,7 +10,8 @@
   },
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "dev": "TURSO_DATABASE_URL=file://${PWD}/packages/database/local.dev.db turbo run dev",
+    "dev:real": "TURSO_DATABASE_URL=file://${PWD}/packages/database/local.db turbo run dev",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
     "test": "turbo run test",
