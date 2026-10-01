@@ -1,20 +1,22 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
+import { FESTIVALES_CACHE_TAG, FESTIVAL_CRITICAL_CACHE_TAG } from '@frijolmagico/cache-tags'
 
 let committed = false
 let failMutation = false
 const invalidations: string[] = []
+let existingParticipation = { id: 11, edicionId: 7, artistaId: 5, bandaId: null, agrupacionId: null }
 const updateTag = mock((tag: string) => {
   expect(committed).toBe(true)
   invalidations.push(tag)
 })
-const revalidateWebCacheBestEffort = mock(async ({ tag }: { tag: string }) => {
+const revalidateWebCacheBestEffort = mock(async ({ tag }: { tag: string; mode?: string }) => {
   expect(committed).toBe(true)
   invalidations.push(tag)
 })
 const tx = {
   query: {
     editionParticipation: {
-      findFirst: async () => ({ id: 11, edicionId: 7, artistaId: 5, bandaId: null, agrupacionId: null })
+      findFirst: async () => existingParticipation
     }
   },
   update: () => ({
@@ -54,6 +56,7 @@ const payload = {
 beforeEach(() => {
   committed = false
   failMutation = false
+  existingParticipation = { id: 11, edicionId: 7, artistaId: 5, bandaId: null, agrupacionId: null }
   invalidations.length = 0
   updateTag.mockClear()
   revalidateWebCacheBestEffort.mockClear()
@@ -68,6 +71,19 @@ describe('updateParticipationAction cache freshness', () => {
     expect(invalidations).toContain('participaciones:edicion:8')
     expect(invalidations).toContain('catalogo:artistas')
     expect(invalidations).toContain('catalogo:artistas:participaciones')
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: FESTIVALES_CACHE_TAG, mode: 'swr' })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: 'catalogo:artistas' })
+  })
+
+  test('does not invalidate discovery when a relationship changes without changing edition membership', async () => {
+    const result = await updateParticipationAction({ ...payload, edicionId: 7, artistaId: 9 })
+
+    expect(result.success).toBe(true)
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' })
+    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalledWith({ tag: FESTIVALES_CACHE_TAG, mode: 'swr' })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: 'catalogo:artistas' })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: 'catalogo:artistas:participaciones' })
   })
 
   test('does not invalidate caches when no values changed', async () => {

@@ -15,6 +15,8 @@ import {
   ARTIST_DETAIL_CACHE_TAG,
   CATALOG_CACHE_TAG,
   CATALOG_PARTICIPATION_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG,
+  FESTIVALES_CACHE_TAG,
   getEditionParticipationsCacheTag
 } from '@frijolmagico/cache-tags'
 import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
@@ -41,6 +43,8 @@ export async function updateParticipationAction(
 
     let oldEditionId: number | null = null
     let changed = false
+    let relationshipChanged = false
+    let editionChanged = false
     let catalogChanged = false
     await db.transaction(async (tx) => {
       const existing = await tx.query.editionParticipation.findFirst({
@@ -54,6 +58,11 @@ export async function updateParticipationAction(
       )
       if (!changed) return
 
+      editionChanged = existing.edicionId !== parsed.data.edicionId
+      relationshipChanged =
+        editionChanged ||
+        existing.artistaId !== parsed.data.artistaId ||
+        existing.agrupacionId !== parsed.data.agrupacionId
       catalogChanged =
         existing.edicionId !== parsed.data.edicionId ||
         existing.artistaId !== parsed.data.artistaId ||
@@ -72,6 +81,18 @@ export async function updateParticipationAction(
       updateTag(getEditionParticipationsCacheTag(parsed.data.edicionId))
     }
     updateTag(ARTIST_DETAIL_CACHE_TAG)
+    if (relationshipChanged) {
+      void revalidateWebCacheBestEffort({
+        tag: FESTIVAL_CRITICAL_CACHE_TAG,
+        mode: 'immediate'
+      })
+    }
+    if (editionChanged) {
+      void revalidateWebCacheBestEffort({
+        tag: FESTIVALES_CACHE_TAG,
+        mode: 'swr'
+      })
+    }
     if (catalogChanged) {
       void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
       void revalidateWebCacheBestEffort({ tag: CATALOG_PARTICIPATION_CACHE_TAG })
