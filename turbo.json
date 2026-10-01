@@ -61,6 +61,7 @@
 
     "test": {
       "cache": false,
+      "env": ["TURSO_DATABASE_URL"],
       "outputs": []
     },
 
