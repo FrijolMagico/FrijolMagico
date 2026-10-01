@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
 import { getTableName } from 'drizzle-orm'
 import { artist as artistTables, participations } from '@frijolmagico/database/schema'
-import { CANONICAL_CATALOG_SLUGS_CACHE_TAG } from '@frijolmagico/cache-tags'
+import {
+  CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+  FEATURED_ARTISTS_CACHE_TAG
+} from '@frijolmagico/cache-tags'
 
 const { artist, artistHistory, artistPseudonym, artistPrimaryPseudonym, artistSlugAlias, catalogArtist } = artistTables
 const { participationActivity, participationExhibition } = participations
@@ -311,6 +314,10 @@ describe('updateArtistaWithPseudonymsAction', () => {
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
     })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      mode: 'swr'
+    })
   })
 
   test('renaming the catalog-selected pseudonym invalidates catalog when its slug stays the same', async () => {
@@ -445,7 +452,14 @@ describe('updateArtistaWithPseudonymsAction', () => {
     )
 
     expect(result.success).toBe(true)
+    expect(mockDb.state.writes.some(({ value }) =>
+      (value as { slug?: string }).slug !== undefined
+    )).toBe(false)
     expect(revalidateWebCache).not.toHaveBeenCalled()
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      mode: 'swr'
+    })
     expect(updateTag).not.toHaveBeenCalledWith('catalogo:artistas')
   })
 
@@ -564,6 +578,44 @@ describe('updateArtistaWithPseudonymsAction', () => {
 })
 
 describe('updateArtistaAction', () => {
+  test('profile-only field changes invalidate catalog base without invalidating Featured', async () => {
+    for (const [field, newValue] of [
+      ['nombre', 'New Name'],
+      ['correo', 'new@example.com'],
+      ['ciudad', 'New City']
+    ] as const) {
+      const mockDb = createDatabaseMock()
+      setSelects(mockDb, [
+        [artist, [[{ slug: 'same-slug' }], []]],
+        [catalogArtist, [[{ pseudonimoId: null }]]],
+        [artistPrimaryPseudonym, [[]]]
+      ])
+      currentDb = mockDb.db
+
+      const result = await updateArtistaAction(
+        { success: false, data: {
+          id: 1, nombre: 'Old Name', pseudonimo: 'Fallback', correo: 'old@example.com',
+          rrss: null, ciudad: 'Old City', pais: null
+        } } as never,
+        {
+          nombre: 'Old Name', pseudonimo: 'Fallback', rut: null,
+          telefono: null, correo: 'old@example.com', ciudad: 'Old City', pais: null, rrss: null,
+          estadoId: 1,
+          historialFlags: { pseudonimo: false, correo: false, ciudad: false, pais: false, rrss: false },
+          [field]: newValue
+        } as never
+      )
+
+      expect(result.success, field).toBe(true)
+      expect(updateTag, field).toHaveBeenCalledWith('catalogo:artistas:base')
+      expect(revalidateWebCache, field).toHaveBeenCalledWith({ tag: 'catalogo:artistas:base' })
+      expect(revalidateWebCache, field).not.toHaveBeenCalledWith({
+        tag: FEATURED_ARTISTS_CACHE_TAG,
+        mode: 'swr'
+      })
+    }
+  })
+
   test('legacy artist updates do not immediately invalidate canonical slugs for an inactive catalog row', async () => {
     const mockDb = createDatabaseMock()
     setSelects(mockDb, [
@@ -632,6 +684,10 @@ describe('updateArtistaAction', () => {
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
+    })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      mode: 'swr'
     })
   })
 })
@@ -784,6 +840,10 @@ describe('mutateArtistPseudonymAction', () => {
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
     })
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      mode: 'swr'
+    })
   })
 
   test('invalidates catalog for a selected pseudonym rename even when its slug is unchanged', async () => {
@@ -900,7 +960,7 @@ describe('mutateArtistPseudonymAction', () => {
     withActiveArtist(referenced)
     setSelects(referenced, [
       [artistPseudonym, [[pseudonym], [{ id: 11, pseudonimo: 'Replacement' }]]],
-      [catalogArtist, [[{ id: 30 }]]],
+      [catalogArtist, [[{ id: 30 }], [{ id: 30, activo: true, deletedAt: null }]]],
       [participationExhibition, [[]]],
       [participationActivity, [[]]],
       [artistPrimaryPseudonym, [[]]]
@@ -920,7 +980,7 @@ describe('mutateArtistPseudonymAction', () => {
       [artist, [[{ id: 1 }], [{ slug: 'old-name' }], []]],
       [artistPseudonym, [[pseudonym], [{ id: 11, pseudonimo: 'Replacement' }]]],
       [artistSlugAlias, [[]]],
-      [catalogArtist, [[{ id: 30 }]]],
+      [catalogArtist, [[{ id: 30 }], [{ id: 30, activo: true, deletedAt: null }]]],
       [participationExhibition, [[{ id: 31 }]]],
       [participationActivity, [[{ id: 32 }]]],
       [artistPrimaryPseudonym, [[{ pseudonimoId: 10 }]]]

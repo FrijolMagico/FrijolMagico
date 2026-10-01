@@ -9,7 +9,8 @@ import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import {
   CANONICAL_CATALOG_SLUGS_CACHE_TAG,
-  CATALOG_BASE_CACHE_TAG
+  CATALOG_BASE_CACHE_TAG,
+  FEATURED_ARTISTS_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 import { toRawAssetPath } from '@frijolmagico/utils/cdn'
 import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
@@ -35,6 +36,13 @@ function receiptSecret(): string {
   } catch {
     throw new Error(INVALID_RECEIPT)
   }
+}
+
+async function invalidateFeaturedArtists(): Promise<void> {
+  await revalidateWebCacheBestEffort({
+    tag: FEATURED_ARTISTS_CACHE_TAG,
+    mode: 'swr'
+  })
 }
 
 async function invalidateActivatedCatalog(
@@ -127,6 +135,7 @@ export async function persistArtistAvatarAction(
     )
     if (committed) {
       await invalidateActivatedCatalog(claims, true)
+      await invalidateFeaturedArtists()
       return { success: true, data: committed }
     }
 
@@ -209,6 +218,7 @@ export async function persistArtistAvatarAction(
       catalogActivationEvidence = true
     }
     await invalidateActivatedCatalog(claims, catalogActivationEvidence)
+    await invalidateFeaturedArtists()
     return { success: true, data: avatar }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Error desconocido'

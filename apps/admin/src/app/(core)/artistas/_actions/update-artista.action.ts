@@ -13,7 +13,8 @@ import {
   ARTIST_HISTORY_CACHE_TAG,
   CANONICAL_CATALOG_SLUGS_CACHE_TAG,
   CATALOG_BASE_CACHE_TAG,
-  CATALOG_CACHE_TAG
+  CATALOG_CACHE_TAG,
+  FEATURED_ARTISTS_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 import { revalidateWebCache } from '@/shared/lib/web-invalidation'
 import { allocateCatalogSlug } from '../catalogo/_lib/catalog-slug'
@@ -136,7 +137,9 @@ export async function updateArtistaWithPseudonymsAction(
       historyChanged,
       catalogSlugChanged,
       canonicalCatalogSlugChanged,
-      catalogDataChanged
+      catalogDataChanged,
+      featuredMembershipEligible,
+      featuredPseudonymChanged
     } = await db.transaction(async (tx) => {
       const pseudonymResult = await applyArtistPseudonymDrafts(
         tx,
@@ -159,7 +162,9 @@ export async function updateArtistaWithPseudonymsAction(
         historyChanged: pseudonymResult.historyChanged,
         catalogSlugChanged: pseudonymResult.catalogSlugChanged,
         canonicalCatalogSlugChanged: pseudonymResult.canonicalCatalogSlugChanged,
-        catalogDataChanged: pseudonymResult.catalogDataChanged
+        catalogDataChanged: pseudonymResult.catalogDataChanged,
+        featuredMembershipEligible: pseudonymResult.featuredMembershipEligible,
+        featuredPseudonymChanged: pseudonymResult.featuredPseudonymChanged
       }
     })
 
@@ -176,6 +181,18 @@ export async function updateArtistaWithPseudonymsAction(
       updateTag(CATALOG_CACHE_TAG)
       void revalidateWebCache({ tag: CATALOG_BASE_CACHE_TAG })
       void revalidateWebCache({ tag: CATALOG_CACHE_TAG, path: '/catalogo' })
+    }
+    if (
+      featuredMembershipEligible &&
+      (catalogSlugChanged || featuredPseudonymChanged || (
+        parsedArtist.data.rrss !== undefined &&
+        JSON.stringify(prevData.rrss) !== JSON.stringify(parsedArtist.data.rrss)
+      ))
+    ) {
+      void revalidateWebCache({
+        tag: FEATURED_ARTISTS_CACHE_TAG,
+        mode: 'swr'
+      })
     }
     return { success: true }
   } catch (error) {
@@ -245,7 +262,9 @@ export async function updateArtistaAction(
   const {
     catalogSlugChanged,
     canonicalCatalogSlugChanged,
-    catalogDataChanged
+    catalogDataChanged,
+    featuredMembershipEligible,
+    featuredPseudonymChanged
   } = await db.transaction(async (tx) => {
     await tx
       .update(artist)
@@ -297,7 +316,10 @@ export async function updateArtistaAction(
     return {
       catalogSlugChanged,
       canonicalCatalogSlugChanged,
-      catalogDataChanged: catalogFieldsChanged(prevData, parsed.data) || pseudonymChanged
+      catalogDataChanged: catalogFieldsChanged(prevData, parsed.data) || pseudonymChanged,
+      featuredMembershipEligible:
+        catalogSelection?.activo === true && catalogSelection.deletedAt === null,
+      featuredPseudonymChanged: pseudonymChanged
     }
   })
 
@@ -314,6 +336,18 @@ export async function updateArtistaAction(
     updateTag(CATALOG_CACHE_TAG)
     void revalidateWebCache({ tag: CATALOG_BASE_CACHE_TAG })
     void revalidateWebCache({ tag: CATALOG_CACHE_TAG, path: '/catalogo' })
+  }
+  if (
+    featuredMembershipEligible &&
+    (catalogSlugChanged || featuredPseudonymChanged || (
+      parsed.data.rrss !== undefined &&
+      JSON.stringify(prevData.rrss) !== JSON.stringify(parsed.data.rrss)
+    ))
+  ) {
+    void revalidateWebCache({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      mode: 'swr'
+    })
   }
 
   return { success: true }

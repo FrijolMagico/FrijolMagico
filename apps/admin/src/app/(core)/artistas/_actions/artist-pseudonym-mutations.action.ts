@@ -11,7 +11,8 @@ import {
   ARTIST_HISTORY_CACHE_TAG,
   CANONICAL_CATALOG_SLUGS_CACHE_TAG,
   CATALOG_BASE_CACHE_TAG,
-  CATALOG_CACHE_TAG
+  CATALOG_CACHE_TAG,
+  FEATURED_ARTISTS_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 import { revalidateWebCache } from '@/shared/lib/web-invalidation'
 import { allocateCatalogSlug } from '../catalogo/_lib/catalog-slug'
@@ -136,6 +137,7 @@ export async function mutateArtistPseudonymAction(
   let catalogSlugChanged = false
   let canonicalCatalogSlugChanged = false
   let catalogDataChanged = false
+  let featuredIdentityChanged = false
   try {
     await requireAuth()
     const parsed = artistPseudonymMutationSchema.safeParse(data)
@@ -157,11 +159,17 @@ export async function mutateArtistPseudonymAction(
             .from(artist)
             .where(eq(artist.id, mutation.artistId))
           const [catalogSelection] = await transaction
-            .select({ pseudonimoId: catalogArtist.pseudonimoId })
+            .select({
+              pseudonimoId: catalogArtist.pseudonimoId,
+              activo: catalogArtist.activo,
+              deletedAt: catalogArtist.deletedAt
+            })
             .from(catalogArtist)
             .where(eq(catalogArtist.artistaId, mutation.artistId))
           if (catalogSelection?.pseudonimoId == null && previousArtist?.pseudonimo !== added.pseudonimo) {
             catalogDataChanged = true
+            featuredIdentityChanged =
+              Boolean(catalogSelection?.activo) && catalogSelection?.deletedAt === null
           }
           await setPrimary(transaction, mutation.artistId, added.id, added.pseudonimo)
         }
@@ -206,11 +214,18 @@ export async function mutateArtistPseudonymAction(
           })
           .from(catalogArtist)
           .where(eq(catalogArtist.artistaId, mutation.artistId))
+        const renamed = mutation.pseudonym !== pseudonym.pseudonimo
+        const publicCatalogSelection =
+          Boolean(catalogSelection?.activo) && catalogSelection?.deletedAt === null
         if (
           (catalogSelection?.pseudonimoId == null || catalogSelection.pseudonimoId === pseudonym.id) &&
-          mutation.pseudonym !== pseudonym.pseudonimo
+          renamed
         ) {
           catalogDataChanged = true
+          if (publicCatalogSelection) {
+            featuredIdentityChanged =
+              catalogSelection.pseudonimoId === pseudonym.id || primary?.pseudonimoId === pseudonym.id
+          }
         }
         if (catalogSelection?.pseudonimoId === pseudonym.id) {
           catalogSlugChanged = await allocateCatalogSlug(
@@ -232,11 +247,17 @@ export async function mutateArtistPseudonymAction(
           .from(artist)
           .where(eq(artist.id, mutation.artistId))
         const [catalogSelection] = await transaction
-          .select({ pseudonimoId: catalogArtist.pseudonimoId })
+          .select({
+            pseudonimoId: catalogArtist.pseudonimoId,
+            activo: catalogArtist.activo,
+            deletedAt: catalogArtist.deletedAt
+          })
           .from(catalogArtist)
           .where(eq(catalogArtist.artistaId, mutation.artistId))
         if (catalogSelection?.pseudonimoId == null && previousArtist?.pseudonimo !== pseudonym.pseudonimo) {
           catalogDataChanged = true
+          featuredIdentityChanged =
+            Boolean(catalogSelection?.activo) && catalogSelection?.deletedAt === null
         }
         await setPrimary(transaction, mutation.artistId, pseudonym.id, pseudonym.pseudonimo)
         return
@@ -251,6 +272,15 @@ export async function mutateArtistPseudonymAction(
         )
       }
 
+      const [catalogSelection] = await transaction
+        .select({
+          id: catalogArtist.id,
+          pseudonimoId: catalogArtist.pseudonimoId,
+          activo: catalogArtist.activo,
+          deletedAt: catalogArtist.deletedAt
+        })
+        .from(catalogArtist)
+        .where(eq(catalogArtist.artistaId, mutation.artistId))
       const [catalogReference] = await transaction
         .select({
           id: catalogArtist.id,
@@ -282,6 +312,10 @@ export async function mutateArtistPseudonymAction(
         await transaction.update(participationActivity).set({ pseudonimoId: replacement.id }).where(and(eq(participationActivity.artistaId, mutation.artistId), eq(participationActivity.pseudonimoId, pseudonym.id)))
         if (catalogReference) {
           if (replacement.pseudonimo !== pseudonym.pseudonimo) catalogDataChanged = true
+          featuredIdentityChanged =
+            replacement.pseudonimo !== pseudonym.pseudonimo &&
+            Boolean(catalogReference.activo) &&
+            catalogReference.deletedAt === null
           catalogSlugChanged = await allocateCatalogSlug(
             transaction,
             mutation.artistId,
@@ -297,12 +331,13 @@ export async function mutateArtistPseudonymAction(
             .select({ pseudonimo: artist.pseudonimo })
             .from(artist)
             .where(eq(artist.id, mutation.artistId))
-          const [catalogSelection] = await transaction
-            .select({ pseudonimoId: catalogArtist.pseudonimoId })
-            .from(catalogArtist)
-            .where(eq(catalogArtist.artistaId, mutation.artistId))
-          if (catalogSelection?.pseudonimoId == null && previousArtist?.pseudonimo !== replacement.pseudonimo) {
+          if (
+            catalogSelection?.pseudonimoId == null &&
+            previousArtist?.pseudonimo !== replacement.pseudonimo
+          ) {
             catalogDataChanged = true
+            featuredIdentityChanged =
+              Boolean(catalogSelection?.activo) && catalogSelection?.deletedAt === null
           }
           await setPrimary(transaction, mutation.artistId, replacement.id, replacement.pseudonimo)
         }
@@ -320,6 +355,12 @@ export async function mutateArtistPseudonymAction(
       updateTag(CATALOG_CACHE_TAG)
       void revalidateWebCache({ tag: CATALOG_BASE_CACHE_TAG })
       void revalidateWebCache({ tag: CATALOG_CACHE_TAG, path: '/catalogo' })
+      if (featuredIdentityChanged) {
+        void revalidateWebCache({
+          tag: FEATURED_ARTISTS_CACHE_TAG,
+          mode: 'swr'
+        })
+      }
       if (canonicalCatalogSlugChanged) {
         void revalidateWebCache({
           tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,

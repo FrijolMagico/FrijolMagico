@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, mock, test } from 'bun:test'
 
 import {
   CANONICAL_CATALOG_SLUGS_CACHE_TAG,
-  CATALOG_BASE_CACHE_TAG
+  CATALOG_BASE_CACHE_TAG,
+  FEATURED_ARTISTS_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
@@ -150,6 +151,10 @@ describe('persist artist avatar cache invalidation', () => {
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
     })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      mode: 'swr'
+    })
   })
 
   test('recovers committed activation after an ambiguous transaction error', async () => {
@@ -163,6 +168,10 @@ describe('persist artist avatar cache invalidation', () => {
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
+    })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      mode: 'swr'
     })
   })
 
@@ -181,7 +190,7 @@ describe('persist artist avatar cache invalidation', () => {
     })
   })
 
-  test('does not invalidate canonical catalog slugs for an avatar-only receipt', async () => {
+  test('invalidates Featured but not canonical slugs for an avatar-only receipt', async () => {
     const result = await persistArtistAvatarAction({
       receipt: avatarOnlyReceipt()
     })
@@ -190,6 +199,10 @@ describe('persist artist avatar cache invalidation', () => {
     expect(revalidateWebCacheBestEffort).not.toHaveBeenCalledWith({
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
+    })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      mode: 'swr'
     })
   })
 
@@ -214,6 +227,10 @@ describe('persist artist avatar cache invalidation', () => {
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
+    })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      mode: 'swr'
     })
   })
 })

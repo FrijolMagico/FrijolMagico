@@ -64,6 +64,13 @@ export async function applyArtistPseudonymDrafts(
   let catalogSlugChanged = false
   let canonicalCatalogSlugChanged = false
   let catalogDataChanged = false
+  let featuredPseudonymChanged = false
+  const [featuredMembership] = await transaction
+    .select({ activo: catalogArtist.activo, deletedAt: catalogArtist.deletedAt })
+    .from(catalogArtist)
+    .where(eq(catalogArtist.artistaId, artistId))
+  const featuredMembershipEligible =
+    featuredMembership?.activo === true && featuredMembership.deletedAt === null
 
   for (const draft of drafts) {
     if (draft.operation === 'add') {
@@ -79,6 +86,7 @@ export async function applyArtistPseudonymDrafts(
           .where(eq(catalogArtist.artistaId, artistId))
         if (catalogSelection?.pseudonimoId == null && artistFallback !== added.pseudonimo) {
           catalogDataChanged = true
+          featuredPseudonymChanged = featuredPseudonymChanged || featuredMembershipEligible
         }
         await setPrimary(transaction, artistId, added.id, added.pseudonimo)
         artistFallback = added.pseudonimo
@@ -140,9 +148,11 @@ export async function applyArtistPseudonymDrafts(
         .where(eq(catalogArtist.artistaId, artistId))
       if (catalogSelection?.pseudonimoId == null && primaryFallbackChanged) {
         catalogDataChanged = true
+        featuredPseudonymChanged = featuredPseudonymChanged || featuredMembershipEligible
       }
       if (catalogSelection?.pseudonimoId === pseudonym.id) {
         catalogDataChanged = true
+        featuredPseudonymChanged = featuredPseudonymChanged || featuredMembershipEligible
         const allocatedSlug = await allocateCatalogSlug(
           transaction,
           artistId,
@@ -166,6 +176,7 @@ export async function applyArtistPseudonymDrafts(
         .where(eq(catalogArtist.artistaId, artistId))
       if (catalogSelection?.pseudonimoId == null && artistFallback !== draft.pseudonym) {
         catalogDataChanged = true
+        featuredPseudonymChanged = featuredPseudonymChanged || featuredMembershipEligible
       }
       await setPrimary(transaction, artistId, pseudonym.id, draft.pseudonym)
       artistFallback = draft.pseudonym
@@ -176,6 +187,8 @@ export async function applyArtistPseudonymDrafts(
     historyChanged,
     catalogSlugChanged,
     canonicalCatalogSlugChanged,
-    catalogDataChanged
+    catalogDataChanged,
+    featuredMembershipEligible,
+    featuredPseudonymChanged
   }
 }
