@@ -210,18 +210,25 @@ Proposed writer-to-bucket fanout (planning only; based on the reconciled source 
 
 Final source-level consistency review: Stage 3's freshness policy is decided but not implemented. No timer-based refresh is proposed. Immediate means the first read after a successfully delivered explicit invalidation; the current best-effort/fire-and-forget branches can fail or outlive the mutation response, so there is no unconditional delivery guarantee and no TTL fallback. Current shared tags (`CATALOG_BASE`, `FESTIVALES`, `EVENT`, `EDITION`) cannot express the selected immediate/SWR boundary without Web reader tag separation. The reconciled source matrix identifies the required writer fanout and confirmed missing branches, including the band-name detail gap. Route data tags and route-output paths are distinct; exact first-read HTML/RSC behavior for root layout and generated festival metadata still needs candidate Preview verification. Do not claim Stage 3/4 implemented or the deployment validated. Festival list/adjacent intentionally remain SWR.
 
-### Stage 4.1 — route path-type transport (in progress)
+### Stage 4 — route-output invalidation (in progress)
 
-Scope: extend the existing Admin→Web invalidation contract with optional `pathType: 'page' | 'layout'`, validate it at both the Admin URL builder and Web receiver, and call Next's matching `revalidatePath(path, pathType)` overload. Preserve legacy requests without `pathType` as `revalidatePath(path)`, and keep tag/mode and path invalidation independent. Reject invalid path types and `pathType` without a non-empty path before performing any invalidation.
+The optional Admin→Web `pathType: 'page' | 'layout'` transport is implemented in commit `d64468bf`; its focused tests pass, the Web suite passes on retry, and the read-only review found no transport defects. This phase now wires route-output invalidation into the source-confirmed Admin mutation branches, then defers broad/full and Preview checks until the callsites are connected.
 
-Non-goals: do not add route-path call sites or alter current invalidation behavior yet; do not deploy, inspect Preview, access Production/Turso, or run remote validation in this work unit. Route selection and Preview proof follow after this transport is implemented and locally verified.
+Route-output candidates from the source audit:
+- `/` **page** for the home banner and Featured output; preserve existing home path invalidations.
+- `/` **layout** for the shared `TopBarInfoWrapper` when event/edition mutations actually change its active-festival/day data.
+- `/festivales` **page** when list membership/order/summary changes.
+- `/festivales/[slug]` **page** when festival detail/metadata fields change.
+- Preserve existing `/catalogo` path invalidations; no new route path is established for About/team from this audit.
 
-Acceptance: Admin URL tests cover `page`, `layout`, legacy path-only, and invalid combinations; Web route tests cover both overloads, backward compatibility, and fail-closed validation before tag/path side effects. Focused tests and review are green; full-workspace verification blockers are tracked separately before Preview validation.
+Implementation constraints: use focused RED/GREEN tests per writer slice; preserve all tag modes and no-op/error guards; add no path call where the query dependency is not established. Split work into small reviewable commits. Defer full workspace suites, root type-check triage, and Vercel Preview validation until all callsites are connected; do not access remote Turso or Production.
 
-Verification so far: TDD RED — Admin helper 22 passed/4 failed; Web route 5 passed/4 failed. Focused GREEN — Admin helper 26/0 (34 expectations), Web route 9/0 (32 assertions). Full Web Turbo suite passed on retry: 249/0 across 57 files (a prior run hit a non-reproducible Bun SIGSEGV in an unrelated festival-types test). Full Admin Turbo suite is blocked by five unhandled `Missing Turso database URL` errors across unrelated test files (748 pass/5 errors); root `bun run type-check` reports 10 errors in test files and none in the Stage4.1 source or direct tests. No database URL was supplied and no DB/remote access was made.
+Completed callsite slice (commit pending): collective and band name updates now combine the immediate critical-festival tag with `/festivales/[slug]` `page` invalidation only after a confirmed successful name change. TDD RED: 16 passed/2 failed for the missing route options. Focused GREEN: 18 passed/0 failed, 51 expectations. Independent read-only review found no defects; no-op/failure guards and other tags are preserved.
 
-- [ ] **In progress:** Implement and verify validated `pathType` transport for route-output invalidation. Implementation commit: `d64468bf feat(cache): support typed route revalidation`; remains in progress pending broad verification blockers.
-- [ ] **Blocked follow-up:** Resolve or safely isolate full Admin test environment/type-check blockers before starting Preview verification.
+Verification already completed for transport: TDD RED — Admin helper 22 passed/4 failed; Web route 5 passed/4 failed. Focused GREEN — Admin helper 26/0 (34 expectations), Web route 9/0 (32 assertions). Full Web Turbo suite passed on retry: 249/0 across 57 files (a prior run hit a non-reproducible Bun SIGSEGV in an unrelated festival-types test). Full Admin Turbo suite is blocked by five unhandled `Missing Turso database URL` errors (748 pass/5 errors); root `bun run type-check` reports 10 test-file errors and none in Stage4.1 source/direct tests. No database URL was supplied and no DB/remote access was made.
+
+- [ ] **In progress:** Wire route-output invalidation into confirmed writer branches using the Stage4 path/type transport.
+- [ ] **Blocked follow-up:** At the end, resolve or safely isolate full Admin test environment/type-check blockers, then run final workspace and Preview checks.
 
 ### Staging validation runbook (prepared, not executed)
 

@@ -161,7 +161,9 @@ describe('upsertCollectiveWithMembersAction alias validation', () => {
     expect(result.success).toBe(true)
     expect(webInvalidations).toContainEqual({
       tag: 'festivales:critico',
-      mode: 'immediate'
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
     })
     expect(webInvalidations.filter((invalidation) =>
       (invalidation as { tag: string }).tag !== 'festivales:critico'

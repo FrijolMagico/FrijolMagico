@@ -134,7 +134,12 @@ describe('band actions', () => {
     expect(result.success).toBe(true)
     expect(updateTag).toHaveBeenCalledTimes(1)
     expect(webInvalidations).toEqual([
-      { tag: 'festivales:critico', mode: 'immediate' }
+      {
+        tag: 'festivales:critico',
+        mode: 'immediate',
+        path: '/festivales/[slug]',
+        pathType: 'page'
+      }
     ])
   })
 

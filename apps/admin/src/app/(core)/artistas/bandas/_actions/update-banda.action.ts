@@ -59,7 +59,9 @@ export async function updateBandaAction(
     if (bandNameChanged) {
       void revalidateWebCacheBestEffort({
         tag: FESTIVAL_CRITICAL_CACHE_TAG,
-        mode: 'immediate'
+        mode: 'immediate',
+        path: '/festivales/[slug]',
+        pathType: 'page'
       })
     }
 

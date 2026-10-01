@@ -224,7 +224,9 @@ export async function upsertCollectiveWithMembersAction(
     if (collectiveNameChanged) {
       void revalidateWebCacheBestEffort({
         tag: FESTIVAL_CRITICAL_CACHE_TAG,
-        mode: 'immediate'
+        mode: 'immediate',
+        path: '/festivales/[slug]',
+        pathType: 'page'
       })
     }
     if (catalogChanged) {
