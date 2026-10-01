@@ -42,25 +42,42 @@ describe('buildWebInvalidationUrl', () => {
     expect(url).toBe('https://custom.test/revalidate')
   })
 
-  test('appends tag query param with URL encoding', () => {
+  test('includes explicit SWR mode with a tag by default', () => {
     const url = buildWebInvalidationUrl({ tag: 'home:featured-artists' })
     expect(url).toBe(
-      'https://web.test/api/revalidate?tag=home%3Afeatured-artists'
+      'https://web.test/api/revalidate?tag=home%3Afeatured-artists&mode=swr'
     )
   })
 
-  test('appends path query param with URL encoding', () => {
+  test('includes explicit immediate mode with a tag when requested', () => {
+    const url = buildWebInvalidationUrl({
+      tag: 'home:featured-artists',
+      mode: 'immediate'
+    })
+    expect(url).toBe(
+      'https://web.test/api/revalidate?tag=home%3Afeatured-artists&mode=immediate'
+    )
+  })
+
+  test('rejects a runtime-invalid mode', () => {
+    const options = { tag: 'home:featured-artists' }
+    Object.assign(options, { mode: 'invalid' })
+
+    expect(() => buildWebInvalidationUrl(options)).toThrow()
+  })
+
+  test('appends path query param without requiring tag mode', () => {
     const url = buildWebInvalidationUrl({ path: '/' })
     expect(url).toBe('https://web.test/api/revalidate?path=%2F')
   })
 
-  test('appends both tag and path query params', () => {
+  test('appends tag mode and path query params together', () => {
     const url = buildWebInvalidationUrl({
       tag: 'home:featured-artists',
       path: '/'
     })
     expect(url).toBe(
-      'https://web.test/api/revalidate?tag=home%3Afeatured-artists&path=%2F'
+      'https://web.test/api/revalidate?tag=home%3Afeatured-artists&mode=swr&path=%2F'
     )
   })
 
@@ -101,11 +118,30 @@ describe('revalidateWebCache', () => {
     expect(result).toEqual({ revalidated: true })
   })
 
-  test('passes tag as query param when provided', async () => {
+  test('sends a tag with explicit SWR mode by default', async () => {
     await revalidateWebCache({ tag: 'home:featured-artists' })
 
     const [url] = mockFetch.mock.calls[0] as [string]
-    expect(url).toContain('tag=home%3Afeatured-artists')
+    expect(new URL(url).searchParams.get('tag')).toBe('home:featured-artists')
+    expect(new URL(url).searchParams.get('mode')).toBe('swr')
+  })
+
+  test('sends a tag with explicit immediate mode when requested', async () => {
+    await revalidateWebCache({
+      tag: 'home:featured-artists',
+      mode: 'immediate'
+    })
+
+    const [url] = mockFetch.mock.calls[0] as [string]
+    expect(new URL(url).searchParams.get('mode')).toBe('immediate')
+  })
+
+  test('sends path-only invalidation without tag mode', async () => {
+    await revalidateWebCache({ path: '/artists' })
+
+    const [url] = mockFetch.mock.calls[0] as [string]
+    expect(new URL(url).searchParams.get('path')).toBe('/artists')
+    expect(new URL(url).searchParams.has('mode')).toBe(false)
   })
 
   test('returns WebInvalidationResult on success', async () => {

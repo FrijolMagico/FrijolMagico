@@ -32,7 +32,7 @@ describe('POST /api/revalidate', () => {
     expect(revalidatePathMock).not.toHaveBeenCalled()
   })
 
-  test('uses stale-while-revalidate tag invalidation and independently revalidates the path', async () => {
+  test('defaults a missing tag mode to stale-while-revalidate and independently revalidates the path', async () => {
     const response = await POST(
       createRequest('tag=artists&path=%2Fartists', 'Bearer test-secret')
     )
@@ -42,6 +42,30 @@ describe('POST /api/revalidate', () => {
     expect(revalidateTagMock).toHaveBeenCalledWith('artists', 'max')
     expect(revalidatePathMock).toHaveBeenCalledTimes(1)
     expect(revalidatePathMock).toHaveBeenCalledWith('/artists')
+  })
+
+  test('uses immediate tag invalidation when requested', async () => {
+    const response = await POST(
+      createRequest('tag=artists&mode=immediate', 'Bearer test-secret')
+    )
+
+    expect(response.status).toBe(200)
+    expect(revalidateTagMock).toHaveBeenCalledTimes(1)
+    expect(revalidateTagMock).toHaveBeenCalledWith('artists', { expire: 0 })
+    expect(revalidatePathMock).not.toHaveBeenCalled()
+  })
+
+  test('rejects unsupported tag mode before invalidating the tag or path', async () => {
+    const response = await POST(
+      createRequest(
+        'tag=artists&mode=unsupported&path=%2Fartists',
+        'Bearer test-secret'
+      )
+    )
+
+    expect(response.status).toBe(400)
+    expect(revalidateTagMock).not.toHaveBeenCalled()
+    expect(revalidatePathMock).not.toHaveBeenCalled()
   })
 
   test('revalidates a path without triggering tag invalidation', async () => {

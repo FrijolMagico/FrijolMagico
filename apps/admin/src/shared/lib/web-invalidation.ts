@@ -14,6 +14,7 @@ interface BuildWebInvalidationUrlOptions {
   url?: string
   path?: string
   tag?: string
+  mode?: 'swr' | 'immediate'
 }
 
 /**
@@ -24,8 +25,13 @@ interface BuildWebInvalidationUrlOptions {
 export function buildWebInvalidationUrl({
   url,
   path,
-  tag
+  tag,
+  mode
 }: BuildWebInvalidationUrlOptions = {}): string {
+  if (mode !== undefined && mode !== 'swr' && mode !== 'immediate') {
+    throw new Error(`[web-invalidation] Unsupported invalidation mode: ${mode}`)
+  }
+
   const baseUrl = url ?? process.env.WEB_REVALIDATION_URL
 
   if (!baseUrl) {
@@ -35,7 +41,10 @@ export function buildWebInvalidationUrl({
   }
 
   const params = new URLSearchParams()
-  if (tag) params.set('tag', tag)
+  if (tag) {
+    params.set('tag', tag)
+    params.set('mode', mode ?? 'swr')
+  }
   if (path) params.set('path', path)
 
   const qs = params.toString()
@@ -45,6 +54,7 @@ export function buildWebInvalidationUrl({
 interface RevalidateWebCacheOptions {
   tag?: string
   path?: string
+  mode?: 'swr' | 'immediate'
 }
 
 interface WebInvalidationLogger {

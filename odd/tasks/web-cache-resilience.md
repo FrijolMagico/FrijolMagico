@@ -113,8 +113,8 @@ Acceptance:
 5. No time-based TTL, production/Vercel/Turso remote access, migrations, or route-path/type changes in this stage. Route output remains a distinct pending Preview question.
 
 Work units:
-- [x] Add the semantic tag split to shared constants and Web readers, with focused reader tests. TDD RED observed: Web suite 227 passed, 5 failed, 4 errors across 232 tests; expected failures were missing canonical/critical tag exports and adjacent still carrying `EDITION`. GREEN: Web suite 243 passed, 0 failed, 855 expectations across 57 files. Read-only review found no concrete tag-boundary issues. Work-unit commit identity will be recorded after commit.
-- [ ] Add explicit SWR/immediate mode to the Admin→Web transport and receiver, with contract tests.
+- [x] Add the semantic tag split to shared constants and Web readers, with focused reader tests. TDD RED observed: Web suite 227 passed, 5 failed, 4 errors across 232 tests; expected failures were missing canonical/critical tag exports and adjacent still carrying `EDITION`. GREEN: Web suite 243 passed, 0 failed, 855 expectations across 57 files. Read-only review found no concrete tag-boundary issues. Work-unit commit: `4b7a7478 feat(cache): partition reader tags by freshness`.
+- [x] Add explicit SWR/immediate mode to the Admin→Web transport and receiver, with contract tests. TDD RED observed for receiver mapping/rejection and runtime-invalid sender mode. GREEN: Web 245 passed/0 failed (862 assertions across 57 files); Admin 722 passed/0 failed (2,538 assertions across 122 files). Read-only review found no remaining contract issue. Work-unit commit identity will be recorded after commit.
 - [ ] Apply festival-critical/discovery fanout to event, edition, activity, exhibition and participation writers, including confirmed missing branches.
 - [ ] Apply canonical/catalog/artist/avatar fanout and Featured invalidation corrections, with branch tests.
 - [ ] Apply About, collective and band writer gaps and close Stage 3 documentation/consistency evidence.

@@ -18,9 +18,14 @@ export async function POST(request: NextRequest) {
 
   const tag = request.nextUrl.searchParams.get('tag')
   const path = request.nextUrl.searchParams.get('path')
+  const mode = request.nextUrl.searchParams.get('mode')
+
+  if (mode !== null && mode !== 'swr' && mode !== 'immediate') {
+    return NextResponse.json({ error: 'Unsupported revalidation mode' }, { status: 400 })
+  }
 
   if (tag) {
-    revalidateTag(tag, 'max')
+    revalidateTag(tag, mode === 'immediate' ? { expire: 0 } : 'max')
   }
   if (path) {
     revalidatePath(path)
