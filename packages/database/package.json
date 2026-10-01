@@ -33,6 +33,7 @@
     "pull:staging": "bun --no-env-file scripts/pull-snapshot.ts staging",
     "pull:production": "bun --no-env-file scripts/pull-snapshot.ts production",
     "check:staging-seed": "bun --no-env-file scripts/check-staging-seed.ts",
+    "load:staging-seed": "bun --env-file=.env.local scripts/load-staging-seed.ts",
     "lint": "eslint .",
     "test": "bun test",
     "type-check": "tsc --noEmit"

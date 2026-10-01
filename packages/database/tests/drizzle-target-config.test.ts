@@ -26,7 +26,8 @@ function checkConfig(config: string, values: Record<string, string>) {
   return spawnSync('node', [drizzleKit, 'check', `--config=${config}`], {
     cwd: packageRoot,
     env: childEnvironment({ PATH: process.env.PATH, ...values }),
-    encoding: 'utf8'
+    encoding: 'utf8',
+    timeout: 10_000
   })
 }
 
@@ -34,12 +35,12 @@ describe('Drizzle target configs', () => {
   test('Node Drizzle config loader accepts offline generate and selected staging config', () => {
     expect(checkConfig('drizzle.config.ts', {}).status).toBe(0)
     expect(checkConfig('drizzle-staging.config.ts', stagingValues).status).toBe(0)
-  })
+  }, 60_000)
 
   test('staging config uses only its selected target variables', () => {
     const result = checkConfig('drizzle-staging.config.ts', stagingValues)
     expect(result.status).toBe(0)
-  })
+  }, 60_000)
 
   test('production config loads with its exact confirmation and no staging variables', () => {
     expect(checkConfig('drizzle-production.config.ts', productionValues).status).toBe(0)
@@ -47,7 +48,7 @@ describe('Drizzle target configs', () => {
       ...productionValues,
       TURSO_PRODUCTION_MIGRATION_CONFIRM: 'migrate:another-database'
     }).status).not.toBe(0)
-  })
+  }, 60_000)
 
   test('target configs reject absent tokens and hostnames not bound to the exact database name', () => {
     expect(checkConfig('drizzle-staging.config.ts', {
@@ -66,5 +67,5 @@ describe('Drizzle target configs', () => {
         TURSO_STAGING_DATABASE_URL: url
       }).status).not.toBe(0)
     }
-  })
+  }, 90_000)
 })

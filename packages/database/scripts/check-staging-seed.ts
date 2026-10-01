@@ -8,6 +8,8 @@ import { createClient } from '@libsql/client'
 import { drizzle } from 'drizzle-orm/libsql'
 import { migrate } from 'drizzle-orm/libsql/migrator'
 
+import { parseSeedStatements } from './load-staging-seed'
+
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 const migrationsFolder = join(packageRoot, 'migrations')
 const seedPath = join(packageRoot, 'seed/seed.sql')
@@ -43,13 +45,7 @@ export async function checkStagingSeedReadiness() {
       }
     }
 
-    const statements = readFileSync(seedPath, 'utf8')
-      .split('\n')
-      .filter((line) => !line.trim().startsWith('--'))
-      .join('\n')
-      .split(';')
-      .map((statement) => statement.trim())
-      .filter((statement) => statement.length > 0)
+    const statements = parseSeedStatements(readFileSync(seedPath, 'utf8'))
 
     const transaction = await client.transaction('write')
     try {
