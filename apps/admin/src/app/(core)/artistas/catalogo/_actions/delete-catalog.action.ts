@@ -7,6 +7,7 @@ import { requireAuth } from '@/shared/lib/auth/utils'
 import { revalidateWebCache } from '@/shared/lib/web-invalidation'
 import { deleteCatalogEntry } from '@/shared/lib/catalog-artist-deletion'
 import {
+  CANONICAL_CATALOG_SLUGS_CACHE_TAG,
   CATALOG_BASE_CACHE_TAG,
   CATALOG_CACHE_TAG,
   CATALOG_PARTICIPATION_CACHE_TAG,
@@ -18,9 +19,15 @@ export async function deleteCatalogAction(id: number): Promise<ActionState> {
   try {
     await requireAuth()
 
-    const { wasFeatured } = await db.transaction(async (tx) =>
+    const { wasFeatured, wasActive } = await db.transaction(async (tx) =>
       deleteCatalogEntry(tx, id),
     )
+    if (wasActive) {
+      void revalidateWebCache({
+        tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+        mode: 'immediate'
+      })
+    }
 
     for (const tag of [CATALOG_BASE_CACHE_TAG, CATALOG_PARTICIPATION_CACHE_TAG, CATALOG_CACHE_TAG]) {
       updateTag(tag)
