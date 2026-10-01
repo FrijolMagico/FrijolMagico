@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
 import { getTableName } from 'drizzle-orm'
 import { artist as artistTables, participations } from '@frijolmagico/database/schema'
+import { CANONICAL_CATALOG_SLUGS_CACHE_TAG } from '@frijolmagico/cache-tags'
 
 const { artist, artistHistory, artistPseudonym, artistPrimaryPseudonym, artistSlugAlias, catalogArtist } = artistTables
 const { participationActivity, participationExhibition } = participations
@@ -225,13 +226,57 @@ describe('updateArtistaWithPseudonymsAction', () => {
     }))
   })
 
+  test('renaming an inactive catalog-selected pseudonym changes the slug without canonical invalidation', async () => {
+    const mockDb = createDatabaseMock()
+    setSelects(mockDb, [
+      [artist, [[{ id: 1, pseudonimo: 'Old Name' }], [{ slug: 'old-name' }], []]],
+      [artistPrimaryPseudonym, [[{ pseudonimoId: 10 }]]],
+      [artistPseudonym, [[pseudonym]]],
+      [catalogArtist, [[{ pseudonimoId: 10, activo: false }], [{ pseudonimoId: 10, activo: false }]]],
+      [artistSlugAlias, [[]]]
+    ])
+    currentDb = mockDb.db
+
+    const result = await updateArtistaWithPseudonymsAction(
+      { success: false, data: { id: 1 } } as never,
+      {
+        data: {
+          nombre: 'Updated artist', pseudonimo: 'Renamed', rut: null,
+          telefono: null, correo: null, ciudad: null, pais: null, rrss: null,
+          estadoId: 1,
+          historialFlags: { pseudonimo: false, correo: false, ciudad: false, pais: false, rrss: false }
+        },
+        pseudonymDrafts: [{
+          operation: 'edit', pseudonymId: 10, pseudonym: 'Renamed',
+          preserveHistory: false, makePrimary: false
+        }]
+      } as never
+    )
+
+    expect(result.success).toBe(true)
+    expect(mockDb.state.writes).toContainEqual(expect.objectContaining({
+      operation: 'update', table: tableName(artist), value: { slug: 'renamed' }
+    }))
+    expect(mockDb.state.writes).toContainEqual(expect.objectContaining({
+      operation: 'insert', table: tableName(artistSlugAlias),
+      value: { slug: 'old-name', artistaId: 1 }
+    }))
+    expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:base')
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas:base' })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+      mode: 'immediate'
+    })
+  })
+
   test('renaming the catalog-selected pseudonym updates the slug and invalidates catalog caches', async () => {
     const mockDb = createDatabaseMock()
     setSelects(mockDb, [
       [artist, [[{ id: 1, pseudonimo: 'Old Name' }], [{ slug: 'old-name' }], []]],
       [artistPrimaryPseudonym, [[{ pseudonimoId: 10 }]]],
       [artistPseudonym, [[pseudonym]]],
-      [catalogArtist, [[{ pseudonimoId: 10 }], [{ pseudonimoId: 10 }]]],
+      [catalogArtist, [[{ pseudonimoId: 10, activo: true, deletedAt: null }], [{ pseudonimoId: 10, activo: true, deletedAt: null }]]],
       [artistSlugAlias, [[]]]
     ])
     currentDb = mockDb.db
@@ -262,6 +307,10 @@ describe('updateArtistaWithPseudonymsAction', () => {
     expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:base')
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas:base' })
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+      mode: 'immediate'
+    })
   })
 
   test('renaming the catalog-selected pseudonym invalidates catalog when its slug stays the same', async () => {
@@ -298,6 +347,10 @@ describe('updateArtistaWithPseudonymsAction', () => {
     expect(result.success).toBe(true)
     expect(mockDb.state.writes.some(({ value }) => (value as { slug?: string }).slug !== undefined)).toBe(false)
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+      mode: 'immediate'
+    })
   })
 
   test('renaming the primary invalidates catalog when the null selection displays its fallback', async () => {
@@ -471,6 +524,10 @@ describe('updateArtistaWithPseudonymsAction', () => {
     expect(result.success).toBe(true)
     expect(mockDb.state.writes.some(({ value }) => (value as { slug?: string }).slug !== undefined)).toBe(false)
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+      mode: 'immediate'
+    })
   })
 
   test('legacy artist updates do not invalidate catalog for unchanged projected fields', async () => {
@@ -498,8 +555,88 @@ describe('updateArtistaWithPseudonymsAction', () => {
     expect(result.success).toBe(true)
     expect(revalidateWebCache).not.toHaveBeenCalled()
     expect(updateTag).not.toHaveBeenCalledWith('catalogo:artistas')
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+      mode: 'immediate'
+    })
   })
 
+})
+
+describe('updateArtistaAction', () => {
+  test('legacy artist updates do not immediately invalidate canonical slugs for an inactive catalog row', async () => {
+    const mockDb = createDatabaseMock()
+    setSelects(mockDb, [
+      [artist, [[{ slug: 'old-name' }], []]],
+      [catalogArtist, [[{ pseudonimoId: 10, activo: false }]]],
+      [artistPrimaryPseudonym, [[{ pseudonimoId: 10 }]]],
+      [artistSlugAlias, [[]]]
+    ])
+    currentDb = mockDb.db
+
+    const result = await updateArtistaAction(
+      { success: false, data: { id: 1 } } as never,
+      {
+        nombre: 'Updated artist', pseudonimo: 'Renamed', rut: null,
+        telefono: null, correo: null, ciudad: null, pais: null, rrss: null,
+        estadoId: 1,
+        historialFlags: { pseudonimo: false, correo: false, ciudad: false, pais: false, rrss: false }
+      } as never
+    )
+
+    expect(result.success).toBe(true)
+    expect(mockDb.state.writes).toContainEqual(expect.objectContaining({
+      operation: 'update', table: tableName(artist), value: { slug: 'renamed' }
+    }))
+    expect(mockDb.state.writes).toContainEqual(expect.objectContaining({
+      operation: 'insert', table: tableName(artistSlugAlias),
+      value: { slug: 'old-name', artistaId: 1 }
+    }))
+    expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:base')
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas:base' })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+      mode: 'immediate'
+    })
+  })
+
+  test('legacy artist updates invalidate canonical slug caches when allocation changes an active catalog artist slug', async () => {
+    const mockDb = createDatabaseMock()
+    setSelects(mockDb, [
+      [artist, [[{ slug: 'old-name' }], []]],
+      [catalogArtist, [[{ pseudonimoId: 10, activo: true, deletedAt: null }]]],
+      [artistPrimaryPseudonym, [[{ pseudonimoId: 10 }]]],
+      [artistSlugAlias, [[]]]
+    ])
+    currentDb = mockDb.db
+
+    const result = await updateArtistaAction(
+      { success: false, data: { id: 1 } } as never,
+      {
+        nombre: 'Updated artist', pseudonimo: 'Renamed', rut: null,
+        telefono: null, correo: null, ciudad: null, pais: null, rrss: null,
+        estadoId: 1,
+        historialFlags: { pseudonimo: false, correo: false, ciudad: false, pais: false, rrss: false }
+      } as never
+    )
+
+    expect(result.success).toBe(true)
+    expect(mockDb.state.writes).toContainEqual(expect.objectContaining({
+      operation: 'update', table: tableName(artist), value: { slug: 'renamed' }
+    }))
+    expect(mockDb.state.writes).toContainEqual(expect.objectContaining({
+      operation: 'insert', table: tableName(artistSlugAlias),
+      value: { slug: 'old-name', artistaId: 1 }
+    }))
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+      mode: 'immediate'
+    })
+  })
+})
+
+describe('updateArtistaWithPseudonymsAction', () => {
   test('legacy artist updates invalidate catalog when the selected primary pseudonym is renamed', async () => {
     const mockDb = createDatabaseMock()
     setSelects(mockDb, [
@@ -524,6 +661,8 @@ describe('updateArtistaWithPseudonymsAction', () => {
     expect(mockDb.state.writes).toContainEqual(expect.objectContaining({
       operation: 'update', table: tableName(artist), value: { slug: 'renamed' }
     }))
+    expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:base')
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas:base' })
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
   })
 
@@ -611,6 +750,40 @@ describe('mutateArtistPseudonymAction', () => {
     ])
     expect(mockDb.state.committed).toBe(true)
     expect(updateTag).toHaveBeenCalledTimes(1)
+  })
+
+  test('changes the slug for an inactive selected catalog pseudonym without canonical invalidation', async () => {
+    const mockDb = createDatabaseMock()
+    withActiveArtist(mockDb)
+    setSelects(mockDb, [
+      [artistPseudonym, [[{ id: 10, pseudonimo: 'Old Name' }]]],
+      [artistPrimaryPseudonym, [[]]],
+      [catalogArtist, [[{ pseudonimoId: 10, activo: false }]]],
+      [artist, [[{ id: 1 }], [{ slug: 'old-name' }], [], []]],
+      [artistSlugAlias, [[]]]
+    ])
+    currentDb = mockDb.db
+
+    const result = await mutateArtistPseudonymAction(null as never, {
+      operation: 'rename', artistId: 1, pseudonymId: 10,
+      pseudonym: 'Renamed', preserveHistory: false
+    })
+
+    expect(result.success).toBe(true)
+    expect(mockDb.state.writes).toContainEqual(expect.objectContaining({
+      operation: 'update', table: tableName(artist), value: { slug: 'renamed' }
+    }))
+    expect(mockDb.state.writes).toContainEqual(expect.objectContaining({
+      operation: 'insert', table: tableName(artistSlugAlias),
+      value: { slug: 'old-name', artistaId: 1 }
+    }))
+    expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:base')
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas:base' })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+      mode: 'immediate'
+    })
   })
 
   test('invalidates catalog for a selected pseudonym rename even when its slug is unchanged', async () => {

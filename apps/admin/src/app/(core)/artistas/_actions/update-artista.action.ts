@@ -11,6 +11,7 @@ import { requireAuth } from '@/shared/lib/auth/utils'
 import {
   ARTIST_CACHE_TAG,
   ARTIST_HISTORY_CACHE_TAG,
+  CANONICAL_CATALOG_SLUGS_CACHE_TAG,
   CATALOG_BASE_CACHE_TAG,
   CATALOG_CACHE_TAG
 } from '@frijolmagico/cache-tags'
@@ -131,7 +132,12 @@ export async function updateArtistaWithPseudonymsAction(
   }
 
   try {
-    const { historyChanged, catalogSlugChanged, catalogDataChanged } = await db.transaction(async (tx) => {
+    const {
+      historyChanged,
+      catalogSlugChanged,
+      canonicalCatalogSlugChanged,
+      catalogDataChanged
+    } = await db.transaction(async (tx) => {
       const pseudonymResult = await applyArtistPseudonymDrafts(
         tx,
         prevData.id,
@@ -152,12 +158,19 @@ export async function updateArtistaWithPseudonymsAction(
       return {
         historyChanged: pseudonymResult.historyChanged,
         catalogSlugChanged: pseudonymResult.catalogSlugChanged,
+        canonicalCatalogSlugChanged: pseudonymResult.canonicalCatalogSlugChanged,
         catalogDataChanged: pseudonymResult.catalogDataChanged
       }
     })
 
     updateTag(ARTIST_CACHE_TAG)
     if (historialInsert || historyChanged) updateTag(ARTIST_HISTORY_CACHE_TAG)
+    if (canonicalCatalogSlugChanged) {
+      void revalidateWebCache({
+        tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+        mode: 'immediate'
+      })
+    }
     if (catalogSlugChanged || catalogDataChanged || catalogFieldsChanged(prevData, parsedArtist.data)) {
       updateTag(CATALOG_BASE_CACHE_TAG)
       updateTag(CATALOG_CACHE_TAG)
@@ -229,7 +242,11 @@ export async function updateArtistaAction(
     }
   }
 
-  const { catalogSlugChanged, catalogDataChanged } = await db.transaction(async (tx) => {
+  const {
+    catalogSlugChanged,
+    canonicalCatalogSlugChanged,
+    catalogDataChanged
+  } = await db.transaction(async (tx) => {
     await tx
       .update(artist)
       .set(parsed.data)
@@ -250,7 +267,11 @@ export async function updateArtistaAction(
     }
 
     const [catalogSelection] = await tx
-      .select({ pseudonimoId: artistTables.catalogArtist.pseudonimoId })
+      .select({
+        pseudonimoId: artistTables.catalogArtist.pseudonimoId,
+        activo: artistTables.catalogArtist.activo,
+        deletedAt: artistTables.catalogArtist.deletedAt
+      })
       .from(artistTables.catalogArtist)
       .where(eq(artistTables.catalogArtist.artistaId, prevData.id))
     const [primary] = await tx
@@ -269,14 +290,25 @@ export async function updateArtistaAction(
       parsed.data.pseudonimo !== undefined
         ? await allocateCatalogSlug(tx, prevData.id, parsed.data.pseudonimo)
         : false
+    const canonicalCatalogSlugChanged =
+      catalogSlugChanged &&
+      catalogSelection?.activo === true &&
+      catalogSelection.deletedAt === null
     return {
       catalogSlugChanged,
+      canonicalCatalogSlugChanged,
       catalogDataChanged: catalogFieldsChanged(prevData, parsed.data) || pseudonymChanged
     }
   })
 
   updateTag(ARTIST_CACHE_TAG)
   if (historialInsert) updateTag(ARTIST_HISTORY_CACHE_TAG)
+  if (canonicalCatalogSlugChanged) {
+    void revalidateWebCache({
+      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+      mode: 'immediate'
+    })
+  }
   if (catalogSlugChanged || catalogDataChanged) {
     updateTag(CATALOG_BASE_CACHE_TAG)
     updateTag(CATALOG_CACHE_TAG)

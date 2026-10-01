@@ -9,6 +9,7 @@ import { requireAuth } from '@/shared/lib/auth/utils'
 import {
   ARTIST_CACHE_TAG,
   ARTIST_HISTORY_CACHE_TAG,
+  CANONICAL_CATALOG_SLUGS_CACHE_TAG,
   CATALOG_BASE_CACHE_TAG,
   CATALOG_CACHE_TAG
 } from '@frijolmagico/cache-tags'
@@ -133,6 +134,7 @@ export async function mutateArtistPseudonymAction(
 ): Promise<ActionState> {
   let historyChanged = false
   let catalogSlugChanged = false
+  let canonicalCatalogSlugChanged = false
   let catalogDataChanged = false
   try {
     await requireAuth()
@@ -197,7 +199,11 @@ export async function mutateArtistPseudonymAction(
           await transaction.update(artist).set({ pseudonimo: mutation.pseudonym }).where(eq(artist.id, mutation.artistId))
         }
         const [catalogSelection] = await transaction
-          .select({ pseudonimoId: catalogArtist.pseudonimoId })
+          .select({
+            pseudonimoId: catalogArtist.pseudonimoId,
+            activo: catalogArtist.activo,
+            deletedAt: catalogArtist.deletedAt
+          })
           .from(catalogArtist)
           .where(eq(catalogArtist.artistaId, mutation.artistId))
         if (
@@ -212,6 +218,10 @@ export async function mutateArtistPseudonymAction(
             mutation.artistId,
             mutation.pseudonym
           )
+          canonicalCatalogSlugChanged =
+            catalogSlugChanged &&
+            catalogSelection.activo &&
+            catalogSelection.deletedAt === null
         }
         return
       }
@@ -242,7 +252,11 @@ export async function mutateArtistPseudonymAction(
       }
 
       const [catalogReference] = await transaction
-        .select({ id: catalogArtist.id })
+        .select({
+          id: catalogArtist.id,
+          activo: catalogArtist.activo,
+          deletedAt: catalogArtist.deletedAt
+        })
         .from(catalogArtist)
         .where(and(eq(catalogArtist.artistaId, mutation.artistId), eq(catalogArtist.pseudonimoId, pseudonym.id)))
       const [exhibitionReference] = await transaction
@@ -273,6 +287,10 @@ export async function mutateArtistPseudonymAction(
             mutation.artistId,
             replacement.pseudonimo
           )
+          canonicalCatalogSlugChanged =
+            catalogSlugChanged &&
+            catalogReference.activo &&
+            catalogReference.deletedAt === null
         }
         if (primary?.pseudonimoId === pseudonym.id) {
           const [previousArtist] = await transaction
@@ -302,6 +320,12 @@ export async function mutateArtistPseudonymAction(
       updateTag(CATALOG_CACHE_TAG)
       void revalidateWebCache({ tag: CATALOG_BASE_CACHE_TAG })
       void revalidateWebCache({ tag: CATALOG_CACHE_TAG, path: '/catalogo' })
+      if (canonicalCatalogSlugChanged) {
+        void revalidateWebCache({
+          tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+          mode: 'immediate'
+        })
+      }
     }
     return { success: true }
   } catch (error) {

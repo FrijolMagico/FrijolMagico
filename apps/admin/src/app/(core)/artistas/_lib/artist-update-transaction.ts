@@ -62,6 +62,7 @@ export async function applyArtistPseudonymDrafts(
   let artistFallback = activeArtist.pseudonimo
   let historyChanged = false
   let catalogSlugChanged = false
+  let canonicalCatalogSlugChanged = false
   let catalogDataChanged = false
 
   for (const draft of drafts) {
@@ -130,7 +131,11 @@ export async function applyArtistPseudonymDrafts(
       }
 
       const [catalogSelection] = await transaction
-        .select({ pseudonimoId: catalogArtist.pseudonimoId })
+        .select({
+          pseudonimoId: catalogArtist.pseudonimoId,
+          activo: catalogArtist.activo,
+          deletedAt: catalogArtist.deletedAt
+        })
         .from(catalogArtist)
         .where(eq(catalogArtist.artistaId, artistId))
       if (catalogSelection?.pseudonimoId == null && primaryFallbackChanged) {
@@ -138,17 +143,25 @@ export async function applyArtistPseudonymDrafts(
       }
       if (catalogSelection?.pseudonimoId === pseudonym.id) {
         catalogDataChanged = true
-        catalogSlugChanged = await allocateCatalogSlug(
+        const allocatedSlug = await allocateCatalogSlug(
           transaction,
           artistId,
           draft.pseudonym
-        ) || catalogSlugChanged
+        )
+        catalogSlugChanged = allocatedSlug || catalogSlugChanged
+        canonicalCatalogSlugChanged =
+          canonicalCatalogSlugChanged ||
+          (allocatedSlug && catalogSelection.activo && catalogSelection.deletedAt === null)
       }
     }
 
     if (draft.makePrimary) {
       const [catalogSelection] = await transaction
-        .select({ pseudonimoId: catalogArtist.pseudonimoId })
+        .select({
+          pseudonimoId: catalogArtist.pseudonimoId,
+          activo: catalogArtist.activo,
+          deletedAt: catalogArtist.deletedAt
+        })
         .from(catalogArtist)
         .where(eq(catalogArtist.artistaId, artistId))
       if (catalogSelection?.pseudonimoId == null && artistFallback !== draft.pseudonym) {
@@ -159,5 +172,10 @@ export async function applyArtistPseudonymDrafts(
     }
   }
 
-  return { historyChanged, catalogSlugChanged, catalogDataChanged }
+  return {
+    historyChanged,
+    catalogSlugChanged,
+    canonicalCatalogSlugChanged,
+    catalogDataChanged
+  }
 }
