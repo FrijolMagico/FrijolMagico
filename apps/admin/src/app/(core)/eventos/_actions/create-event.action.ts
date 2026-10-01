@@ -10,7 +10,11 @@ import {
   eventInsertSchema
 } from '../_schemas/event.schema'
 import type { ActionState } from '@/shared/types/actions'
-import { EVENT_CACHE_TAG } from '@frijolmagico/cache-tags'
+import {
+  EVENT_CACHE_TAG,
+  FESTIVALES_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG
+} from '@frijolmagico/cache-tags'
 import { revalidateWebCache } from '@/shared/lib/web-invalidation'
 
 const { event } = events
@@ -37,12 +41,15 @@ export async function createEventAction(
     await db.insert(event).values(parsed.data)
 
     updateTag(EVENT_CACHE_TAG)
-    try {
-      await revalidateWebCache({ tag: EVENT_CACHE_TAG })
-    } catch {
-      console.error('[event-crud] Web cache sync failed', {
-        tag: EVENT_CACHE_TAG
-      })
+    for (const [tag, mode] of [
+      [FESTIVAL_CRITICAL_CACHE_TAG, 'immediate'],
+      [FESTIVALES_CACHE_TAG, 'swr']
+    ] as const) {
+      try {
+        await revalidateWebCache({ tag, mode })
+      } catch {
+        console.error('[event-crud] Web cache sync failed', { tag })
+      }
     }
     return { success: true }
   } catch (error) {

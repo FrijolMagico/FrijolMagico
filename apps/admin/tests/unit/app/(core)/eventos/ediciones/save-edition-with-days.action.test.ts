@@ -1,4 +1,8 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
+import {
+  FESTIVALES_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG
+} from '@frijolmagico/cache-tags'
 
 let committed = false
 let existingEdition = { eventoId: 2, numeroEdicion: 'I' }
@@ -112,6 +116,14 @@ describe('saveEditionWithDaysAction catalog freshness', () => {
     )
 
     expect(result.success).toBe(true)
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate'
+    })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVALES_CACHE_TAG,
+      mode: 'swr'
+    })
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: 'catalogo:artistas'
     })

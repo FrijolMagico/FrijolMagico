@@ -14,7 +14,9 @@ import type { ActionState } from '@/shared/types/actions'
 import {
   CATALOG_CACHE_TAG,
   CATALOG_PARTICIPATION_CACHE_TAG,
-  EVENT_CACHE_TAG
+  EVENT_CACHE_TAG,
+  FESTIVALES_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 import {
   revalidateWebCache,
@@ -73,12 +75,15 @@ export async function updateEventAction(
     }
 
     updateTag(EVENT_CACHE_TAG)
-    try {
-      await revalidateWebCache({ tag: EVENT_CACHE_TAG })
-    } catch {
-      console.error('[event-crud] Web cache sync failed', {
-        tag: EVENT_CACHE_TAG
-      })
+    for (const [tag, mode] of [
+      [FESTIVAL_CRITICAL_CACHE_TAG, 'immediate'],
+      [FESTIVALES_CACHE_TAG, 'swr']
+    ] as const) {
+      try {
+        await revalidateWebCache({ tag, mode })
+      } catch {
+        console.error('[event-crud] Web cache sync failed', { tag })
+      }
     }
     return { success: true }
   } catch (error) {

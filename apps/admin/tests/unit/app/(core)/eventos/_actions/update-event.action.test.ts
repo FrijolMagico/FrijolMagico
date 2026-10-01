@@ -1,4 +1,8 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
+import {
+  FESTIVALES_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG
+} from '@frijolmagico/cache-tags'
 
 let eventName = 'Evento original'
 let failUpdate = false
@@ -67,7 +71,14 @@ describe('updateEventAction catalog freshness', () => {
     })
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledTimes(2)
     expect(updateTag).toHaveBeenCalledWith('eventos')
-    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'eventos' })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate'
+    })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVALES_CACHE_TAG,
+      mode: 'swr'
+    })
   })
 
   test('does not invalidate the web catalog for a no-op name update', async () => {

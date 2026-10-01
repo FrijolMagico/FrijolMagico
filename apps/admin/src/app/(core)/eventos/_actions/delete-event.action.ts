@@ -11,7 +11,9 @@ import {
   CATALOG_CACHE_TAG,
   CATALOG_EDITION_DATES_CACHE_TAG,
   CATALOG_PARTICIPATION_CACHE_TAG,
-  EVENT_CACHE_TAG
+  EVENT_CACHE_TAG,
+  FESTIVALES_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 import { revalidateWebCache } from '@/shared/lib/web-invalidation'
 
@@ -36,12 +38,15 @@ export async function deleteEventAction(id: number): Promise<ActionState> {
     if (deletedEvents.length === 0) return { success: true }
 
     updateTag(EVENT_CACHE_TAG)
-    try {
-      await revalidateWebCache({ tag: EVENT_CACHE_TAG })
-    } catch {
-      console.error('[event-crud] Web cache sync failed', {
-        tag: EVENT_CACHE_TAG
-      })
+    for (const [tag, mode] of [
+      [FESTIVAL_CRITICAL_CACHE_TAG, 'immediate'],
+      [FESTIVALES_CACHE_TAG, 'swr']
+    ] as const) {
+      try {
+        await revalidateWebCache({ tag, mode })
+      } catch {
+        console.error('[event-crud] Web cache sync failed', { tag })
+      }
     }
     for (const tag of [
       CATALOG_CACHE_TAG,

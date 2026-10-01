@@ -1,4 +1,8 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
+import {
+  FESTIVALES_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG
+} from '@frijolmagico/cache-tags'
 
 const updateTag = mock(() => {})
 const revalidateWebCache = mock(() => Promise.resolve({ revalidated: true }))
@@ -138,6 +142,14 @@ describe('updateEditionPublicationAction', () => {
     expect(dbMock.updateState.whereCalls).toBe(1)
     expect(updateTag).toHaveBeenCalledTimes(2)
     expect(revalidateWebCache).toHaveBeenCalledTimes(2)
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate'
+    })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVALES_CACHE_TAG,
+      mode: 'swr'
+    })
     expect(consoleError).toHaveBeenCalled()
   })
 

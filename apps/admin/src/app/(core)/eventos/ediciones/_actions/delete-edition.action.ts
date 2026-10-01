@@ -13,6 +13,8 @@ import {
   CATALOG_EDITION_DATES_CACHE_TAG,
   CATALOG_PARTICIPATION_CACHE_TAG,
   EDITION_CACHE_TAG,
+  FESTIVALES_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG,
   EDITION_DAY_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 
@@ -41,12 +43,15 @@ export async function deleteEditionAction(
 
   updateTag(EDITION_CACHE_TAG)
   updateTag(EDITION_DAY_CACHE_TAG)
-  try {
-    await revalidateWebCache({ tag: EDITION_CACHE_TAG })
-  } catch {
-    console.error('[delete-edition] Web cache sync failed', {
-      tag: EDITION_CACHE_TAG
-    })
+  for (const [tag, mode] of [
+    [FESTIVAL_CRITICAL_CACHE_TAG, 'immediate'],
+    [FESTIVALES_CACHE_TAG, 'swr']
+  ] as const) {
+    try {
+      await revalidateWebCache({ tag, mode })
+    } catch {
+      console.error('[delete-edition] Web cache sync failed', { tag })
+    }
   }
   for (const tag of [
     CATALOG_CACHE_TAG,

@@ -1,4 +1,8 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
+import {
+  FESTIVALES_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG
+} from '@frijolmagico/cache-tags'
 
 let deletedRows: { id: number }[] = [{ id: 1 }]
 let failDelete = false
@@ -52,9 +56,15 @@ describe('deleteEventAction catalog freshness', () => {
 
     expect(result.success).toBe(true)
     expect(invalidations).toContain('local:eventos')
-    expect(invalidations).toContain('web:eventos')
     expect(invalidations).toContain('web:catalogo:artistas')
-    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'eventos' })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate'
+    })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVALES_CACHE_TAG,
+      mode: 'swr'
+    })
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas' })
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: 'catalogo:artistas:participaciones'
@@ -62,7 +72,7 @@ describe('deleteEventAction catalog freshness', () => {
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: 'catalogo:artistas:fechas-edicion'
     })
-    expect(revalidateWebCache).toHaveBeenCalledTimes(4)
+    expect(revalidateWebCache).toHaveBeenCalledTimes(5)
   })
 
   test('does not invalidate tags when the event ID does not exist', async () => {
