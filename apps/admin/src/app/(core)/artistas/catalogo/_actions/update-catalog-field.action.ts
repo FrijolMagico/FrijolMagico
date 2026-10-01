@@ -6,6 +6,7 @@ import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { and, eq, isNull } from 'drizzle-orm'
 import {
+  CANONICAL_CATALOG_SLUGS_CACHE_TAG,
   CATALOG_BASE_CACHE_TAG,
   CATALOG_CACHE_TAG,
   CATALOG_PARTICIPATION_CACHE_TAG,
@@ -37,38 +38,44 @@ export async function updateCatalogFieldAction(
     }
   }
 
+  const existingCatalogRow = 'activo' in parsed.data
+    ? (
+        await db
+          .select({
+            artistaId: artist.catalogArtist.artistaId,
+            activo: artist.catalogArtist.activo,
+            deletedAt: artist.catalogArtist.deletedAt
+          })
+          .from(artist.catalogArtist)
+          .where(eq(artist.catalogArtist.id, id))
+          .limit(1)
+      )[0]
+    : undefined
+
   // Server-side avatar guard: can't activate a catalog entry without an avatar
-  if (parsed.data.activo === true) {
-    const [row] = await db
-      .select({ artistaId: artist.catalogArtist.artistaId })
-      .from(artist.catalogArtist)
-      .where(eq(artist.catalogArtist.id, id))
+  if (parsed.data.activo === true && existingCatalogRow) {
+    const [avatar] = await db
+      .select({ id: artist.artistImage.id })
+      .from(artist.artistImage)
+      .where(
+        and(
+          eq(artist.artistImage.artistaId, existingCatalogRow.artistaId),
+          eq(artist.artistImage.tipo, 'avatar'),
+          isNull(artist.artistImage.deletedAt)
+        )
+      )
       .limit(1)
 
-    if (row) {
-      const [avatar] = await db
-        .select({ id: artist.artistImage.id })
-        .from(artist.artistImage)
-        .where(
-          and(
-            eq(artist.artistImage.artistaId, row.artistaId),
-            eq(artist.artistImage.tipo, 'avatar'),
-            isNull(artist.artistImage.deletedAt)
-          )
-        )
-        .limit(1)
-
-      if (!avatar) {
-        return {
-          success: false,
-          errors: [
-            {
-              entityType: 'catalogo',
-              message:
-                'No se puede activar una entrada sin avatar. Debe subir un avatar antes de activar la entrada.'
-            }
-          ]
-        }
+    if (!avatar) {
+      return {
+        success: false,
+        errors: [
+          {
+            entityType: 'catalogo',
+            message:
+              'No se puede activar una entrada sin avatar. Debe subir un avatar antes de activar la entrada.'
+          }
+        ]
       }
     }
   }
@@ -83,6 +90,18 @@ export async function updateCatalogFieldAction(
   for (const tag of catalogTags) {
     updateTag(tag)
     void revalidateWebCache({ tag, path: '/catalogo' })
+  }
+
+  if (
+    'activo' in parsed.data &&
+    existingCatalogRow &&
+    existingCatalogRow.deletedAt === null &&
+    existingCatalogRow.activo !== parsed.data.activo
+  ) {
+    void revalidateWebCache({
+      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+      mode: 'immediate'
+    })
   }
 
   if ('destacado' in parsed.data) {

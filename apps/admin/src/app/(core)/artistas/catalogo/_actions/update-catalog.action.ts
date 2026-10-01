@@ -9,6 +9,7 @@ import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import {
   ARTIST_DETAIL_CACHE_TAG,
+  CANONICAL_CATALOG_SLUGS_CACHE_TAG,
   CATALOG_BASE_CACHE_TAG,
   CATALOG_CACHE_TAG,
   CATALOG_PARTICIPATION_CACHE_TAG,
@@ -83,7 +84,9 @@ export async function updateCatalogAction(
   const intent = requestedIntent ?? AVATAR_INTENT.UNCHANGED
   if (!artistaId) return conflict()
 
-  let activeStateChanged = activo !== undefined
+  let activeStateChanged = false
+  let catalogSlugChanged = false
+  let canonicalCatalogSlugChanged = false
   try {
     const result = await db.transaction(async (tx) => {
       const [ownedPseudonym] = await tx
@@ -162,16 +165,25 @@ export async function updateCatalogAction(
       const [currentCatalog] = await tx
         .select({
           pseudonimoId: artist.catalogArtist.pseudonimoId,
-          activo: artist.catalogArtist.activo
+          activo: artist.catalogArtist.activo,
+          deletedAt: artist.catalogArtist.deletedAt
         })
         .from(artist.catalogArtist)
         .where(eq(artist.catalogArtist.id, id))
         .limit(1)
-      if (currentCatalog) {
+      if (currentCatalog && currentCatalog.deletedAt === null) {
         activeStateChanged = activo !== undefined && currentCatalog.activo !== activo
       }
       if (currentCatalog && currentCatalog.pseudonimoId !== pseudonimoId) {
-        await allocateCatalogSlug(tx, artistaId, ownedPseudonym.pseudonimo)
+        catalogSlugChanged = await allocateCatalogSlug(
+          tx,
+          artistaId,
+          ownedPseudonym.pseudonimo
+        )
+        canonicalCatalogSlugChanged =
+          catalogSlugChanged &&
+          currentCatalog.deletedAt === null &&
+          (activo ?? currentCatalog.activo)
       }
 
       await tx
@@ -215,6 +227,12 @@ export async function updateCatalogAction(
       // DB mutation already committed; cache invalidation is best-effort.
     }
     void revalidateWebCache({ tag, path: '/catalogo' })
+  }
+  if (activeStateChanged || canonicalCatalogSlugChanged) {
+    void revalidateWebCache({
+      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+      mode: 'immediate'
+    })
   }
   if (destacado !== undefined) {
     void revalidateWebCache({ tag: FEATURED_ARTISTS_CACHE_TAG, path: '/' })

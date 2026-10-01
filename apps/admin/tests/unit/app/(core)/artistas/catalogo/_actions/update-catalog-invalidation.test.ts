@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
 
 import { getAvatarUrl } from '@frijolmagico/utils/cdn'
 import { artist as artistTables } from '@frijolmagico/database/schema'
+import { CANONICAL_CATALOG_SLUGS_CACHE_TAG } from '@frijolmagico/cache-tags'
 
 const updateTag = mock(() => {})
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
@@ -17,6 +18,8 @@ let dbTransaction: (
 let savedCatalogValues: Record<string, unknown> | null = null
 let savedSlugValues: Record<string, unknown>[] = []
 let savedAliases: Record<string, unknown>[] = []
+let initialCatalogActive = false
+let currentCatalogExists = true
 
 mock.module('server-only', () => ({}))
 mock.module('next/cache', () => ({ updateTag }))
@@ -61,7 +64,11 @@ function makeTx() {
             if (table === artistTables.artistPseudonym) {
               return [{ id: 43, pseudonimo: 'Selected Artist' }] as never[]
             }
-            if (table === artistTables.catalogArtist) return [{ pseudonimoId: 43, activo: false }] as never[]
+            if (table === artistTables.catalogArtist) {
+              return currentCatalogExists
+                ? ([{ pseudonimoId: 43, activo: initialCatalogActive, deletedAt: null }] as never[])
+                : ([] as never[])
+            }
             if (table === artistTables.artistImage) {
               return [{ id: 7, path: 'artistas/current.webp', version: 'v7' }] as never[]
             }
@@ -104,6 +111,8 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     savedCatalogValues = null
     savedSlugValues = []
     savedAliases = []
+    initialCatalogActive = false
+    currentCatalogExists = true
     dbTransaction = async (cb) => {
       const result = await cb(makeTx())
       return result
@@ -307,7 +316,7 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     expect(committed).toEqual({ catalog: 'original', activeAvatarId: 7 })
   })
 
-  test('persists a changed active contextual pseudonym and updates its canonical catalog slug', async () => {
+  test('persists a changed inactive contextual pseudonym without invalidating canonical catalog slugs', async () => {
     const result = await updateCatalogAction(
       { success: false },
       { ...validInput, pseudonimoId: 44 }
@@ -317,21 +326,72 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     expect(savedCatalogValues).toMatchObject({ pseudonimoId: 44 })
     expect(savedSlugValues).toEqual([{ slug: 'selected-artist' }])
     expect(savedAliases).toEqual([{ slug: 'old-slug', artistaId: 42 }])
+    expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:base')
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: 'catalogo:artistas',
+      path: '/catalogo'
+    })
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+      mode: 'immediate'
+    })
   })
 
-  test('invalidates participation only when an active-state transition is requested', async () => {
+  test('does not invalidate canonical slugs when no current catalog row exists', async () => {
+    currentCatalogExists = false
+
     await updateCatalogAction(
       { success: false },
       { ...validInput, activo: true }
     )
 
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+      mode: 'immediate'
+    })
+  })
+
+  test('invalidates canonical slugs when an inactive catalog row becomes active', async () => {
+    await updateCatalogAction(
+      { success: false },
+      { ...validInput, activo: true }
+    )
+
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: 'catalogo:artistas:base',
+      path: '/catalogo'
+    })
     expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:participaciones')
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+      mode: 'immediate'
+    })
+  })
+
+  test('invalidates canonical slugs when an active catalog row becomes inactive', async () => {
+    initialCatalogActive = true
+
+    await updateCatalogAction({ success: false }, { ...validInput, activo: false })
+
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: 'catalogo:artistas:base',
+      path: '/catalogo'
+    })
+    expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:participaciones')
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+      mode: 'immediate'
+    })
   })
 
   test('does not invalidate participation when active state is unchanged', async () => {
     await updateCatalogAction({ success: false }, validInput)
 
     expect(updateTag).not.toHaveBeenCalledWith('catalogo:artistas:participaciones')
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+      mode: 'immediate'
+    })
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: 'catalogo:artistas:base',
       path: '/catalogo'
