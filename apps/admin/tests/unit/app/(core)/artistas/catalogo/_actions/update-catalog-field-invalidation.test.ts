@@ -1,12 +1,16 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
 
 import { artist as artistTables } from '@frijolmagico/database/schema'
-import { CANONICAL_CATALOG_SLUGS_CACHE_TAG } from '@frijolmagico/cache-tags'
+import {
+  CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+  FEATURED_ARTISTS_CACHE_TAG
+} from '@frijolmagico/cache-tags'
 
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
 const updateTag = mock(() => {})
 const revalidateWebCache = mock(async () => ({ revalidated: true }))
 let storedActivo = false
+let storedDestacado = false
 let storedDeletedAt: Date | null = null
 let updateValues: Record<string, unknown> | null = null
 
@@ -21,7 +25,14 @@ mock.module('@frijolmagico/database/orm', () => ({
         where: () => ({
           limit: async () =>
             table === artistTables.catalogArtist
-              ? [{ artistaId: 42, activo: storedActivo, deletedAt: storedDeletedAt }]
+              ? [
+                {
+                  artistaId: 42,
+                  activo: storedActivo,
+                  destacado: storedDestacado,
+                  deletedAt: storedDeletedAt
+                }
+              ]
               : [{ id: 7 }]
         })
       })
@@ -45,6 +56,7 @@ describe('updateCatalogFieldAction — canonical slug invalidation', () => {
     updateTag.mockClear()
     revalidateWebCache.mockClear()
     storedActivo = false
+    storedDestacado = false
     storedDeletedAt = null
     updateValues = null
   })
@@ -74,6 +86,10 @@ describe('updateCatalogFieldAction — canonical slug invalidation', () => {
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
+    })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      mode: 'swr'
     })
     expect(
       revalidateWebCache.mock.calls.filter(
@@ -105,15 +121,38 @@ describe('updateCatalogFieldAction — canonical slug invalidation', () => {
     })
   })
 
-  test('does not invalidate canonical slugs for unrelated fields', async () => {
+  test('preserves root-path Featured invalidation when destacado changes', async () => {
+    storedActivo = true
+    storedDestacado = false
+
     await expect(
       updateCatalogFieldAction(1, { destacado: true })
     ).resolves.toEqual({ success: true })
 
     expect(updateValues).toEqual({ destacado: true })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      path: '/'
+    })
     expect(revalidateWebCache).not.toHaveBeenCalledWith({
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
+    })
+  })
+
+  test('preserves root-path invalidation without Featured tag when destacado is unchanged', async () => {
+    storedActivo = true
+    storedDestacado = true
+
+    await expect(
+      updateCatalogFieldAction(1, { destacado: true })
+    ).resolves.toEqual({ success: true })
+
+    expect(updateValues).toEqual({ destacado: true })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ path: '/' })
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      path: '/'
     })
   })
 })

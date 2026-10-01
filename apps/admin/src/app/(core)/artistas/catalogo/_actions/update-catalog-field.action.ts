@@ -38,12 +38,13 @@ export async function updateCatalogFieldAction(
     }
   }
 
-  const existingCatalogRow = 'activo' in parsed.data
+  const existingCatalogRow = 'activo' in parsed.data || 'destacado' in parsed.data
     ? (
         await db
           .select({
             artistaId: artist.catalogArtist.artistaId,
             activo: artist.catalogArtist.activo,
+            destacado: artist.catalogArtist.destacado,
             deletedAt: artist.catalogArtist.deletedAt
           })
           .from(artist.catalogArtist)
@@ -104,14 +105,38 @@ export async function updateCatalogFieldAction(
     })
   }
 
-  if ('destacado' in parsed.data) {
-    console.log(
-      '[updateCatalogFieldAction] Destacado field updated, invalidating featured artists cache'
-    )
+  const activeStateChanged =
+    'activo' in parsed.data &&
+    existingCatalogRow !== undefined &&
+    existingCatalogRow.deletedAt === null &&
+    existingCatalogRow.activo !== parsed.data.activo
+
+  if (activeStateChanged && !('destacado' in parsed.data)) {
     void revalidateWebCache({
       tag: FEATURED_ARTISTS_CACHE_TAG,
-      path: '/'
+      mode: 'swr'
     })
+  }
+
+  if ('destacado' in parsed.data) {
+    const eligibleBefore =
+      existingCatalogRow !== undefined &&
+      existingCatalogRow.deletedAt === null &&
+      existingCatalogRow.activo
+    const eligibleAfter =
+      existingCatalogRow !== undefined &&
+      existingCatalogRow.deletedAt === null &&
+      (parsed.data.activo ?? existingCatalogRow.activo)
+    const publicFeaturedStateChanged =
+      existingCatalogRow !== undefined &&
+      (eligibleBefore && existingCatalogRow.destacado) !==
+        (eligibleAfter && parsed.data.destacado)
+
+    void revalidateWebCache(
+      publicFeaturedStateChanged || activeStateChanged
+        ? { tag: FEATURED_ARTISTS_CACHE_TAG, path: '/' }
+        : { path: '/' }
+    )
   }
 
   return { success: true }

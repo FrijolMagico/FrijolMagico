@@ -2,7 +2,11 @@ import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
 
 import { getAvatarUrl } from '@frijolmagico/utils/cdn'
 import { artist as artistTables } from '@frijolmagico/database/schema'
-import { CANONICAL_CATALOG_SLUGS_CACHE_TAG } from '@frijolmagico/cache-tags'
+import {
+  ARTIST_DETAIL_CACHE_TAG,
+  CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+  FEATURED_ARTISTS_CACHE_TAG
+} from '@frijolmagico/cache-tags'
 
 const updateTag = mock(() => {})
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
@@ -19,6 +23,9 @@ let savedCatalogValues: Record<string, unknown> | null = null
 let savedSlugValues: Record<string, unknown>[] = []
 let savedAliases: Record<string, unknown>[] = []
 let initialCatalogActive = false
+let initialCatalogFeatured = false
+let initialCatalogDeleted = false
+let selectedPseudonymId = 43
 let currentCatalogExists = true
 
 mock.module('server-only', () => ({}))
@@ -50,27 +57,39 @@ const validInput = {
   // Inactive on purpose: these tests cover cache invalidation, not the
   // avatar activation rule (activating without an avatar is rejected).
   activo: false,
-  destacado: false,
   avatarUrl: null
 }
 
 function makeTx() {
   let initialArtistLookup = true
+  let artistImageLookupCount = 0
   return {
     select: (_selection: Record<string, unknown>) => ({
       from: (table: unknown) => ({
         where: () => ({
           limit: async () => {
             if (table === artistTables.artistPseudonym) {
-              return [{ id: 43, pseudonimo: 'Selected Artist' }] as never[]
+              return [
+                { id: selectedPseudonymId, pseudonimo: 'Selected Artist' }
+              ] as never[]
             }
             if (table === artistTables.catalogArtist) {
               return currentCatalogExists
-                ? ([{ pseudonimoId: 43, activo: initialCatalogActive, deletedAt: null }] as never[])
+                ? ([
+                    {
+                      pseudonimoId: 43,
+                      activo: initialCatalogActive,
+                      destacado: initialCatalogFeatured,
+                      deletedAt: initialCatalogDeleted ? '2026-07-01' : null
+                    }
+                  ] as never[])
                 : ([] as never[])
             }
             if (table === artistTables.artistImage) {
-              return [{ id: 7, path: 'artistas/current.webp', version: 'v7' }] as never[]
+              artistImageLookupCount += 1
+              return artistImageLookupCount === 1
+                ? ([{ id: 7, path: 'artistas/current.webp', version: 'v7' }] as never[])
+                : ([{ id: 8, artistaId: 42, deletedAt: '2026-07-01' }] as never[])
             }
             if (table === artistTables.artist && initialArtistLookup) {
               initialArtistLookup = false
@@ -112,6 +131,9 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     savedSlugValues = []
     savedAliases = []
     initialCatalogActive = false
+    initialCatalogFeatured = false
+    initialCatalogDeleted = false
+    selectedPseudonymId = 43
     currentCatalogExists = true
     dbTransaction = async (cb) => {
       const result = await cb(makeTx())
@@ -256,6 +278,62 @@ describe('update-catalog action — best-effort cache invalidation', () => {
       catalog: 'Descripción actualizada',
       activeAvatarId: 8
     })
+    expect(updateTag).toHaveBeenCalledWith(ARTIST_DETAIL_CACHE_TAG)
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      mode: 'swr'
+    })
+  })
+
+  test('invalidates Featured when selecting a historical avatar on an active catalog row', async () => {
+    initialCatalogActive = true
+    initialCatalogFeatured = true
+
+    const result = await updateCatalogAction(
+      { success: false },
+      {
+        ...validInput,
+        activo: true,
+        expectedActive: {
+          id: 7,
+          path: getAvatarUrl('artistas/current.webp'),
+          version: 'v7'
+        },
+        intent: 'historical',
+        avatarId: 8
+      }
+    )
+
+    expect(result).toEqual({ success: true })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      mode: 'swr'
+    })
+  })
+
+  test('omits Featured invalidation when selecting a historical avatar on a deleted catalog row', async () => {
+    initialCatalogDeleted = true
+
+    const result = await updateCatalogAction(
+      { success: false },
+      {
+        ...validInput,
+        expectedActive: {
+          id: 7,
+          path: getAvatarUrl('artistas/current.webp'),
+          version: 'v7'
+        },
+        intent: 'historical',
+        avatarId: 8
+      }
+    )
+
+    expect(result).toEqual({ success: true })
+    expect(updateTag).toHaveBeenCalledWith(ARTIST_DETAIL_CACHE_TAG)
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      mode: 'swr'
+    })
   })
 
   test('returns a conflict without changing catalog or avatar state when historical activation fails', async () => {
@@ -335,6 +413,57 @@ describe('update-catalog action — best-effort cache invalidation', () => {
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
     })
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      mode: 'swr'
+    })
+  })
+
+  test('invalidates Featured when an active catalog row selects a different pseudonym', async () => {
+    initialCatalogActive = true
+    selectedPseudonymId = 44
+
+    await updateCatalogAction(
+      { success: false },
+      { ...validInput, activo: true, pseudonimoId: 44 }
+    )
+
+    expect(savedCatalogValues).toMatchObject({ pseudonimoId: 44 })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      mode: 'swr'
+    })
+  })
+
+  test('preserves root-path Featured invalidation when destacado changes', async () => {
+    initialCatalogActive = true
+    initialCatalogFeatured = false
+
+    await updateCatalogAction(
+      { success: false },
+      { ...validInput, activo: true, destacado: true }
+    )
+
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      path: '/'
+    })
+  })
+
+  test('preserves root-path invalidation without Featured tag when destacado is unchanged', async () => {
+    initialCatalogActive = true
+    initialCatalogFeatured = true
+
+    await updateCatalogAction(
+      { success: false },
+      { ...validInput, activo: true, destacado: true }
+    )
+
+    expect(revalidateWebCache).toHaveBeenCalledWith({ path: '/' })
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      path: '/'
+    })
   })
 
   test('does not invalidate canonical slugs when no current catalog row exists', async () => {
@@ -366,6 +495,10 @@ describe('update-catalog action — best-effort cache invalidation', () => {
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
     })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      mode: 'swr'
+    })
   })
 
   test('invalidates canonical slugs when an active catalog row becomes inactive', async () => {
@@ -382,6 +515,10 @@ describe('update-catalog action — best-effort cache invalidation', () => {
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
     })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      mode: 'swr'
+    })
   })
 
   test('does not invalidate participation when active state is unchanged', async () => {
@@ -391,6 +528,10 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     expect(revalidateWebCache).not.toHaveBeenCalledWith({
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
+    })
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      mode: 'swr'
     })
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: 'catalogo:artistas:base',

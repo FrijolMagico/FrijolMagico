@@ -86,7 +86,9 @@ export async function updateCatalogAction(
 
   let activeStateChanged = false
   let catalogSlugChanged = false
+  let featuredSelectionChanged = false
   let canonicalCatalogSlugChanged = false
+  let publicFeaturedStateChanged = false
   try {
     const result = await db.transaction(async (tx) => {
       const [ownedPseudonym] = await tx
@@ -166,6 +168,7 @@ export async function updateCatalogAction(
         .select({
           pseudonimoId: artist.catalogArtist.pseudonimoId,
           activo: artist.catalogArtist.activo,
+          destacado: artist.catalogArtist.destacado,
           deletedAt: artist.catalogArtist.deletedAt
         })
         .from(artist.catalogArtist)
@@ -173,6 +176,21 @@ export async function updateCatalogAction(
         .limit(1)
       if (currentCatalog && currentCatalog.deletedAt === null) {
         activeStateChanged = activo !== undefined && currentCatalog.activo !== activo
+        if (destacado !== undefined) {
+          const eligibleAfter = activo ?? currentCatalog.activo
+          publicFeaturedStateChanged =
+            (currentCatalog.activo && currentCatalog.destacado) !==
+            (eligibleAfter && destacado)
+        }
+      }
+      if (
+        intent === AVATAR_INTENT.HISTORICAL &&
+        currentCatalog &&
+        currentCatalog.deletedAt === null &&
+        (activo ?? currentCatalog.activo) &&
+        (destacado ?? currentCatalog.destacado)
+      ) {
+        featuredSelectionChanged = true
       }
       if (currentCatalog && currentCatalog.pseudonimoId !== pseudonimoId) {
         catalogSlugChanged = await allocateCatalogSlug(
@@ -180,6 +198,10 @@ export async function updateCatalogAction(
           artistaId,
           ownedPseudonym.pseudonimo
         )
+        const eligibleCatalogRow =
+          currentCatalog.deletedAt === null &&
+          (activo ?? currentCatalog.activo)
+        featuredSelectionChanged = catalogSlugChanged && eligibleCatalogRow
         canonicalCatalogSlugChanged =
           catalogSlugChanged &&
           currentCatalog.deletedAt === null &&
@@ -235,7 +257,18 @@ export async function updateCatalogAction(
     })
   }
   if (destacado !== undefined) {
-    void revalidateWebCache({ tag: FEATURED_ARTISTS_CACHE_TAG, path: '/' })
+    void revalidateWebCache(
+      publicFeaturedStateChanged ||
+        activeStateChanged ||
+        featuredSelectionChanged
+        ? { tag: FEATURED_ARTISTS_CACHE_TAG, path: '/' }
+        : { path: '/' }
+    )
+  } else if (activeStateChanged || featuredSelectionChanged) {
+    void revalidateWebCache({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      mode: 'swr'
+    })
   }
   return { success: true }
 }
