@@ -7,7 +7,10 @@ import { z } from 'zod'
 
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
-import { CATALOG_BASE_CACHE_TAG } from '@frijolmagico/cache-tags'
+import {
+  CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+  CATALOG_BASE_CACHE_TAG
+} from '@frijolmagico/cache-tags'
 import { toRawAssetPath } from '@frijolmagico/utils/cdn'
 import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
 import {
@@ -34,12 +37,21 @@ function receiptSecret(): string {
   }
 }
 
-async function invalidateActivatedCatalog(claims: {
-  requestedActive?: boolean
-  catalogId?: number
-}): Promise<void> {
+async function invalidateActivatedCatalog(
+  claims: {
+    requestedActive?: boolean
+    catalogId?: number
+  },
+  catalogActivationEvidence: boolean
+): Promise<void> {
   if (claims.requestedActive && claims.catalogId) {
     await revalidateWebCacheBestEffort({ tag: CATALOG_BASE_CACHE_TAG })
+    if (catalogActivationEvidence) {
+      await revalidateWebCacheBestEffort({
+        tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+        mode: 'immediate'
+      })
+    }
   }
 }
 
@@ -114,13 +126,14 @@ export async function persistArtistAvatarAction(
       claims.version
     )
     if (committed) {
-      await invalidateActivatedCatalog(claims)
+      await invalidateActivatedCatalog(claims, true)
       return { success: true, data: committed }
     }
 
     let avatar: UploadArtistAvatarData
+    let catalogActivationEvidence = false
     try {
-      avatar = await db.transaction(async (tx) => {
+      const persisted = await db.transaction(async (tx) => {
         const [currentArtist] = await tx
           .select({ deletedAt: artist.artist.deletedAt })
           .from(artist.artist)
@@ -162,19 +175,29 @@ export async function persistArtistAvatarAction(
           })
         if (!inserted)
           throw new Error('No se pudo persistir el avatar del artista')
+        let activatedCatalogRow: { id: number } | undefined
         if (claims.requestedActive && claims.catalogId) {
-          await tx
+          const [activated] = await tx
             .update(artist.catalogArtist)
             .set({ activo: true })
             .where(
               and(
                 eq(artist.catalogArtist.id, claims.catalogId),
-                eq(artist.catalogArtist.artistaId, claims.artistaId)
+                eq(artist.catalogArtist.artistaId, claims.artistaId),
+                eq(artist.catalogArtist.activo, false),
+                isNull(artist.catalogArtist.deletedAt)
               )
             )
+            .returning({ id: artist.catalogArtist.id })
+          activatedCatalogRow = activated
         }
-        return { ...inserted, oldAsset: old ?? null }
+        return {
+          avatar: { ...inserted, oldAsset: old ?? null },
+          catalogActivationEvidence: Boolean(activatedCatalogRow)
+        }
       })
+      avatar = persisted.avatar
+      catalogActivationEvidence = persisted.catalogActivationEvidence
     } catch (error) {
       const recovered = await findCommitted(
         claims.artistaId,
@@ -183,8 +206,9 @@ export async function persistArtistAvatarAction(
       )
       if (!recovered) throw error
       avatar = recovered
+      catalogActivationEvidence = true
     }
-    await invalidateActivatedCatalog(claims)
+    await invalidateActivatedCatalog(claims, catalogActivationEvidence)
     return { success: true, data: avatar }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Error desconocido'

@@ -1,10 +1,15 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
 
-import { CATALOG_BASE_CACHE_TAG } from '@frijolmagico/cache-tags'
+import {
+  CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+  CATALOG_BASE_CACHE_TAG
+} from '@frijolmagico/cache-tags'
 
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
 const revalidateWebCacheBestEffort = mock(async (_options: { tag: string }) => {})
 const updateValues: unknown[] = []
+let catalogActive = false
+let surfaceTransactionErrorAfterCommit = false
 let committedAvatar: {
   id: number
   artistaId: number
@@ -18,8 +23,8 @@ const db = {
       where: () => ({ limit: async () => committedAvatar })
     })
   }),
-  transaction: async (callback: (tx: unknown) => Promise<unknown>) =>
-    callback({
+  transaction: async (callback: (tx: unknown) => Promise<unknown>) => {
+    const result = await callback({
       select: () => ({
         from: () => ({
           where: () => ({ limit: async () => [{ deletedAt: null }] })
@@ -29,14 +34,20 @@ const db = {
         set: (values: unknown) => ({
           where: () => {
             updateValues.push(values)
-            if (
-              typeof values === 'object' &&
-              values !== null &&
-              'activo' in values
-            ) {
-              return Promise.resolve()
+            return {
+              returning: async () => {
+                if (
+                  typeof values === 'object' &&
+                  values !== null &&
+                  'activo' in values
+                ) {
+                  if (catalogActive) return []
+                  catalogActive = true
+                  return [{ id: 3 }]
+                }
+                return []
+              }
             }
-            return { returning: async () => [] }
           }
         })
       }),
@@ -53,6 +64,19 @@ const db = {
         })
       })
     })
+    if (surfaceTransactionErrorAfterCommit) {
+      committedAvatar = [
+        {
+          id: 10,
+          artistaId: 42,
+          path: 'artistas/42/avatar-v1.webp',
+          version: 'v1'
+        }
+      ]
+      throw new Error('transaction outcome is ambiguous')
+    }
+    return result
+  }
 }
 
 mock.module('server-only', () => ({}))
@@ -85,16 +109,34 @@ function activeCatalogReceipt() {
   )
 }
 
+function avatarOnlyReceipt() {
+  process.env.ASSET_RECEIPT_SECRET = secret
+  return createArtistAvatarUploadReceipt(
+    {
+      subjectId: 'admin-1',
+      artistaId: 42,
+      path: 'artistas/42/avatar-v1.webp',
+      version: 'v1',
+      expectedActive: undefined,
+      catalogId: undefined,
+      requestedActive: false
+    },
+    secret
+  )
+}
+
 describe('persist artist avatar cache invalidation', () => {
   beforeEach(() => {
     updateValues.length = 0
+    catalogActive = false
+    surfaceTransactionErrorAfterCommit = false
     committedAvatar = []
     revalidateWebCacheBestEffort.mockClear()
     requireAuth.mockReset()
     requireAuth.mockResolvedValue({ user: { id: 'admin-1' } })
   })
 
-  test('invalidates the canonical catalog cache after activating an artist', async () => {
+  test('invalidates canonical slugs when persistence activates an inactive catalog', async () => {
     const result = await persistArtistAvatarAction({
       receipt: activeCatalogReceipt()
     })
@@ -103,6 +145,51 @@ describe('persist artist avatar cache invalidation', () => {
     expect(updateValues).toContainEqual({ activo: true })
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: CATALOG_BASE_CACHE_TAG
+    })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+      mode: 'immediate'
+    })
+  })
+
+  test('recovers committed activation after an ambiguous transaction error', async () => {
+    surfaceTransactionErrorAfterCommit = true
+
+    const result = await persistArtistAvatarAction({
+      receipt: activeCatalogReceipt()
+    })
+
+    expect(result).toMatchObject({ success: true, data: { id: 10 } })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+      mode: 'immediate'
+    })
+  })
+
+  test('does not invalidate canonical slugs when the catalog was already active', async () => {
+    catalogActive = true
+
+    const result = await persistArtistAvatarAction({
+      receipt: activeCatalogReceipt()
+    })
+
+    expect(result).toMatchObject({ success: true, data: { id: 10 } })
+    expect(updateValues).toContainEqual({ activo: true })
+    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalledWith({
+      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+      mode: 'immediate'
+    })
+  })
+
+  test('does not invalidate canonical catalog slugs for an avatar-only receipt', async () => {
+    const result = await persistArtistAvatarAction({
+      receipt: avatarOnlyReceipt()
+    })
+
+    expect(result).toMatchObject({ success: true, data: { id: 10 } })
+    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalledWith({
+      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+      mode: 'immediate'
     })
   })
 
@@ -123,6 +210,10 @@ describe('persist artist avatar cache invalidation', () => {
     expect(result).toMatchObject({ success: true, data: { id: 10 } })
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: CATALOG_BASE_CACHE_TAG
+    })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+      mode: 'immediate'
     })
   })
 })
