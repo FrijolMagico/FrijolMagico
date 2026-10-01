@@ -71,6 +71,37 @@ describe('buildWebInvalidationUrl', () => {
     expect(url).toBe('https://web.test/api/revalidate?path=%2F')
   })
 
+  test('appends path type alongside a path-only invalidation', () => {
+    const url = buildWebInvalidationUrl({ path: '/', pathType: 'page' })
+    expect(url).toBe(
+      'https://web.test/api/revalidate?path=%2F&pathType=page'
+    )
+  })
+
+  test('appends tag mode, path, and path type query params together', () => {
+    const url = buildWebInvalidationUrl({
+      tag: 'home:featured-artists',
+      path: '/',
+      pathType: 'layout'
+    })
+    expect(url).toBe(
+      'https://web.test/api/revalidate?tag=home%3Afeatured-artists&mode=swr&path=%2F&pathType=layout'
+    )
+  })
+
+  test('rejects a runtime-invalid path type', () => {
+    const options = { path: '/' }
+    Object.assign(options, { pathType: 'invalid' })
+
+    expect(() => buildWebInvalidationUrl(options)).toThrow()
+  })
+
+  test('rejects path type without a non-empty path', () => {
+    expect(() =>
+      buildWebInvalidationUrl({ path: '', pathType: 'page' })
+    ).toThrow()
+  })
+
   test('appends tag mode and path query params together', () => {
     const url = buildWebInvalidationUrl({
       tag: 'home:featured-artists',

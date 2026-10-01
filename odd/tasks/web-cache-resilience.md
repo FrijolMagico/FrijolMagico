@@ -210,6 +210,19 @@ Proposed writer-to-bucket fanout (planning only; based on the reconciled source 
 
 Final source-level consistency review: Stage 3's freshness policy is decided but not implemented. No timer-based refresh is proposed. Immediate means the first read after a successfully delivered explicit invalidation; the current best-effort/fire-and-forget branches can fail or outlive the mutation response, so there is no unconditional delivery guarantee and no TTL fallback. Current shared tags (`CATALOG_BASE`, `FESTIVALES`, `EVENT`, `EDITION`) cannot express the selected immediate/SWR boundary without Web reader tag separation. The reconciled source matrix identifies the required writer fanout and confirmed missing branches, including the band-name detail gap. Route data tags and route-output paths are distinct; exact first-read HTML/RSC behavior for root layout and generated festival metadata still needs candidate Preview verification. Do not claim Stage 3/4 implemented or the deployment validated. Festival list/adjacent intentionally remain SWR.
 
+### Stage 4.1 — route path-type transport (in progress)
+
+Scope: extend the existing Admin→Web invalidation contract with optional `pathType: 'page' | 'layout'`, validate it at both the Admin URL builder and Web receiver, and call Next's matching `revalidatePath(path, pathType)` overload. Preserve legacy requests without `pathType` as `revalidatePath(path)`, and keep tag/mode and path invalidation independent. Reject invalid path types and `pathType` without a non-empty path before performing any invalidation.
+
+Non-goals: do not add route-path call sites or alter current invalidation behavior yet; do not deploy, inspect Preview, access Production/Turso, or run remote validation in this work unit. Route selection and Preview proof follow after this transport is implemented and locally verified.
+
+Acceptance: Admin URL tests cover `page`, `layout`, legacy path-only, and invalid combinations; Web route tests cover both overloads, backward compatibility, and fail-closed validation before tag/path side effects. Focused tests and review are green; full-workspace verification blockers are tracked separately before Preview validation.
+
+Verification so far: TDD RED — Admin helper 22 passed/4 failed; Web route 5 passed/4 failed. Focused GREEN — Admin helper 26/0 (34 expectations), Web route 9/0 (32 assertions). Full Web Turbo suite passed on retry: 249/0 across 57 files (a prior run hit a non-reproducible Bun SIGSEGV in an unrelated festival-types test). Full Admin Turbo suite is blocked by five unhandled `Missing Turso database URL` errors across unrelated test files (748 pass/5 errors); root `bun run type-check` reports 10 errors in test files and none in the Stage4.1 source or direct tests. No database URL was supplied and no DB/remote access was made.
+
+- [ ] **In progress:** Implement and verify validated `pathType` transport for route-output invalidation.
+- [ ] **Blocked follow-up:** Resolve or safely isolate full Admin test environment/type-check blockers before starting Preview verification.
+
 ### Staging validation runbook (prepared, not executed)
 
 Prerequisites: authorized Vercel staging deployment with the same cache directives/handler as the candidate; known deployment/build ID and function regions; a designated staging-only test record or isolated probe; permission for any staging DB mutation; and logs/metrics access. User explicitly authorizes Vercel CLI use and any Preview environment, never Production. CLI 59.26.0 is installed; `.vercel/repo.json` maps `frijolmagico` and `admin-frijolmagico`. Preview-only `vercel list` queries found no deployments for branch `refactor/database-staging-web-cache` in either project; existing Ready previews belong to other branch refs and do not contain the uncommitted Stage 2 candidate. No deployment, environment pull, production query, or DB write was made.

@@ -75,4 +75,44 @@ describe('POST /api/revalidate', () => {
     expect(revalidatePathMock).toHaveBeenCalledWith('/artists')
     expect(revalidateTagMock).not.toHaveBeenCalled()
   })
+
+  test.each(['page', 'layout'] as const)(
+    'passes %s path type to revalidatePath',
+    async (pathType) => {
+      const response = await POST(
+        createRequest(
+          `path=%2Fartists&pathType=${pathType}`,
+          'Bearer test-secret'
+        )
+      )
+
+      expect(response.status).toBe(200)
+      expect(revalidatePathMock).toHaveBeenCalledTimes(1)
+      expect(revalidatePathMock).toHaveBeenCalledWith('/artists', pathType)
+      expect(revalidateTagMock).not.toHaveBeenCalled()
+    }
+  )
+
+  test('rejects unsupported path type before invalidating tag or path', async () => {
+    const response = await POST(
+      createRequest(
+        'tag=artists&path=%2Fartists&pathType=unsupported',
+        'Bearer test-secret'
+      )
+    )
+
+    expect(response.status).toBe(400)
+    expect(revalidateTagMock).not.toHaveBeenCalled()
+    expect(revalidatePathMock).not.toHaveBeenCalled()
+  })
+
+  test('rejects path type without a non-empty path before invalidating tag or path', async () => {
+    const response = await POST(
+      createRequest('tag=artists&pathType=page', 'Bearer test-secret')
+    )
+
+    expect(response.status).toBe(400)
+    expect(revalidateTagMock).not.toHaveBeenCalled()
+    expect(revalidatePathMock).not.toHaveBeenCalled()
+  })
 })
