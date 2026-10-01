@@ -22,10 +22,21 @@ Para una copia de producción, obtené **autorización de lectura de producción
 | `bun run dev` / `bun run prod` | Sirve el archivo local de staging / producción, respectivamente. No conecta a Turso Cloud. |
 | `bun --no-env-file run migrate:staging` | **Escribe** migraciones versionadas en staging remoto, con autorización específica. |
 | `bun --no-env-file run migrate:production` | **Escribe** migraciones versionadas en producción remota, con autorización humana nueva y confirmación explícita. |
+| `bun run check:staging-seed` | Valida offline en una base temporal que las migraciones, la carga atómica con FK activas y los conteos exactos del fixture funcionan. No acepta destino ni realiza I/O remoto. |
 | `bun run new <name>` | Genera una migración SQL custom para editar y revisar. |
 | `bun run test --filter=@frijolmagico/database` (desde la raíz) | Ejecuta los tests del paquete vía Turbo. |
 
-No existe `bun run seed`, `bun run migrate` genérico ni `bun run reset:dev-r2` público. `seed/seed.sql` se conserva como fixture de tests y referencia histórica, **no** como procedimiento de desarrollo ni como datos para sincronizar con Turso. El script heredado `scripts/clean-devr2/reset-dev-r2.ts` solo protege assets del seed, no los del snapshot real: **no lo ejecutes manualmente contra `local.dev.db`**. Si ese archivo existe, el script aborta antes de cualquier acción R2; para limpiar el bucket necesitás un plan nuevo, revisado contra los assets del snapshot y autorizado por separado.
+No existe `bun run seed`, `bun run migrate` genérico ni `bun run reset:dev-r2` público. `seed/seed.sql` se conserva como fixture sintética; `bun run check:staging-seed` solo comprueba el fixture contra las migraciones en una base desechable bajo el directorio temporal del sistema. No lee ni modifica `local.db` o `local.dev.db`, no recibe una ruta de destino y no llama a Turso. El resultado demuestra que esta versión de SQLite/libSQL acepta las 654 sentencias en una transacción con FK activas sobre el esquema migrado y vacío; **no es autorización ni un comando de carga remota**. El script heredado `scripts/clean-devr2/reset-dev-r2.ts` solo protege assets del seed, no los del snapshot real: **no lo ejecutes manualmente contra `local.dev.db`**. Si ese archivo existe, el script aborta antes de cualquier acción R2; para limpiar el bucket necesitás un plan nuevo, revisado contra los assets del snapshot y autorizado por separado.
+
+## Futura población sintética de staging (requiere aprobaciones separadas)
+
+No hay hoy un comando de creación o carga del fixture remoto. No ejecutes esta secuencia ahora: cada escritura necesita una aprobación humana nueva para el destino staging exacto; la aprobación de un paso no habilita el siguiente.
+
+1. **Crear staging:** confirmar y registrar el nombre exacto del nuevo destino y su grupo. Obtener aprobación explícita para crear esa base; luego ejecutar el procedimiento de creación Turso aprobado para ese nombre (por ejemplo, `turso db create <nombre-staging>`). Verificar identidad y host sin copiar URL con credenciales a logs.
+2. **Migrar staging:** revisar las migraciones pendientes y verificar nuevamente el nombre/host. Pedir autorización independiente para la escritura de migraciones y ejecutar `bun --no-env-file run migrate:staging` siguiendo [Configuración y migraciones remotas](#configuración-y-migraciones-remotas). Comprobar después el historial Drizzle remoto y detenerse ante cualquier discrepancia.
+3. **Cargar fixture:** solo después de verificar esquema e historial, pedir aprobación independiente para cargar los datos sintéticos en ese staging. Antes de operar, el mecanismo elegido debe demostrar que fija `foreign_keys = ON`, verifica un destino vacío y ejecuta todo el archivo en una única transacción con rollback ante error. El check offline prueba ese contrato local para la fixture, pero no valida la semántica del shell/driver remoto; hasta que se seleccione y pruebe un importador remoto transaccional, **no existe comando remoto de carga y no se debe canalizar el SQL a Turso**. Después de la carga autorizada, verificar los conteos esperados (artista 70, catálogo 38, 60 participaciones en la edición `temp`) y `foreign_key_check` con una lectura aprobada.
+
+Nunca crear, migrar ni cargar producción con este procedimiento. No reutilizar autorización entre pasos ni reintentar a ciegas; no pasar URL o token en argumentos, documentación, tests o logs. El check `bun run check:staging-seed` es exclusivamente offline.
 
 ## Configuración y migraciones remotas
 

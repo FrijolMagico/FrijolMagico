@@ -28,18 +28,23 @@ async function freshSeededDatabase() {
     .filter((statement) => statement.length > 0)
 
   expect(statements.length).toBeGreaterThan(5)
-  await client.execute('PRAGMA foreign_keys = OFF')
-  for (const [index, statement] of statements.entries()) {
-    try {
-      await client.execute(statement)
-    } catch (error) {
-      throw new Error(
-        `Complete seed failed at statement ${index + 1}/${statements.length}`,
-        { cause: error }
-      )
+  const transaction = await client.transaction('write')
+  try {
+    for (const [index, statement] of statements.entries()) {
+      try {
+        await transaction.execute(statement)
+      } catch (error) {
+        throw new Error(
+          `Complete seed failed at statement ${index + 1}/${statements.length}`,
+          { cause: error }
+        )
+      }
     }
+    await transaction.commit()
+  } catch (error) {
+    await transaction.rollback()
+    throw error
   }
-  await client.execute('PRAGMA foreign_keys = ON')
 
   return client
 }
