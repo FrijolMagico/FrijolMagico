@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, test } from 'bun:test'
 import { spawnSync } from 'node:child_process'
-import { chmod, mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { chmod, copyFile, mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 
 import { migrateTarget } from '../scripts/migrate-target'
 
@@ -214,6 +214,48 @@ describe('explicit migration target', () => {
       encoding: 'utf8'
     })
     expect(result.status).toBe(0)
+  })
+
+  test('package command rejects Bun-loaded generic credentials but explicit no-env-file command succeeds', async () => {
+    const root = await setup()
+    const manifest = JSON.parse(await readFile(join(import.meta.dir, '../package.json'), 'utf8')) as {
+      scripts: Record<string, string>
+    }
+    await mkdir(join(root, 'scripts'))
+    await copyFile(join(import.meta.dir, '../scripts/migrate-target.ts'), join(root, 'scripts/migrate-target.ts'))
+    await writeFile(join(root, 'package.json'), JSON.stringify({
+      name: 'offline-migrate-test',
+      scripts: { 'migrate:staging': manifest.scripts['migrate:staging'] }
+    }))
+    await writeFile(join(root, '.env.local'), [
+      'TURSO_DATABASE_URL=libsql://ambient-generic.turso.io',
+      'TURSO_AUTH_TOKEN=ambient-placeholder'
+    ].join('\n'))
+
+    const path = `${process.env.PATH}:${dirname(process.execPath)}:/usr/bin`
+    const defaultCommand = spawnSync(process.execPath, ['run', 'migrate:staging'], {
+      cwd: root,
+      env: childEnvironment({ PATH: path }),
+      encoding: 'utf8'
+    })
+    expect(defaultCommand.status).toBe(1)
+    expect(defaultCommand.stderr).toContain('Migration refused or failed')
+    await expect(readFile(join(root, 'preflight-args'))).rejects.toMatchObject({ code: 'ENOENT' })
+
+    const explicitCommand = spawnSync(process.execPath, ['--no-env-file', 'run', 'migrate:staging'], {
+      cwd: root,
+      env: childEnvironment({
+        PATH: path,
+        TURSO_STAGING_DATABASE_NAME: 'safe-staging',
+        TURSO_PRODUCTION_DATABASE_NAME: 'safe-production',
+        TURSO_STAGING_DATABASE_URL: 'libsql://safe-staging-team.turso.io',
+        TURSO_PRODUCTION_DATABASE_URL: 'https://safe-production-team.turso.io',
+        TURSO_STAGING_AUTH_TOKEN: 'staging-secret'
+      }),
+      encoding: 'utf8'
+    })
+    expect(explicitCommand.status).toBe(0)
+    expect(await readFile(join(root, 'args'), 'utf8')).toBe('migrate\n--config\ndrizzle.config.ts\n')
   })
 
   test('rejects ambient URL or token even when empty, without leaking errors', async () => {

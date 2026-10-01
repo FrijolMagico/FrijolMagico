@@ -25,13 +25,13 @@
     }
   },
   "scripts": {
-    "migrate:staging": "bun run scripts/migrate-target.ts staging",
-    "migrate:production": "bun run scripts/migrate-target.ts production",
+    "migrate:staging": "bun --no-env-file scripts/migrate-target.ts staging",
+    "migrate:production": "bun --no-env-file scripts/migrate-target.ts production",
     "new": "bun run drizzle-kit generate --custom --name",
     "dev": "turso dev --db-file local.dev.db",
     "prod": "turso dev --db-file local.db",
-    "pull:staging": "bun run scripts/pull-snapshot.ts staging",
-    "pull:production": "bun run scripts/pull-snapshot.ts production",
+    "pull:staging": "bun --no-env-file scripts/pull-snapshot.ts staging",
+    "pull:production": "bun --no-env-file scripts/pull-snapshot.ts production",
     "lint": "eslint .",
     "test": "bun test",
     "type-check": "tsc --noEmit"

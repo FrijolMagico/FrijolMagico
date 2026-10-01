@@ -8,20 +8,20 @@ Desde `packages/database/`, con `turso`, `sqlite3` y `bun` disponibles:
 
 1. Cerrá `bun run dev`/`bun run prod` y cualquier otro proceso que use los archivos locales. No actualices una base abierta.
 2. Autenticate en la CLI con `turso auth login` (sesión de CLI separada de los tokens de la app) y verificá por fuera del dump que estás en la organización y base esperadas. Configurá `TURSO_STAGING_DATABASE_NAME` con el nombre exacto de staging. No configures `TURSO_DATABASE_URL` ni `TURSO_AUTH_TOKEN` para el pull.
-3. Con autorización para leer staging, ejecutá `bun run pull:staging`. El comando obtiene `turso db shell <nombre> .dump`, importa con `sqlite3`, verifica integridad, claves foráneas, metadatos de migración y un esquema mínimo, y recién entonces reemplaza `local.dev.db`.
+3. Con autorización para leer staging, ejecutá `bun --no-env-file run pull:staging`. El comando obtiene `turso db shell <nombre> .dump`, importa con `sqlite3`, verifica integridad, claves foráneas, metadatos de migración y un esquema mínimo, y recién entonces reemplaza `local.dev.db`.
 4. Verificá el origen y los datos localmente antes de ejecutar `bun run dev` (`turso dev --db-file local.dev.db`). La validación estructural no demuestra de qué base vino el dump.
 
-Para una copia de producción, obtené **autorización de lectura de producción por separado**, configurá `TURSO_PRODUCTION_DATABASE_NAME`, cerrá ambos servidores locales y ejecutá `bun run pull:production`; verificá origen y contenido antes de `bun run prod` (`turso dev --db-file local.db`). Los nombres de staging y producción deben ser distintos. Un pull no migra ni escribe en Turso remoto; **sí reemplaza el archivo local seleccionado**. Si falla antes del reemplazo, conserva el archivo anterior. Un dump válido pero del origen equivocado no se puede detectar solo por el esquema.
+Para una copia de producción, obtené **autorización de lectura de producción por separado**, configurá `TURSO_PRODUCTION_DATABASE_NAME`, cerrá ambos servidores locales y ejecutá `bun --no-env-file run pull:production`; verificá origen y contenido antes de `bun run prod` (`turso dev --db-file local.db`). Los nombres de staging y producción deben ser distintos. Un pull no migra ni escribe en Turso remoto; **sí reemplaza el archivo local seleccionado**. Si falla antes del reemplazo, conserva el archivo anterior. Un dump válido pero del origen equivocado no se puede detectar solo por el esquema.
 
 ## Comandos y destinos
 
 | Comando (desde `packages/database/`) | Destino / efecto |
 | --- | --- |
-| `bun run pull:staging` | Lee staging; valida y reemplaza solo `local.dev.db`. |
-| `bun run pull:production` | Lee producción; valida y reemplaza solo `local.db`. |
+| `bun --no-env-file run pull:staging` | Lee staging; valida y reemplaza solo `local.dev.db`. |
+| `bun --no-env-file run pull:production` | Lee producción; valida y reemplaza solo `local.db`. |
 | `bun run dev` / `bun run prod` | Sirve el archivo local de staging / producción, respectivamente. No conecta a Turso Cloud. |
-| `bun run migrate:staging` | **Escribe** migraciones versionadas en staging remoto, con autorización específica. |
-| `bun run migrate:production` | **Escribe** migraciones versionadas en producción remota, con autorización humana nueva y confirmación explícita. |
+| `bun --no-env-file run migrate:staging` | **Escribe** migraciones versionadas en staging remoto, con autorización específica. |
+| `bun --no-env-file run migrate:production` | **Escribe** migraciones versionadas en producción remota, con autorización humana nueva y confirmación explícita. |
 | `bun run new <name>` | Genera una migración SQL custom para editar y revisar. |
 | `bun run test --filter=@frijolmagico/database` (desde la raíz) | Ejecuta los tests del paquete vía Turbo. |
 
@@ -29,7 +29,7 @@ No existe `bun run seed`, `bun run migrate` genérico ni `bun run reset:dev-r2` 
 
 ## Configuración y migraciones remotas
 
-La CLI `turso` usa su propia autenticación (`turso auth login`); los tokens de Drizzle **no** la autentican. Guardá credenciales solo en un entorno privado, nunca en Git ni en comandos compartidos. Los pulls requieren únicamente el nombre `TURSO_STAGING_DATABASE_NAME` o `TURSO_PRODUCTION_DATABASE_NAME` del destino correspondiente; rechazan `TURSO_DATABASE_URL` y `TURSO_AUTH_TOKEN` ambientales. No hay que configurar tokens para servir los archivos locales.
+La CLI `turso` usa su propia autenticación (`turso auth login`); los tokens de Drizzle **no** la autentican. Guardá credenciales solo en un entorno privado, nunca en Git ni en comandos compartidos. Los pulls requieren únicamente el nombre `TURSO_STAGING_DATABASE_NAME` o `TURSO_PRODUCTION_DATABASE_NAME` del destino correspondiente; rechazan `TURSO_DATABASE_URL` y `TURSO_AUTH_TOKEN` ambientales. Ejecutá los comandos de pull y migración con `bun --no-env-file run ...`: así Bun no carga automáticamente `.env.local` en el proceso de entrada. Los scripts del paquete también usan `bun --no-env-file` para evitar una segunda carga. Las variables explícitas ya exportadas en el shell siguen disponibles. Los comandos cortos anteriores `bun run pull:staging`, `bun run pull:production` y `bun run migrate:<destino>` fallan cerrado antes de llamar a Turso si Bun carga credenciales genéricas desde `.env.local`; no las ignoran ni seleccionan un destino alternativo. No hay que configurar tokens para servir los archivos locales.
 
 Para migrar, configurá **ambos** juegos de identidad y URL, y el token solo del destino que vas a migrar:
 
@@ -40,7 +40,7 @@ Para migrar, configurá **ambos** juegos de identidad y URL, y el token solo del
 
 Las URL deben identificar el host de la base nombrada y los destinos deben ser distintos. `TURSO_DATABASE_URL` y `TURSO_AUTH_TOKEN` ambientales se rechazan también en migraciones. El wrapper verifica además la URL de la CLI (`turso db show <nombre> --url`) antes de aplicar el mismo directorio `migrations/` al destino seleccionado. Producción requiere `TURSO_PRODUCTION_MIGRATION_CONFIRM=migrate:<nombre-de-producción>`; esta marca **no sustituye** la autorización humana.
 
-Secuencia operativa: revisar el SQL pendiente y el destino, obtener autorización para **staging**, ejecutar `bun run migrate:staging`, verificar el estado remoto; luego solicitar **otra autorización** para producción, revisar respaldo/rollback y ejecutar `bun run migrate:production` con su confirmación exacta. Nunca ejecutes los dos destinos como una sola operación implícita. Un pull posterior permite obtener snapshots compatibles con las migraciones. Ningún comando de este documento se ejecutó contra Turso al actualizar la documentación.
+Secuencia operativa: revisar el SQL pendiente y el destino, obtener autorización para **staging**, ejecutar `bun --no-env-file run migrate:staging`, verificar el estado remoto; luego solicitar **otra autorización** para producción, revisar respaldo/rollback y ejecutar `bun --no-env-file run migrate:production` con su confirmación exacta. Nunca ejecutes los dos destinos como una sola operación implícita. Un pull posterior permite obtener snapshots compatibles con las migraciones. Ningún comando de este documento se ejecutó contra Turso al actualizar la documentación.
 
 ## Privacidad, fallas y rollback
 

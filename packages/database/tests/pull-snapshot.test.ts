@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, test } from 'bun:test'
 import { execFileSync, spawnSync } from 'node:child_process'
-import { chmod, lstat, mkdtemp, mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises'
+import { chmod, copyFile, lstat, mkdtemp, mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 
 import { pullSnapshot } from '../scripts/pull-snapshot'
 
@@ -118,6 +118,44 @@ describe('explicit snapshot pull', () => {
     await writeFile(turso, '#!/bin/sh\nprintf \'%s\\n\' \'BEGIN TRANSACTION; COMMIT;\'\nexit 1\n')
     await expect(pullSnapshot('staging', root)).rejects.toThrow('dump or import failed')
     expect(await readFile(join(root, 'local.dev.db'), 'utf8')).toBe('old staging')
+  })
+
+  test('package command rejects Bun-loaded generic credentials but explicit no-env-file command succeeds', async () => {
+    const root = await setup(validDump)
+    const manifest = JSON.parse(await readFile(join(import.meta.dir, '../package.json'), 'utf8')) as {
+      scripts: Record<string, string>
+    }
+    await mkdir(join(root, 'scripts'))
+    await copyFile(join(import.meta.dir, '../scripts/pull-snapshot.ts'), join(root, 'scripts/pull-snapshot.ts'))
+    await writeFile(join(root, 'package.json'), JSON.stringify({
+      name: 'offline-pull-test',
+      scripts: { 'pull:staging': manifest.scripts['pull:staging'] }
+    }))
+    await writeFile(join(root, '.env.local'), [
+      'TURSO_STAGING_DATABASE_NAME=safe-staging',
+      'TURSO_DATABASE_URL=libsql://ambient-generic.turso.io',
+      'TURSO_AUTH_TOKEN=ambient-placeholder'
+    ].join('\n'))
+
+    const path = `${process.env.PATH}:${dirname(process.execPath)}:/usr/bin`
+    const defaultCommand = spawnSync(process.execPath, ['run', 'pull:staging'], {
+      cwd: root,
+      env: { PATH: path },
+      encoding: 'utf8'
+    })
+    expect(defaultCommand.status).toBe(1)
+    expect(defaultCommand.stderr).toContain('Snapshot refresh failed')
+    await expect(lstat(join(root, 'calls'))).rejects.toMatchObject({ code: 'ENOENT' })
+    await expect(lstat(join(root, 'local.dev.db'))).rejects.toMatchObject({ code: 'ENOENT' })
+
+    const explicitCommand = spawnSync(process.execPath, ['--no-env-file', 'run', 'pull:staging'], {
+      cwd: root,
+      env: { PATH: path, TURSO_STAGING_DATABASE_NAME: 'safe-staging' },
+      encoding: 'utf8'
+    })
+    expect(explicitCommand.status).toBe(0)
+    expect((await readFile(join(root, 'local.dev.db'))).subarray(0, 16).toString()).toBe('SQLite format 3\0')
+    expect(await readFile(join(root, 'calls'), 'utf8')).toBe('called\n')
   })
 
   test('rejects ambient credentials before running the dump', async () => {
