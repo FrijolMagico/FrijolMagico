@@ -19,3 +19,6 @@ Integrate the fetched `dev` tip (`591bf7051e2a7d3a2fa6e7521f929824ea76fb59`) int
 
 ## Deferred staging work
 A read-only query for the user-named `staged-frijolmagico` returned `database not found`; do not guess another target. No staging migration was run. Confirm the exact visible Turso staging database and separately authorize any remote migration/reconciliation; its prior 0026 collective migration may not be safely replayable after the order change.
+
+## Evidence
+- Integration merge commit: `f802d465fe738b3fa6374537aa34a9130bccdebd` (`merge(dev): integrate remote dev updates`).
