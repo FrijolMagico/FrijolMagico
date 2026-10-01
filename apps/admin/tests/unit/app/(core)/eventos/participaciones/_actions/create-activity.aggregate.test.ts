@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
+import { FESTIVALES_CACHE_TAG, FESTIVAL_CRITICAL_CACHE_TAG } from '@frijolmagico/cache-tags'
 import { participations } from '@frijolmagico/database/schema'
 
 const updateTag = mock((tag: string) => {
@@ -367,11 +368,10 @@ describe('createActivityAction aggregate', () => {
       'artistas:detalle'
     ])
     expect(revalidateWebCacheBestEffort.mock.calls).toEqual([
-      [{ tag: 'festivales' }],
-      [{ tag: 'eventos' }],
-      [{ tag: 'ediciones' }]
+      [{ tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' }],
+      [{ tag: FESTIVALES_CACHE_TAG, mode: 'swr' }]
     ])
-    expect(invalidationCommitStates).toEqual(Array(9).fill(true))
+    expect(invalidationCommitStates).toEqual(Array(8).fill(true))
     expect(revalidateWebCacheBestEffort).not.toHaveBeenCalledWith({
       tag: 'catalogo:artistas'
     })
@@ -396,7 +396,15 @@ describe('createActivityAction aggregate', () => {
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: 'catalogo:artistas:participaciones'
     })
-    expect(invalidationCommitStates).toEqual(Array(11).fill(true))
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate'
+    })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: FESTIVALES_CACHE_TAG,
+      mode: 'swr'
+    })
+    expect(invalidationCommitStates).toEqual(Array(10).fill(true))
   })
 
   test('does not invalidate any cache after a later detail mutation fails', async () => {

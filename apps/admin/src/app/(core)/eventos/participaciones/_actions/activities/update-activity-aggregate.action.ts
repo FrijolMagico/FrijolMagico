@@ -14,6 +14,7 @@ import {
   EDITION_CACHE_TAG,
   EVENT_CACHE_TAG,
   FESTIVALES_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG,
   getEditionParticipationsCacheTag,
   getParticipationActivitiesCacheTag
 } from '@frijolmagico/cache-tags'
@@ -306,7 +307,14 @@ export async function updateActivityAggregateAction(
         )
       }
     }
-    for (const tag of PUBLIC_TAGS) void revalidateWebCacheBestEffort({ tag })
+    void revalidateWebCacheBestEffort({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate'
+    })
+    void revalidateWebCacheBestEffort({
+      tag: FESTIVALES_CACHE_TAG,
+      mode: 'swr'
+    })
     if (catalogChanged) {
       void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
       void revalidateWebCacheBestEffort({ tag: CATALOG_PARTICIPATION_CACHE_TAG })

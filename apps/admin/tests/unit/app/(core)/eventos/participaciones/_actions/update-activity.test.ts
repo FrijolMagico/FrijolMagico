@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
+import { FESTIVALES_CACHE_TAG, FESTIVAL_CRITICAL_CACHE_TAG } from '@frijolmagico/cache-tags'
 
 let committed = false
 let failMutation = false
@@ -16,7 +17,7 @@ const updateTag = mock((tag: string) => {
   expect(committed).toBe(true)
   invalidations.push(`local:${tag}`)
 })
-const revalidateWebCacheBestEffort = mock(async ({ tag }: { tag: string }) => {
+const revalidateWebCacheBestEffort = mock(async ({ tag }: { tag: string; mode?: string }) => {
   expect(committed).toBe(true)
   invalidations.push(`web:${tag}`)
 })
@@ -90,7 +91,10 @@ describe('updateActivityAction catalog freshness', () => {
     expect(invalidations).toContain('local:participaciones:edicion:7')
     expect(invalidations).toContain('local:artistas:detalle')
     expect(invalidations).toContain('local:festivales')
-    expect(invalidations).toContain('web:festivales')
+    expect(invalidations).toContain(`web:${FESTIVAL_CRITICAL_CACHE_TAG}`)
+    expect(invalidations).toContain(`web:${FESTIVALES_CACHE_TAG}`)
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: FESTIVALES_CACHE_TAG, mode: 'swr' })
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: 'catalogo:artistas' })
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: 'catalogo:artistas:participaciones' })
   })

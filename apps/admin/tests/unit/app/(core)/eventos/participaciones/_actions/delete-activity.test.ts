@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
+import { FESTIVALES_CACHE_TAG, FESTIVAL_CRITICAL_CACHE_TAG } from '@frijolmagico/cache-tags'
 
 let committed = false
 let activityExists = true
@@ -9,7 +10,7 @@ const updateTag = mock((tag: string) => {
   expect(committed).toBe(true)
   invalidations.push(`local:${tag}`)
 })
-const revalidateWebCacheBestEffort = mock(async ({ tag }: { tag: string }) => {
+const revalidateWebCacheBestEffort = mock(async ({ tag }: { tag: string; mode?: string }) => {
   expect(committed).toBe(true)
   invalidations.push(`web:${tag}`)
 })
@@ -67,6 +68,8 @@ describe('deleteActivityAction catalog freshness', () => {
     expect(invalidations).toContain('local:artistas:detalle')
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: 'catalogo:artistas' })
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: 'catalogo:artistas:participaciones' })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: FESTIVALES_CACHE_TAG, mode: 'swr' })
   })
 
   test('preserves other tag invalidations but skips remote catalog for unpublished activity', async () => {
@@ -75,10 +78,13 @@ describe('deleteActivityAction catalog freshness', () => {
 
     expect(result.success).toBe(true)
     expect(invalidations).toContain('local:festivales')
-    expect(invalidations).toContain('web:festivales')
+    expect(invalidations).toContain(`web:${FESTIVAL_CRITICAL_CACHE_TAG}`)
+    expect(invalidations).toContain(`web:${FESTIVALES_CACHE_TAG}`)
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: FESTIVALES_CACHE_TAG, mode: 'swr' })
     expect(invalidations).not.toContain('web:catalogo:artistas')
     expect(invalidations).not.toContain('web:catalogo:artistas:participaciones')
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledTimes(3)
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledTimes(2)
   })
 
   test('does not purge caches when the activity is already absent', async () => {

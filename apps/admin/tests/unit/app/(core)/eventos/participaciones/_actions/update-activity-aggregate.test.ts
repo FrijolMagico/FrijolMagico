@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
+import { FESTIVALES_CACHE_TAG, FESTIVAL_CRITICAL_CACHE_TAG } from '@frijolmagico/cache-tags'
 import { participations } from '@frijolmagico/database/schema'
 
 let action: typeof import('../../../../../../../src/app/(core)/eventos/participaciones/_actions/activities/update-activity-aggregate.action').updateActivityAggregateAction
@@ -235,12 +236,19 @@ describe('updateActivityAggregateAction', () => {
       'eventos',
       'ediciones',
       'artistas:detalle',
-      'festivales',
-      'eventos',
-      'ediciones',
+      FESTIVAL_CRITICAL_CACHE_TAG,
+      FESTIVALES_CACHE_TAG,
       'catalogo:artistas',
       'catalogo:artistas:participaciones'
     ])
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate'
+    })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: FESTIVALES_CACHE_TAG,
+      mode: 'swr'
+    })
   })
 
   test('does not invalidate the web catalog when a non-public activity remains unchanged', async () => {
