@@ -7,6 +7,7 @@ import {
 
 const updateTag = mock(() => {})
 const revalidateWebCache = mock(async () => ({ revalidated: true }))
+const revalidateWebCacheBestEffort = mock(async () => ({ revalidated: true }))
 const values = mock(async () => {})
 const event = {}
 const db = {
@@ -20,7 +21,10 @@ mock.module('@frijolmagico/database/orm', () => ({ db }))
 mock.module('@/shared/lib/auth/utils', () => ({
   requireAuth: async () => ({ user: { id: 'admin-1' } })
 }))
-mock.module('@/shared/lib/web-invalidation', () => ({ revalidateWebCache }))
+mock.module('@/shared/lib/web-invalidation', () => ({
+  revalidateWebCache,
+  revalidateWebCacheBestEffort
+}))
 mock.module('@frijolmagico/database/schema', () => ({ events: { event } }))
 mock.module('@/core/eventos/_schemas/event.schema', () => ({
   eventInsertSchema: {
@@ -35,6 +39,7 @@ const { createEventAction } = await import(
 beforeEach(() => {
   updateTag.mockClear()
   revalidateWebCache.mockClear()
+  revalidateWebCacheBestEffort.mockClear()
   values.mockClear()
 })
 
@@ -50,11 +55,24 @@ describe('createEventAction public cache freshness', () => {
     expect(updateTag).toHaveBeenCalledWith(EVENT_CACHE_TAG)
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate'
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
     })
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVALES_CACHE_TAG,
-      mode: 'swr'
+      mode: 'swr',
+      path: '/festivales',
+      pathType: 'page'
     })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      path: '/',
+      pathType: 'page'
+    })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      path: '/',
+      pathType: 'layout'
+    })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledTimes(2)
   })
 })

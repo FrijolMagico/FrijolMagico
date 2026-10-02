@@ -16,6 +16,7 @@ const revalidateWebCache = mock(async ({ tag }: { tag: string }) => {
   invalidations.push(`web:${tag}`)
   return { revalidated: true }
 })
+const revalidateWebCacheBestEffort = mock(async () => ({ revalidated: true }))
 const invalidations: string[] = []
 const db = {
   delete: () => ({
@@ -36,7 +37,10 @@ mock.module('@/shared/lib/auth/utils', () => ({
   requireAuth: async () => ({ user: { id: 'admin-1' } })
 }))
 mock.module('next/cache', () => ({ updateTag }))
-mock.module('@/shared/lib/web-invalidation', () => ({ revalidateWebCache }))
+mock.module('@/shared/lib/web-invalidation', () => ({
+  revalidateWebCache,
+  revalidateWebCacheBestEffort
+}))
 const { deleteEventAction } = await import(
   '@/core/eventos/_actions/delete-event.action'
 )
@@ -48,6 +52,7 @@ beforeEach(() => {
   invalidations.length = 0
   updateTag.mockClear()
   revalidateWebCache.mockClear()
+  revalidateWebCacheBestEffort.mockClear()
 })
 
 describe('deleteEventAction catalog freshness', () => {
@@ -59,12 +64,25 @@ describe('deleteEventAction catalog freshness', () => {
     expect(invalidations).toContain('web:catalogo:artistas')
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate'
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
     })
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVALES_CACHE_TAG,
-      mode: 'swr'
+      mode: 'swr',
+      path: '/festivales',
+      pathType: 'page'
     })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      path: '/',
+      pathType: 'page'
+    })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      path: '/',
+      pathType: 'layout'
+    })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledTimes(2)
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas' })
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: 'catalogo:artistas:participaciones'
@@ -83,6 +101,7 @@ describe('deleteEventAction catalog freshness', () => {
     expect(invalidations).toEqual([])
     expect(updateTag).not.toHaveBeenCalled()
     expect(revalidateWebCache).not.toHaveBeenCalled()
+    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
   })
 
   test('preserves the failure response and does not invalidate tags on database error', async () => {
@@ -94,5 +113,6 @@ describe('deleteEventAction catalog freshness', () => {
     expect(invalidations).toEqual([])
     expect(updateTag).not.toHaveBeenCalled()
     expect(revalidateWebCache).not.toHaveBeenCalled()
+    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
   })
 })
