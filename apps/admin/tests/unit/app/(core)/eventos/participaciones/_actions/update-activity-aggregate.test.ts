@@ -6,6 +6,7 @@ let action: typeof import('../../../../../../../src/app/(core)/eventos/participa
 let failAt: string | null
 let parentEditionId = 7
 let activityTypeSlug = 'taller'
+let storedActivityTypeSlug = 'taller'
 let activityExists = true
 let activityParticipationId = 11
 let storedActivityStatus = 'confirmado'
@@ -19,16 +20,25 @@ let operations: string[]
 let stagedMutations: string[]
 let committedState: string[]
 let writes: { table: string; values: Record<string, unknown> }[]
+let webInvalidations: { tag: string; path?: string; pathType?: string; mode?: string }[]
 
 const tables = participations
 const updateTag = mock((tag: string) => {
   expect(committed).toBe(true)
   invalidations.push(tag)
 })
-const revalidateWebCacheBestEffort = mock(async ({ tag }: { tag: string }) => {
-  expect(committed).toBe(true)
-  invalidations.push(tag)
-})
+const revalidateWebCacheBestEffort = mock(
+  async (request: {
+    tag: string
+    path?: string
+    pathType?: string
+    mode?: string
+  }) => {
+    expect(committed).toBe(true)
+    webInvalidations.push(request)
+    invalidations.push(request.tag)
+  }
+)
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
 
 function tableName(table: unknown) {
@@ -58,6 +68,7 @@ function createHarness() {
                 participacionId: activityParticipationId,
                 tipoActividadId: storedActivityTypeId,
                 estado: storedActivityStatus,
+                tipoActividad: { slug: storedActivityTypeSlug },
                 pseudonimoId: 41
               }
             : undefined
@@ -182,6 +193,7 @@ beforeEach(async () => {
   failAt = null
   parentEditionId = 7
   activityTypeSlug = 'taller'
+  storedActivityTypeSlug = 'taller'
   activityExists = true
   activityParticipationId = 11
   storedActivityStatus = 'confirmado'
@@ -196,6 +208,7 @@ beforeEach(async () => {
     durationMinutes: 60
   }]
   invalidations = []
+  webInvalidations = []
   committed = false
   operations = []
   stagedMutations = []
@@ -241,14 +254,67 @@ describe('updateActivityAggregateAction', () => {
       'catalogo:artistas',
       'catalogo:artistas:participaciones'
     ])
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+    expect(webInvalidations).toContainEqual({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate'
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
     })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+    expect(webInvalidations).toContainEqual({
       tag: FESTIVALES_CACHE_TAG,
-      mode: 'swr'
+      mode: 'swr',
+      path: '/festivales',
+      pathType: 'page'
     })
+    expect(
+      webInvalidations.every(({ path, pathType }) => !path || pathType === 'page')
+    ).toBe(true)
+  })
+
+  test('attaches the list route only when its summary category contribution changes', async () => {
+    storedActivityStatus = 'seleccionado'
+    activityTypeSlug = 'taller'
+    await action({ ...input, activity: { ...input.activity, estado: 'confirmado' } })
+    expect(webInvalidations.find(({ tag }) => tag === FESTIVALES_CACHE_TAG)).toMatchObject({
+      path: '/festivales',
+      pathType: 'page'
+    })
+
+    storedActivityStatus = 'confirmado'
+    storedActivityTypeSlug = 'taller'
+    activityTypeSlug = 'musica'
+    webInvalidations = []
+    await action({
+      ...input,
+      activity: { ...input.activity, estado: 'confirmado' },
+      registration: null
+    })
+    expect(webInvalidations.find(({ tag }) => tag === FESTIVALES_CACHE_TAG)).toMatchObject({
+      path: '/festivales',
+      pathType: 'page'
+    })
+
+    storedActivityStatus = 'seleccionado'
+    storedActivityTypeSlug = 'charla'
+    activityTypeSlug = 'charla'
+    webInvalidations = []
+    await action(input)
+    expect(webInvalidations.find(({ tag }) => tag === FESTIVALES_CACHE_TAG)?.path).toBeUndefined()
+
+    activityTypeSlug = 'taller'
+    webInvalidations = []
+    await action(input)
+    expect(webInvalidations.find(({ tag }) => tag === FESTIVALES_CACHE_TAG)).toMatchObject({
+      path: '/festivales',
+      pathType: 'page'
+    })
+  })
+
+  test('does not attach either festival route when activity remains private and is not a talk', async () => {
+    storedActivityStatus = 'seleccionado'
+    const result = await action(input)
+    expect(result.success).toBe(true)
+    expect(webInvalidations.every(({ path }) => path === undefined)).toBe(true)
   })
 
   test('does not invalidate the web catalog when a non-public activity remains unchanged', async () => {
