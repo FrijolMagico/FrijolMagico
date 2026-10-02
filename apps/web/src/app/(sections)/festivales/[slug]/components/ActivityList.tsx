@@ -84,14 +84,25 @@ export const ActivityList = ({
       if (!region) return
 
       updateScrollCue()
-      if (typeof ResizeObserver === 'undefined') return
+      const resizeObserver =
+        typeof ResizeObserver === 'undefined'
+          ? null
+          : new ResizeObserver(updateScrollCue)
+      resizeObserver?.observe(region)
+      for (const child of region.children) resizeObserver?.observe(child)
 
-      const observer = new ResizeObserver(updateScrollCue)
-      observer.observe(region)
-      for (const child of region.children) observer.observe(child)
-      return () => observer.disconnect()
+      const mutationObserver =
+        typeof MutationObserver === 'undefined'
+          ? null
+          : new MutationObserver(updateScrollCue)
+      mutationObserver?.observe(region, { childList: true, subtree: true })
+
+      return () => {
+        resizeObserver?.disconnect()
+        mutationObserver?.disconnect()
+      }
     },
-    [selectedDate, selectedType, updateScrollCue]
+    [updateScrollCue]
   )
   const selectedDay = schedule.days.find((day) => day.date === selectedDate)
   const isVisibleType = (type: string) =>

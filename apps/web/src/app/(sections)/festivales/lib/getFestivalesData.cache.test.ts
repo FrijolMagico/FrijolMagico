@@ -2,7 +2,7 @@ import { describe, expect, mock, test } from 'bun:test'
 
 import { FESTIVALES_CACHE_TAG } from '@frijolmagico/cache-tags'
 
-const cacheTagMock = mock((_tag: string) => {})
+const cacheTagMock = mock<(tag: string) => void>(() => {})
 const festivalesRepositoryMock = mock(async () => [])
 
 mock.module('next/cache', () => ({

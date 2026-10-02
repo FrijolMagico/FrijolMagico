@@ -13,7 +13,7 @@ mock.module('next/navigation', () => ({
   })
 }))
 
-const cacheTagMock = mock((_tag: string) => {})
+const cacheTagMock = mock<(tag: string) => void>(() => {})
 
 mock.module('next/cache', () => ({
   cacheLife: mock(() => {}),
