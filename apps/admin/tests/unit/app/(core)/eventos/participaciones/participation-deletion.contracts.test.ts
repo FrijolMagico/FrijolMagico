@@ -15,11 +15,13 @@ import { join } from 'node:path'
 import { createClient } from '@libsql/client'
 import { drizzle } from 'drizzle-orm/libsql'
 import {
+  activityType,
   editionParticipation,
   participationActivity,
   participationExhibition
 } from '../../../../../../../../packages/database/src/db/schema/participations'
 import {
+  activityTypeRelations,
   participationActivityRelations,
   participationExhibitionRelations
 } from '../../../../../../../../packages/database/src/db/relations'
@@ -31,6 +33,8 @@ const databasePath = join(databaseDirectory, 'fixtures.db')
 const client = createClient({ url: `file:${databasePath}` })
 const database = drizzle(client, {
   schema: {
+    activityType,
+    activityTypeRelations,
     editionParticipation,
     participationActivity,
     participationExhibition,
@@ -63,6 +67,7 @@ async function createSchema() {
   await client.batch([
     'PRAGMA foreign_keys = ON',
     'CREATE TABLE evento_edicion (id INTEGER PRIMARY KEY)',
+    'CREATE TABLE tipo_actividad (id INTEGER PRIMARY KEY, slug TEXT NOT NULL UNIQUE)',
     `CREATE TABLE participacion_edicion (
       id INTEGER PRIMARY KEY,
       edicion_id INTEGER NOT NULL REFERENCES evento_edicion(id),

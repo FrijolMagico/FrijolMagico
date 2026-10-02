@@ -4,22 +4,25 @@ import { FESTIVALES_CACHE_TAG, FESTIVAL_CRITICAL_CACHE_TAG } from '@frijolmagico
 let committed = false
 let activityExists = true
 let activityEstado = 'confirmado'
+let activityTipoSlug = 'taller'
 let failMutation = false
 const invalidations: string[] = []
+const pathInvalidations: { path: string; pathType?: string }[] = []
 const updateTag = mock((tag: string) => {
   expect(committed).toBe(true)
   invalidations.push(`local:${tag}`)
 })
-const revalidateWebCacheBestEffort = mock(async ({ tag }: { tag: string; mode?: string }) => {
+const revalidateWebCacheBestEffort = mock(async ({ tag, path, pathType }: { tag: string; mode?: string; path?: string; pathType?: string }) => {
   expect(committed).toBe(true)
   invalidations.push(`web:${tag}`)
+  if (path) pathInvalidations.push({ path, pathType })
 })
 const tx = {
   query: {
     participationExhibition: { findFirst: async () => undefined },
     participationActivity: {
       findFirst: async () => activityExists
-        ? { id: 22, participacionId: 11, estado: activityEstado, participacion: { edicionId: 7 } }
+        ? { id: 22, participacionId: 11, estado: activityEstado, tipoActividad: { slug: activityTipoSlug }, participacion: { edicionId: 7 } }
         : undefined
     }
   },
@@ -50,8 +53,10 @@ beforeEach(() => {
   committed = false
   activityExists = true
   activityEstado = 'confirmado'
+  activityTipoSlug = 'taller'
   failMutation = false
   invalidations.length = 0
+  pathInvalidations.length = 0
   updateTag.mockClear()
   revalidateWebCacheBestEffort.mockClear()
 })
@@ -68,8 +73,12 @@ describe('deleteActivityAction catalog freshness', () => {
     expect(invalidations).toContain('local:artistas:detalle')
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: 'catalogo:artistas' })
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: 'catalogo:artistas:participaciones' })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: FESTIVALES_CACHE_TAG, mode: 'swr' })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate', path: '/festivales/[slug]', pathType: 'page' })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: FESTIVALES_CACHE_TAG, mode: 'swr', path: '/festivales', pathType: 'page' })
+    expect(pathInvalidations).toEqual([
+      { path: '/festivales/[slug]', pathType: 'page' },
+      { path: '/festivales', pathType: 'page' }
+    ])
   })
 
   test('preserves other tag invalidations but skips remote catalog for unpublished activity', async () => {
@@ -85,6 +94,18 @@ describe('deleteActivityAction catalog freshness', () => {
     expect(invalidations).not.toContain('web:catalogo:artistas')
     expect(invalidations).not.toContain('web:catalogo:artistas:participaciones')
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledTimes(2)
+    expect(pathInvalidations).toEqual([])
+  })
+
+  test('invalidates the festival list for an unpublished talk without invalidating its detail page', async () => {
+    activityEstado = 'seleccionado'
+    activityTipoSlug = 'charla'
+    const result = await deleteActivityAction({ id: 22 })
+
+    expect(result.success).toBe(true)
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({ tag: FESTIVALES_CACHE_TAG, mode: 'swr', path: '/festivales', pathType: 'page' })
+    expect(pathInvalidations).toEqual([{ path: '/festivales', pathType: 'page' }])
   })
 
   test('does not purge caches when the activity is already absent', async () => {
@@ -95,6 +116,7 @@ describe('deleteActivityAction catalog freshness', () => {
     expect(result.data?.alreadyAbsent).toBe(true)
     expect(invalidations).toEqual([])
     expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
+    expect(pathInvalidations).toEqual([])
   })
 
   test('does not invalidate caches when the database deletion fails', async () => {
@@ -104,5 +126,6 @@ describe('deleteActivityAction catalog freshness', () => {
     expect(result.success).toBe(false)
     expect(invalidations).toEqual([])
     expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
+    expect(pathInvalidations).toEqual([])
   })
 })

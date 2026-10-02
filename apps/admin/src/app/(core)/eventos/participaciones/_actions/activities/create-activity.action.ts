@@ -72,6 +72,7 @@ export async function createActivityAction(
     }
 
     let participationId: number | null = null
+    let effectiveActivityTypeSlug: string | null = null
     const isPublicActivity =
       data.activity.estado === 'confirmado' || data.activity.estado === 'completado'
 
@@ -95,6 +96,7 @@ export async function createActivityAction(
             : eq(table.id, data.activity.tipoActividadId)
       })
       if (!effectiveType) throw new Error('El tipo de actividad no existe')
+      effectiveActivityTypeSlug = effectiveType.slug
 
       if (!['taller', 'charla', 'musica'].includes(effectiveType.slug)) {
         throw new Error(
@@ -204,11 +206,17 @@ export async function createActivityAction(
     }
     void revalidateWebCacheBestEffort({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate'
+      mode: 'immediate',
+      ...(isPublicActivity
+        ? { path: '/festivales/[slug]', pathType: 'page' as const }
+        : {})
     })
     void revalidateWebCacheBestEffort({
       tag: FESTIVALES_CACHE_TAG,
-      mode: 'swr'
+      mode: 'swr',
+      ...(isPublicActivity || effectiveActivityTypeSlug === 'charla'
+        ? { path: '/festivales', pathType: 'page' as const }
+        : {})
     })
     if (isPublicActivity) {
       void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })

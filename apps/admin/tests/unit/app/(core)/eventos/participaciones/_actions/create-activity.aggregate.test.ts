@@ -6,8 +6,16 @@ const updateTag = mock((tag: string) => {
   invalidationCommitStates.push(transactionCommitted)
 })
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
-const revalidateWebCacheBestEffort = mock(async (options: unknown) => {
+type WebInvalidation = {
+  tag?: string
+  mode?: string
+  path?: string
+  pathType?: string
+}
+const webInvalidations: WebInvalidation[] = []
+const revalidateWebCacheBestEffort = mock(async (options: WebInvalidation) => {
   invalidationCommitStates.push(transactionCommitted)
+  webInvalidations.push(options)
 })
 const committed: { rows: Map<unknown, Record<string, unknown>[]> } = {
   rows: new Map()
@@ -127,6 +135,7 @@ describe('createActivityAction aggregate', () => {
     updateTag.mockClear()
     requireAuth.mockClear()
     revalidateWebCacheBestEffort.mockClear()
+    webInvalidations.length = 0
     effectiveTypeSlug = 'taller'
     activePseudonymId = 41
     participationExists = true
@@ -381,6 +390,81 @@ describe('createActivityAction aggregate', () => {
     expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
   })
 
+  test('attaches festival detail and list paths to confirmed activity invalidations', async () => {
+    const input = payload()
+    input.activity.estado = 'confirmado'
+    const result = await createActivityAction({
+      ...input,
+      occurrences: [{ date: '2026-06-10' }]
+    } as never)
+
+    expect(result.success).toBe(true)
+    expect(webInvalidations).toContainEqual({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
+    })
+    expect(webInvalidations).toContainEqual({
+      tag: FESTIVALES_CACHE_TAG,
+      mode: 'swr',
+      path: '/festivales',
+      pathType: 'page'
+    })
+
+    const completedInput = payload()
+    completedInput.activity.estado = 'completado'
+    const completed = await createActivityAction({
+      ...completedInput,
+      occurrences: [{ date: '2026-06-10' }]
+    } as never)
+    expect(completed.success).toBe(true)
+    expect(webInvalidations).toContainEqual({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
+    })
+  })
+
+  test('attaches only the festival list path for talks regardless of state', async () => {
+    effectiveTypeSlug = 'charla'
+    const result = await createActivityAction({
+      ...payload(),
+      occurrences: [{ date: '2026-06-10' }]
+    } as never)
+
+    expect(result.success).toBe(true)
+    expect(webInvalidations).toContainEqual({
+      tag: FESTIVALES_CACHE_TAG,
+      mode: 'swr',
+      path: '/festivales',
+      pathType: 'page'
+    })
+    expect(webInvalidations).not.toContainEqual(expect.objectContaining({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      path: '/festivales/[slug]'
+    }))
+  })
+
+  test('does not attach festival route paths to private non-talk activities', async () => {
+    effectiveTypeSlug = 'musica'
+    const result = await createActivityAction({
+      ...payload(undefined, { bandId: 8 }),
+      occurrences: [{ date: '2026-06-10' }]
+    } as never)
+
+    expect(result.success).toBe(true)
+
+    effectiveTypeSlug = 'taller'
+    const privateWorkshop = await createActivityAction({
+      ...payload(),
+      occurrences: [{ date: '2026-06-10' }]
+    } as never)
+    expect(privateWorkshop.success).toBe(true)
+    expect(webInvalidations.every(({ path, pathType }) => !path && !pathType)).toBe(true)
+  })
+
   test('invalidates scoped and public tags only after the transaction commits', async () => {
     const result = await createActivityAction({
       ...payload(),
@@ -428,11 +512,15 @@ describe('createActivityAction aggregate', () => {
     })
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate'
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
     })
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: FESTIVALES_CACHE_TAG,
-      mode: 'swr'
+      mode: 'swr',
+      path: '/festivales',
+      pathType: 'page'
     })
     expect(invalidationCommitStates).toEqual(Array(10).fill(true))
   })

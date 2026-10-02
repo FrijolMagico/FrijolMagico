@@ -56,11 +56,15 @@ export async function deleteActivityAction(
     let alreadyAbsent = false
     let participationDeleted = false
     let isPublicActivity = false
+    let isTalkActivity = false
 
     await db.transaction(async (tx) => {
       const activity = await tx.query.participationActivity.findFirst({
         where: (table, { eq }) => eq(table.id, id),
-        with: { participacion: { columns: { edicionId: true } } }
+        with: {
+          participacion: { columns: { edicionId: true } },
+          tipoActividad: { columns: { slug: true } }
+        }
       })
 
       if (activity) {
@@ -68,6 +72,7 @@ export async function deleteActivityAction(
         editionId = activity.participacion?.edicionId ?? null
         isPublicActivity =
           activity.estado === 'confirmado' || activity.estado === 'completado'
+        isTalkActivity = activity.tipoActividad?.slug === 'charla'
         if (editionId === null) throw new Error('Participación no encontrada')
 
         await tx
@@ -107,11 +112,15 @@ export async function deleteActivityAction(
     }
     void revalidateWebCacheBestEffort({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate'
+      mode: 'immediate',
+      ...(isPublicActivity ? { path: '/festivales/[slug]', pathType: 'page' as const } : {})
     })
     void revalidateWebCacheBestEffort({
       tag: FESTIVALES_CACHE_TAG,
-      mode: 'swr'
+      mode: 'swr',
+      ...((isPublicActivity || isTalkActivity)
+        ? { path: '/festivales', pathType: 'page' as const }
+        : {})
     })
     if (isPublicActivity) {
       void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
