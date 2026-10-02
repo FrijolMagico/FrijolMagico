@@ -23,7 +23,7 @@ Antes de refrescar, detené los procesos de web/admin y cualquier otro proceso q
 
 Los pulls obtienen un dump, lo importan y validan antes de reemplazar el archivo seleccionado. No migran ni escriben en Turso remoto; sí reemplazan el snapshot local. No configures `TURSO_DATABASE_URL` ni `TURSO_AUTH_TOKEN` para el pull. Verificá el origen independientemente del dump: un dump válido pero del origen equivocado no se puede detectar solo por el esquema.
 
-CI aplica las mismas migraciones versionadas únicamente al archivo aislado `mock.local.db` mediante `bun run migrate:ci` y `drizzle-ci.config.ts`. Esa configuración fija `file:./mock.local.db`, no usa `TURSO_DATABASE_URL` ni tokens y corre con `--no-env-file`; CI no migra bases remotas. Las migraciones de producción son una operación manual fuera de CI que requiere autorización humana separada.
+CI aplica las mismas migraciones versionadas únicamente al archivo aislado `mock.local.db` mediante `bun run migrate:ci` y `drizzle-ci.config.ts`, y después carga `seed/seed.sql` con `sqlite3 -bail` y claves foráneas habilitadas. Build y tests de CI apuntan a ese mismo archivo mediante su URL `file:` absoluta; nunca usan los snapshots locales. Esa configuración fija `file:./mock.local.db`, no usa `TURSO_DATABASE_URL` ni tokens y corre con `--no-env-file`; CI no migra bases remotas. Las migraciones de producción son una operación manual fuera de CI que requiere autorización humana separada.
 
 ## Comandos y destinos
 

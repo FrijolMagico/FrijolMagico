@@ -1,52 +1,43 @@
 import { afterEach, describe, expect, test } from 'bun:test'
+import { execFileSync, spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
-import { mkdtemp, rm } from 'node:fs/promises'
+import { cp, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import { createClient } from '@libsql/client'
-import { drizzle } from 'drizzle-orm/libsql'
-import { migrate } from 'drizzle-orm/libsql/migrator'
 
-const migrationsFolder = join(import.meta.dir, '../migrations')
+const packageRoot = join(import.meta.dir, '..')
+const drizzleKit = join(packageRoot, 'node_modules/drizzle-kit/bin.cjs')
+const migrationsFolder = join(packageRoot, 'migrations')
 const seedPath = join(import.meta.dir, '../seed/seed.sql')
 const directories: string[] = []
 
 async function freshSeededDatabase() {
   const directory = await mkdtemp(join(tmpdir(), 'synthetic-seed-contract-'))
   directories.push(directory)
-  const client = createClient({ url: `file:${join(directory, 'test.db')}` })
-  await client.execute('PRAGMA foreign_keys = ON')
-  await migrate(drizzle(client), { migrationsFolder })
-
-  const statements = readFileSync(seedPath, 'utf8')
-    .split('\n')
-    .filter((line) => !line.trim().startsWith('--'))
-    .join('\n')
-    .split(';')
-    .map((statement) => statement.trim())
-    .filter((statement) => statement.length > 0)
-
-  expect(statements.length).toBeGreaterThan(5)
-  const transaction = await client.transaction('write')
-  try {
-    for (const [index, statement] of statements.entries()) {
-      try {
-        await transaction.execute(statement)
-      } catch (error) {
-        throw new Error(
-          `Complete seed failed at statement ${index + 1}/${statements.length}`,
-          { cause: error }
-        )
-      }
-    }
-    await transaction.commit()
-  } catch (error) {
-    await transaction.rollback()
-    throw error
+  const temporaryMigrations = join(directory, 'migrations')
+  const databasePath = join(directory, 'mock.local.db')
+  await cp(migrationsFolder, temporaryMigrations, { recursive: true })
+  await writeFile(
+    join(directory, 'drizzle-ci.config.ts'),
+    `export default { dialect: 'turso', out: './migrations', dbCredentials: { url: 'file:./mock.local.db' } }\n`
+  )
+  const migration = spawnSync(
+    process.execPath,
+    ['--no-env-file', drizzleKit, 'migrate', '--config=drizzle-ci.config.ts'],
+    { cwd: directory, encoding: 'utf8', env: { PATH: process.env.PATH, NODE_ENV: 'test' } }
+  )
+  if (migration.status !== 0) {
+    throw new Error(`Temporary CI migration failed: ${migration.stderr}`)
   }
 
-  return client
+  execFileSync('sqlite3', ['-bail', databasePath], {
+    input: `PRAGMA foreign_keys=ON;\n${readFileSync(seedPath, 'utf8')}`,
+    stdio: ['pipe', 'ignore', 'pipe']
+  })
+
+  return createClient({ url: `file:${databasePath}` })
 }
 
 afterEach(async () => {
@@ -190,10 +181,26 @@ describe('synthetic festival seed contract', () => {
     expect(Number(privacy?.invalid_poster_paths)).toBe(0)
   })
 
-  test('complete seed preserves foreign-key integrity', async () => {
+  test('complete seed preserves foreign-key integrity and routing data on a fresh migrated database', async () => {
     const client = await freshSeededDatabase()
+    const foreignKeysEnabled = await client.execute('PRAGMA foreign_keys')
+    const integrity = await client.execute('PRAGMA integrity_check')
     const violations = await client.execute('PRAGMA foreign_key_check')
+    const journal = await client.execute('SELECT created_at FROM __drizzle_migrations ORDER BY created_at')
+    const routingSlugs = await client.execute(`
+      SELECT
+        (SELECT COUNT(*) FROM catalogo_artista catalog
+          JOIN artista ON artista.id = catalog.artista_id
+          WHERE artista.slug IS NULL OR trim(artista.slug) = '') AS empty_catalog_slugs,
+        (SELECT COUNT(*) FROM evento_edicion
+          WHERE slug IS NULL OR trim(slug) = '') AS empty_festival_slugs
+    `)
 
+    expect(Number(foreignKeysEnabled.rows[0]?.foreign_keys)).toBe(1)
+    expect(integrity.rows[0]?.integrity_check).toBe('ok')
     expect(violations.rows).toEqual([])
+    expect(journal.rows).toHaveLength(28)
+    expect(Number(routingSlugs.rows[0]?.empty_catalog_slugs)).toBe(0)
+    expect(Number(routingSlugs.rows[0]?.empty_festival_slugs)).toBe(0)
   })
 })
