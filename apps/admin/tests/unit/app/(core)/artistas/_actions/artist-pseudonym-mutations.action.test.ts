@@ -267,7 +267,7 @@ describe('updateArtistaWithPseudonymsAction', () => {
     }))
     expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:base')
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas:base' })
-    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas' })
     expect(revalidateWebCache).not.toHaveBeenCalledWith({
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
@@ -311,7 +311,7 @@ describe('updateArtistaWithPseudonymsAction', () => {
     }))
     expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:base')
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas:base' })
-    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas' })
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
@@ -355,7 +355,7 @@ describe('updateArtistaWithPseudonymsAction', () => {
 
     expect(result.success).toBe(true)
     expect(mockDb.state.writes.some(({ value }) => (value as { slug?: string }).slug !== undefined)).toBe(false)
-    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas' })
     expect(revalidateWebCache).not.toHaveBeenCalledWith({
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
@@ -389,7 +389,7 @@ describe('updateArtistaWithPseudonymsAction', () => {
     )
 
     expect(result.success).toBe(true)
-    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas' })
   })
 
   test('changing primary invalidates catalog when the null selection displays its new fallback', async () => {
@@ -421,7 +421,7 @@ describe('updateArtistaWithPseudonymsAction', () => {
     )
 
     expect(result.success).toBe(true)
-    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas' })
   })
 
   test('renaming a non-selected pseudonym does not invalidate catalog', async () => {
@@ -488,7 +488,7 @@ describe('updateArtistaWithPseudonymsAction', () => {
 
     expect(result.success).toBe(true)
     expect(mockDb.state.committed).toBe(true)
-    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas' })
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate', path: '/festivales/[slug]', pathType: 'page' })
   })
 
@@ -580,7 +580,7 @@ describe('updateArtistaWithPseudonymsAction', () => {
 
     expect(result.success).toBe(true)
     expect(mockDb.state.writes.some(({ value }) => (value as { slug?: string }).slug !== undefined)).toBe(false)
-    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas' })
     expect(revalidateWebCache).not.toHaveBeenCalledWith({
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
@@ -715,7 +715,7 @@ describe('updateArtistaAction', () => {
     }))
     expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:base')
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas:base' })
-    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas' })
     expect(revalidateWebCache).not.toHaveBeenCalledWith({
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
@@ -788,7 +788,7 @@ describe('updateArtistaWithPseudonymsAction', () => {
     }))
     expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:base')
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas:base' })
-    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas' })
   })
 
   test('rolls back the whole submit when a general artist update fails', async () => {
@@ -948,7 +948,7 @@ describe('mutateArtistPseudonymAction', () => {
     }))
     expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:base')
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas:base' })
-    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas' })
     expect(revalidateWebCache).not.toHaveBeenCalledWith({
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
@@ -978,7 +978,7 @@ describe('mutateArtistPseudonymAction', () => {
 
     expect(result.success).toBe(true)
     expect(mockDb.state.writes.some(({ value }) => (value as { slug?: string }).slug !== undefined)).toBe(false)
-    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas' })
   })
 
   test('does not invalidate catalog when a catalog-visible pseudonym rename rolls back', async () => {
@@ -1120,7 +1120,7 @@ describe('mutateArtistPseudonymAction', () => {
     expect(retirement.state.writes).toContainEqual(expect.objectContaining({
       operation: 'insert', table: tableName(artistSlugAlias), value: { slug: 'old-name', artistaId: 1 }
     }))
-    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas' })
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate', path: '/festivales/[slug]', pathType: 'page'
     })

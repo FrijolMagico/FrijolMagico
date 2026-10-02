@@ -424,10 +424,7 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     expect(savedSlugValues).toEqual([{ slug: 'selected-artist' }])
     expect(savedAliases).toEqual([{ slug: 'old-slug', artistaId: 42 }])
     expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:base')
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: 'catalogo:artistas',
-      path: '/catalogo'
-    })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas' })
     expect(revalidateWebCache).not.toHaveBeenCalledWith({
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
@@ -523,10 +520,7 @@ describe('update-catalog action — best-effort cache invalidation', () => {
       path: '/festivales/[slug]',
       pathType: 'page'
     })
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: 'catalogo:artistas:base',
-      path: '/catalogo'
-    })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas:base' })
     expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:participaciones')
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
@@ -549,10 +543,7 @@ describe('update-catalog action — best-effort cache invalidation', () => {
       path: '/festivales/[slug]',
       pathType: 'page'
     })
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: 'catalogo:artistas:base',
-      path: '/catalogo'
-    })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas:base' })
     expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:participaciones')
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
@@ -576,9 +567,6 @@ describe('update-catalog action — best-effort cache invalidation', () => {
       tag: FEATURED_ARTISTS_CACHE_TAG,
       mode: 'swr'
     })
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: 'catalogo:artistas:base',
-      path: '/catalogo'
-    })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas:base' })
   })
 })

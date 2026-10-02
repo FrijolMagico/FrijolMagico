@@ -161,16 +161,13 @@ describe('createCatalogAction', () => {
       data: { catalogId: 9, artistId: 42, requestedActive: false }
     })
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: 'catalogo:artistas:base',
-      path: '/catalogo'
+      tag: 'catalogo:artistas:base'
     })
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: 'catalogo:artistas:participaciones',
-      path: '/catalogo'
+      tag: 'catalogo:artistas:participaciones'
     })
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: 'catalogo:artistas',
-      path: '/catalogo'
+      tag: 'catalogo:artistas'
     })
   })
 

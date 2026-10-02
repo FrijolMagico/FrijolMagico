@@ -47,12 +47,12 @@ describe('catalog server actions — web invalidation contracts', () => {
     expect(source).toContain("from '@frijolmagico/cache-tags'")
   })
 
-  test('update-catalog-field.action calls void revalidateWebCache with path', () => {
+  test('update-catalog-field.action uses tag-only catalog invalidation', () => {
     const source = readFileSync(UPDATE_FIELD_PATH, 'utf8')
 
-    // Must use fire-and-forget pattern
-    expect(source).toContain('void revalidateWebCache')
-    expect(source).toContain("path: '/catalogo'")
+    expect(source).toContain('void revalidateWebCache({ tag })')
+    expect(source).toContain('CATALOG_BASE_CACHE_TAG')
+    expect(source).not.toContain("path: '/catalogo'")
   })
 
   test('update-catalog.action imports revalidateWebCache', () => {
@@ -69,11 +69,12 @@ describe('catalog server actions — web invalidation contracts', () => {
     expect(source).toContain("from '@frijolmagico/cache-tags'")
   })
 
-  test('update-catalog.action calls void revalidateWebCache with path', () => {
+  test('update-catalog.action uses tag-only catalog invalidation', () => {
     const source = readFileSync(UPDATE_CATALOG_PATH, 'utf8')
 
-    expect(source).toContain('void revalidateWebCache')
-    expect(source).toContain("path: '/catalogo'")
+    expect(source).toContain('void revalidateWebCache({ tag })')
+    expect(source).toContain('CATALOG_BASE_CACHE_TAG')
+    expect(source).not.toContain("path: '/catalogo'")
   })
 
   test('delete-catalog.action imports revalidateWebCache', () => {
@@ -90,11 +91,12 @@ describe('catalog server actions — web invalidation contracts', () => {
     expect(source).toContain("from '@frijolmagico/cache-tags'")
   })
 
-  test('delete-catalog.action calls void revalidateWebCache with path', () => {
+  test('delete-catalog.action uses tag-only catalog invalidation', () => {
     const source = readFileSync(DELETE_CATALOG_PATH, 'utf8')
 
-    expect(source).toContain('void revalidateWebCache')
-    expect(source).toContain("path: '/catalogo'")
+    expect(source).toContain('void revalidateWebCache({ tag })')
+    expect(source).toContain('CATALOG_BASE_CACHE_TAG')
+    expect(source).not.toContain("path: '/catalogo'")
   })
 
   test('all three actions preserve legacy catalog invalidation', () => {

@@ -91,7 +91,7 @@ export async function updateCatalogFieldAction(
   if ('activo' in parsed.data) catalogTags.push(CATALOG_PARTICIPATION_CACHE_TAG)
   for (const tag of catalogTags) {
     updateTag(tag)
-    void revalidateWebCache({ tag, path: '/catalogo' })
+    void revalidateWebCache({ tag })
   }
 
   if (
