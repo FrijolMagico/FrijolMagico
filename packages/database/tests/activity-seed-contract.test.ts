@@ -300,7 +300,7 @@ describe('complete activity seed contract', () => {
     }
   })
 
-  test('seeded TEST edition preserves its public identity', async () => {
+  test('seeded synthetic fixture edition preserves its stable identity', async () => {
     const client = await freshSeededDatabase()
     const result = await client.execute(`
       SELECT id, numero_edicion, slug, nombre, published
@@ -319,9 +319,9 @@ describe('complete activity seed contract', () => {
     ).toEqual([
       {
         id: 7,
-        numero_edicion: 'TEST',
-        slug: 'frijol-magico-test',
-        nombre: 'Recolectando Semillas',
+        numero_edicion: 'VII',
+        slug: 'temp',
+        nombre: 'Festival Fixture Edition 07',
         published: 1
       }
     ])

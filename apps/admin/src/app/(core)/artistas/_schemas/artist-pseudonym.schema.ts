@@ -188,7 +188,10 @@ export function persistablePseudonymDrafts(
     .filter((draft) => draft.operation === 'add'
       ? normalizePseudonymText(draft.pseudonym).length > 0
       : hasPseudonymTextChanged(draft.pseudonym, draft.originalText) || draft.makePrimary)
-    .map(({ originalText: _originalText, ...draft }) => draft)
+    .map(({ originalText, ...draft }) => {
+      void originalText
+      return draft
+    })
 }
 
 export const artistPseudonymMutationSchema = z.discriminatedUnion('operation', [

@@ -13,7 +13,9 @@ interface WebInvalidationResult {
 interface BuildWebInvalidationUrlOptions {
   url?: string
   path?: string
+  pathType?: 'page' | 'layout'
   tag?: string
+  mode?: 'swr' | 'immediate'
 }
 
 /**
@@ -24,8 +26,20 @@ interface BuildWebInvalidationUrlOptions {
 export function buildWebInvalidationUrl({
   url,
   path,
-  tag
+  pathType,
+  tag,
+  mode
 }: BuildWebInvalidationUrlOptions = {}): string {
+  if (pathType !== undefined && pathType !== 'page' && pathType !== 'layout') {
+    throw new Error(`[web-invalidation] Unsupported path type: ${pathType}`)
+  }
+  if (pathType !== undefined && !path) {
+    throw new Error('[web-invalidation] A non-empty path is required with pathType')
+  }
+  if (mode !== undefined && mode !== 'swr' && mode !== 'immediate') {
+    throw new Error(`[web-invalidation] Unsupported invalidation mode: ${mode}`)
+  }
+
   const baseUrl = url ?? process.env.WEB_REVALIDATION_URL
 
   if (!baseUrl) {
@@ -35,8 +49,14 @@ export function buildWebInvalidationUrl({
   }
 
   const params = new URLSearchParams()
-  if (tag) params.set('tag', tag)
-  if (path) params.set('path', path)
+  if (tag) {
+    params.set('tag', tag)
+    params.set('mode', mode ?? 'swr')
+  }
+  if (path) {
+    params.set('path', path)
+    if (pathType !== undefined) params.set('pathType', pathType)
+  }
 
   const qs = params.toString()
   return qs ? `${baseUrl}?${qs}` : baseUrl
@@ -45,6 +65,8 @@ export function buildWebInvalidationUrl({
 interface RevalidateWebCacheOptions {
   tag?: string
   path?: string
+  pathType?: 'page' | 'layout'
+  mode?: 'swr' | 'immediate'
 }
 
 interface WebInvalidationLogger {

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, jest, test } from 'bun:test'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 
 import { ActivityList } from './ActivityList'
 
@@ -8,6 +8,13 @@ import type { FestivalActivity } from '../../types/festival'
 afterEach(() => {
   jest.useRealTimers()
 })
+
+async function clickAndFlushMutationObserver(button: HTMLElement) {
+  await act(async () => {
+    fireEvent.click(button)
+    await new Promise<void>((resolve) => setTimeout(resolve, 0))
+  })
+}
 
 const makeActivity = (
   title: string,
@@ -36,6 +43,90 @@ const occurrence = (
 })
 
 describe('ActivityList', () => {
+  test('remeasures the scroll cue after filtered DOM changes and disconnects its observer', () => {
+    const observers: Array<
+      MutationObserver & {
+        callback: MutationCallback
+        observedTarget: Node | null
+        observedOptions: MutationObserverInit | undefined
+        disconnected: boolean
+      }
+    > = []
+    const originalMutationObserver = Object.getOwnPropertyDescriptor(
+      globalThis,
+      'MutationObserver'
+    )
+
+    class ControlledMutationObserver implements MutationObserver {
+      observedTarget: Node | null = null
+      observedOptions: MutationObserverInit | undefined
+      disconnected = false
+
+      constructor(readonly callback: MutationCallback) {
+        observers.push(this)
+      }
+
+      observe(target: Node, options?: MutationObserverInit) {
+        this.observedTarget = target
+        this.observedOptions = options
+      }
+
+      disconnect() {
+        this.disconnected = true
+      }
+
+      takeRecords() {
+        return []
+      }
+
+      trigger() {
+        this.callback([], this)
+      }
+    }
+
+    Object.defineProperty(globalThis, 'MutationObserver', {
+      configurable: true,
+      value: ControlledMutationObserver
+    })
+
+    try {
+      const { container, unmount } = render(
+        <ActivityList
+          actividades={[
+            makeActivity('Workshop', 'taller', [occurrence(1, '2026-10-03')]),
+            makeActivity('Talk', 'charla', [occurrence(2, '2026-10-03', '11:00')])
+          ]}
+          isEditionPast={false}
+        />
+      )
+      const scroller = container.querySelector<HTMLElement>(
+        '[data-schedule-scroll-region]'
+      )!
+      Object.defineProperty(scroller, 'clientHeight', { value: 100 })
+      Object.defineProperty(scroller, 'scrollHeight', { value: 200 })
+      const observer = observers[0]!
+      const cue = container.querySelector('svg.lucide-chevron-down')?.parentElement
+
+      expect(observer.observedTarget).toBe(scroller)
+      expect(observer.observedOptions).toEqual({ childList: true, subtree: true })
+      expect(cue).not.toBeNull()
+      expect(cue?.classList.contains('opacity-100')).toBe(false)
+
+      fireEvent.click(screen.getByRole('button', { name: 'Charlas' }))
+      act(() => observer.callback([], observer as unknown as MutationObserver))
+
+      expect(cue?.classList.contains('opacity-100')).toBe(true)
+      unmount()
+      expect(observer.disconnected).toBe(true)
+    } finally {
+      if (originalMutationObserver) {
+        Object.defineProperty(globalThis, 'MutationObserver', originalMutationObserver)
+      } else {
+        Reflect.deleteProperty(globalThis, 'MutationObserver')
+      }
+    }
+  })
+
   test('renders each occurrence as a separate card, including same-day blocks', () => {
     jest.useFakeTimers()
     jest.setSystemTime(new Date('2026-10-03T16:30:00.000Z'))
@@ -126,7 +217,7 @@ describe('ActivityList', () => {
     expect(screen.queryByRole('link', { name: 'Inscríbete' })).toBeNull()
   })
 
-  test('groups cards only by unique start time, regardless of overlapping durations', () => {
+  test('groups cards only by unique start time, regardless of overlapping durations', async () => {
     const date = '2026-10-03'
     const { container } = render(
       <ActivityList
@@ -165,7 +256,9 @@ describe('ActivityList', () => {
     expect(container.querySelectorAll('[data-timeline-time]')).toHaveLength(3)
     expect(container.querySelectorAll('[data-timeline-dot][aria-hidden="true"]')).toHaveLength(3)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Charlas' }))
+    await clickAndFlushMutationObserver(
+      screen.getByRole('button', { name: 'Charlas' })
+    )
     const filteredRows = Array.from(container.querySelectorAll('[data-schedule-row]'))
     expect(filteredRows).toHaveLength(2)
     expect(filteredRows.map((row) => row.querySelector('[data-timeline-time]')?.textContent)).toEqual([
@@ -246,7 +339,7 @@ describe('ActivityList', () => {
     expect(sibling.textContent).toContain('Closed sibling')
   })
 
-  test('filters by type and changes the selected day', () => {
+  test('filters by type and changes the selected day', async () => {
     const { container } = render(
       <ActivityList
         actividades={[
@@ -259,22 +352,28 @@ describe('ActivityList', () => {
 
     const scroller = container.querySelector('[data-schedule-scroll-region]')!
     scroller.scrollTop = 120
-    fireEvent.click(screen.getByRole('button', { name: 'Charlas' }))
+    await clickAndFlushMutationObserver(
+      screen.getByRole('button', { name: 'Charlas' })
+    )
     expect(scroller.scrollTop).toBe(0)
     expect(screen.queryByText('Primer día')).toBeNull()
     expect(container.querySelectorAll('[data-schedule-row]')).toHaveLength(0)
     expect(screen.queryByRole('button', { name: 'Música' })).toBeNull()
     scroller.scrollTop = 120
-    fireEvent.click(screen.getByRole('button', { name: '4 Octubre' }))
+    await clickAndFlushMutationObserver(
+      screen.getByRole('button', { name: '4 Octubre' })
+    )
     expect(scroller.scrollTop).toBe(0)
     const heading = screen.getByRole('heading', { name: 'Actividades Día 4' })
     const dayNumber = heading.querySelectorAll('span')[1]
     expect(dayNumber.textContent).toBe('Día 4')
     expect(screen.getByText('Segundo día')).toBeDefined()
     expect(screen.queryByText('Primer día')).toBeNull()
-    fireEvent.click(screen.getByRole('button', { name: 'Talleres' }))
+    await clickAndFlushMutationObserver(
+      screen.getByRole('button', { name: 'Talleres' })
+    )
     expect(screen.queryByText('Segundo día')).toBeNull()
-    fireEvent.click(screen.getByRole('button', { name: 'Todos' }))
+    await clickAndFlushMutationObserver(screen.getByRole('button', { name: 'Todos' }))
     expect(screen.getByText('Segundo día')).toBeDefined()
   })
 

@@ -10,6 +10,7 @@ import type {
 const ORIGINAL_MEMBERS: MemberDraftItem[] = [
   {
     artistId: 1,
+    pseudonymId: null,
     pseudonym: 'Luna Roja',
     city: 'Valparaíso',
     role: 'Voz',
@@ -17,6 +18,7 @@ const ORIGINAL_MEMBERS: MemberDraftItem[] = [
   },
   {
     artistId: 2,
+    pseudonymId: null,
     pseudonym: 'Río Alto',
     city: 'Santiago',
     role: 'Percusión',
@@ -28,6 +30,7 @@ const AVAILABLE_ARTISTS: ArtistOption[] = [
   {
     id: 3,
     pseudonym: 'Cielo Sur',
+    aliasLabel: null,
     city: 'Concepción'
   }
 ]
@@ -74,6 +77,7 @@ describe('collective stores', () => {
     expect(useCollectiveDraftStore.getState().existingMembers).toEqual([
       {
         artistId: 1,
+        pseudonymId: null,
         pseudonym: 'Luna Roja',
         city: 'Valparaíso',
         role: 'Dirección',
@@ -100,6 +104,7 @@ describe('collective stores', () => {
 
     useCollectiveDraftStore.getState().addMember({
       artistId: 3,
+      pseudonymId: null,
       pseudonym: 'Cielo Sur',
       city: 'Concepción',
       role: 'Bajo',
@@ -107,6 +112,7 @@ describe('collective stores', () => {
     })
     useCollectiveDraftStore.getState().addMember({
       artistId: 1,
+      pseudonymId: null,
       pseudonym: 'Luna Roja',
       city: 'Valparaíso',
       role: 'Dirección',
@@ -116,6 +122,7 @@ describe('collective stores', () => {
     expect(useCollectiveDraftStore.getState().pendingAdds).toEqual([
       {
         artistId: 3,
+        pseudonymId: null,
         pseudonym: 'Cielo Sur',
         city: 'Concepción',
         role: 'Bajo',
@@ -126,6 +133,7 @@ describe('collective stores', () => {
       ORIGINAL_MEMBERS[1],
       {
         artistId: 1,
+        pseudonymId: null,
         pseudonym: 'Luna Roja',
         city: 'Valparaíso',
         role: 'Dirección',
@@ -138,6 +146,7 @@ describe('collective stores', () => {
     useCollectiveDraftStore.getState().init(ORIGINAL_MEMBERS, AVAILABLE_ARTISTS)
     useCollectiveDraftStore.getState().addMember({
       artistId: 3,
+      pseudonymId: null,
       pseudonym: 'Cielo Sur',
       city: 'Concepción',
       role: 'Bajo',
@@ -161,13 +170,18 @@ describe('collective stores', () => {
     useCollectiveDraftStore.getState().openMemberCreate()
     useCollectiveDraftStore.getState().addMember({
       artistId: 3,
+      pseudonymId: null,
       pseudonym: 'Cielo Sur',
       city: 'Concepción',
       role: 'Bajo',
       active: true
     })
     useCollectiveDraftStore.getState().closeMemberCreate()
-    useCollectiveDraftStore.getState().updateMember(3, { role: 'Teclado' })
+    useCollectiveDraftStore.getState().updateMember(3, {
+      pseudonymId: 19,
+      pseudonym: 'Nueva identidad',
+      role: 'Teclado'
+    })
     useCollectiveDraftStore.getState().openMemberUpdate(1)
 
     expect(useCollectiveDraftStore.getState()).toMatchObject({
@@ -183,7 +197,8 @@ describe('collective stores', () => {
     expect(useCollectiveDraftStore.getState().pendingAdds).toEqual([
       {
         artistId: 3,
-        pseudonym: 'Cielo Sur',
+        pseudonymId: 19,
+        pseudonym: 'Nueva identidad',
         city: 'Concepción',
         role: 'Teclado',
         active: true
@@ -195,6 +210,7 @@ describe('collective stores', () => {
 
     expect(useCollectiveDraftStore.getState().existingMembers[0]).toEqual({
       artistId: 1,
+      pseudonymId: null,
       pseudonym: 'Luna Roja',
       city: 'Valparaíso',
       role: 'Dirección',

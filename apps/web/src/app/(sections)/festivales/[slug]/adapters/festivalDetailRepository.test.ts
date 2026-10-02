@@ -13,6 +13,7 @@ mock.module('@/infra/config/dataSourceConfig', () => ({
 }))
 
 import { ActivityList } from '../components/ActivityList'
+import { adjacentFestivalsRepository } from './adjacentFestivalsRepository'
 import { festivalDetailRepository } from './festivalDetailRepository'
 
 beforeEach(() => {
@@ -50,12 +51,12 @@ describe('festivalDetailRepository', () => {
     expect(executeQueryMock).not.toHaveBeenCalled()
   })
 
-  test('returns mock detail only when mock source is selected', async () => {
+  test('rejects an explicitly selected mock data source', async () => {
     getDataSourceMock.mockReturnValue('mock')
 
-    const result = await festivalDetailRepository('edicion-xv-1')
-
-    expect(result?.slug).toBe('edicion-xv-1')
+    await expect(festivalDetailRepository('edicion-xv-1')).rejects.toThrow(
+      'Unsupported data source: mock'
+    )
     expect(executeQueryMock).not.toHaveBeenCalled()
   })
 
@@ -197,19 +198,11 @@ describe('festivalDetailRepository', () => {
     expect(result).toBeNull()
   })
 
-  test('returns null and logs error when query fails', async () => {
-    const consoleSpy = mock(() => {})
-    globalThis.console.warn = consoleSpy
+  test('propagates query failures', async () => {
+    const failure = new Error('DB error')
+    executeQueryMock.mockResolvedValueOnce({ data: [], error: failure })
 
-    executeQueryMock.mockResolvedValueOnce({
-      data: [],
-      error: new Error('DB error')
-    })
-
-    const result = await festivalDetailRepository('edicion-xv-1')
-
-    expect(result).toBeNull()
-    expect(consoleSpy).toHaveBeenCalled()
+    await expect(festivalDetailRepository('edicion-xv-1')).rejects.toBe(failure)
   })
 
   test('returns null for malformed query payloads', async () => {
@@ -232,5 +225,44 @@ describe('festivalDetailRepository', () => {
     const result = await festivalDetailRepository('edicion-15-1')
 
     expect(result).toBeNull()
+  })
+
+  test('returns empty adjacent results when the query succeeds without rows', async () => {
+    executeQueryMock.mockResolvedValueOnce({ data: [], error: null })
+
+    await expect(adjacentFestivalsRepository('edicion-15-1')).resolves.toEqual({
+      prev: null,
+      next: null
+    })
+  })
+
+  test('maps populated adjacent festival results', async () => {
+    executeQueryMock.mockResolvedValueOnce({
+      data: [{
+        direction: 'prev',
+        slug: 'edicion-xiv-1',
+        numero_edicion: 'XIV',
+        edicion_nombre: 'Anterior',
+        evento_nombre: 'Festival Ejemplo'
+      }],
+      error: null
+    })
+
+    await expect(adjacentFestivalsRepository('edicion-xv-1')).resolves.toEqual({
+      prev: {
+        slug: 'edicion-xiv-1',
+        numero_edicion: 'XIV',
+        edicion_nombre: 'Anterior',
+        evento_nombre: 'Festival Ejemplo'
+      },
+      next: null
+    })
+  })
+
+  test('propagates adjacent festival query failures', async () => {
+    const failure = new Error('Adjacent festival query failed')
+    executeQueryMock.mockResolvedValueOnce({ data: [], error: failure })
+
+    await expect(adjacentFestivalsRepository('edicion-15-1')).rejects.toBe(failure)
   })
 })

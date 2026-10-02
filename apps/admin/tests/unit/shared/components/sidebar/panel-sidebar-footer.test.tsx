@@ -29,12 +29,12 @@ mock.module('@/shared/components/ui/sidebar', () => ({
     createElement('div', { 'data-testid': 'sidebar-menu-item' }, children)
 }))
 
-mock.module('./panel-sidebar-user-dropdown', () => ({
+mock.module('@/shared/components/sidebar/panel-sidebar-user-dropdown', () => ({
   PanelSidebarUserDropdown: () =>
     createElement('div', { 'data-testid': 'user-dropdown' })
 }))
 
-mock.module('./panel-sidebar-user', () => ({
+mock.module('@/shared/components/sidebar/panel-sidebar-user', () => ({
   PanelSidebarUser: () =>
     createElement('div', { 'data-testid': 'panel-sidebar-user' }),
   PanelSidebarUserSkeleton: () =>
@@ -45,8 +45,8 @@ mock.module('@tabler/icons-react', () => ({
   IconSelector: () => createElement('div', { 'data-testid': 'icon-selector' })
 }))
 
-import { PanelSidebarVersion } from '@/shared/components/sidebar/panel-sidebar-version'
-import { PanelSidebarFooter } from '@/shared/components/sidebar/panel-sidebar-footer'
+const { PanelSidebarVersion } = await import('@/shared/components/sidebar/panel-sidebar-version')
+const { PanelSidebarFooter } = await import('@/shared/components/sidebar/panel-sidebar-footer')
 
 describe('PanelSidebarFooter with PanelSidebarVersion', () => {
   test('PanelSidebarVersion renders version text with v prefix', () => {

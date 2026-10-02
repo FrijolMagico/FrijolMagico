@@ -1,39 +1,32 @@
-import { executeQuery } from '@frijolmagico/database/client'
 import { getDataSource } from '@/infra/config/dataSourceConfig'
 
 import { mapCatalogArtists } from './mappers/catalogMapper'
-import { getDataFromCatalogMock } from './mocks/catalogData.mock'
 
 import type { CatalogArtist } from '../types/catalog'
-import type { RawCatalogResult } from '../types/catalogDB'
-import { CATALOG_QUERY } from './queries/catalogoQuery'
+import { composeCatalogRows } from './queries/catalog-batched'
+import {
+  getCachedCatalogBaseRows,
+  getCachedCatalogEditionDateRows,
+  getCachedCatalogParticipationRows
+} from './queries/catalog-cache'
 
 export async function catalogRepository(): Promise<CatalogArtist[]> {
   const source = getDataSource({ prod: 'database', dev: 'local' })
 
   if (source === 'local' || source === 'database') {
-    const { data, error } = await executeQuery<RawCatalogResult>(
-      CATALOG_QUERY,
-      []
-    )
+    const [baseRows, participationRows, editionDateRows] = await Promise.all([
+      getCachedCatalogBaseRows(),
+      getCachedCatalogParticipationRows(),
+      getCachedCatalogEditionDateRows()
+    ])
 
-    if (error) {
-      console.warn(
-        '⚠️ Database query failed, falling back to mock data:',
-        error.message
-      )
-      return getDataFromCatalogMock()
+    if (baseRows.length === 0) {
+      return []
     }
 
-    if (!data || data.length === 0) {
-      console.warn('⚠️ No data found in database, falling back to mock data')
-      return getDataFromCatalogMock()
-    }
-
-    const parsedData = data.map((row: RawCatalogResult) =>
-      JSON.parse(row.resultado)
+    return mapCatalogArtists(
+      composeCatalogRows(baseRows, participationRows, editionDateRows)
     )
-    return mapCatalogArtists(parsedData)
   }
 
   throw new Error(`Unsupported data source: ${source}`)

@@ -1,6 +1,6 @@
 {
   "name": "frijolmagico",
-  "version": "4.12.0",
+  "version": "4.13.0",
   "private": true,
   "devEngines": {
     "packageManager": {
@@ -9,13 +9,17 @@
     }
   },
   "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev",
+    "build": "bun scripts/build-local.ts staging",
+    "build:real": "bun scripts/build-local.ts production",
+    "dev": "TURSO_DATABASE_URL=file://${PWD}/packages/database/local.dev.db turbo run dev",
+    "dev:real": "TURSO_DATABASE_URL=file://${PWD}/packages/database/local.db turbo run dev",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
     "test": "turbo run test",
     "type-check": "turbo run type-check",
-    "db:migrate": "turbo run migrate --filter @frijolmagico/database",
+    "db:migrate": "echo 'Choose db:migrate:staging or db:migrate:production; no implicit migration target' && exit 1",
+    "db:migrate:staging": "bun --cwd packages/database run migrate:staging",
+    "db:migrate:production": "bun --cwd packages/database run migrate:production",
     "format": "prettier --write \"**/*.{ts,tsx,md}\" --ignore-path .gitignore"
   },
   "devDependencies": {

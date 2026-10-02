@@ -7,6 +7,9 @@ import type { PreparedAsset } from '@/shared/assets-manager/client/contracts'
 import { ASSET_QUEUE_STATUS } from '@/shared/assets-manager/client/queue'
 
 mock.module('server-only', () => ({}))
+mock.module('@/core/artistas/catalogo/_actions/update-catalog-field.action', () => ({
+  updateCatalogFieldAction: async () => ({ success: false })
+}))
 
 const { createAvatarCancelObserver } = await import(
   '@/core/artistas/catalogo/_hooks/use-avatar-cancel-observer'

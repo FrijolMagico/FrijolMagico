@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
+import { FESTIVAL_CRITICAL_CACHE_TAG } from '@frijolmagico/cache-tags'
 
 const updateTag = mock(() => {})
+const revalidateWebCacheBestEffort = mock(async (_options: unknown) => {})
 const getSession = mock(async () => ({ user: { id: '1' } }))
 const requireAuth = mock(async () => ({ user: { id: '1' } }))
 const getUser = mock(async () => ({ id: '1' }))
@@ -30,6 +32,7 @@ let currentDb = createDbMock().db
 mock.module('server-only', () => ({}))
 mock.module('next/cache', () => ({ cacheTag: mock(() => {}), updateTag }))
 mock.module('next/cache.js', () => ({ cacheTag: mock(() => {}), updateTag }))
+mock.module('@/shared/lib/web-invalidation', () => ({ revalidateWebCacheBestEffort }))
 mock.module('@/shared/lib/auth/utils', () => ({
   getSession,
   requireAuth,
@@ -50,6 +53,7 @@ const { createActivityDetailAction } =
 describe('createActivityDetailAction', () => {
   beforeEach(() => {
     updateTag.mockClear()
+    revalidateWebCacheBestEffort.mockClear()
     requireAuth.mockClear()
     currentDb = createDbMock().db
   })
@@ -109,6 +113,13 @@ describe('createActivityDetailAction', () => {
     expect(dbMock.insertState.valuesArgs).toHaveLength(1)
     expect(dbMock.insertState.valuesArgs[0]).toEqual(payload)
     expect(updateTag).toHaveBeenCalledTimes(1)
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
+    })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledTimes(1)
   })
 
   test('strips unknown fields before inserting', async () => {
@@ -149,5 +160,7 @@ describe('createActivityDetailAction', () => {
 
     expect(result.success).toBe(false)
     expect(result.errors?.[0].message).toBe('connection lost')
+    expect(updateTag).not.toHaveBeenCalled()
+    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
   })
 })

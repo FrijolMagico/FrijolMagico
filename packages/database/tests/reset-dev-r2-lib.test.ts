@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'bun:test'
+import { fileURLToPath } from 'node:url'
 
 import { devR2Config } from '../scripts/clean-devr2/config'
+import { assertNoDevSnapshot } from '../scripts/clean-devr2/reset-dev-r2'
 import {
   buildCleanupPlan,
   collectProtectedFolderPrefixes,
@@ -13,6 +15,22 @@ import {
 } from '../scripts/clean-devr2/reset-dev-r2-lib'
 
 const assetColumns = devR2Config.assetColumns
+
+describe('assertNoDevSnapshot', () => {
+  test('rejects an existing file before the legacy reset can reach R2', () => {
+    const existingFile = fileURLToPath(new URL('../seed/seed.sql', import.meta.url))
+    expect(() => assertNoDevSnapshot(existingFile)).toThrow(
+      /local\.dev\.db exists.*No R2 action was taken/,
+    )
+  })
+
+  test('allows a missing snapshot path', () => {
+    const missingFile = fileURLToPath(
+      new URL('./nonexistent-dev-snapshot-for-reset-test.db', import.meta.url),
+    )
+    expect(() => assertNoDevSnapshot(missingFile)).not.toThrow()
+  })
+})
 
 describe('isDevEnvironment', () => {
   test('accepts exactly NODE_ENV=development without VERCEL_ENV', () => {
@@ -284,15 +302,15 @@ describe('parseSeedAssetKeys', () => {
     ).text()
     const keys = parseSeedAssetKeys(seedSql, assetColumns)
 
-    expect(keys).toContain('artistas/anima-red/avatar-123456789.webp')
-    expect(keys).toContain('artistas/cat-linaa-art/avatar-123456789.webp')
+    expect(keys).toContain('artistas/fixture-artist-001/avatar-123456789.webp')
+    expect(keys).toContain('artistas/fixture-artist-002/avatar-123456789.webp')
     expect(keys).toContain(
       'festivales/frijol-magico/i/afiche-123456789.webp',
     )
     expect(keys).toContain(
       'festivales/frijol-magico/ii/afiche-123456789.webp',
     )
-    // 15 seed avatars + 2 seed posters, deduplicated.
-    expect(keys).toHaveLength(17)
+    // 65 seed avatars + 2 seed posters, deduplicated.
+    expect(keys).toHaveLength(67)
   })
 })

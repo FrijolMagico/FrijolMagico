@@ -87,7 +87,7 @@ describe('fresh local band migration contract', () => {
     expect(bands).toHaveLength(5)
     expect(bands[0]).toMatchObject({
       id: 1,
-      name: 'Los Colores del Viento',
+      name: 'Fixture Band 01',
       active: true
     })
   })
@@ -100,7 +100,7 @@ describe('fresh local band migration contract', () => {
     for (const statement of inserts) await client.execute(statement)
     const rows = await orm.select().from(band).where(eq(band.id, 1))
     expect(rows[0]).toMatchObject({
-      name: 'Los Colores del Viento',
+      name: 'Fixture Band 01',
       active: true,
       phone: null,
       city: null,

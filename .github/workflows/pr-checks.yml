@@ -4,42 +4,10 @@ on:
   pull_request:
 
 jobs:
-  production-migrations:
-    name: Production Migrations
-    if: github.event.pull_request.base.ref == 'main' && github.head_ref == 'dev' && github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
-    environment: production-migrations
-    concurrency:
-      group: production-migrations
-      cancel-in-progress: false
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Apply production migrations
-        run: bun run --filter=@frijolmagico/database migrate
-        env:
-          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
-          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
-
   quality:
     name: Lint & Type-Check & Build & Test
-    needs: production-migrations
-    if: always()
     runs-on: ubuntu-latest
     steps:
-      - name: Require successful production migrations for release PRs
-        if: github.event.pull_request.base.ref == 'main' && github.head_ref == 'dev' && github.event.pull_request.head.repo.full_name == github.repository && needs.production-migrations.result != 'success'
-        run: |
-          echo "Production migrations did not succeed; failing the release PR quality check."
-          exit 1
-
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
@@ -58,16 +26,34 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Create mock database
+      - name: Create, migrate and seed isolated CI database
         run: |
+          set -euo pipefail
+          if ! command -v sqlite3 >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y sqlite3
+          fi
           MOCK_DB="${GITHUB_WORKSPACE}/packages/database/mock.local.db"
           touch "$MOCK_DB"
-          TURSO_DATABASE_URL="file:${MOCK_DB}" bun run --filter=@frijolmagico/database migrate
+          bun run --filter=@frijolmagico/database migrate:ci
+          {
+            printf '%s\n' 'PRAGMA foreign_keys=ON;'
+            cat packages/database/seed/seed.sql
+          } | sqlite3 -bail "$MOCK_DB"
+          test "$(sqlite3 -bail "$MOCK_DB" 'PRAGMA integrity_check;')" = 'ok'
+          test -z "$(sqlite3 -bail "$MOCK_DB" 'PRAGMA foreign_key_check;')"
+          test "$(sqlite3 -bail "$MOCK_DB" "SELECT COUNT(*) FROM catalogo_artista catalog JOIN artista ON artista.id = catalog.artista_id WHERE artista.slug IS NULL OR trim(artista.slug) = '';")" = '0'
+          test "$(sqlite3 -bail "$MOCK_DB" "SELECT COUNT(*) FROM evento_edicion WHERE slug IS NULL OR trim(slug) = '';")" = '0'
+          test "$(sqlite3 -bail "$MOCK_DB" 'SELECT COUNT(*) FROM catalogo_artista;')" = '38'
+          test "$(sqlite3 -bail "$MOCK_DB" 'SELECT COUNT(*) FROM evento_edicion;')" -gt '0'
+          test "$(sqlite3 -bail "$MOCK_DB" 'SELECT COUNT(*) FROM __drizzle_migrations;')" = '28'
 
       - name: Build
-        run: TURSO_DATABASE_URL="file:${GITHUB_WORKSPACE}/packages/database/mock.local.db" bun run build
+        run: bun run turbo run build
         env:
           DATA_SOURCE: local
+          TURSO_DATABASE_URL: file:${{ github.workspace }}/packages/database/mock.local.db
+          TURSO_AUTH_TOKEN: ''
 
       - name: Lint
         run: bun run lint
@@ -76,7 +62,10 @@ jobs:
         run: bun run type-check
 
       - name: Test
-        run: TURSO_DATABASE_URL="file:${GITHUB_WORKSPACE}/packages/database/mock.local.db" bun run test
+        run: bun run test
+        env:
+          TURSO_DATABASE_URL: file:${{ github.workspace }}/packages/database/mock.local.db
+          TURSO_AUTH_TOKEN: ''
 
       - name: Enforce per-file test isolation
         run: |

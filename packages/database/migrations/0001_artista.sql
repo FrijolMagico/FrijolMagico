@@ -107,7 +107,8 @@ CREATE TABLE IF NOT EXISTS agrupacion (
     descripcion TEXT,
     correo TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TEXT
 );
 --> statement-breakpoint
 

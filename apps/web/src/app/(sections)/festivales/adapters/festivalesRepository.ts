@@ -15,15 +15,10 @@ export async function festivalesRepository(): Promise<FestivalEdicion[]> {
     )
 
     if (error) {
-      console.warn(
-        '⚠️ Database query failed for festival listing:',
-        error.message
-      )
-      return []
+      throw error
     }
 
     if (!data || data.length === 0) {
-      console.warn('⚠️ No data found in database for festival listing')
       return []
     }
 

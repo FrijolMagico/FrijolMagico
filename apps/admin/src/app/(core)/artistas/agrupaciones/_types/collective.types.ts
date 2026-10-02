@@ -14,6 +14,7 @@ export interface DeletedCollectiveRow extends CollectiveRow {
 
 export interface MemberDraftItem {
   artistId: number
+  pseudonymId: number | null
   pseudonym: string
   city: string | null
   role: string | null
@@ -23,6 +24,7 @@ export interface MemberDraftItem {
 export interface ArtistOption {
   id: number
   pseudonym: string
+  aliasLabel: string | null
   city: string | null
 }
 

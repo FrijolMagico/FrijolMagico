@@ -296,6 +296,10 @@ export const collectiveArtist = sqliteTable(
     artistaId: integer('artista_id')
       .notNull()
       .references(() => artist.id, { onDelete: 'cascade' }),
+    pseudonimoId: integer('pseudonimo_id').references(
+      () => artistPseudonym.id,
+      { onDelete: 'restrict' }
+    ),
     rol: text('rol'),
     activo: integer('activo', { mode: 'boolean' }).notNull().default(true),
     createdAt: text('created_at')

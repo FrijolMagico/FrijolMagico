@@ -11,7 +11,11 @@ import { requireAuth } from '@/shared/lib/auth/utils'
 import {
   ARTIST_CACHE_TAG,
   ARTIST_HISTORY_CACHE_TAG,
-  CATALOG_CACHE_TAG
+  CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+  CATALOG_BASE_CACHE_TAG,
+  CATALOG_CACHE_TAG,
+  FEATURED_ARTISTS_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 import { revalidateWebCache } from '@/shared/lib/web-invalidation'
 import { allocateCatalogSlug } from '../catalogo/_lib/catalog-slug'
@@ -70,6 +74,18 @@ const HISTORIAL_FIELDS = [
   'rrss'
 ] as const
 
+const CATALOG_ARTIST_FIELDS = ['nombre', 'correo', 'rrss', 'ciudad', 'pais'] as const
+
+type CatalogArtistField = typeof CATALOG_ARTIST_FIELDS[number]
+
+type CatalogArtistValues = Partial<Record<CatalogArtistField, unknown>>
+
+function catalogFieldsChanged(previous: Artist, next: CatalogArtistValues) {
+  return CATALOG_ARTIST_FIELDS.some((field) =>
+    next[field] !== undefined && JSON.stringify(previous[field]) !== JSON.stringify(next[field])
+  )
+}
+
 export async function updateArtistaWithPseudonymsAction(
   { data: prevData }: ActionState<Artist>,
   input: { data: ArtistUpdateFormInput; pseudonymDrafts: ArtistPseudonymDraftInput[] }
@@ -90,7 +106,8 @@ export async function updateArtistaWithPseudonymsAction(
   }
 
   const { historialFlags, ...updateFields } = input.data
-  const { pseudonimo: _pseudonimo, ...generalFields } = updateFields
+  const { pseudonimo, ...generalFields } = updateFields
+  void pseudonimo
   const parsedArtist = artistUpdateSchema.safeParse(generalFields)
   if (!parsedArtist.success) {
     return {
@@ -117,7 +134,14 @@ export async function updateArtistaWithPseudonymsAction(
   }
 
   try {
-    const { historyChanged, catalogSlugChanged } = await db.transaction(async (tx) => {
+    const {
+      historyChanged,
+      catalogSlugChanged,
+      canonicalCatalogSlugChanged,
+      catalogDataChanged,
+      featuredMembershipEligible,
+      featuredPseudonymChanged
+    } = await db.transaction(async (tx) => {
       const pseudonymResult = await applyArtistPseudonymDrafts(
         tx,
         prevData.id,
@@ -137,15 +161,49 @@ export async function updateArtistaWithPseudonymsAction(
       }
       return {
         historyChanged: pseudonymResult.historyChanged,
-        catalogSlugChanged: pseudonymResult.catalogSlugChanged
+        catalogSlugChanged: pseudonymResult.catalogSlugChanged,
+        canonicalCatalogSlugChanged: pseudonymResult.canonicalCatalogSlugChanged,
+        catalogDataChanged: pseudonymResult.catalogDataChanged,
+        featuredMembershipEligible: pseudonymResult.featuredMembershipEligible,
+        featuredPseudonymChanged: pseudonymResult.featuredPseudonymChanged
       }
     })
 
     updateTag(ARTIST_CACHE_TAG)
     if (historialInsert || historyChanged) updateTag(ARTIST_HISTORY_CACHE_TAG)
-    if (catalogSlugChanged) {
+    if (canonicalCatalogSlugChanged) {
+      void revalidateWebCache({
+        tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+        mode: 'immediate'
+      })
+    }
+    const catalogProjectionChanged =
+      catalogSlugChanged || catalogDataChanged || catalogFieldsChanged(prevData, parsedArtist.data)
+    if (catalogProjectionChanged) {
+      updateTag(CATALOG_BASE_CACHE_TAG)
       updateTag(CATALOG_CACHE_TAG)
+      void revalidateWebCache({ tag: CATALOG_BASE_CACHE_TAG })
       void revalidateWebCache({ tag: CATALOG_CACHE_TAG, path: '/catalogo' })
+    }
+    if (catalogProjectionChanged) {
+      void revalidateWebCache({
+        tag: FESTIVAL_CRITICAL_CACHE_TAG,
+        mode: 'immediate',
+        path: '/festivales/[slug]',
+        pathType: 'page'
+      })
+    }
+    if (
+      featuredMembershipEligible &&
+      (catalogSlugChanged || featuredPseudonymChanged || (
+        parsedArtist.data.rrss !== undefined &&
+        JSON.stringify(prevData.rrss) !== JSON.stringify(parsedArtist.data.rrss)
+      ))
+    ) {
+      void revalidateWebCache({
+        tag: FEATURED_ARTISTS_CACHE_TAG,
+        mode: 'swr'
+      })
     }
     return { success: true }
   } catch (error) {
@@ -212,7 +270,13 @@ export async function updateArtistaAction(
     }
   }
 
-  const catalogSlugChanged = await db.transaction(async (tx) => {
+  const {
+    catalogSlugChanged,
+    canonicalCatalogSlugChanged,
+    catalogDataChanged,
+    featuredMembershipEligible,
+    featuredPseudonymChanged
+  } = await db.transaction(async (tx) => {
     await tx
       .update(artist)
       .set(parsed.data)
@@ -233,28 +297,77 @@ export async function updateArtistaAction(
     }
 
     const [catalogSelection] = await tx
-      .select({ pseudonimoId: artistTables.catalogArtist.pseudonimoId })
+      .select({
+        pseudonimoId: artistTables.catalogArtist.pseudonimoId,
+        activo: artistTables.catalogArtist.activo,
+        deletedAt: artistTables.catalogArtist.deletedAt
+      })
       .from(artistTables.catalogArtist)
       .where(eq(artistTables.catalogArtist.artistaId, prevData.id))
     const [primary] = await tx
       .select({ pseudonimoId: artistTables.artistPrimaryPseudonym.pseudonimoId })
       .from(artistTables.artistPrimaryPseudonym)
       .where(eq(artistTables.artistPrimaryPseudonym.artistaId, prevData.id))
-    if (
+    const pseudonymIsDisplayed =
+      catalogSelection?.pseudonimoId == null ||
+      catalogSelection.pseudonimoId === primary?.pseudonimoId
+    const pseudonymChanged =
+      pseudonymIsDisplayed && parsed.data.pseudonimo !== undefined &&
+      parsed.data.pseudonimo !== prevData.pseudonimo
+    const catalogSlugChanged =
       catalogSelection?.pseudonimoId != null &&
       catalogSelection.pseudonimoId === primary?.pseudonimoId &&
       parsed.data.pseudonimo !== undefined
-    ) {
-      return allocateCatalogSlug(tx, prevData.id, parsed.data.pseudonimo)
+        ? await allocateCatalogSlug(tx, prevData.id, parsed.data.pseudonimo)
+        : false
+    const canonicalCatalogSlugChanged =
+      catalogSlugChanged &&
+      catalogSelection?.activo === true &&
+      catalogSelection.deletedAt === null
+    return {
+      catalogSlugChanged,
+      canonicalCatalogSlugChanged,
+      catalogDataChanged: catalogFieldsChanged(prevData, parsed.data) || pseudonymChanged,
+      featuredMembershipEligible:
+        catalogSelection?.activo === true && catalogSelection.deletedAt === null,
+      featuredPseudonymChanged: pseudonymChanged
     }
-    return false
   })
 
   updateTag(ARTIST_CACHE_TAG)
   if (historialInsert) updateTag(ARTIST_HISTORY_CACHE_TAG)
-  if (catalogSlugChanged) {
+  if (canonicalCatalogSlugChanged) {
+    void revalidateWebCache({
+      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+      mode: 'immediate'
+    })
+  }
+  const catalogProjectionChanged = catalogSlugChanged || catalogDataChanged
+  if (catalogProjectionChanged) {
+    updateTag(CATALOG_BASE_CACHE_TAG)
     updateTag(CATALOG_CACHE_TAG)
+    void revalidateWebCache({ tag: CATALOG_BASE_CACHE_TAG })
     void revalidateWebCache({ tag: CATALOG_CACHE_TAG, path: '/catalogo' })
+  }
+  if (catalogProjectionChanged) {
+    void revalidateWebCache({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
+    })
+  }
+  if (
+    featuredMembershipEligible &&
+    (catalogSlugChanged || featuredPseudonymChanged || (
+      parsed.data.rrss !== undefined &&
+      JSON.stringify(prevData.rrss) !== JSON.stringify(parsed.data.rrss)
+    ))
+  ) {
+    void revalidateWebCache({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      mode: 'swr'
+    })
   }
 
   return { success: true }

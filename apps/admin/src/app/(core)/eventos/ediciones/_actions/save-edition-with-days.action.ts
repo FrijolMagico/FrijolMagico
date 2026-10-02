@@ -7,10 +7,18 @@ import { db } from '@frijolmagico/database/orm'
 import { events } from '@frijolmagico/database/schema'
 import { toSlug } from '@/shared/lib/utils'
 import { requireAuth } from '@/shared/lib/auth/utils'
-import { revalidateWebCache } from '@/shared/lib/web-invalidation'
+import {
+  revalidateWebCache,
+  revalidateWebCacheBestEffort
+} from '@/shared/lib/web-invalidation'
 import type { ActionState } from '@/shared/types/actions'
 import {
+  CATALOG_CACHE_TAG,
+  CATALOG_EDITION_DATES_CACHE_TAG,
+  CATALOG_PARTICIPATION_CACHE_TAG,
   EDITION_CACHE_TAG,
+  FESTIVALES_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG,
   EDITION_DAY_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 import {
@@ -48,9 +56,100 @@ export async function saveEditionWithDaysAction(
       .limit(1)
 
     const slug = toSlug(`${evento?.slug ?? 'edicion'}-${numeroEdicion}`)
+    let catalogDatesChanged = id === null && days.length > 0
+    let catalogEditionChanged = id === null
+    let publicOutputChanged = id === null
+    let activeFestivalChanged = id === null
 
     await db.transaction(async (tx) => {
       let edicionId = id
+      if (edicionId !== null) {
+        const [existingEdition] = await tx
+          .select({
+            eventoId: eventEdition.eventoId,
+            numeroEdicion: eventEdition.numeroEdicion,
+            nombre: eventEdition.nombre,
+            posterUrl: eventEdition.posterUrl,
+            slug: eventEdition.slug
+          })
+          .from(eventEdition)
+          .where(eq(eventEdition.id, edicionId))
+          .limit(1)
+        if (existingEdition !== undefined) {
+          catalogEditionChanged =
+            existingEdition.eventoId !== eventoId ||
+            existingEdition.numeroEdicion !== numeroEdicion
+          const editionChanged =
+            existingEdition.eventoId !== eventoId ||
+            existingEdition.numeroEdicion !== numeroEdicion ||
+            (existingEdition.nombre ?? null) !== (nombre ?? null) ||
+            (existingEdition.posterUrl ?? null) !== (posterUrl ?? null) ||
+            existingEdition.slug !== slug
+          publicOutputChanged = editionChanged
+          activeFestivalChanged =
+            existingEdition.eventoId !== eventoId ||
+            existingEdition.numeroEdicion !== numeroEdicion ||
+            existingEdition.slug !== slug
+        }
+      }
+      const existingDates =
+        edicionId === null
+          ? []
+          : await tx
+              .select({
+                id: eventEditionDay.id,
+                fecha: eventEditionDay.fecha,
+                horaInicio: eventEditionDay.horaInicio,
+                horaFin: eventEditionDay.horaFin,
+                modalidad: eventEditionDay.modalidad,
+                lugarId: eventEditionDay.lugarId
+              })
+              .from(eventEditionDay)
+              .where(eq(eventEditionDay.eventoEdicionId, edicionId))
+      const nextDates = days.map((day) => day.fecha).sort()
+      const previousDates = existingDates.map((day) => day.fecha).sort()
+      catalogDatesChanged =
+        catalogDatesChanged ||
+        nextDates.length !== previousDates.length ||
+        nextDates.some((date, index) => date !== previousDates[index])
+      const existingDaysById = new Map(
+        existingDates.map((day) => [day.id, day])
+      )
+      const nextDayIds = days
+        .filter((day) => day.existingId !== undefined)
+        .map((day) => day.existingId)
+      const dayMembershipChanged =
+        existingDates.length !== days.length ||
+        existingDates.some((day) => !nextDayIds.includes(day.id)) ||
+        days.some((day) => day.existingId === undefined)
+      const dayFieldsChanged = days.some((day) => {
+        if (day.existingId === undefined) return true
+        const previous = existingDaysById.get(day.existingId)
+        return (
+          previous === undefined ||
+          previous.fecha !== day.fecha ||
+          previous.horaInicio !== day.horaInicio ||
+          previous.horaFin !== day.horaFin ||
+          (previous.modalidad ?? null) !== (day.modalidad ?? null) ||
+          (previous.lugarId ?? null) !== (day.lugarId ?? null)
+        )
+      })
+      publicOutputChanged =
+        publicOutputChanged || dayMembershipChanged || dayFieldsChanged
+      activeFestivalChanged =
+        activeFestivalChanged ||
+        dayMembershipChanged ||
+        days.some((day) => {
+          const previous =
+            day.existingId === undefined
+              ? undefined
+              : existingDaysById.get(day.existingId)
+          return (
+            previous === undefined ||
+            previous.fecha !== day.fecha ||
+            (previous.lugarId ?? null) !== (day.lugarId ?? null)
+          )
+        })
 
       if (edicionId !== null) {
         await tx
@@ -119,11 +218,41 @@ export async function saveEditionWithDaysAction(
 
     updateTag(EDITION_CACHE_TAG)
     updateTag(EDITION_DAY_CACHE_TAG)
-    try {
-      await revalidateWebCache({ tag: EDITION_CACHE_TAG })
-    } catch {
-      console.error('[save-edition] Web cache sync failed', {
-        tag: EDITION_CACHE_TAG
+    for (const [tag, mode, path] of [
+      [FESTIVAL_CRITICAL_CACHE_TAG, 'immediate', '/festivales/[slug]'],
+      [FESTIVALES_CACHE_TAG, 'swr', '/festivales']
+    ] as const) {
+      try {
+        await revalidateWebCache({
+          tag,
+          mode,
+          ...(publicOutputChanged ? { path, pathType: 'page' as const } : {})
+        })
+      } catch {
+        console.error('[save-edition] Web cache sync failed', { tag })
+      }
+    }
+    if (activeFestivalChanged) {
+      for (const pathType of ['page', 'layout'] as const) {
+        try {
+          await revalidateWebCache({ path: '/', pathType })
+        } catch {
+          console.error('[save-edition] Web cache sync failed', {
+            path: '/',
+            pathType
+          })
+        }
+      }
+    }
+    if (catalogEditionChanged) {
+      void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
+      void revalidateWebCacheBestEffort({
+        tag: CATALOG_PARTICIPATION_CACHE_TAG
+      })
+    }
+    if (catalogDatesChanged) {
+      void revalidateWebCacheBestEffort({
+        tag: CATALOG_EDITION_DATES_CACHE_TAG
       })
     }
 

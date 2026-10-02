@@ -218,21 +218,28 @@ describe('activity occurrences additive migration', () => {
       tag: '0024_artist_pseudonyms',
       breakpoints: true
     })
-    expect(entries.at(-2)).toEqual({
+    expect(entries[25]).toEqual({
       idx: 25,
       version: '7',
       when: 1785628800000,
       tag: '0025_catalog_slug_aliases',
       breakpoints: true
     })
-    expect(entries.at(-1)).toEqual({
+    expect(entries[26]).toEqual({
       idx: 26,
       version: '7',
       when: 1785715200000,
       tag: '0026_talk_presenter',
       breakpoints: true
     })
-    expect(entries.at(-1)!.when).toBeGreaterThan(entries.at(-2)!.when)
+    expect(entries[27]).toEqual({
+      idx: 27,
+      version: '7',
+      when: 1785801600000,
+      tag: '0027_collective_member_pseudonyms',
+      breakpoints: true
+    })
+    expect(entries[27]!.when).toBeGreaterThan(entries[26]!.when)
 
     const directory = await mkdtemp(join(tmpdir(), 'activity-occurrences-migrator-'))
     directories.push(directory)

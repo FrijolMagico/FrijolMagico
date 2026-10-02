@@ -8,9 +8,12 @@ import { requireAuth } from '@/shared/lib/auth/utils'
 import { ActionState } from '@/shared/types/actions'
 import {
   ARTIST_DETAIL_CACHE_TAG,
+  CATALOG_CACHE_TAG,
+  CATALOG_PARTICIPATION_CACHE_TAG,
   EDITION_CACHE_TAG,
   EVENT_CACHE_TAG,
   FESTIVALES_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG,
   getEditionParticipationsCacheTag,
   getParticipationActivitiesCacheTag
 } from '@frijolmagico/cache-tags'
@@ -69,6 +72,9 @@ export async function createActivityAction(
     }
 
     let participationId: number | null = null
+    let effectiveActivityTypeSlug: string | null = null
+    const isPublicActivity =
+      data.activity.estado === 'confirmado' || data.activity.estado === 'completado'
 
     await db.transaction(async (tx) => {
       const participationRecord = await findOrCreateEditionParticipation(
@@ -90,6 +96,7 @@ export async function createActivityAction(
             : eq(table.id, data.activity.tipoActividadId)
       })
       if (!effectiveType) throw new Error('El tipo de actividad no existe')
+      effectiveActivityTypeSlug = effectiveType.slug
 
       if (!['taller', 'charla', 'musica'].includes(effectiveType.slug)) {
         throw new Error(
@@ -197,8 +204,23 @@ export async function createActivityAction(
         )
       }
     }
-    for (const tag of PUBLIC_ACTIVITY_TAGS) {
-      void revalidateWebCacheBestEffort({ tag })
+    void revalidateWebCacheBestEffort({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      ...(isPublicActivity
+        ? { path: '/festivales/[slug]', pathType: 'page' as const }
+        : {})
+    })
+    void revalidateWebCacheBestEffort({
+      tag: FESTIVALES_CACHE_TAG,
+      mode: 'swr',
+      ...(isPublicActivity || effectiveActivityTypeSlug === 'charla'
+        ? { path: '/festivales', pathType: 'page' as const }
+        : {})
+    })
+    if (isPublicActivity) {
+      void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
+      void revalidateWebCacheBestEffort({ tag: CATALOG_PARTICIPATION_CACHE_TAG })
     }
 
     return { success: true }

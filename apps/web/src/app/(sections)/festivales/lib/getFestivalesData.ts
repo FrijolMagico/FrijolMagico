@@ -1,4 +1,4 @@
-import { cacheTag } from 'next/cache'
+import { cacheLife, cacheTag } from 'next/cache'
 import { FESTIVALES_CACHE_TAG } from '@frijolmagico/cache-tags'
 import { festivalesRepository } from '../adapters/festivalesRepository'
 
@@ -9,7 +9,8 @@ export async function getFestivalesData(): Promise<{
   data: FestivalEdicion[]
   error: ErrorObject
 }> {
-  'use cache'
+  'use cache: remote'
+  cacheLife({ stale: 5 * 60, revalidate: Infinity, expire: Infinity })
   cacheTag(FESTIVALES_CACHE_TAG)
   try {
     const data = await festivalesRepository()

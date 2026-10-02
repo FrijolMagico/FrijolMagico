@@ -1,5 +1,6 @@
 /**
- * Types for the dev R2 reset script (`bun run reset:dev-r2`).
+ * Types for the retired legacy manual dev R2 reset script.
+ * Its seed-based asset protection is unsafe for real database snapshots.
  */
 
 /**

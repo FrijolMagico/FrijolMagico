@@ -1,6 +1,3 @@
-import { cacheTag } from 'next/cache'
-import { CATALOG_CACHE_TAG } from '@frijolmagico/cache-tags'
-
 import { formatUrlWithoutQuery } from '@frijolmagico/utils/url'
 import { catalogRepository } from '../adapters/catalogRepository'
 
@@ -11,9 +8,6 @@ export async function getCatalogData(): Promise<{
   data: CatalogArtist[]
   error: ErrorObject
 }> {
-  'use cache'
-  cacheTag(CATALOG_CACHE_TAG)
-
   try {
     const data = await catalogRepository()
 

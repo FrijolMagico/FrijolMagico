@@ -161,6 +161,14 @@ describe('createCatalogAction', () => {
       data: { catalogId: 9, artistId: 42, requestedActive: false }
     })
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: 'catalogo:artistas:base',
+      path: '/catalogo'
+    })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: 'catalogo:artistas:participaciones',
+      path: '/catalogo'
+    })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: 'catalogo:artistas',
       path: '/catalogo'
     })
@@ -180,6 +188,8 @@ describe('createCatalogAction', () => {
       success: true,
       data: { catalogId: 9, artistId: 42, requestedActive: false }
     })
+    expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:base')
+    expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:participaciones')
   })
 
   test('rejects a pseudonym that is inactive or owned by another artist', async () => {
@@ -211,6 +221,8 @@ describe('createCatalogAction', () => {
         }
       ]
     })
+    expect(updateTag).not.toHaveBeenCalled()
+    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
   })
 
   test('returns an explicit creation failure when the insert returns invalid identifiers', async () => {
