@@ -37,7 +37,11 @@ export async function deleteEditionAction(
   const deletedEditions = await db
     .delete(eventEdition)
     .where(eq(eventEdition.id, id))
-    .returning({ id: eventEdition.id })
+    .returning({
+      id: eventEdition.id,
+      published: eventEdition.published,
+      slug: eventEdition.slug
+    })
 
   if (deletedEditions.length === 0) return { success: true }
 
@@ -51,6 +55,34 @@ export async function deleteEditionAction(
       await revalidateWebCache({ tag, mode })
     } catch {
       console.error('[delete-edition] Web cache sync failed', { tag })
+    }
+  }
+  for (const { published, slug } of deletedEditions) {
+    if (slug) {
+      try {
+        await revalidateWebCache({
+          tag: FESTIVAL_CRITICAL_CACHE_TAG,
+          path: `/festivales/${slug}`
+        })
+      } catch {
+        console.error('[delete-edition] Web cache sync failed', {
+          tag: FESTIVAL_CRITICAL_CACHE_TAG
+        })
+      }
+    }
+    try {
+      await revalidateWebCache({ tag: FESTIVALES_CACHE_TAG, path: '/festivales' })
+    } catch {
+      console.error('[delete-edition] Web cache sync failed', { tag: FESTIVALES_CACHE_TAG })
+    }
+    if (published && slug) {
+      for (const pathType of ['page', 'layout'] as const) {
+        try {
+          await revalidateWebCache({ path: '/', pathType })
+        } catch {
+          console.error('[delete-edition] Web cache sync failed', { path: '/' })
+        }
+      }
     }
   }
   for (const tag of [
