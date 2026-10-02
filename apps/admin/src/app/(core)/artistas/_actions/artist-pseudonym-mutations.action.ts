@@ -12,7 +12,8 @@ import {
   CANONICAL_CATALOG_SLUGS_CACHE_TAG,
   CATALOG_BASE_CACHE_TAG,
   CATALOG_CACHE_TAG,
-  FEATURED_ARTISTS_CACHE_TAG
+  FEATURED_ARTISTS_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 import { revalidateWebCache } from '@/shared/lib/web-invalidation'
 import { allocateCatalogSlug } from '../catalogo/_lib/catalog-slug'
@@ -138,6 +139,7 @@ export async function mutateArtistPseudonymAction(
   let canonicalCatalogSlugChanged = false
   let catalogDataChanged = false
   let featuredIdentityChanged = false
+  let festivalDetailChanged = false
   try {
     await requireAuth()
     const parsed = artistPseudonymMutationSchema.safeParse(data)
@@ -166,6 +168,7 @@ export async function mutateArtistPseudonymAction(
             })
             .from(catalogArtist)
             .where(eq(catalogArtist.artistaId, mutation.artistId))
+          if (previousArtist?.pseudonimo !== added.pseudonimo) festivalDetailChanged = true
           if (catalogSelection?.pseudonimoId == null && previousArtist?.pseudonimo !== added.pseudonimo) {
             catalogDataChanged = true
             featuredIdentityChanged =
@@ -215,6 +218,7 @@ export async function mutateArtistPseudonymAction(
           .from(catalogArtist)
           .where(eq(catalogArtist.artistaId, mutation.artistId))
         const renamed = mutation.pseudonym !== pseudonym.pseudonimo
+        if (renamed) festivalDetailChanged = true
         const publicCatalogSelection =
           Boolean(catalogSelection?.activo) && catalogSelection?.deletedAt === null
         if (
@@ -254,6 +258,7 @@ export async function mutateArtistPseudonymAction(
           })
           .from(catalogArtist)
           .where(eq(catalogArtist.artistaId, mutation.artistId))
+        if (previousArtist?.pseudonimo !== pseudonym.pseudonimo) festivalDetailChanged = true
         if (catalogSelection?.pseudonimoId == null && previousArtist?.pseudonimo !== pseudonym.pseudonimo) {
           catalogDataChanged = true
           featuredIdentityChanged =
@@ -307,6 +312,12 @@ export async function mutateArtistPseudonymAction(
       }
 
       if (replacement) {
+        if (
+          replacement.pseudonimo !== pseudonym.pseudonimo &&
+          (exhibitionReference || activityReference)
+        ) {
+          festivalDetailChanged = true
+        }
         await transaction.update(catalogArtist).set({ pseudonimoId: replacement.id }).where(and(eq(catalogArtist.artistaId, mutation.artistId), eq(catalogArtist.pseudonimoId, pseudonym.id)))
         await transaction.update(participationExhibition).set({ pseudonimoId: replacement.id }).where(and(eq(participationExhibition.artistaId, mutation.artistId), eq(participationExhibition.pseudonimoId, pseudonym.id)))
         await transaction.update(participationActivity).set({ pseudonimoId: replacement.id }).where(and(eq(participationActivity.artistaId, mutation.artistId), eq(participationActivity.pseudonimoId, pseudonym.id)))
@@ -331,6 +342,7 @@ export async function mutateArtistPseudonymAction(
             .select({ pseudonimo: artist.pseudonimo })
             .from(artist)
             .where(eq(artist.id, mutation.artistId))
+          if (previousArtist?.pseudonimo !== replacement.pseudonimo) festivalDetailChanged = true
           if (
             catalogSelection?.pseudonimoId == null &&
             previousArtist?.pseudonimo !== replacement.pseudonimo
@@ -350,6 +362,15 @@ export async function mutateArtistPseudonymAction(
 
     updateTag(ARTIST_CACHE_TAG)
     if (historyChanged) updateTag(ARTIST_HISTORY_CACHE_TAG)
+    if (catalogSlugChanged || catalogDataChanged) festivalDetailChanged = true
+    if (festivalDetailChanged) {
+      void revalidateWebCache({
+        tag: FESTIVAL_CRITICAL_CACHE_TAG,
+        mode: 'immediate',
+        path: '/festivales/[slug]',
+        pathType: 'page'
+      })
+    }
     if (catalogSlugChanged || catalogDataChanged) {
       updateTag(CATALOG_BASE_CACHE_TAG)
       updateTag(CATALOG_CACHE_TAG)

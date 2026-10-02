@@ -3,7 +3,8 @@ import { getTableName } from 'drizzle-orm'
 import { artist as artistTables, participations } from '@frijolmagico/database/schema'
 import {
   CANONICAL_CATALOG_SLUGS_CACHE_TAG,
-  FEATURED_ARTISTS_CACHE_TAG
+  FEATURED_ARTISTS_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 
 const { artist, artistHistory, artistPseudonym, artistPrimaryPseudonym, artistSlugAlias, catalogArtist } = artistTables
@@ -271,6 +272,7 @@ describe('updateArtistaWithPseudonymsAction', () => {
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
     })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate', path: '/festivales/[slug]', pathType: 'page' })
   })
 
   test('renaming the catalog-selected pseudonym updates the slug and invalidates catalog caches', async () => {
@@ -487,11 +489,52 @@ describe('updateArtistaWithPseudonymsAction', () => {
     expect(result.success).toBe(true)
     expect(mockDb.state.committed).toBe(true)
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate', path: '/festivales/[slug]', pathType: 'page' })
+  })
+
+  test('active catalog projected artist and pseudonym changes invalidate festival detail data and route', async () => {
+    const mockDb = createDatabaseMock()
+    setSelects(mockDb, [
+      [artist, [[{ id: 1, pseudonimo: 'Old Name' }], [{ slug: 'old-name' }], []]],
+      [artistPrimaryPseudonym, [[{ pseudonimoId: 10 }]]],
+      [artistPseudonym, [[pseudonym]]],
+      [catalogArtist, [[{ pseudonimoId: 10, activo: true, deletedAt: null }], [{ pseudonimoId: 10, activo: true, deletedAt: null }]]],
+      [artistSlugAlias, [[]]]
+    ])
+    currentDb = mockDb.db
+
+    const result = await updateArtistaWithPseudonymsAction(
+      { success: false, data: {
+        id: 1, nombre: 'Old Name', pseudonimo: 'Old Name', correo: null,
+        rrss: null, ciudad: null, pais: null
+      } } as never,
+      {
+        data: {
+          nombre: 'New Name', pseudonimo: 'Fallback', rut: null,
+          telefono: null, correo: null, ciudad: null, pais: null, rrss: null,
+          estadoId: 1,
+          historialFlags: { pseudonimo: false, correo: false, ciudad: false, pais: false, rrss: false }
+        },
+        pseudonymDrafts: [{
+          operation: 'edit', pseudonymId: 10, pseudonym: 'Renamed',
+          preserveHistory: false, makePrimary: false
+        }]
+      } as never
+    )
+
+    expect(result.success).toBe(true)
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate', path: '/festivales/[slug]', pathType: 'page'
+    })
   })
 
   test('updates with pseudonym drafts do not invalidate catalog for unchanged projected fields', async () => {
     const mockDb = createDatabaseMock()
-    withActiveArtist(mockDb)
+    setSelects(mockDb, [
+      [artist, [[{ id: 1, pseudonimo: 'Fallback' }]]],
+      [catalogArtist, [[{ pseudonimoId: null, activo: false }]]],
+      [artistPrimaryPseudonym, [[]]]
+    ])
     currentDb = mockDb.db
 
     const result = await updateArtistaWithPseudonymsAction(
@@ -542,13 +585,39 @@ describe('updateArtistaWithPseudonymsAction', () => {
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
     })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate', path: '/festivales/[slug]', pathType: 'page' })
   })
 
-  test('legacy artist updates do not invalidate catalog for unchanged projected fields', async () => {
+  test('legacy active catalog projected artist changes invalidate festival detail data and route', async () => {
     const mockDb = createDatabaseMock()
     setSelects(mockDb, [
       [artist, [[{ slug: 'same-slug' }], []]],
-      [catalogArtist, [[{ pseudonimoId: null }]]],
+      [catalogArtist, [[{ pseudonimoId: null, activo: true, deletedAt: null }]]],
+      [artistPrimaryPseudonym, [[]]]
+    ])
+    currentDb = mockDb.db
+
+    const result = await updateArtistaAction(
+      { success: false, data: { id: 1, nombre: 'Old Name', pseudonimo: 'Fallback' } } as never,
+      {
+        nombre: 'New Name', pseudonimo: 'Fallback', rut: null,
+        telefono: null, correo: null, ciudad: null, pais: null, rrss: null,
+        estadoId: 1,
+        historialFlags: { pseudonimo: false, correo: false, ciudad: false, pais: false, rrss: false }
+      } as never
+    )
+
+    expect(result.success).toBe(true)
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate', path: '/festivales/[slug]', pathType: 'page'
+    })
+  })
+
+  test('legacy inactive artist updates do not invalidate detail for unchanged projected fields', async () => {
+    const mockDb = createDatabaseMock()
+    setSelects(mockDb, [
+      [artist, [[{ slug: 'same-slug' }], []]],
+      [catalogArtist, [[{ pseudonimoId: null, activo: false }]]],
       [artistPrimaryPseudonym, [[]]]
     ])
     currentDb = mockDb.db
@@ -751,6 +820,7 @@ describe('updateArtistaWithPseudonymsAction', () => {
     expect(result.success).toBe(false)
     expect(mockDb.state.committed).toBe(false)
     expect(mockDb.state.rolledBack).toBe(true)
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({ tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate', path: '/festivales/[slug]', pathType: 'page' })
   })
 })
 
@@ -806,6 +876,49 @@ describe('mutateArtistPseudonymAction', () => {
     ])
     expect(mockDb.state.committed).toBe(true)
     expect(updateTag).toHaveBeenCalledTimes(1)
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate', path: '/festivales/[slug]', pathType: 'page'
+    })
+  })
+
+  test('renames a non-selected pseudonym and invalidates festival detail', async () => {
+    const mockDb = createDatabaseMock()
+    withActiveArtist(mockDb)
+    setSelects(mockDb, [
+      [artistPseudonym, [[pseudonym]]],
+      [artistPrimaryPseudonym, [[]]],
+      [catalogArtist, [[{ pseudonimoId: 99 }]]]
+    ])
+    currentDb = mockDb.db
+
+    const result = await mutateArtistPseudonymAction(null as never, {
+      operation: 'rename', artistId: 1, pseudonymId: 10,
+      pseudonym: 'Renamed', preserveHistory: false
+    })
+
+    expect(result.success).toBe(true)
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate', path: '/festivales/[slug]', pathType: 'page'
+    })
+  })
+
+  test('add with makePrimary invalidates festival detail when compatibility text changes', async () => {
+    const mockDb = createDatabaseMock()
+    withActiveArtist(mockDb)
+    setSelects(mockDb, [[catalogArtist, [[{ pseudonimoId: 10 }]]]])
+    currentDb = mockDb.db
+
+    const result = await mutateArtistPseudonymAction(null as never, {
+      operation: 'add', artistId: 1, pseudonym: 'New Primary', makePrimary: true
+    })
+
+    expect(result.success).toBe(true)
+    expect(mockDb.state.writes).toContainEqual(expect.objectContaining({
+      operation: 'update', table: tableName(artist), value: { pseudonimo: 'New Primary' }
+    }))
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate', path: '/festivales/[slug]', pathType: 'page'
+    })
   })
 
   test('changes the slug for an inactive selected catalog pseudonym without canonical invalidation', async () => {
@@ -889,7 +1002,7 @@ describe('mutateArtistPseudonymAction', () => {
     expect(updateTag).not.toHaveBeenCalledWith('catalogo:artistas')
   })
 
-  test('does not invalidate catalog for a no-op selected pseudonym rename', async () => {
+  test('does not invalidate festival detail for a no-op pseudonym rename', async () => {
     const mockDb = createDatabaseMock()
     withActiveArtist(mockDb)
     setSelects(mockDb, [
@@ -909,6 +1022,9 @@ describe('mutateArtistPseudonymAction', () => {
     expect(result.success).toBe(true)
     expect(revalidateWebCache).not.toHaveBeenCalled()
     expect(updateTag).not.toHaveBeenCalledWith('catalogo:artistas')
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate', path: '/festivales/[slug]', pathType: 'page'
+    })
   })
 
   test('renames the selected identity and records old text only when requested', async () => {
@@ -953,6 +1069,9 @@ describe('mutateArtistPseudonymAction', () => {
     expect(mockDb.state.writes.some(({ table, value }) =>
       table === tableName(artist) && (value as { pseudonimo?: string }).pseudonimo === 'Second Name'
     )).toBe(true)
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate', path: '/festivales/[slug]', pathType: 'page'
+    })
   })
 
   test('requires reassignment for referenced or primary names and moves references atomically', async () => {
@@ -973,6 +1092,9 @@ describe('mutateArtistPseudonymAction', () => {
     expect(blocked.success).toBe(false)
     expect(referenced.state.writes).toEqual([])
     expect(referenced.state.rolledBack).toBe(true)
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate', path: '/festivales/[slug]', pathType: 'page'
+    })
 
     const retirement = createDatabaseMock()
     withActiveArtist(retirement)
@@ -999,6 +1121,9 @@ describe('mutateArtistPseudonymAction', () => {
       operation: 'insert', table: tableName(artistSlugAlias), value: { slug: 'old-name', artistaId: 1 }
     }))
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas', path: '/catalogo' })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate', path: '/festivales/[slug]', pathType: 'page'
+    })
     for (const table of [catalogArtist, participationExhibition, participationActivity]) {
       expect(retirement.state.writes.some(({ operation, table: writtenTable, value }) =>
         operation === 'update' && writtenTable === tableName(table) &&
@@ -1008,6 +1133,35 @@ describe('mutateArtistPseudonymAction', () => {
     expect(retirement.state.writes.some(({ table, value }) =>
       table === tableName(artistPseudonym) && (value as { deletedAt?: unknown }).deletedAt !== undefined
     )).toBe(true)
+  })
+
+  test('invalidates festival detail when retiring an active catalog-only pseudonym', async () => {
+    const mockDb = createDatabaseMock()
+    withActiveArtist(mockDb)
+    setSelects(mockDb, [
+      [artist, [[{ id: 1, slug: 'old-name' }], [{ id: 1, slug: 'old-name' }], []]],
+      [artistPseudonym, [[pseudonym], [{ id: 11, pseudonimo: 'Replacement' }]]],
+      [catalogArtist, [[{ id: 30, pseudonimoId: 10 }], [{ id: 30, activo: true, deletedAt: null }]]],
+      [participationExhibition, [[]]],
+      [participationActivity, [[]]],
+      [artistPrimaryPseudonym, [[]]],
+      [artistSlugAlias, [[]]]
+    ])
+    currentDb = mockDb.db
+
+    const result = await mutateArtistPseudonymAction(null as never, {
+      operation: 'retire', artistId: 1, pseudonymId: 10, reassignToPseudonymId: 11
+    })
+
+    expect(result.success).toBe(true)
+    expect(mockDb.state.committed).toBe(true)
+    expect(mockDb.state.writes).not.toContainEqual(expect.objectContaining({
+      operation: 'update', table: tableName(artist), value: { pseudonimo: 'Replacement' }
+    }))
+    expect(updateTag).toHaveBeenCalledWith('catalogo:artistas')
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate', path: '/festivales/[slug]', pathType: 'page'
+    })
   })
 
   test('rolls back reassignment when a reference update fails', async () => {
@@ -1033,5 +1187,8 @@ describe('mutateArtistPseudonymAction', () => {
     expect(mockDb.state.writes.some(({ table }) => table === tableName(artistPseudonym))).toBe(false)
     expect(revalidateWebCache).not.toHaveBeenCalled()
     expect(updateTag).not.toHaveBeenCalledWith('catalogo:artistas')
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate', path: '/festivales/[slug]', pathType: 'page'
+    })
   })
 })

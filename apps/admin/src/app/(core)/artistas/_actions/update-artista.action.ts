@@ -14,7 +14,8 @@ import {
   CANONICAL_CATALOG_SLUGS_CACHE_TAG,
   CATALOG_BASE_CACHE_TAG,
   CATALOG_CACHE_TAG,
-  FEATURED_ARTISTS_CACHE_TAG
+  FEATURED_ARTISTS_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 import { revalidateWebCache } from '@/shared/lib/web-invalidation'
 import { allocateCatalogSlug } from '../catalogo/_lib/catalog-slug'
@@ -176,11 +177,21 @@ export async function updateArtistaWithPseudonymsAction(
         mode: 'immediate'
       })
     }
-    if (catalogSlugChanged || catalogDataChanged || catalogFieldsChanged(prevData, parsedArtist.data)) {
+    const catalogProjectionChanged =
+      catalogSlugChanged || catalogDataChanged || catalogFieldsChanged(prevData, parsedArtist.data)
+    if (catalogProjectionChanged) {
       updateTag(CATALOG_BASE_CACHE_TAG)
       updateTag(CATALOG_CACHE_TAG)
       void revalidateWebCache({ tag: CATALOG_BASE_CACHE_TAG })
       void revalidateWebCache({ tag: CATALOG_CACHE_TAG, path: '/catalogo' })
+    }
+    if (catalogProjectionChanged) {
+      void revalidateWebCache({
+        tag: FESTIVAL_CRITICAL_CACHE_TAG,
+        mode: 'immediate',
+        path: '/festivales/[slug]',
+        pathType: 'page'
+      })
     }
     if (
       featuredMembershipEligible &&
@@ -331,11 +342,20 @@ export async function updateArtistaAction(
       mode: 'immediate'
     })
   }
-  if (catalogSlugChanged || catalogDataChanged) {
+  const catalogProjectionChanged = catalogSlugChanged || catalogDataChanged
+  if (catalogProjectionChanged) {
     updateTag(CATALOG_BASE_CACHE_TAG)
     updateTag(CATALOG_CACHE_TAG)
     void revalidateWebCache({ tag: CATALOG_BASE_CACHE_TAG })
     void revalidateWebCache({ tag: CATALOG_CACHE_TAG, path: '/catalogo' })
+  }
+  if (catalogProjectionChanged) {
+    void revalidateWebCache({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
+    })
   }
   if (
     featuredMembershipEligible &&
