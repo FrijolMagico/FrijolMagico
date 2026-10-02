@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
-import { CANONICAL_CATALOG_SLUGS_CACHE_TAG } from '@frijolmagico/cache-tags'
+import {
+  CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG,
+} from '@frijolmagico/cache-tags'
 
 const updateTag = mock(() => {})
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
@@ -44,6 +47,12 @@ describe('deleteCatalogAction canonical slug invalidation', () => {
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
     })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page',
+    })
   })
 
   test('does not invalidate canonical slugs after deleting an inactive row while preserving catalog invalidation', async () => {
@@ -63,6 +72,24 @@ describe('deleteCatalogAction canonical slug invalidation', () => {
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
     })
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page',
+    })
+  })
+
+  test('does not invalidate caches when deletion fails', async () => {
+    deleteCatalogEntry.mockRejectedValue(new Error('Deletion failed'))
+
+    await expect(deleteCatalogAction(9)).resolves.toEqual({
+      success: false,
+      errors: [{ entityType: 'catalogo', message: 'Deletion failed' }],
+    })
+
+    expect(updateTag).not.toHaveBeenCalled()
+    expect(revalidateWebCache).not.toHaveBeenCalled()
   })
 
   test('preserves Featured invalidation for a deleted featured row', async () => {

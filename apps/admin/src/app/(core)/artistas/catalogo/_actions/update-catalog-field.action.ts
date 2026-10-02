@@ -10,7 +10,8 @@ import {
   CATALOG_BASE_CACHE_TAG,
   CATALOG_CACHE_TAG,
   CATALOG_PARTICIPATION_CACHE_TAG,
-  FEATURED_ARTISTS_CACHE_TAG
+  FEATURED_ARTISTS_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import { revalidateWebCache } from '@/shared/lib/web-invalidation'
@@ -102,6 +103,12 @@ export async function updateCatalogFieldAction(
     void revalidateWebCache({
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
+    })
+    void revalidateWebCache({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
     })
   }
 

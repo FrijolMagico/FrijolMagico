@@ -3,19 +3,27 @@ import { beforeEach, describe, expect, mock, test } from 'bun:test'
 import { artist as artistTables } from '@frijolmagico/database/schema'
 import {
   CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG,
   FEATURED_ARTISTS_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
 const updateTag = mock((_tag: string) => {})
 const revalidateWebCache = mock(
-  async (_options: { tag?: string; path?: string; mode?: 'immediate' | 'swr' }) => ({
+  async (_options: {
+    tag?: string
+    path?: string
+    pathType?: 'page'
+    mode?: 'immediate' | 'swr'
+  }) => ({
     revalidated: true
   })
 )
 let storedActivo = false
 let storedDestacado = false
 let storedDeletedAt: Date | null = null
+let catalogRowExists = true
+let avatarExists = true
 let updateValues: Record<string, unknown> | null = null
 
 mock.module('server-only', () => ({}))
@@ -29,15 +37,19 @@ mock.module('@frijolmagico/database/orm', () => ({
         where: () => ({
           limit: async () =>
             table === artistTables.catalogArtist
-              ? [
-                {
-                  artistaId: 42,
-                  activo: storedActivo,
-                  destacado: storedDestacado,
-                  deletedAt: storedDeletedAt
-                }
-              ]
-              : [{ id: 7 }]
+              ? catalogRowExists
+                ? [
+                  {
+                    artistaId: 42,
+                    activo: storedActivo,
+                    destacado: storedDestacado,
+                    deletedAt: storedDeletedAt
+                  }
+                ]
+                : []
+              : avatarExists
+                ? [{ id: 7 }]
+                : []
         })
       })
     }),
@@ -62,6 +74,8 @@ describe('updateCatalogFieldAction — canonical slug invalidation', () => {
     storedActivo = false
     storedDestacado = false
     storedDeletedAt = null
+    catalogRowExists = true
+    avatarExists = true
     updateValues = null
   })
 
@@ -77,6 +91,12 @@ describe('updateCatalogFieldAction — canonical slug invalidation', () => {
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
     })
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
+    })
   })
 
   test('invalidates canonical slugs once when activo changes successfully', async () => {
@@ -90,6 +110,12 @@ describe('updateCatalogFieldAction — canonical slug invalidation', () => {
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
+    })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
     })
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FEATURED_ARTISTS_CACHE_TAG,
@@ -123,6 +149,57 @@ describe('updateCatalogFieldAction — canonical slug invalidation', () => {
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
     })
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
+    })
+  })
+
+  test('does not invalidate festival details when the catalog row is missing', async () => {
+    catalogRowExists = false
+
+    await expect(updateCatalogFieldAction(1, { activo: true })).resolves.toEqual({
+      success: true
+    })
+
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
+    })
+  })
+
+  test('does not invalidate festival details when validation fails', async () => {
+    await expect(
+      updateCatalogFieldAction(1, { activo: 'invalid' } as never)
+    ).resolves.toMatchObject({ success: false })
+
+    expect(updateValues).toBeNull()
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
+    })
+  })
+
+  test('does not invalidate festival details when the avatar guard fails', async () => {
+    avatarExists = false
+
+    await expect(updateCatalogFieldAction(1, { activo: true })).resolves.toMatchObject({
+      success: false
+    })
+
+    expect(updateValues).toBeNull()
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
+    })
   })
 
   test('preserves root-path Featured invalidation when destacado changes', async () => {
@@ -137,6 +214,12 @@ describe('updateCatalogFieldAction — canonical slug invalidation', () => {
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FEATURED_ARTISTS_CACHE_TAG,
       path: '/'
+    })
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
     })
     expect(revalidateWebCache).not.toHaveBeenCalledWith({
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,

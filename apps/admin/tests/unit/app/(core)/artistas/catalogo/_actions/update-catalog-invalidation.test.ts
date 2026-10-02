@@ -5,7 +5,8 @@ import { artist as artistTables } from '@frijolmagico/database/schema'
 import {
   ARTIST_DETAIL_CACHE_TAG,
   CANONICAL_CATALOG_SLUGS_CACHE_TAG,
-  FEATURED_ARTISTS_CACHE_TAG
+  FEATURED_ARTISTS_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 
 const updateTag = mock(() => {})
@@ -280,6 +281,12 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     })
     expect(updateTag).toHaveBeenCalledWith(ARTIST_DETAIL_CACHE_TAG)
     expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
+    })
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
       tag: FEATURED_ARTISTS_CACHE_TAG,
       mode: 'swr'
     })
@@ -306,6 +313,12 @@ describe('update-catalog action — best-effort cache invalidation', () => {
 
     expect(result).toEqual({ success: true })
     expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
+    })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FEATURED_ARTISTS_CACHE_TAG,
       mode: 'swr'
     })
@@ -330,6 +343,12 @@ describe('update-catalog action — best-effort cache invalidation', () => {
 
     expect(result).toEqual({ success: true })
     expect(updateTag).toHaveBeenCalledWith(ARTIST_DETAIL_CACHE_TAG)
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
+    })
     expect(revalidateWebCache).not.toHaveBeenCalledWith({
       tag: FEATURED_ARTISTS_CACHE_TAG,
       mode: 'swr'
@@ -414,12 +433,18 @@ describe('update-catalog action — best-effort cache invalidation', () => {
       mode: 'immediate'
     })
     expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
+    })
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
       tag: FEATURED_ARTISTS_CACHE_TAG,
       mode: 'swr'
     })
   })
 
-  test('invalidates Featured when an active catalog row selects a different pseudonym', async () => {
+  test('invalidates festival detail when an active catalog row selects a different pseudonym', async () => {
     initialCatalogActive = true
     selectedPseudonymId = 44
 
@@ -428,6 +453,12 @@ describe('update-catalog action — best-effort cache invalidation', () => {
       { ...validInput, activo: true, pseudonimoId: 44 }
     )
 
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
+    })
     expect(savedCatalogValues).toMatchObject({ pseudonimoId: 44 })
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FEATURED_ARTISTS_CACHE_TAG,
@@ -480,12 +511,18 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     })
   })
 
-  test('invalidates canonical slugs when an inactive catalog row becomes active', async () => {
+  test('invalidates festival detail when an inactive catalog row becomes active', async () => {
     await updateCatalogAction(
       { success: false },
       { ...validInput, activo: true }
     )
 
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
+    })
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: 'catalogo:artistas:base',
       path: '/catalogo'
@@ -506,6 +543,12 @@ describe('update-catalog action — best-effort cache invalidation', () => {
 
     await updateCatalogAction({ success: false }, { ...validInput, activo: false })
 
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
+    })
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: 'catalogo:artistas:base',
       path: '/catalogo'

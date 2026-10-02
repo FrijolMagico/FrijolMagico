@@ -10,7 +10,8 @@ import { artist } from '@frijolmagico/database/schema'
 import {
   CANONICAL_CATALOG_SLUGS_CACHE_TAG,
   CATALOG_BASE_CACHE_TAG,
-  FEATURED_ARTISTS_CACHE_TAG
+  FEATURED_ARTISTS_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 import { toRawAssetPath } from '@frijolmagico/utils/cdn'
 import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
@@ -42,6 +43,15 @@ async function invalidateFeaturedArtists(): Promise<void> {
   await revalidateWebCacheBestEffort({
     tag: FEATURED_ARTISTS_CACHE_TAG,
     mode: 'swr'
+  })
+}
+
+async function invalidateFestivalDetail(): Promise<void> {
+  await revalidateWebCacheBestEffort({
+    tag: FESTIVAL_CRITICAL_CACHE_TAG,
+    mode: 'immediate',
+    path: '/festivales/[slug]',
+    pathType: 'page'
   })
 }
 
@@ -136,6 +146,7 @@ export async function persistArtistAvatarAction(
     if (committed) {
       await invalidateActivatedCatalog(claims, true)
       await invalidateFeaturedArtists()
+      await invalidateFestivalDetail()
       return { success: true, data: committed }
     }
 
@@ -219,6 +230,7 @@ export async function persistArtistAvatarAction(
     }
     await invalidateActivatedCatalog(claims, catalogActivationEvidence)
     await invalidateFeaturedArtists()
+    await invalidateFestivalDetail()
     return { success: true, data: avatar }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Error desconocido'

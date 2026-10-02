@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, mock, test } from 'bun:test'
 import {
   CANONICAL_CATALOG_SLUGS_CACHE_TAG,
   CATALOG_BASE_CACHE_TAG,
-  FEATURED_ARTISTS_CACHE_TAG
+  FEATURED_ARTISTS_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
@@ -155,6 +156,12 @@ describe('persist artist avatar cache invalidation', () => {
       tag: FEATURED_ARTISTS_CACHE_TAG,
       mode: 'swr'
     })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
+    })
   })
 
   test('recovers committed activation after an ambiguous transaction error', async () => {
@@ -172,6 +179,12 @@ describe('persist artist avatar cache invalidation', () => {
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: FEATURED_ARTISTS_CACHE_TAG,
       mode: 'swr'
+    })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
     })
   })
 
@@ -204,6 +217,12 @@ describe('persist artist avatar cache invalidation', () => {
       tag: FEATURED_ARTISTS_CACHE_TAG,
       mode: 'swr'
     })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
+    })
   })
 
   test('re-invalidates the canonical catalog cache for an idempotent retry', async () => {
@@ -231,6 +250,24 @@ describe('persist artist avatar cache invalidation', () => {
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: FEATURED_ARTISTS_CACHE_TAG,
       mode: 'swr'
+    })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
+    })
+  })
+
+  test('does not invalidate festival detail when the receipt is invalid', async () => {
+    const result = await persistArtistAvatarAction({ receipt: 'invalid' })
+
+    expect(result).toMatchObject({ success: false })
+    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
     })
   })
 })

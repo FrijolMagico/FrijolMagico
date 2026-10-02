@@ -12,6 +12,7 @@ import {
   CATALOG_CACHE_TAG,
   CATALOG_PARTICIPATION_CACHE_TAG,
   FEATURED_ARTISTS_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG,
 } from '@frijolmagico/cache-tags'
 import type { ActionState } from '@/shared/types/actions'
 
@@ -26,6 +27,12 @@ export async function deleteCatalogAction(id: number): Promise<ActionState> {
       void revalidateWebCache({
         tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
         mode: 'immediate'
+      })
+      void revalidateWebCache({
+        tag: FESTIVAL_CRITICAL_CACHE_TAG,
+        mode: 'immediate',
+        path: '/festivales/[slug]',
+        pathType: 'page',
       })
     }
 
