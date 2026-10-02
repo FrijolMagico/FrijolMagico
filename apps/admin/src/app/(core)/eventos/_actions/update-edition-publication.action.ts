@@ -26,7 +26,7 @@ const WEB_CACHE_INVALIDATIONS = [
   { tag: FESTIVALES_CACHE_TAG, mode: 'swr' }
 ] as const
 
-async function syncPublicationCaches() {
+async function syncPublicationCaches(editionMatched: boolean) {
   for (const tag of LOCAL_CACHE_TAGS) {
     try {
       updateTag(tag)
@@ -35,17 +35,39 @@ async function syncPublicationCaches() {
     }
   }
 
+  const webInvalidations = [
+    ...WEB_CACHE_INVALIDATIONS.map(({ tag, mode }) => ({
+      tag,
+      mode,
+      ...(editionMatched && tag === FESTIVAL_CRITICAL_CACHE_TAG
+        ? { path: '/festivales/[slug]', pathType: 'page' as const }
+        : {}),
+      ...(editionMatched && tag === FESTIVALES_CACHE_TAG
+        ? { path: '/festivales', pathType: 'page' as const }
+        : {})
+    })),
+    ...(editionMatched
+      ? [
+          { mode: 'immediate' as const, path: '/', pathType: 'page' as const },
+          { mode: 'immediate' as const, path: '/', pathType: 'layout' as const }
+        ]
+      : [])
+  ]
+
   const results = await Promise.allSettled(
-    WEB_CACHE_INVALIDATIONS.map(({ tag, mode }) =>
-      Promise.resolve().then(() => revalidateWebCache({ tag, mode }))
+    webInvalidations.map((invalidation) =>
+      Promise.resolve().then(() => revalidateWebCache(invalidation))
     )
   )
 
   results.forEach((result, index) => {
     if (result.status === 'rejected') {
-      console.error('[edition-publication] Web cache sync failed', {
-        tag: WEB_CACHE_INVALIDATIONS[index].tag
-      })
+      const invalidation = webInvalidations[index]
+      console.error('[edition-publication] Web cache sync failed',
+        'tag' in invalidation
+          ? { tag: invalidation.tag }
+          : { path: invalidation.path, pathType: invalidation.pathType }
+      )
     }
   })
 }
@@ -68,12 +90,13 @@ export async function updateEditionPublicationAction(
       }
     }
 
-    await db
+    const [updatedEdition] = await db
       .update(eventEdition)
       .set({ published: parsed.data.published })
       .where(eq(eventEdition.id, parsed.data.id))
+      .returning({ id: eventEdition.id })
 
-    await syncPublicationCaches()
+    await syncPublicationCaches(updatedEdition !== undefined)
 
     return { success: true, data: { published: parsed.data.published } }
   } catch (error) {
