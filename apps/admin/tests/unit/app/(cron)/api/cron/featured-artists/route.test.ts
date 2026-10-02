@@ -42,7 +42,7 @@ mock.module('@/shared/lib/web-invalidation', () => ({
   revalidateWebCacheBestEffort: mockRevalidateWebCacheBestEffort
 }))
 
-import { GET } from '@/app/(cron)/api/cron/featured-artists/route'
+const { GET } = await import('@/app/(cron)/api/cron/featured-artists/route')
 
 // ---------------------------------------------------------------------------
 // Helpers

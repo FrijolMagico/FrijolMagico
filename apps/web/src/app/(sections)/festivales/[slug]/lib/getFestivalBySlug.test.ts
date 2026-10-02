@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
 
 import { notFound } from 'next/navigation'
+import { FESTIVAL_CRITICAL_CACHE_TAG } from '@frijolmagico/cache-tags'
 
 import { executeQueryMock } from '@/test-utils/mockDatabase'
 
@@ -12,8 +13,11 @@ mock.module('next/navigation', () => ({
   })
 }))
 
+const cacheTagMock = mock<(tag: string) => void>(() => {})
+
 mock.module('next/cache', () => ({
-  cacheTag: mock(() => {})
+  cacheLife: mock(() => {}),
+  cacheTag: cacheTagMock
 }))
 
 mock.module('@/infra/config/dataSourceConfig', () => ({
@@ -23,6 +27,7 @@ mock.module('@/infra/config/dataSourceConfig', () => ({
 
 beforeEach(() => {
   executeQueryMock.mockReset()
+  cacheTagMock.mockClear()
 })
 
 const baseRawResult = {
@@ -49,6 +54,9 @@ describe('getFestivalBySlug', () => {
     const result = await getFestivalBySlug('edicion-15-1')
 
     expect(result.slug).toBe('edicion-15-1')
+    expect(cacheTagMock.mock.calls.map(([tag]) => tag)).toEqual([
+      FESTIVAL_CRITICAL_CACHE_TAG
+    ])
   })
 
   test('calls notFound when repository returns null', async () => {

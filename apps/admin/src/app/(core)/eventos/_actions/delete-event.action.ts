@@ -7,8 +7,18 @@ import { db } from '@frijolmagico/database/orm'
 import { events } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import type { ActionState } from '@/shared/types/actions'
-import { EVENT_CACHE_TAG } from '@frijolmagico/cache-tags'
-import { revalidateWebCache } from '@/shared/lib/web-invalidation'
+import {
+  CATALOG_CACHE_TAG,
+  CATALOG_EDITION_DATES_CACHE_TAG,
+  CATALOG_PARTICIPATION_CACHE_TAG,
+  EVENT_CACHE_TAG,
+  FESTIVALES_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG
+} from '@frijolmagico/cache-tags'
+import {
+  revalidateWebCache,
+  revalidateWebCacheBestEffort
+} from '@/shared/lib/web-invalidation'
 
 const { event } = events
 
@@ -23,15 +33,42 @@ export async function deleteEventAction(id: number): Promise<ActionState> {
       }
     }
 
-    await db.delete(event).where(eq(event.id, id))
+    const deletedEvents = await db
+      .delete(event)
+      .where(eq(event.id, id))
+      .returning({ id: event.id })
+
+    if (deletedEvents.length === 0) return { success: true }
 
     updateTag(EVENT_CACHE_TAG)
-    try {
-      await revalidateWebCache({ tag: EVENT_CACHE_TAG })
-    } catch {
-      console.error('[event-crud] Web cache sync failed', {
-        tag: EVENT_CACHE_TAG
-      })
+    for (const [tag, mode] of [
+      [FESTIVAL_CRITICAL_CACHE_TAG, 'immediate'],
+      [FESTIVALES_CACHE_TAG, 'swr']
+    ] as const) {
+      try {
+        await revalidateWebCache({
+          tag,
+          mode,
+          ...(tag === FESTIVAL_CRITICAL_CACHE_TAG
+            ? { path: '/festivales/[slug]', pathType: 'page' as const }
+            : { path: '/festivales', pathType: 'page' as const })
+        })
+      } catch {
+        console.error('[event-crud] Web cache sync failed', { tag })
+      }
+    }
+    void revalidateWebCacheBestEffort({ path: '/', pathType: 'page' })
+    void revalidateWebCacheBestEffort({ path: '/', pathType: 'layout' })
+    for (const tag of [
+      CATALOG_CACHE_TAG,
+      CATALOG_PARTICIPATION_CACHE_TAG,
+      CATALOG_EDITION_DATES_CACHE_TAG
+    ]) {
+      try {
+        await revalidateWebCache({ tag })
+      } catch {
+        console.error('[event-crud] Web cache sync failed', { tag })
+      }
     }
     return { success: true }
   } catch (error) {

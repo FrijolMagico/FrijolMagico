@@ -32,9 +32,13 @@ const discardArtistAvatarAction = mock(async (): Promise<DiscardResult> => ({
   data: null
 }))
 const revalidateTag = mock(() => {})
+const revalidateWebCacheBestEffort = mock(async () => {})
 
 mock.module('server-only', () => ({}))
 mock.module('next/cache', () => ({ revalidateTag }))
+mock.module('@/shared/lib/web-invalidation', () => ({
+  revalidateWebCacheBestEffort
+}))
 mock.module('@/shared/lib/auth/utils', () => ({
   getSession,
   requireAuth,
@@ -76,6 +80,7 @@ describe('asset persistence routes', () => {
     discardArtistAvatarAction.mockReset()
     discardArtistAvatarAction.mockResolvedValue({ success: true, data: null })
     revalidateTag.mockClear()
+    revalidateWebCacheBestEffort.mockClear()
   })
 
   test('rejects unauthenticated persist and discard before calling actions', async () => {
@@ -107,14 +112,23 @@ describe('asset persistence routes', () => {
     expect(discardResponse.status).toBe(204)
   })
 
-  test('expires catalog and artist tags after a successful persistence response', async () => {
+  test('expires the base catalog and artist tags after a successful persistence response', async () => {
     const response = await persist(request('/api/assets/persist'))
 
     expect(response.status).toBe(200)
+    expect(revalidateTag).toHaveBeenCalledWith('catalogo:artistas:base', {
+      expire: 0
+    })
     expect(revalidateTag).toHaveBeenCalledWith('catalogo:artistas', {
       expire: 0
     })
     expect(revalidateTag).toHaveBeenCalledWith('artistas', { expire: 0 })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: 'catalogo:artistas:base'
+    })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: 'catalogo:artistas'
+    })
   })
 
   test('keeps the committed persistence response when tag invalidation fails', async () => {
@@ -137,6 +151,12 @@ describe('asset persistence routes', () => {
       '[assets/persist] Cache invalidation failed',
       expect.any(Error)
     )
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: 'catalogo:artistas:base'
+    })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: 'catalogo:artistas'
+    })
     console.error = originalError
   })
 
@@ -154,6 +174,8 @@ describe('asset persistence routes', () => {
     const discardResponse = await discard(request('/api/assets/discard'))
 
     expect(persistResponse.status).toBe(400)
+    expect(revalidateTag).not.toHaveBeenCalled()
+    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
     await expect(persistResponse.json()).resolves.toEqual({
       error: 'INVALID_RECEIPT'
     })

@@ -6,7 +6,11 @@ import { eq } from 'drizzle-orm'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/shared/lib/auth/utils'
-import { BAND_ACTIVE_CACHE_TAG } from '@frijolmagico/cache-tags'
+import {
+  BAND_ACTIVE_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG
+} from '@frijolmagico/cache-tags'
+import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
 import type { ActionState } from '@/shared/types/actions'
 import {
   bandUpdateSchema,
@@ -32,10 +36,34 @@ export async function updateBandaAction(
     }
 
     const { id, ...updateValues } = parsed.data
+    let bandNameChanged = false
 
-    await db.update(artist.band).set(updateValues).where(eq(artist.band.id, id))
+    await db.transaction(async (transaction) => {
+      const [existingBand] = await transaction
+        .select({ name: artist.band.name })
+        .from(artist.band)
+        .where(eq(artist.band.id, id))
+
+      await transaction
+        .update(artist.band)
+        .set(updateValues)
+        .where(eq(artist.band.id, id))
+
+      bandNameChanged =
+        existingBand !== undefined &&
+        updateValues.name !== undefined &&
+        existingBand.name !== updateValues.name
+    })
 
     nextCache.updateTag?.(BAND_ACTIVE_CACHE_TAG)
+    if (bandNameChanged) {
+      void revalidateWebCacheBestEffort({
+        tag: FESTIVAL_CRITICAL_CACHE_TAG,
+        mode: 'immediate',
+        path: '/festivales/[slug]',
+        pathType: 'page'
+      })
+    }
 
     return { success: true }
   } catch (error) {

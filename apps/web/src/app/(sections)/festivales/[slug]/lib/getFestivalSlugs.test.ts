@@ -37,25 +37,16 @@ describe('getFestivalSlugs', () => {
     expect(slugs).toEqual(['edicion-15-1'])
   })
 
-  test('falls back to mock slugs when local DB query fails', async () => {
-    executeQueryMock.mockResolvedValueOnce({
-      data: [],
-      error: new Error('DB error')
-    })
+  test('propagates local DB query failures', async () => {
+    const failure = new Error('DB error')
+    executeQueryMock.mockResolvedValueOnce({ data: [], error: failure })
 
-    const slugs = await getFestivalSlugs()
-
-    expect(slugs).toEqual(['edicion-xv-1', 'edicion-3-2'])
+    await expect(getFestivalSlugs()).rejects.toBe(failure)
   })
 
-  test('falls back to mock slugs when local DB returns no rows', async () => {
-    executeQueryMock.mockResolvedValueOnce({
-      data: [],
-      error: null
-    })
+  test('returns an empty list when the successful query has no rows', async () => {
+    executeQueryMock.mockResolvedValueOnce({ data: [], error: null })
 
-    const slugs = await getFestivalSlugs()
-
-    expect(slugs).toEqual(['edicion-xv-1', 'edicion-3-2'])
+    await expect(getFestivalSlugs()).resolves.toEqual([])
   })
 })

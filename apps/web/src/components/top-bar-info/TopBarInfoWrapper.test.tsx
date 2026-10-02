@@ -13,6 +13,7 @@ mock.module('next/link', () => ({
 
 // Mock next/cache
 mock.module('next/cache', () => ({
+  cacheLife: mock(() => {}),
   cacheTag: mock(() => {})
 }))
 

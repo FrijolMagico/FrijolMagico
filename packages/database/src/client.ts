@@ -21,9 +21,8 @@ export interface TursoConfig {
 export function getTursoClient(config?: TursoConfig): Client {
   if (client) return client
 
-  // Determine the database URL, prioritizing config over environment variables and finally local dev URL (Turso CLI default)
-  const url =
-    config?.url || process.env.TURSO_DATABASE_URL || 'http://127.0.0.1:8080'
+  // Determine the database URL, prioritizing config over the environment.
+  const url = config?.url || process.env.TURSO_DATABASE_URL
 
   if (!url) {
     throw new Error(
@@ -31,11 +30,13 @@ export function getTursoClient(config?: TursoConfig): Client {
     )
   }
 
-  const authToken = config?.authToken || process.env.TURSO_AUTH_TOKEN
+  const authToken = url.startsWith('file:')
+    ? undefined
+    : config?.authToken || process.env.TURSO_AUTH_TOKEN
 
   client = createClient({
     url,
-    authToken
+    ...(authToken ? { authToken } : {})
   })
 
   return client

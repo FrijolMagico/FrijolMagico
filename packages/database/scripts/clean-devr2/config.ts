@@ -1,8 +1,10 @@
 /**
- * Configuration for the dev R2 reset script (`bun run reset:dev-r2`).
+ * Configuration for the retired legacy manual dev R2 reset script.
+ * Do not use it with real database snapshots: seed assets are not a complete
+ * inventory of the assets referenced by a snapshot.
  *
- * This file is code, not runtime input: changing it requires a commit, so the
- * safety guarantees of the script cannot be overridden from an environment.
+ * This file is code, not runtime input; environment variables cannot override
+ * its configuration.
  */
 
 import type { DevR2Config } from './types'

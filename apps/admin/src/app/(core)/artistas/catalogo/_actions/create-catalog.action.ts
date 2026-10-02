@@ -7,7 +7,9 @@ import { generateKeyBetween } from 'fractional-indexing'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import {
+  CATALOG_BASE_CACHE_TAG,
   CATALOG_CACHE_TAG,
+  CATALOG_PARTICIPATION_CACHE_TAG,
   FEATURED_ARTISTS_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 import { requireAuth } from '@/shared/lib/auth/utils'
@@ -120,15 +122,14 @@ export async function createCatalogAction(
     // NOTE: Soft-deleted catalog rows still rely on the current unique `artistaId`
     // constraint. This change does not introduce restore-or-reinsert semantics.
 
-    try {
-      updateTag(CATALOG_CACHE_TAG)
-    } catch (error) {
-      console.error('Catalog cache invalidation failed', error)
+    for (const tag of [CATALOG_BASE_CACHE_TAG, CATALOG_PARTICIPATION_CACHE_TAG, CATALOG_CACHE_TAG]) {
+      try {
+        updateTag(tag)
+      } catch (error) {
+        console.error('Catalog cache invalidation failed', error)
+      }
+      void revalidateWebCacheBestEffort({ tag, path: '/catalogo' })
     }
-    void revalidateWebCacheBestEffort({
-      tag: CATALOG_CACHE_TAG,
-      path: '/catalogo'
-    })
 
     if ('destacado' in parsed.data && parsed.data.destacado) {
       void revalidateWebCacheBestEffort({

@@ -4,6 +4,12 @@ import { EMPTY_HISTORY } from '@/core/artistas/_lib/aggregate-history'
 import type { HistoryFieldEntry } from '@/core/artistas/_lib/aggregate-history'
 
 mock.module('server-only', () => ({}))
+mock.module('@/core/artistas/_actions/insert-artist-history.action', () => ({
+  insertArtistHistoryItemAction: async () => ({ success: false })
+}))
+mock.module('@/core/artistas/_actions/delete-artist-history-field.action', () => ({
+  deleteArtistHistoryFieldAction: async () => ({ success: false })
+}))
 
 const { optimisticReducer, FIELD_TO_STORE_KEY } = await import(
   '@/core/artistas/_hooks/use-artist-history'

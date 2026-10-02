@@ -13,15 +13,18 @@ const artistTable = artistSchema.artist
  * 2. Soft-deletes: sets deletedAt, activo=false, destacado=false
  * 3. If it was featured, picks 1 random eligible replacement and marks it
  *
- * @returns whether the deleted entry was featured before deletion
+ * @returns whether the deleted entry was featured and active before deletion
  */
 export async function deleteCatalogEntry(
   tx: Transaction,
   id: number,
-): Promise<{ wasFeatured: boolean }> {
+): Promise<{ wasFeatured: boolean; wasActive: boolean }> {
   // Step 1: Read current state
   const [current] = await tx
-    .select({ destacado: catalogArtist.destacado })
+    .select({
+      destacado: catalogArtist.destacado,
+      activo: catalogArtist.activo,
+    })
     .from(catalogArtist)
     .where(
       and(eq(catalogArtist.id, id), isNotDeleted(catalogArtist.deletedAt)),
@@ -67,5 +70,5 @@ export async function deleteCatalogEntry(
     }
   }
 
-  return { wasFeatured: current.destacado }
+  return { wasFeatured: current.destacado, wasActive: current.activo }
 }

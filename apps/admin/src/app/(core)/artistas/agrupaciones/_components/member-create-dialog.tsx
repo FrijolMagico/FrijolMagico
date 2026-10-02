@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -24,20 +24,26 @@ import {
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 
+import { getMemberPseudonymsAction } from '../_actions/get-member-pseudonyms.action'
 import { searchArtistsAction } from '../_actions/search-artists.action'
 import { useCollectiveDraftStore } from '../_store/use-collective-draft-store'
 import type { ArtistOption } from '../_types/collective.types'
+import type { MemberPseudonymOption } from '../_actions/get-member-pseudonyms.action'
 
 function resetDialogState(
   setSelectedArtist: (artist: ArtistOption | null) => void,
   setRole: (role: string) => void,
   setSearch: (search: string) => void,
-  setSearchResults: (results: ArtistOption[]) => void
+  setSearchResults: (results: ArtistOption[]) => void,
+  setPseudonyms: (pseudonyms: MemberPseudonymOption[]) => void,
+  setPseudonymId: (pseudonymId: number | null) => void
 ) {
   setSelectedArtist(null)
   setRole('')
   setSearch('')
   setSearchResults([])
+  setPseudonyms([])
+  setPseudonymId(null)
 }
 
 export function MemberCreateDialog() {
@@ -66,6 +72,10 @@ export function MemberCreateDialog() {
   const [search, setSearch] = useState('')
   const [searchResults, setSearchResults] = useState<ArtistOption[]>([])
   const [isSearching, setIsSearching] = useState(false)
+  const [pseudonyms, setPseudonyms] = useState<MemberPseudonymOption[]>([])
+  const [pseudonymId, setPseudonymId] = useState<number | null>(null)
+  const [isLoadingPseudonyms, setIsLoadingPseudonyms] = useState(false)
+  const pseudonymRequestId = useRef(0)
 
   const selectedArtistIds = new Set([
     ...existingMembers.map((member) => member.artistId),
@@ -81,7 +91,16 @@ export function MemberCreateDialog() {
   )
 
   const closeDialog = () => {
-    resetDialogState(setSelectedArtist, setRole, setSearch, setSearchResults)
+    pseudonymRequestId.current += 1
+    setIsLoadingPseudonyms(false)
+    resetDialogState(
+      setSelectedArtist,
+      setRole,
+      setSearch,
+      setSearchResults,
+      setPseudonyms,
+      setPseudonymId
+    )
     closeMemberCreate()
   }
 
@@ -109,6 +128,36 @@ export function MemberCreateDialog() {
     }
   }
 
+  const handleSelectArtist = async (artist: ArtistOption | null) => {
+    const requestId = ++pseudonymRequestId.current
+    setSelectedArtist(artist)
+    setPseudonyms([])
+    setPseudonymId(null)
+    if (!artist) {
+      setIsLoadingPseudonyms(false)
+      return
+    }
+
+    setIsLoadingPseudonyms(true)
+    try {
+      const options = await getMemberPseudonymsAction(artist.id)
+      if (requestId !== pseudonymRequestId.current) return
+
+      setPseudonyms(options)
+      setPseudonymId(options.find((option) => option.isPrimary)?.id ?? null)
+    } catch (error) {
+      if (requestId === pseudonymRequestId.current) {
+        toast.error(
+          error instanceof Error ? error.message : 'No se pudieron cargar los pseudónimos'
+        )
+      }
+    } finally {
+      if (requestId === pseudonymRequestId.current) {
+        setIsLoadingPseudonyms(false)
+      }
+    }
+  }
+
   const handleAddMember = () => {
     if (!selectedArtist) {
       toast.error('Seleccioná un artista para continuar')
@@ -117,7 +166,10 @@ export function MemberCreateDialog() {
 
     addMember({
       artistId: selectedArtist.id,
-      pseudonym: selectedArtist.pseudonym,
+      pseudonymId,
+      pseudonym:
+        pseudonyms.find((option) => option.id === pseudonymId)?.pseudonym ??
+        selectedArtist.pseudonym,
       city: selectedArtist.city,
       role: role.trim() || null,
       active: true
@@ -147,7 +199,7 @@ export function MemberCreateDialog() {
               <Combobox
                 items={staticArtists}
                 value={selectedArtist}
-                onValueChange={setSelectedArtist}
+                onValueChange={handleSelectArtist}
                 itemToStringLabel={(item) => item?.pseudonym ?? ''}
                 isItemEqualToValue={(item, value) => item.id === value.id}
               >
@@ -163,6 +215,11 @@ export function MemberCreateDialog() {
                       <ComboboxItem key={artist.id} value={artist}>
                         <div className='flex flex-col'>
                           <span>{artist.pseudonym}</span>
+                          {artist.aliasLabel && (
+                            <span className='text-muted-foreground text-xs'>
+                              Coincide con: {artist.aliasLabel}
+                            </span>
+                          )}
                           <span className='text-muted-foreground text-xs'>
                             {artist.city || 'Sin ciudad'}
                           </span>
@@ -219,11 +276,16 @@ export function MemberCreateDialog() {
                             ? 'bg-muted w-full rounded-md border p-3 text-left'
                             : 'w-full rounded-md border p-3 text-left'
                         }
-                        onClick={() => setSelectedArtist(artist)}
+                        onClick={() => void handleSelectArtist(artist)}
                       >
                         <span className='block font-medium'>
                           {artist.pseudonym}
                         </span>
+                        {artist.aliasLabel && (
+                          <span className='text-muted-foreground block text-sm'>
+                            Coincide con: {artist.aliasLabel}
+                          </span>
+                        )}
                         <span className='text-muted-foreground text-sm'>
                           {artist.city || 'Sin ciudad'}
                         </span>
@@ -232,6 +294,26 @@ export function MemberCreateDialog() {
                   })
                 )}
               </div>
+            </div>
+          )}
+
+          {selectedArtist && pseudonyms.length > 0 && (
+            <div className='space-y-2'>
+              <Label htmlFor='member-pseudonym'>Pseudónimo</Label>
+              <select
+                id='member-pseudonym'
+                className='border-input bg-background h-9 w-full rounded-md border px-3 text-sm'
+                value={pseudonymId?.toString() ?? ''}
+                onChange={(event) =>
+                  setPseudonymId(event.target.value ? Number(event.target.value) : null)
+                }
+              >
+                {pseudonyms.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.pseudonym}{option.isPrimary ? ' (principal)' : ''}
+                  </option>
+                ))}
+              </select>
             </div>
           )}
 
@@ -253,7 +335,11 @@ export function MemberCreateDialog() {
           <Button
             type='button'
             onClick={handleAddMember}
-            disabled={!selectedArtist}
+            disabled={
+              !selectedArtist ||
+              !pseudonyms.some((option) => option.id === pseudonymId) ||
+              isLoadingPseudonyms
+            }
           >
             Agregar miembro
           </Button>

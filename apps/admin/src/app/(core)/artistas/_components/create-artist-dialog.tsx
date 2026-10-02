@@ -54,7 +54,8 @@ export function CreateArtistDialog() {
         [...pseudonyms, primaryPseudonym].map((pseudonym) => pseudonym.trim()).filter(Boolean)
       )]
       const slug = toSlug(primaryPseudonym)
-      const { pseudonimo: _pseudonimo, ...artist } = data
+      const { pseudonimo, ...artist } = data
+      void pseudonimo
       const result = await createArtistWithPseudonymsAction(
         { success: false },
         {

@@ -11,6 +11,8 @@ import { revalidateWebCache } from '@/shared/lib/web-invalidation'
 import { deleteCatalogEntry } from '@/shared/lib/catalog-artist-deletion'
 import {
   ARTIST_CACHE_TAG,
+  CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+  CATALOG_BASE_CACHE_TAG,
   CATALOG_CACHE_TAG,
   FEATURED_ARTISTS_CACHE_TAG,
 } from '@frijolmagico/cache-tags'
@@ -22,7 +24,11 @@ export async function deleteArtistaAction(id: number): Promise<ActionState> {
 
     // Find catalog entries for this artist before deletion
     const catalogEntries = await db
-      .select({ id: artist.catalogArtist.id })
+      .select({
+        id: artist.catalogArtist.id,
+        activo: artist.catalogArtist.activo,
+        deletedAt: artist.catalogArtist.deletedAt,
+      })
       .from(artist.catalogArtist)
       .where(
         and(
@@ -56,6 +62,14 @@ export async function deleteArtistaAction(id: number): Promise<ActionState> {
     })
 
     updateTag(ARTIST_CACHE_TAG)
+    updateTag(CATALOG_BASE_CACHE_TAG)
+    if (catalogEntries.some((entry) => entry.activo && entry.deletedAt === null)) {
+      void revalidateWebCache({
+        tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+        mode: 'immediate',
+      })
+    }
+    void revalidateWebCache({ tag: CATALOG_BASE_CACHE_TAG })
     void revalidateWebCache({ tag: CATALOG_CACHE_TAG, path: '/catalogo' })
 
     if (wasFeatured) {

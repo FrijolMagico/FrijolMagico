@@ -3,7 +3,6 @@ import { getDataSource } from '@/infra/config/dataSourceConfig'
 
 import { mapFestivalDetail } from './mappers/festivalDetailMapper'
 import { FESTIVAL_DETAIL_QUERY } from './queries/festivalDetailQuery'
-import { getFestivalDetailMock } from './mocks/festivalDetailData.mock'
 
 import type { FestivalDetail, RawFestivalDetail } from '../../types/festival'
 
@@ -17,27 +16,32 @@ export async function festivalDetailRepository(
   const source = getDataSource({ prod: 'database' })
 
   if (source === 'local' || source === 'database') {
-    try {
-      const { data, error } = await executeQuery<RawFestivalDetail>(
-        FESTIVAL_DETAIL_QUERY,
-        [slug]
-      )
+    const { data, error } = await executeQuery<RawFestivalDetail>(
+      FESTIVAL_DETAIL_QUERY,
+      [slug]
+    )
 
-      if (!error && data && data.length > 0) {
-        const raw = JSON.parse(data[0].resultado) as FestivalDetail
+    if (error) {
+      throw error
+    }
 
-        if (raw.slug) {
-          return mapFestivalDetail(raw)
-        }
-      }
-    } catch {
-      console.warn('⚠️ Unable to load festival detail from database')
+    if (!data || data.length === 0) {
       return null
     }
 
-    console.warn('⚠️ Unable to load festival detail from database')
-    return null
+    try {
+      const raw = JSON.parse(data[0].resultado) as FestivalDetail
+
+      if (raw.slug) {
+        return mapFestivalDetail(raw)
+      }
+
+      return null
+    } catch {
+      console.warn('⚠️ Unable to map festival detail query result')
+      return null
+    }
   }
 
-  return source === 'mock' ? (getFestivalDetailMock(slug) ?? null) : null
+  throw new Error(`Unsupported data source: ${source}`)
 }

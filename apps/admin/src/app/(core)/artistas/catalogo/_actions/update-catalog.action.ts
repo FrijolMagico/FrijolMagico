@@ -9,8 +9,12 @@ import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import {
   ARTIST_DETAIL_CACHE_TAG,
+  CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+  CATALOG_BASE_CACHE_TAG,
   CATALOG_CACHE_TAG,
-  FEATURED_ARTISTS_CACHE_TAG
+  CATALOG_PARTICIPATION_CACHE_TAG,
+  FEATURED_ARTISTS_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 import { getAvatarUrl } from '@frijolmagico/utils/cdn'
 import { requireAuth } from '@/shared/lib/auth/utils'
@@ -81,6 +85,12 @@ export async function updateCatalogAction(
   const intent = requestedIntent ?? AVATAR_INTENT.UNCHANGED
   if (!artistaId) return conflict()
 
+  let activeStateChanged = false
+  let festivalDetailChanged = false
+  let catalogSlugChanged = false
+  let featuredSelectionChanged = false
+  let canonicalCatalogSlugChanged = false
+  let publicFeaturedStateChanged = false
   try {
     const result = await db.transaction(async (tx) => {
       const [ownedPseudonym] = await tx
@@ -157,12 +167,51 @@ export async function updateCatalogAction(
       }
 
       const [currentCatalog] = await tx
-        .select({ pseudonimoId: artist.catalogArtist.pseudonimoId })
+        .select({
+          pseudonimoId: artist.catalogArtist.pseudonimoId,
+          activo: artist.catalogArtist.activo,
+          destacado: artist.catalogArtist.destacado,
+          deletedAt: artist.catalogArtist.deletedAt
+        })
         .from(artist.catalogArtist)
         .where(eq(artist.catalogArtist.id, id))
         .limit(1)
+      if (currentCatalog && currentCatalog.deletedAt === null) {
+        activeStateChanged = activo !== undefined && currentCatalog.activo !== activo
+        festivalDetailChanged = activeStateChanged
+        if (destacado !== undefined) {
+          const eligibleAfter = activo ?? currentCatalog.activo
+          publicFeaturedStateChanged =
+            (currentCatalog.activo && currentCatalog.destacado) !==
+            (eligibleAfter && destacado)
+        }
+      }
+      if (
+        intent === AVATAR_INTENT.HISTORICAL &&
+        currentCatalog &&
+        currentCatalog.deletedAt === null &&
+        (activo ?? currentCatalog.activo)
+      ) {
+        festivalDetailChanged = true
+        if (destacado ?? currentCatalog.destacado) {
+          featuredSelectionChanged = true
+        }
+      }
       if (currentCatalog && currentCatalog.pseudonimoId !== pseudonimoId) {
-        await allocateCatalogSlug(tx, artistaId, ownedPseudonym.pseudonimo)
+        catalogSlugChanged = await allocateCatalogSlug(
+          tx,
+          artistaId,
+          ownedPseudonym.pseudonimo
+        )
+        const eligibleCatalogRow =
+          currentCatalog.deletedAt === null &&
+          (activo ?? currentCatalog.activo)
+        festivalDetailChanged ||= catalogSlugChanged && eligibleCatalogRow
+        featuredSelectionChanged = catalogSlugChanged && eligibleCatalogRow
+        canonicalCatalogSlugChanged =
+          catalogSlugChanged &&
+          currentCatalog.deletedAt === null &&
+          (activo ?? currentCatalog.activo)
       }
 
       await tx
@@ -197,14 +246,43 @@ export async function updateCatalogAction(
       // The restore committed; cache invalidation is best-effort.
     }
   }
-  try {
-    updateTag(CATALOG_CACHE_TAG)
-  } catch {
-    // DB mutation already committed; cache invalidation is best-effort.
+  if (festivalDetailChanged) {
+    void revalidateWebCache({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
+    })
   }
-  void revalidateWebCache({ tag: CATALOG_CACHE_TAG, path: '/catalogo' })
+  const catalogTags = [CATALOG_BASE_CACHE_TAG, CATALOG_CACHE_TAG]
+  if (activeStateChanged) catalogTags.push(CATALOG_PARTICIPATION_CACHE_TAG)
+  for (const tag of catalogTags) {
+    try {
+      updateTag(tag)
+    } catch {
+      // DB mutation already committed; cache invalidation is best-effort.
+    }
+    void revalidateWebCache({ tag, path: '/catalogo' })
+  }
+  if (activeStateChanged || canonicalCatalogSlugChanged) {
+    void revalidateWebCache({
+      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+      mode: 'immediate'
+    })
+  }
   if (destacado !== undefined) {
-    void revalidateWebCache({ tag: FEATURED_ARTISTS_CACHE_TAG, path: '/' })
+    void revalidateWebCache(
+      publicFeaturedStateChanged ||
+        activeStateChanged ||
+        featuredSelectionChanged
+        ? { tag: FEATURED_ARTISTS_CACHE_TAG, path: '/' }
+        : { path: '/' }
+    )
+  } else if (activeStateChanged || featuredSelectionChanged) {
+    void revalidateWebCache({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      mode: 'swr'
+    })
   }
   return { success: true }
 }

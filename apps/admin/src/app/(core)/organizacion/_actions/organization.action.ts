@@ -7,7 +7,11 @@ import { db } from '@frijolmagico/database/orm'
 import { core } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/shared/lib/auth/utils'
 
-import { ORGANIZATION_CACHE_TAG } from '@frijolmagico/cache-tags'
+import {
+  NOSOTROS_CACHE_TAG,
+  ORGANIZATION_CACHE_TAG
+} from '@frijolmagico/cache-tags'
+import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
 import { ORGANIZATION_ID } from '../_constants'
 import {
   OrganizationFormInput,
@@ -62,6 +66,10 @@ export async function updateOrganization(
       .where(eq(organization.id, ORGANIZATION_ID))
 
     updateTag(ORGANIZATION_CACHE_TAG)
+    void revalidateWebCacheBestEffort({
+      tag: NOSOTROS_CACHE_TAG,
+      mode: 'swr'
+    })
 
     return {
       success: true,

@@ -4,6 +4,7 @@ import { cacheTag } from 'next/cache'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { and, asc, count, eq, inArray, isNull } from 'drizzle-orm'
+import { alias } from 'drizzle-orm/sqlite-core'
 import {
   ARTIST_CACHE_TAG,
   getCollectiveMembersCacheTag
@@ -16,7 +17,13 @@ import type {
   MembersByCollectiveId
 } from '../_types/collective.types'
 
-const { artist: artistTable, collectiveArtist } = artist
+const {
+  artist: artistTable,
+  artistPseudonym,
+  artistPrimaryPseudonym,
+  collectiveArtist
+} = artist
+const memberPseudonym = alias(artistPseudonym, 'member_pseudonym')
 
 function createMembersByCollectiveId(
   collectiveIds: number[]
@@ -28,14 +35,19 @@ function createMembersByCollectiveId(
 
 function mapMemberRowToDraftItem(row: {
   artistId: number
-  pseudonym: string
+  pseudonymId: number | null
+  primaryPseudonymId: number | null
+  selectedPseudonym: string | null
+  pseudonym: string | null
+  legacyPseudonym: string
   city: string | null
   role: string | null
   active: boolean
 }): MemberDraftItem {
   return {
     artistId: row.artistId,
-    pseudonym: row.pseudonym,
+    pseudonymId: row.pseudonymId ?? row.primaryPseudonymId,
+    pseudonym: row.selectedPseudonym ?? row.pseudonym ?? row.legacyPseudonym,
     city: row.city,
     role: row.role,
     active: row.active
@@ -70,13 +82,36 @@ export async function getCollectiveDetail(
             artistId: collectiveArtist.artistaId,
             role: collectiveArtist.rol,
             active: collectiveArtist.activo,
-            pseudonym: artistTable.pseudonimo,
+            pseudonymId: collectiveArtist.pseudonimoId,
+            primaryPseudonymId: artistPrimaryPseudonym.pseudonimoId,
+            selectedPseudonym: memberPseudonym.pseudonimo,
+            pseudonym: artistPseudonym.pseudonimo,
+            legacyPseudonym: artistTable.pseudonimo,
             city: artistTable.ciudad
           })
           .from(collectiveArtist)
           .innerJoin(
             artistTable,
             eq(artistTable.id, collectiveArtist.artistaId)
+          )
+          .leftJoin(
+            artistPrimaryPseudonym,
+            eq(artistPrimaryPseudonym.artistaId, artistTable.id)
+          )
+          .leftJoin(
+            artistPseudonym,
+            and(
+              eq(artistPseudonym.id, artistPrimaryPseudonym.pseudonimoId),
+              isNull(artistPseudonym.deletedAt)
+            )
+          )
+          .leftJoin(
+            memberPseudonym,
+            and(
+              eq(memberPseudonym.id, collectiveArtist.pseudonimoId),
+              eq(memberPseudonym.artistaId, collectiveArtist.artistaId),
+              isNull(memberPseudonym.deletedAt)
+            )
           )
           .where(
             and(
@@ -85,7 +120,7 @@ export async function getCollectiveDetail(
               isNull(artistTable.deletedAt)
             )
           )
-          .orderBy(asc(artistTable.pseudonimo))
+          .orderBy(asc(artistPseudonym.pseudonimo), asc(artistTable.pseudonimo))
 
   const [activeArtistCountResult, memberRows] = await Promise.all([
     activeArtistCountPromise,
@@ -108,15 +143,34 @@ export async function getCollectiveDetail(
     }
   }
 
-  const availableArtists: ArtistOption[] = await db
+  const availableArtistRows = await db
     .select({
       id: artistTable.id,
-      pseudonym: artistTable.pseudonimo,
+      pseudonym: artistPseudonym.pseudonimo,
+      legacyPseudonym: artistTable.pseudonimo,
       city: artistTable.ciudad
     })
     .from(artistTable)
+    .leftJoin(
+      artistPrimaryPseudonym,
+      eq(artistPrimaryPseudonym.artistaId, artistTable.id)
+    )
+    .leftJoin(
+      artistPseudonym,
+      and(
+        eq(artistPseudonym.id, artistPrimaryPseudonym.pseudonimoId),
+        isNull(artistPseudonym.deletedAt)
+      )
+    )
     .where(isNull(artistTable.deletedAt))
-    .orderBy(asc(artistTable.pseudonimo))
+    .orderBy(asc(artistPseudonym.pseudonimo), asc(artistTable.pseudonimo))
+
+  const availableArtists: ArtistOption[] = availableArtistRows.map((row) => ({
+    id: row.id,
+    pseudonym: row.pseudonym ?? row.legacyPseudonym,
+    aliasLabel: null,
+    city: row.city
+  }))
 
   return {
     membersByCollectiveId,

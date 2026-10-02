@@ -9,7 +9,11 @@ import { requireAuth } from '@/shared/lib/auth/utils'
 import {
   ARTIST_CACHE_TAG,
   ARTIST_HISTORY_CACHE_TAG,
-  CATALOG_CACHE_TAG
+  CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+  CATALOG_BASE_CACHE_TAG,
+  CATALOG_CACHE_TAG,
+  FEATURED_ARTISTS_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 import { revalidateWebCache } from '@/shared/lib/web-invalidation'
 import { allocateCatalogSlug } from '../catalogo/_lib/catalog-slug'
@@ -132,6 +136,10 @@ export async function mutateArtistPseudonymAction(
 ): Promise<ActionState> {
   let historyChanged = false
   let catalogSlugChanged = false
+  let canonicalCatalogSlugChanged = false
+  let catalogDataChanged = false
+  let featuredIdentityChanged = false
+  let festivalDetailChanged = false
   try {
     await requireAuth()
     const parsed = artistPseudonymMutationSchema.safeParse(data)
@@ -148,6 +156,24 @@ export async function mutateArtistPseudonymAction(
           .returning({ id: artistPseudonym.id, pseudonimo: artistPseudonym.pseudonimo })
         if (!added) throw new Error('No se pudo crear el pseudónimo')
         if (mutation.makePrimary) {
+          const [previousArtist] = await transaction
+            .select({ pseudonimo: artist.pseudonimo })
+            .from(artist)
+            .where(eq(artist.id, mutation.artistId))
+          const [catalogSelection] = await transaction
+            .select({
+              pseudonimoId: catalogArtist.pseudonimoId,
+              activo: catalogArtist.activo,
+              deletedAt: catalogArtist.deletedAt
+            })
+            .from(catalogArtist)
+            .where(eq(catalogArtist.artistaId, mutation.artistId))
+          if (previousArtist?.pseudonimo !== added.pseudonimo) festivalDetailChanged = true
+          if (catalogSelection?.pseudonimoId == null && previousArtist?.pseudonimo !== added.pseudonimo) {
+            catalogDataChanged = true
+            featuredIdentityChanged =
+              Boolean(catalogSelection?.activo) && catalogSelection?.deletedAt === null
+          }
           await setPrimary(transaction, mutation.artistId, added.id, added.pseudonimo)
         }
         return
@@ -184,20 +210,60 @@ export async function mutateArtistPseudonymAction(
           await transaction.update(artist).set({ pseudonimo: mutation.pseudonym }).where(eq(artist.id, mutation.artistId))
         }
         const [catalogSelection] = await transaction
-          .select({ pseudonimoId: catalogArtist.pseudonimoId })
+          .select({
+            pseudonimoId: catalogArtist.pseudonimoId,
+            activo: catalogArtist.activo,
+            deletedAt: catalogArtist.deletedAt
+          })
           .from(catalogArtist)
           .where(eq(catalogArtist.artistaId, mutation.artistId))
+        const renamed = mutation.pseudonym !== pseudonym.pseudonimo
+        if (renamed) festivalDetailChanged = true
+        const publicCatalogSelection =
+          Boolean(catalogSelection?.activo) && catalogSelection?.deletedAt === null
+        if (
+          (catalogSelection?.pseudonimoId == null || catalogSelection.pseudonimoId === pseudonym.id) &&
+          renamed
+        ) {
+          catalogDataChanged = true
+          if (publicCatalogSelection) {
+            featuredIdentityChanged =
+              catalogSelection.pseudonimoId === pseudonym.id || primary?.pseudonimoId === pseudonym.id
+          }
+        }
         if (catalogSelection?.pseudonimoId === pseudonym.id) {
           catalogSlugChanged = await allocateCatalogSlug(
             transaction,
             mutation.artistId,
             mutation.pseudonym
           )
+          canonicalCatalogSlugChanged =
+            catalogSlugChanged &&
+            catalogSelection.activo &&
+            catalogSelection.deletedAt === null
         }
         return
       }
 
       if (mutation.operation === 'set-primary') {
+        const [previousArtist] = await transaction
+          .select({ pseudonimo: artist.pseudonimo })
+          .from(artist)
+          .where(eq(artist.id, mutation.artistId))
+        const [catalogSelection] = await transaction
+          .select({
+            pseudonimoId: catalogArtist.pseudonimoId,
+            activo: catalogArtist.activo,
+            deletedAt: catalogArtist.deletedAt
+          })
+          .from(catalogArtist)
+          .where(eq(catalogArtist.artistaId, mutation.artistId))
+        if (previousArtist?.pseudonimo !== pseudonym.pseudonimo) festivalDetailChanged = true
+        if (catalogSelection?.pseudonimoId == null && previousArtist?.pseudonimo !== pseudonym.pseudonimo) {
+          catalogDataChanged = true
+          featuredIdentityChanged =
+            Boolean(catalogSelection?.activo) && catalogSelection?.deletedAt === null
+        }
         await setPrimary(transaction, mutation.artistId, pseudonym.id, pseudonym.pseudonimo)
         return
       }
@@ -211,8 +277,21 @@ export async function mutateArtistPseudonymAction(
         )
       }
 
+      const [catalogSelection] = await transaction
+        .select({
+          id: catalogArtist.id,
+          pseudonimoId: catalogArtist.pseudonimoId,
+          activo: catalogArtist.activo,
+          deletedAt: catalogArtist.deletedAt
+        })
+        .from(catalogArtist)
+        .where(eq(catalogArtist.artistaId, mutation.artistId))
       const [catalogReference] = await transaction
-        .select({ id: catalogArtist.id })
+        .select({
+          id: catalogArtist.id,
+          activo: catalogArtist.activo,
+          deletedAt: catalogArtist.deletedAt
+        })
         .from(catalogArtist)
         .where(and(eq(catalogArtist.artistaId, mutation.artistId), eq(catalogArtist.pseudonimoId, pseudonym.id)))
       const [exhibitionReference] = await transaction
@@ -233,17 +312,45 @@ export async function mutateArtistPseudonymAction(
       }
 
       if (replacement) {
+        if (
+          replacement.pseudonimo !== pseudonym.pseudonimo &&
+          (exhibitionReference || activityReference)
+        ) {
+          festivalDetailChanged = true
+        }
         await transaction.update(catalogArtist).set({ pseudonimoId: replacement.id }).where(and(eq(catalogArtist.artistaId, mutation.artistId), eq(catalogArtist.pseudonimoId, pseudonym.id)))
         await transaction.update(participationExhibition).set({ pseudonimoId: replacement.id }).where(and(eq(participationExhibition.artistaId, mutation.artistId), eq(participationExhibition.pseudonimoId, pseudonym.id)))
         await transaction.update(participationActivity).set({ pseudonimoId: replacement.id }).where(and(eq(participationActivity.artistaId, mutation.artistId), eq(participationActivity.pseudonimoId, pseudonym.id)))
         if (catalogReference) {
+          if (replacement.pseudonimo !== pseudonym.pseudonimo) catalogDataChanged = true
+          featuredIdentityChanged =
+            replacement.pseudonimo !== pseudonym.pseudonimo &&
+            Boolean(catalogReference.activo) &&
+            catalogReference.deletedAt === null
           catalogSlugChanged = await allocateCatalogSlug(
             transaction,
             mutation.artistId,
             replacement.pseudonimo
           )
+          canonicalCatalogSlugChanged =
+            catalogSlugChanged &&
+            catalogReference.activo &&
+            catalogReference.deletedAt === null
         }
         if (primary?.pseudonimoId === pseudonym.id) {
+          const [previousArtist] = await transaction
+            .select({ pseudonimo: artist.pseudonimo })
+            .from(artist)
+            .where(eq(artist.id, mutation.artistId))
+          if (previousArtist?.pseudonimo !== replacement.pseudonimo) festivalDetailChanged = true
+          if (
+            catalogSelection?.pseudonimoId == null &&
+            previousArtist?.pseudonimo !== replacement.pseudonimo
+          ) {
+            catalogDataChanged = true
+            featuredIdentityChanged =
+              Boolean(catalogSelection?.activo) && catalogSelection?.deletedAt === null
+          }
           await setPrimary(transaction, mutation.artistId, replacement.id, replacement.pseudonimo)
         }
       }
@@ -255,9 +362,32 @@ export async function mutateArtistPseudonymAction(
 
     updateTag(ARTIST_CACHE_TAG)
     if (historyChanged) updateTag(ARTIST_HISTORY_CACHE_TAG)
-    if (catalogSlugChanged) {
+    if (catalogSlugChanged || catalogDataChanged) festivalDetailChanged = true
+    if (festivalDetailChanged) {
+      void revalidateWebCache({
+        tag: FESTIVAL_CRITICAL_CACHE_TAG,
+        mode: 'immediate',
+        path: '/festivales/[slug]',
+        pathType: 'page'
+      })
+    }
+    if (catalogSlugChanged || catalogDataChanged) {
+      updateTag(CATALOG_BASE_CACHE_TAG)
       updateTag(CATALOG_CACHE_TAG)
+      void revalidateWebCache({ tag: CATALOG_BASE_CACHE_TAG })
       void revalidateWebCache({ tag: CATALOG_CACHE_TAG, path: '/catalogo' })
+      if (featuredIdentityChanged) {
+        void revalidateWebCache({
+          tag: FEATURED_ARTISTS_CACHE_TAG,
+          mode: 'swr'
+        })
+      }
+      if (canonicalCatalogSlugChanged) {
+        void revalidateWebCache({
+          tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+          mode: 'immediate'
+        })
+      }
     }
     return { success: true }
   } catch (error) {

@@ -9,6 +9,8 @@ const RESTORE_ACTION_PATH =
   SRC + '/app/(core)/artistas/bandas/_actions/restore-banda.action.ts'
 
 const updateTag = mock(() => {})
+const webInvalidations: unknown[] = []
+let currentBandName = 'Los Andes'
 const getSession = mock(async () => ({ user: { id: '1' } }))
 const requireAuth = mock(async () => ({ user: { id: '1' } }))
 const getUser = mock(async () => ({ id: '1' }))
@@ -25,37 +27,54 @@ type UpdateState = {
 function createDbMock() {
   const insertState: InsertState = { valuesArgs: [] }
   const updateState: UpdateState = { setArgs: [], whereArgs: [] }
-
-  return {
-    insertState,
-    updateState,
-    db: {
-      insert: () => ({
-        values: (...args: unknown[]) => {
-          insertState.valuesArgs.push(...args)
-          return Promise.resolve()
-        }
-      }),
-      update: () => ({
-        set: (...args: unknown[]) => {
-          updateState.setArgs.push(...args)
-          return {
-            where: (...whereArgs: unknown[]) => {
-              updateState.whereArgs.push(...whereArgs)
-              return Promise.resolve()
-            }
+  const transaction = {
+    select: () => {
+      const builder = {
+        from: () => builder,
+        where: async () => [{ name: currentBandName }]
+      }
+      return builder
+    },
+    update: () => ({
+      set: (...args: unknown[]) => {
+        updateState.setArgs.push(...args)
+        return {
+          where: (...whereArgs: unknown[]) => {
+            updateState.whereArgs.push(...whereArgs)
+            return updateFailure
+              ? Promise.reject(updateFailure)
+              : Promise.resolve()
           }
         }
-      })
-    }
+      }
+    })
   }
+  const db = {
+    ...transaction,
+    insert: () => ({
+      values: (...args: unknown[]) => {
+        insertState.valuesArgs.push(...args)
+        return Promise.resolve()
+      }
+    }),
+    transaction: (callback: (tx: typeof transaction) => Promise<unknown>) =>
+      callback(transaction)
+  }
+
+  return { insertState, updateState, db }
 }
 
 let currentDb = createDbMock().db
+let updateFailure: Error | null = null
 
 mock.module('server-only', () => ({}))
 mock.module('next/cache', () => ({ cacheTag: mock(() => {}), updateTag }))
 mock.module('next/cache.js', () => ({ cacheTag: mock(() => {}), updateTag }))
+mock.module('@/shared/lib/web-invalidation', () => ({
+  revalidateWebCacheBestEffort: (options: unknown) => {
+    webInvalidations.push(options)
+  }
+}))
 mock.module('@/shared/lib/auth/utils', () => ({
   getSession,
   requireAuth,
@@ -83,6 +102,9 @@ describe('band actions', () => {
   beforeEach(() => {
     updateTag.mockClear()
     requireAuth.mockClear()
+    webInvalidations.length = 0
+    updateFailure = null
+    currentBandName = 'Los Andes'
     currentDb = createDbMock().db
   })
 
@@ -104,6 +126,47 @@ describe('band actions', () => {
     expect(requireAuth).toHaveBeenCalledTimes(1)
     expect(dbMock.insertState.valuesArgs).toHaveLength(1)
     expect(updateTag).toHaveBeenCalledTimes(1)
+  })
+
+  test('updateBandaAction immediately invalidates festivals when the name changes', async () => {
+    const result = await updateBandaAction({ id: 1, name: 'New Name' })
+
+    expect(result.success).toBe(true)
+    expect(updateTag).toHaveBeenCalledTimes(1)
+    expect(webInvalidations).toEqual([
+      {
+        tag: 'festivales:critico',
+        mode: 'immediate',
+        path: '/festivales/[slug]',
+        pathType: 'page'
+      }
+    ])
+  })
+
+  test('updateBandaAction does not invalidate festivals when the name is unchanged', async () => {
+    const result = await updateBandaAction({ id: 1, name: 'Los Andes' })
+
+    expect(result.success).toBe(true)
+    expect(updateTag).toHaveBeenCalledTimes(1)
+    expect(webInvalidations).toEqual([])
+  })
+
+  test('updateBandaAction does not invalidate festivals when the name is omitted', async () => {
+    const result = await updateBandaAction({ id: 1, description: 'Updated' })
+
+    expect(result.success).toBe(true)
+    expect(updateTag).toHaveBeenCalledTimes(1)
+    expect(webInvalidations).toEqual([])
+  })
+
+  test('updateBandaAction does not invalidate festivals when the update fails', async () => {
+    updateFailure = new Error('Update failed')
+
+    const result = await updateBandaAction({ id: 1, name: 'New Name' })
+
+    expect(result.success).toBe(false)
+    expect(updateTag).not.toHaveBeenCalled()
+    expect(webInvalidations).toEqual([])
   })
 
   test('updateBandaAction rejects invalid input before touching the db', async () => {

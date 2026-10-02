@@ -20,6 +20,7 @@ mock.module('next/navigation', () => ({
 }))
 
 mock.module('next/cache', () => ({
+  cacheLife: mock(() => {}),
   cacheTag: mock(() => {})
 }))
 

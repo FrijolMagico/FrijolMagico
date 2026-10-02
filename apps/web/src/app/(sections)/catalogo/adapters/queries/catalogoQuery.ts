@@ -1,4 +1,4 @@
-export const CATALOG_QUERY = `SELECT json_object(
+export const LEGACY_CATALOG_QUERY = `SELECT json_object(
   'id', a.id,
   'name', COALESCE(catalog_pseudonym.pseudonimo, a.pseudonimo, a.nombre),
   'slug', a.slug,
@@ -161,3 +161,6 @@ JOIN artista a ON ca.artista_id = a.id
 LEFT JOIN artista_pseudonimo catalog_pseudonym ON catalog_pseudonym.id = ca.pseudonimo_id
 WHERE ca.activo = 1 AND ca.deleted_at IS NULL
 ORDER BY ca.orden ASC`
+
+// Kept as the reference implementation while the batched DAL is validated.
+export const CATALOG_QUERY = LEGACY_CATALOG_QUERY

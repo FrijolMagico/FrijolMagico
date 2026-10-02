@@ -1,4 +1,10 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
+import {
+  EDITION_CACHE_TAG,
+  EVENT_CACHE_TAG,
+  FESTIVALES_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG
+} from '@frijolmagico/cache-tags'
 
 const updateTag = mock(() => {})
 const revalidateWebCache = mock(() => Promise.resolve({ revalidated: true }))
@@ -11,10 +17,15 @@ const getUser = mock(async () => ({ id: '1' }))
 type UpdateState = {
   values: unknown[]
   whereCalls: number
+  returningCalls: number
 }
 
-function createDbMock() {
-  const updateState: UpdateState = { values: [], whereCalls: 0 }
+function createDbMock(returningRows: unknown[] = [{ id: 1 }]) {
+  const updateState: UpdateState = {
+    values: [],
+    whereCalls: 0,
+    returningCalls: 0
+  }
 
   return {
     updateState,
@@ -25,7 +36,12 @@ function createDbMock() {
           return {
             where: () => {
               updateState.whereCalls += 1
-              return Promise.resolve()
+              return {
+                returning: () => {
+                  updateState.returningCalls += 1
+                  return Promise.resolve(returningRows)
+                }
+              }
             }
           }
         }
@@ -65,6 +81,9 @@ describe('updateEditionPublicationAction', () => {
     currentDb = createDbMock().db
     updateTag.mockClear()
     revalidateWebCache.mockClear()
+    revalidateWebCache.mockImplementation(() =>
+      Promise.resolve({ revalidated: true })
+    )
     requireAuth.mockClear()
   })
 
@@ -136,16 +155,67 @@ describe('updateEditionPublicationAction', () => {
     expect(result).toEqual({ success: true, data: { published: true } })
     expect(dbMock.updateState.values).toEqual([{ published: true }])
     expect(dbMock.updateState.whereCalls).toBe(1)
+    expect(dbMock.updateState.returningCalls).toBe(1)
     expect(updateTag).toHaveBeenCalledTimes(2)
-    expect(revalidateWebCache).toHaveBeenCalledTimes(2)
+    expect(revalidateWebCache).toHaveBeenCalledTimes(4)
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
+    })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVALES_CACHE_TAG,
+      mode: 'swr',
+      path: '/festivales',
+      pathType: 'page'
+    })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      mode: 'immediate',
+      path: '/',
+      pathType: 'page'
+    })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      mode: 'immediate',
+      path: '/',
+      pathType: 'layout'
+    })
     expect(consoleError).toHaveBeenCalled()
+  })
+
+  test('keeps success and unconditional cache invalidation when no row is returned', async () => {
+    const dbMock = createDbMock([])
+    currentDb = dbMock.db
+
+    const result = await updateEditionPublicationAction({
+      id: 7,
+      published: true
+    })
+
+    expect(result).toEqual({ success: true, data: { published: true } })
+    expect(dbMock.updateState.whereCalls).toBe(1)
+    expect(dbMock.updateState.returningCalls).toBe(1)
+    expect(updateTag).toHaveBeenCalledTimes(2)
+    expect(updateTag).toHaveBeenCalledWith(EDITION_CACHE_TAG)
+    expect(updateTag).toHaveBeenCalledWith(EVENT_CACHE_TAG)
+    expect(revalidateWebCache).toHaveBeenCalledTimes(2)
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate'
+    })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVALES_CACHE_TAG,
+      mode: 'swr'
+    })
   })
 
   test('returns failure without invalidating caches when the write fails', async () => {
     currentDb = {
       update: () => ({
         set: () => ({
-          where: () => Promise.reject(new Error('connection lost'))
+          where: () => ({
+            returning: () => Promise.reject(new Error('connection lost'))
+          })
         })
       })
     }

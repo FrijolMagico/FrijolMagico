@@ -13,6 +13,8 @@ const DELETE_EXHIBITION_PATH = `${ACTIONS_DIR}/exhibitions/delete-exhibition.act
 const UPDATE_ACTIVITY_PATH = `${ACTIONS_DIR}/activities/update-activity.action.ts`
 const DELETE_ACTIVITY_PATH = `${ACTIONS_DIR}/activities/delete-activity.action.ts`
 const UPDATE_DETAILS_PATH = `${ACTIONS_DIR}/activities/update-activity-detail.action.ts`
+const UPDATE_PARTICIPATION_PATH = `${ACTIONS_DIR}/participations/update-participation.action.ts`
+const UPDATE_ACTIVITY_AGGREGATE_PATH = `${ACTIONS_DIR}/activities/update-activity-aggregate.action.ts`
 
 describe('participation server action cleanup contracts', () => {
   test('shared helper remains server-only and enforces a single participant entity', () => {
@@ -89,6 +91,56 @@ describe('participation server action cleanup contracts', () => {
     expect(updateDetailsSource).toContain(
       'updateTag(getParticipationActivitiesCacheTag(participationId))'
     )
+  })
+
+  test('catalog invalidation is conditional on public catalog mutations', () => {
+    const createExhibitionSource = readFileSync(CREATE_EXHIBITION_PATH, 'utf8')
+    const updateExhibitionSource = readFileSync(UPDATE_EXHIBITION_PATH, 'utf8')
+    const deleteExhibitionSource = readFileSync(DELETE_EXHIBITION_PATH, 'utf8')
+    const updateParticipationSource = readFileSync(UPDATE_PARTICIPATION_PATH, 'utf8')
+    const updateActivityAggregateSource = readFileSync(
+      UPDATE_ACTIVITY_AGGREGATE_PATH,
+      'utf8'
+    )
+
+    for (const source of [
+      createExhibitionSource,
+      updateExhibitionSource,
+      deleteExhibitionSource,
+      updateParticipationSource,
+      updateActivityAggregateSource
+    ]) {
+      expect(source).toContain('CATALOG_CACHE_TAG')
+      expect(source).toContain('revalidateWebCacheBestEffort')
+      expect(source).toContain('catalogChanged')
+    }
+    expect(deleteExhibitionSource).toContain('if (alreadyAbsent)')
+    expect(updateParticipationSource).toContain('existing.artistaId !== parsed.data.artistaId')
+    expect(updateExhibitionSource).toContain('existing.artistaId !== (artistId ?? null)')
+    expect(updateExhibitionSource).toContain('existing.pseudonimoId !== pseudonimoId')
+    expect(updateActivityAggregateSource).toContain("['confirmado', 'completado']")
+  })
+
+  test('participation-domain catalog invalidation wires only the participation tag', () => {
+    const actionPaths = [
+      CREATE_ACTIVITY_PATH,
+      `${ACTIONS_DIR}/activities/delete-activity.action.ts`,
+      UPDATE_ACTIVITY_PATH,
+      UPDATE_ACTIVITY_AGGREGATE_PATH,
+      CREATE_EXHIBITION_PATH,
+      DELETE_EXHIBITION_PATH,
+      UPDATE_EXHIBITION_PATH,
+      UPDATE_PARTICIPATION_PATH
+    ]
+
+    for (const path of actionPaths) {
+      const source = readFileSync(path, 'utf8')
+      expect(source).toContain('CATALOG_CACHE_TAG')
+      expect(source).toContain('CATALOG_PARTICIPATION_CACHE_TAG')
+      expect(source).toContain('revalidateWebCacheBestEffort({ tag: CATALOG_PARTICIPATION_CACHE_TAG })')
+      expect(source).not.toContain('CATALOG_BASE_CACHE_TAG')
+      expect(source).not.toContain('CATALOG_EDITION_DATES_CACHE_TAG')
+    }
   })
 
   test('updateExhibitionAction updates exhibition fields', () => {

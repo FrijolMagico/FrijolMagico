@@ -9,12 +9,20 @@ import { requireAuth } from '@/shared/lib/auth/utils'
 import type { ActionState } from '@/shared/types/actions'
 import {
   ARTIST_DETAIL_CACHE_TAG,
+  CATALOG_CACHE_TAG,
+  CATALOG_PARTICIPATION_CACHE_TAG,
+  EDITION_CACHE_TAG,
+  EVENT_CACHE_TAG,
+  FESTIVALES_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG,
   getEditionParticipationsCacheTag,
   getParticipationActivitiesCacheTag
 } from '@frijolmagico/cache-tags'
+import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
 import { deleteOrphanedEditionParticipation } from '../participations/delete-orphaned-edition-participation'
 
 const { participationActivity } = participations
+const PUBLIC_ACTIVITY_TAGS = [FESTIVALES_CACHE_TAG, EVENT_CACHE_TAG, EDITION_CACHE_TAG]
 
 interface DeleteActivityInput {
   id: number
@@ -47,16 +55,24 @@ export async function deleteActivityAction(
     let editionId: number | null = null
     let alreadyAbsent = false
     let participationDeleted = false
+    let isPublicActivity = false
+    let isTalkActivity = false
 
     await db.transaction(async (tx) => {
       const activity = await tx.query.participationActivity.findFirst({
         where: (table, { eq }) => eq(table.id, id),
-        with: { participacion: { columns: { edicionId: true } } }
+        with: {
+          participacion: { columns: { edicionId: true } },
+          tipoActividad: { columns: { slug: true } }
+        }
       })
 
       if (activity) {
         participationId = activity.participacionId
         editionId = activity.participacion?.edicionId ?? null
+        isPublicActivity =
+          activity.estado === 'confirmado' || activity.estado === 'completado'
+        isTalkActivity = activity.tipoActividad?.slug === 'charla'
         if (editionId === null) throw new Error('Participación no encontrada')
 
         await tx
@@ -80,9 +96,36 @@ export async function deleteActivityAction(
       throw new Error('Participación no encontrada')
     }
 
-    updateTag(getEditionParticipationsCacheTag(editionId))
-    updateTag(getParticipationActivitiesCacheTag(participationId))
-    updateTag(ARTIST_DETAIL_CACHE_TAG)
+    try {
+      updateTag(getEditionParticipationsCacheTag(editionId))
+      updateTag(getParticipationActivitiesCacheTag(participationId))
+      updateTag(ARTIST_DETAIL_CACHE_TAG)
+    } catch (error) {
+      console.error('[deleteActivityAction] Local invalidation failed', error)
+    }
+    for (const tag of PUBLIC_ACTIVITY_TAGS) {
+      try {
+        updateTag(tag)
+      } catch (error) {
+        console.error('[deleteActivityAction] Local invalidation failed', { tag, error })
+      }
+    }
+    void revalidateWebCacheBestEffort({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      ...(isPublicActivity ? { path: '/festivales/[slug]', pathType: 'page' as const } : {})
+    })
+    void revalidateWebCacheBestEffort({
+      tag: FESTIVALES_CACHE_TAG,
+      mode: 'swr',
+      ...((isPublicActivity || isTalkActivity)
+        ? { path: '/festivales', pathType: 'page' as const }
+        : {})
+    })
+    if (isPublicActivity) {
+      void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
+      void revalidateWebCacheBestEffort({ tag: CATALOG_PARTICIPATION_CACHE_TAG })
+    }
 
     return { success: true, data: { alreadyAbsent, participationDeleted } }
   } catch (error) {

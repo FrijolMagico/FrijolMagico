@@ -1,6 +1,7 @@
 /**
- * Shared logic for the dev R2 reset script: extracting the set of asset keys
- * that must survive a bucket cleanup (the seed-referenced assets).
+ * Shared logic for the retired legacy manual dev R2 reset script.
+ * Seed-referenced assets alone cannot protect assets in real database snapshots;
+ * do not use this cleanup with those snapshots.
  *
  * Pure functions, no I/O — unit-tested in tests/reset-dev-r2-lib.test.ts.
  */
@@ -146,9 +147,9 @@ export function parseSeedAssetKeys(
  * - NODE_ENV exactly 'development' (not production, preview, staging, or any
  *   other value, and not missing). Fail-closed by design.
  *
- * The official `bun run reset:dev-r2` command provides NODE_ENV=development
- * explicitly; any other invocation path that reaches this script without it
- * is rejected.
+ * The retired manual script requires NODE_ENV=development explicitly;
+ * invocation without it is rejected. This guard does not make cleanup safe
+ * for real database snapshots.
  */
 export function isDevEnvironment(
   env: Record<string, string | undefined>,

@@ -7,17 +7,18 @@ const dialog = readFileSync(
   'utf8'
 )
 const activityForms = [
-  'create-activity-dialog.tsx',
-  'update-activity-dialog.tsx'
-].map((name) =>
-  readFileSync(
+  { name: 'create-activity-dialog.tsx', width: 'md:w-6xl' },
+  { name: 'update-activity-dialog.tsx', width: 'md:w-7xl' }
+].map(({ name, width }) => ({
+  source: readFileSync(
     new URL(
       `../../../../src/app/(core)/eventos/participaciones/_components/${name}`,
       import.meta.url
     ),
     'utf8'
-  )
-)
+  ),
+  width
+}))
 
 describe('EntityFormDialog layout contract', () => {
   test('caps panel height and width while scrolling only the body', () => {
@@ -33,18 +34,18 @@ describe('EntityFormDialog layout contract', () => {
     expect(dialog).toContain('contentSized?: boolean')
     expect(dialog).toMatch(/contentSized && 'w-fit sm:max-w-none'/)
     expect(dialog).not.toMatch(/'flex w-fit[^']*sm:max-w-none'/)
-    for (const form of activityForms) {
-      expect(form).toMatch(/<EntityFormDialog[\s\S]*?contentSized/)
+    for (const { source } of activityForms) {
+      expect(source).toMatch(/<EntityFormDialog[\s\S]*?contentSized/)
     }
   })
 
   test('constrains activity forms and stacks columns on narrow devices', () => {
-    for (const form of activityForms) {
-      expect(form).not.toContain("className='md:max-w-6xl md:min-w-3xl'")
-      expect(form).toMatch(
-        /<form[\s\S]*?className='[^']*max-w-full[^']*flex-col[^']*md:w-(?:6xl|7xl)[^']*md:flex-row/
+    for (const { source, width } of activityForms) {
+      expect(source).not.toMatch(/className\s*=\s*['\"]md:max-w-6xl md:min-w-3xl['\"]/)
+      expect(source).toMatch(
+        new RegExp(`<form[\\s\\S]*?className\\s*=\\s*(['\"])[^'\"]*max-w-full[^'\"]*flex-col[^'\"]*${width}[^'\"]*md:flex-row\\1`)
       )
-      expect(form.match(/className='hidden md:block'/g)?.length).toBe(2)
+      expect(source.match(/className\s*=\s*(['\"])(?=[^'"]*hidden)(?=[^'"]*md:block)[^'"]*['"]/g)?.length).toBe(2)
     }
   })
 })

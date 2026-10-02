@@ -9,9 +9,12 @@ import { requireAuth } from '@/shared/lib/auth/utils'
 import type { ActionState } from '@/shared/types/actions'
 import {
   ARTIST_DETAIL_CACHE_TAG,
+  CATALOG_CACHE_TAG,
+  CATALOG_PARTICIPATION_CACHE_TAG,
   EDITION_CACHE_TAG,
   EVENT_CACHE_TAG,
   FESTIVALES_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG,
   getEditionParticipationsCacheTag,
   getParticipationActivitiesCacheTag
 } from '@frijolmagico/cache-tags'
@@ -65,9 +68,13 @@ export async function updateActivityAggregateAction(
     }
 
     let effectiveParticipationId: number | null = null
+    let catalogChanged = false
+    let festivalDetailChanged = false
+    let festivalListChanged = false
     await db.transaction(async (tx) => {
       const existingActivity = await tx.query.participationActivity.findFirst({
-        where: (table, operators) => operators.eq(table.id, activityInput.id)
+        where: (table, operators) => operators.eq(table.id, activityInput.id),
+        with: { tipoActividad: { columns: { slug: true } } }
       })
       if (
         !existingActivity ||
@@ -95,6 +102,26 @@ export async function updateActivityAggregateAction(
             : operators.eq(table.id, submittedTypeId)
       })
       if (!effectiveType) throw new Error('El tipo de actividad no existe')
+      const publicStates = ['confirmado', 'completado']
+      const oldIsPublic = publicStates.includes(existingActivity.estado ?? '')
+      const newIsPublic = publicStates.includes(activityInput.estado ?? '')
+      const oldTypeSlug = existingActivity.tipoActividad?.slug
+      const festivalListCategory = (slug: string | undefined, isPublic: boolean) =>
+        slug === 'charla'
+          ? 'charla'
+          : isPublic && (slug === 'taller' || slug === 'musica')
+            ? slug
+            : null
+      festivalDetailChanged = oldIsPublic || newIsPublic
+      festivalListChanged =
+        festivalListCategory(oldTypeSlug, oldIsPublic) !==
+        festivalListCategory(effectiveType.slug, newIsPublic)
+      catalogChanged =
+        (oldIsPublic || newIsPublic) &&
+        (existingActivity.estado !== activityInput.estado ||
+          existingActivity.tipoActividadId !== effectiveType.id ||
+          existingParticipation.artistaId !== participation.artistaId ||
+          existingParticipation.agrupacionId !== participation.agrupacionId)
       if (!['taller', 'charla', 'musica'].includes(effectiveType.slug)) {
         throw new Error(
           'Este tipo de actividad no admite sesiones y no se puede crear o editar hasta que el modelo lo soporte'
@@ -303,7 +330,24 @@ export async function updateActivityAggregateAction(
         )
       }
     }
-    for (const tag of PUBLIC_TAGS) void revalidateWebCacheBestEffort({ tag })
+    void revalidateWebCacheBestEffort({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      ...(festivalDetailChanged
+        ? { path: '/festivales/[slug]', pathType: 'page' as const }
+        : {})
+    })
+    void revalidateWebCacheBestEffort({
+      tag: FESTIVALES_CACHE_TAG,
+      mode: 'swr',
+      ...(festivalListChanged
+        ? { path: '/festivales', pathType: 'page' as const }
+        : {})
+    })
+    if (catalogChanged) {
+      void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
+      void revalidateWebCacheBestEffort({ tag: CATALOG_PARTICIPATION_CACHE_TAG })
+    }
     return { success: true }
   } catch (error) {
     console.error('[updateActivityAggregateAction]', error)
