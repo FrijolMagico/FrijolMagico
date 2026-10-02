@@ -5,8 +5,28 @@ import {
 } from '@frijolmagico/cache-tags'
 
 let committed = false
-let existingEdition = { eventoId: 2, numeroEdicion: 'I' }
-let existingDates: { fecha: string }[] = []
+let existingEdition: {
+  eventoId: number
+  numeroEdicion: string
+  nombre: string | null
+  posterUrl: string | null
+  slug: string
+} | undefined = {
+  eventoId: 2,
+  numeroEdicion: 'I',
+  nombre: null,
+  posterUrl: null,
+  slug: 'festival-I'
+}
+let existingDates: {
+  id: number
+  fecha: string
+  horaInicio: string
+  horaFin: string
+  modalidad: string | null
+  lugarId: number | null
+}[] = []
+const routeInvalidations: { path: string; pathType: 'page' | 'layout' }[] = []
 let failMutation = false
 let transactionSelectCount = 0
 const invalidations: string[] = []
@@ -14,9 +34,17 @@ const updateTag = mock((tag: string) => {
   expect(committed).toBe(true)
   invalidations.push(`local:${tag}`)
 })
-const revalidateWebCache = mock(async ({ tag }: { tag: string }) => {
+const revalidateWebCache = mock(async (input: {
+  tag?: string
+  mode?: 'immediate' | 'swr'
+  path?: string
+  pathType?: 'page' | 'layout'
+}) => {
   expect(committed).toBe(true)
-  invalidations.push(`web:${tag}`)
+  if (input.tag) invalidations.push(`web:${input.tag}:${input.mode}`)
+  if (input.path && input.pathType) {
+    routeInvalidations.push({ path: input.path, pathType: input.pathType })
+  }
   return { revalidated: true }
 })
 const revalidateWebCacheBestEffort = mock(async ({ tag }: { tag: string }) => {
@@ -37,11 +65,10 @@ const tx = {
     from: () => ({
       where: () => {
         transactionSelectCount += 1
-        return makeQuery<{
-          fecha?: string
-          eventoId?: number
-          numeroEdicion?: string
-        }>(transactionSelectCount === 1 ? [existingEdition] : existingDates)
+        if (transactionSelectCount === 1) {
+          return makeQuery(existingEdition ? [existingEdition] : [])
+        }
+        return makeQuery(existingDates)
       }
     })
   }),
@@ -56,6 +83,11 @@ const tx = {
     where: async () => {
       if (failMutation) throw new Error('database update failed')
     }
+  }),
+  insert: () => ({
+    values: () => ({
+      returning: async () => [{ id: 10 }]
+    })
   })
 }
 const db = {
@@ -98,11 +130,18 @@ const payload = {
 
 beforeEach(() => {
   committed = false
-  existingEdition = { eventoId: 2, numeroEdicion: 'I' }
+  existingEdition = {
+    eventoId: 2,
+    numeroEdicion: 'I',
+    nombre: null,
+    posterUrl: null,
+    slug: 'festival-I'
+  }
   existingDates = []
   failMutation = false
   transactionSelectCount = 0
   invalidations.length = 0
+  routeInvalidations.length = 0
   updateTag.mockClear()
   revalidateWebCache.mockClear()
   revalidateWebCacheBestEffort.mockClear()
@@ -118,12 +157,22 @@ describe('saveEditionWithDaysAction catalog freshness', () => {
     expect(result.success).toBe(true)
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate'
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
     })
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVALES_CACHE_TAG,
-      mode: 'swr'
+      mode: 'swr',
+      path: '/festivales',
+      pathType: 'page'
     })
+    expect(routeInvalidations).toEqual([
+      { path: '/festivales/[slug]', pathType: 'page' },
+      { path: '/festivales', pathType: 'page' },
+      { path: '/', pathType: 'page' },
+      { path: '/', pathType: 'layout' }
+    ])
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: 'catalogo:artistas'
     })
@@ -156,7 +205,16 @@ describe('saveEditionWithDaysAction catalog freshness', () => {
   })
 
   test('invalidates only edition-date catalog data when a date changes', async () => {
-    existingDates = [{ fecha: '2026-06-10' }]
+    existingDates = [
+      {
+        id: 9,
+        fecha: '2026-06-10',
+        horaInicio: '10:00',
+        horaFin: '18:00',
+        modalidad: 'presencial',
+        lugarId: null
+      }
+    ]
     const result = await saveEditionWithDaysAction(
       { success: true },
       {
@@ -180,13 +238,133 @@ describe('saveEditionWithDaysAction catalog freshness', () => {
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: 'catalogo:artistas:fechas-edicion'
     })
+    expect(routeInvalidations).toEqual([
+      { path: '/festivales/[slug]', pathType: 'page' },
+      { path: '/festivales', pathType: 'page' },
+      { path: '/', pathType: 'page' },
+      { path: '/', pathType: 'layout' }
+    ])
   })
 
   test('preserves no-op handling when projected edition fields and dates are unchanged', async () => {
     const result = await saveEditionWithDaysAction({ success: true }, payload)
 
     expect(result.success).toBe(true)
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate'
+    })
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVALES_CACHE_TAG,
+      mode: 'swr'
+    })
+    expect(routeInvalidations).toEqual([])
     expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
+  })
+
+  test('invalidates festival routes for name and poster changes without the root routes', async () => {
+    await saveEditionWithDaysAction({ success: true }, {
+      ...payload,
+      nombre: 'New name',
+      posterUrl: '/poster.jpg'
+    })
+
+    expect(routeInvalidations).toEqual([
+      { path: '/festivales/[slug]', pathType: 'page' },
+      { path: '/festivales', pathType: 'page' }
+    ])
+  })
+
+  test('keeps time and modality edits off the root routes', async () => {
+    existingDates = [
+      {
+        id: 9,
+        fecha: '2026-06-10',
+        horaInicio: '10:00',
+        horaFin: '18:00',
+        modalidad: 'presencial',
+        lugarId: null
+      }
+    ]
+
+    await saveEditionWithDaysAction({ success: true }, {
+      ...payload,
+      days: [
+        {
+          tempId: 'day-1',
+          existingId: 9,
+          fecha: '2026-06-10',
+          horaInicio: '11:00',
+          horaFin: '19:00',
+          modalidad: 'online',
+          lugarId: null
+        }
+      ]
+    })
+
+    expect(routeInvalidations).toEqual([
+      { path: '/festivales/[slug]', pathType: 'page' },
+      { path: '/festivales', pathType: 'page' }
+    ])
+  })
+
+  test('invalidates root routes when the venue changes', async () => {
+    existingDates = [
+      {
+        id: 9,
+        fecha: '2026-06-10',
+        horaInicio: '10:00',
+        horaFin: '18:00',
+        modalidad: 'presencial',
+        lugarId: 4
+      }
+    ]
+
+    await saveEditionWithDaysAction({ success: true }, {
+      ...payload,
+      days: [
+        {
+          tempId: 'day-1',
+          existingId: 9,
+          fecha: '2026-06-10',
+          horaInicio: '10:00',
+          horaFin: '18:00',
+          modalidad: 'presencial',
+          lugarId: 5
+        }
+      ]
+    })
+
+    expect(routeInvalidations).toContainEqual({
+      path: '/',
+      pathType: 'page'
+    })
+    expect(routeInvalidations).toContainEqual({
+      path: '/',
+      pathType: 'layout'
+    })
+  })
+
+  test('invalidates public and root routes when creating an edition', async () => {
+    await saveEditionWithDaysAction({ success: true }, {
+      ...payload,
+      id: null
+    })
+
+    expect(routeInvalidations).toEqual([
+      { path: '/festivales/[slug]', pathType: 'page' },
+      { path: '/festivales', pathType: 'page' },
+      { path: '/', pathType: 'page' },
+      { path: '/', pathType: 'layout' }
+    ])
+  })
+
+  test('does not treat a missing edition row on update as an edition change', async () => {
+    existingEdition = undefined
+
+    await saveEditionWithDaysAction({ success: true }, payload)
+
+    expect(routeInvalidations).toEqual([])
   })
 
   test('does not invalidate the web catalog when the transaction fails', async () => {
