@@ -17,8 +17,10 @@ Integrate the fetched `dev` tip (`591bf7051e2a7d3a2fa6e7521f929824ea76fb59`) int
 - [x] Merge fetched remote `dev` and resolve all five conflicts, retaining upstream design behavior and branch-specific synthetic fixtures. Preserve deployed `0026_talk_presenter`; move collective-member pseudonyms to 0027.
 - [x] Verify migration metadata, conflict markers, and focused tests: admin 798/798, web 272/272, database 109/109; staged and unstaged diff checks clean. No unresolved paths or conflict markers; idx 26/27 match deployed production order.
 
-## Deferred staging work
-A read-only query for the user-named `staged-frijolmagico` returned `database not found`; do not guess another target. No staging migration was run. Confirm the exact visible Turso staging database and separately authorize any remote migration/reconciliation; its prior 0026 collective migration may not be safely replayable after the order change.
+## Staging synchronization
+- [x] Identified the actual target as `staging-frijolmagico`; obtained explicit authorization for a private backup and target-specific reconciliation.
+- [x] Exported a private pre-sync snapshot, then transactionally applied the missing `0026_talk_presenter` DDL and reconciled Drizzle history: talk presenters at idx 26 (`1785715200000`), collective pseudonyms at idx 27 (`1785801600000`).
+- [x] `bun run migrate:staging` succeeded after reconciliation. Verified 28 ledger rows, three presenter columns, six presenter triggers, matching key-table row counts against the snapshot, and an empty foreign-key check.
 
 ## Evidence
 - Integration merge commit: `f802d465fe738b3fa6374537aa34a9130bccdebd` (`merge(dev): integrate remote dev updates`).
