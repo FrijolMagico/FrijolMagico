@@ -10,7 +10,7 @@ const updateTag = mock(() => {})
 const revalidateWebCacheBestEffort = mock(async (_options: unknown) => {})
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
 const findOrCreateEditionParticipation = mock(async () => ({ id: 12 }))
-const resolveActiveArtistPseudonym = mock(async () => null)
+const resolveActiveArtistPseudonym = mock(async (): Promise<number | null> => null)
 const deleteOrphanedEditionParticipation = mock(async () => false)
 const values = mock(async (_data: unknown) => {})
 const insert = mock(() => ({ values }))
@@ -87,6 +87,38 @@ const successfulPublicInvalidation = () => {
   })
 }
 
+const successfulPublicRouteInvalidation = () => {
+  expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+    tag: FESTIVAL_CRITICAL_CACHE_TAG,
+    mode: 'immediate',
+    path: '/festivales/[slug]',
+    pathType: 'page'
+  })
+  expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+    tag: FESTIVALES_CACHE_TAG,
+    mode: 'swr',
+    path: '/festivales',
+    pathType: 'page'
+  })
+}
+
+const successfulTagOnlyInvalidation = () => {
+  expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+    tag: FESTIVAL_CRITICAL_CACHE_TAG,
+    mode: 'immediate'
+  })
+  expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+    tag: FESTIVALES_CACHE_TAG,
+    mode: 'swr'
+  })
+  expect(
+    revalidateWebCacheBestEffort.mock.calls.some(
+      ([options]) =>
+        typeof options === 'object' && options !== null && 'path' in options
+    )
+  ).toBe(false)
+}
+
 describe('exhibition public cache invalidation', () => {
   beforeEach(() => {
     updateTag.mockClear()
@@ -94,6 +126,7 @@ describe('exhibition public cache invalidation', () => {
     requireAuth.mockClear()
     findOrCreateEditionParticipation.mockClear()
     resolveActiveArtistPseudonym.mockClear()
+    resolveActiveArtistPseudonym.mockResolvedValue(null)
     deleteOrphanedEditionParticipation.mockClear()
     values.mockClear()
     insert.mockClear()
@@ -117,13 +150,28 @@ describe('exhibition public cache invalidation', () => {
     })
 
     expect(result.success).toBe(true)
-    successfulPublicInvalidation()
+    successfulPublicRouteInvalidation()
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: CATALOG_CACHE_TAG
     })
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: CATALOG_PARTICIPATION_CACHE_TAG
     })
+  })
+
+  test('creates a non-public exhibition with tag-only invalidation', async () => {
+    transactionResult = {
+      insert,
+      query: { participationExhibition: { findFirst } }
+    }
+
+    const result = await createExhibitionAction({
+      participation,
+      exhibition: { ...exhibition, estado: 'seleccionado' }
+    })
+
+    expect(result.success).toBe(true)
+    successfulTagOnlyInvalidation()
   })
 
   test('updates a public exhibition, preserving catalog invalidation', async () => {
@@ -154,13 +202,94 @@ describe('exhibition public cache invalidation', () => {
     } as Parameters<typeof updateExhibitionAction>[0])
 
     expect(result.success).toBe(true)
-    successfulPublicInvalidation()
+    successfulPublicRouteInvalidation()
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: CATALOG_CACHE_TAG
     })
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: CATALOG_PARTICIPATION_CACHE_TAG
     })
+  })
+
+  test('does not revalidate festival routes for a public status transition alone', async () => {
+    const existing = {
+      id: 21,
+      participacionId: 12,
+      artistaId: 5,
+      pseudonimoId: null,
+      disciplinaId: 1,
+      modoIngresoId: 1,
+      estado: 'confirmado',
+      participacion: { edicionId: 9 }
+    }
+    findFirst.mockResolvedValue(existing)
+    transactionResult = {
+      query: { participationExhibition: { findFirst } },
+      update
+    }
+
+    const result = await updateExhibitionAction({
+      id: 21,
+      participacionId: 12,
+      artistaId: 5,
+      pseudonimoId: null,
+      disciplinaId: 1,
+      modoIngresoId: 1,
+      estado: 'completado'
+    } as Parameters<typeof updateExhibitionAction>[0])
+
+    expect(result.success).toBe(true)
+    successfulTagOnlyInvalidation()
+  })
+
+  test('revalidates only the festival detail for a public pseudonym change', async () => {
+    const existing = {
+      id: 21,
+      participacionId: 12,
+      artistaId: 5,
+      pseudonimoId: null,
+      disciplinaId: 1,
+      modoIngresoId: 1,
+      estado: 'confirmado',
+      participacion: { edicionId: 9 }
+    }
+    resolveActiveArtistPseudonym.mockResolvedValue(7)
+    findFirst.mockResolvedValue(existing)
+    transactionResult = {
+      query: { participationExhibition: { findFirst } },
+      update
+    }
+
+    const result = await updateExhibitionAction({
+      id: 21,
+      participacionId: 12,
+      artistaId: 5,
+      pseudonimoId: 7,
+      disciplinaId: 1,
+      modoIngresoId: 1,
+      estado: 'confirmado'
+    } as Parameters<typeof updateExhibitionAction>[0])
+
+    expect(result.success).toBe(true)
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate',
+      path: '/festivales/[slug]',
+      pathType: 'page'
+    })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      tag: FESTIVALES_CACHE_TAG,
+      mode: 'swr'
+    })
+    expect(
+      revalidateWebCacheBestEffort.mock.calls.some(
+        ([options]) =>
+          typeof options === 'object' &&
+          options !== null &&
+          'path' in options &&
+          options.path === '/festivales'
+      )
+    ).toBe(false)
   })
 
   test('does not invalidate public or catalog data for an unchanged exhibition', async () => {
@@ -210,13 +339,31 @@ describe('exhibition public cache invalidation', () => {
     const result = await deleteExhibitionAction(null as never, { id: 21 })
 
     expect(result.success).toBe(true)
-    successfulPublicInvalidation()
+    successfulPublicRouteInvalidation()
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: CATALOG_CACHE_TAG
     })
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: CATALOG_PARTICIPATION_CACHE_TAG
     })
+  })
+
+  test('deletes a non-public exhibition with tag-only invalidation', async () => {
+    findFirst.mockResolvedValue({
+      id: 21,
+      participacionId: 12,
+      estado: 'seleccionado',
+      participacion: { edicionId: 9 }
+    })
+    transactionResult = {
+      query: { participationExhibition: { findFirst } },
+      delete: deleteQuery
+    }
+
+    const result = await deleteExhibitionAction(null as never, { id: 21 })
+
+    expect(result.success).toBe(true)
+    successfulTagOnlyInvalidation()
   })
 
   test('does not invalidate caches when deleting an already absent exhibition', async () => {

@@ -102,11 +102,17 @@ export async function createExhibitionAction(data: {
     }
     void revalidateWebCacheBestEffort({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate'
+      mode: 'immediate',
+      ...(catalogChanged
+        ? { path: '/festivales/[slug]', pathType: 'page' as const }
+        : {})
     })
     void revalidateWebCacheBestEffort({
       tag: FESTIVALES_CACHE_TAG,
-      mode: 'swr'
+      mode: 'swr',
+      ...(catalogChanged
+        ? { path: '/festivales', pathType: 'page' as const }
+        : {})
     })
     if (catalogChanged) {
       void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
