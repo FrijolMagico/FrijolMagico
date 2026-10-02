@@ -262,7 +262,7 @@ export async function updateCatalogAction(
     } catch {
       // DB mutation already committed; cache invalidation is best-effort.
     }
-    void revalidateWebCache({ tag, path: '/catalogo' })
+    void revalidateWebCache({ tag })
   }
   if (activeStateChanged || canonicalCatalogSlugChanged) {
     void revalidateWebCache({

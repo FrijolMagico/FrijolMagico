@@ -37,10 +37,7 @@ describe('deleteCatalogAction canonical slug invalidation', () => {
     expect(deleteCatalogEntry).toHaveBeenCalledTimes(1)
     expect(deleteCatalogEntry).toHaveBeenCalledWith(expect.anything(), 9)
     expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:base')
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: 'catalogo:artistas:base',
-      path: '/catalogo'
-    })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas:base' })
     expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:participaciones')
     expect(updateTag).toHaveBeenCalledWith('catalogo:artistas')
     expect(revalidateWebCache).toHaveBeenCalledWith({
@@ -62,10 +59,7 @@ describe('deleteCatalogAction canonical slug invalidation', () => {
 
     expect(deleteCatalogEntry).toHaveBeenCalledWith(expect.anything(), 9)
     expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:base')
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: 'catalogo:artistas:base',
-      path: '/catalogo'
-    })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas:base' })
     expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:participaciones')
     expect(updateTag).toHaveBeenCalledWith('catalogo:artistas')
     expect(revalidateWebCache).not.toHaveBeenCalledWith({

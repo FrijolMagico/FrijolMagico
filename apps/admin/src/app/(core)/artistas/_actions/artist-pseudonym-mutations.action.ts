@@ -375,7 +375,7 @@ export async function mutateArtistPseudonymAction(
       updateTag(CATALOG_BASE_CACHE_TAG)
       updateTag(CATALOG_CACHE_TAG)
       void revalidateWebCache({ tag: CATALOG_BASE_CACHE_TAG })
-      void revalidateWebCache({ tag: CATALOG_CACHE_TAG, path: '/catalogo' })
+      void revalidateWebCache({ tag: CATALOG_CACHE_TAG })
       if (featuredIdentityChanged) {
         void revalidateWebCache({
           tag: FEATURED_ARTISTS_CACHE_TAG,

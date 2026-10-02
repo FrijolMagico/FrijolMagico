@@ -141,10 +141,7 @@ describe('updateCatalogFieldAction — canonical slug invalidation', () => {
     expect(updateValues).toEqual({ activo: true })
     expect(updateTag.mock.calls).toContainEqual(['catalogo:artistas:base'])
     expect(updateTag.mock.calls).toContainEqual(['catalogo:artistas'])
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: 'catalogo:artistas:base',
-      path: '/catalogo'
-    })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas:base' })
     expect(revalidateWebCache).not.toHaveBeenCalledWith({
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'

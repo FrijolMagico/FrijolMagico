@@ -4,6 +4,7 @@ import {
   CANONICAL_CATALOG_SLUGS_CACHE_TAG,
   CATALOG_BASE_CACHE_TAG,
   CATALOG_CACHE_TAG,
+  CATALOG_PARTICIPATION_CACHE_TAG,
   FEATURED_ARTISTS_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 
@@ -68,10 +69,8 @@ describe('deleteArtistaAction canonical slug invalidation', () => {
       mode: 'immediate'
     })
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: CATALOG_BASE_CACHE_TAG })
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: CATALOG_CACHE_TAG,
-      path: '/catalogo'
-    })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: CATALOG_CACHE_TAG })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: CATALOG_PARTICIPATION_CACHE_TAG })
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FEATURED_ARTISTS_CACHE_TAG,
       path: '/'
@@ -86,10 +85,8 @@ describe('deleteArtistaAction canonical slug invalidation', () => {
     expect(deleteCatalogEntry).toHaveBeenCalledWith(transaction, 9)
     expect(updateTag).toHaveBeenCalledWith(CATALOG_BASE_CACHE_TAG)
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: CATALOG_BASE_CACHE_TAG })
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: CATALOG_CACHE_TAG,
-      path: '/catalogo'
-    })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: CATALOG_CACHE_TAG })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: CATALOG_PARTICIPATION_CACHE_TAG })
     expect(revalidateWebCache).not.toHaveBeenCalledWith({
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
@@ -104,9 +101,7 @@ describe('deleteArtistaAction canonical slug invalidation', () => {
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
     })
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: CATALOG_CACHE_TAG,
-      path: '/catalogo'
-    })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: CATALOG_CACHE_TAG })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: CATALOG_PARTICIPATION_CACHE_TAG })
   })
 })

@@ -128,7 +128,7 @@ export async function createCatalogAction(
       } catch (error) {
         console.error('Catalog cache invalidation failed', error)
       }
-      void revalidateWebCacheBestEffort({ tag, path: '/catalogo' })
+      void revalidateWebCacheBestEffort({ tag })
     }
 
     if ('destacado' in parsed.data && parsed.data.destacado) {

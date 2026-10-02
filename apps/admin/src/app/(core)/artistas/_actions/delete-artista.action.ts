@@ -14,6 +14,7 @@ import {
   CANONICAL_CATALOG_SLUGS_CACHE_TAG,
   CATALOG_BASE_CACHE_TAG,
   CATALOG_CACHE_TAG,
+  CATALOG_PARTICIPATION_CACHE_TAG,
   FEATURED_ARTISTS_CACHE_TAG,
 } from '@frijolmagico/cache-tags'
 import type { ActionState } from '@/shared/types/actions'
@@ -70,7 +71,8 @@ export async function deleteArtistaAction(id: number): Promise<ActionState> {
       })
     }
     void revalidateWebCache({ tag: CATALOG_BASE_CACHE_TAG })
-    void revalidateWebCache({ tag: CATALOG_CACHE_TAG, path: '/catalogo' })
+    void revalidateWebCache({ tag: CATALOG_CACHE_TAG })
+    void revalidateWebCache({ tag: CATALOG_PARTICIPATION_CACHE_TAG })
 
     if (wasFeatured) {
       void revalidateWebCache({

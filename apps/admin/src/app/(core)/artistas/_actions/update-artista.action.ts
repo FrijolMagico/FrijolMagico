@@ -183,7 +183,7 @@ export async function updateArtistaWithPseudonymsAction(
       updateTag(CATALOG_BASE_CACHE_TAG)
       updateTag(CATALOG_CACHE_TAG)
       void revalidateWebCache({ tag: CATALOG_BASE_CACHE_TAG })
-      void revalidateWebCache({ tag: CATALOG_CACHE_TAG, path: '/catalogo' })
+      void revalidateWebCache({ tag: CATALOG_CACHE_TAG })
     }
     if (catalogProjectionChanged) {
       void revalidateWebCache({
@@ -347,7 +347,7 @@ export async function updateArtistaAction(
     updateTag(CATALOG_BASE_CACHE_TAG)
     updateTag(CATALOG_CACHE_TAG)
     void revalidateWebCache({ tag: CATALOG_BASE_CACHE_TAG })
-    void revalidateWebCache({ tag: CATALOG_CACHE_TAG, path: '/catalogo' })
+    void revalidateWebCache({ tag: CATALOG_CACHE_TAG })
   }
   if (catalogProjectionChanged) {
     void revalidateWebCache({

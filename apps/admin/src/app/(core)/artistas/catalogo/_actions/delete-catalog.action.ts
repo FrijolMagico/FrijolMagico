@@ -38,7 +38,7 @@ export async function deleteCatalogAction(id: number): Promise<ActionState> {
 
     for (const tag of [CATALOG_BASE_CACHE_TAG, CATALOG_PARTICIPATION_CACHE_TAG, CATALOG_CACHE_TAG]) {
       updateTag(tag)
-      void revalidateWebCache({ tag, path: '/catalogo' })
+      void revalidateWebCache({ tag })
     }
 
     if (wasFeatured) {
