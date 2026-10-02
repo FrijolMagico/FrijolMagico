@@ -2,6 +2,12 @@
 
 Acceso a Turso/libSQL desde el monorepo: Drizzle ORM para consultas relacionales y cliente SQL para consultas directas. Para desarrollo, `local.dev.db` es una copia real de **staging** y `local.db` una copia real de **producción**; no son bases de datos de prueba generadas con seed.
 
+## Local builds
+
+From the repository root, `bun run build` builds against the existing staging snapshot at `packages/database/local.dev.db`, matching `bun run dev`. `bun run build:real` builds against the existing production snapshot at `packages/database/local.db`, matching `bun run dev:real`. Both commands fail if their selected snapshot is missing; they do not create, migrate, seed, or pull a database. Forward Turbo filters as usual, for example `bun run build --filter=@frijolmagico/web`.
+
+Vercel builds keep their configured database environment and do not select a local snapshot. The app-level `next build` scripts are unchanged.
+
 ## Desarrollo local con snapshots
 
 Desde la raíz, `bun run dev` inicia web y admin con una URL `file:` directa a `packages/database/local.dev.db`; `bun run dev:real` usa `packages/database/local.db`. Ambos preservan los filtros Turbo pasados, por ejemplo `bun run dev --filter=@frijolmagico/web` o `bun run dev:real --filter=@frijolmagico/admin`. No inician un servidor Turso local, sincronizan snapshots automáticamente ni leen Turso Cloud. `dev:real` solo apunta al archivo local `local.db` —nunca a una base remota—, pero el admin puede escribir en ese archivo con datos reales de producción.

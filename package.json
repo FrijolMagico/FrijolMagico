@@ -9,7 +9,8 @@
     }
   },
   "scripts": {
-    "build": "turbo run build",
+    "build": "bun scripts/build-local.ts staging",
+    "build:real": "bun scripts/build-local.ts production",
     "dev": "TURSO_DATABASE_URL=file://${PWD}/packages/database/local.dev.db turbo run dev",
     "dev:real": "TURSO_DATABASE_URL=file://${PWD}/packages/database/local.db turbo run dev",
     "lint": "turbo run lint",
