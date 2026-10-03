@@ -18,8 +18,8 @@ Los antiguos scripts locales de desarrollo y producción del paquete de base de 
 
 Antes de refrescar, detené los procesos de web/admin y cualquier otro proceso que use los archivos locales. Desde `packages/database/`, obtené autorización de lectura para el destino específico:
 
-- Staging: autenticar la CLI con `turso auth login`, configurar `TURSO_STAGING_DATABASE_NAME` con el nombre exacto y ejecutar `bun --no-env-file run pull:staging` para reemplazar `local.dev.db`.
-- Producción: obtener autorización de lectura separada, configurar `TURSO_PRODUCTION_DATABASE_NAME` y ejecutar `bun --no-env-file run pull:production` para reemplazar `local.db`.
+- Staging: autenticar la CLI con `turso auth login`, configurar `TURSO_STAGING_DATABASE_NAME` con el nombre exacto y ejecutar `bun run pull:staging` para reemplazar `local.dev.db`.
+- Producción: obtener autorización de lectura separada, configurar `TURSO_PRODUCTION_DATABASE_NAME` y ejecutar `bun run pull:production` para reemplazar `local.db`.
 
 Los pulls obtienen un dump, lo importan y validan antes de reemplazar el archivo seleccionado. No migran ni escriben en Turso remoto; sí reemplazan el snapshot local. No configures `TURSO_DATABASE_URL` ni `TURSO_AUTH_TOKEN` para el pull. Verificá el origen independientemente del dump: un dump válido pero del origen equivocado no se puede detectar solo por el esquema.
 
@@ -29,8 +29,8 @@ CI aplica las mismas migraciones versionadas únicamente al archivo aislado `moc
 
 | Comando (desde `packages/database/`) | Destino / efecto |
 | --- | --- |
-| `bun --no-env-file run pull:staging` | Lee staging; valida y reemplaza solo `local.dev.db`. |
-| `bun --no-env-file run pull:production` | Lee producción; valida y reemplaza solo `local.db`. |
+| `bun run pull:staging` | Lee staging; valida y reemplaza solo `local.dev.db`. |
+| `bun run pull:production` | Lee producción; valida y reemplaza solo `local.db`. |
 | `bun run dev` (desde la raíz) | Web + admin con URL `file:` a `packages/database/local.dev.db`; sin servidor local ni conexión/sync a Turso Cloud. |
 | `bun run dev:real` (desde la raíz) | Web + admin con URL `file:` a `packages/database/local.db`; permite escrituras locales. |
 | `bun run migrate:staging` | **Escribe** migraciones versionadas en staging remoto, con autorización específica. |
@@ -50,14 +50,14 @@ No existe `bun run seed`, `bun run migrate` genérico ni `bun run reset:dev-r2` 
 Marcá cada casilla con evidencia para **web y admin** antes de habilitar un preview de prueba. Los checks locales no sustituyen las aprobaciones remotas.
 
 - [x] **Destino, esquema y fixture:** `staging-frijolmagico` está creada con 27 migraciones y el fixture cargado una vez; se verificaron conteos y FK. Su cuota de lecturas sigue compartida con la organización; no inferir aislamiento de cuota por tener dos bases.
-- [ ] **Snapshots:** con autorización de lectura y procesos locales cerrados, confirmar identidad del origen independientemente del dump; solo entonces ejecutar `bun --no-env-file run pull:staging` y comprobar `local.dev.db` sin exponer datos. `local.db` requiere autorización de lectura **distinta** para producción. No sustituir ninguno por el seed.
+- [ ] **Snapshots:** con autorización de lectura y procesos locales cerrados, confirmar identidad del origen independientemente del dump; solo entonces ejecutar `bun run pull:staging` y comprobar `local.dev.db` sin exponer datos. `local.db` requiere autorización de lectura **distinta** para producción. No sustituir ninguno por el seed.
 - [ ] **Variables Vercel:** comprobar la configuración efectiva de **ambos** proyectos sin mostrar secretos: Production (`main`) usa la base principal; Preview general usa staging y Preview **específico de la rama `dev`** sobrescribe con la principal. Vercel `Development` no es el Preview de `dev`; no colocar tokens en `NEXT_PUBLIC_*`. Confirmar que el Ignored Build Step sigue permitiendo solo `main` y `dev`; cualquier preview de una rama feature requiere una decisión y acción de despliegue separadas. No asumir aislamiento hasta verificar desde una ejecución autorizada de cada rama.
 - [ ] **Comportamiento y lecturas:** pedir autorización para **un** preview controlado; comprobar su destino sin revelar credenciales, el endpoint de slugs canónicos, redirects y consultas de catálogo con tráfico acotado. Registrar ventana/consulta/branch, estado de caché, latencia y métrica de *rows read* de Turso antes/después si el proveedor la ofrece. Las lecturas de la organización son compartidas y la diferencia temporal puede incluir tráfico ajeno; no atribuir ahorros facturables a una SQL sin métricas por consulta. Los pasos VM de SQLite no son *rows read* facturados.
 - [ ] **Cierre:** decidir conservar o revertir variables/builds del preview según la evidencia, sin desplegar producción ni migrarla automáticamente. Escalar cualquier desacuerdo de identidad, historial, FK o consumo antes de continuar.
 
 ## Configuración y migraciones remotas
 
-La CLI `turso` usa su propia autenticación (`turso auth login`); los tokens de Drizzle **no** la autentican. Guardá credenciales solo en un entorno privado, nunca en Git ni en comandos compartidos. Para migraciones, agregá manualmente las credenciales del destino a `packages/database/.env.local`, que está ignorado por Git; no incluyas valores reales en documentación, comandos ni logs. Los scripts `bun run migrate:staging` y `bun run migrate:production` cargan explícitamente ese archivo y ejecutan Drizzle Kit con `--config=drizzle-staging.config.ts` o `--config=drizzle-production.config.ts`. Cada config lee y valida solo las variables de su destino; no hay wrapper que filtre el entorno del proceso. Drizzle Kit puede mostrar URLs o tokens en su salida: no ejecutes con credenciales reales en logs compartidos ni guardes la salida en lugares inseguros. Los pulls siguen usando `bun --no-env-file run pull:<destino>` y no cargan ese archivo; requieren solo el nombre de la base y autenticación separada de la CLI Turso. No hay que configurar tokens para servir los archivos locales.
+La CLI `turso` usa su propia autenticación (`turso auth login`); los tokens de Drizzle **no** la autentican. Guardá credenciales solo en un entorno privado, nunca en Git ni en comandos compartidos. Para migraciones, agregá manualmente las credenciales del destino a `packages/database/.env.local`, que está ignorado por Git; no incluyas valores reales en documentación, comandos ni logs. Los scripts `bun run migrate:staging` y `bun run migrate:production` cargan explícitamente ese archivo y ejecutan Drizzle Kit con `--config=drizzle-staging.config.ts` o `--config=drizzle-production.config.ts`. Cada config lee y valida solo las variables de su destino; no hay wrapper que filtre el entorno del proceso. Drizzle Kit puede mostrar URLs o tokens en su salida: no ejecutes con credenciales reales en logs compartidos ni guardes la salida en lugares inseguros. Los pulls siguen usando `bun run pull:<destino>` y no cargan ese archivo; requieren solo el nombre de la base y autenticación separada de la CLI Turso. No hay que configurar tokens para servir los archivos locales.
 
 Para migrar, configurá únicamente el juego de identidad, URL y token del destino que vas a migrar:
 

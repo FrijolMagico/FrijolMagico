@@ -12,8 +12,8 @@ Drizzle ORM + Turso (libSQL) database package.
 ## Commands
 
 ```bash
-bun --no-env-file run pull:staging    # read staging into local.dev.db
-bun --no-env-file run pull:production # read production into local.db
+bun run pull:staging    # read staging into local.dev.db
+bun run pull:production # read production into local.db
 # From the repository root:
 bun run dev                # web + admin against packages/database/local.dev.db
 bun run dev:real           # web + admin against packages/database/local.db (admin can write)
