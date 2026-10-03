@@ -24,5 +24,5 @@ Add root-level Bun commands to start both built Next.js apps with the selected l
 - Independent verifier passed structural assertions and Turbo dry-run inspection; no servers launched.
 - Native ASSESS was unassessable because the untracked ODD task file needs an explicit intended-untracked selection; the independent verifier fulfilled the high-risk fallback verification plan.
 - Native review INSPECT is blocked at the intended-untracked selection stop; no START or review lineage was created.
-- Commit identity: pending.
+- Commit identity: `ef71ed6d` (`feat(scripts): add database-aware app start commands`).
 - Existing unrelated/pre-existing changes were left untouched, including `apps/web/src/app/(sections)/catalogo/page.tsx`.
