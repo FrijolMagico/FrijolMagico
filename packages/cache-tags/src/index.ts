@@ -21,6 +21,7 @@ export const FEATURED_ARTISTS_CACHE_TAG = 'home:destacados'
 export const NOSOTROS_CACHE_TAG = 'nosotros'
 export const FESTIVALES_CACHE_TAG = 'festivales'
 export const FESTIVAL_CRITICAL_CACHE_TAG = 'festivales:critico'
+export const FESTIVAL_ACTIVE_DISPLAY_CACHE_TAG = 'festivales:activo:display'
 
 // ── Artistas ──────────────────────────────────
 export const ARTIST_CACHE_TAG = 'artistas'
