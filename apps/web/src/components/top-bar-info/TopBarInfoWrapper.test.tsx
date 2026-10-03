@@ -2,90 +2,72 @@ import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
 import { cleanup, render } from '@testing-library/react'
 import type { ReactNode } from 'react'
 
-import { executeQueryMock } from '@/test-utils/mockDatabase'
+const getActiveFestivalDisplay = mock(async () => null as {
+  id: number
+  slug: string
+  event_name: string
+  edition_number: string
+  start_date: string
+  end_date: string
+  days: { fecha: string; lugar: string | null }[]
+} | null)
 
-// Mock next/link for TopBarInfoClient
 mock.module('next/link', () => ({
   default: ({ href, children }: { href: string; children: ReactNode }) => (
     <a href={href}>{children}</a>
   )
 }))
-
-// Mock next/cache
 mock.module('next/cache', () => ({
   cacheLife: mock(() => {}),
   cacheTag: mock(() => {})
 }))
+mock.module('@/data/data-access-layer/festivals/getActiveFestivalDisplay', () => ({
+  getActiveFestivalDisplay
+}))
 
 afterEach(cleanup)
-
-beforeEach(() => {
-  executeQueryMock.mockReset()
-})
+beforeEach(() => getActiveFestivalDisplay.mockReset())
 
 describe('TopBarInfoWrapper', () => {
-  test('renders dynamic data when festival is active', async () => {
-    // Mock: active festival + edition days
-    executeQueryMock.mockResolvedValueOnce({
-      data: [
-        {
-          id: 10,
-          slug: 'edicion-15-1',
-          event_name: 'Festival Frijol Mágico',
-          edition_number: 'XV',
-          start_date: '2026-10-09',
-          end_date: '2026-10-11'
-        }
-      ],
-      error: null
-    })
-    executeQueryMock.mockResolvedValueOnce({
-      data: [
+  test('renders the active festival display and its days', async () => {
+    getActiveFestivalDisplay.mockResolvedValueOnce({
+      id: 10,
+      slug: 'edicion-15-1',
+      event_name: 'Festival Frijol Mágico',
+      edition_number: 'XV',
+      start_date: '2026-10-09',
+      end_date: '2026-10-11',
+      days: [
         { fecha: '2026-10-09', lugar: 'Mall VIVO Coquimbo' },
         { fecha: '2026-10-10', lugar: 'Mall VIVO Coquimbo' }
-      ],
-      error: null
+      ]
     })
 
     const { TopBarInfoWrapper } = await import('./TopBarInfoWrapper')
-    const element = await TopBarInfoWrapper()
-
-    const { container } = render(element)
-    const section = container.querySelector('section')
-    expect(section).not.toBeNull()
-    expect(section!.textContent).toContain('Festival Frijol Mágico')
+    const { container } = render(await TopBarInfoWrapper())
+    expect(container.querySelector('section')?.textContent).toContain('Festival Frijol Mágico')
+    expect(container.querySelector('section')?.textContent).toContain('Mall VIVO Coquimbo')
   })
 
-  test('renders site data when no festival is active', async () => {
-    // Mock: no active festival
-    executeQueryMock.mockResolvedValueOnce({
-      data: [],
-      error: null
-    })
-
-    // TopBarInfoWrapper will fall back to siteData.top_bar
+  test('keeps static site data when there is no active festival', async () => {
+    getActiveFestivalDisplay.mockResolvedValueOnce(null)
     const { TopBarInfoWrapper } = await import('./TopBarInfoWrapper')
-    const element = await TopBarInfoWrapper()
-
-    expect(element).not.toBeNull()
-    // site.json top_bar has text: '¡Vive la experiencia!'
-    // Just check it renders something non-null
-    const { container } = render(element)
+    const { container } = render(await TopBarInfoWrapper())
     expect(container.querySelector('section')).not.toBeNull()
   })
 
-  test('returns null when no festival and site top_bar is inactive', async () => {
-    // Mock: no active festival
-    executeQueryMock.mockResolvedValueOnce({
-      data: [],
-      error: null
+  test('uses the start-date fallback when an active edition has no days', async () => {
+    getActiveFestivalDisplay.mockResolvedValueOnce({
+      id: 10,
+      slug: 'edicion-15-1',
+      event_name: 'Festival Frijol Mágico',
+      edition_number: 'XV',
+      start_date: '2026-10-09',
+      end_date: '2026-10-09',
+      days: []
     })
-    // Temporarily set top_bar.active to false
-    // We need a different mock approach for site.json
-    // For now just verify the fallback case works
     const { TopBarInfoWrapper } = await import('./TopBarInfoWrapper')
-    const element = await TopBarInfoWrapper()
-
-    expect(element).not.toBeNull()
+    const { container } = render(await TopBarInfoWrapper())
+    expect(container.querySelector('section')?.textContent).toContain('9 de octubre')
   })
 })
