@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
 import {
   FESTIVALES_CACHE_TAG,
-  FESTIVAL_CRITICAL_CACHE_TAG
+  FESTIVAL_CRITICAL_CACHE_TAG,
+  FESTIVAL_ACTIVE_DISPLAY_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 
 let committed = false
@@ -29,6 +30,16 @@ let existingDates: {
 const routeInvalidations: { path: string; pathType: 'page' | 'layout' }[] = []
 let failMutation = false
 let transactionSelectCount = 0
+let projectionSequence: (Record<string, unknown> | null)[] = []
+const activeDisplay = {
+  id: 1,
+  slug: 'festival-I',
+  event_name: 'Festival',
+  edition_number: 'I',
+  start_date: '2026-06-10',
+  end_date: '2026-06-10',
+  days: [{ fecha: '2026-06-10', lugar: 'Plaza' }]
+}
 const invalidations: string[] = []
 const updateTag = mock((tag: string) => {
   expect(committed).toBe(true)
@@ -106,6 +117,11 @@ mock.restore()
 mock.module('server-only', () => ({}))
 mock.module('next/cache', () => ({ updateTag }))
 mock.module('@frijolmagico/database/orm', () => ({ db }))
+mock.module('@frijolmagico/database/active-festival-display', () => ({
+  getActiveFestivalDisplay: async () => projectionSequence.shift() ?? null,
+  compareActiveFestivalDisplay: (before: unknown, after: unknown) =>
+    JSON.stringify(before) !== JSON.stringify(after)
+}))
 mock.module('@/shared/lib/auth/utils', () => ({
   requireAuth: async () => ({ user: { id: 'admin-1' } })
 }))
@@ -140,6 +156,7 @@ beforeEach(() => {
   existingDates = []
   failMutation = false
   transactionSelectCount = 0
+  projectionSequence = []
   invalidations.length = 0
   routeInvalidations.length = 0
   updateTag.mockClear()
@@ -148,7 +165,8 @@ beforeEach(() => {
 })
 
 describe('saveEditionWithDaysAction catalog freshness', () => {
-  test('invalidates the web catalog when the edition number changes', async () => {
+  test('invalidates active display when the changed edition is selected', async () => {
+    projectionSequence = [activeDisplay, { ...activeDisplay, edition_number: 'II' }]
     const result = await saveEditionWithDaysAction(
       { success: true },
       { ...payload, numeroEdicion: 'II' }
@@ -169,10 +187,14 @@ describe('saveEditionWithDaysAction catalog freshness', () => {
     })
     expect(routeInvalidations).toEqual([
       { path: '/festivales/[slug]', pathType: 'page' },
-      { path: '/festivales', pathType: 'page' },
-      { path: '/', pathType: 'page' },
-      { path: '/', pathType: 'layout' }
+      { path: '/festivales', pathType: 'page' }
     ])
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVAL_ACTIVE_DISPLAY_CACHE_TAG,
+      mode: 'immediate'
+    })
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({ path: '/', pathType: 'page' })
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({ path: '/', pathType: 'layout' })
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: 'catalogo:artistas'
     })
@@ -204,7 +226,8 @@ describe('saveEditionWithDaysAction catalog freshness', () => {
     })
   })
 
-  test('invalidates only edition-date catalog data when a date changes', async () => {
+  test('invalidates active display when a selected edition date changes', async () => {
+    projectionSequence = [activeDisplay, { ...activeDisplay, end_date: '2026-06-11' }]
     existingDates = [
       {
         id: 9,
@@ -240,13 +263,18 @@ describe('saveEditionWithDaysAction catalog freshness', () => {
     })
     expect(routeInvalidations).toEqual([
       { path: '/festivales/[slug]', pathType: 'page' },
-      { path: '/festivales', pathType: 'page' },
-      { path: '/', pathType: 'page' },
-      { path: '/', pathType: 'layout' }
+      { path: '/festivales', pathType: 'page' }
     ])
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVAL_ACTIVE_DISPLAY_CACHE_TAG,
+      mode: 'immediate'
+    })
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({ path: '/', pathType: 'page' })
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({ path: '/', pathType: 'layout' })
   })
 
-  test('preserves no-op handling when projected edition fields and dates are unchanged', async () => {
+  test('does not invalidate active display for an unchanged projection', async () => {
+    projectionSequence = [activeDisplay, activeDisplay]
     const result = await saveEditionWithDaysAction({ success: true }, payload)
 
     expect(result.success).toBe(true)
@@ -260,6 +288,10 @@ describe('saveEditionWithDaysAction catalog freshness', () => {
     })
     expect(routeInvalidations).toEqual([])
     expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: FESTIVAL_ACTIVE_DISPLAY_CACHE_TAG,
+      mode: 'immediate'
+    })
   })
 
   test('invalidates festival routes for name and poster changes without the root routes', async () => {
@@ -308,7 +340,8 @@ describe('saveEditionWithDaysAction catalog freshness', () => {
     ])
   })
 
-  test('invalidates root routes when the venue changes', async () => {
+  test('invalidates active display without root paths when the selected venue changes', async () => {
+    projectionSequence = [activeDisplay, { ...activeDisplay, days: [{ fecha: '2026-06-10', lugar: 'Auditorio' }] }]
     existingDates = [
       {
         id: 9,
@@ -335,17 +368,20 @@ describe('saveEditionWithDaysAction catalog freshness', () => {
       ]
     })
 
-    expect(routeInvalidations).toContainEqual({
-      path: '/',
-      pathType: 'page'
+    expect(routeInvalidations).toEqual([
+      { path: '/festivales/[slug]', pathType: 'page' },
+      { path: '/festivales', pathType: 'page' }
+    ])
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVAL_ACTIVE_DISPLAY_CACHE_TAG,
+      mode: 'immediate'
     })
-    expect(routeInvalidations).toContainEqual({
-      path: '/',
-      pathType: 'layout'
-    })
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({ path: '/', pathType: 'page' })
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({ path: '/', pathType: 'layout' })
   })
 
-  test('invalidates public and root routes when creating an edition', async () => {
+  test('invalidates active display when creating the first selected edition without root paths', async () => {
+    projectionSequence = [null, activeDisplay]
     await saveEditionWithDaysAction({ success: true }, {
       ...payload,
       id: null
@@ -353,10 +389,14 @@ describe('saveEditionWithDaysAction catalog freshness', () => {
 
     expect(routeInvalidations).toEqual([
       { path: '/festivales/[slug]', pathType: 'page' },
-      { path: '/festivales', pathType: 'page' },
-      { path: '/', pathType: 'page' },
-      { path: '/', pathType: 'layout' }
+      { path: '/festivales', pathType: 'page' }
     ])
+    expect(revalidateWebCache).toHaveBeenCalledWith({
+      tag: FESTIVAL_ACTIVE_DISPLAY_CACHE_TAG,
+      mode: 'immediate'
+    })
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({ path: '/', pathType: 'page' })
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({ path: '/', pathType: 'layout' })
   })
 
   test('does not treat a missing edition row on update as an edition change', async () => {
@@ -367,7 +407,8 @@ describe('saveEditionWithDaysAction catalog freshness', () => {
     expect(routeInvalidations).toEqual([])
   })
 
-  test('does not invalidate the web catalog when the transaction fails', async () => {
+  test('does not invalidate active display when the transaction mutation fails', async () => {
+    projectionSequence = [activeDisplay]
     failMutation = true
     const result = await saveEditionWithDaysAction({ success: true }, {
       ...payload,
@@ -376,5 +417,9 @@ describe('saveEditionWithDaysAction catalog freshness', () => {
 
     expect(result.success).toBe(false)
     expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+      tag: FESTIVAL_ACTIVE_DISPLAY_CACHE_TAG,
+      mode: 'immediate'
+    })
   })
 })

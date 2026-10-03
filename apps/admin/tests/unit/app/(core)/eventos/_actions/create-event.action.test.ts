@@ -65,14 +65,9 @@ describe('createEventAction public cache freshness', () => {
       path: '/festivales',
       pathType: 'page'
     })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      path: '/',
-      pathType: 'page'
-    })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      path: '/',
-      pathType: 'layout'
-    })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledTimes(2)
+    expect(revalidateWebCache).toHaveBeenCalledTimes(2)
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({ path: '/', pathType: 'page' })
+    expect(revalidateWebCache).not.toHaveBeenCalledWith({ path: '/', pathType: 'layout' })
+    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
   })
 })
