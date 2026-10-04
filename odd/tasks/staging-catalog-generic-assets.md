@@ -21,7 +21,7 @@ Align the synthetic seed and the authorized staging database with generic, reusa
 
 ## Work unit
 
-- [~] WU1 — Update the seed and its isolated contract test; copy and verify existing staging assets to generic keys; update staging catalog, artist-image, and edition references/featured flags in direct transactions; verify database, bucket, and CDN state; commit only the scoped source/task files on this branch.
+- [x] WU1 — Update the seed and its isolated contract test; copy and verify existing staging assets to generic keys; update staging catalog, artist-image, and edition references/featured flags in direct transactions; verify database, bucket, and CDN state; commit only the scoped source/task files on this branch.
 
 ## Acceptance criteria and checks
 
@@ -38,7 +38,9 @@ Align the synthetic seed and the authorized staging database with generic, reusa
 - Fresh read-only checks validated staging identity and exact inventory: 22 artist image objects and two poster objects; no target-key collisions. No staging artist-image row referenced a source artist object; both old poster keys were referenced and included in the remap. All 24 objects were copied to generic keys, checked by R2 object size/ETag, and returned CDN HTTP 200. Original keys remain until staging references are transactionally updated and verified.
 - One guarded direct transaction committed to staging: updated 38 catalog artist-image URL/version pairs, set exactly catalog IDs 1–3 featured, and remapped `poster_url`, `poster_path`, and `poster_version` for all seven editions. Post-commit queries confirmed 3 featured rows, 38 generic catalog image rows, and 7 generic edition poster rows. Remote edition VII already had `frijol-magico-vii`; only the seed needed correction.
 - After the staging transaction, verified across every schema table carrying `imagen_url`, `poster_url`, or `poster_path` that no references remain to old keys (the edition snapshot table is empty). Deleted the 24 old object keys and 18 obsolete directory-marker keys. The bucket now has 24 generic assets; R2 HEAD and CDN HEAD checks returned HTTP 200 for all 24 targets. Staging has no references to old keys.
-- Source/test changes are ready for review and work-unit commit. Git index/commit remains paused pending confirmation from the peer session that previously requested no overlapping index operations; preserve its unrelated changes.
+- Work-unit commit: `7448c3c055f2eb0ec9f97cec93fd2fd78ec112e6` (`feat(database): align staging catalog generic assets`). Only the five scoped task/source/test paths were staged; the preceding peer delivery was already present at HEAD and its unrelated files were not included.
+- Native ASSESS on that commit against parent `1f1f128a8fde083f02dc489f2944164cb9985247` returned `medium`, 206 changed lines, `reviewDue=false` (`under_budget`), runtime writer profile `large`; its plan requires writer self-verification and no independent verifier. Native review is deferred to the PR slice. INSPECT was performed; its offered route covered the entire accumulated workspace, so no workspace-wide START was issued.
+- WU1 is complete. No push or PR was created.
 - Peer-session commit coordination is still pending; no staging, commit, or index operations will occur until that is resolved.
 - Initial read-only audit found 38 catalog rows in both fixture and staging, all unfeatured; staging edition poster keys were available, while catalog artist image paths were synthetic. Fresh inventory and reference checks are required immediately before mutation.
 - Route: delegated bounded writer for the seed and directly affected fixture tests (multi-file write; test-first), with the parent owning R2 and direct staging database operations.
