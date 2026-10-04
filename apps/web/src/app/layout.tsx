@@ -10,9 +10,7 @@ import localFont from 'next/font/local'
 
 import siteData from '@/data/site.json'
 import '@/styles/globals.css'
-import { Suspense } from 'react'
 import { TopBarInfoWrapper } from '@/components/top-bar-info/TopBarInfoWrapper'
-import { TopBarSkeleton } from '@/components/top-bar-info/TopBarSkeleton'
 import { Background } from '@/components/Background'
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics'
 import { Analytics } from '@vercel/analytics/next'
@@ -123,9 +121,7 @@ export default function RootLayout({
         >
           Saltar al contenido principal
         </a>
-        <Suspense fallback={<TopBarSkeleton />}>
-          <TopBarInfoWrapper />
-        </Suspense>
+        <TopBarInfoWrapper />
         <div id='main-content' tabIndex={-1} className='outline-none' />
         {children}
         <Footer />

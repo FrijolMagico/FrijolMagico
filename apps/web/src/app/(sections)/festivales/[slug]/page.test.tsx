@@ -1,6 +1,4 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
-import { Suspense } from 'react'
-
 import { notFound } from 'next/navigation'
 
 import { executeQueryMock } from '@/test-utils/mockDatabase'
@@ -97,7 +95,7 @@ describe('FestivalDetailPage', () => {
     expect(notFound).toHaveBeenCalled()
   })
 
-  test('composes the server navigator Suspense slot inside active detail content', async () => {
+  test('composes the server navigator directly inside active detail content', async () => {
     executeQueryMock
       .mockResolvedValueOnce({
         data: [buildDetailRow(baseDetail)],
@@ -125,15 +123,14 @@ describe('FestivalDetailPage', () => {
     const content = animation.props.children as {
       type: unknown
       props: {
-        navigator: { type: unknown; props: { children: { type: unknown } } }
+        navigator: { type: unknown }
       }
     }
 
     expect(content.type).toBe(FestivalDetailContent)
 
     const navigator = content.props.navigator
-    expect(navigator.type).toBe(Suspense)
-    expect(navigator.props.children.type).toBe(FestivalNavigator)
+    expect(navigator.type).toBe(FestivalNavigator)
   })
 
   test('does not import FestivalNavigator from client modules', async () => {
