@@ -1,17 +1,17 @@
-import { CatalogArtist } from '../types/catalog'
+import type { CatalogSearchPayload } from '../types/catalog-payloads'
 import { CatalogSearchBar } from './CatalogSearchBar'
 import { CatalogFilterBar } from './CatalogFilterBar'
 
 export const CatalogSearchSection = ({
-  catalogData
+  filterOptions
 }: {
-  catalogData: CatalogArtist[]
+  filterOptions: CatalogSearchPayload
 }) => {
   return (
     <>
       <section className='flex w-full flex-col justify-center gap-4 pb-6 sm:flex-row'>
         <CatalogSearchBar />
-        <CatalogFilterBar catalogData={catalogData} />
+        <CatalogFilterBar filterOptions={filterOptions} />
       </section>
     </>
   )
