@@ -1,9 +1,9 @@
 import { CatalogSearchSection } from './CatalogSearchSection'
-import { getCatalogDataForRender } from '../lib/getCatalogData'
+import { getCatalogData } from '../lib/getCatalogData'
 import { projectCatalogSearchOptions } from '../application/catalog-payloads'
 
 export async function CatalogSearchServer() {
-  const { data, error } = await getCatalogDataForRender()
+  const { data, error } = await getCatalogData()
   if (error) return null
 
   return (
