@@ -43,7 +43,7 @@ export async function GET(request: Request) {
 
     const invalidationResult = await revalidateWebCache({
       tag: FEATURED_ARTISTS_CACHE_TAG,
-      path: '/'
+      mode: 'swr'
     })
 
     const durationMs = Date.now() - startedAt
