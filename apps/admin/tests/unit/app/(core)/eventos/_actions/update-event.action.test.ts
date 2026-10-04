@@ -2,58 +2,37 @@ import { beforeEach, describe, expect, mock, test } from 'bun:test'
 import {
   EVENT_CACHE_TAG,
   FESTIVALES_CACHE_TAG,
-  FESTIVAL_CRITICAL_CACHE_TAG,
-  FESTIVAL_ACTIVE_DISPLAY_CACHE_TAG
+  FESTIVAL_CRITICAL_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 
 let eventName = 'Evento original'
 let failUpdate = false
 let returningRows = [{ id: 1 }]
-let projectionSequence: (Record<string, unknown> | null)[] = []
-let transactionCompleted = false
-const activeDisplay = {
-  id: 10,
-  slug: 'festival-i',
-  event_name: 'Evento original',
-  edition_number: 'I',
-  start_date: '2026-10-01',
-  end_date: '2026-10-01',
-  days: [{ fecha: '2026-10-01', lugar: null }]
-}
 const updateTag = mock(() => {})
 const revalidateWebCache = mock(async () => ({ revalidated: true }))
 const revalidateWebCacheBestEffort = mock(async () => {})
 
-const select = () => ({
-  from: () => ({
-    where: () => ({
-      limit: async () => [{ nombre: eventName }]
-    })
-  })
-})
-const update = () => ({
-  set: (values: { nombre?: string }) => ({
-    where: () => ({
-      returning: async () => {
-        if (failUpdate) throw new Error('database update failed')
-        if (returningRows.length > 0 && values.nombre !== undefined) {
-          eventName = values.nombre
-        }
-        return returningRows
-      }
-    })
-  })
-})
 const db = {
-  transaction: async (
-    callback: (tx: { select: typeof select; update: typeof update }) => Promise<unknown>
-  ) => {
-    const result = await callback({ select, update })
-    transactionCompleted = true
-    return result
-  },
-  select,
-  update
+  select: () => ({
+    from: () => ({
+      where: () => ({
+        limit: async () => [{ nombre: eventName }]
+      })
+    })
+  }),
+  update: () => ({
+    set: (values: { nombre?: string }) => ({
+      where: () => ({
+        returning: async () => {
+          if (failUpdate) throw new Error('database update failed')
+          if (returningRows.length > 0 && values.nombre !== undefined) {
+            eventName = values.nombre
+          }
+          return returningRows
+        }
+      })
+    })
+  })
 }
 
 mock.restore()
@@ -67,14 +46,6 @@ mock.module('@/shared/lib/web-invalidation', () => ({
   revalidateWebCacheBestEffort
 }))
 mock.module('@frijolmagico/database/orm', () => ({ db }))
-mock.module('@frijolmagico/database/active-festival-display', () => ({
-  getActiveFestivalDisplay: async () => {
-    const projection = projectionSequence.shift()
-    return projection ?? null
-  },
-  compareActiveFestivalDisplay: (before: unknown, after: unknown) =>
-    JSON.stringify(before) !== JSON.stringify(after)
-}))
 
 const { updateEventAction } = await import(
   '@/core/eventos/_actions/update-event.action'
@@ -84,16 +55,13 @@ beforeEach(() => {
   eventName = 'Evento original'
   failUpdate = false
   returningRows = [{ id: 1 }]
-  projectionSequence = []
-  transactionCompleted = false
   updateTag.mockClear()
   revalidateWebCache.mockClear()
   revalidateWebCacheBestEffort.mockClear()
 })
 
 describe('updateEventAction catalog freshness', () => {
-  test('invalidates the dedicated display tag only when the selected event name changes', async () => {
-    projectionSequence = [activeDisplay, { ...activeDisplay, event_name: 'Evento nuevo' }]
+  test('invalidates the web catalog after changing the event name', async () => {
     const result = await updateEventAction(
       { success: true },
       { id: 1, nombre: 'Evento nuevo' }
@@ -106,14 +74,15 @@ describe('updateEventAction catalog freshness', () => {
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: 'catalogo:artistas:participaciones'
     })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledTimes(2)
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: FESTIVAL_ACTIVE_DISPLAY_CACHE_TAG,
-      mode: 'immediate'
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      path: '/',
+      pathType: 'page'
     })
-    expect(transactionCompleted).toBe(true)
-    expect(revalidateWebCache).not.toHaveBeenCalledWith({ path: '/', pathType: 'page' })
-    expect(revalidateWebCache).not.toHaveBeenCalledWith({ path: '/', pathType: 'layout' })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      path: '/',
+      pathType: 'layout'
+    })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledTimes(4)
     expect(updateTag).toHaveBeenCalledWith('eventos')
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
@@ -129,8 +98,7 @@ describe('updateEventAction catalog freshness', () => {
     })
   })
 
-  test('does not invalidate active display for an unchanged selected projection', async () => {
-    projectionSequence = [activeDisplay, activeDisplay]
+  test('does not invalidate the web catalog for a no-op name update', async () => {
     const result = await updateEventAction(
       { success: true },
       { id: 1, nombre: 'Evento original' }
@@ -143,11 +111,15 @@ describe('updateEventAction catalog freshness', () => {
     expect(revalidateWebCacheBestEffort).not.toHaveBeenCalledWith({
       tag: 'catalogo:artistas:participaciones'
     })
-    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
-    expect(revalidateWebCache).not.toHaveBeenCalledWith({
-      tag: FESTIVAL_ACTIVE_DISPLAY_CACHE_TAG,
-      mode: 'immediate'
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      path: '/',
+      pathType: 'page'
     })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
+      path: '/',
+      pathType: 'layout'
+    })
+    expect(revalidateWebCacheBestEffort).toHaveBeenCalledTimes(2)
   })
 
   test('preserves festival and local invalidations when no row was updated', async () => {
@@ -174,15 +146,17 @@ describe('updateEventAction catalog freshness', () => {
     expect(revalidateWebCacheBestEffort).not.toHaveBeenCalledWith({
       tag: 'catalogo:artistas:participaciones'
     })
-    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
-    expect(revalidateWebCache).not.toHaveBeenCalledWith({
-      tag: FESTIVAL_ACTIVE_DISPLAY_CACHE_TAG,
-      mode: 'immediate'
+    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalledWith({
+      path: '/',
+      pathType: 'page'
+    })
+    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalledWith({
+      path: '/',
+      pathType: 'layout'
     })
   })
 
-  test('does not invalidate active display when the transaction mutation fails', async () => {
-    projectionSequence = [activeDisplay]
+  test('does not invalidate the web catalog when the update fails', async () => {
     failUpdate = true
     const result = await updateEventAction(
       { success: true },
@@ -191,10 +165,6 @@ describe('updateEventAction catalog freshness', () => {
 
     expect(result.success).toBe(false)
     expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
-    expect(revalidateWebCache).not.toHaveBeenCalledWith({
-      tag: FESTIVAL_ACTIVE_DISPLAY_CACHE_TAG,
-      mode: 'immediate'
-    })
     expect(updateTag).not.toHaveBeenCalled()
   })
 })

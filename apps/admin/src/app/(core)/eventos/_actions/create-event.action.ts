@@ -15,7 +15,10 @@ import {
   FESTIVALES_CACHE_TAG,
   FESTIVAL_CRITICAL_CACHE_TAG
 } from '@frijolmagico/cache-tags'
-import { revalidateWebCache } from '@/shared/lib/web-invalidation'
+import {
+  revalidateWebCache,
+  revalidateWebCacheBestEffort
+} from '@/shared/lib/web-invalidation'
 
 const { event } = events
 
@@ -57,6 +60,8 @@ export async function createEventAction(
         console.error('[event-crud] Web cache sync failed', { tag })
       }
     }
+    void revalidateWebCacheBestEffort({ path: '/', pathType: 'page' })
+    void revalidateWebCacheBestEffort({ path: '/', pathType: 'layout' })
     return { success: true }
   } catch (error) {
     return {

@@ -9,11 +9,6 @@ import { requireAuth } from '@/shared/lib/auth/utils'
 import type { ActionState } from '@/shared/types/actions'
 import { revalidateWebCache } from '@/shared/lib/web-invalidation'
 import {
-  getActiveFestivalDisplay,
-  type ActiveFestivalDisplay
-} from '@frijolmagico/database/active-festival-display'
-import { invalidateActiveFestivalDisplay } from '../../_lib/active-festival-invalidation'
-import {
   CATALOG_CACHE_TAG,
   CATALOG_EDITION_DATES_CACHE_TAG,
   CATALOG_PARTICIPATION_CACHE_TAG,
@@ -39,20 +34,17 @@ export async function deleteEditionAction(
     }
   }
 
-  let activeFestivalSnapshots: [ActiveFestivalDisplay | null, ActiveFestivalDisplay | null] = [null, null]
-  const deletedEditions = await db.transaction(async (tx) => {
-    const before = await getActiveFestivalDisplay(tx)
-    const deletedEditions = await tx
-      .delete(eventEdition)
-      .where(eq(eventEdition.id, id))
-      .returning({ id: eventEdition.id, slug: eventEdition.slug })
-    activeFestivalSnapshots = [before, await getActiveFestivalDisplay(tx)]
-    return deletedEditions
-  })
+  const deletedEditions = await db
+    .delete(eventEdition)
+    .where(eq(eventEdition.id, id))
+    .returning({
+      id: eventEdition.id,
+      published: eventEdition.published,
+      slug: eventEdition.slug
+    })
 
   if (deletedEditions.length === 0) return { success: true }
 
-  await invalidateActiveFestivalDisplay(...activeFestivalSnapshots)
   updateTag(EDITION_CACHE_TAG)
   updateTag(EDITION_DAY_CACHE_TAG)
   for (const [tag, mode] of [
@@ -65,7 +57,7 @@ export async function deleteEditionAction(
       console.error('[delete-edition] Web cache sync failed', { tag })
     }
   }
-  for (const { slug } of deletedEditions) {
+  for (const { published, slug } of deletedEditions) {
     if (slug) {
       try {
         await revalidateWebCache({
@@ -82,6 +74,15 @@ export async function deleteEditionAction(
       await revalidateWebCache({ tag: FESTIVALES_CACHE_TAG, path: '/festivales' })
     } catch {
       console.error('[delete-edition] Web cache sync failed', { tag: FESTIVALES_CACHE_TAG })
+    }
+    if (published && slug) {
+      for (const pathType of ['page', 'layout'] as const) {
+        try {
+          await revalidateWebCache({ path: '/', pathType })
+        } catch {
+          console.error('[delete-edition] Web cache sync failed', { path: '/' })
+        }
+      }
     }
   }
   for (const tag of [

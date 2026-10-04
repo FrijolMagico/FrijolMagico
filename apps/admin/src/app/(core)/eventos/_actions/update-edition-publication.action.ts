@@ -13,8 +13,6 @@ import {
 } from '@frijolmagico/cache-tags'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import { revalidateWebCache } from '@/shared/lib/web-invalidation'
-import { getActiveFestivalDisplay } from '@frijolmagico/database/active-festival-display'
-import { invalidateActiveFestivalDisplay } from '../_lib/active-festival-invalidation'
 import type { ActionState } from '@/shared/types/actions'
 import {
   editionPublicationSchema,
@@ -48,6 +46,12 @@ async function syncPublicationCaches(editionMatched: boolean) {
         ? { path: '/festivales', pathType: 'page' as const }
         : {})
     })),
+    ...(editionMatched
+      ? [
+          { mode: 'immediate' as const, path: '/', pathType: 'page' as const },
+          { mode: 'immediate' as const, path: '/', pathType: 'layout' as const }
+        ]
+      : [])
   ]
 
   const results = await Promise.allSettled(
@@ -59,9 +63,11 @@ async function syncPublicationCaches(editionMatched: boolean) {
   results.forEach((result, index) => {
     if (result.status === 'rejected') {
       const invalidation = webInvalidations[index]
-      console.error('[edition-publication] Web cache sync failed', {
-        tag: invalidation.tag
-      })
+      console.error('[edition-publication] Web cache sync failed',
+        'tag' in invalidation
+          ? { tag: invalidation.tag }
+          : { path: invalidation.path, pathType: invalidation.pathType }
+      )
     }
   })
 }
@@ -84,18 +90,12 @@ export async function updateEditionPublicationAction(
       }
     }
 
-    const { updatedEdition, before, after } = await db.transaction(async (tx) => {
-      const before = await getActiveFestivalDisplay(tx)
-      const [updatedEdition] = await tx
-        .update(eventEdition)
-        .set({ published: parsed.data.published })
-        .where(eq(eventEdition.id, parsed.data.id))
-        .returning({ id: eventEdition.id })
-      const after = await getActiveFestivalDisplay(tx)
-      return { updatedEdition, before, after }
-    })
+    const [updatedEdition] = await db
+      .update(eventEdition)
+      .set({ published: parsed.data.published })
+      .where(eq(eventEdition.id, parsed.data.id))
+      .returning({ id: eventEdition.id })
 
-    await invalidateActiveFestivalDisplay(before, after)
     await syncPublicationCaches(updatedEdition !== undefined)
 
     return { success: true, data: { published: parsed.data.published } }

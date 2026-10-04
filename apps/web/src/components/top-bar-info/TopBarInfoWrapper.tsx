@@ -1,4 +1,5 @@
-import { getActiveFestivalDisplay } from '@/data/data-access-layer/festivals/getActiveFestivalDisplay'
+import { getActiveFestival } from '@/data/data-access-layer/festivals/getActiveFestival'
+import { getEditionDays } from '@/data/data-access-layer/festivals/getEditionDays'
 import {
   formatDateRangeWithPlace,
   type DayWithPlace
@@ -7,12 +8,15 @@ import siteData from '@/data/site.json'
 import { TopBarInfoClient, type TopBarData } from './TopBarInfoClient'
 
 async function buildDynamicData(): Promise<TopBarData | null> {
-  const festival = await getActiveFestivalDisplay()
+  const { data } = await getActiveFestival()
 
-  if (!festival) return null
+  if (!data?.length) return null
 
-  const days: DayWithPlace[] = festival.days.length
-    ? festival.days
+  const festival = data[0]
+  const daysResult = await getEditionDays(festival.id)
+
+  const days: DayWithPlace[] = daysResult.data?.length
+    ? daysResult.data.map((d) => ({ fecha: d.fecha, lugar: d.lugar }))
     : [{ fecha: festival.start_date, lugar: null }]
 
   const dateRange = formatDateRangeWithPlace(days)
