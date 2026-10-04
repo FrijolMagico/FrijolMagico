@@ -62,7 +62,8 @@ export async function deleteEditionAction(
       try {
         await revalidateWebCache({
           tag: FESTIVAL_CRITICAL_CACHE_TAG,
-          path: `/festivales/${slug}`
+          path: `/festivales/${slug}`,
+          mode: 'immediate'
         })
       } catch {
         console.error('[delete-edition] Web cache sync failed', {

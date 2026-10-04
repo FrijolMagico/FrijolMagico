@@ -85,8 +85,14 @@ describe('deleteEditionAction catalog freshness', () => {
     })
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      path: '/festivales/festival-2025'
+      path: '/festivales/festival-2025',
+      mode: 'immediate'
     })
+    expect(
+      revalidateWebCache.mock.calls
+        .filter(([options]) => options.tag === FESTIVAL_CRITICAL_CACHE_TAG)
+        .every(([options]) => options.mode === 'immediate')
+    ).toBe(true)
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVALES_CACHE_TAG,
       path: '/festivales'
@@ -112,7 +118,8 @@ describe('deleteEditionAction catalog freshness', () => {
     expect(revalidateWebCache).not.toHaveBeenCalledWith({ path: '/', pathType: 'layout' })
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      path: '/festivales/festival-2025'
+      path: '/festivales/festival-2025',
+      mode: 'immediate'
     })
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVALES_CACHE_TAG,
