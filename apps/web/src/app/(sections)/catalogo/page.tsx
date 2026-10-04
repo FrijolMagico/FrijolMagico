@@ -1,20 +1,18 @@
-import { CatalogPanel } from './components/CatalogPanel'
 import { Header } from '@/components/Header'
-import { CatalogList } from './components/CatalogList'
-import { ErrorSection } from '@/components/ErrorSection'
+import { TrackPageView } from '@/components/analytics/TrackPageView'
+import { ContextBar } from '@/components/context-bar/ContextBar'
+import { paths } from '@/config/paths'
 import siteData from '@/data/site.json'
+import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import {
   CatalogCardLoader,
   CatalogSearchSectionLoader
 } from './components/CatalogSkeletonLoaders'
-import { CatalogSearchSection } from './components/CatalogSearchSection'
 import { CatalogFiltersInitializer } from './components/CatalogFiltersInitializer'
-import { getCatalogData } from './lib/getCatalogData'
-import { Metadata } from 'next'
-import { TrackPageView } from '@/components/analytics/TrackPageView'
-import { paths } from '@/config/paths'
-import { ContextBar } from '@/components/context-bar/ContextBar'
+import { CatalogListServer } from './components/catalog-list-server'
+import { CatalogPanelServer } from './components/catalog-panel-server'
+import { CatalogSearchServer } from './components/catalog-search-server'
 
 const { catalog } = siteData
 
@@ -23,9 +21,7 @@ export const metadata: Metadata = {
   description: catalog.seo.description
 }
 
-export default async function CatalogPage() {
-  const { data, error } = await getCatalogData()
-
+export default function CatalogPage() {
   return (
     <>
       <TrackPageView
@@ -36,20 +32,16 @@ export default async function CatalogPage() {
       <main className='container mx-auto w-full flex-1 px-4 pt-8 pb-16'>
         {/* Search and Filter Section */}
         <CatalogFiltersInitializer />
-        {error ? (
-          <ErrorSection error={error.message} />
-        ) : (
-          <>
-            <Suspense fallback={<CatalogSearchSectionLoader />}>
-              <CatalogSearchSection catalogData={data || []} />
-            </Suspense>
-            <Suspense fallback={<CatalogCardLoader />}>
-              <CatalogList catalog={data || []} />
-            </Suspense>
-          </>
-        )}
+        <Suspense fallback={<CatalogSearchSectionLoader />}>
+          <CatalogSearchServer />
+        </Suspense>
+        <Suspense fallback={<CatalogCardLoader />}>
+          <CatalogListServer />
+        </Suspense>
       </main>
-      <CatalogPanel catalogData={data || []} />
+      <Suspense fallback={null}>
+        <CatalogPanelServer />
+      </Suspense>
       <ContextBar />
     </>
   )
