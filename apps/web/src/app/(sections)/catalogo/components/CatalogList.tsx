@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
-import type { CatalogArtist } from '../types/catalog'
+import type { CatalogListArtist } from '../types/catalog-payloads'
 import { CatalogArtistCard } from './CatalogArtistCard'
 import { useCatalogFiltersStore } from '../store/useCatalogFiltersStore'
 import { Pagination } from '@/components/ui/Pagination'
@@ -10,7 +10,7 @@ import { filterCatalog } from '../utils/filterUtils'
 import { getPageFromURL, updatePageURL } from '../utils/urlFilters'
 
 interface CatalogListProps {
-  catalog: CatalogArtist[]
+  catalog: CatalogListArtist[]
 }
 
 export const CatalogList: React.FC<CatalogListProps> = ({ catalog }) => {
@@ -41,7 +41,7 @@ export const CatalogList: React.FC<CatalogListProps> = ({ catalog }) => {
   }, [currentPage])
 
   // Get current items
-  const currentItems = useMemo<CatalogArtist[]>(() => {
+  const currentItems = useMemo<CatalogListArtist[]>(() => {
     const startIndex = (currentPage - 1) * itemsPerPage
     return filteredCatalog.slice(startIndex, startIndex + itemsPerPage)
   }, [filteredCatalog, currentPage, itemsPerPage])

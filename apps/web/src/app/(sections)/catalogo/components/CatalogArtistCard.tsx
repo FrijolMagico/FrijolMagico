@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import type { CatalogArtist } from '../types/catalog'
+import type { CatalogListArtist } from '../types/catalog-payloads'
 import { Mail } from 'lucide-react'
 import { useCatalogPanelStore } from '../store/useCatalogPanelStore'
 import { cn } from '@/utils/cn'
@@ -16,7 +16,7 @@ export const CatalogArtistCard = ({
   email,
   rrss,
   collective
-}: CatalogArtist) => {
+}: CatalogListArtist) => {
   const setArtistPanelOpen = useCatalogPanelStore(
     (state) => state.setArtistPanelOpen
   )
