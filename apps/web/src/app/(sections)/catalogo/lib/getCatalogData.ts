@@ -1,3 +1,5 @@
+import { cache } from 'react'
+import { unstable_rethrow } from 'next/navigation'
 import { formatUrlWithoutQuery } from '@frijolmagico/utils/url'
 import { catalogRepository } from '../adapters/catalogRepository'
 
@@ -16,6 +18,7 @@ export async function getCatalogData(): Promise<{
       error: null
     }
   } catch (error) {
+    unstable_rethrow(error)
     const err = error as Error
     console.error(err.message)
     return {
@@ -27,6 +30,8 @@ export async function getCatalogData(): Promise<{
     }
   }
 }
+
+export const getCatalogDataForRender = cache(getCatalogData)
 
 /**
  * Formatea los datos del artista para la UI.
