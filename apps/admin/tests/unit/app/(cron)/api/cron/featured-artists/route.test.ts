@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
 
+type RevalidateWebCacheOptions = Parameters<
+  typeof import('@/shared/lib/web-invalidation').revalidateWebCache
+>[0]
+
 // ---------------------------------------------------------------------------
 // Mocks — must be declared BEFORE importing the route handler
 // ---------------------------------------------------------------------------
@@ -12,9 +16,12 @@ const mockFisherYatesShuffle = mock((arr: readonly unknown[]) => [...arr])
 
 const mockSelectFeaturedArtists = mock((candidates: readonly unknown[]) => [])
 
-const mockInvalidateWebFeaturedArtists = mock(() =>
-  Promise.resolve({ revalidated: true } as const)
+const mockInvalidateWebFeaturedArtists = mock(
+  (_options: RevalidateWebCacheOptions) =>
+    Promise.resolve({ revalidated: true } as const)
 )
+
+const transactionEvents: string[] = []
 
 const mockBuildWebInvalidationUrl = mock(
   () => 'https://example.com/api/revalidate'
@@ -69,6 +76,7 @@ beforeEach(() => {
   process.env.CRON_SECRET = 'test-cron-secret'
   mockRotateFeaturedArtists.mockClear()
   mockInvalidateWebFeaturedArtists.mockClear()
+  transactionEvents.length = 0
   mockTransaction.mockClear()
   mockRotateFeaturedArtists.mockImplementation(() =>
     Promise.resolve({ rotated: true, count: 3 })
@@ -117,11 +125,28 @@ describe('GET /api/cron/featured-artists', () => {
     expect(mockRotateFeaturedArtists).toHaveBeenCalledWith('mock-tx')
   })
 
-  test('calls revalidateWebCache after successful rotation', async () => {
-    const request = createRequest('Bearer test-cron-secret')
-    await GET(request)
+  test('revalidates only the featured-artists tag with SWR after transaction completion', async () => {
+    mockTransaction.mockImplementation(async (fn) => {
+      const result = await fn('mock-tx')
+      transactionEvents.push('transaction-completed')
+      return result
+    })
+    mockInvalidateWebFeaturedArtists.mockImplementation(async (options) => {
+      transactionEvents.push('cache-invalidated')
+      expect(options).toEqual({ tag: 'home:destacados', mode: 'swr' })
+      expect(options).not.toHaveProperty('path')
+      return { revalidated: true }
+    })
 
+    const request = createRequest('Bearer test-cron-secret')
+    const response = await GET(request)
+
+    expect(response.status).toBe(200)
     expect(mockInvalidateWebFeaturedArtists).toHaveBeenCalledTimes(1)
+    expect(transactionEvents).toEqual([
+      'transaction-completed',
+      'cache-invalidated'
+    ])
   })
 
   test('returns 500 when transaction throws', async () => {
@@ -144,18 +169,36 @@ describe('GET /api/cron/featured-artists', () => {
     console.error = originalError
   })
 
-  test('does not call revalidateWebCache on transaction failure', async () => {
-    mockTransaction.mockImplementation(() => {
-      throw new Error('DB error')
-    })
+  test('does not call revalidateWebCache when the transaction rejects', async () => {
+    mockTransaction.mockImplementation(() =>
+      Promise.reject(new Error('DB error'))
+    )
 
     const originalError = console.error
     console.error = mock(() => {}) as never
 
     const request = createRequest('Bearer test-cron-secret')
-    await GET(request)
+    const response = await GET(request)
 
+    expect(response.status).toBe(500)
     expect(mockInvalidateWebFeaturedArtists).not.toHaveBeenCalled()
+
+    console.error = originalError
+  })
+
+  test('returns failure when cache invalidation fails', async () => {
+    mockInvalidateWebFeaturedArtists.mockImplementation(() =>
+      Promise.reject(new Error('Cache invalidation failed'))
+    )
+
+    const originalError = console.error
+    console.error = mock(() => {}) as never
+
+    const request = createRequest('Bearer test-cron-secret')
+    const response = await GET(request)
+
+    expect(response.status).toBe(500)
+    expect(mockInvalidateWebFeaturedArtists).toHaveBeenCalledTimes(1)
 
     console.error = originalError
   })
