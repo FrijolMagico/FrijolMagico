@@ -1,8 +1,8 @@
 import { CatalogPanel } from './CatalogPanel'
-import { getCatalogDataForRender } from '../lib/getCatalogData'
+import { getCatalogData } from '../lib/getCatalogData'
 
 export async function CatalogPanelServer() {
-  const { data, error } = await getCatalogDataForRender()
+  const { data, error } = await getCatalogData()
   if (error) return null
 
   return <CatalogPanel catalogData={data} />
