@@ -2,47 +2,22 @@ import { beforeEach, describe, expect, mock, test } from 'bun:test'
 import { FESTIVAL_ACTIVE_DISPLAY_CACHE_TAG } from '@frijolmagico/cache-tags'
 import type { ActiveFestivalDisplay } from '@frijolmagico/database/active-festival-display'
 
+import { executeQueryMock } from '@/test-utils/mockDatabase'
+
 const cacheTag = mock(() => {})
 const cacheLife = mock(() => {})
-const rollback = mock(async () => {})
-const tx = { select: mock(async () => null), rollback }
-const transaction = mock(async (callback: (query: typeof tx) => Promise<unknown>) => {
-  try {
-    return await callback(tx)
-  } catch (error) {
-    await tx.rollback()
-    throw error
-  }
-})
-const query = { transaction }
-const getActiveFestivalDisplay = mock(
-  async (query: typeof tx): Promise<ActiveFestivalDisplay | null> => {
-    await query.select()
-    await query.select()
-    return null
-  }
-)
 mock.module('next/cache', () => ({ cacheTag, cacheLife }))
-mock.module('@frijolmagico/database/orm', () => ({ db: query }))
-mock.module('@frijolmagico/database/active-festival-display', () => ({
-  getActiveFestivalDisplay
-}))
 
-const { getActiveFestivalDisplay: getCachedActiveFestivalDisplay } = await import(
-  './getActiveFestivalDisplay'
-)
+const { getActiveFestivalDisplay } = await import('./getActiveFestivalDisplay')
 
 beforeEach(() => {
   cacheTag.mockClear()
   cacheLife.mockClear()
-  transaction.mockClear()
-  tx.select.mockClear()
-  rollback.mockClear()
-  getActiveFestivalDisplay.mockClear()
+  executeQueryMock.mockReset()
 })
 
 describe('getActiveFestivalDisplay remote reader', () => {
-  test('uses only the dedicated tag and delegates to the shared projection', async () => {
+  test('uses one raw query and preserves the cached display contract', async () => {
     const display: ActiveFestivalDisplay = {
       id: 1,
       slug: 'festival-i',
@@ -50,41 +25,60 @@ describe('getActiveFestivalDisplay remote reader', () => {
       edition_number: 'I',
       start_date: '2026-10-01',
       end_date: '2026-10-02',
-      days: []
+      days: [
+        { fecha: '2026-10-01', lugar: null },
+        { fecha: '2026-10-02', lugar: 'Plaza' }
+      ]
     }
-    getActiveFestivalDisplay.mockImplementationOnce(async (query) => {
-      await query.select()
-      await query.select()
-      return display
+    executeQueryMock.mockResolvedValueOnce({
+      data: [
+        {
+          id: 1,
+          slug: 'festival-i',
+          event_name: 'Festival',
+          edition_number: 'I',
+          start_date: '2026-10-01',
+          end_date: '2026-10-02',
+          fecha: '2026-10-01',
+          lugar: null
+        },
+        {
+          id: 1,
+          slug: 'festival-i',
+          event_name: 'Festival',
+          edition_number: 'I',
+          start_date: '2026-10-01',
+          end_date: '2026-10-02',
+          fecha: '2026-10-02',
+          lugar: 'Plaza'
+        }
+      ],
+      error: null
     })
 
-    await expect(getCachedActiveFestivalDisplay()).resolves.toBe(display)
-    expect(transaction).toHaveBeenCalledTimes(1)
-    expect(getActiveFestivalDisplay).toHaveBeenCalledWith(tx)
-    expect(tx.select).toHaveBeenCalledTimes(2)
-    expect(rollback).not.toHaveBeenCalled()
+    await expect(getActiveFestivalDisplay()).resolves.toEqual(display)
+    expect(executeQueryMock).toHaveBeenCalledTimes(1)
+    expect(executeQueryMock.mock.calls[0]?.[0]).toContain(
+      'WITH selected_edition AS'
+    )
     expect(cacheTag).toHaveBeenCalledWith(FESTIVAL_ACTIVE_DISPLAY_CACHE_TAG)
-    expect(cacheTag).toHaveBeenCalledTimes(1)
-    expect(cacheLife).toHaveBeenCalledWith({ stale: 5 * 60, revalidate: Infinity, expire: Infinity })
-  })
-
-  test('preserves the null projection', async () => {
-    getActiveFestivalDisplay.mockResolvedValueOnce(null)
-    await expect(getCachedActiveFestivalDisplay()).resolves.toBeNull()
-  })
-
-  test('propagates projection failure through the read transaction', async () => {
-    const failure = new Error('projection failed')
-    getActiveFestivalDisplay.mockImplementationOnce(async (query) => {
-      await query.select()
-      await query.select()
-      throw failure
+    expect(cacheLife).toHaveBeenCalledWith({
+      stale: 5 * 60,
+      revalidate: Infinity,
+      expire: Infinity
     })
+  })
 
-    await expect(getCachedActiveFestivalDisplay()).rejects.toBe(failure)
-    expect(transaction).toHaveBeenCalledTimes(1)
-    expect(getActiveFestivalDisplay).toHaveBeenCalledWith(tx)
-    expect(tx.select).toHaveBeenCalledTimes(2)
-    expect(rollback).toHaveBeenCalledTimes(1)
+  test('returns null when there is no eligible edition', async () => {
+    executeQueryMock.mockResolvedValueOnce({ data: [], error: null })
+
+    await expect(getActiveFestivalDisplay()).resolves.toBeNull()
+  })
+
+  test('throws query errors instead of treating them as no active festival', async () => {
+    const failure = new Error('Database connection failed')
+    executeQueryMock.mockResolvedValueOnce({ data: [], error: failure })
+
+    await expect(getActiveFestivalDisplay()).rejects.toBe(failure)
   })
 })
