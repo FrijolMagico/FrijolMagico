@@ -11,11 +11,6 @@ import {
   revalidateWebCache,
   revalidateWebCacheBestEffort
 } from '@/shared/lib/web-invalidation'
-import {
-  getActiveFestivalDisplay,
-  type ActiveFestivalDisplay
-} from '@frijolmagico/database/active-festival-display'
-import { invalidateActiveFestivalDisplay } from '../../_lib/active-festival-invalidation'
 import type { ActionState } from '@/shared/types/actions'
 import {
   CATALOG_CACHE_TAG,
@@ -64,10 +59,9 @@ export async function saveEditionWithDaysAction(
     let catalogDatesChanged = id === null && days.length > 0
     let catalogEditionChanged = id === null
     let publicOutputChanged = id === null
-    let activeFestivalSnapshots: [ActiveFestivalDisplay | null, ActiveFestivalDisplay | null] = [null, null]
+    let activeFestivalChanged = id === null
 
     await db.transaction(async (tx) => {
-      const before = await getActiveFestivalDisplay(tx)
       let edicionId = id
       if (edicionId !== null) {
         const [existingEdition] = await tx
@@ -92,6 +86,10 @@ export async function saveEditionWithDaysAction(
             (existingEdition.posterUrl ?? null) !== (posterUrl ?? null) ||
             existingEdition.slug !== slug
           publicOutputChanged = editionChanged
+          activeFestivalChanged =
+            existingEdition.eventoId !== eventoId ||
+            existingEdition.numeroEdicion !== numeroEdicion ||
+            existingEdition.slug !== slug
         }
       }
       const existingDates =
@@ -138,6 +136,21 @@ export async function saveEditionWithDaysAction(
       })
       publicOutputChanged =
         publicOutputChanged || dayMembershipChanged || dayFieldsChanged
+      activeFestivalChanged =
+        activeFestivalChanged ||
+        dayMembershipChanged ||
+        days.some((day) => {
+          const previous =
+            day.existingId === undefined
+              ? undefined
+              : existingDaysById.get(day.existingId)
+          return (
+            previous === undefined ||
+            previous.fecha !== day.fecha ||
+            (previous.lugarId ?? null) !== (day.lugarId ?? null)
+          )
+        })
+
       if (edicionId !== null) {
         await tx
           .update(eventEdition)
@@ -201,10 +214,8 @@ export async function saveEditionWithDaysAction(
           await tx.insert(eventEditionDay).values(dayData)
         }
       }
-      activeFestivalSnapshots = [before, await getActiveFestivalDisplay(tx)]
     })
 
-    await invalidateActiveFestivalDisplay(...activeFestivalSnapshots)
     updateTag(EDITION_CACHE_TAG)
     updateTag(EDITION_DAY_CACHE_TAG)
     for (const [tag, mode, path] of [
@@ -219,6 +230,18 @@ export async function saveEditionWithDaysAction(
         })
       } catch {
         console.error('[save-edition] Web cache sync failed', { tag })
+      }
+    }
+    if (activeFestivalChanged) {
+      for (const pathType of ['page', 'layout'] as const) {
+        try {
+          await revalidateWebCache({ path: '/', pathType })
+        } catch {
+          console.error('[save-edition] Web cache sync failed', {
+            path: '/',
+            pathType
+          })
+        }
       }
     }
     if (catalogEditionChanged) {

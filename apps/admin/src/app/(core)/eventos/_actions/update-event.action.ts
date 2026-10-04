@@ -22,8 +22,6 @@ import {
   revalidateWebCache,
   revalidateWebCacheBestEffort
 } from '@/shared/lib/web-invalidation'
-import { getActiveFestivalDisplay } from '@frijolmagico/database/active-festival-display'
-import { invalidateActiveFestivalDisplay } from '../_lib/active-festival-invalidation'
 
 const { event } = events
 
@@ -53,22 +51,17 @@ export async function updateEventAction(
       }
     }
 
-    const eventId = data.id
-    const { updatedEvents, before, after, existingEvent } = await db.transaction(async (tx) => {
-      const before = await getActiveFestivalDisplay(tx)
-      const [existingEvent] = await tx
-        .select({ nombre: event.nombre })
-        .from(event)
-        .where(eq(event.id, eventId))
-        .limit(1)
-      const updatedEvents = await tx
-        .update(event)
-        .set(parsed.data)
-        .where(eq(event.id, eventId))
-        .returning({ id: event.id })
-      const after = await getActiveFestivalDisplay(tx)
-      return { updatedEvents, before, after, existingEvent }
-    })
+    const [existingEvent] = await db
+      .select({ nombre: event.nombre })
+      .from(event)
+      .where(eq(event.id, data.id))
+      .limit(1)
+
+    const updatedEvents = await db
+      .update(event)
+      .set(parsed.data)
+      .where(eq(event.id, data.id))
+      .returning({ id: event.id })
 
     if (
       updatedEvents.length > 0 &&
@@ -80,8 +73,6 @@ export async function updateEventAction(
         tag: CATALOG_PARTICIPATION_CACHE_TAG
       })
     }
-
-    await invalidateActiveFestivalDisplay(before, after)
 
     updateTag(EVENT_CACHE_TAG)
     for (const [tag, mode] of [
@@ -101,6 +92,10 @@ export async function updateEventAction(
       } catch {
         console.error('[event-crud] Web cache sync failed', { tag })
       }
+    }
+    if (updatedEvents.length > 0) {
+      void revalidateWebCacheBestEffort({ path: '/', pathType: 'page' })
+      void revalidateWebCacheBestEffort({ path: '/', pathType: 'layout' })
     }
     return { success: true }
   } catch (error) {

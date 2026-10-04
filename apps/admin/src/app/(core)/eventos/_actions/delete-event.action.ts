@@ -15,9 +15,10 @@ import {
   FESTIVALES_CACHE_TAG,
   FESTIVAL_CRITICAL_CACHE_TAG
 } from '@frijolmagico/cache-tags'
-import { revalidateWebCache } from '@/shared/lib/web-invalidation'
-import { getActiveFestivalDisplay } from '@frijolmagico/database/active-festival-display'
-import { invalidateActiveFestivalDisplay } from '../_lib/active-festival-invalidation'
+import {
+  revalidateWebCache,
+  revalidateWebCacheBestEffort
+} from '@/shared/lib/web-invalidation'
 
 const { event } = events
 
@@ -32,19 +33,13 @@ export async function deleteEventAction(id: number): Promise<ActionState> {
       }
     }
 
-    const { deletedEvents, before, after } = await db.transaction(async (tx) => {
-      const before = await getActiveFestivalDisplay(tx)
-      const deletedEvents = await tx
-        .delete(event)
-        .where(eq(event.id, id))
-        .returning({ id: event.id })
-      const after = await getActiveFestivalDisplay(tx)
-      return { deletedEvents, before, after }
-    })
+    const deletedEvents = await db
+      .delete(event)
+      .where(eq(event.id, id))
+      .returning({ id: event.id })
 
     if (deletedEvents.length === 0) return { success: true }
 
-    await invalidateActiveFestivalDisplay(before, after)
     updateTag(EVENT_CACHE_TAG)
     for (const [tag, mode] of [
       [FESTIVAL_CRITICAL_CACHE_TAG, 'immediate'],
@@ -62,6 +57,8 @@ export async function deleteEventAction(id: number): Promise<ActionState> {
         console.error('[event-crud] Web cache sync failed', { tag })
       }
     }
+    void revalidateWebCacheBestEffort({ path: '/', pathType: 'page' })
+    void revalidateWebCacheBestEffort({ path: '/', pathType: 'layout' })
     for (const tag of [
       CATALOG_CACHE_TAG,
       CATALOG_PARTICIPATION_CACHE_TAG,

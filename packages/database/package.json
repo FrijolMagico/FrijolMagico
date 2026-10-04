@@ -11,10 +11,6 @@
       "types": "./src/drizzle.ts",
       "default": "./src/drizzle.ts"
     },
-    "./active-festival-display": {
-      "types": "./src/active-festival-display.ts",
-      "default": "./src/active-festival-display.ts"
-    },
     "./schema": {
       "types": "./src/db/schema/index.ts",
       "default": "./src/db/schema/index.ts"
