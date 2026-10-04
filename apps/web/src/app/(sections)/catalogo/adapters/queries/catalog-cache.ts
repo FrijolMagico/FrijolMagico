@@ -16,7 +16,7 @@ import type { CatalogBaseRow } from './catalog-batched'
 import type { EditionDateRow, ParticipationRow } from './catalog-batched'
 
 export async function getCachedCatalogBaseRows(): Promise<CatalogBaseRow[]> {
-  'use cache: remote'
+  'use cache'
   cacheLife({ stale: 5 * 60, revalidate: Infinity, expire: Infinity })
   cacheTag(CATALOG_BASE_CACHE_TAG)
 
@@ -26,7 +26,7 @@ export async function getCachedCatalogBaseRows(): Promise<CatalogBaseRow[]> {
 }
 
 export async function getCachedCatalogParticipationRows(): Promise<ParticipationRow[]> {
-  'use cache: remote'
+  'use cache'
   cacheLife({ stale: 5 * 60, revalidate: Infinity, expire: Infinity })
   cacheTag(CATALOG_PARTICIPATION_CACHE_TAG)
 
@@ -36,7 +36,7 @@ export async function getCachedCatalogParticipationRows(): Promise<Participation
 }
 
 export async function getCachedCatalogEditionDateRows(): Promise<EditionDateRow[]> {
-  'use cache: remote'
+  'use cache'
   cacheLife({ stale: 5 * 60, revalidate: Infinity, expire: Infinity })
   cacheTag(CATALOG_EDITION_DATES_CACHE_TAG)
 

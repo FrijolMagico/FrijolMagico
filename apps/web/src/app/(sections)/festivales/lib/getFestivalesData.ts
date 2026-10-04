@@ -9,7 +9,7 @@ export async function getFestivalesData(): Promise<{
   data: FestivalEdicion[]
   error: ErrorObject
 }> {
-  'use cache: remote'
+  'use cache'
   cacheLife({ stale: 5 * 60, revalidate: Infinity, expire: Infinity })
   cacheTag(FESTIVALES_CACHE_TAG)
   try {
