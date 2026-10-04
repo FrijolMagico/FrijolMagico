@@ -79,49 +79,49 @@ INSERT INTO artista_pseudonimo (id, artista_id, pseudonimo, deleted_at, created_
 INSERT INTO artista_pseudonimo (id, artista_id, pseudonimo, created_at, updated_at) VALUES (1001, 1, 'Fixture Secondary Alias 001', '2026-01-01 00:00:00', '2026-01-01 00:00:00');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (1, 1,'artistas/fixture-artist-001/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (1, 1,'artistas/asset-01/avatar-01.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '01');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (2, 2,'artistas/fixture-artist-002/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":59264,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (2, 2,'artistas/asset-02/avatar-02.webp', 'avatar', 1, '{"width":800,"height":800,"size":59264,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '02');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (3, 3,'artistas/fixture-artist-003/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (3, 3,'artistas/asset-03/avatar-03.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '03');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (4, 4,'artistas/fixture-artist-004/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":59264,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (4, 4,'artistas/asset-04/avatar-04.webp', 'avatar', 1, '{"width":800,"height":800,"size":59264,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '04');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (5, 5,'artistas/fixture-artist-005/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":89436,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (5, 5,'artistas/asset-05/avatar-05.webp', 'avatar', 1, '{"width":800,"height":800,"size":89436,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '05');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (6, 6,'artistas/fixture-artist-006/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":107548,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (6, 6,'artistas/asset-06/avatar-06.webp', 'avatar', 1, '{"width":800,"height":800,"size":107548,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '06');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (7, 7,'artistas/fixture-artist-007/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":70512,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (7, 7,'artistas/asset-07/avatar-07.webp', 'avatar', 1, '{"width":800,"height":800,"size":70512,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '07');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (8, 8,'artistas/fixture-artist-008/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":37958,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (8, 8,'artistas/asset-08/avatar-08.webp', 'avatar', 1, '{"width":800,"height":800,"size":37958,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '08');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (9, 9,'artistas/fixture-artist-009/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":137494,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (9, 9,'artistas/asset-09/avatar-09.webp', 'avatar', 1, '{"width":800,"height":800,"size":137494,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '09');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (10, 10,'artistas/fixture-artist-010/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":110228,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (10, 10,'artistas/asset-10/avatar-10.webp', 'avatar', 1, '{"width":800,"height":800,"size":110228,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '10');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (11, 11,'artistas/fixture-artist-011/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":52510,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (11, 11,'artistas/asset-11/avatar-11.webp', 'avatar', 1, '{"width":800,"height":800,"size":52510,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '11');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (12, 12,'artistas/fixture-artist-012/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":71800,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (12, 12,'artistas/asset-12/avatar-12.webp', 'avatar', 1, '{"width":800,"height":800,"size":71800,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '12');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (13, 13,'artistas/fixture-artist-013/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":116490,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (13, 13,'artistas/asset-13/avatar-13.webp', 'avatar', 1, '{"width":800,"height":800,"size":116490,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '13');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (14, 14,'artistas/fixture-artist-014/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":48586,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (14, 14,'artistas/asset-14/avatar-14.webp', 'avatar', 1, '{"width":800,"height":800,"size":48586,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '14');
 
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (15, 15,'artistas/fixture-artist-015/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":54396,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (15, 15,'artistas/asset-15/avatar-15.webp', 'avatar', 1, '{"width":800,"height":800,"size":54396,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '15');
 INSERT INTO artista_historial (id, artista_id, pseudonimo, correo, rrss, ciudad, pais, orden, created_at, notas)
 VALUES (1, 1,'Fixture Former Alias 001','history-001@example.invalid','{"profile":"https://example.invalid/history-001"}','Fixture City','ZZ', 1, '2026-01-20 03:39:14','Synthetic prior-identity fixture record');
 INSERT INTO artista_historial (id, artista_id, pseudonimo, correo, rrss, ciudad, pais, orden, created_at, notas)
@@ -143,13 +143,13 @@ INSERT INTO artista_historial (id, artista_id, pseudonimo, correo, rrss, ciudad,
 INSERT INTO artista_historial (id, artista_id, pseudonimo, correo, rrss, ciudad, pais, orden, created_at, notas) VALUES (16, 15,'Fixture Former Alias 015','history-015@example.invalid','{"profile":"https://example.invalid/history-015"}','Fixture City','ZZ', 1, '2026-01-20 03:39:14','Synthetic prior-identity fixture record');
 
 INSERT INTO catalogo_artista (id, artista_id, orden, destacado, activo, descripcion, created_at, updated_at, deleted_at)
-VALUES (1, 1, 'a1', 0, 1,'Synthetic portfolio description for fixture artist 001.', '2026-01-20 03:39:11', '2026-06-03 04:49:25', NULL);
+VALUES (1, 1, 'a1', 1, 1,'Synthetic portfolio description for fixture artist 001.', '2026-01-20 03:39:11', '2026-06-03 04:49:25', NULL);
 
 INSERT INTO catalogo_artista (id, artista_id, orden, destacado, activo, descripcion, created_at, updated_at, deleted_at)
-VALUES (2, 2, 'a2', 0, 1,'Synthetic portfolio description for fixture artist 002.', '2026-01-20 03:39:11', '2026-06-22 06:20:08', NULL);
+VALUES (2, 2, 'a2', 1, 1,'Synthetic portfolio description for fixture artist 002.', '2026-01-20 03:39:11', '2026-06-22 06:20:08', NULL);
 
 INSERT INTO catalogo_artista (id, artista_id, orden, destacado, activo, descripcion, created_at, updated_at, deleted_at)
-VALUES (3, 3, 'a3', 0, 1,'Synthetic portfolio description for fixture artist 003.', '2026-01-20 03:39:11', '2026-06-03 04:49:25', NULL);
+VALUES (3, 3, 'a3', 1, 1,'Synthetic portfolio description for fixture artist 003.', '2026-01-20 03:39:11', '2026-06-03 04:49:25', NULL);
 
 INSERT INTO catalogo_artista (id, artista_id, orden, destacado, activo, descripcion, created_at, updated_at, deleted_at)
 VALUES (4, 4, 'a4', 0, 1,'Synthetic portfolio description for fixture artist 004.', '2026-01-20 03:39:11', '2026-06-03 04:49:25', NULL);
@@ -191,10 +191,10 @@ INSERT INTO evento (id, organizacion_id, nombre, slug, descripcion, created_at, 
 VALUES (1, 1, 'Festival Frijol Mágico', 'frijol-magico','Synthetic festival event fixture.', '2026-01-20 03:38:52', '2026-01-20 03:38:52');
 
 INSERT INTO evento_edicion (id, evento_id, nombre, numero_edicion, slug, poster_url, poster_path, poster_version, published, created_at, updated_at)
-VALUES (1, 1,'Festival Fixture Edition 01', 'I', 'frijol-magico-i', 'festivales/frijol-magico/i/afiche-123456789.webp', 'festivales/frijol-magico/i/afiche-123456789.webp', '123456789', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
+VALUES (1, 1,'Festival Fixture Edition 01', 'I', 'frijol-magico-i', 'festivales/asset-01/afiche-01.webp', 'festivales/asset-01/afiche-01.webp', '01', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
 
 INSERT INTO evento_edicion (id, evento_id, nombre, numero_edicion, slug, poster_url, poster_path, poster_version, published, created_at, updated_at)
-VALUES (2, 1,'Festival Fixture Edition 02', 'II', 'frijol-magico-ii', 'festivales/frijol-magico/ii/afiche-123456789.webp', 'festivales/frijol-magico/ii/afiche-123456789.webp', '123456789', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
+VALUES (2, 1,'Festival Fixture Edition 02', 'II', 'frijol-magico-ii', 'festivales/asset-02/afiche-02.webp', 'festivales/asset-02/afiche-02.webp', '02', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
 
 INSERT INTO evento_edicion_dia (id, evento_edicion_id, lugar_id, fecha, hora_inicio, hora_fin, modalidad, created_at, updated_at)
 VALUES (1, 1, 1, '2017-02-25', '14:00', '20:00', 'presencial', '2026-01-20 03:38:59', '2026-01-20 03:38:59');
@@ -529,51 +529,51 @@ VALUES (69, 2,'Fixture Person 069','Fixture Artist 069','fixture-artist-069','FI
 INSERT INTO artista (id, estado_id, nombre, pseudonimo, slug, rut, correo, rrss, ciudad, pais, telefono, created_at, updated_at, deleted_at)
 VALUES (70, 2,'Fixture Person 070','Fixture Artist 070','fixture-artist-070','FIXTURE-ID-070','artist-070@example.invalid','{"profile":"https://example.invalid/fixture-artist-070"}','Fixture City','ZZ', NULL, '2026-01-20 03:39:05', '2026-03-05 23:48:49', NULL);
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (16, 21,'artistas/fixture-artist-021/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (16, 21,'artistas/asset-16/avatar-16.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '16');
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (17, 22,'artistas/fixture-artist-022/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (17, 22,'artistas/asset-17/avatar-17.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '17');
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (18, 23,'artistas/fixture-artist-023/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (18, 23,'artistas/asset-18/avatar-18.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '18');
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (19, 24,'artistas/fixture-artist-024/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (19, 24,'artistas/asset-19/avatar-19.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '19');
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (20, 25,'artistas/fixture-artist-025/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (20, 25,'artistas/asset-20/avatar-20.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '20');
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (21, 26,'artistas/fixture-artist-026/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (21, 26,'artistas/asset-21/avatar-21.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '21');
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (22, 27,'artistas/fixture-artist-027/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (22, 27,'artistas/asset-22/avatar-22.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '22');
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (23, 28,'artistas/fixture-artist-028/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (23, 28,'artistas/asset-01/avatar-01.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '01');
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (24, 29,'artistas/fixture-artist-029/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (24, 29,'artistas/asset-02/avatar-02.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '02');
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (25, 30,'artistas/fixture-artist-030/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (25, 30,'artistas/asset-03/avatar-03.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '03');
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (26, 31,'artistas/fixture-artist-031/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (26, 31,'artistas/asset-04/avatar-04.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '04');
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (27, 32,'artistas/fixture-artist-032/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (27, 32,'artistas/asset-05/avatar-05.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '05');
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (28, 33,'artistas/fixture-artist-033/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (28, 33,'artistas/asset-06/avatar-06.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '06');
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (29, 34,'artistas/fixture-artist-034/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (29, 34,'artistas/asset-07/avatar-07.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '07');
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (30, 35,'artistas/fixture-artist-035/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (30, 35,'artistas/asset-08/avatar-08.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '08');
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (31, 36,'artistas/fixture-artist-036/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (31, 36,'artistas/asset-09/avatar-09.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '09');
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (32, 37,'artistas/fixture-artist-037/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (32, 37,'artistas/asset-10/avatar-10.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '10');
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (33, 38,'artistas/fixture-artist-038/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (33, 38,'artistas/asset-11/avatar-11.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '11');
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (34, 39,'artistas/fixture-artist-039/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (34, 39,'artistas/asset-12/avatar-12.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '12');
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (35, 40,'artistas/fixture-artist-040/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (35, 40,'artistas/asset-13/avatar-13.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '13');
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (36, 41,'artistas/fixture-artist-041/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (36, 41,'artistas/asset-14/avatar-14.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '14');
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (37, 42,'artistas/fixture-artist-042/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (37, 42,'artistas/asset-15/avatar-15.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '15');
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
-VALUES (38, 43,'artistas/fixture-artist-043/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
+VALUES (38, 43,'artistas/asset-16/avatar-16.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '16');
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
 VALUES (39, 44,'artistas/fixture-artist-044/avatar-123456789.webp', 'avatar', 1, '{"width":800,"height":800,"size":66372,"aspectRatio":"1:1","format":"webp"}', '2026-01-20 03:39:08', '2026-01-20 03:39:08', NULL, '123456789');
 INSERT INTO artista_imagen (id, artista_id, imagen_url, tipo, orden, metadata, created_at, updated_at, deleted_at, imagen_version)
@@ -725,15 +725,15 @@ VALUES (37, 42, 'a37', 0, 1,'Synthetic portfolio description for fixture artist 
 INSERT INTO catalogo_artista (id, artista_id, orden, destacado, activo, descripcion, created_at, updated_at, deleted_at)
 VALUES (38, 43, 'a38', 0, 1,'Synthetic portfolio description for fixture artist 043.', '2026-01-20 03:39:11', '2026-06-03 04:49:25', NULL);
 INSERT INTO evento_edicion (id, evento_id, nombre, numero_edicion, slug, poster_url, poster_path, poster_version, published, created_at, updated_at)
-VALUES (3, 1,'Festival Fixture Edition 03', 'III', 'frijol-magico-iii', 'festivales/frijol-magico/i/afiche-123456789.webp', 'festivales/frijol-magico/i/afiche-123456789.webp', '123456789', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
+VALUES (3, 1,'Festival Fixture Edition 03', 'III', 'frijol-magico-iii', 'festivales/asset-01/afiche-01.webp', 'festivales/asset-01/afiche-01.webp', '01', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
 INSERT INTO evento_edicion (id, evento_id, nombre, numero_edicion, slug, poster_url, poster_path, poster_version, published, created_at, updated_at)
-VALUES (4, 1,'Festival Fixture Edition 04', 'IV', 'frijol-magico-iv', 'festivales/frijol-magico/ii/afiche-123456789.webp', 'festivales/frijol-magico/ii/afiche-123456789.webp', '123456789', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
+VALUES (4, 1,'Festival Fixture Edition 04', 'IV', 'frijol-magico-iv', 'festivales/asset-02/afiche-02.webp', 'festivales/asset-02/afiche-02.webp', '02', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
 INSERT INTO evento_edicion (id, evento_id, nombre, numero_edicion, slug, poster_url, poster_path, poster_version, published, created_at, updated_at)
-VALUES (5, 1,'Festival Fixture Edition 05', 'V', 'frijol-magico-v', 'festivales/frijol-magico/i/afiche-123456789.webp', 'festivales/frijol-magico/i/afiche-123456789.webp', '123456789', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
+VALUES (5, 1,'Festival Fixture Edition 05', 'V', 'frijol-magico-v', 'festivales/asset-01/afiche-01.webp', 'festivales/asset-01/afiche-01.webp', '01', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
 INSERT INTO evento_edicion (id, evento_id, nombre, numero_edicion, slug, poster_url, poster_path, poster_version, published, created_at, updated_at)
-VALUES (6, 1,'Festival Fixture Edition 06', 'VI', 'frijol-magico-vi', 'festivales/frijol-magico/ii/afiche-123456789.webp', 'festivales/frijol-magico/ii/afiche-123456789.webp', '123456789', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
+VALUES (6, 1,'Festival Fixture Edition 06', 'VI', 'frijol-magico-vi', 'festivales/asset-02/afiche-02.webp', 'festivales/asset-02/afiche-02.webp', '02', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
 INSERT INTO evento_edicion (id, evento_id, nombre, numero_edicion, slug, poster_url, poster_path, poster_version, published, created_at, updated_at)
-VALUES (7, 1,'Festival Fixture Edition 07', 'VII','temp', 'festivales/frijol-magico/i/afiche-123456789.webp', 'festivales/frijol-magico/i/afiche-123456789.webp', '123456789', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
+VALUES (7, 1,'Festival Fixture Edition 07', 'VII','frijol-magico-vii', 'festivales/asset-01/afiche-01.webp', 'festivales/asset-01/afiche-01.webp', '01', 1, '2026-01-20 03:38:55', '2026-01-20 03:38:55');
 INSERT INTO evento_edicion_dia (id, evento_edicion_id, lugar_id, fecha, hora_inicio, hora_fin, modalidad, created_at, updated_at)
 VALUES (5, 3, 1, '2018-02-24', '12:00', '20:00', 'presencial', '2026-01-20 03:38:59', '2026-01-20 03:38:59');
 INSERT INTO evento_edicion_dia (id, evento_edicion_id, lugar_id, fecha, hora_inicio, hora_fin, modalidad, created_at, updated_at)

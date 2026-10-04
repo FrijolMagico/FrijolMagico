@@ -302,15 +302,15 @@ describe('parseSeedAssetKeys', () => {
     ).text()
     const keys = parseSeedAssetKeys(seedSql, assetColumns)
 
-    expect(keys).toContain('artistas/fixture-artist-001/avatar-123456789.webp')
-    expect(keys).toContain('artistas/fixture-artist-002/avatar-123456789.webp')
-    expect(keys).toContain(
-      'festivales/frijol-magico/i/afiche-123456789.webp',
+    expect(keys.filter((key) => key.startsWith('artistas/asset-'))).toEqual(
+      Array.from({ length: 22 }, (_, index) => {
+        const assetId = String(index + 1).padStart(2, '0')
+        return `artistas/asset-${assetId}/avatar-${assetId}.webp`
+      })
     )
-    expect(keys).toContain(
-      'festivales/frijol-magico/ii/afiche-123456789.webp',
-    )
-    // 65 seed avatars + 2 seed posters, deduplicated.
-    expect(keys).toHaveLength(67)
+    expect(keys).toContain('festivales/asset-01/afiche-01.webp')
+    expect(keys).toContain('festivales/asset-02/afiche-02.webp')
+    // 22 reusable artist assets + 27 non-catalog avatars + 2 posters.
+    expect(keys).toHaveLength(51)
   })
 })

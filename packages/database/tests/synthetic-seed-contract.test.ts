@@ -62,7 +62,7 @@ describe('synthetic festival seed contract', () => {
       LEFT JOIN participacion_edicion participation
         ON participation.edicion_id = edition.id
       LEFT JOIN evento_edicion_dia day ON day.evento_edicion_id = edition.id
-      WHERE edition.slug = 'temp' AND edition.published = 1
+      WHERE edition.slug = 'frijol-magico-vii' AND edition.published = 1
       GROUP BY edition.id
     `)
 
@@ -81,6 +81,48 @@ describe('synthetic festival seed contract', () => {
     `)
     expect(Number(fixtureCounts.rows[0]?.artist_count)).toBe(70)
     expect(Number(fixtureCounts.rows[0]?.catalog_count)).toBe(38)
+  })
+
+  test('catalog and edition assets use generic reusable keys with stable featured and routing data', async () => {
+    const client = await freshSeededDatabase()
+    const catalog = await client.execute(`
+      SELECT catalog.id, catalog.destacado, image.imagen_url, image.imagen_version
+      FROM catalogo_artista catalog
+      JOIN artista_imagen image ON image.artista_id = catalog.artista_id
+      ORDER BY catalog.id
+    `)
+    const featured = await client.execute(`
+      SELECT id FROM catalogo_artista WHERE destacado = 1 ORDER BY id
+    `)
+    const editions = await client.execute(`
+      SELECT edition.id, edition.numero_edicion, edition.slug,
+        edition.poster_url, edition.poster_path, edition.poster_version,
+        event.slug AS festival_slug
+      FROM evento_edicion edition
+      JOIN evento event ON event.id = edition.evento_id
+      ORDER BY edition.id
+    `)
+
+    expect(catalog.rows).toHaveLength(38)
+    expect(featured.rows.map((row) => Number(row.id))).toEqual([1, 2, 3])
+    catalog.rows.forEach((row, index) => {
+      const assetId = String((index % 22) + 1).padStart(2, '0')
+      expect(row.imagen_url).toBe(`artistas/asset-${assetId}/avatar-${assetId}.webp`)
+      expect(row.imagen_version).toBe(assetId)
+    })
+
+    expect(editions.rows).toHaveLength(7)
+    editions.rows.forEach((row, index) => {
+      const assetId = index % 2 === 0 ? '01' : '02'
+      const posterKey = `festivales/asset-${assetId}/afiche-${assetId}.webp`
+      expect(row.poster_url).toBe(posterKey)
+      expect(row.poster_path).toBe(posterKey)
+      expect(row.poster_version).toBe(assetId)
+      expect(row.slug).toBe(`${row.festival_slug}-${String(row.numero_edicion).toLowerCase()}`)
+    })
+
+    const editionVII = editions.rows.find((row) => row.numero_edicion === 'VII')
+    expect(editionVII?.slug).toBe('frijol-magico-vii')
   })
 
   test('alias resolution and pseudonym ownership cover canonical, retired, and secondary names', async () => {
@@ -160,6 +202,7 @@ describe('synthetic festival seed contract', () => {
           WHERE url IS NOT NULL AND lower(url) NOT LIKE 'https://example.invalid/%') AS non_fixture_venue_urls,
         (SELECT COUNT(*) FROM artista_imagen
           WHERE imagen_url IS NOT NULL
+            AND artista_id NOT IN (SELECT artista_id FROM catalogo_artista)
             AND imagen_url NOT GLOB 'artistas/fixture-artist-*') AS non_fixture_avatar_paths,
         (SELECT COUNT(*) FROM evento_edicion
           WHERE poster_path IS NOT NULL
