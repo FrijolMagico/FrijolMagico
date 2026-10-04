@@ -5,18 +5,16 @@ import { X } from 'lucide-react'
 import Link from 'next/link'
 
 import { useCatalogPanelStore } from '../store/useCatalogPanelStore'
+import {
+  getArtistSlugFromURL,
+  useCatalogPanelInitialization
+} from '../hooks/use-catalog-panel-initialization'
 import { CatalogArtistPanelContent } from './CatalogArtistPanelContent'
 import { useAnalytics } from '@/components/analytics/useAnalytics'
 import { cn } from '@/utils/cn'
 
 import type { CatalogArtist } from '../types/catalog'
 import { paths } from '@/config/paths'
-
-const getArtistSlugFromURL = () => {
-  if (typeof window === 'undefined') return null
-  const params = new URLSearchParams(window.location.search)
-  return params.get('artista')
-}
 
 export const CatalogPanel = ({
   catalogData
@@ -37,8 +35,6 @@ export const CatalogPanel = ({
 
   const { trackArtistView } = useAnalytics()
 
-  const initialized = useRef(false)
-
   // Slug prioritario: el del store (set sincrónicamente por el card) o el de la URL
   const artistSlug = storeSlug ?? getArtistSlugFromURL()
 
@@ -47,17 +43,7 @@ export const CatalogPanel = ({
     [catalogData, artistSlug]
   )
 
-  // On mount: leer ?artista de la URL e inicializar (navegación directa / bookmark)
-  useEffect(() => {
-    if (initialized.current) return
-    initialized.current = true
-
-    const urlSlug = getArtistSlugFromURL()
-    if (urlSlug) {
-      setArtistSlug(urlSlug)
-      setArtistPanelOpen(true)
-    }
-  }, [setArtistSlug, setArtistPanelOpen])
+  useCatalogPanelInitialization()
 
   // Sincronizar con navegación hacia atrás/adelante del navegador
   useEffect(() => {
