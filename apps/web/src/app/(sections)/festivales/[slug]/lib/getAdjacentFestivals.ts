@@ -12,7 +12,7 @@ export type { AdjacentFestival } from '../adapters/adjacentFestivalsRepository'
 export async function getAdjacentFestivals(
   slug: string
 ): Promise<AdjacentFestivalsResult> {
-  'use cache: remote'
+  'use cache'
   cacheLife({ stale: 5 * 60, revalidate: Infinity, expire: Infinity })
   cacheTag(FESTIVALES_CACHE_TAG)
 

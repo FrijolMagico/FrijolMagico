@@ -9,7 +9,7 @@ export async function getAboutData(): Promise<{
   data: AboutData | null
   error: ErrorObject
 }> {
-  'use cache: remote'
+  'use cache'
   cacheLife({ stale: 5 * 60, revalidate: Infinity, expire: Infinity })
   cacheTag(NOSOTROS_CACHE_TAG)
 
