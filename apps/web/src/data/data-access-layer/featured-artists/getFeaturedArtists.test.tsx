@@ -32,10 +32,10 @@ describe('FEATURED_ARTISTS_QUERY', () => {
     expect(FEATURED_ARTISTS_QUERY).not.toContain('ac.pseudonimo_id')
   })
 
-  test('configures tagged caching without a timed revalidation interval', () => {
+  test('configures tagged caching with a seven-day revalidation interval', () => {
     expect(cacheOptions).toEqual({
       tags: [FEATURED_ARTISTS_CACHE_TAG],
-      revalidate: false
+      revalidate: 7 * 24 * 60 * 60
     })
     expect(unstableCacheMock).toHaveBeenCalledTimes(1)
   })
