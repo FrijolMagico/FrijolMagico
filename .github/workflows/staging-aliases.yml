@@ -1,0 +1,140 @@
+name: Staging aliases
+
+on:
+  deployment_status:
+
+permissions:
+  contents: read
+
+env:
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+  VERCEL_TEAM_ID: ${{ vars.VERCEL_TEAM_ID }}
+  VERCEL_WEB_PROJECT_ID: ${{ vars.VERCEL_WEB_PROJECT_ID }}
+  VERCEL_ADMIN_PROJECT_ID: ${{ vars.VERCEL_ADMIN_PROJECT_ID }}
+
+# Configure VERCEL_TOKEN as a secret and VERCEL_TEAM_ID, VERCEL_WEB_PROJECT_ID,
+# and VERCEL_ADMIN_PROJECT_ID as repository variables. Alias retention is configured separately.
+# This workflow requires GitHub deployment_status success events from the Vercel integration.
+
+jobs:
+  alias:
+    name: Update staging alias
+    if: github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Update the matching Vercel staging alias
+        uses: actions/github-script@v7
+        env:
+          EXPECTED_SHA: ${{ github.event.deployment.sha }}
+          DEPLOYMENT_REF: ${{ github.event.deployment.ref }}
+          ENVIRONMENT_URL: ${{ github.event.deployment_status.environment_url }}
+          DEPLOYMENT_CREATOR: ${{ github.event.deployment.creator.login }}
+          DEPLOYMENT_APP_SLUG: ${{ github.event.deployment.performed_via_github_app.slug }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        with:
+          script: |
+            const token = process.env.VERCEL_TOKEN
+            const teamId = process.env.VERCEL_TEAM_ID
+            const expectedSha = process.env.EXPECTED_SHA
+            const deploymentRef = process.env.DEPLOYMENT_REF
+            const environmentUrl = process.env.ENVIRONMENT_URL
+            const repository = process.env.GITHUB_REPOSITORY
+
+            if (deploymentRef && deploymentRef !== 'staging' && deploymentRef !== 'refs/heads/staging' && deploymentRef !== expectedSha) {
+              await core.summary.addHeading('Staging alias unchanged').addRaw(`App unknown; alias not applicable; commit ${expectedSha || '(unknown)'}; outcome: skipped because GitHub deployment ref ${deploymentRef} is not staging.`, true).write()
+              return
+            }
+
+            for (const [name, value] of Object.entries({
+              VERCEL_TOKEN: token,
+              VERCEL_TEAM_ID: teamId,
+              VERCEL_WEB_PROJECT_ID: process.env.VERCEL_WEB_PROJECT_ID,
+              VERCEL_ADMIN_PROJECT_ID: process.env.VERCEL_ADMIN_PROJECT_ID,
+            })) {
+              if (!value || !value.trim()) throw new Error(`Required GitHub secret/variable ${name} is missing`)
+            }
+            if (!/^[0-9a-f]{40}$/i.test(expectedSha || '')) throw new Error('GitHub deployment has no valid commit SHA')
+            if (!environmentUrl) throw new Error('GitHub deployment_status has no environment_url; cannot identify its Vercel deployment')
+
+            const url = new URL(environmentUrl)
+            if (url.protocol !== 'https:' || url.username || url.password || url.port || url.pathname !== '/' || url.search || url.hash || !url.hostname.endsWith('.vercel.app')) {
+              throw new Error('GitHub deployment environment_url is not a bare HTTPS .vercel.app deployment URL')
+            }
+            const deploymentHostname = url.hostname.toLowerCase()
+            const trustedActor = process.env.DEPLOYMENT_CREATOR === 'vercel[bot]' || process.env.DEPLOYMENT_APP_SLUG === 'vercel'
+            if (!trustedActor) throw new Error('GitHub deployment was not created by the Vercel integration')
+
+            const api = 'https://api.vercel.com'
+            const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+            const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
+            const safeGet = async url => {
+              for (let attempt = 0; attempt < 4; attempt++) {
+                let response
+                try {
+                  response = await fetch(url, { headers, signal: AbortSignal.timeout(15000) })
+                } catch {
+                  if (attempt < 3) {
+                    await wait(500 * (2 ** attempt))
+                    continue
+                  }
+                  throw new Error('Vercel API GET failed after bounded retries (network/timeout error)')
+                }
+                if ((response.status === 429 || response.status >= 500) && attempt < 3) {
+                  const retryAfter = Number(response.headers.get('retry-after'))
+                  await wait(Number.isFinite(retryAfter) && retryAfter > 0 ? Math.min(retryAfter * 1000, 5000) : 500 * (2 ** attempt))
+                  continue
+                }
+                if (!response.ok) throw new Error(`Vercel API GET failed (HTTP ${response.status})`)
+                return response.json()
+              }
+              throw new Error('Vercel API GET exhausted bounded retries')
+            }
+            const teamQuery = `teamId=${encodeURIComponent(teamId)}`
+            const deployment = await safeGet(`${api}/v13/deployments/${encodeURIComponent(deploymentHostname)}?${teamQuery}`)
+            const projectMappings = [
+              { app: 'web', projectId: process.env.VERCEL_WEB_PROJECT_ID, alias: 'frijolmagico-staging.vercel.app' },
+              { app: 'admin', projectId: process.env.VERCEL_ADMIN_PROJECT_ID, alias: 'admin-frijolmagico-staging.vercel.app' },
+            ]
+            const mapping = projectMappings.find(item => item.projectId && item.projectId === deployment.projectId)
+            if (!mapping) {
+              await core.summary.addHeading('Staging alias unchanged').addRaw(`App unknown; alias not applicable; commit ${expectedSha}; outcome: skipped because Vercel project ${deployment.projectId || '(unknown)'} is not configured for staging.`, true).write()
+              return
+            }
+            if (!mapping.projectId.trim()) throw new Error(`Required GitHub variable for the ${mapping.app} Vercel project is missing`)
+            if (deployment.target === 'production') {
+              await core.summary.addHeading(`${mapping.app} staging alias unchanged`).addRaw(`Alias ${mapping.alias}; commit ${expectedSha}; outcome: skipped because deployment ${deployment.id || deployment.uid} targets production.`, true).write()
+              return
+            }
+            if (deployment.meta?.githubCommitRef !== 'staging') {
+              await core.summary.addHeading(`${mapping.app} staging alias unchanged`).addRaw(`Alias ${mapping.alias}; commit ${expectedSha}; outcome: skipped because Vercel Git branch is ${deployment.meta?.githubCommitRef || '(unknown)'}, not staging.`, true).write()
+              return
+            }
+            if (deployment.source !== 'git') throw new Error('Vercel deployment is not a Git deployment; refusing alias update')
+            if (deployment.readyState !== 'READY') throw new Error(`Vercel deployment is not READY (state: ${deployment.readyState || 'unknown'}); refusing alias update`)
+            if (deployment.meta?.githubCommitSha !== expectedSha) throw new Error('Vercel deployment commit does not match the GitHub deployment SHA')
+            const org = deployment.meta?.githubCommitOrg
+            const repo = deployment.meta?.githubCommitRepo
+            const [expectedOwner, expectedRepo] = repository.split('/')
+            if ((org && org.toLowerCase() !== expectedOwner.toLowerCase()) || (repo && repo.toLowerCase() !== expectedRepo.toLowerCase())) {
+              throw new Error('Vercel deployment belongs to a different GitHub repository')
+            }
+
+            const { owner, repo: contextRepo } = context.repo
+            const currentRef = await github.rest.git.getRef({ owner, repo: contextRepo, ref: 'heads/staging' })
+            if (currentRef.data.object.sha !== expectedSha) {
+              await core.summary.addHeading(`${mapping.app} staging alias unchanged`).addRaw(`Alias ${mapping.alias}; commit ${expectedSha}; outcome: skipped as stale because staging is at ${currentRef.data.object.sha}.`, true).write()
+              return
+            }
+
+            const deploymentId = deployment.id || deployment.uid
+            if (!deploymentId) throw new Error('Vercel deployment detail has no deployment ID')
+            const assignment = await fetch(`${api}/v2/deployments/${encodeURIComponent(deploymentId)}/aliases?${teamQuery}`, {
+              method: 'POST', headers, body: JSON.stringify({ alias: mapping.alias }), signal: AbortSignal.timeout(15000),
+            })
+            if (!assignment.ok) throw new Error(`Vercel alias assignment failed (HTTP ${assignment.status})`)
+            const assigned = await safeGet(`${api}/v4/aliases/${encodeURIComponent(mapping.alias)}?${teamQuery}`)
+            if (assigned.deploymentId !== deploymentId) throw new Error('Alias readback does not point to the expected deployment')
+            await core.summary.addHeading(`${mapping.app} staging alias updated`)
+              .addRaw(`Project ${mapping.projectId}; alias ${mapping.alias}; commit ${expectedSha}; outcome: updated.`, true)
+              .write()
