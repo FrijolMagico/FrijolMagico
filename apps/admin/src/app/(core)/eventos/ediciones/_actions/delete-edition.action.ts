@@ -38,11 +38,7 @@ export async function deleteEditionAction(
   const deletedEditions = await db
     .delete(eventEdition)
     .where(eq(eventEdition.id, id))
-    .returning({
-      id: eventEdition.id,
-      published: eventEdition.published,
-      slug: eventEdition.slug
-    })
+    .returning({ id: eventEdition.id })
 
   if (deletedEditions.length === 0) return { success: true }
 
@@ -50,29 +46,11 @@ export async function deleteEditionAction(
   updateTag(EDITION_DAY_CACHE_TAG)
   const invalidationRequests: RevalidateWebCacheOptions[] = [
     { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
-    { tag: FESTIVALES_CACHE_TAG, mode: 'swr' }
-  ]
-  for (const { published, slug } of deletedEditions) {
-    if (slug) {
-      invalidationRequests.push({
-        tag: FESTIVAL_CRITICAL_CACHE_TAG,
-        path: `/festivales/${slug}`,
-        mode: 'immediate'
-      })
-    }
-    invalidationRequests.push({ tag: FESTIVALES_CACHE_TAG, path: '/festivales' })
-    if (published && slug) {
-      invalidationRequests.push(
-        { path: '/', pathType: 'page' },
-        { path: '/', pathType: 'layout' }
-      )
-    }
-  }
-  invalidationRequests.push(
+    { tag: FESTIVALES_CACHE_TAG, mode: 'swr' },
     { tag: CATALOG_CACHE_TAG },
     { tag: CATALOG_PARTICIPATION_CACHE_TAG },
     { tag: CATALOG_EDITION_DATES_CACHE_TAG }
-  )
+  ]
   const webInvalidation = await revalidateWebCacheBatch(
     invalidationRequests,
     'delete-edition'

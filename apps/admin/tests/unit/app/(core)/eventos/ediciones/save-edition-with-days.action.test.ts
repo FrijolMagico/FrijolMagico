@@ -199,20 +199,8 @@ describe('saveEditionWithDaysAction catalog freshness', () => {
       {
         context: 'save-edition-with-days',
         requests: [
-          {
-            tag: FESTIVAL_CRITICAL_CACHE_TAG,
-            mode: 'immediate',
-            path: '/festivales/[slug]',
-            pathType: 'page'
-          },
-          {
-            tag: FESTIVALES_CACHE_TAG,
-            mode: 'swr',
-            path: '/festivales',
-            pathType: 'page'
-          },
-          { path: '/', pathType: 'page' },
-          { path: '/', pathType: 'layout' },
+          { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
+          { tag: FESTIVALES_CACHE_TAG, mode: 'swr' },
           { tag: 'catalogo:artistas' },
           { tag: 'catalogo:artistas:participaciones' }
         ]
@@ -238,22 +226,13 @@ describe('saveEditionWithDaysAction catalog freshness', () => {
     expect(result.success).toBe(true)
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
+      mode: 'immediate'
     })
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVALES_CACHE_TAG,
-      mode: 'swr',
-      path: '/festivales',
-      pathType: 'page'
+      mode: 'swr'
     })
-    expect(routeInvalidations).toEqual([
-      { path: '/festivales/[slug]', pathType: 'page' },
-      { path: '/festivales', pathType: 'page' },
-      { path: '/', pathType: 'page' },
-      { path: '/', pathType: 'layout' }
-    ])
+    expect(routeInvalidations).toEqual([])
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: 'catalogo:artistas'
     })
@@ -316,32 +295,15 @@ describe('saveEditionWithDaysAction catalog freshness', () => {
 
     expect(result.success).toBe(true)
     expect(batchCalls[0]?.requests).toEqual([
-      {
-        tag: FESTIVAL_CRITICAL_CACHE_TAG,
-        mode: 'immediate',
-        path: '/festivales/[slug]',
-        pathType: 'page'
-      },
-      {
-        tag: FESTIVALES_CACHE_TAG,
-        mode: 'swr',
-        path: '/festivales',
-        pathType: 'page'
-      },
-      { path: '/', pathType: 'page' },
-      { path: '/', pathType: 'layout' },
+      { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
+      { tag: FESTIVALES_CACHE_TAG, mode: 'swr' },
       { tag: 'catalogo:artistas:fechas-edicion' }
     ])
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledTimes(1)
     expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
       tag: 'catalogo:artistas:fechas-edicion'
     })
-    expect(routeInvalidations).toEqual([
-      { path: '/festivales/[slug]', pathType: 'page' },
-      { path: '/festivales', pathType: 'page' },
-      { path: '/', pathType: 'page' },
-      { path: '/', pathType: 'layout' }
-    ])
+    expect(routeInvalidations).toEqual([])
   })
 
   test('preserves no-op handling when projected edition fields and dates are unchanged', async () => {
@@ -360,20 +322,21 @@ describe('saveEditionWithDaysAction catalog freshness', () => {
     expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
   })
 
-  test('invalidates festival routes for name and poster changes without the root routes', async () => {
+  test('retains festival tags for name and poster changes without route invalidation', async () => {
     await saveEditionWithDaysAction({ success: true }, {
       ...payload,
       nombre: 'New name',
       posterUrl: '/poster.jpg'
     })
 
-    expect(routeInvalidations).toEqual([
-      { path: '/festivales/[slug]', pathType: 'page' },
-      { path: '/festivales', pathType: 'page' }
+    expect(batchCalls[0]?.requests.slice(0, 2)).toEqual([
+      { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
+      { tag: FESTIVALES_CACHE_TAG, mode: 'swr' }
     ])
+    expect(routeInvalidations).toEqual([])
   })
 
-  test('keeps time and modality edits off the root routes', async () => {
+  test('keeps time and modality edits free of route invalidations', async () => {
     existingDates = [
       {
         id: 9,
@@ -400,13 +363,10 @@ describe('saveEditionWithDaysAction catalog freshness', () => {
       ]
     })
 
-    expect(routeInvalidations).toEqual([
-      { path: '/festivales/[slug]', pathType: 'page' },
-      { path: '/festivales', pathType: 'page' }
-    ])
+    expect(routeInvalidations).toEqual([])
   })
 
-  test('invalidates root routes when the venue changes', async () => {
+  test('retains tag invalidation when the venue changes', async () => {
     existingDates = [
       {
         id: 9,
@@ -433,28 +393,20 @@ describe('saveEditionWithDaysAction catalog freshness', () => {
       ]
     })
 
-    expect(routeInvalidations).toContainEqual({
-      path: '/',
-      pathType: 'page'
-    })
-    expect(routeInvalidations).toContainEqual({
-      path: '/',
-      pathType: 'layout'
-    })
+    expect(routeInvalidations).toEqual([])
   })
 
-  test('invalidates public and root routes when creating an edition', async () => {
+  test('invalidates festival tags and catalog tags when creating an edition', async () => {
     await saveEditionWithDaysAction({ success: true }, {
       ...payload,
       id: null
     })
 
-    expect(routeInvalidations).toEqual([
-      { path: '/festivales/[slug]', pathType: 'page' },
-      { path: '/festivales', pathType: 'page' },
-      { path: '/', pathType: 'page' },
-      { path: '/', pathType: 'layout' }
+    expect(batchCalls[0]?.requests.slice(0, 2)).toEqual([
+      { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
+      { tag: FESTIVALES_CACHE_TAG, mode: 'swr' }
     ])
+    expect(routeInvalidations).toEqual([])
   })
 
   test('does not treat a missing edition row on update as an edition change', async () => {

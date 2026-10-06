@@ -188,20 +188,8 @@ describe('updateEditionPublicationAction', () => {
     expect(revalidateWebCacheBatch).toHaveBeenCalledTimes(1)
     expect(revalidateWebCacheBatch).toHaveBeenCalledWith(
       [
-        {
-          tag: FESTIVAL_CRITICAL_CACHE_TAG,
-          mode: 'immediate',
-          path: '/festivales/[slug]',
-          pathType: 'page'
-        },
-        {
-          tag: FESTIVALES_CACHE_TAG,
-          mode: 'swr',
-          path: '/festivales',
-          pathType: 'page'
-        },
-        { mode: 'immediate', path: '/', pathType: 'page' },
-        { mode: 'immediate', path: '/', pathType: 'layout' }
+        { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
+        { tag: FESTIVALES_CACHE_TAG, mode: 'swr' }
       ],
       'update-edition-publication'
     )
@@ -259,20 +247,8 @@ describe('updateEditionPublicationAction', () => {
     expect(result).toEqual({ success: true, data: { published: false } })
     expect(revalidateWebCacheBatch).toHaveBeenCalledWith(
       [
-        {
-          tag: FESTIVAL_CRITICAL_CACHE_TAG,
-          mode: 'immediate',
-          path: '/festivales/[slug]',
-          pathType: 'page'
-        },
-        {
-          tag: FESTIVALES_CACHE_TAG,
-          mode: 'swr',
-          path: '/festivales',
-          pathType: 'page'
-        },
-        { mode: 'immediate', path: '/', pathType: 'page' },
-        { mode: 'immediate', path: '/', pathType: 'layout' }
+        { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
+        { tag: FESTIVALES_CACHE_TAG, mode: 'swr' }
       ],
       'update-edition-publication'
     )

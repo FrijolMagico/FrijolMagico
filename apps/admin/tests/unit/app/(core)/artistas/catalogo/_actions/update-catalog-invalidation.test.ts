@@ -523,7 +523,7 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     })
   })
 
-  test('batches root path and Featured tag for destacado changes', async () => {
+  test('batches only the Featured tag when destacado makes an active artist eligible', async () => {
     initialCatalogActive = true
     initialCatalogFeatured = false
 
@@ -535,26 +535,42 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     expect(batchRequests).toEqual([[
       { tag: 'catalogo:artistas:base' },
       { tag: 'catalogo:artistas' },
-      { path: '/', tag: FEATURED_ARTISTS_CACHE_TAG }
+      { tag: FEATURED_ARTISTS_CACHE_TAG }
     ]])
   })
 
-  test('preserves root-path Featured invalidation when destacado changes', async () => {
+  test('invalidates Featured when destacado removes an active artist from eligibility', async () => {
     initialCatalogActive = true
+    initialCatalogFeatured = true
+
+    await updateCatalogAction(
+      { success: false },
+      { ...validInput, activo: true, destacado: false }
+    )
+
+    expect(batchRequests).toEqual([[
+      { tag: 'catalogo:artistas:base' },
+      { tag: 'catalogo:artistas' },
+      { tag: FEATURED_ARTISTS_CACHE_TAG }
+    ]])
+  })
+
+  test('does not invalidate Featured when destacado stays false for an inactive artist', async () => {
+    initialCatalogActive = false
     initialCatalogFeatured = false
 
     await updateCatalogAction(
       { success: false },
-      { ...validInput, activo: true, destacado: true }
+      { ...validInput, destacado: false }
     )
 
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: FEATURED_ARTISTS_CACHE_TAG,
-      path: '/'
-    })
+    expect(batchRequests).toEqual([[
+      { tag: 'catalogo:artistas:base' },
+      { tag: 'catalogo:artistas' }
+    ]])
   })
 
-  test('preserves root-path invalidation without Featured tag when destacado is unchanged', async () => {
+  test('does not invalidate Featured when destacado is unchanged for an active artist', async () => {
     initialCatalogActive = true
     initialCatalogFeatured = true
 
@@ -563,10 +579,8 @@ describe('update-catalog action — best-effort cache invalidation', () => {
       { ...validInput, activo: true, destacado: true }
     )
 
-    expect(revalidateWebCache).toHaveBeenCalledWith({ path: '/' })
     expect(revalidateWebCache).not.toHaveBeenCalledWith({
-      tag: FEATURED_ARTISTS_CACHE_TAG,
-      path: '/'
+      tag: FEATURED_ARTISTS_CACHE_TAG
     })
   })
 

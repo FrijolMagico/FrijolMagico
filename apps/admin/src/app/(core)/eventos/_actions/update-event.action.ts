@@ -76,26 +76,10 @@ export async function updateEventAction(
     }
 
     updateTag(EVENT_CACHE_TAG)
-    for (const [tag, mode] of [
-      [FESTIVAL_CRITICAL_CACHE_TAG, 'immediate'],
-      [FESTIVALES_CACHE_TAG, 'swr']
-    ] as const) {
-      webInvalidations.push({
-        tag,
-        mode,
-        ...(updatedEvents.length > 0
-          ? tag === FESTIVAL_CRITICAL_CACHE_TAG
-            ? { path: '/festivales/[slug]', pathType: 'page' as const }
-            : { path: '/festivales', pathType: 'page' as const }
-          : {})
-      })
-    }
-    if (updatedEvents.length > 0) {
-      webInvalidations.push(
-        { path: '/', pathType: 'page' },
-        { path: '/', pathType: 'layout' }
-      )
-    }
+    webInvalidations.push(
+      { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
+      { tag: FESTIVALES_CACHE_TAG, mode: 'swr' }
+    )
 
     const webInvalidation = await revalidateWebCacheBatch(
       webInvalidations,

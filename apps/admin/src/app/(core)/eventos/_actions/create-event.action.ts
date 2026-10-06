@@ -43,20 +43,8 @@ export async function createEventAction(
     updateTag(EVENT_CACHE_TAG)
     const webInvalidation = await revalidateWebCacheBatch(
       [
-        {
-          tag: FESTIVAL_CRITICAL_CACHE_TAG,
-          mode: 'immediate',
-          path: '/festivales/[slug]',
-          pathType: 'page'
-        },
-        {
-          tag: FESTIVALES_CACHE_TAG,
-          mode: 'swr',
-          path: '/festivales',
-          pathType: 'page'
-        },
-        { path: '/', pathType: 'page' },
-        { path: '/', pathType: 'layout' }
+        { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
+        { tag: FESTIVALES_CACHE_TAG, mode: 'swr' }
       ],
       'create-event'
     )

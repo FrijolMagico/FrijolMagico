@@ -72,11 +72,7 @@ describe('deleteEditionAction catalog freshness', () => {
     const result = await deleteEditionAction({ success: true }, { id: 1 })
 
     expect(result).toEqual({ success: true, webRevalidation: 'swr' })
-    expect(Object.keys(returnedProjection ?? {}).sort()).toEqual([
-      'id',
-      'published',
-      'slug'
-    ])
+    expect(Object.keys(returnedProjection ?? {})).toEqual(['id'])
     expect(invalidations).toContain('local:ediciones')
     expect(invalidations).toContain('local:ediciones:dias')
     expect(revalidateWebCacheBatch).toHaveBeenCalledTimes(1)
@@ -84,14 +80,6 @@ describe('deleteEditionAction catalog freshness', () => {
       [
         { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
         { tag: FESTIVALES_CACHE_TAG, mode: 'swr' },
-        {
-          tag: FESTIVAL_CRITICAL_CACHE_TAG,
-          path: '/festivales/festival-2025',
-          mode: 'immediate'
-        },
-        { tag: FESTIVALES_CACHE_TAG, path: '/festivales' },
-        { path: '/', pathType: 'page' },
-        { path: '/', pathType: 'layout' },
         { tag: 'catalogo:artistas' },
         { tag: 'catalogo:artistas:participaciones' },
         { tag: 'catalogo:artistas:fechas-edicion' }
@@ -111,63 +99,32 @@ describe('deleteEditionAction catalog freshness', () => {
     expect(revalidateWebCacheBatch.mock.calls[0]?.[0]).toEqual([
       { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
       { tag: FESTIVALES_CACHE_TAG, mode: 'swr' },
-      {
-        tag: FESTIVAL_CRITICAL_CACHE_TAG,
-        path: '/festivales/first-festival',
-        mode: 'immediate'
-      },
-      { tag: FESTIVALES_CACHE_TAG, path: '/festivales' },
-      { path: '/', pathType: 'page' },
-      { path: '/', pathType: 'layout' },
-      {
-        tag: FESTIVAL_CRITICAL_CACHE_TAG,
-        path: '/festivales/second-festival',
-        mode: 'immediate'
-      },
-      { tag: FESTIVALES_CACHE_TAG, path: '/festivales' },
       { tag: 'catalogo:artistas' },
       { tag: 'catalogo:artistas:participaciones' },
       { tag: 'catalogo:artistas:fechas-edicion' }
     ])
   })
 
-  test('omits root paths for unpublished editions but retains slug and festival requests', async () => {
+  test('keeps tag-only invalidation for unpublished editions', async () => {
     deletedRows = [{ id: 1, published: false, slug: 'festival-2025' }]
 
     await deleteEditionAction({ success: true }, { id: 1 })
 
-    const requests = revalidateWebCacheBatch.mock.calls[0]?.[0] ?? []
-    expect(requests).not.toContainEqual({ path: '/', pathType: 'page' })
-    expect(requests).not.toContainEqual({ path: '/', pathType: 'layout' })
-    expect(requests).toContainEqual({
-      tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      path: '/festivales/festival-2025',
-      mode: 'immediate'
-    })
-    expect(requests).toContainEqual({
-      tag: FESTIVALES_CACHE_TAG,
-      path: '/festivales'
-    })
+    expect(revalidateWebCacheBatch.mock.calls[0]?.[0].slice(0, 2)).toEqual([
+      { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
+      { tag: FESTIVALES_CACHE_TAG, mode: 'swr' }
+    ])
   })
 
-  test('omits slug and root requests for a published edition without a slug', async () => {
+  test('keeps tag-only invalidation when a published edition has no slug', async () => {
     deletedRows = [{ id: 1, published: true, slug: '' }]
 
     await deleteEditionAction({ success: true }, { id: 1 })
 
-    const requests = revalidateWebCacheBatch.mock.calls[0]?.[0] ?? []
-    expect(requests).not.toContainEqual({ path: '/', pathType: 'page' })
-    expect(requests).not.toContainEqual({ path: '/', pathType: 'layout' })
-    expect(
-      requests.some(
-        ({ tag, path }) =>
-          tag === FESTIVAL_CRITICAL_CACHE_TAG && path !== undefined
-      )
-    ).toBe(false)
-    expect(requests).toContainEqual({
-      tag: FESTIVALES_CACHE_TAG,
-      path: '/festivales'
-    })
+    expect(revalidateWebCacheBatch.mock.calls[0]?.[0].slice(0, 2)).toEqual([
+      { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
+      { tag: FESTIVALES_CACHE_TAG, mode: 'swr' }
+    ])
   })
 
   test('does not invalidate or report freshness when the edition ID does not exist', async () => {

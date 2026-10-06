@@ -83,7 +83,14 @@ describe('catalog server actions — web invalidation contracts', () => {
     expect(source).toContain('CATALOG_BASE_CACHE_TAG')
     expect(source).toMatch(/if \(festivalDetailChanged\)[\s\S]*?path: '\/festivales\/\[slug\]'[\s\S]*?pathType: 'page'/)
     expect(source).toMatch(/if \(activeStateChanged \|\| canonicalCatalogSlugChanged\)[\s\S]*?mode: 'immediate'/)
-    expect(source).toMatch(/if \(destacado !== undefined\)[\s\S]*?path: '\/'/)
+    const featuredBranch = source.match(
+      /\n  if \(destacado !== undefined\) \{\n    if \(([\s\S]*?)\n  \} else if \(activeStateChanged \|\| featuredSelectionChanged\)/
+    )?.[1]
+    expect(featuredBranch).toMatch(
+      /featuredSelectionChanged\s*\) \{\s*invalidationRequests\.push\(\{ tag: FEATURED_ARTISTS_CACHE_TAG \}\)/
+    )
+    expect(featuredBranch).not.toContain('path:')
+    expect(featuredBranch).not.toContain("mode: 'swr'")
     expect(source).toMatch(/else if \(activeStateChanged \|\| featuredSelectionChanged\)[\s\S]*?mode: 'swr'/)
     expect(source).not.toContain("path: '/catalogo'")
   })

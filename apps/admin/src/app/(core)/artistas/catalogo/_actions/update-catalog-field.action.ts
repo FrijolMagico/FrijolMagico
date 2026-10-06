@@ -138,11 +138,9 @@ export async function updateCatalogFieldAction(
       (eligibleBefore && existingCatalogRow.destacado) !==
         (eligibleAfter && parsed.data.destacado)
 
-    invalidationRequests.push(
-      publicFeaturedStateChanged || activeStateChanged
-        ? { tag: FEATURED_ARTISTS_CACHE_TAG, path: '/' }
-        : { path: '/' }
-    )
+    if (publicFeaturedStateChanged || activeStateChanged) {
+      invalidationRequests.push({ tag: FEATURED_ARTISTS_CACHE_TAG })
+    }
   }
 
   const webInvalidation = await revalidateWebCacheBatch(

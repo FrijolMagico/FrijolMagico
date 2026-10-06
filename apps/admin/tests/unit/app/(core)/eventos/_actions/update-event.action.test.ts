@@ -92,20 +92,8 @@ describe('updateEventAction cache freshness', () => {
       [
         { tag: 'catalogo:artistas' },
         { tag: 'catalogo:artistas:participaciones' },
-        {
-          tag: FESTIVAL_CRITICAL_CACHE_TAG,
-          mode: 'immediate',
-          path: '/festivales/[slug]',
-          pathType: 'page'
-        },
-        {
-          tag: FESTIVALES_CACHE_TAG,
-          mode: 'swr',
-          path: '/festivales',
-          pathType: 'page'
-        },
-        { path: '/', pathType: 'page' },
-        { path: '/', pathType: 'layout' }
+        { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
+        { tag: FESTIVALES_CACHE_TAG, mode: 'swr' }
       ],
       'update-event'
     )
@@ -123,20 +111,8 @@ describe('updateEventAction cache freshness', () => {
     expect(result).toEqual({ success: true, webRevalidation: 'swr' })
     expect(revalidateWebCacheBatch).toHaveBeenCalledWith(
       [
-        {
-          tag: FESTIVAL_CRITICAL_CACHE_TAG,
-          mode: 'immediate',
-          path: '/festivales/[slug]',
-          pathType: 'page'
-        },
-        {
-          tag: FESTIVALES_CACHE_TAG,
-          mode: 'swr',
-          path: '/festivales',
-          pathType: 'page'
-        },
-        { path: '/', pathType: 'page' },
-        { path: '/', pathType: 'layout' }
+        { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
+        { tag: FESTIVALES_CACHE_TAG, mode: 'swr' }
       ],
       'update-event'
     )

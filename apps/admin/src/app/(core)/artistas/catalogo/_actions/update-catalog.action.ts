@@ -275,13 +275,13 @@ export async function updateCatalogAction(
     })
   }
   if (destacado !== undefined) {
-    invalidationRequests.push(
+    if (
       publicFeaturedStateChanged ||
-        activeStateChanged ||
-        featuredSelectionChanged
-        ? { tag: FEATURED_ARTISTS_CACHE_TAG, path: '/' }
-        : { path: '/' }
-    )
+      activeStateChanged ||
+      featuredSelectionChanged
+    ) {
+      invalidationRequests.push({ tag: FEATURED_ARTISTS_CACHE_TAG })
+    }
   } else if (activeStateChanged || featuredSelectionChanged) {
     invalidationRequests.push({
       tag: FEATURED_ARTISTS_CACHE_TAG,

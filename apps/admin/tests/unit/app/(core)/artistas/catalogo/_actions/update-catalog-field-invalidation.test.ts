@@ -92,8 +92,7 @@ describe('updateCatalogFieldAction — web invalidation', () => {
     expect(revalidateWebCacheBatch).toHaveBeenCalledWith(
       [
         { tag: CATALOG_BASE_CACHE_TAG },
-        { tag: CATALOG_CACHE_TAG },
-        { path: '/' }
+        { tag: CATALOG_CACHE_TAG }
       ],
       'update-catalog-field'
     )
@@ -191,14 +190,13 @@ describe('updateCatalogFieldAction — web invalidation', () => {
     })
   })
 
-  test('keeps the root request for destacado and adds featured tag only when public state changes', async () => {
+  test('invalidates Featured only when destacado changes public state', async () => {
     storedActivo = true
     storedDestacado = false
     await updateCatalogFieldAction(1, { destacado: true })
     expect(updateValues).toEqual({ destacado: true })
     expect(revalidateWebCacheBatch.mock.calls[0]?.[0]).toContainEqual({
-      tag: FEATURED_ARTISTS_CACHE_TAG,
-      path: '/'
+      tag: FEATURED_ARTISTS_CACHE_TAG
     })
     expect(revalidateWebCacheBatch.mock.calls[0]?.[0]).not.toContainEqual({
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
@@ -215,11 +213,29 @@ describe('updateCatalogFieldAction — web invalidation', () => {
     storedDestacado = true
     await updateCatalogFieldAction(1, { destacado: true })
     expect(updateValues).toEqual({ destacado: true })
-    expect(revalidateWebCacheBatch.mock.calls[0]?.[0]).toContainEqual({ path: '/' })
     expect(revalidateWebCacheBatch.mock.calls[0]?.[0]).not.toContainEqual({
-      tag: FEATURED_ARTISTS_CACHE_TAG,
-      path: '/'
+      tag: FEATURED_ARTISTS_CACHE_TAG
     })
+    expect(revalidateWebCacheBatch.mock.calls[0]?.[0]).not.toContainEqual({ path: '/' })
+
+    revalidateWebCacheBatch.mockClear()
+    storedDestacado = true
+    await updateCatalogFieldAction(1, { destacado: false })
+    expect(revalidateWebCacheBatch.mock.calls[0]?.[0]).toContainEqual({
+      tag: FEATURED_ARTISTS_CACHE_TAG
+    })
+  })
+
+  test('does not invalidate Featured when a non-featured inactive artist stays non-featured', async () => {
+    storedActivo = false
+    storedDestacado = false
+
+    await updateCatalogFieldAction(1, { destacado: false })
+
+    expect(revalidateWebCacheBatch.mock.calls[0]?.[0]).not.toContainEqual({
+      tag: FEATURED_ARTISTS_CACHE_TAG
+    })
+    expect(revalidateWebCacheBatch.mock.calls[0]?.[0]).not.toContainEqual({ path: '/' })
   })
 
   test('keeps the database update successful when the batch returns no freshness metadata', async () => {

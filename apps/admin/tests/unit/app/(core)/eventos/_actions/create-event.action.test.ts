@@ -18,20 +18,8 @@ const revalidateWebCacheBatch = mock(async (...args: unknown[]) => {
   return batchResult
 })
 const expectedRequests = [
-  {
-    tag: FESTIVAL_CRITICAL_CACHE_TAG,
-    mode: 'immediate',
-    path: '/festivales/[slug]',
-    pathType: 'page'
-  },
-  {
-    tag: FESTIVALES_CACHE_TAG,
-    mode: 'swr',
-    path: '/festivales',
-    pathType: 'page'
-  },
-  { path: '/', pathType: 'page' },
-  { path: '/', pathType: 'layout' }
+  { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
+  { tag: FESTIVALES_CACHE_TAG, mode: 'swr' }
 ]
 let authError: Error | undefined
 const requireAuth = mock(async () => {

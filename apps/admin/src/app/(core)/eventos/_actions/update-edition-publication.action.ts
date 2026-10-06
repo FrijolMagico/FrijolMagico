@@ -26,7 +26,7 @@ const WEB_CACHE_INVALIDATIONS = [
   { tag: FESTIVALES_CACHE_TAG, mode: 'swr' }
 ] as const
 
-async function syncPublicationCaches(editionMatched: boolean) {
+async function syncPublicationCaches() {
   for (const tag of LOCAL_CACHE_TAGS) {
     try {
       updateTag(tag)
@@ -35,24 +35,7 @@ async function syncPublicationCaches(editionMatched: boolean) {
     }
   }
 
-  const webInvalidations = [
-    ...WEB_CACHE_INVALIDATIONS.map(({ tag, mode }) => ({
-      tag,
-      mode,
-      ...(editionMatched && tag === FESTIVAL_CRITICAL_CACHE_TAG
-        ? { path: '/festivales/[slug]', pathType: 'page' as const }
-        : {}),
-      ...(editionMatched && tag === FESTIVALES_CACHE_TAG
-        ? { path: '/festivales', pathType: 'page' as const }
-        : {})
-    })),
-    ...(editionMatched
-      ? [
-          { mode: 'immediate' as const, path: '/', pathType: 'page' as const },
-          { mode: 'immediate' as const, path: '/', pathType: 'layout' as const }
-        ]
-      : [])
-  ]
+  const webInvalidations = [...WEB_CACHE_INVALIDATIONS]
 
   return await revalidateWebCacheBatch(
     webInvalidations,
@@ -78,15 +61,13 @@ export async function updateEditionPublicationAction(
       }
     }
 
-    const [updatedEdition] = await db
+    await db
       .update(eventEdition)
       .set({ published: parsed.data.published })
       .where(eq(eventEdition.id, parsed.data.id))
       .returning({ id: eventEdition.id })
 
-    const webInvalidation = await syncPublicationCaches(
-      updatedEdition !== undefined
-    )
+    const webInvalidation = await syncPublicationCaches()
 
     return {
       success: true,

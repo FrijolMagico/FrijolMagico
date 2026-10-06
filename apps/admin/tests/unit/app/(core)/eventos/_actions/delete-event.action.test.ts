@@ -95,20 +95,8 @@ describe('deleteEventAction catalog freshness', () => {
     expect(invalidations).toEqual([`local:${EVENT_CACHE_TAG}`, 'batch'])
     expect(revalidateWebCacheBatch).toHaveBeenCalledWith(
       [
-        {
-          tag: FESTIVAL_CRITICAL_CACHE_TAG,
-          mode: 'immediate',
-          path: '/festivales/[slug]',
-          pathType: 'page'
-        },
-        {
-          tag: FESTIVALES_CACHE_TAG,
-          mode: 'swr',
-          path: '/festivales',
-          pathType: 'page'
-        },
-        { path: '/', pathType: 'page' },
-        { path: '/', pathType: 'layout' },
+        { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
+        { tag: FESTIVALES_CACHE_TAG, mode: 'swr' },
         { tag: CATALOG_CACHE_TAG },
         { tag: CATALOG_PARTICIPATION_CACHE_TAG },
         { tag: CATALOG_EDITION_DATES_CACHE_TAG }
