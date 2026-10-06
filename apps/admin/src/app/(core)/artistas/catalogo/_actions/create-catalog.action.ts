@@ -19,7 +19,8 @@ import {
   catalogInsertSchema,
   type CatalogInsertInput
 } from '../_schemas/catalog.schema'
-import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
+import { revalidateWebCacheBatch } from '@/shared/lib/web-invalidation'
+import type { RevalidateWebCacheOptions } from '@/shared/lib/web-invalidation'
 import { allocateCatalogSlug } from '../_lib/catalog-slug'
 
 interface CreatedCatalog {
@@ -122,21 +123,31 @@ export async function createCatalogAction(
     // NOTE: Soft-deleted catalog rows still rely on the current unique `artistaId`
     // constraint. This change does not introduce restore-or-reinsert semantics.
 
+    const invalidationRequests: RevalidateWebCacheOptions[] = [
+      { tag: CATALOG_BASE_CACHE_TAG },
+      { tag: CATALOG_PARTICIPATION_CACHE_TAG },
+      { tag: CATALOG_CACHE_TAG }
+    ]
+
     for (const tag of [CATALOG_BASE_CACHE_TAG, CATALOG_PARTICIPATION_CACHE_TAG, CATALOG_CACHE_TAG]) {
       try {
         updateTag(tag)
       } catch (error) {
         console.error('Catalog cache invalidation failed', error)
       }
-      void revalidateWebCacheBestEffort({ tag })
     }
 
     if ('destacado' in parsed.data && parsed.data.destacado) {
-      void revalidateWebCacheBestEffort({
+      invalidationRequests.push({
         tag: FEATURED_ARTISTS_CACHE_TAG,
         path: '/'
       })
     }
+
+    const webInvalidation = await revalidateWebCacheBatch(
+      invalidationRequests,
+      'create-catalog'
+    )
 
     return {
       success: true,
@@ -144,7 +155,8 @@ export async function createCatalogAction(
         catalogId: createdCatalog.id,
         artistId: createdCatalog.artistaId,
         requestedActive: parsed.data.activo ?? false
-      }
+      },
+      ...webInvalidation
     }
   } catch (error) {
     if (error instanceof Error && error.message === CATALOG_CREATE_NOT_CONFIRMED) {

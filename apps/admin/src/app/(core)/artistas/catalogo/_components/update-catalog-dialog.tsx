@@ -145,7 +145,11 @@ function UpdateCatalogDialogForm({
 
     reset()
     closeUpdateCatalogDialog()
-    toast.success('Catálogo actualizado correctamente')
+    toast.success(
+      result.webRevalidation === 'swr'
+        ? 'Catálogo actualizado correctamente. Pueden tardar en aparecer en la web.'
+        : 'Catálogo actualizado correctamente'
+    )
   }
 
   return (

@@ -62,7 +62,11 @@ export function UpdateEventDialog() {
       }
 
       closeUpdateEventDialog()
-      toast.success('Evento actualizado exitósamente')
+      toast.success(
+        result.webRevalidation === 'swr'
+          ? 'Evento actualizado exitósamente. Pueden tardar en aparecer en la web.'
+          : 'Evento actualizado exitósamente'
+      )
     } finally {
       reset()
     }

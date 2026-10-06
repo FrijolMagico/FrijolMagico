@@ -15,10 +15,7 @@ import {
   FESTIVALES_CACHE_TAG,
   FESTIVAL_CRITICAL_CACHE_TAG
 } from '@frijolmagico/cache-tags'
-import {
-  revalidateWebCache,
-  revalidateWebCacheBestEffort
-} from '@/shared/lib/web-invalidation'
+import { revalidateWebCacheBatch } from '@/shared/lib/web-invalidation'
 
 const { event } = events
 
@@ -44,25 +41,26 @@ export async function createEventAction(
     await db.insert(event).values(parsed.data)
 
     updateTag(EVENT_CACHE_TAG)
-    for (const [tag, mode] of [
-      [FESTIVAL_CRITICAL_CACHE_TAG, 'immediate'],
-      [FESTIVALES_CACHE_TAG, 'swr']
-    ] as const) {
-      try {
-        await revalidateWebCache({
-          tag,
-          mode,
-          ...(tag === FESTIVAL_CRITICAL_CACHE_TAG
-            ? { path: '/festivales/[slug]', pathType: 'page' as const }
-            : { path: '/festivales', pathType: 'page' as const })
-        })
-      } catch {
-        console.error('[event-crud] Web cache sync failed', { tag })
-      }
-    }
-    void revalidateWebCacheBestEffort({ path: '/', pathType: 'page' })
-    void revalidateWebCacheBestEffort({ path: '/', pathType: 'layout' })
-    return { success: true }
+    const webInvalidation = await revalidateWebCacheBatch(
+      [
+        {
+          tag: FESTIVAL_CRITICAL_CACHE_TAG,
+          mode: 'immediate',
+          path: '/festivales/[slug]',
+          pathType: 'page'
+        },
+        {
+          tag: FESTIVALES_CACHE_TAG,
+          mode: 'swr',
+          path: '/festivales',
+          pathType: 'page'
+        },
+        { path: '/', pathType: 'page' },
+        { path: '/', pathType: 'layout' }
+      ],
+      'create-event'
+    )
+    return { success: true, ...webInvalidation }
   } catch (error) {
     return {
       success: false,

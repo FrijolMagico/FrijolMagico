@@ -21,7 +21,13 @@ export function EventGrid({ events }: EventGridProps) {
       setOptimisticEvents(id)
       try {
         const result = await deleteEventAction(id)
-        if (result.success) toast.success('Evento eliminado exitosamente')
+        if (result.success) {
+          toast.success(
+            result.webRevalidation === 'swr'
+              ? 'Evento eliminado exitosamente. Pueden tardar en aparecer en la web.'
+              : 'Evento eliminado exitosamente'
+          )
+        }
       } catch (error) {
         toast.error('Ocurrió un error al intentar eliminar el evento')
         console.error(error)

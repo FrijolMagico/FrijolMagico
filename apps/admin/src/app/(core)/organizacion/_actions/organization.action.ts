@@ -11,7 +11,7 @@ import {
   NOSOTROS_CACHE_TAG,
   ORGANIZATION_CACHE_TAG
 } from '@frijolmagico/cache-tags'
-import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
+import { revalidateWebCacheBatch } from '@/shared/lib/web-invalidation'
 import { ORGANIZATION_ID } from '../_constants'
 import {
   OrganizationFormInput,
@@ -66,10 +66,10 @@ export async function updateOrganization(
       .where(eq(organization.id, ORGANIZATION_ID))
 
     updateTag(ORGANIZATION_CACHE_TAG)
-    void revalidateWebCacheBestEffort({
-      tag: NOSOTROS_CACHE_TAG,
-      mode: 'swr'
-    })
+    const webInvalidation = await revalidateWebCacheBatch(
+      [{ tag: NOSOTROS_CACHE_TAG, mode: 'swr' }],
+      'update-organization'
+    )
 
     return {
       success: true,
@@ -78,7 +78,10 @@ export async function updateOrganization(
         descripcion: validated.data.descripcion ?? '',
         mision: validated.data.mision ?? '',
         vision: validated.data.vision ?? ''
-      }
+      },
+      ...(webInvalidation.webRevalidation
+        ? { webRevalidation: webInvalidation.webRevalidation }
+        : {})
     }
   } catch (error) {
     return {

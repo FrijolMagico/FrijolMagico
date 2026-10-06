@@ -13,10 +13,24 @@ type WebInvalidation = {
   pathType?: string
 }
 const webInvalidations: WebInvalidation[] = []
-const revalidateWebCacheBestEffort = mock(async (options: WebInvalidation) => {
-  invalidationCommitStates.push(transactionCommitted)
-  webInvalidations.push(options)
-})
+const batchCalls: { requests: WebInvalidation[]; context?: string }[] = []
+let batchResult: { webRevalidation?: 'swr' | 'immediate' } = {
+  webRevalidation: 'swr'
+}
+let batchPromise: Promise<{ webRevalidation?: 'swr' | 'immediate' }> | null = null
+let batchStarted: (() => void) | null = null
+const revalidateWebCacheBatch = mock(
+  async (
+    requests: WebInvalidation[],
+    context?: string
+  ): Promise<{ webRevalidation?: 'swr' | 'immediate' }> => {
+    invalidationCommitStates.push(transactionCommitted)
+    batchCalls.push({ requests, context })
+    webInvalidations.push(...requests)
+    batchStarted?.()
+    return batchPromise ? batchPromise : batchResult
+  }
+)
 const committed: { rows: Map<unknown, Record<string, unknown>[]> } = {
   rows: new Map()
 }
@@ -118,7 +132,7 @@ mock.module('server-only', () => ({}))
 mock.module('next/cache', () => ({ updateTag }))
 mock.module('@/shared/lib/auth/utils', () => ({ requireAuth }))
 mock.module('@/shared/lib/web-invalidation', () => ({
-  revalidateWebCacheBestEffort
+  revalidateWebCacheBatch
 }))
 mock.module('@frijolmagico/database/orm', () => ({
   db: new Proxy(
@@ -134,7 +148,11 @@ describe('createActivityAction aggregate', () => {
   beforeEach(() => {
     updateTag.mockClear()
     requireAuth.mockClear()
-    revalidateWebCacheBestEffort.mockClear()
+    revalidateWebCacheBatch.mockClear()
+    batchCalls.length = 0
+    batchResult = { webRevalidation: 'swr' }
+    batchPromise = null
+    batchStarted = null
     webInvalidations.length = 0
     effectiveTypeSlug = 'taller'
     activePseudonymId = 41
@@ -346,6 +364,7 @@ describe('createActivityAction aggregate', () => {
     expect(typeLookups).toHaveLength(1)
     expect(harness.pending.has(tables.participationActivity)).toBe(false)
     expect(transactionCommitted).toBe(false)
+    expect(revalidateWebCacheBatch).not.toHaveBeenCalled()
   })
 
   test('rejects registration when the database-resolved effective type is music', async () => {
@@ -365,7 +384,7 @@ describe('createActivityAction aggregate', () => {
     expect(harness.pending.has(tables.participationActivity)).toBe(false)
     expect(transactionCommitted).toBe(false)
     expect(updateTag).not.toHaveBeenCalled()
-    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
+    expect(revalidateWebCacheBatch).not.toHaveBeenCalled()
   })
 
   test('rolls back activity, detail and registration when the registration insert fails', async () => {
@@ -387,7 +406,7 @@ describe('createActivityAction aggregate', () => {
     expect(harness.records.get(tables.activityRegistration)).toBeUndefined()
     expect(transactionCommitted).toBe(false)
     expect(updateTag).not.toHaveBeenCalled()
-    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
+    expect(revalidateWebCacheBatch).not.toHaveBeenCalled()
   })
 
   test('attaches festival detail and list paths to confirmed activity invalidations', async () => {
@@ -427,6 +446,64 @@ describe('createActivityAction aggregate', () => {
     })
   })
 
+  test('awaits the ordered batch after local invalidation and returns its requested summary', async () => {
+    let resolveBatch!: (value: { webRevalidation: 'swr' }) => void
+    batchPromise = new Promise((resolve) => {
+      resolveBatch = resolve
+    })
+    const started = new Promise<void>((resolve) => {
+      batchStarted = resolve
+    })
+    const input = payload()
+    input.activity.estado = 'completado'
+    let settled = false
+    const action = createActivityAction({
+      ...input,
+      occurrences: [{ date: '2026-06-10' }]
+    } as never).then((result) => {
+      settled = true
+      return result
+    })
+
+    await started
+    expect(settled).toBe(false)
+    expect(transactionCommitted).toBe(true)
+    expect(updateTag.mock.calls.map(([tag]) => tag)).toEqual([
+      'participaciones:edicion:7',
+      'actividades:participacion:11',
+      'festivales',
+      'eventos',
+      'ediciones',
+      'artistas:detalle'
+    ])
+    expect(batchCalls).toEqual([
+      {
+        requests: [
+          {
+            tag: FESTIVAL_CRITICAL_CACHE_TAG,
+            mode: 'immediate',
+            path: '/festivales/[slug]',
+            pathType: 'page'
+          },
+          {
+            tag: FESTIVALES_CACHE_TAG,
+            mode: 'swr',
+            path: '/festivales',
+            pathType: 'page'
+          },
+          { tag: 'catalogo:artistas' },
+          { tag: 'catalogo:artistas:participaciones' }
+        ],
+        context: 'create-activity'
+      }
+    ])
+    expect(invalidationCommitStates).toEqual(Array(7).fill(true))
+
+    resolveBatch({ webRevalidation: 'swr' })
+    const result = await action
+    expect(result).toEqual({ success: true, webRevalidation: 'swr' })
+  })
+
   test('attaches only the festival list path for talks regardless of state', async () => {
     effectiveTypeSlug = 'charla'
     const result = await createActivityAction({
@@ -435,16 +512,16 @@ describe('createActivityAction aggregate', () => {
     } as never)
 
     expect(result.success).toBe(true)
-    expect(webInvalidations).toContainEqual({
-      tag: FESTIVALES_CACHE_TAG,
-      mode: 'swr',
-      path: '/festivales',
-      pathType: 'page'
-    })
-    expect(webInvalidations).not.toContainEqual(expect.objectContaining({
-      tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      path: '/festivales/[slug]'
-    }))
+    expect(batchCalls[0]?.requests).toEqual([
+      { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
+      {
+        tag: FESTIVALES_CACHE_TAG,
+        mode: 'swr',
+        path: '/festivales',
+        pathType: 'page'
+      }
+    ])
+    expect(result.webRevalidation).toBe('swr')
   })
 
   test('does not attach festival route paths to private non-talk activities', async () => {
@@ -462,7 +539,15 @@ describe('createActivityAction aggregate', () => {
       occurrences: [{ date: '2026-06-10' }]
     } as never)
     expect(privateWorkshop.success).toBe(true)
-    expect(webInvalidations.every(({ path, pathType }) => !path && !pathType)).toBe(true)
+    expect(batchCalls).toHaveLength(2)
+    expect(batchCalls.every(({ requests }) =>
+      requests.every(({ path, pathType }) => !path && !pathType)
+    )).toBe(true)
+    expect(batchCalls.every(({ requests }) =>
+      requests.every(({ tag }) =>
+        tag !== 'catalogo:artistas' && tag !== 'catalogo:artistas:participaciones'
+      )
+    )).toBe(true)
   })
 
   test('invalidates scoped and public tags only after the transaction commits', async () => {
@@ -481,17 +566,17 @@ describe('createActivityAction aggregate', () => {
       'ediciones',
       'artistas:detalle'
     ])
-    expect(revalidateWebCacheBestEffort.mock.calls).toEqual([
-      [{ tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' }],
-      [{ tag: FESTIVALES_CACHE_TAG, mode: 'swr' }]
+    expect(batchCalls).toEqual([
+      {
+        requests: [
+          { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
+          { tag: FESTIVALES_CACHE_TAG, mode: 'swr' }
+        ],
+        context: 'create-activity'
+      }
     ])
-    expect(invalidationCommitStates).toEqual(Array(8).fill(true))
-    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalledWith({
-      tag: 'catalogo:artistas'
-    })
-    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalledWith({
-      tag: 'catalogo:artistas:participaciones'
-    })
+    expect(invalidationCommitStates).toEqual(Array(7).fill(true))
+    expect(revalidateWebCacheBatch).toHaveBeenCalledTimes(1)
   })
 
   test('invalidates the remote catalog after creating a public activity', async () => {
@@ -504,25 +589,29 @@ describe('createActivityAction aggregate', () => {
 
     expect(result.success).toBe(true)
     expect(transactionCommitted).toBe(true)
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: 'catalogo:artistas'
-    })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: 'catalogo:artistas:participaciones'
-    })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
-    })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: FESTIVALES_CACHE_TAG,
-      mode: 'swr',
-      path: '/festivales',
-      pathType: 'page'
-    })
-    expect(invalidationCommitStates).toEqual(Array(10).fill(true))
+    expect(batchCalls).toEqual([
+      {
+        requests: [
+          {
+            tag: FESTIVAL_CRITICAL_CACHE_TAG,
+            mode: 'immediate',
+            path: '/festivales/[slug]',
+            pathType: 'page'
+          },
+          {
+            tag: FESTIVALES_CACHE_TAG,
+            mode: 'swr',
+            path: '/festivales',
+            pathType: 'page'
+          },
+          { tag: 'catalogo:artistas' },
+          { tag: 'catalogo:artistas:participaciones' }
+        ],
+        context: 'create-activity'
+      }
+    ])
+    expect(result.webRevalidation).toBe('swr')
+    expect(invalidationCommitStates).toEqual(Array(7).fill(true))
   })
 
   test('does not invalidate any cache after a later detail mutation fails', async () => {
@@ -536,6 +625,6 @@ describe('createActivityAction aggregate', () => {
     expect(result.success).toBe(false)
     expect(transactionCommitted).toBe(false)
     expect(updateTag).not.toHaveBeenCalled()
-    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
+    expect(revalidateWebCacheBatch).not.toHaveBeenCalled()
   })
 })

@@ -19,7 +19,10 @@ import {
   FESTIVALES_CACHE_TAG,
   getEditionParticipationsCacheTag
 } from '@frijolmagico/cache-tags'
-import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
+import {
+  revalidateWebCacheBatch,
+  type RevalidateWebCacheOptions
+} from '@/shared/lib/web-invalidation'
 
 const { editionParticipation } = participations
 
@@ -81,8 +84,9 @@ export async function updateParticipationAction(
       updateTag(getEditionParticipationsCacheTag(parsed.data.edicionId))
     }
     updateTag(ARTIST_DETAIL_CACHE_TAG)
+    const webRevalidationRequests: RevalidateWebCacheOptions[] = []
     if (relationshipChanged) {
-      void revalidateWebCacheBestEffort({
+      webRevalidationRequests.push({
         tag: FESTIVAL_CRITICAL_CACHE_TAG,
         mode: 'immediate',
         path: '/festivales/[slug]',
@@ -90,17 +94,20 @@ export async function updateParticipationAction(
       })
     }
     if (editionChanged) {
-      void revalidateWebCacheBestEffort({
-        tag: FESTIVALES_CACHE_TAG,
-        mode: 'swr'
-      })
+      webRevalidationRequests.push({ tag: FESTIVALES_CACHE_TAG, mode: 'swr' })
     }
     if (catalogChanged) {
-      void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
-      void revalidateWebCacheBestEffort({ tag: CATALOG_PARTICIPATION_CACHE_TAG })
+      webRevalidationRequests.push(
+        { tag: CATALOG_CACHE_TAG },
+        { tag: CATALOG_PARTICIPATION_CACHE_TAG }
+      )
     }
 
-    return { success: true }
+    const webRevalidation = webRevalidationRequests.length
+      ? await revalidateWebCacheBatch(webRevalidationRequests, 'update-participation')
+      : {}
+
+    return { success: true, ...webRevalidation }
   } catch (error) {
     console.error('[updateDetallesAction]', error)
     return {

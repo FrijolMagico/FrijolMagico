@@ -17,7 +17,8 @@ import {
   FEATURED_ARTISTS_CACHE_TAG,
   FESTIVAL_CRITICAL_CACHE_TAG
 } from '@frijolmagico/cache-tags'
-import { revalidateWebCache } from '@/shared/lib/web-invalidation'
+import { revalidateWebCacheBatch } from '@/shared/lib/web-invalidation'
+import type { RevalidateWebCacheOptions } from '@/shared/lib/web-invalidation'
 import { allocateCatalogSlug } from '../catalogo/_lib/catalog-slug'
 import { artistUpdateSchema } from '../_schemas/artista.schema'
 import { artistHistoryInsertSchema } from '../_schemas/history.schema'
@@ -52,11 +53,13 @@ export async function getArtistPseudonymsAction(
       artistPrimaryPseudonym,
       eq(artistPrimaryPseudonym.artistaId, artistPseudonym.artistaId)
     )
-    .where(and(
-      eq(artistPseudonym.artistaId, artistId),
-      isNull(artistPseudonym.deletedAt),
-      isNull(artist.deletedAt)
-    ))
+    .where(
+      and(
+        eq(artistPseudonym.artistaId, artistId),
+        isNull(artistPseudonym.deletedAt),
+        isNull(artist.deletedAt)
+      )
+    )
     .orderBy(asc(artistPseudonym.id))
 
   return rows.map(({ id, pseudonimo, primaryId }) => ({
@@ -74,34 +77,53 @@ const HISTORIAL_FIELDS = [
   'rrss'
 ] as const
 
-const CATALOG_ARTIST_FIELDS = ['nombre', 'correo', 'rrss', 'ciudad', 'pais'] as const
+const CATALOG_ARTIST_FIELDS = [
+  'nombre',
+  'correo',
+  'rrss',
+  'ciudad',
+  'pais'
+] as const
 
-type CatalogArtistField = typeof CATALOG_ARTIST_FIELDS[number]
+type CatalogArtistField = (typeof CATALOG_ARTIST_FIELDS)[number]
 
 type CatalogArtistValues = Partial<Record<CatalogArtistField, unknown>>
 
 function catalogFieldsChanged(previous: Artist, next: CatalogArtistValues) {
-  return CATALOG_ARTIST_FIELDS.some((field) =>
-    next[field] !== undefined && JSON.stringify(previous[field]) !== JSON.stringify(next[field])
+  return CATALOG_ARTIST_FIELDS.some(
+    (field) =>
+      next[field] !== undefined &&
+      JSON.stringify(previous[field]) !== JSON.stringify(next[field])
   )
 }
 
 export async function updateArtistaWithPseudonymsAction(
   { data: prevData }: ActionState<Artist>,
-  input: { data: ArtistUpdateFormInput; pseudonymDrafts: ArtistPseudonymDraftInput[] }
+  input: {
+    data: ArtistUpdateFormInput
+    pseudonymDrafts: ArtistPseudonymDraftInput[]
+  }
 ): Promise<ActionState> {
   await requireAuth()
 
   if (!prevData?.id) {
-    return { success: false, errors: [{ entityType: 'artista', message: 'ID de artista inválido' }] }
+    return {
+      success: false,
+      errors: [{ entityType: 'artista', message: 'ID de artista inválido' }]
+    }
   }
 
-  const parsedDrafts = input.pseudonymDrafts.map((draft) => artistPseudonymDraftSchema.safeParse(draft))
+  const parsedDrafts = input.pseudonymDrafts.map((draft) =>
+    artistPseudonymDraftSchema.safeParse(draft)
+  )
   const invalidDraft = parsedDrafts.find((parsed) => !parsed.success)
   if (invalidDraft && !invalidDraft.success) {
     return {
       success: false,
-      errors: invalidDraft.error.issues.map((issue) => ({ entityType: 'artista', message: issue.message }))
+      errors: invalidDraft.error.issues.map((issue) => ({
+        entityType: 'artista',
+        message: issue.message
+      }))
     }
   }
 
@@ -112,20 +134,27 @@ export async function updateArtistaWithPseudonymsAction(
   if (!parsedArtist.success) {
     return {
       success: false,
-      errors: parsedArtist.error.issues.map((issue) => ({ entityType: 'artista', message: issue.message }))
+      errors: parsedArtist.error.issues.map((issue) => ({
+        entityType: 'artista',
+        message: issue.message
+      }))
     }
   }
 
   let historialInsert = null
   if (historialFlags) {
-    const candidate: Record<string, unknown> = { artistaId: prevData.id, notas: null }
+    const candidate: Record<string, unknown> = {
+      artistaId: prevData.id,
+      notas: null
+    }
     for (const field of HISTORIAL_FIELDS) {
       if (field === 'pseudonimo' || !historialFlags[field]) {
         candidate[field] = null
         continue
       }
       const value = prevData[field]
-      candidate[field] = value && typeof value === 'object' ? JSON.stringify(value) : value
+      candidate[field] =
+        value && typeof value === 'object' ? JSON.stringify(value) : value
     }
     if (HISTORIAL_FIELDS.some((field) => candidate[field] !== null)) {
       const parsedHistory = artistHistoryInsertSchema.safeParse(candidate)
@@ -145,13 +174,18 @@ export async function updateArtistaWithPseudonymsAction(
       const pseudonymResult = await applyArtistPseudonymDrafts(
         tx,
         prevData.id,
-        parsedDrafts.flatMap((draft) => draft.success ? [draft.data] : [])
+        parsedDrafts.flatMap((draft) => (draft.success ? [draft.data] : []))
       )
-      await tx.update(artist).set(parsedArtist.data).where(eq(artist.id, prevData.id))
+      await tx
+        .update(artist)
+        .set(parsedArtist.data)
+        .where(eq(artist.id, prevData.id))
 
       if (historialInsert) {
         const [maxResult] = await tx
-          .select({ maxOrden: sql<number>`COALESCE(MAX(${artistTables.artistHistory.orden}), 0)` })
+          .select({
+            maxOrden: sql<number>`COALESCE(MAX(${artistTables.artistHistory.orden}), 0)`
+          })
           .from(artistTables.artistHistory)
           .where(eq(artistTables.artistHistory.artistaId, prevData.id))
         await tx.insert(artistTables.artistHistory).values({
@@ -162,7 +196,8 @@ export async function updateArtistaWithPseudonymsAction(
       return {
         historyChanged: pseudonymResult.historyChanged,
         catalogSlugChanged: pseudonymResult.catalogSlugChanged,
-        canonicalCatalogSlugChanged: pseudonymResult.canonicalCatalogSlugChanged,
+        canonicalCatalogSlugChanged:
+          pseudonymResult.canonicalCatalogSlugChanged,
         catalogDataChanged: pseudonymResult.catalogDataChanged,
         featuredMembershipEligible: pseudonymResult.featuredMembershipEligible,
         featuredPseudonymChanged: pseudonymResult.featuredPseudonymChanged
@@ -171,22 +206,23 @@ export async function updateArtistaWithPseudonymsAction(
 
     updateTag(ARTIST_CACHE_TAG)
     if (historialInsert || historyChanged) updateTag(ARTIST_HISTORY_CACHE_TAG)
+    const invalidationRequests: RevalidateWebCacheOptions[] = []
     if (canonicalCatalogSlugChanged) {
-      void revalidateWebCache({
+      invalidationRequests.push({
         tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
         mode: 'immediate'
       })
     }
     const catalogProjectionChanged =
-      catalogSlugChanged || catalogDataChanged || catalogFieldsChanged(prevData, parsedArtist.data)
+      catalogSlugChanged ||
+      catalogDataChanged ||
+      catalogFieldsChanged(prevData, parsedArtist.data)
     if (catalogProjectionChanged) {
       updateTag(CATALOG_BASE_CACHE_TAG)
       updateTag(CATALOG_CACHE_TAG)
-      void revalidateWebCache({ tag: CATALOG_BASE_CACHE_TAG })
-      void revalidateWebCache({ tag: CATALOG_CACHE_TAG })
-    }
-    if (catalogProjectionChanged) {
-      void revalidateWebCache({
+      invalidationRequests.push({ tag: CATALOG_BASE_CACHE_TAG })
+      invalidationRequests.push({ tag: CATALOG_CACHE_TAG })
+      invalidationRequests.push({
         tag: FESTIVAL_CRITICAL_CACHE_TAG,
         mode: 'immediate',
         path: '/festivales/[slug]',
@@ -195,21 +231,31 @@ export async function updateArtistaWithPseudonymsAction(
     }
     if (
       featuredMembershipEligible &&
-      (catalogSlugChanged || featuredPseudonymChanged || (
-        parsedArtist.data.rrss !== undefined &&
-        JSON.stringify(prevData.rrss) !== JSON.stringify(parsedArtist.data.rrss)
-      ))
+      (catalogSlugChanged ||
+        featuredPseudonymChanged ||
+        (parsedArtist.data.rrss !== undefined &&
+          JSON.stringify(prevData.rrss) !==
+            JSON.stringify(parsedArtist.data.rrss)))
     ) {
-      void revalidateWebCache({
+      invalidationRequests.push({
         tag: FEATURED_ARTISTS_CACHE_TAG,
         mode: 'swr'
       })
     }
-    return { success: true }
+    const webInvalidation = await revalidateWebCacheBatch(
+      invalidationRequests,
+      'update-artista-with-pseudonyms'
+    )
+    return { success: true, ...webInvalidation }
   } catch (error) {
     return {
       success: false,
-      errors: [{ entityType: 'artista', message: error instanceof Error ? error.message : 'Error desconocido' }]
+      errors: [
+        {
+          entityType: 'artista',
+          message: error instanceof Error ? error.message : 'Error desconocido'
+        }
+      ]
     }
   }
 }
@@ -277,10 +323,7 @@ export async function updateArtistaAction(
     featuredMembershipEligible,
     featuredPseudonymChanged
   } = await db.transaction(async (tx) => {
-    await tx
-      .update(artist)
-      .set(parsed.data)
-      .where(eq(artist.id, prevData.id))
+    await tx.update(artist).set(parsed.data).where(eq(artist.id, prevData.id))
 
     if (historialInsert) {
       const [maxResult] = await tx
@@ -305,14 +348,17 @@ export async function updateArtistaAction(
       .from(artistTables.catalogArtist)
       .where(eq(artistTables.catalogArtist.artistaId, prevData.id))
     const [primary] = await tx
-      .select({ pseudonimoId: artistTables.artistPrimaryPseudonym.pseudonimoId })
+      .select({
+        pseudonimoId: artistTables.artistPrimaryPseudonym.pseudonimoId
+      })
       .from(artistTables.artistPrimaryPseudonym)
       .where(eq(artistTables.artistPrimaryPseudonym.artistaId, prevData.id))
     const pseudonymIsDisplayed =
       catalogSelection?.pseudonimoId == null ||
       catalogSelection.pseudonimoId === primary?.pseudonimoId
     const pseudonymChanged =
-      pseudonymIsDisplayed && parsed.data.pseudonimo !== undefined &&
+      pseudonymIsDisplayed &&
+      parsed.data.pseudonimo !== undefined &&
       parsed.data.pseudonimo !== prevData.pseudonimo
     const catalogSlugChanged =
       catalogSelection?.pseudonimoId != null &&
@@ -327,17 +373,20 @@ export async function updateArtistaAction(
     return {
       catalogSlugChanged,
       canonicalCatalogSlugChanged,
-      catalogDataChanged: catalogFieldsChanged(prevData, parsed.data) || pseudonymChanged,
+      catalogDataChanged:
+        catalogFieldsChanged(prevData, parsed.data) || pseudonymChanged,
       featuredMembershipEligible:
-        catalogSelection?.activo === true && catalogSelection.deletedAt === null,
+        catalogSelection?.activo === true &&
+        catalogSelection.deletedAt === null,
       featuredPseudonymChanged: pseudonymChanged
     }
   })
 
   updateTag(ARTIST_CACHE_TAG)
   if (historialInsert) updateTag(ARTIST_HISTORY_CACHE_TAG)
+  const invalidationRequests: RevalidateWebCacheOptions[] = []
   if (canonicalCatalogSlugChanged) {
-    void revalidateWebCache({
+    invalidationRequests.push({
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
     })
@@ -346,11 +395,9 @@ export async function updateArtistaAction(
   if (catalogProjectionChanged) {
     updateTag(CATALOG_BASE_CACHE_TAG)
     updateTag(CATALOG_CACHE_TAG)
-    void revalidateWebCache({ tag: CATALOG_BASE_CACHE_TAG })
-    void revalidateWebCache({ tag: CATALOG_CACHE_TAG })
-  }
-  if (catalogProjectionChanged) {
-    void revalidateWebCache({
+    invalidationRequests.push({ tag: CATALOG_BASE_CACHE_TAG })
+    invalidationRequests.push({ tag: CATALOG_CACHE_TAG })
+    invalidationRequests.push({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
       mode: 'immediate',
       path: '/festivales/[slug]',
@@ -359,16 +406,20 @@ export async function updateArtistaAction(
   }
   if (
     featuredMembershipEligible &&
-    (catalogSlugChanged || featuredPseudonymChanged || (
-      parsed.data.rrss !== undefined &&
-      JSON.stringify(prevData.rrss) !== JSON.stringify(parsed.data.rrss)
-    ))
+    (catalogSlugChanged ||
+      featuredPseudonymChanged ||
+      (parsed.data.rrss !== undefined &&
+        JSON.stringify(prevData.rrss) !== JSON.stringify(parsed.data.rrss)))
   ) {
-    void revalidateWebCache({
+    invalidationRequests.push({
       tag: FEATURED_ARTISTS_CACHE_TAG,
       mode: 'swr'
     })
   }
 
-  return { success: true }
+  const webInvalidation = await revalidateWebCacheBatch(
+    invalidationRequests,
+    'update-artista'
+  )
+  return { success: true, ...webInvalidation }
 }

@@ -10,6 +10,7 @@ import {
   artistInsertSchema,
   type ArtistInsertInput
 } from '../_schemas/artista.schema'
+import { revalidateWebCacheBatch } from '@/shared/lib/web-invalidation'
 import type { ActionState } from '@/shared/types/actions'
 
 export interface CreateArtistActionData {
@@ -50,7 +51,9 @@ export async function createArtistaAction(
       // The database mutation has already committed; cache invalidation is best-effort.
     }
 
-    return { success: true, data: { id: createdArtist.id } }
+    const webInvalidation = await revalidateWebCacheBatch([], 'create-artista')
+
+    return { success: true, data: { id: createdArtist.id }, ...webInvalidation }
   } catch (error) {
     return {
       success: false,

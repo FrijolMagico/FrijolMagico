@@ -15,10 +15,7 @@ import {
   FESTIVALES_CACHE_TAG,
   FESTIVAL_CRITICAL_CACHE_TAG
 } from '@frijolmagico/cache-tags'
-import {
-  revalidateWebCache,
-  revalidateWebCacheBestEffort
-} from '@/shared/lib/web-invalidation'
+import { revalidateWebCacheBatch } from '@/shared/lib/web-invalidation'
 
 const { event } = events
 
@@ -41,36 +38,32 @@ export async function deleteEventAction(id: number): Promise<ActionState> {
     if (deletedEvents.length === 0) return { success: true }
 
     updateTag(EVENT_CACHE_TAG)
-    for (const [tag, mode] of [
-      [FESTIVAL_CRITICAL_CACHE_TAG, 'immediate'],
-      [FESTIVALES_CACHE_TAG, 'swr']
-    ] as const) {
-      try {
-        await revalidateWebCache({
-          tag,
-          mode,
-          ...(tag === FESTIVAL_CRITICAL_CACHE_TAG
-            ? { path: '/festivales/[slug]', pathType: 'page' as const }
-            : { path: '/festivales', pathType: 'page' as const })
-        })
-      } catch {
-        console.error('[event-crud] Web cache sync failed', { tag })
-      }
+    const { webRevalidation } = await revalidateWebCacheBatch(
+      [
+        {
+          tag: FESTIVAL_CRITICAL_CACHE_TAG,
+          mode: 'immediate',
+          path: '/festivales/[slug]',
+          pathType: 'page'
+        },
+        {
+          tag: FESTIVALES_CACHE_TAG,
+          mode: 'swr',
+          path: '/festivales',
+          pathType: 'page'
+        },
+        { path: '/', pathType: 'page' },
+        { path: '/', pathType: 'layout' },
+        { tag: CATALOG_CACHE_TAG },
+        { tag: CATALOG_PARTICIPATION_CACHE_TAG },
+        { tag: CATALOG_EDITION_DATES_CACHE_TAG }
+      ],
+      'delete-event'
+    )
+    return {
+      success: true,
+      ...(webRevalidation ? { webRevalidation } : {})
     }
-    void revalidateWebCacheBestEffort({ path: '/', pathType: 'page' })
-    void revalidateWebCacheBestEffort({ path: '/', pathType: 'layout' })
-    for (const tag of [
-      CATALOG_CACHE_TAG,
-      CATALOG_PARTICIPATION_CACHE_TAG,
-      CATALOG_EDITION_DATES_CACHE_TAG
-    ]) {
-      try {
-        await revalidateWebCache({ tag })
-      } catch {
-        console.error('[event-crud] Web cache sync failed', { tag })
-      }
-    }
-    return { success: true }
   } catch (error) {
     return {
       success: false,

@@ -12,7 +12,7 @@ import {
   FESTIVAL_CRITICAL_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 import { requireAuth } from '@/shared/lib/auth/utils'
-import { revalidateWebCache } from '@/shared/lib/web-invalidation'
+import { revalidateWebCacheBatch } from '@/shared/lib/web-invalidation'
 import type { ActionState } from '@/shared/types/actions'
 import {
   editionPublicationSchema,
@@ -54,22 +54,10 @@ async function syncPublicationCaches(editionMatched: boolean) {
       : [])
   ]
 
-  const results = await Promise.allSettled(
-    webInvalidations.map((invalidation) =>
-      Promise.resolve().then(() => revalidateWebCache(invalidation))
-    )
+  return await revalidateWebCacheBatch(
+    webInvalidations,
+    'update-edition-publication'
   )
-
-  results.forEach((result, index) => {
-    if (result.status === 'rejected') {
-      const invalidation = webInvalidations[index]
-      console.error('[edition-publication] Web cache sync failed',
-        'tag' in invalidation
-          ? { tag: invalidation.tag }
-          : { path: invalidation.path, pathType: invalidation.pathType }
-      )
-    }
-  })
 }
 
 export async function updateEditionPublicationAction(
@@ -96,9 +84,15 @@ export async function updateEditionPublicationAction(
       .where(eq(eventEdition.id, parsed.data.id))
       .returning({ id: eventEdition.id })
 
-    await syncPublicationCaches(updatedEdition !== undefined)
+    const webInvalidation = await syncPublicationCaches(
+      updatedEdition !== undefined
+    )
 
-    return { success: true, data: { published: parsed.data.published } }
+    return {
+      success: true,
+      data: { published: parsed.data.published },
+      ...webInvalidation
+    }
   } catch (error) {
     return {
       success: false,

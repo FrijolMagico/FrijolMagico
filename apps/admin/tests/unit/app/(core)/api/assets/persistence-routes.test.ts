@@ -33,10 +33,14 @@ const discardArtistAvatarAction = mock(async (): Promise<DiscardResult> => ({
 }))
 const revalidateTag = mock(() => {})
 const revalidateWebCacheBestEffort = mock(async () => {})
+const revalidateWebCacheBatch = mock(
+  async (): Promise<{ webRevalidation?: 'swr' | 'immediate' }> => ({})
+)
 
 mock.module('server-only', () => ({}))
 mock.module('next/cache', () => ({ revalidateTag }))
 mock.module('@/shared/lib/web-invalidation', () => ({
+  revalidateWebCacheBatch,
   revalidateWebCacheBestEffort
 }))
 mock.module('@/shared/lib/auth/utils', () => ({
@@ -81,6 +85,8 @@ describe('asset persistence routes', () => {
     discardArtistAvatarAction.mockResolvedValue({ success: true, data: null })
     revalidateTag.mockClear()
     revalidateWebCacheBestEffort.mockClear()
+    revalidateWebCacheBatch.mockReset()
+    revalidateWebCacheBatch.mockResolvedValue({})
   })
 
   test('rejects unauthenticated persist and discard before calling actions', async () => {
@@ -123,12 +129,109 @@ describe('asset persistence routes', () => {
       expire: 0
     })
     expect(revalidateTag).toHaveBeenCalledWith('artistas', { expire: 0 })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: 'catalogo:artistas:base'
+    expect(revalidateWebCacheBatch).toHaveBeenCalledWith(
+      [
+        { tag: 'catalogo:artistas:base' },
+        { tag: 'catalogo:artistas' }
+      ],
+      'assets-persist'
+    )
+    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
+  })
+
+  test('preserves action-only SWR metadata when the API batch has no summary', async () => {
+    persistArtistAvatarAction.mockResolvedValueOnce({
+      success: true,
+      data: {
+        id: 7,
+        artistaId: 42,
+        path: 'artistas/42/avatar-v1.webp',
+        version: 'v1',
+        oldAsset: null
+      },
+      webRevalidation: 'swr'
     })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: 'catalogo:artistas'
+
+    const response = await persist(request('/api/assets/persist'))
+
+    await expect(response.json()).resolves.toEqual({
+      id: 7,
+      artistaId: 42,
+      path: 'artistas/42/avatar-v1.webp',
+      version: 'v1',
+      oldAsset: null,
+      webRevalidation: 'swr'
     })
+  })
+
+  test('preserves immediate metadata when neither executed branch requests SWR', async () => {
+    persistArtistAvatarAction.mockResolvedValueOnce({
+      success: true,
+      data: {
+        id: 7,
+        artistaId: 42,
+        path: 'artistas/42/avatar-v1.webp',
+        version: 'v1',
+        oldAsset: null
+      },
+      webRevalidation: 'immediate'
+    })
+
+    const response = await persist(request('/api/assets/persist'))
+
+    await expect(response.json()).resolves.toMatchObject({
+      id: 7,
+      webRevalidation: 'immediate'
+    })
+  })
+
+  test('prefers SWR when action and API batch summaries disagree', async () => {
+    persistArtistAvatarAction.mockResolvedValueOnce({
+      success: true,
+      data: {
+        id: 7,
+        artistaId: 42,
+        path: 'artistas/42/avatar-v1.webp',
+        version: 'v1',
+        oldAsset: null
+      },
+      webRevalidation: 'immediate'
+    })
+    revalidateWebCacheBatch.mockResolvedValueOnce({ webRevalidation: 'swr' })
+
+    const response = await persist(request('/api/assets/persist'))
+
+    await expect(response.json()).resolves.toMatchObject({
+      id: 7,
+      artistaId: 42,
+      webRevalidation: 'swr'
+    })
+  })
+
+  test('awaits the API batch before returning persistence data', async () => {
+    let completeBatch: (summary: {}) => void = () => {}
+    let startBatch: () => void = () => {}
+    const batchStarted = new Promise<void>((resolve) => (startBatch = resolve))
+    revalidateWebCacheBatch.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          completeBatch = resolve
+          startBatch()
+        })
+    )
+    let responseSettled = false
+    const responsePromise = persist(request('/api/assets/persist')).then(
+      (response) => {
+        responseSettled = true
+        return response
+      }
+    )
+
+    await batchStarted
+    expect(responseSettled).toBe(false)
+    completeBatch({})
+    const response = await responsePromise
+    expect(response.status).toBe(200)
   })
 
   test('keeps the committed persistence response when tag invalidation fails', async () => {
@@ -151,12 +254,13 @@ describe('asset persistence routes', () => {
       '[assets/persist] Cache invalidation failed',
       expect.any(Error)
     )
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: 'catalogo:artistas:base'
-    })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: 'catalogo:artistas'
-    })
+    expect(revalidateWebCacheBatch).toHaveBeenCalledWith(
+      [
+        { tag: 'catalogo:artistas:base' },
+        { tag: 'catalogo:artistas' }
+      ],
+      'assets-persist'
+    )
     console.error = originalError
   })
 
@@ -175,6 +279,7 @@ describe('asset persistence routes', () => {
 
     expect(persistResponse.status).toBe(400)
     expect(revalidateTag).not.toHaveBeenCalled()
+    expect(revalidateWebCacheBatch).not.toHaveBeenCalled()
     expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
     await expect(persistResponse.json()).resolves.toEqual({
       error: 'INVALID_RECEIPT'

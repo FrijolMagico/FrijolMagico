@@ -7,7 +7,8 @@ import { db } from '@frijolmagico/database/orm'
 import { events } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import type { ActionState } from '@/shared/types/actions'
-import { revalidateWebCache } from '@/shared/lib/web-invalidation'
+import { revalidateWebCacheBatch } from '@/shared/lib/web-invalidation'
+import type { RevalidateWebCacheOptions } from '@/shared/lib/web-invalidation'
 import {
   CATALOG_CACHE_TAG,
   CATALOG_EDITION_DATES_CACHE_TAG,
@@ -47,55 +48,40 @@ export async function deleteEditionAction(
 
   updateTag(EDITION_CACHE_TAG)
   updateTag(EDITION_DAY_CACHE_TAG)
-  for (const [tag, mode] of [
-    [FESTIVAL_CRITICAL_CACHE_TAG, 'immediate'],
-    [FESTIVALES_CACHE_TAG, 'swr']
-  ] as const) {
-    try {
-      await revalidateWebCache({ tag, mode })
-    } catch {
-      console.error('[delete-edition] Web cache sync failed', { tag })
-    }
-  }
+  const invalidationRequests: RevalidateWebCacheOptions[] = [
+    { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
+    { tag: FESTIVALES_CACHE_TAG, mode: 'swr' }
+  ]
   for (const { published, slug } of deletedEditions) {
     if (slug) {
-      try {
-        await revalidateWebCache({
-          tag: FESTIVAL_CRITICAL_CACHE_TAG,
-          path: `/festivales/${slug}`
-        })
-      } catch {
-        console.error('[delete-edition] Web cache sync failed', {
-          tag: FESTIVAL_CRITICAL_CACHE_TAG
-        })
-      }
+      invalidationRequests.push({
+        tag: FESTIVAL_CRITICAL_CACHE_TAG,
+        path: `/festivales/${slug}`,
+        mode: 'immediate'
+      })
     }
-    try {
-      await revalidateWebCache({ tag: FESTIVALES_CACHE_TAG, path: '/festivales' })
-    } catch {
-      console.error('[delete-edition] Web cache sync failed', { tag: FESTIVALES_CACHE_TAG })
-    }
+    invalidationRequests.push({ tag: FESTIVALES_CACHE_TAG, path: '/festivales' })
     if (published && slug) {
-      for (const pathType of ['page', 'layout'] as const) {
-        try {
-          await revalidateWebCache({ path: '/', pathType })
-        } catch {
-          console.error('[delete-edition] Web cache sync failed', { path: '/' })
-        }
-      }
+      invalidationRequests.push(
+        { path: '/', pathType: 'page' },
+        { path: '/', pathType: 'layout' }
+      )
     }
   }
-  for (const tag of [
-    CATALOG_CACHE_TAG,
-    CATALOG_PARTICIPATION_CACHE_TAG,
-    CATALOG_EDITION_DATES_CACHE_TAG
-  ]) {
-    try {
-      await revalidateWebCache({ tag })
-    } catch {
-      console.error('[delete-edition] Web cache sync failed', { tag })
-    }
-  }
+  invalidationRequests.push(
+    { tag: CATALOG_CACHE_TAG },
+    { tag: CATALOG_PARTICIPATION_CACHE_TAG },
+    { tag: CATALOG_EDITION_DATES_CACHE_TAG }
+  )
+  const webInvalidation = await revalidateWebCacheBatch(
+    invalidationRequests,
+    'delete-edition'
+  )
 
-  return { success: true }
+  return {
+    success: true,
+    ...(webInvalidation.webRevalidation
+      ? { webRevalidation: webInvalidation.webRevalidation }
+      : {})
+  }
 }

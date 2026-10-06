@@ -79,7 +79,11 @@ export function EditionRow({ edition, days, places, events }: EditionRowProps) {
       if (!result.success && result.errors) {
         toast.error(result.errors[0]?.message ?? 'Error al eliminar')
       } else {
-        toast.success('Edición eliminada')
+        toast.success(
+          result.success && result.webRevalidation === 'swr'
+            ? 'Edición eliminada. Pueden tardar en aparecer en la web.'
+            : 'Edición eliminada'
+        )
       }
     })
   }

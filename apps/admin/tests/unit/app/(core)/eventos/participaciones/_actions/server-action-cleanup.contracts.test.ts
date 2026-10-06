@@ -78,7 +78,7 @@ describe('participation server action cleanup contracts', () => {
       'getParticipationActivitiesCacheTag(participationId)'
     )
     expect(createActivitySource).toContain('...PUBLIC_ACTIVITY_TAGS')
-    expect(createActivitySource).toContain('revalidateWebCacheBestEffort')
+    expect(createActivitySource).toContain('revalidateWebCacheBatch')
     expect(updateActivitySource).toContain(
       'updateTag(getParticipationActivitiesCacheTag'
     )
@@ -111,8 +111,16 @@ describe('participation server action cleanup contracts', () => {
       updateActivityAggregateSource
     ]) {
       expect(source).toContain('CATALOG_CACHE_TAG')
-      expect(source).toContain('revalidateWebCacheBestEffort')
       expect(source).toContain('catalogChanged')
+    }
+    expect(updateParticipationSource).toContain('revalidateWebCacheBatch')
+    expect(updateActivityAggregateSource).toContain('revalidateWebCacheBatch')
+    for (const source of [
+      createExhibitionSource,
+      updateExhibitionSource,
+      deleteExhibitionSource
+    ]) {
+      expect(source).toContain('revalidateWebCacheBestEffort')
     }
     expect(deleteExhibitionSource).toContain('if (alreadyAbsent)')
     expect(updateParticipationSource).toContain('existing.artistaId !== parsed.data.artistaId')
@@ -122,9 +130,10 @@ describe('participation server action cleanup contracts', () => {
   })
 
   test('participation-domain catalog invalidation wires only the participation tag', () => {
+    const deleteActivityPath = `${ACTIONS_DIR}/activities/delete-activity.action.ts`
     const actionPaths = [
       CREATE_ACTIVITY_PATH,
-      `${ACTIONS_DIR}/activities/delete-activity.action.ts`,
+      deleteActivityPath,
       UPDATE_ACTIVITY_PATH,
       UPDATE_ACTIVITY_AGGREGATE_PATH,
       CREATE_EXHIBITION_PATH,
@@ -132,12 +141,30 @@ describe('participation server action cleanup contracts', () => {
       UPDATE_EXHIBITION_PATH,
       UPDATE_PARTICIPATION_PATH
     ]
+    const batchMigratedPaths = new Set([
+      CREATE_ACTIVITY_PATH,
+      deleteActivityPath,
+      UPDATE_ACTIVITY_PATH,
+      UPDATE_ACTIVITY_AGGREGATE_PATH,
+      UPDATE_PARTICIPATION_PATH
+    ])
 
     for (const path of actionPaths) {
       const source = readFileSync(path, 'utf8')
       expect(source).toContain('CATALOG_CACHE_TAG')
       expect(source).toContain('CATALOG_PARTICIPATION_CACHE_TAG')
-      expect(source).toContain('revalidateWebCacheBestEffort({ tag: CATALOG_PARTICIPATION_CACHE_TAG })')
+      if (path === CREATE_ACTIVITY_PATH) {
+        expect(source).toContain(
+          'webInvalidationRequests.push({ tag: CATALOG_PARTICIPATION_CACHE_TAG })'
+        )
+        expect(source).toContain('await revalidateWebCacheBatch')
+      } else if (batchMigratedPaths.has(path)) {
+        expect(source).toContain('revalidateWebCacheBatch')
+      } else {
+        expect(source).toContain(
+          'revalidateWebCacheBestEffort({ tag: CATALOG_PARTICIPATION_CACHE_TAG })'
+        )
+      }
       expect(source).not.toContain('CATALOG_BASE_CACHE_TAG')
       expect(source).not.toContain('CATALOG_EDITION_DATES_CACHE_TAG')
     }

@@ -31,7 +31,8 @@ mock.module('@/shared/lib/auth/utils', () => ({
 }))
 mock.module('next/cache', () => ({ updateTag: mock(() => {}) }))
 mock.module('@/shared/lib/web-invalidation', () => ({
-  revalidateWebCacheBestEffort: mock(async () => {})
+  revalidateWebCacheBestEffort: mock(async () => {}),
+  revalidateWebCacheBatch: mock(async () => ({}))
 }))
 
 const { createActivityAction } = await import(

@@ -15,6 +15,7 @@ export interface UpdateStep {
 interface UpdatePlanResult {
   success: boolean
   errorMessage?: string
+  webRevalidation?: ActionState['webRevalidation']
 }
 
 /**
@@ -25,6 +26,8 @@ interface UpdatePlanResult {
 export async function executeUpdatePlan(
   steps: UpdateStep[]
 ): Promise<UpdatePlanResult> {
+  let webRevalidation: ActionState['webRevalidation']
+
   for (const step of steps) {
     if (!hasDiff(step.initial, step.current)) continue
 
@@ -37,7 +40,13 @@ export async function executeUpdatePlan(
 
       return { success: false, errorMessage: message }
     }
+
+    if (result.webRevalidation === 'swr') {
+      webRevalidation = 'swr'
+    } else if (result.webRevalidation === 'immediate' && webRevalidation !== 'swr') {
+      webRevalidation = 'immediate'
+    }
   }
 
-  return { success: true }
+  return { success: true, ...(webRevalidation ? { webRevalidation } : {}) }
 }

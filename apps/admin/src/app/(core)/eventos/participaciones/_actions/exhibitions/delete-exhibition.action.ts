@@ -18,8 +18,8 @@ import {
   getEditionParticipationsCacheTag,
   getParticipationExhibitionsCacheTag
 } from '@frijolmagico/cache-tags'
+import { revalidateWebCacheBatch } from '@/shared/lib/web-invalidation'
 import { deleteOrphanedEditionParticipation } from '../participations/delete-orphaned-edition-participation'
-import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
 
 const { participationExhibition } = participations
 const PUBLIC_EXHIBITION_TAGS = [FESTIVALES_CACHE_TAG, EVENT_CACHE_TAG, EDITION_CACHE_TAG]
@@ -108,26 +108,34 @@ export async function deleteExhibitionAction(
         console.error('[deleteExhibitionAction] Local invalidation failed', { tag, error })
       }
     }
-    void revalidateWebCacheBestEffort({
-      tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      ...(catalogChanged
-        ? { path: '/festivales/[slug]', pathType: 'page' as const }
-        : {})
-    })
-    void revalidateWebCacheBestEffort({
-      tag: FESTIVALES_CACHE_TAG,
-      mode: 'swr',
-      ...(catalogChanged
-        ? { path: '/festivales', pathType: 'page' as const }
-        : {})
-    })
-    if (catalogChanged) {
-      void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
-      void revalidateWebCacheBestEffort({ tag: CATALOG_PARTICIPATION_CACHE_TAG })
-    }
+    const webRevalidation = await revalidateWebCacheBatch(
+      [
+        {
+          tag: FESTIVAL_CRITICAL_CACHE_TAG,
+          mode: 'immediate',
+          ...(catalogChanged
+            ? { path: '/festivales/[slug]', pathType: 'page' as const }
+            : {})
+        },
+        {
+          tag: FESTIVALES_CACHE_TAG,
+          mode: 'swr',
+          ...(catalogChanged
+            ? { path: '/festivales', pathType: 'page' as const }
+            : {})
+        },
+        ...(catalogChanged
+          ? [{ tag: CATALOG_CACHE_TAG }, { tag: CATALOG_PARTICIPATION_CACHE_TAG }]
+          : [])
+      ],
+      'delete-exhibition'
+    )
 
-    return { success: true, data: { alreadyAbsent, participationDeleted } }
+    return {
+      success: true,
+      data: { alreadyAbsent, participationDeleted },
+      ...webRevalidation
+    }
   } catch (error) {
     console.error('[deleteExhibitionAction]', error)
     return {

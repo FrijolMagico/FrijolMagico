@@ -14,7 +14,8 @@ import {
   FESTIVAL_CRITICAL_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 import { requireAuth } from '@/shared/lib/auth/utils'
-import { revalidateWebCache } from '@/shared/lib/web-invalidation'
+import { revalidateWebCacheBatch } from '@/shared/lib/web-invalidation'
+import type { RevalidateWebCacheOptions } from '@/shared/lib/web-invalidation'
 import {
   catalogFieldUpdateSchema,
   type CatalogFieldUpdateInput
@@ -89,27 +90,10 @@ export async function updateCatalogFieldAction(
 
   const catalogTags = [CATALOG_BASE_CACHE_TAG, CATALOG_CACHE_TAG]
   if ('activo' in parsed.data) catalogTags.push(CATALOG_PARTICIPATION_CACHE_TAG)
+  const invalidationRequests: RevalidateWebCacheOptions[] = []
   for (const tag of catalogTags) {
     updateTag(tag)
-    void revalidateWebCache({ tag })
-  }
-
-  if (
-    'activo' in parsed.data &&
-    existingCatalogRow &&
-    existingCatalogRow.deletedAt === null &&
-    existingCatalogRow.activo !== parsed.data.activo
-  ) {
-    void revalidateWebCache({
-      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
-      mode: 'immediate'
-    })
-    void revalidateWebCache({
-      tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
-    })
+    invalidationRequests.push({ tag })
   }
 
   const activeStateChanged =
@@ -118,8 +102,23 @@ export async function updateCatalogFieldAction(
     existingCatalogRow.deletedAt === null &&
     existingCatalogRow.activo !== parsed.data.activo
 
+  if (activeStateChanged) {
+    invalidationRequests.push(
+      {
+        tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+        mode: 'immediate'
+      },
+      {
+        tag: FESTIVAL_CRITICAL_CACHE_TAG,
+        mode: 'immediate',
+        path: '/festivales/[slug]',
+        pathType: 'page'
+      }
+    )
+  }
+
   if (activeStateChanged && !('destacado' in parsed.data)) {
-    void revalidateWebCache({
+    invalidationRequests.push({
       tag: FEATURED_ARTISTS_CACHE_TAG,
       mode: 'swr'
     })
@@ -139,12 +138,17 @@ export async function updateCatalogFieldAction(
       (eligibleBefore && existingCatalogRow.destacado) !==
         (eligibleAfter && parsed.data.destacado)
 
-    void revalidateWebCache(
+    invalidationRequests.push(
       publicFeaturedStateChanged || activeStateChanged
         ? { tag: FEATURED_ARTISTS_CACHE_TAG, path: '/' }
         : { path: '/' }
     )
   }
 
-  return { success: true }
+  const webInvalidation = await revalidateWebCacheBatch(
+    invalidationRequests,
+    'update-catalog-field'
+  )
+
+  return { success: true, ...webInvalidation }
 }

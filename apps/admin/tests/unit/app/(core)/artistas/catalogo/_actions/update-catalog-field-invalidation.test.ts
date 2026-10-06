@@ -3,21 +3,22 @@ import { beforeEach, describe, expect, mock, test } from 'bun:test'
 import { artist as artistTables } from '@frijolmagico/database/schema'
 import {
   CANONICAL_CATALOG_SLUGS_CACHE_TAG,
-  FESTIVAL_CRITICAL_CACHE_TAG,
-  FEATURED_ARTISTS_CACHE_TAG
+  CATALOG_BASE_CACHE_TAG,
+  CATALOG_CACHE_TAG,
+  CATALOG_PARTICIPATION_CACHE_TAG,
+  FEATURED_ARTISTS_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
 const updateTag = mock((_tag: string) => {})
-const revalidateWebCache = mock(
-  async (_options: {
+const revalidateWebCacheBatch = mock(
+  async (_requests: Array<{
     tag?: string
     path?: string
     pathType?: 'page'
     mode?: 'immediate' | 'swr'
-  }) => ({
-    revalidated: true
-  })
+  }>, _context?: string) => ({})
 )
 let storedActivo = false
 let storedDestacado = false
@@ -29,7 +30,7 @@ let updateValues: Record<string, unknown> | null = null
 mock.module('server-only', () => ({}))
 mock.module('next/cache', () => ({ updateTag }))
 mock.module('@/shared/lib/auth/utils', () => ({ requireAuth }))
-mock.module('@/shared/lib/web-invalidation', () => ({ revalidateWebCache }))
+mock.module('@/shared/lib/web-invalidation', () => ({ revalidateWebCacheBatch }))
 mock.module('@frijolmagico/database/orm', () => ({
   db: {
     select: () => ({
@@ -39,13 +40,13 @@ mock.module('@frijolmagico/database/orm', () => ({
             table === artistTables.catalogArtist
               ? catalogRowExists
                 ? [
-                  {
-                    artistaId: 42,
-                    activo: storedActivo,
-                    destacado: storedDestacado,
-                    deletedAt: storedDeletedAt
-                  }
-                ]
+                    {
+                      artistaId: 42,
+                      activo: storedActivo,
+                      destacado: storedDestacado,
+                      deletedAt: storedDeletedAt
+                    }
+                  ]
                 : []
               : avatarExists
                 ? [{ id: 7 }]
@@ -66,11 +67,12 @@ mock.module('@frijolmagico/database/orm', () => ({
 const { updateCatalogFieldAction } =
   await import('@/core/artistas/catalogo/_actions/update-catalog-field.action')
 
-describe('updateCatalogFieldAction — canonical slug invalidation', () => {
+describe('updateCatalogFieldAction — web invalidation', () => {
   beforeEach(() => {
     requireAuth.mockClear()
     updateTag.mockClear()
-    revalidateWebCache.mockClear()
+    revalidateWebCacheBatch.mockClear()
+    revalidateWebCacheBatch.mockResolvedValue({})
     storedActivo = false
     storedDestacado = false
     storedDeletedAt = null
@@ -79,7 +81,59 @@ describe('updateCatalogFieldAction — canonical slug invalidation', () => {
     updateValues = null
   })
 
-  test('does not invalidate canonical slugs when activo is unchanged', async () => {
+  test('batches base and catalog tags and returns requested SWR metadata after success', async () => {
+    revalidateWebCacheBatch.mockResolvedValue({ webRevalidation: 'swr' })
+
+    await expect(updateCatalogFieldAction(1, { destacado: true })).resolves.toEqual({
+      success: true,
+      webRevalidation: 'swr'
+    })
+
+    expect(revalidateWebCacheBatch).toHaveBeenCalledWith(
+      [
+        { tag: CATALOG_BASE_CACHE_TAG },
+        { tag: CATALOG_CACHE_TAG },
+        { path: '/' }
+      ],
+      'update-catalog-field'
+    )
+    expect(updateTag.mock.calls).toEqual([
+      [CATALOG_BASE_CACHE_TAG],
+      [CATALOG_CACHE_TAG]
+    ])
+  })
+
+  test('includes participation and immediate canonical/festival requests only for an active change', async () => {
+    await expect(updateCatalogFieldAction(1, { activo: true })).resolves.toEqual({
+      success: true
+    })
+
+    expect(updateValues).toEqual({ activo: true })
+    expect(updateTag.mock.calls).toEqual([
+      [CATALOG_BASE_CACHE_TAG],
+      [CATALOG_CACHE_TAG],
+      [CATALOG_PARTICIPATION_CACHE_TAG]
+    ])
+    expect(revalidateWebCacheBatch).toHaveBeenCalledTimes(1)
+    expect(revalidateWebCacheBatch).toHaveBeenCalledWith(
+      [
+        { tag: CATALOG_BASE_CACHE_TAG },
+        { tag: CATALOG_CACHE_TAG },
+        { tag: CATALOG_PARTICIPATION_CACHE_TAG },
+        { tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG, mode: 'immediate' },
+        {
+          tag: FESTIVAL_CRITICAL_CACHE_TAG,
+          mode: 'immediate',
+          path: '/festivales/[slug]',
+          pathType: 'page'
+        },
+        { tag: FEATURED_ARTISTS_CACHE_TAG, mode: 'swr' }
+      ],
+      'update-catalog-field'
+    )
+  })
+
+  test('does not add active-change requests when activo is unchanged', async () => {
     storedActivo = true
 
     await expect(updateCatalogFieldAction(1, { activo: true })).resolves.toEqual({
@@ -87,156 +141,108 @@ describe('updateCatalogFieldAction — canonical slug invalidation', () => {
     })
 
     expect(updateValues).toEqual({ activo: true })
-    expect(revalidateWebCache).not.toHaveBeenCalledWith({
-      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
-      mode: 'immediate'
-    })
-    expect(revalidateWebCache).not.toHaveBeenCalledWith({
-      tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
-    })
+    expect(revalidateWebCacheBatch).toHaveBeenCalledWith(
+      [
+        { tag: CATALOG_BASE_CACHE_TAG },
+        { tag: CATALOG_CACHE_TAG },
+        { tag: CATALOG_PARTICIPATION_CACHE_TAG }
+      ],
+      'update-catalog-field'
+    )
   })
 
-  test('invalidates canonical slugs once when activo changes successfully', async () => {
-    storedActivo = false
+  test('does not add immediate requests for soft-deleted or missing rows', async () => {
+    storedDeletedAt = new Date('2025-01-01T00:00:00.000Z')
 
-    await expect(updateCatalogFieldAction(1, { activo: true })).resolves.toEqual({
-      success: true
-    })
-
+    await updateCatalogFieldAction(1, { activo: true })
     expect(updateValues).toEqual({ activo: true })
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
-      mode: 'immediate'
-    })
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
-    })
-    expect(revalidateWebCache).toHaveBeenCalledWith({
+    expect(revalidateWebCacheBatch.mock.calls[0]?.[0]).toEqual([
+      { tag: CATALOG_BASE_CACHE_TAG },
+      { tag: CATALOG_CACHE_TAG },
+      { tag: CATALOG_PARTICIPATION_CACHE_TAG }
+    ])
+
+    revalidateWebCacheBatch.mockClear()
+    updateValues = null
+    storedDeletedAt = null
+    catalogRowExists = false
+    await updateCatalogFieldAction(1, { activo: true })
+    expect(revalidateWebCacheBatch.mock.calls[0]?.[0]).toEqual([
+      { tag: CATALOG_BASE_CACHE_TAG },
+      { tag: CATALOG_CACHE_TAG },
+      { tag: CATALOG_PARTICIPATION_CACHE_TAG }
+    ])
+  })
+
+  test('requests featured SWR for an active change unless destacado is also supplied', async () => {
+    storedActivo = false
+    await updateCatalogFieldAction(1, { activo: true })
+    expect(revalidateWebCacheBatch.mock.calls[0]?.[0]).toContainEqual({
       tag: FEATURED_ARTISTS_CACHE_TAG,
       mode: 'swr'
     })
-    expect(
-      revalidateWebCache.mock.calls.filter(
-        ([input]) =>
-          input.tag === CANONICAL_CATALOG_SLUGS_CACHE_TAG &&
-          input.mode === 'immediate'
-      )
-    ).toHaveLength(1)
+
+    revalidateWebCacheBatch.mockClear()
+    storedActivo = false
+    await updateCatalogFieldAction(1, { activo: true, destacado: true })
+    expect(revalidateWebCacheBatch.mock.calls[0]?.[0]).not.toContainEqual({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      mode: 'swr'
+    })
   })
 
-  test('does not invalidate canonical slugs when activating a soft-deleted row', async () => {
-    storedActivo = false
-    storedDeletedAt = new Date('2025-01-01T00:00:00.000Z')
-
-    await expect(updateCatalogFieldAction(1, { activo: true })).resolves.toEqual({
-      success: true
+  test('keeps the root request for destacado and adds featured tag only when public state changes', async () => {
+    storedActivo = true
+    storedDestacado = false
+    await updateCatalogFieldAction(1, { destacado: true })
+    expect(updateValues).toEqual({ destacado: true })
+    expect(revalidateWebCacheBatch.mock.calls[0]?.[0]).toContainEqual({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      path: '/'
     })
-
-    expect(updateValues).toEqual({ activo: true })
-    expect(updateTag.mock.calls).toContainEqual(['catalogo:artistas:base'])
-    expect(updateTag.mock.calls).toContainEqual(['catalogo:artistas'])
-    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas:base' })
-    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+    expect(revalidateWebCacheBatch.mock.calls[0]?.[0]).not.toContainEqual({
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
     })
-    expect(revalidateWebCache).not.toHaveBeenCalledWith({
+    expect(revalidateWebCacheBatch.mock.calls[0]?.[0]).not.toContainEqual({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
       mode: 'immediate',
       path: '/festivales/[slug]',
       pathType: 'page'
     })
+
+    revalidateWebCacheBatch.mockClear()
+    storedDestacado = true
+    await updateCatalogFieldAction(1, { destacado: true })
+    expect(updateValues).toEqual({ destacado: true })
+    expect(revalidateWebCacheBatch.mock.calls[0]?.[0]).toContainEqual({ path: '/' })
+    expect(revalidateWebCacheBatch.mock.calls[0]?.[0]).not.toContainEqual({
+      tag: FEATURED_ARTISTS_CACHE_TAG,
+      path: '/'
+    })
   })
 
-  test('does not invalidate festival details when the catalog row is missing', async () => {
-    catalogRowExists = false
+  test('keeps the database update successful when the batch returns no freshness metadata', async () => {
+    revalidateWebCacheBatch.mockResolvedValue({})
 
     await expect(updateCatalogFieldAction(1, { activo: true })).resolves.toEqual({
       success: true
     })
-
-    expect(revalidateWebCache).not.toHaveBeenCalledWith({
-      tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
-    })
+    expect(updateValues).toEqual({ activo: true })
   })
 
-  test('does not invalidate festival details when validation fails', async () => {
+  test('does not invalidate or report success metadata for validation or avatar-guard failures', async () => {
+    revalidateWebCacheBatch.mockResolvedValue({ webRevalidation: 'immediate' })
     await expect(
       updateCatalogFieldAction(1, { activo: 'invalid' } as never)
     ).resolves.toMatchObject({ success: false })
+    expect(revalidateWebCacheBatch).not.toHaveBeenCalled()
 
-    expect(updateValues).toBeNull()
-    expect(revalidateWebCache).not.toHaveBeenCalledWith({
-      tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
-    })
-  })
-
-  test('does not invalidate festival details when the avatar guard fails', async () => {
     avatarExists = false
-
     await expect(updateCatalogFieldAction(1, { activo: true })).resolves.toMatchObject({
       success: false
     })
-
     expect(updateValues).toBeNull()
-    expect(revalidateWebCache).not.toHaveBeenCalledWith({
-      tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
-    })
-  })
-
-  test('preserves root-path Featured invalidation when destacado changes', async () => {
-    storedActivo = true
-    storedDestacado = false
-
-    await expect(
-      updateCatalogFieldAction(1, { destacado: true })
-    ).resolves.toEqual({ success: true })
-
-    expect(updateValues).toEqual({ destacado: true })
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: FEATURED_ARTISTS_CACHE_TAG,
-      path: '/'
-    })
-    expect(revalidateWebCache).not.toHaveBeenCalledWith({
-      tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
-    })
-    expect(revalidateWebCache).not.toHaveBeenCalledWith({
-      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
-      mode: 'immediate'
-    })
-  })
-
-  test('preserves root-path invalidation without Featured tag when destacado is unchanged', async () => {
-    storedActivo = true
-    storedDestacado = true
-
-    await expect(
-      updateCatalogFieldAction(1, { destacado: true })
-    ).resolves.toEqual({ success: true })
-
-    expect(updateValues).toEqual({ destacado: true })
-    expect(revalidateWebCache).toHaveBeenCalledWith({ path: '/' })
-    expect(revalidateWebCache).not.toHaveBeenCalledWith({
-      tag: FEATURED_ARTISTS_CACHE_TAG,
-      path: '/'
-    })
+    expect(revalidateWebCacheBatch).not.toHaveBeenCalled()
   })
 })
