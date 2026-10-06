@@ -6,6 +6,11 @@ const getSession = mock(async () => ({ user: { id: 'admin-1' } }))
 const getUser = mock(async () => ({ id: 'admin-1' }))
 const revalidateWebCache = mock(async () => ({ revalidated: true }))
 const revalidateWebCacheBestEffort = mock(async () => {})
+const revalidateWebCacheBatch = mock(
+  async (): Promise<{ webRevalidation?: 'swr' | 'immediate' }> => ({
+    webRevalidation: 'immediate'
+  })
+)
 const buildWebInvalidationUrl = mock(() => 'https://example.com/api/revalidate')
 const max = mock(() => 'max(orden)')
 const pseudonymTable = {
@@ -22,6 +27,7 @@ let slugValues: Record<string, unknown>[] = []
 let aliasValues: Record<string, unknown>[] = []
 let returningResult: unknown = [{ id: 9, artistaId: 42 }]
 let ownedPseudonym: unknown = { id: 43 }
+let transactionFailure: Error | null = null
 
 mock.restore()
 mock.module('server-only', () => ({}))
@@ -41,7 +47,8 @@ mock.module('@/shared/lib/auth/utils', () => ({
 mock.module('@/shared/lib/web-invalidation', () => ({
   buildWebInvalidationUrl,
   revalidateWebCache,
-  revalidateWebCacheBestEffort
+  revalidateWebCacheBestEffort,
+  revalidateWebCacheBatch
 }))
 mock.module('@frijolmagico/database/schema', () => ({
   artist: {
@@ -64,8 +71,10 @@ mock.module('@frijolmagico/database/orm', () => ({
           ? { where: () => ({ limit: async () => ownedPseudonym ? [ownedPseudonym] : [] }) }
           : Promise.resolve([{ maxOrden: null }])
     }),
-    transaction: async (run: (tx: ReturnType<typeof createTransaction>) => Promise<unknown>) =>
-      run(createTransaction()),
+    transaction: async (run: (tx: ReturnType<typeof createTransaction>) => Promise<unknown>) => {
+      if (transactionFailure) throw transactionFailure
+      return run(createTransaction())
+    },
     insert: () => ({
       values: (values: Record<string, unknown>) => {
         insertedValues = values
@@ -131,8 +140,13 @@ describe('createCatalogAction', () => {
     aliasValues = []
     returningResult = [{ id: 9, artistaId: 42 }]
     ownedPseudonym = { id: 43, pseudonimo: 'Selected Artist' }
+    transactionFailure = null
     updateTag.mockClear()
     revalidateWebCacheBestEffort.mockClear()
+    revalidateWebCacheBatch.mockClear()
+    revalidateWebCacheBatch.mockImplementation(async () => ({
+      webRevalidation: 'immediate'
+    }))
   })
 
   test('returns the committed identifiers and keeps the row inactive', async () => {
@@ -143,14 +157,15 @@ describe('createCatalogAction', () => {
 
     expect(result).toEqual({
       success: true,
-      data: { catalogId: 9, artistId: 42, requestedActive: true }
+      data: { catalogId: 9, artistId: 42, requestedActive: true },
+      webRevalidation: 'immediate'
     })
     expect(insertedValues).toMatchObject({ artistaId: 42, pseudonimoId: 43, activo: false })
     expect(slugValues).toEqual([{ slug: 'selected-artist' }])
     expect(aliasValues).toEqual([{ slug: 'old-slug', artistaId: 42 }])
   })
 
-  test('invokes internal best-effort revalidation after a committed create', async () => {
+  test('awaits the exact batch after a committed create and merges requested freshness metadata', async () => {
     const result = await createCatalogAction(
       { success: false },
       { artistaId: 42, pseudonimoId: 43, descripcion: null, destacado: true, activo: false }
@@ -158,23 +173,53 @@ describe('createCatalogAction', () => {
 
     expect(result).toEqual({
       success: true,
-      data: { catalogId: 9, artistId: 42, requestedActive: false }
+      data: { catalogId: 9, artistId: 42, requestedActive: false },
+      webRevalidation: 'immediate'
     })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: 'catalogo:artistas:base'
-    })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: 'catalogo:artistas:participaciones'
-    })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: 'catalogo:artistas'
-    })
+    expect(revalidateWebCacheBatch).toHaveBeenCalledWith(
+      [
+        { tag: 'catalogo:artistas:base' },
+        { tag: 'catalogo:artistas:participaciones' },
+        { tag: 'catalogo:artistas' },
+        { tag: 'home:destacados', path: '/' }
+      ],
+      'create-catalog'
+    )
+    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
+  })
+
+  test('omits featured tag and path unless destacado is true', async () => {
+    for (const featuredInput of [false, undefined]) {
+      revalidateWebCacheBatch.mockClear()
+      await createCatalogAction(
+        { success: false },
+        {
+          artistaId: 42,
+          pseudonimoId: 43,
+          descripcion: null,
+          ...(featuredInput === undefined ? {} : { destacado: featuredInput }),
+          activo: false
+        }
+      )
+
+      expect(revalidateWebCacheBatch).toHaveBeenCalledWith(
+        [
+          { tag: 'catalogo:artistas:base' },
+          { tag: 'catalogo:artistas:participaciones' },
+          { tag: 'catalogo:artistas' }
+        ],
+        'create-catalog'
+      )
+    }
   })
 
   test('keeps a committed creation successful when internal cache invalidation fails', async () => {
     updateTag.mockImplementationOnce(() => {
       throw new Error('cache unavailable')
     })
+    revalidateWebCacheBatch.mockImplementationOnce(async () => ({
+      webRevalidation: 'swr'
+    }))
 
     const result = await createCatalogAction(
       { success: false },
@@ -183,10 +228,12 @@ describe('createCatalogAction', () => {
 
     expect(result).toEqual({
       success: true,
-      data: { catalogId: 9, artistId: 42, requestedActive: false }
+      data: { catalogId: 9, artistId: 42, requestedActive: false },
+      webRevalidation: 'swr'
     })
     expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:base')
     expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:participaciones')
+    expect(revalidateWebCacheBatch).toHaveBeenCalledTimes(1)
   })
 
   test('rejects a pseudonym that is inactive or owned by another artist', async () => {
@@ -199,6 +246,19 @@ describe('createCatalogAction', () => {
 
     expect(result).toMatchObject({ success: false })
     expect(insertedValues).toBeNull()
+  })
+
+  test('does not invalidate or request web revalidation when the database transaction fails', async () => {
+    transactionFailure = new Error('database unavailable')
+
+    const result = await createCatalogAction(
+      { success: false },
+      { artistaId: 42, pseudonimoId: 43, descripcion: null, destacado: true, activo: false }
+    )
+
+    expect(result).toMatchObject({ success: false })
+    expect(updateTag).not.toHaveBeenCalled()
+    expect(revalidateWebCacheBatch).not.toHaveBeenCalled()
   })
 
   test('returns an explicit creation failure when the insert confirms no identifiers', async () => {
@@ -220,6 +280,7 @@ describe('createCatalogAction', () => {
     })
     expect(updateTag).not.toHaveBeenCalled()
     expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
+    expect(revalidateWebCacheBatch).not.toHaveBeenCalled()
   })
 
   test('returns an explicit creation failure when the insert returns invalid identifiers', async () => {

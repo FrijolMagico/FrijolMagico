@@ -4,7 +4,8 @@ import 'server-only'
 import { updateTag } from 'next/cache'
 import { db } from '@frijolmagico/database/orm'
 import { requireAuth } from '@/shared/lib/auth/utils'
-import { revalidateWebCache } from '@/shared/lib/web-invalidation'
+import { revalidateWebCacheBatch } from '@/shared/lib/web-invalidation'
+import type { RevalidateWebCacheOptions } from '@/shared/lib/web-invalidation'
 import { deleteCatalogEntry } from '@/shared/lib/catalog-artist-deletion'
 import {
   CANONICAL_CATALOG_SLUGS_CACHE_TAG,
@@ -23,32 +24,41 @@ export async function deleteCatalogAction(id: number): Promise<ActionState> {
     const { wasFeatured, wasActive } = await db.transaction(async (tx) =>
       deleteCatalogEntry(tx, id),
     )
+    const invalidationRequests: RevalidateWebCacheOptions[] = []
+
     if (wasActive) {
-      void revalidateWebCache({
-        tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
-        mode: 'immediate'
-      })
-      void revalidateWebCache({
-        tag: FESTIVAL_CRITICAL_CACHE_TAG,
-        mode: 'immediate',
-        path: '/festivales/[slug]',
-        pathType: 'page',
-      })
+      invalidationRequests.push(
+        {
+          tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+          mode: 'immediate',
+        },
+        {
+          tag: FESTIVAL_CRITICAL_CACHE_TAG,
+          mode: 'immediate',
+          path: '/festivales/[slug]',
+          pathType: 'page',
+        },
+      )
     }
 
     for (const tag of [CATALOG_BASE_CACHE_TAG, CATALOG_PARTICIPATION_CACHE_TAG, CATALOG_CACHE_TAG]) {
       updateTag(tag)
-      void revalidateWebCache({ tag })
+      invalidationRequests.push({ tag })
     }
 
     if (wasFeatured) {
-      void revalidateWebCache({
+      invalidationRequests.push({
         tag: FEATURED_ARTISTS_CACHE_TAG,
         path: '/',
       })
     }
 
-    return { success: true }
+    const webInvalidation = await revalidateWebCacheBatch(
+      invalidationRequests,
+      'delete-catalog'
+    )
+
+    return { success: true, ...webInvalidation }
   } catch (error) {
     return {
       success: false,

@@ -104,7 +104,11 @@ function UpdateArtistDialogForm({
 
     discardDrafts()
     close()
-    toast.success('Artista actualizado correctamente')
+    toast.success(
+      result.webRevalidation === 'swr'
+        ? 'Artista actualizado correctamente. Pueden tardar en aparecer en la web.'
+        : 'Artista actualizado correctamente'
+    )
   }
 
   return (

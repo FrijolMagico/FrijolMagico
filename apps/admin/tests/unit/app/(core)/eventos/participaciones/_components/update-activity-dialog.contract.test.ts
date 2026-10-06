@@ -43,9 +43,11 @@ describe('UpdateActivityDialog aggregate save contract', () => {
   test('keeps save feedback, form reset, and dialog close behavior', () => {
     expect(componentSource).toContain('toast.error(')
     expect(componentSource).toContain('result.errors?.map')
-    expect(componentSource).toContain("toast.success('Cambios guardados')")
+    expect(componentSource).toContain('toast.success(')
+    expect(componentSource).toMatch(/Cambios guardados\$\{result\.webRevalidation === 'swr'/)
     expect(componentSource).toContain('methods.reset(values)')
     expect(componentSource).toContain('closeUpdateDialogs()')
+    expect(componentSource).toContain('router.refresh()')
     expect(componentSource).toContain("form: 'update-activity-form'")
   })
 

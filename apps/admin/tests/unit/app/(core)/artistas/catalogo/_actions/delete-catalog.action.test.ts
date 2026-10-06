@@ -1,18 +1,22 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
 import {
   CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+  CATALOG_BASE_CACHE_TAG,
+  CATALOG_CACHE_TAG,
+  CATALOG_PARTICIPATION_CACHE_TAG,
+  FEATURED_ARTISTS_CACHE_TAG,
   FESTIVAL_CRITICAL_CACHE_TAG,
 } from '@frijolmagico/cache-tags'
 
 const updateTag = mock(() => {})
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
-const revalidateWebCache = mock(async () => ({ revalidated: true }))
+const revalidateWebCacheBatch = mock(async () => ({}))
 const deleteCatalogEntry = mock(async () => ({ wasFeatured: false, wasActive: true }))
 
 mock.module('server-only', () => ({}))
 mock.module('next/cache', () => ({ updateTag }))
 mock.module('@/shared/lib/auth/utils', () => ({ requireAuth }))
-mock.module('@/shared/lib/web-invalidation', () => ({ revalidateWebCache }))
+mock.module('@/shared/lib/web-invalidation', () => ({ revalidateWebCacheBatch }))
 mock.module('@/shared/lib/catalog-artist-deletion', () => ({ deleteCatalogEntry }))
 mock.module('@frijolmagico/database/orm', () => ({
   db: { transaction: async (callback: (tx: unknown) => Promise<unknown>) => callback({}) }
@@ -25,53 +29,66 @@ const { deleteCatalogAction } = await import(
 beforeEach(() => {
   updateTag.mockClear()
   requireAuth.mockClear()
-  revalidateWebCache.mockClear()
+  revalidateWebCacheBatch.mockClear()
+  revalidateWebCacheBatch.mockResolvedValue({})
   deleteCatalogEntry.mockReset()
   deleteCatalogEntry.mockResolvedValue({ wasFeatured: false, wasActive: true })
 })
 
-describe('deleteCatalogAction canonical slug invalidation', () => {
-  test('invalidates canonical slugs after confirmed catalog deletion while preserving catalog invalidation', async () => {
-    await expect(deleteCatalogAction(9)).resolves.toEqual({ success: true })
+describe('deleteCatalogAction web invalidation', () => {
+  test('batches exactly the active slug, festival detail, and three catalog requests', async () => {
+    revalidateWebCacheBatch.mockResolvedValue({ webRevalidation: 'immediate' })
 
-    expect(deleteCatalogEntry).toHaveBeenCalledTimes(1)
+    await expect(deleteCatalogAction(9)).resolves.toEqual({
+      success: true,
+      webRevalidation: 'immediate',
+    })
+
     expect(deleteCatalogEntry).toHaveBeenCalledWith(expect.anything(), 9)
-    expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:base')
-    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas:base' })
-    expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:participaciones')
-    expect(updateTag).toHaveBeenCalledWith('catalogo:artistas')
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
-      mode: 'immediate'
-    })
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page',
-    })
+    expect(updateTag).toHaveBeenCalledTimes(3)
+    expect(revalidateWebCacheBatch).toHaveBeenCalledWith(
+      [
+        { tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG, mode: 'immediate' },
+        {
+          tag: FESTIVAL_CRITICAL_CACHE_TAG,
+          mode: 'immediate',
+          path: '/festivales/[slug]',
+          pathType: 'page'
+        },
+        { tag: CATALOG_BASE_CACHE_TAG },
+        { tag: CATALOG_PARTICIPATION_CACHE_TAG },
+        { tag: CATALOG_CACHE_TAG }
+      ],
+      'delete-catalog'
+    )
   })
 
-  test('does not invalidate canonical slugs after deleting an inactive row while preserving catalog invalidation', async () => {
+  test('keeps inactive deletion to the three catalog requests and no freshness metadata', async () => {
     deleteCatalogEntry.mockResolvedValue({ wasFeatured: false, wasActive: false })
 
     await expect(deleteCatalogAction(9)).resolves.toEqual({ success: true })
 
-    expect(deleteCatalogEntry).toHaveBeenCalledWith(expect.anything(), 9)
-    expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:base')
-    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas:base' })
-    expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:participaciones')
-    expect(updateTag).toHaveBeenCalledWith('catalogo:artistas')
-    expect(revalidateWebCache).not.toHaveBeenCalledWith({
-      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
-      mode: 'immediate'
-    })
-    expect(revalidateWebCache).not.toHaveBeenCalledWith({
-      tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page',
-    })
+
+    expect(revalidateWebCacheBatch).toHaveBeenCalledWith([
+      { tag: CATALOG_BASE_CACHE_TAG },
+      { tag: CATALOG_PARTICIPATION_CACHE_TAG },
+      { tag: CATALOG_CACHE_TAG },
+    ], 'delete-catalog')
+    expect(updateTag).toHaveBeenCalledTimes(3)
+  })
+
+  test('adds only the existing featured tag and root path when the deleted row was featured', async () => {
+    deleteCatalogEntry.mockResolvedValue({ wasFeatured: true, wasActive: false })
+
+    await expect(deleteCatalogAction(9)).resolves.toEqual({ success: true })
+
+    expect(revalidateWebCacheBatch).toHaveBeenCalledWith([
+      { tag: CATALOG_BASE_CACHE_TAG },
+      { tag: CATALOG_PARTICIPATION_CACHE_TAG },
+      { tag: CATALOG_CACHE_TAG },
+      { tag: FEATURED_ARTISTS_CACHE_TAG, path: '/' },
+    ], 'delete-catalog')
+
   })
 
   test('does not invalidate caches when deletion fails', async () => {
@@ -83,17 +100,6 @@ describe('deleteCatalogAction canonical slug invalidation', () => {
     })
 
     expect(updateTag).not.toHaveBeenCalled()
-    expect(revalidateWebCache).not.toHaveBeenCalled()
-  })
-
-  test('preserves Featured invalidation for a deleted featured row', async () => {
-    deleteCatalogEntry.mockResolvedValue({ wasFeatured: true, wasActive: true })
-
-    await expect(deleteCatalogAction(9)).resolves.toEqual({ success: true })
-
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: 'home:destacados',
-      path: '/'
-    })
+    expect(revalidateWebCacheBatch).not.toHaveBeenCalled()
   })
 })

@@ -42,9 +42,16 @@ describe('artist detail cache dependency contract', () => {
     const invalidation = action.includes('updateTag(ARTIST_DETAIL_CACHE_TAG)')
       ? 'updateTag(ARTIST_DETAIL_CACHE_TAG)'
       : 'ARTIST_DETAIL_CACHE_TAG\n    ]'
-    expect(action).toContain(invalidation)
-    expect(action.indexOf(invalidation)).toBeGreaterThan(action.indexOf('await db.'))
-    expect(action.indexOf(invalidation)).toBeLessThan(action.lastIndexOf('return { success: true'))
+    const mutationIndex = action.indexOf('await db.')
+    const invalidationIndex = action.indexOf(invalidation)
+    const finalSuccessIndex =
+      [...action.matchAll(/return\s*\{\s*success:\s*true\b/g)].at(-1)?.index ?? -1
+
+    expect(mutationIndex).toBeGreaterThanOrEqual(0)
+    expect(invalidationIndex).toBeGreaterThanOrEqual(0)
+    expect(finalSuccessIndex).toBeGreaterThanOrEqual(0)
+    expect(mutationIndex).toBeLessThan(invalidationIndex)
+    expect(invalidationIndex).toBeLessThan(finalSuccessIndex)
   })
 
   test('event and edition mutations invalidate their existing DAL dependencies', () => {

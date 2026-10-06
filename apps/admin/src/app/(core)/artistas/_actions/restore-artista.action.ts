@@ -9,6 +9,7 @@ import { artist } from '@frijolmagico/database/schema'
 import { and, eq, isNotNull } from 'drizzle-orm'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import { ARTIST_CACHE_TAG } from '@frijolmagico/cache-tags'
+import { revalidateWebCacheBatch } from '@/shared/lib/web-invalidation'
 import type { ActionState } from '@/shared/types/actions'
 
 export async function restoreArtistaAction(id: number): Promise<ActionState> {
@@ -21,8 +22,9 @@ export async function restoreArtistaAction(id: number): Promise<ActionState> {
       .where(and(eq(artist.artist.id, id), isNotNull(artist.artist.deletedAt)))
 
     updateTag(ARTIST_CACHE_TAG)
+    const webInvalidation = await revalidateWebCacheBatch([], 'restore-artista')
 
-    return { success: true }
+    return { success: true, ...webInvalidation }
   } catch (error) {
     return {
       success: false,

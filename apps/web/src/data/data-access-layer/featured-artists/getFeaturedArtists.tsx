@@ -23,7 +23,7 @@ export const getFeaturedArtists = async (): Promise<FeaturedArtist[]> => {
   cacheTag(FEATURED_ARTISTS_CACHE_TAG)
   cacheLife({
     stale: 5 * 60,
-    revalidate: Infinity,
+    revalidate: 7 * 24 * 60 * 60,
     expire: Infinity
   })
 

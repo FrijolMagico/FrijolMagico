@@ -25,13 +25,14 @@ interface ParticipationsContainerProps {
 
 interface ParticipationDeletionResult {
   success: boolean
+  webRevalidation?: 'swr' | 'immediate'
   errors?: { message?: string }[]
 }
 
 interface RunParticipationDeletionOptions {
   execute: () => Promise<ParticipationDeletionResult>
   setPending: (isPending: boolean) => void
-  onSuccess: () => void
+  onSuccess: (webRevalidation?: 'swr' | 'immediate') => void
   onError: (message?: string) => void
   close: () => void
   refresh: () => void
@@ -54,7 +55,7 @@ export async function runParticipationDeletion({
       return false
     }
 
-    onSuccess()
+    onSuccess(result.webRevalidation)
     close()
     refresh()
     return true
@@ -100,7 +101,10 @@ export function ParticipationsContainer({
       execute: () =>
         deleteExhibitionAction({ success: false }, { id: exhibition.id }),
       setPending: setIsPending,
-      onSuccess: () => toast.success('Expositor eliminado'),
+      onSuccess: (webRevalidation) =>
+        toast.success(
+          `Expositor eliminado${webRevalidation === 'swr' ? '. Pueden tardar en aparecer en la web.' : ''}`
+        ),
       onError: (message) => toast.error(message ?? 'Error al quitar expositor'),
       close: closeUpdateDialogs,
       refresh: router.refresh
@@ -114,7 +118,10 @@ export function ParticipationsContainer({
     await runParticipationDeletion({
       execute: () => deleteActivityAction({ id: activity.id }),
       setPending: setIsPending,
-      onSuccess: () => toast.success('Actividad eliminada'),
+      onSuccess: (webRevalidation) =>
+        toast.success(
+          `Actividad eliminada${webRevalidation === 'swr' ? '. Pueden tardar en aparecer en la web.' : ''}`
+        ),
       onError: (message) =>
         toast.error(message ?? 'Error al eliminar actividad'),
       close: closeUpdateDialogs,

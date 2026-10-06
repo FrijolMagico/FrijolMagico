@@ -118,7 +118,9 @@ export function CreateExhibitionDialog({
       return
     }
 
-    toast.success('Expositor agregado correctamente')
+    toast.success(
+      `Expositor agregado correctamente${result.webRevalidation === 'swr' ? ' Pueden tardar en aparecer en la web.' : ''}`
+    )
     methods.reset()
     toggleCreateExhibitionDialogOpen(false)
   }

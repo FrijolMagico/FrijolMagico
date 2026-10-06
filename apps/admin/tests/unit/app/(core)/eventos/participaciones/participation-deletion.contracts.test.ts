@@ -15,6 +15,10 @@ import { join } from 'node:path'
 import { createClient } from '@libsql/client'
 import { drizzle } from 'drizzle-orm/libsql'
 import {
+  FESTIVALES_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG
+} from '@frijolmagico/cache-tags'
+import {
   activityType,
   editionParticipation,
   participationActivity,
@@ -46,6 +50,10 @@ const updateTag = mock(() => {})
 const getSession = mock(async () => ({ user: { id: '1' } }))
 const requireAuth = mock(async () => ({ user: { id: '1' } }))
 const getUser = mock(async () => ({ id: '1' }))
+const revalidateWebCacheBatch = mock(async () => ({
+  webRevalidation: 'swr' as const
+}))
+const revalidateWebCacheBestEffort = mock(async () => {})
 
 mock.module('server-only', () => ({}))
 mock.module('next/cache', () => ({ updateTag }))
@@ -54,6 +62,10 @@ mock.module('@/shared/lib/auth/utils', () => ({
   getSession,
   requireAuth,
   getUser
+}))
+mock.module('@/shared/lib/web-invalidation', () => ({
+  revalidateWebCacheBatch,
+  revalidateWebCacheBestEffort
 }))
 
 const { deleteActivityAction } =
@@ -119,6 +131,8 @@ async function resetFixtures() {
   ])
   updateTag.mockClear()
   requireAuth.mockClear()
+  revalidateWebCacheBatch.mockClear()
+  revalidateWebCacheBestEffort.mockClear()
 }
 
 async function seedParticipation(id = 1) {
@@ -168,8 +182,16 @@ describe('participation deletion persistence', () => {
       deleteExhibitionAction({ success: false }, { id: 10 })
     ).resolves.toEqual({
       success: true,
-      data: { alreadyAbsent: false, participationDeleted: false }
+      data: { alreadyAbsent: false, participationDeleted: false },
+      webRevalidation: 'swr'
     })
+    expect(revalidateWebCacheBatch).toHaveBeenCalledWith(
+      [
+        { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
+        { tag: FESTIVALES_CACHE_TAG, mode: 'swr' }
+      ],
+      'delete-exhibition'
+    )
 
     expect(await idsOf(participationExhibition)).toEqual([])
     expect(await idsOf(participationActivity)).toEqual([{ id: 20 }])
@@ -195,8 +217,16 @@ describe('participation deletion persistence', () => {
 
     await expect(deleteActivityAction({ id: 20 })).resolves.toEqual({
       success: true,
-      data: { alreadyAbsent: false, participationDeleted: false }
+      data: { alreadyAbsent: false, participationDeleted: false },
+      webRevalidation: 'swr'
     })
+    expect(revalidateWebCacheBatch).toHaveBeenCalledWith(
+      [
+        { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
+        { tag: FESTIVALES_CACHE_TAG, mode: 'swr' }
+      ],
+      'delete-activity'
+    )
 
     expect(await idsOf(participationExhibition)).toEqual([{ id: 10 }])
     expect(await idsOf(participationActivity)).toEqual([{ id: 21 }])
@@ -211,8 +241,16 @@ describe('participation deletion persistence', () => {
 
     await expect(deleteActivityAction({ id: 20 })).resolves.toEqual({
       success: true,
-      data: { alreadyAbsent: false, participationDeleted: true }
+      data: { alreadyAbsent: false, participationDeleted: true },
+      webRevalidation: 'swr'
     })
+    expect(revalidateWebCacheBatch).toHaveBeenCalledWith(
+      [
+        { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
+        { tag: FESTIVALES_CACHE_TAG, mode: 'swr' }
+      ],
+      'delete-activity'
+    )
     expect(await database.select().from(editionParticipation)).toEqual([])
   })
 
@@ -223,7 +261,12 @@ describe('participation deletion persistence', () => {
       args: [20, 1]
     })
 
-    await deleteActivityAction({ id: 20 })
+    await expect(deleteActivityAction({ id: 20 })).resolves.toEqual({
+      success: true,
+      data: { alreadyAbsent: false, participationDeleted: true },
+      webRevalidation: 'swr'
+    })
+    expect(revalidateWebCacheBatch).toHaveBeenCalledTimes(1)
     await seedParticipation(2)
 
     await expect(
@@ -236,6 +279,7 @@ describe('participation deletion persistence', () => {
       success: true,
       data: { alreadyAbsent: true, participationDeleted: false }
     })
+    expect(revalidateWebCacheBatch).toHaveBeenCalledTimes(1)
     expect(
       await database
         .select({ id: editionParticipation.id })
@@ -267,14 +311,15 @@ describe('participation deletion persistence', () => {
 })
 
 describe('participation deletion UI contracts', () => {
-  test('runs success routing with pending cleanup, close, and refresh', async () => {
+  test('forwards web revalidation metadata through successful routing', async () => {
     const calls: string[] = []
 
     await expect(
       runParticipationDeletion({
-        execute: async () => ({ success: true }),
+        execute: async () => ({ success: true, webRevalidation: 'swr' }),
         setPending: (isPending) => calls.push(`pending:${isPending}`),
-        onSuccess: () => calls.push('success'),
+        onSuccess: (webRevalidation) =>
+          calls.push(`success:${webRevalidation ?? 'absent'}`),
         onError: () => calls.push('error'),
         close: () => calls.push('close'),
         refresh: () => calls.push('refresh')
@@ -283,7 +328,7 @@ describe('participation deletion UI contracts', () => {
 
     expect(calls).toEqual([
       'pending:true',
-      'success',
+      'success:swr',
       'close',
       'refresh',
       'pending:false'

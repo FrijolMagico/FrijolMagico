@@ -174,7 +174,11 @@ export async function runOptimisticMutation<
     const result = await serverAction(id)
 
     if (result.success) {
-      toast.success(successMessage)
+      toast.success(
+        result.webRevalidation === 'swr'
+          ? `${successMessage} Pueden tardar en aparecer en la web.`
+          : successMessage
+      )
       return
     }
 

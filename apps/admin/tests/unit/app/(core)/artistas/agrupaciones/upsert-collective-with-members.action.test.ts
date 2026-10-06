@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, mock, test } from 'bun:test'
 
 const writes: Array<{ table: unknown; values?: unknown; update?: unknown }> = []
 const selectResults: unknown[][] = []
-const webInvalidations: unknown[] = []
+const webInvalidationBatches: Array<{ requests: unknown[]; context?: string }> = []
 let selectCount = 0
 let transactionFailure: Error | null = null
 
@@ -46,8 +46,18 @@ mock.module('@frijolmagico/database/orm', () => ({ db: dbMock }))
 mock.module('@/shared/lib/auth/utils', () => ({ requireAuth: async () => ({}) }))
 mock.module('next/cache', () => ({ updateTag: () => undefined }))
 mock.module('@/shared/lib/web-invalidation', () => ({
-  revalidateWebCacheBestEffort: (options: unknown) => {
-    webInvalidations.push(options)
+  revalidateWebCacheBestEffort: () => undefined,
+  revalidateWebCacheBatch: async (requests: unknown[], context?: string) => {
+    webInvalidationBatches.push({ requests, context })
+    const hasSWR = requests.some((request) => {
+      const { tag, mode } = request as { tag: string; mode?: string }
+      return mode === 'swr' || (mode === undefined && tag !== 'festivales:critico')
+    })
+    return hasSWR
+      ? { webRevalidation: 'swr' }
+      : requests.length > 0
+        ? { webRevalidation: 'immediate' }
+        : {}
   }
 }))
 
@@ -71,7 +81,7 @@ const basePayload = {
 beforeEach(() => {
   writes.length = 0
   selectResults.length = 0
-  webInvalidations.length = 0
+  webInvalidationBatches.length = 0
   selectCount = 0
   transactionFailure = null
 })
@@ -101,10 +111,15 @@ describe('upsertCollectiveWithMembersAction alias validation', () => {
         activo: true
       })
     )).toBe(true)
-    expect(webInvalidations).toEqual([
-      { tag: 'catalogo:artistas:base' },
-      { tag: 'catalogo:artistas:participaciones' },
-      { tag: 'catalogo:artistas' }
+    expect(webInvalidationBatches).toEqual([
+      {
+        requests: [
+          { tag: 'catalogo:artistas:base' },
+          { tag: 'catalogo:artistas:participaciones' },
+          { tag: 'catalogo:artistas' }
+        ],
+        context: 'upsert-collective-with-members'
+      }
     ])
   })
 
@@ -149,7 +164,7 @@ describe('upsertCollectiveWithMembersAction alias validation', () => {
     )).toBe(true)
   })
 
-  test('immediately invalidates festivals when the collective name changes', async () => {
+  test('reports requested SWR policy for mixed changes and immediately invalidates festivals when the name changes', async () => {
     const result = await upsertCollectiveWithMembersAction(
       { success: false },
       {
@@ -159,18 +174,22 @@ describe('upsertCollectiveWithMembersAction alias validation', () => {
     )
 
     expect(result.success).toBe(true)
-    expect(webInvalidations).toContainEqual({
-      tag: 'festivales:critico',
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
-    })
-    expect(webInvalidations.filter((invalidation) =>
-      (invalidation as { tag: string }).tag !== 'festivales:critico'
-    )).toEqual([
-      { tag: 'catalogo:artistas:base' },
-      { tag: 'catalogo:artistas:participaciones' },
-      { tag: 'catalogo:artistas' }
+    expect(result.webRevalidation).toBe('swr')
+    expect(webInvalidationBatches).toEqual([
+      {
+        requests: [
+          {
+            tag: 'festivales:critico',
+            mode: 'immediate',
+            path: '/festivales/[slug]',
+            pathType: 'page'
+          },
+          { tag: 'catalogo:artistas:base' },
+          { tag: 'catalogo:artistas:participaciones' },
+          { tag: 'catalogo:artistas' }
+        ],
+        context: 'upsert-collective-with-members'
+      }
     ])
   })
 
@@ -184,7 +203,8 @@ describe('upsertCollectiveWithMembersAction alias validation', () => {
     )
 
     expect(result.success).toBe(true)
-    expect(webInvalidations).toEqual([])
+    expect(result.webRevalidation).toBeUndefined()
+    expect(webInvalidationBatches).toEqual([])
   })
 
   test('does not invalidate festivals when the transaction fails after a name change', async () => {
@@ -199,7 +219,8 @@ describe('upsertCollectiveWithMembersAction alias validation', () => {
     )
 
     expect(result.success).toBe(false)
-    expect(webInvalidations).toEqual([])
+    expect(result.webRevalidation).toBeUndefined()
+    expect(webInvalidationBatches).toEqual([])
   })
 
   test('does not invalidate the catalog for a non-catalog field-only update', async () => {
@@ -212,7 +233,8 @@ describe('upsertCollectiveWithMembersAction alias validation', () => {
     )
 
     expect(result.success).toBe(true)
-    expect(webInvalidations).toEqual([])
+    expect(result.webRevalidation).toBeUndefined()
+    expect(webInvalidationBatches).toEqual([])
   })
 
   test('rejects an inactive alias', async () => {

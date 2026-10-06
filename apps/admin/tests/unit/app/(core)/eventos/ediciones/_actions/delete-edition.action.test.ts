@@ -4,6 +4,13 @@ import {
   FESTIVAL_CRITICAL_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 
+type InvalidationRequest = {
+  tag?: string
+  mode?: 'immediate' | 'swr'
+  path?: string
+  pathType?: 'page' | 'layout'
+}
+
 let deletedRows: { id: number; published: boolean; slug: string }[] = [
   { id: 1, published: true, slug: 'festival-2025' }
 ]
@@ -15,16 +22,14 @@ const updateTag = mock((tag: string) => {
   expect(mutationCompleted).toBe(true)
   invalidations.push(`local:${tag}`)
 })
-const revalidateWebCache = mock(
-  async (options: {
-    tag?: string
-    mode?: 'immediate' | 'swr'
-    path?: string
-    pathType?: 'page' | 'layout'
-  }) => {
+const revalidateWebCacheBatch = mock(
+  async (requests: InvalidationRequest[], context: string) => {
     expect(mutationCompleted).toBe(true)
-    invalidations.push(`web:${options.tag ?? options.path}`)
-    return { revalidated: true }
+    invalidations.push(`batch:${context}:${requests.length}`)
+    for (const request of requests) {
+      invalidations.push(`web:${request.tag ?? request.path}`)
+    }
+    return { webRevalidation: 'swr' as const }
   }
 )
 const db = {
@@ -47,7 +52,7 @@ mock.module('@/shared/lib/auth/utils', () => ({
   requireAuth: async () => ({ user: { id: 'admin-1' } })
 }))
 mock.module('next/cache', () => ({ updateTag }))
-mock.module('@/shared/lib/web-invalidation', () => ({ revalidateWebCache }))
+mock.module('@/shared/lib/web-invalidation', () => ({ revalidateWebCacheBatch }))
 const { deleteEditionAction } = await import(
   '@/core/eventos/ediciones/_actions/delete-edition.action'
 )
@@ -59,14 +64,14 @@ beforeEach(() => {
   mutationCompleted = false
   invalidations.length = 0
   updateTag.mockClear()
-  revalidateWebCache.mockClear()
+  revalidateWebCacheBatch.mockClear()
 })
 
 describe('deleteEditionAction catalog freshness', () => {
-  test('invalidates edition and web catalog tags after deleting an edition', async () => {
+  test('batches the existing requests in order and returns requested freshness', async () => {
     const result = await deleteEditionAction({ success: true }, { id: 1 })
 
-    expect(result.success).toBe(true)
+    expect(result).toEqual({ success: true, webRevalidation: 'swr' })
     expect(Object.keys(returnedProjection ?? {}).sort()).toEqual([
       'id',
       'published',
@@ -74,79 +79,108 @@ describe('deleteEditionAction catalog freshness', () => {
     ])
     expect(invalidations).toContain('local:ediciones')
     expect(invalidations).toContain('local:ediciones:dias')
-    expect(invalidations).toContain('web:catalogo:artistas')
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate'
-    })
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: FESTIVALES_CACHE_TAG,
-      mode: 'swr'
-    })
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      path: '/festivales/festival-2025',
-      mode: 'immediate'
-    })
-    expect(
-      revalidateWebCache.mock.calls
-        .filter(([options]) => options.tag === FESTIVAL_CRITICAL_CACHE_TAG)
-        .every(([options]) => options.mode === 'immediate')
-    ).toBe(true)
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: FESTIVALES_CACHE_TAG,
-      path: '/festivales'
-    })
-    expect(revalidateWebCache).toHaveBeenCalledWith({ path: '/', pathType: 'page' })
-    expect(revalidateWebCache).toHaveBeenCalledWith({ path: '/', pathType: 'layout' })
-    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas' })
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: 'catalogo:artistas:participaciones'
-    })
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: 'catalogo:artistas:fechas-edicion'
-    })
-    expect(revalidateWebCache).toHaveBeenCalledTimes(9)
+    expect(revalidateWebCacheBatch).toHaveBeenCalledTimes(1)
+    expect(revalidateWebCacheBatch).toHaveBeenCalledWith(
+      [
+        { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
+        { tag: FESTIVALES_CACHE_TAG, mode: 'swr' },
+        {
+          tag: FESTIVAL_CRITICAL_CACHE_TAG,
+          path: '/festivales/festival-2025',
+          mode: 'immediate'
+        },
+        { tag: FESTIVALES_CACHE_TAG, path: '/festivales' },
+        { path: '/', pathType: 'page' },
+        { path: '/', pathType: 'layout' },
+        { tag: 'catalogo:artistas' },
+        { tag: 'catalogo:artistas:participaciones' },
+        { tag: 'catalogo:artistas:fechas-edicion' }
+      ],
+      'delete-edition'
+    )
   })
 
-  test('does not invalidate root paths when deleting an unpublished edition', async () => {
+  test('keeps each deleted row request group before catalog-wide requests', async () => {
+    deletedRows = [
+      { id: 1, published: true, slug: 'first-festival' },
+      { id: 2, published: false, slug: 'second-festival' }
+    ]
+
+    await deleteEditionAction({ success: true }, { id: 1 })
+
+    expect(revalidateWebCacheBatch.mock.calls[0]?.[0]).toEqual([
+      { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
+      { tag: FESTIVALES_CACHE_TAG, mode: 'swr' },
+      {
+        tag: FESTIVAL_CRITICAL_CACHE_TAG,
+        path: '/festivales/first-festival',
+        mode: 'immediate'
+      },
+      { tag: FESTIVALES_CACHE_TAG, path: '/festivales' },
+      { path: '/', pathType: 'page' },
+      { path: '/', pathType: 'layout' },
+      {
+        tag: FESTIVAL_CRITICAL_CACHE_TAG,
+        path: '/festivales/second-festival',
+        mode: 'immediate'
+      },
+      { tag: FESTIVALES_CACHE_TAG, path: '/festivales' },
+      { tag: 'catalogo:artistas' },
+      { tag: 'catalogo:artistas:participaciones' },
+      { tag: 'catalogo:artistas:fechas-edicion' }
+    ])
+  })
+
+  test('omits root paths for unpublished editions but retains slug and festival requests', async () => {
     deletedRows = [{ id: 1, published: false, slug: 'festival-2025' }]
 
     await deleteEditionAction({ success: true }, { id: 1 })
 
-    expect(revalidateWebCache).not.toHaveBeenCalledWith({ path: '/', pathType: 'page' })
-    expect(revalidateWebCache).not.toHaveBeenCalledWith({ path: '/', pathType: 'layout' })
-    expect(revalidateWebCache).toHaveBeenCalledWith({
+    const requests = revalidateWebCacheBatch.mock.calls[0]?.[0] ?? []
+    expect(requests).not.toContainEqual({ path: '/', pathType: 'page' })
+    expect(requests).not.toContainEqual({ path: '/', pathType: 'layout' })
+    expect(requests).toContainEqual({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
       path: '/festivales/festival-2025',
       mode: 'immediate'
     })
-    expect(revalidateWebCache).toHaveBeenCalledWith({
+    expect(requests).toContainEqual({
       tag: FESTIVALES_CACHE_TAG,
       path: '/festivales'
     })
   })
 
-  test('does not invalidate root paths when the deleted edition has an empty slug', async () => {
+  test('omits slug and root requests for a published edition without a slug', async () => {
     deletedRows = [{ id: 1, published: true, slug: '' }]
 
     await deleteEditionAction({ success: true }, { id: 1 })
 
-    expect(revalidateWebCache).not.toHaveBeenCalledWith({ path: '/', pathType: 'page' })
-    expect(revalidateWebCache).not.toHaveBeenCalledWith({ path: '/', pathType: 'layout' })
+    const requests = revalidateWebCacheBatch.mock.calls[0]?.[0] ?? []
+    expect(requests).not.toContainEqual({ path: '/', pathType: 'page' })
+    expect(requests).not.toContainEqual({ path: '/', pathType: 'layout' })
+    expect(
+      requests.some(
+        ({ tag, path }) =>
+          tag === FESTIVAL_CRITICAL_CACHE_TAG && path !== undefined
+      )
+    ).toBe(false)
+    expect(requests).toContainEqual({
+      tag: FESTIVALES_CACHE_TAG,
+      path: '/festivales'
+    })
   })
 
-  test('does not invalidate tags when the edition ID does not exist', async () => {
+  test('does not invalidate or report freshness when the edition ID does not exist', async () => {
     deletedRows = []
     const result = await deleteEditionAction({ success: true }, { id: 1 })
 
-    expect(result.success).toBe(true)
+    expect(result).toEqual({ success: true })
     expect(invalidations).toEqual([])
     expect(updateTag).not.toHaveBeenCalled()
-    expect(revalidateWebCache).not.toHaveBeenCalled()
+    expect(revalidateWebCacheBatch).not.toHaveBeenCalled()
   })
 
-  test('preserves database errors and does not invalidate tags when deletion fails', async () => {
+  test('preserves database errors and does not invalidate when deletion fails', async () => {
     failDelete = true
 
     await expect(
@@ -154,6 +188,6 @@ describe('deleteEditionAction catalog freshness', () => {
     ).rejects.toThrow('database delete failed')
     expect(invalidations).toEqual([])
     expect(updateTag).not.toHaveBeenCalled()
-    expect(revalidateWebCache).not.toHaveBeenCalled()
+    expect(revalidateWebCacheBatch).not.toHaveBeenCalled()
   })
 })

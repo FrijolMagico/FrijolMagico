@@ -8,6 +8,15 @@ import {
 
 const updateTag = mock(() => {})
 const revalidateWebCache = mock(() => Promise.resolve({ revalidated: true }))
+const revalidateWebCacheBatch = mock(
+  async (requests: { mode?: 'immediate' | 'swr' }[]) => ({
+    ...(requests.some(({ mode }) => mode === 'swr')
+      ? { webRevalidation: 'swr' as const }
+      : requests.length
+        ? { webRevalidation: 'immediate' as const }
+        : {})
+  })
+)
 const buildWebInvalidationUrl = mock(() => 'https://example.com/api/revalidate')
 const revalidateWebCacheBestEffort = mock(async () => {})
 const getSession = mock(async () => ({ user: { id: '1' } }))
@@ -62,6 +71,7 @@ mock.module('@/shared/lib/auth/utils', () => ({
 mock.module('@/shared/lib/web-invalidation', () => ({
   buildWebInvalidationUrl,
   revalidateWebCache,
+  revalidateWebCacheBatch,
   revalidateWebCacheBestEffort
 }))
 mock.module('@frijolmagico/database/orm', () => ({
@@ -84,6 +94,16 @@ describe('updateEditionPublicationAction', () => {
     revalidateWebCache.mockImplementation(() =>
       Promise.resolve({ revalidated: true })
     )
+    revalidateWebCacheBatch.mockImplementation(
+      async (requests: { mode?: 'immediate' | 'swr' }[]) => ({
+        ...(requests.some(({ mode }) => mode === 'swr')
+          ? { webRevalidation: 'swr' as const }
+          : requests.length
+            ? { webRevalidation: 'immediate' as const }
+            : {})
+      })
+    )
+    revalidateWebCacheBatch.mockClear()
     requireAuth.mockClear()
   })
 
@@ -119,24 +139,26 @@ describe('updateEditionPublicationAction', () => {
     expect(updateTag).not.toHaveBeenCalled()
   })
 
-  test('preserves mutation success while awaiting failed cache synchronization', async () => {
+  test('preserves mutation success while awaiting batched cache synchronization', async () => {
     const dbMock = createDbMock()
     currentDb = dbMock.db
-    const resolvers: (() => void)[] = []
-    let remoteCalls = 0
+    let resolveBatch: ((summary: { webRevalidation: 'swr' }) => void) | undefined
     const consoleError = mock(() => {})
+    const originalConsoleError = globalThis.console.error
     globalThis.console.error = consoleError
-    updateTag.mockImplementationOnce(() => {
-      throw new Error('local cache unavailable')
-    })
-    revalidateWebCache.mockImplementation(() => {
-      remoteCalls += 1
-      if (remoteCalls === 2)
-        return Promise.reject(new Error('remote cache unavailable'))
-      return new Promise<{ revalidated: boolean }>((resolve) =>
-        resolvers.push(() => resolve({ revalidated: true }))
-      )
-    })
+    updateTag
+      .mockImplementationOnce(() => {
+        throw new Error('local edition cache unavailable')
+      })
+      .mockImplementationOnce(() => {
+        throw new Error('local event cache unavailable')
+      })
+    revalidateWebCacheBatch.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveBatch = resolve
+        })
+    )
 
     let completed = false
     const resultPromise = updateEditionPublicationAction({
@@ -149,38 +171,51 @@ describe('updateEditionPublicationAction', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 0))
     expect(completed).toBe(false)
-    resolvers.forEach((resolve) => resolve())
+    expect(resolveBatch).toBeDefined()
+    resolveBatch?.({ webRevalidation: 'swr' })
     const result = await resultPromise
+    globalThis.console.error = originalConsoleError
 
-    expect(result).toEqual({ success: true, data: { published: true } })
+    expect(result).toEqual({
+      success: true,
+      data: { published: true },
+      webRevalidation: 'swr'
+    })
     expect(dbMock.updateState.values).toEqual([{ published: true }])
     expect(dbMock.updateState.whereCalls).toBe(1)
     expect(dbMock.updateState.returningCalls).toBe(1)
     expect(updateTag).toHaveBeenCalledTimes(2)
-    expect(revalidateWebCache).toHaveBeenCalledTimes(4)
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
-    })
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: FESTIVALES_CACHE_TAG,
-      mode: 'swr',
-      path: '/festivales',
-      pathType: 'page'
-    })
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      mode: 'immediate',
-      path: '/',
-      pathType: 'page'
-    })
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      mode: 'immediate',
-      path: '/',
-      pathType: 'layout'
-    })
-    expect(consoleError).toHaveBeenCalled()
+    expect(revalidateWebCacheBatch).toHaveBeenCalledTimes(1)
+    expect(revalidateWebCacheBatch).toHaveBeenCalledWith(
+      [
+        {
+          tag: FESTIVAL_CRITICAL_CACHE_TAG,
+          mode: 'immediate',
+          path: '/festivales/[slug]',
+          pathType: 'page'
+        },
+        {
+          tag: FESTIVALES_CACHE_TAG,
+          mode: 'swr',
+          path: '/festivales',
+          pathType: 'page'
+        },
+        { mode: 'immediate', path: '/', pathType: 'page' },
+        { mode: 'immediate', path: '/', pathType: 'layout' }
+      ],
+      'update-edition-publication'
+    )
+    expect(revalidateWebCache).not.toHaveBeenCalled()
+    expect(consoleError).toHaveBeenNthCalledWith(
+      1,
+      '[edition-publication] Local cache sync failed',
+      { tag: EDITION_CACHE_TAG }
+    )
+    expect(consoleError).toHaveBeenNthCalledWith(
+      2,
+      '[edition-publication] Local cache sync failed',
+      { tag: EVENT_CACHE_TAG }
+    )
   })
 
   test('keeps success and unconditional cache invalidation when no row is returned', async () => {
@@ -192,21 +227,55 @@ describe('updateEditionPublicationAction', () => {
       published: true
     })
 
-    expect(result).toEqual({ success: true, data: { published: true } })
+    expect(result).toEqual({
+      success: true,
+      data: { published: true },
+      webRevalidation: 'swr'
+    })
     expect(dbMock.updateState.whereCalls).toBe(1)
     expect(dbMock.updateState.returningCalls).toBe(1)
     expect(updateTag).toHaveBeenCalledTimes(2)
     expect(updateTag).toHaveBeenCalledWith(EDITION_CACHE_TAG)
     expect(updateTag).toHaveBeenCalledWith(EVENT_CACHE_TAG)
-    expect(revalidateWebCache).toHaveBeenCalledTimes(2)
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate'
+    expect(revalidateWebCacheBatch).toHaveBeenCalledTimes(1)
+    expect(revalidateWebCacheBatch).toHaveBeenCalledWith(
+      [
+        { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
+        { tag: FESTIVALES_CACHE_TAG, mode: 'swr' }
+      ],
+      'update-edition-publication'
+    )
+    expect(revalidateWebCache).not.toHaveBeenCalled()
+  })
+
+  test('omits freshness metadata when the batch has no summary', async () => {
+    revalidateWebCacheBatch.mockImplementationOnce(async () => ({}))
+
+    const result = await updateEditionPublicationAction({
+      id: 7,
+      published: false
     })
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: FESTIVALES_CACHE_TAG,
-      mode: 'swr'
-    })
+
+    expect(result).toEqual({ success: true, data: { published: false } })
+    expect(revalidateWebCacheBatch).toHaveBeenCalledWith(
+      [
+        {
+          tag: FESTIVAL_CRITICAL_CACHE_TAG,
+          mode: 'immediate',
+          path: '/festivales/[slug]',
+          pathType: 'page'
+        },
+        {
+          tag: FESTIVALES_CACHE_TAG,
+          mode: 'swr',
+          path: '/festivales',
+          pathType: 'page'
+        },
+        { mode: 'immediate', path: '/', pathType: 'page' },
+        { mode: 'immediate', path: '/', pathType: 'layout' }
+      ],
+      'update-edition-publication'
+    )
   })
 
   test('returns failure without invalidating caches when the write fails', async () => {
@@ -229,5 +298,6 @@ describe('updateEditionPublicationAction', () => {
     expect(result.errors?.[0]?.message).toBe('connection lost')
     expect(updateTag).not.toHaveBeenCalled()
     expect(revalidateWebCache).not.toHaveBeenCalled()
+    expect(revalidateWebCacheBatch).not.toHaveBeenCalled()
   })
 })

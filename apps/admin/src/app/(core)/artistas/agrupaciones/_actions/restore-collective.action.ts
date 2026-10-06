@@ -14,7 +14,7 @@ import {
   COLLECTIVE_CACHE_TAG,
   COLLECTIVE_DELETED_CACHE_TAG
 } from '@frijolmagico/cache-tags'
-import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
+import { revalidateWebCacheBatch } from '@/shared/lib/web-invalidation'
 import type { ActionState } from '@/shared/types/actions'
 
 const { collective } = artist
@@ -35,9 +35,21 @@ export async function restoreCollectiveAction(
       updateTag(COLLECTIVE_CACHE_TAG)
       updateTag(COLLECTIVE_ACTIVE_CACHE_TAG)
       updateTag(COLLECTIVE_DELETED_CACHE_TAG)
-      void revalidateWebCacheBestEffort({ tag: CATALOG_BASE_CACHE_TAG })
-      void revalidateWebCacheBestEffort({ tag: CATALOG_PARTICIPATION_CACHE_TAG })
-      void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
+      const webInvalidation = await revalidateWebCacheBatch(
+        [
+          { tag: CATALOG_BASE_CACHE_TAG },
+          { tag: CATALOG_PARTICIPATION_CACHE_TAG },
+          { tag: CATALOG_CACHE_TAG }
+        ],
+        'restore-collective'
+      )
+
+      return {
+        success: true,
+        ...(webInvalidation.webRevalidation
+          ? { webRevalidation: webInvalidation.webRevalidation }
+          : {})
+      }
     }
 
     return { success: true }

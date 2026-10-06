@@ -13,7 +13,35 @@ const updateTag = mock(() => {})
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
 const getSession = mock(async () => ({ user: { id: 'admin-1' } }))
 const getUser = mock(async () => ({ id: 'admin-1' }))
-const revalidateWebCache = mock(async () => ({ revalidated: true }))
+const revalidateWebCache = mock(
+  async (_options?: {
+    tag?: string
+    path?: string
+    pathType?: 'page' | 'layout'
+    mode?: 'swr' | 'immediate'
+  }) => ({ revalidated: true })
+)
+const batchRequests: {
+  tag?: string
+  path?: string
+  pathType?: 'page' | 'layout'
+  mode?: 'swr' | 'immediate'
+}[][] = []
+let batchResult: { webRevalidation?: 'swr' | 'immediate' } = {}
+const revalidateWebCacheBatch = mock(
+  async (
+    requests: {
+      tag?: string
+      path?: string
+      pathType?: 'page' | 'layout'
+      mode?: 'swr' | 'immediate'
+    }[]
+  ) => {
+    batchRequests.push(requests)
+    for (const request of requests) await revalidateWebCache(request)
+    return batchResult
+  }
+)
 const revalidateWebCacheBestEffort = mock(async () => {})
 const buildWebInvalidationUrl = mock(() => 'https://example.com/api/revalidate')
 
@@ -39,6 +67,7 @@ mock.module('@/shared/lib/auth/utils', () => ({
 mock.module('@/shared/lib/web-invalidation', () => ({
   buildWebInvalidationUrl,
   revalidateWebCache,
+  revalidateWebCacheBatch,
   revalidateWebCacheBestEffort
 }))
 mock.module('@frijolmagico/database/orm', () => ({
@@ -128,6 +157,9 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     updateTag.mockReset()
     requireAuth.mockReset()
     revalidateWebCache.mockReset()
+    revalidateWebCacheBatch.mockClear()
+    batchRequests.length = 0
+    batchResult = {}
     savedCatalogValues = null
     savedSlugValues = []
     savedAliases = []
@@ -158,10 +190,15 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     expect(updateTag).toHaveBeenCalledTimes(2)
   })
 
-  test('returns success when cache invalidation succeeds', async () => {
+  test('awaits the exact base catalog batch and returns requested freshness', async () => {
+    batchResult = { webRevalidation: 'swr' }
     const result = await updateCatalogAction({ success: false }, validInput)
 
-    expect(result).toEqual({ success: true })
+    expect(result).toEqual({ success: true, webRevalidation: 'swr' })
+    expect(batchRequests).toEqual([[
+      { tag: 'catalogo:artistas:base' },
+      { tag: 'catalogo:artistas' }
+    ]])
     expect(updateTag).toHaveBeenCalledTimes(2)
     expect(updateTag).toHaveBeenNthCalledWith(1, 'catalogo:artistas:base')
     expect(updateTag).toHaveBeenNthCalledWith(2, 'catalogo:artistas')
@@ -441,6 +478,29 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     })
   })
 
+  test('batches slug, festival and featured requests for an active canonical-slug change', async () => {
+    initialCatalogActive = true
+    selectedPseudonymId = 44
+
+    await updateCatalogAction(
+      { success: false },
+      { ...validInput, activo: true, pseudonimoId: 44 }
+    )
+
+    expect(batchRequests).toEqual([[
+      {
+        tag: FESTIVAL_CRITICAL_CACHE_TAG,
+        mode: 'immediate',
+        path: '/festivales/[slug]',
+        pathType: 'page'
+      },
+      { tag: 'catalogo:artistas:base' },
+      { tag: 'catalogo:artistas' },
+      { tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG, mode: 'immediate' },
+      { tag: FEATURED_ARTISTS_CACHE_TAG, mode: 'swr' }
+    ]])
+  })
+
   test('invalidates festival detail when an active catalog row selects a different pseudonym', async () => {
     initialCatalogActive = true
     selectedPseudonymId = 44
@@ -461,6 +521,22 @@ describe('update-catalog action — best-effort cache invalidation', () => {
       tag: FEATURED_ARTISTS_CACHE_TAG,
       mode: 'swr'
     })
+  })
+
+  test('batches root path and Featured tag for destacado changes', async () => {
+    initialCatalogActive = true
+    initialCatalogFeatured = false
+
+    await updateCatalogAction(
+      { success: false },
+      { ...validInput, activo: true, destacado: true }
+    )
+
+    expect(batchRequests).toEqual([[
+      { tag: 'catalogo:artistas:base' },
+      { tag: 'catalogo:artistas' },
+      { path: '/', tag: FEATURED_ARTISTS_CACHE_TAG }
+    ]])
   })
 
   test('preserves root-path Featured invalidation when destacado changes', async () => {
@@ -506,6 +582,27 @@ describe('update-catalog action — best-effort cache invalidation', () => {
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
     })
+  })
+
+  test('batches the exact immediate and SWR requests when an inactive row becomes active', async () => {
+    await updateCatalogAction(
+      { success: false },
+      { ...validInput, activo: true }
+    )
+
+    expect(batchRequests).toEqual([[
+      {
+        tag: FESTIVAL_CRITICAL_CACHE_TAG,
+        mode: 'immediate',
+        path: '/festivales/[slug]',
+        pathType: 'page'
+      },
+      { tag: 'catalogo:artistas:base' },
+      { tag: 'catalogo:artistas' },
+      { tag: 'catalogo:artistas:participaciones' },
+      { tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG, mode: 'immediate' },
+      { tag: FEATURED_ARTISTS_CACHE_TAG, mode: 'swr' }
+    ]])
   })
 
   test('invalidates festival detail when an inactive catalog row becomes active', async () => {

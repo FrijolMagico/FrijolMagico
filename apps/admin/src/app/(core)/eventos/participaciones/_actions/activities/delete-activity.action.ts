@@ -18,7 +18,10 @@ import {
   getEditionParticipationsCacheTag,
   getParticipationActivitiesCacheTag
 } from '@frijolmagico/cache-tags'
-import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
+import {
+  revalidateWebCacheBatch,
+  type RevalidateWebCacheOptions
+} from '@/shared/lib/web-invalidation'
 import { deleteOrphanedEditionParticipation } from '../participations/delete-orphaned-edition-participation'
 
 const { participationActivity } = participations
@@ -110,24 +113,38 @@ export async function deleteActivityAction(
         console.error('[deleteActivityAction] Local invalidation failed', { tag, error })
       }
     }
-    void revalidateWebCacheBestEffort({
-      tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      ...(isPublicActivity ? { path: '/festivales/[slug]', pathType: 'page' as const } : {})
-    })
-    void revalidateWebCacheBestEffort({
-      tag: FESTIVALES_CACHE_TAG,
-      mode: 'swr',
-      ...((isPublicActivity || isTalkActivity)
-        ? { path: '/festivales', pathType: 'page' as const }
-        : {})
-    })
+    const webRevalidationRequests: RevalidateWebCacheOptions[] = [
+      {
+        tag: FESTIVAL_CRITICAL_CACHE_TAG,
+        mode: 'immediate',
+        ...(isPublicActivity
+          ? { path: '/festivales/[slug]', pathType: 'page' as const }
+          : {})
+      },
+      {
+        tag: FESTIVALES_CACHE_TAG,
+        mode: 'swr',
+        ...(isPublicActivity || isTalkActivity
+          ? { path: '/festivales', pathType: 'page' as const }
+          : {})
+      }
+    ]
     if (isPublicActivity) {
-      void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
-      void revalidateWebCacheBestEffort({ tag: CATALOG_PARTICIPATION_CACHE_TAG })
+      webRevalidationRequests.push(
+        { tag: CATALOG_CACHE_TAG },
+        { tag: CATALOG_PARTICIPATION_CACHE_TAG }
+      )
     }
+    const webRevalidation = await revalidateWebCacheBatch(
+      webRevalidationRequests,
+      'delete-activity'
+    )
 
-    return { success: true, data: { alreadyAbsent, participationDeleted } }
+    return {
+      success: true,
+      data: { alreadyAbsent, participationDeleted },
+      ...webRevalidation
+    }
   } catch (error) {
     console.error('[deleteActivityAction]', error)
     return {

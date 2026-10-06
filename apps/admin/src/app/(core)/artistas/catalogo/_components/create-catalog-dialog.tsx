@@ -129,7 +129,11 @@ export function CreateCatalogDialog({
       success = true
       suppressCancelRef.current = true
       toggleDialog(false)
-      toast.success('Artista agregado al catálogo')
+      toast.success(
+        result.webRevalidation === 'swr'
+          ? 'Artista agregado al catálogo. Pueden tardar en aparecer en la web.'
+          : 'Artista agregado al catálogo'
+      )
     } finally {
       if (success) {
         reset()

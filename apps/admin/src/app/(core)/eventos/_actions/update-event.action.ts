@@ -19,8 +19,8 @@ import {
   FESTIVAL_CRITICAL_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 import {
-  revalidateWebCache,
-  revalidateWebCacheBestEffort
+  revalidateWebCacheBatch,
+  type RevalidateWebCacheOptions
 } from '@/shared/lib/web-invalidation'
 
 const { event } = events
@@ -63,15 +63,16 @@ export async function updateEventAction(
       .where(eq(event.id, data.id))
       .returning({ id: event.id })
 
+    const webInvalidations: RevalidateWebCacheOptions[] = []
     if (
       updatedEvents.length > 0 &&
       parsed.data.nombre !== undefined &&
       existingEvent?.nombre !== parsed.data.nombre
     ) {
-      void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
-      void revalidateWebCacheBestEffort({
-        tag: CATALOG_PARTICIPATION_CACHE_TAG
-      })
+      webInvalidations.push(
+        { tag: CATALOG_CACHE_TAG },
+        { tag: CATALOG_PARTICIPATION_CACHE_TAG }
+      )
     }
 
     updateTag(EVENT_CACHE_TAG)
@@ -79,25 +80,28 @@ export async function updateEventAction(
       [FESTIVAL_CRITICAL_CACHE_TAG, 'immediate'],
       [FESTIVALES_CACHE_TAG, 'swr']
     ] as const) {
-      try {
-        await revalidateWebCache({
-          tag,
-          mode,
-          ...(updatedEvents.length > 0
-            ? tag === FESTIVAL_CRITICAL_CACHE_TAG
-              ? { path: '/festivales/[slug]', pathType: 'page' as const }
-              : { path: '/festivales', pathType: 'page' as const }
-            : {})
-        })
-      } catch {
-        console.error('[event-crud] Web cache sync failed', { tag })
-      }
+      webInvalidations.push({
+        tag,
+        mode,
+        ...(updatedEvents.length > 0
+          ? tag === FESTIVAL_CRITICAL_CACHE_TAG
+            ? { path: '/festivales/[slug]', pathType: 'page' as const }
+            : { path: '/festivales', pathType: 'page' as const }
+          : {})
+      })
     }
     if (updatedEvents.length > 0) {
-      void revalidateWebCacheBestEffort({ path: '/', pathType: 'page' })
-      void revalidateWebCacheBestEffort({ path: '/', pathType: 'layout' })
+      webInvalidations.push(
+        { path: '/', pathType: 'page' },
+        { path: '/', pathType: 'layout' }
+      )
     }
-    return { success: true }
+
+    const webInvalidation = await revalidateWebCacheBatch(
+      webInvalidations,
+      'update-event'
+    )
+    return { success: true, ...webInvalidation }
   } catch (error) {
     return {
       success: false,

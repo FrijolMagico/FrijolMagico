@@ -62,7 +62,11 @@ export function CreateEventDialog() {
       }
 
       toggleCreateEventDialog(false)
-      toast.success('Evento creado exitósamente')
+      toast.success(
+        result.webRevalidation === 'swr'
+          ? 'Evento creado exitósamente. Pueden tardar en aparecer en la web.'
+          : 'Evento creado exitósamente'
+      )
     } finally {
       reset()
     }

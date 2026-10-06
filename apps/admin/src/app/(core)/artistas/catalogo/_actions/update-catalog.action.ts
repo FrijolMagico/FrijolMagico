@@ -18,7 +18,10 @@ import {
 } from '@frijolmagico/cache-tags'
 import { getAvatarUrl } from '@frijolmagico/utils/cdn'
 import { requireAuth } from '@/shared/lib/auth/utils'
-import { revalidateWebCache } from '@/shared/lib/web-invalidation'
+import {
+  revalidateWebCacheBatch,
+  type RevalidateWebCacheOptions
+} from '@/shared/lib/web-invalidation'
 import type { ActionState } from '@/shared/types/actions'
 import {
   AVATAR_CONFLICT,
@@ -246,8 +249,9 @@ export async function updateCatalogAction(
       // The restore committed; cache invalidation is best-effort.
     }
   }
+  const invalidationRequests: RevalidateWebCacheOptions[] = []
   if (festivalDetailChanged) {
-    void revalidateWebCache({
+    invalidationRequests.push({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
       mode: 'immediate',
       path: '/festivales/[slug]',
@@ -262,16 +266,16 @@ export async function updateCatalogAction(
     } catch {
       // DB mutation already committed; cache invalidation is best-effort.
     }
-    void revalidateWebCache({ tag })
+    invalidationRequests.push({ tag })
   }
   if (activeStateChanged || canonicalCatalogSlugChanged) {
-    void revalidateWebCache({
+    invalidationRequests.push({
       tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
       mode: 'immediate'
     })
   }
   if (destacado !== undefined) {
-    void revalidateWebCache(
+    invalidationRequests.push(
       publicFeaturedStateChanged ||
         activeStateChanged ||
         featuredSelectionChanged
@@ -279,10 +283,14 @@ export async function updateCatalogAction(
         : { path: '/' }
     )
   } else if (activeStateChanged || featuredSelectionChanged) {
-    void revalidateWebCache({
+    invalidationRequests.push({
       tag: FEATURED_ARTISTS_CACHE_TAG,
       mode: 'swr'
     })
   }
-  return { success: true }
+  const { webRevalidation } = await revalidateWebCacheBatch(invalidationRequests)
+  return {
+    success: true,
+    ...(webRevalidation ? { webRevalidation } : {})
+  }
 }

@@ -15,6 +15,8 @@ const ACTIONS_DIR = join(
 const UPDATE_FIELD_PATH = join(ACTIONS_DIR, 'update-catalog-field.action.ts')
 const UPDATE_CATALOG_PATH = join(ACTIONS_DIR, 'update-catalog.action.ts')
 const DELETE_CATALOG_PATH = join(ACTIONS_DIR, 'delete-catalog.action.ts')
+const RESTORE_CATALOG_PATH = join(ACTIONS_DIR, 'restore-catalog.action.ts')
+const REORDER_CATALOG_PATH = join(ACTIONS_DIR, 'reorder-catalog.action.ts')
 const ARTIST_ACTIONS_DIR = join(
   import.meta.dir,
   '../../../../../../..',
@@ -33,11 +35,12 @@ const CANONICAL_SLUG_ROUTE_PATH = join(
 // ---------------------------------------------------------------------------
 
 describe('catalog server actions — web invalidation contracts', () => {
-  test('update-catalog-field.action imports revalidateWebCache', () => {
+  test('update-catalog-field.action awaits batched web invalidation', () => {
     const source = readFileSync(UPDATE_FIELD_PATH, 'utf8')
 
-    expect(source).toContain('revalidateWebCache')
+    expect(source).toContain('revalidateWebCacheBatch')
     expect(source).toContain('@/shared/lib/web-invalidation')
+    expect(source).toMatch(/await revalidateWebCacheBatch\(/)
   })
 
   test('update-catalog-field.action imports CATALOG_CACHE_TAG from shared package', () => {
@@ -47,19 +50,22 @@ describe('catalog server actions — web invalidation contracts', () => {
     expect(source).toContain("from '@frijolmagico/cache-tags'")
   })
 
-  test('update-catalog-field.action uses tag-only catalog invalidation', () => {
+  test('update-catalog-field.action preserves local catalog tags and tag-only requests', () => {
     const source = readFileSync(UPDATE_FIELD_PATH, 'utf8')
 
-    expect(source).toContain('void revalidateWebCache({ tag })')
+    expect(source).toContain('invalidationRequests.push({ tag })')
+    expect(source).toContain('updateTag(tag)')
     expect(source).toContain('CATALOG_BASE_CACHE_TAG')
     expect(source).not.toContain("path: '/catalogo'")
   })
 
-  test('update-catalog.action imports revalidateWebCache', () => {
+  test('update-catalog.action awaits one batch and returns requested freshness', () => {
     const source = readFileSync(UPDATE_CATALOG_PATH, 'utf8')
 
-    expect(source).toContain('revalidateWebCache')
+    expect(source).toContain('revalidateWebCacheBatch')
     expect(source).toContain('@/shared/lib/web-invalidation')
+    expect(source).toMatch(/await revalidateWebCacheBatch\(invalidationRequests\)/)
+    expect(source).toContain('...(webRevalidation ? { webRevalidation } : {})')
   })
 
   test('update-catalog.action imports CATALOG_CACHE_TAG from shared package', () => {
@@ -69,19 +75,25 @@ describe('catalog server actions — web invalidation contracts', () => {
     expect(source).toContain("from '@frijolmagico/cache-tags'")
   })
 
-  test('update-catalog.action uses tag-only catalog invalidation', () => {
+  test('update-catalog.action preserves local catalog tags and exact web request conditions', () => {
     const source = readFileSync(UPDATE_CATALOG_PATH, 'utf8')
 
-    expect(source).toContain('void revalidateWebCache({ tag })')
+    expect(source).toContain('invalidationRequests.push({ tag })')
+    expect(source).toContain('updateTag(tag)')
     expect(source).toContain('CATALOG_BASE_CACHE_TAG')
+    expect(source).toMatch(/if \(festivalDetailChanged\)[\s\S]*?path: '\/festivales\/\[slug\]'[\s\S]*?pathType: 'page'/)
+    expect(source).toMatch(/if \(activeStateChanged \|\| canonicalCatalogSlugChanged\)[\s\S]*?mode: 'immediate'/)
+    expect(source).toMatch(/if \(destacado !== undefined\)[\s\S]*?path: '\/'/)
+    expect(source).toMatch(/else if \(activeStateChanged \|\| featuredSelectionChanged\)[\s\S]*?mode: 'swr'/)
     expect(source).not.toContain("path: '/catalogo'")
   })
 
-  test('delete-catalog.action imports revalidateWebCache', () => {
+  test('delete-catalog.action awaits the batch invalidation helper', () => {
     const source = readFileSync(DELETE_CATALOG_PATH, 'utf8')
 
-    expect(source).toContain('revalidateWebCache')
+    expect(source).toContain('revalidateWebCacheBatch')
     expect(source).toContain('@/shared/lib/web-invalidation')
+    expect(source).toMatch(/await revalidateWebCacheBatch\(/)
   })
 
   test('delete-catalog.action imports CATALOG_CACHE_TAG from shared package', () => {
@@ -91,12 +103,24 @@ describe('catalog server actions — web invalidation contracts', () => {
     expect(source).toContain("from '@frijolmagico/cache-tags'")
   })
 
-  test('delete-catalog.action uses tag-only catalog invalidation', () => {
+  test('delete-catalog.action preserves tag-only catalog invalidation', () => {
     const source = readFileSync(DELETE_CATALOG_PATH, 'utf8')
 
-    expect(source).toContain('void revalidateWebCache({ tag })')
+    expect(source).toContain('invalidationRequests.push({ tag })')
     expect(source).toContain('CATALOG_BASE_CACHE_TAG')
     expect(source).not.toContain("path: '/catalogo'")
+  })
+
+  test('restore and reorder await batch invalidation only inside their existing effect branches', () => {
+    const restoreSource = readFileSync(RESTORE_CATALOG_PATH, 'utf8')
+    const reorderSource = readFileSync(REORDER_CATALOG_PATH, 'utf8')
+
+    for (const source of [restoreSource, reorderSource]) {
+      expect(source).toContain('revalidateWebCacheBatch')
+      expect(source).toMatch(/await revalidateWebCacheBatch\(/)
+    }
+    expect(restoreSource).toMatch(/if \(restored\.length > 0\)[\s\S]*?await revalidateWebCacheBatch\(/)
+    expect(reorderSource).toMatch(/if \(changed\)[\s\S]*?await revalidateWebCacheBatch\(/)
   })
 
   test('all three actions preserve legacy catalog invalidation', () => {
@@ -121,7 +145,7 @@ describe('catalog server actions — web invalidation contracts', () => {
   test('update-catalog-field invalidates canonical slugs when activo is supplied', () => {
     const source = readFileSync(UPDATE_FIELD_PATH, 'utf8')
 
-    expect(source).toMatch(/if \('activo' in parsed\.data\)[\s\S]*?CANONICAL_CATALOG_SLUGS_CACHE_TAG/)
+    expect(source).toMatch(/existingCatalogRow\.deletedAt === null[\s\S]*?existingCatalogRow\.activo !== parsed\.data\.activo/)
     expect(source).toMatch(/tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,\s*mode: 'immediate'/)
   })
 

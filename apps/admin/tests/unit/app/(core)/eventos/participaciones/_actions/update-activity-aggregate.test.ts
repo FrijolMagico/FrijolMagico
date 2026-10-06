@@ -21,6 +21,10 @@ let stagedMutations: string[]
 let committedState: string[]
 let writes: { table: string; values: Record<string, unknown> }[]
 let webInvalidations: { tag: string; path?: string; pathType?: string; mode?: string }[]
+let batchCalls: { requests: { tag: string; path?: string; pathType?: string; mode?: string }[]; context?: string }[]
+let batchSummary: { webRevalidation?: 'swr' | 'immediate' }
+let batchBarrier: Promise<void> | undefined
+let batchStarted: (() => void) | undefined
 
 const tables = participations
 const updateTag = mock((tag: string) => {
@@ -39,6 +43,18 @@ const revalidateWebCacheBestEffort = mock(
     invalidations.push(request.tag)
   }
 )
+const revalidateWebCacheBatch = mock(async (
+  requests: { tag: string; path?: string; pathType?: string; mode?: string }[],
+  context?: string
+) => {
+  expect(committed).toBe(true)
+  batchCalls.push({ requests, context })
+  webInvalidations.push(...requests)
+  invalidations.push(...requests.map(({ tag }) => tag))
+  batchStarted?.()
+  await batchBarrier
+  return batchSummary
+})
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
 
 function tableName(table: unknown) {
@@ -148,7 +164,8 @@ mock.module('@frijolmagico/database/orm', () => ({ db: createHarness() }))
 mock.module('@/shared/lib/auth/utils', () => ({ requireAuth }))
 mock.module('next/cache', () => ({ updateTag }))
 mock.module('@/shared/lib/web-invalidation', () => ({
-  revalidateWebCacheBestEffort
+  revalidateWebCacheBestEffort,
+  revalidateWebCacheBatch
 }))
 
 const initialSchedule = [{ date: '2026-06-12', startTime: '11:00', durationMinutes: 60 }]
@@ -209,17 +226,62 @@ beforeEach(async () => {
   }]
   invalidations = []
   webInvalidations = []
+  batchCalls = []
+  batchSummary = { webRevalidation: 'swr' }
+  batchBarrier = undefined
+  batchStarted = undefined
   committed = false
   operations = []
   stagedMutations = []
   committedState = ['prior-state']
   writes = []
   mock.clearAllMocks()
+  revalidateWebCacheBestEffort.mockClear()
+  revalidateWebCacheBatch.mockClear()
   ;({ updateActivityAggregateAction: action } =
     await import('../../../../../../../src/app/(core)/eventos/participaciones/_actions/activities/update-activity-aggregate.action'))
 })
 
 describe('updateActivityAggregateAction', () => {
+  test('awaits the exact conditional batch and returns its requested freshness summary', async () => {
+    let releaseBatch!: () => void
+    let markStarted!: () => void
+    const started = new Promise<void>((resolve) => { markStarted = resolve })
+    batchBarrier = new Promise<void>((resolve) => { releaseBatch = resolve })
+    batchStarted = markStarted
+
+    let settled = false
+    const resultPromise = action(input).then((result) => {
+      settled = true
+      return result
+    })
+    await Promise.race([started, resultPromise.then(() => undefined)])
+    expect(batchCalls).toHaveLength(1)
+    expect(settled).toBe(false)
+    releaseBatch()
+    expect(await resultPromise).toEqual({ success: true, webRevalidation: 'swr' })
+    expect(batchCalls).toEqual([{
+      requests: [
+        {
+          tag: FESTIVAL_CRITICAL_CACHE_TAG,
+          mode: 'immediate',
+          path: '/festivales/[slug]',
+          pathType: 'page'
+        },
+        {
+          tag: FESTIVALES_CACHE_TAG,
+          mode: 'swr',
+          path: '/festivales',
+          pathType: 'page'
+        },
+        { tag: 'catalogo:artistas' },
+        { tag: 'catalogo:artistas:participaciones' }
+      ],
+      context: 'update-activity-aggregate'
+    }])
+    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
+  })
+
   test('updates activity, upserts missing detail and registration in one transaction', async () => {
     const result = await action(input)
     expect(result.success).toBe(true)
@@ -308,6 +370,28 @@ describe('updateActivityAggregateAction', () => {
       path: '/festivales',
       pathType: 'page'
     })
+    expect(webInvalidations.find(({ tag }) => tag === FESTIVAL_CRITICAL_CACHE_TAG)?.path).toBeUndefined()
+  })
+
+  test('keeps the immediate detail route independent from the list route', async () => {
+    storedActivityStatus = 'confirmado'
+    storedActivityTypeSlug = 'charla'
+    activityTypeSlug = 'charla'
+    await action({
+      ...input,
+      activity: { ...input.activity, estado: 'confirmado' },
+      registration: null
+    })
+
+    expect(batchCalls[0]?.requests).toEqual([
+      {
+        tag: FESTIVAL_CRITICAL_CACHE_TAG,
+        mode: 'immediate',
+        path: '/festivales/[slug]',
+        pathType: 'page'
+      },
+      { tag: FESTIVALES_CACHE_TAG, mode: 'swr' }
+    ])
   })
 
   test('does not attach either festival route when activity remains private and is not a talk', async () => {
@@ -322,8 +406,25 @@ describe('updateActivityAggregateAction', () => {
     const result = await action(input)
 
     expect(result.success).toBe(true)
+    expect(batchCalls).toEqual([{
+      requests: [
+        { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
+        { tag: FESTIVALES_CACHE_TAG, mode: 'swr' }
+      ],
+      context: 'update-activity-aggregate'
+    }])
+    expect(operations).toContain('participation:update')
+    expect(operations).toContain('activity:update')
+    expect(operations).toContain('detail:upsert')
     expect(invalidations).not.toContain('catalogo:artistas')
     expect(invalidations).not.toContain('catalogo:artistas:participaciones')
+  })
+
+  test('returns only freshness requested by the successful batch', async () => {
+    batchSummary = {}
+    const result = await action(input)
+    expect(result).toEqual({ success: true })
+    expect(batchCalls).toHaveLength(1)
   })
 
   test('rejects edition and activity ownership mismatches before mutations', async () => {
