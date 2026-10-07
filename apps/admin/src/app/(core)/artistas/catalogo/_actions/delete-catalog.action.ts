@@ -35,8 +35,6 @@ export async function deleteCatalogAction(id: number): Promise<ActionState> {
         {
           tag: FESTIVAL_CRITICAL_CACHE_TAG,
           mode: 'immediate',
-          path: '/festivales/[slug]',
-          pathType: 'page',
         },
       )
     }
@@ -47,10 +45,7 @@ export async function deleteCatalogAction(id: number): Promise<ActionState> {
     }
 
     if (wasFeatured) {
-      invalidationRequests.push({
-        tag: FEATURED_ARTISTS_CACHE_TAG,
-        path: '/',
-      })
+      invalidationRequests.push({ tag: FEATURED_ARTISTS_CACHE_TAG })
     }
 
     const webInvalidation = await revalidateWebCacheBatch(

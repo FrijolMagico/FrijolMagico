@@ -88,21 +88,9 @@ const exhibition = {
   estado: 'confirmado'
 } as const
 
-const publicRequests = (
-  detailPath: boolean,
-  listPath: boolean,
-  catalogChanged: boolean
-) => [
-  {
-    tag: FESTIVAL_CRITICAL_CACHE_TAG,
-    mode: 'immediate',
-    ...(detailPath ? { path: '/festivales/[slug]', pathType: 'page' } : {})
-  },
-  {
-    tag: FESTIVALES_CACHE_TAG,
-    mode: 'swr',
-    ...(listPath ? { path: '/festivales', pathType: 'page' } : {})
-  },
+const publicRequests = (catalogChanged: boolean) => [
+  { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
+  { tag: FESTIVALES_CACHE_TAG, mode: 'swr' },
   ...(catalogChanged
     ? [{ tag: CATALOG_CACHE_TAG }, { tag: CATALOG_PARTICIPATION_CACHE_TAG }]
     : [])
@@ -176,7 +164,7 @@ describe('exhibition public cache invalidation', () => {
     })
 
     expect(result.success).toBe(true)
-    expectBatch(publicRequests(true, true, true), 'create-exhibition')
+    expectBatch(publicRequests(true), 'create-exhibition')
     expect(result.webRevalidation).toBe('swr')
   })
 
@@ -192,7 +180,7 @@ describe('exhibition public cache invalidation', () => {
     })
 
     expect(result.success).toBe(true)
-    expectBatch(publicRequests(false, false, false), 'create-exhibition')
+    expectBatch(publicRequests(false), 'create-exhibition')
     expect(result.webRevalidation).toBe('swr')
     expectNoFestivalPaths()
   })
@@ -286,7 +274,7 @@ describe('exhibition public cache invalidation', () => {
     } as Parameters<typeof updateExhibitionAction>[0])
 
     expect(result.success).toBe(true)
-    expectBatch(publicRequests(true, true, true), 'update-exhibition')
+    expectBatch(publicRequests(true), 'update-exhibition')
     expect(result.webRevalidation).toBe('swr')
   })
 
@@ -318,7 +306,7 @@ describe('exhibition public cache invalidation', () => {
     } as Parameters<typeof updateExhibitionAction>[0])
 
     expect(result.success).toBe(true)
-    expectBatch(publicRequests(false, false, true), 'update-exhibition')
+    expectBatch(publicRequests(true), 'update-exhibition')
     expect(result.webRevalidation).toBe('swr')
     expectNoFestivalPaths()
   })
@@ -352,7 +340,7 @@ describe('exhibition public cache invalidation', () => {
     } as Parameters<typeof updateExhibitionAction>[0])
 
     expect(result.success).toBe(true)
-    expectBatch(publicRequests(true, false, true), 'update-exhibition')
+    expectBatch(publicRequests(true), 'update-exhibition')
     expect(result.webRevalidation).toBe('swr')
   })
 
@@ -408,7 +396,7 @@ describe('exhibition public cache invalidation', () => {
       data: { alreadyAbsent: false, participationDeleted: false },
       webRevalidation: 'swr'
     })
-    expectDeleteBatch(publicRequests(true, true, true))
+    expectDeleteBatch(publicRequests(true))
   })
 
   test('deletes a non-public exhibition with tag-only invalidation', async () => {
@@ -430,7 +418,7 @@ describe('exhibition public cache invalidation', () => {
       data: { alreadyAbsent: false, participationDeleted: false },
       webRevalidation: 'swr'
     })
-    expectDeleteBatch(publicRequests(false, false, false))
+    expectDeleteBatch(publicRequests(false))
   })
 
   test('awaits deletion invalidation before returning and merges its freshness summary', async () => {
@@ -472,7 +460,7 @@ describe('exhibition public cache invalidation', () => {
     expect(invalidationSequence.at(-1)).toBe('batch')
     expect(invalidationSequence.slice(0, -1)).toContain('local')
     expect(revalidateWebCacheBatch).toHaveBeenCalledWith(
-      publicRequests(true, true, true),
+      publicRequests(true),
       'delete-exhibition'
     )
     releaseBatch({ webRevalidation: 'swr' })

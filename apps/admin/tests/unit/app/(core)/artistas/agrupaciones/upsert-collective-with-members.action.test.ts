@@ -180,9 +180,7 @@ describe('upsertCollectiveWithMembersAction alias validation', () => {
         requests: [
           {
             tag: 'festivales:critico',
-            mode: 'immediate',
-            path: '/festivales/[slug]',
-            pathType: 'page'
+            mode: 'immediate'
           },
           { tag: 'catalogo:artistas:base' },
           { tag: 'catalogo:artistas:participaciones' },

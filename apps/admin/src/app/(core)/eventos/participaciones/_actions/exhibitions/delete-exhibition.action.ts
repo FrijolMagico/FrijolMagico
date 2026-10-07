@@ -112,17 +112,11 @@ export async function deleteExhibitionAction(
       [
         {
           tag: FESTIVAL_CRITICAL_CACHE_TAG,
-          mode: 'immediate',
-          ...(catalogChanged
-            ? { path: '/festivales/[slug]', pathType: 'page' as const }
-            : {})
+          mode: 'immediate'
         },
         {
           tag: FESTIVALES_CACHE_TAG,
-          mode: 'swr',
-          ...(catalogChanged
-            ? { path: '/festivales', pathType: 'page' as const }
-            : {})
+          mode: 'swr'
         },
         ...(catalogChanged
           ? [{ tag: CATALOG_CACHE_TAG }, { tag: CATALOG_PARTICIPATION_CACHE_TAG }]

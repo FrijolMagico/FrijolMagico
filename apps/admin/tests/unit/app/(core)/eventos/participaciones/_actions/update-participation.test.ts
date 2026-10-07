@@ -97,9 +97,7 @@ describe('updateParticipationAction cache freshness', () => {
       [
         {
           tag: FESTIVAL_CRITICAL_CACHE_TAG,
-          mode: 'immediate',
-          path: '/festivales/[slug]',
-          pathType: 'page'
+          mode: 'immediate'
         },
         { tag: FESTIVALES_CACHE_TAG, mode: 'swr' },
         { tag: CATALOG_CACHE_TAG },
@@ -118,11 +116,9 @@ describe('updateParticipationAction cache freshness', () => {
       [
         {
           tag: FESTIVAL_CRITICAL_CACHE_TAG,
-          mode: 'immediate',
-          path: '/festivales/[slug]',
-          pathType: 'page'
+          mode: 'immediate'
         },
-        { tag: CATALOG_CACHE_TAG },
+        { tag: CATALOG_CACHE_TAG }
         { tag: CATALOG_PARTICIPATION_CACHE_TAG }
       ],
       'update-participation'
@@ -137,11 +133,9 @@ describe('updateParticipationAction cache freshness', () => {
       [
         {
           tag: FESTIVAL_CRITICAL_CACHE_TAG,
-          mode: 'immediate',
-          path: '/festivales/[slug]',
-          pathType: 'page'
+          mode: 'immediate'
         },
-        { tag: CATALOG_CACHE_TAG },
+        { tag: CATALOG_CACHE_TAG }
         { tag: CATALOG_PARTICIPATION_CACHE_TAG }
       ],
       'update-participation'

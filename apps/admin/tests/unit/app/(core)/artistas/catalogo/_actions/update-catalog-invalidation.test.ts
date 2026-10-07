@@ -319,9 +319,7 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     expect(updateTag).toHaveBeenCalledWith(ARTIST_DETAIL_CACHE_TAG)
     expect(revalidateWebCache).not.toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
+      mode: 'immediate'
     })
     expect(revalidateWebCache).not.toHaveBeenCalledWith({
       tag: FEATURED_ARTISTS_CACHE_TAG,
@@ -351,9 +349,7 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     expect(result).toEqual({ success: true })
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
+      mode: 'immediate'
     })
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FEATURED_ARTISTS_CACHE_TAG,
@@ -382,9 +378,7 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     expect(updateTag).toHaveBeenCalledWith(ARTIST_DETAIL_CACHE_TAG)
     expect(revalidateWebCache).not.toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
+      mode: 'immediate'
     })
     expect(revalidateWebCache).not.toHaveBeenCalledWith({
       tag: FEATURED_ARTISTS_CACHE_TAG,
@@ -468,9 +462,7 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     })
     expect(revalidateWebCache).not.toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
+      mode: 'immediate'
     })
     expect(revalidateWebCache).not.toHaveBeenCalledWith({
       tag: FEATURED_ARTISTS_CACHE_TAG,
@@ -490,9 +482,7 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     expect(batchRequests).toEqual([[
       {
         tag: FESTIVAL_CRITICAL_CACHE_TAG,
-        mode: 'immediate',
-        path: '/festivales/[slug]',
-        pathType: 'page'
+        mode: 'immediate'
       },
       { tag: 'catalogo:artistas:base' },
       { tag: 'catalogo:artistas' },
@@ -512,9 +502,7 @@ describe('update-catalog action — best-effort cache invalidation', () => {
 
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
+      mode: 'immediate'
     })
     expect(savedCatalogValues).toMatchObject({ pseudonimoId: 44 })
     expect(revalidateWebCache).toHaveBeenCalledWith({
@@ -607,9 +595,7 @@ describe('update-catalog action — best-effort cache invalidation', () => {
     expect(batchRequests).toEqual([[
       {
         tag: FESTIVAL_CRITICAL_CACHE_TAG,
-        mode: 'immediate',
-        path: '/festivales/[slug]',
-        pathType: 'page'
+        mode: 'immediate'
       },
       { tag: 'catalogo:artistas:base' },
       { tag: 'catalogo:artistas' },
@@ -627,9 +613,7 @@ describe('update-catalog action — best-effort cache invalidation', () => {
 
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
+      mode: 'immediate'
     })
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas:base' })
     expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:participaciones')
@@ -650,9 +634,7 @@ describe('update-catalog action — best-effort cache invalidation', () => {
 
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
+      mode: 'immediate'
     })
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: 'catalogo:artistas:base' })
     expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:participaciones')

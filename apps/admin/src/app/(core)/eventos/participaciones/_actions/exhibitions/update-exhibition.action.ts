@@ -47,8 +47,6 @@ export async function updateExhibitionAction(
     }
 
     let catalogChanged = false
-    let detailRouteChanged = false
-    let listRouteChanged = false
     let changed = false
     let oldParticipationId: number | null = null
     let editionId: number | null = null
@@ -86,21 +84,6 @@ export async function updateExhibitionAction(
         if (key === 'id') return false
         return existing[key as keyof typeof existing] !== value
       })
-      const membershipChanged = publicBefore !== publicAfter
-      detailRouteChanged =
-        membershipChanged ||
-        (publicBefore &&
-          publicAfter &&
-          (existing.disciplinaId !== nextDisciplinaId ||
-            existing.participacionId !== nextParticipationId ||
-            existing.artistaId !== (artistId ?? null) ||
-            existing.pseudonimoId !== pseudonimoId))
-      listRouteChanged =
-        membershipChanged ||
-        (publicBefore &&
-          publicAfter &&
-          (existing.disciplinaId !== nextDisciplinaId ||
-            existing.participacionId !== nextParticipationId))
       catalogChanged =
         (publicBefore || publicAfter) &&
         (existing.estado !== nextEstado ||
@@ -136,17 +119,11 @@ export async function updateExhibitionAction(
       [
         {
           tag: FESTIVAL_CRITICAL_CACHE_TAG,
-          mode: 'immediate',
-          ...(detailRouteChanged
-            ? { path: '/festivales/[slug]', pathType: 'page' as const }
-            : {})
+          mode: 'immediate'
         },
         {
           tag: FESTIVALES_CACHE_TAG,
-          mode: 'swr',
-          ...(listRouteChanged
-            ? { path: '/festivales', pathType: 'page' as const }
-            : {})
+          mode: 'swr'
         },
         ...(catalogChanged
           ? [{ tag: CATALOG_CACHE_TAG }, { tag: CATALOG_PARTICIPATION_CACHE_TAG }]

@@ -253,9 +253,7 @@ export async function updateCatalogAction(
   if (festivalDetailChanged) {
     invalidationRequests.push({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
+      mode: 'immediate'
     })
   }
   const catalogTags = [CATALOG_BASE_CACHE_TAG, CATALOG_CACHE_TAG]

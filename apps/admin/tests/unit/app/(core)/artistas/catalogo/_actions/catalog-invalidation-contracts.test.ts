@@ -81,7 +81,8 @@ describe('catalog server actions — web invalidation contracts', () => {
     expect(source).toContain('invalidationRequests.push({ tag })')
     expect(source).toContain('updateTag(tag)')
     expect(source).toContain('CATALOG_BASE_CACHE_TAG')
-    expect(source).toMatch(/if \(festivalDetailChanged\)[\s\S]*?path: '\/festivales\/\[slug\]'[\s\S]*?pathType: 'page'/)
+    expect(source).toMatch(/if \(festivalDetailChanged\)[\s\S]*?tag: FESTIVAL_CRITICAL_CACHE_TAG,[\s\S]*?mode: 'immediate'/)
+    expect(source).not.toContain('path:')
     expect(source).toMatch(/if \(activeStateChanged \|\| canonicalCatalogSlugChanged\)[\s\S]*?mode: 'immediate'/)
     const featuredBranch = source.match(
       /\n  if \(destacado !== undefined\) \{\n    if \(([\s\S]*?)\n  \} else if \(activeStateChanged \|\| featuredSelectionChanged\)/

@@ -69,12 +69,9 @@ export async function updateActivityAggregateAction(
 
     let effectiveParticipationId: number | null = null
     let catalogChanged = false
-    let festivalDetailChanged = false
-    let festivalListChanged = false
     await db.transaction(async (tx) => {
       const existingActivity = await tx.query.participationActivity.findFirst({
-        where: (table, operators) => operators.eq(table.id, activityInput.id),
-        with: { tipoActividad: { columns: { slug: true } } }
+        where: (table, operators) => operators.eq(table.id, activityInput.id)
       })
       if (
         !existingActivity ||
@@ -105,17 +102,6 @@ export async function updateActivityAggregateAction(
       const publicStates = ['confirmado', 'completado']
       const oldIsPublic = publicStates.includes(existingActivity.estado ?? '')
       const newIsPublic = publicStates.includes(activityInput.estado ?? '')
-      const oldTypeSlug = existingActivity.tipoActividad?.slug
-      const festivalListCategory = (slug: string | undefined, isPublic: boolean) =>
-        slug === 'charla'
-          ? 'charla'
-          : isPublic && (slug === 'taller' || slug === 'musica')
-            ? slug
-            : null
-      festivalDetailChanged = oldIsPublic || newIsPublic
-      festivalListChanged =
-        festivalListCategory(oldTypeSlug, oldIsPublic) !==
-        festivalListCategory(effectiveType.slug, newIsPublic)
       catalogChanged =
         (oldIsPublic || newIsPublic) &&
         (existingActivity.estado !== activityInput.estado ||
@@ -334,17 +320,11 @@ export async function updateActivityAggregateAction(
       [
         {
           tag: FESTIVAL_CRITICAL_CACHE_TAG,
-          mode: 'immediate',
-          ...(festivalDetailChanged
-            ? { path: '/festivales/[slug]', pathType: 'page' as const }
-            : {})
+          mode: 'immediate'
         },
         {
           tag: FESTIVALES_CACHE_TAG,
-          mode: 'swr',
-          ...(festivalListChanged
-            ? { path: '/festivales', pathType: 'page' as const }
-            : {})
+          mode: 'swr'
         },
         ...(catalogChanged
           ? [

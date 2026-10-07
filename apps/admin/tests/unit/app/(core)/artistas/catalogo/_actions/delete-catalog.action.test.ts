@@ -51,9 +51,7 @@ describe('deleteCatalogAction web invalidation', () => {
         { tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG, mode: 'immediate' },
         {
           tag: FESTIVAL_CRITICAL_CACHE_TAG,
-          mode: 'immediate',
-          path: '/festivales/[slug]',
-          pathType: 'page'
+          mode: 'immediate'
         },
         { tag: CATALOG_BASE_CACHE_TAG },
         { tag: CATALOG_PARTICIPATION_CACHE_TAG },
@@ -77,7 +75,7 @@ describe('deleteCatalogAction web invalidation', () => {
     expect(updateTag).toHaveBeenCalledTimes(3)
   })
 
-  test('adds only the existing featured tag and root path when the deleted row was featured', async () => {
+  test('adds only the existing featured tag when the deleted row was featured', async () => {
     deleteCatalogEntry.mockResolvedValue({ wasFeatured: true, wasActive: false })
 
     await expect(deleteCatalogAction(9)).resolves.toEqual({ success: true })
@@ -86,7 +84,7 @@ describe('deleteCatalogAction web invalidation', () => {
       { tag: CATALOG_BASE_CACHE_TAG },
       { tag: CATALOG_PARTICIPATION_CACHE_TAG },
       { tag: CATALOG_CACHE_TAG },
-      { tag: FEATURED_ARTISTS_CACHE_TAG, path: '/' },
+      { tag: FEATURED_ARTISTS_CACHE_TAG },
     ], 'delete-catalog')
 
   })

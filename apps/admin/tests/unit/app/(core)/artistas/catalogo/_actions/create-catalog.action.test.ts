@@ -181,7 +181,7 @@ describe('createCatalogAction', () => {
         { tag: 'catalogo:artistas:base' },
         { tag: 'catalogo:artistas:participaciones' },
         { tag: 'catalogo:artistas' },
-        { tag: 'home:destacados', path: '/' }
+        { tag: 'home:destacados'
       ],
       'create-catalog'
     )

@@ -63,9 +63,7 @@ function avatarCacheRequests(
     { tag: FEATURED_ARTISTS_CACHE_TAG, mode: 'swr' },
     {
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
+      mode: 'immediate'
     }
   )
   return requests

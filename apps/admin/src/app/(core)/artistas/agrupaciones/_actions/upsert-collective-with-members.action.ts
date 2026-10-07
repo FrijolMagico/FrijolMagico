@@ -226,9 +226,7 @@ export async function upsertCollectiveWithMembersAction(
     if (collectiveNameChanged) {
       invalidationRequests.push({
         tag: FESTIVAL_CRITICAL_CACHE_TAG,
-        mode: 'immediate',
-        path: '/festivales/[slug]',
-        pathType: 'page'
+        mode: 'immediate'
       })
     }
     if (catalogChanged) {

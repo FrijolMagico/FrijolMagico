@@ -139,9 +139,7 @@ function avatarOnlyReceipt() {
 const featuredRequest = { tag: FEATURED_ARTISTS_CACHE_TAG, mode: 'swr' }
 const festivalRequest = {
   tag: FESTIVAL_CRITICAL_CACHE_TAG,
-  mode: 'immediate',
-  path: '/festivales/[slug]',
-  pathType: 'page'
+  mode: 'immediate'
 }
 
 function expectBatchRequests(requests: typeof invalidationBatches[number]['requests']) {
@@ -182,9 +180,7 @@ describe('persist artist avatar cache invalidation', () => {
           { tag: FEATURED_ARTISTS_CACHE_TAG, mode: 'swr' },
           {
             tag: FESTIVAL_CRITICAL_CACHE_TAG,
-            mode: 'immediate',
-            path: '/festivales/[slug]',
-            pathType: 'page'
+            mode: 'immediate'
           }
         ],
         context: 'persist-artist-avatar'

@@ -210,17 +210,11 @@ export async function createActivityAction(
     const webInvalidationRequests: RevalidateWebCacheOptions[] = [
       {
         tag: FESTIVAL_CRITICAL_CACHE_TAG,
-        mode: 'immediate',
-        ...(isPublicActivity
-          ? { path: '/festivales/[slug]', pathType: 'page' as const }
-          : {})
+        mode: 'immediate'
       },
       {
         tag: FESTIVALES_CACHE_TAG,
-        mode: 'swr',
-        ...(isPublicActivity || effectiveActivityTypeSlug === 'charla'
-          ? { path: '/festivales', pathType: 'page' as const }
-          : {})
+        mode: 'swr'
       }
     ]
     if (isPublicActivity) {

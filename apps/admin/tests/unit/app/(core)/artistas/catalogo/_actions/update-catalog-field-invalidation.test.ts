@@ -122,9 +122,7 @@ describe('updateCatalogFieldAction — web invalidation', () => {
         { tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG, mode: 'immediate' },
         {
           tag: FESTIVAL_CRITICAL_CACHE_TAG,
-          mode: 'immediate',
-          path: '/festivales/[slug]',
-          pathType: 'page'
+          mode: 'immediate'
         },
         { tag: FEATURED_ARTISTS_CACHE_TAG, mode: 'swr' }
       ],
@@ -204,9 +202,7 @@ describe('updateCatalogFieldAction — web invalidation', () => {
     })
     expect(revalidateWebCacheBatch.mock.calls[0]?.[0]).not.toContainEqual({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
+      mode: 'immediate'
     })
 
     revalidateWebCacheBatch.mockClear()

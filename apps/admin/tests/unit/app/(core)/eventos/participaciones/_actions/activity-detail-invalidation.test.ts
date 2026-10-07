@@ -58,9 +58,7 @@ describe('activity detail Web invalidation', () => {
       [
         {
           tag: FESTIVAL_CRITICAL_CACHE_TAG,
-          mode: 'immediate',
-          path: '/festivales/[slug]',
-          pathType: 'page'
+          mode: 'immediate'
         }
       ],
       'update-activity-detail'

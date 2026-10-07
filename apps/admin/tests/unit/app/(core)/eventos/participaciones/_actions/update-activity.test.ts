@@ -116,15 +116,11 @@ describe('updateActivityAction catalog freshness', () => {
         requests: [
           {
             tag: FESTIVAL_CRITICAL_CACHE_TAG,
-            mode: 'immediate',
-            path: '/festivales/[slug]',
-            pathType: 'page'
+            mode: 'immediate'
           },
           {
             tag: FESTIVALES_CACHE_TAG,
-            mode: 'swr',
-            path: '/festivales',
-            pathType: 'page'
+            mode: 'swr'
           },
           { tag: 'catalogo:artistas' },
           { tag: 'catalogo:artistas:participaciones' }
@@ -191,12 +187,10 @@ describe('updateActivityAction catalog freshness', () => {
       [
         {
           tag: FESTIVAL_CRITICAL_CACHE_TAG,
-          mode: 'immediate',
-          path: '/festivales/[slug]',
-          pathType: 'page'
+          mode: 'immediate'
         },
         { tag: FESTIVALES_CACHE_TAG, mode: 'swr' },
-        { tag: 'catalogo:artistas' },
+        { tag: 'catalogo:artistas' }
         { tag: 'catalogo:artistas:participaciones' }
       ],
       'update-activity'
@@ -229,9 +223,7 @@ describe('updateActivityAction catalog freshness', () => {
         { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
         {
           tag: FESTIVALES_CACHE_TAG,
-          mode: 'swr',
-          path: '/festivales',
-          pathType: 'page'
+          mode: 'swr'
         }
       ],
       'update-activity'
@@ -263,17 +255,13 @@ describe('updateActivityAction catalog freshness', () => {
       [
         {
           tag: FESTIVAL_CRITICAL_CACHE_TAG,
-          mode: 'immediate',
-          path: '/festivales/[slug]',
-          pathType: 'page'
+          mode: 'immediate'
         },
         {
           tag: FESTIVALES_CACHE_TAG,
-          mode: 'swr',
-          path: '/festivales',
-          pathType: 'page'
+          mode: 'swr'
         },
-        { tag: 'catalogo:artistas' },
+        { tag: 'catalogo:artistas' }
         { tag: 'catalogo:artistas:participaciones' }
       ],
       'update-activity'

@@ -264,15 +264,11 @@ describe('updateActivityAggregateAction', () => {
       requests: [
         {
           tag: FESTIVAL_CRITICAL_CACHE_TAG,
-          mode: 'immediate',
-          path: '/festivales/[slug]',
-          pathType: 'page'
+          mode: 'immediate'
         },
         {
           tag: FESTIVALES_CACHE_TAG,
-          mode: 'swr',
-          path: '/festivales',
-          pathType: 'page'
+          mode: 'swr'
         },
         { tag: 'catalogo:artistas' },
         { tag: 'catalogo:artistas:participaciones' }
@@ -318,15 +314,11 @@ describe('updateActivityAggregateAction', () => {
     ])
     expect(webInvalidations).toContainEqual({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
+      mode: 'immediate'
     })
     expect(webInvalidations).toContainEqual({
       tag: FESTIVALES_CACHE_TAG,
-      mode: 'swr',
-      path: '/festivales',
-      pathType: 'page'
+      mode: 'swr'
     })
     expect(
       webInvalidations.every(({ path, pathType }) => !path || pathType === 'page')
@@ -338,8 +330,8 @@ describe('updateActivityAggregateAction', () => {
     activityTypeSlug = 'taller'
     await action({ ...input, activity: { ...input.activity, estado: 'confirmado' } })
     expect(webInvalidations.find(({ tag }) => tag === FESTIVALES_CACHE_TAG)).toMatchObject({
-      path: '/festivales',
-      pathType: 'page'
+      tag: FESTIVALES_CACHE_TAG,
+      mode: 'swr'
     })
 
     storedActivityStatus = 'confirmado'
@@ -352,8 +344,8 @@ describe('updateActivityAggregateAction', () => {
       registration: null
     })
     expect(webInvalidations.find(({ tag }) => tag === FESTIVALES_CACHE_TAG)).toMatchObject({
-      path: '/festivales',
-      pathType: 'page'
+      tag: FESTIVALES_CACHE_TAG,
+      mode: 'swr'
     })
 
     storedActivityStatus = 'seleccionado'
@@ -367,8 +359,8 @@ describe('updateActivityAggregateAction', () => {
     webInvalidations = []
     await action(input)
     expect(webInvalidations.find(({ tag }) => tag === FESTIVALES_CACHE_TAG)).toMatchObject({
-      path: '/festivales',
-      pathType: 'page'
+      tag: FESTIVALES_CACHE_TAG,
+      mode: 'swr'
     })
     expect(webInvalidations.find(({ tag }) => tag === FESTIVAL_CRITICAL_CACHE_TAG)?.path).toBeUndefined()
   })
@@ -386,9 +378,7 @@ describe('updateActivityAggregateAction', () => {
     expect(batchCalls[0]?.requests).toEqual([
       {
         tag: FESTIVAL_CRITICAL_CACHE_TAG,
-        mode: 'immediate',
-        path: '/festivales/[slug]',
-        pathType: 'page'
+        mode: 'immediate'
       },
       { tag: FESTIVALES_CACHE_TAG, mode: 'swr' }
     ])

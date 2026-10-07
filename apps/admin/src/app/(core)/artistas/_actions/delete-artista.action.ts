@@ -76,10 +76,7 @@ export async function deleteArtistaAction(id: number): Promise<ActionState> {
     invalidationRequests.push({ tag: CATALOG_PARTICIPATION_CACHE_TAG })
 
     if (wasFeatured) {
-      invalidationRequests.push({
-        tag: FEATURED_ARTISTS_CACHE_TAG,
-        path: '/'
-      })
+      invalidationRequests.push({ tag: FEATURED_ARTISTS_CACHE_TAG })
     }
 
     const webInvalidation = await revalidateWebCacheBatch(

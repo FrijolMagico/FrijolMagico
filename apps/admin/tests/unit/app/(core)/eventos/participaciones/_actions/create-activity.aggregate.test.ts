@@ -420,15 +420,11 @@ describe('createActivityAction aggregate', () => {
     expect(result.success).toBe(true)
     expect(webInvalidations).toContainEqual({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
+      mode: 'immediate'
     })
     expect(webInvalidations).toContainEqual({
       tag: FESTIVALES_CACHE_TAG,
-      mode: 'swr',
-      path: '/festivales',
-      pathType: 'page'
+      mode: 'swr'
     })
 
     const completedInput = payload()
@@ -440,9 +436,7 @@ describe('createActivityAction aggregate', () => {
     expect(completed.success).toBe(true)
     expect(webInvalidations).toContainEqual({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
+      mode: 'immediate'
     })
   })
 
@@ -481,15 +475,11 @@ describe('createActivityAction aggregate', () => {
         requests: [
           {
             tag: FESTIVAL_CRITICAL_CACHE_TAG,
-            mode: 'immediate',
-            path: '/festivales/[slug]',
-            pathType: 'page'
+            mode: 'immediate'
           },
           {
             tag: FESTIVALES_CACHE_TAG,
-            mode: 'swr',
-            path: '/festivales',
-            pathType: 'page'
+            mode: 'swr'
           },
           { tag: 'catalogo:artistas' },
           { tag: 'catalogo:artistas:participaciones' }
@@ -516,9 +506,7 @@ describe('createActivityAction aggregate', () => {
       { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
       {
         tag: FESTIVALES_CACHE_TAG,
-        mode: 'swr',
-        path: '/festivales',
-        pathType: 'page'
+        mode: 'swr'
       }
     ])
     expect(result.webRevalidation).toBe('swr')
@@ -594,15 +582,11 @@ describe('createActivityAction aggregate', () => {
         requests: [
           {
             tag: FESTIVAL_CRITICAL_CACHE_TAG,
-            mode: 'immediate',
-            path: '/festivales/[slug]',
-            pathType: 'page'
+            mode: 'immediate'
           },
           {
             tag: FESTIVALES_CACHE_TAG,
-            mode: 'swr',
-            path: '/festivales',
-            pathType: 'page'
+            mode: 'swr'
           },
           { tag: 'catalogo:artistas' },
           { tag: 'catalogo:artistas:participaciones' }

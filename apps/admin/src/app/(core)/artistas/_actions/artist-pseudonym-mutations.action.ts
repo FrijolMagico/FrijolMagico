@@ -495,9 +495,7 @@ export async function mutateArtistPseudonymAction(
     if (festivalDetailChanged) {
       invalidationRequests.push({
         tag: FESTIVAL_CRITICAL_CACHE_TAG,
-        mode: 'immediate',
-        path: '/festivales/[slug]',
-        pathType: 'page'
+        mode: 'immediate'
       })
     }
     if (catalogSlugChanged || catalogDataChanged) {

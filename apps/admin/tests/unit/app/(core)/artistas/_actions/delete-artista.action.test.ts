@@ -94,7 +94,7 @@ describe('deleteArtistaAction canonical slug invalidation', () => {
         { tag: CATALOG_BASE_CACHE_TAG },
         { tag: CATALOG_CACHE_TAG },
         { tag: CATALOG_PARTICIPATION_CACHE_TAG },
-        { tag: FEATURED_ARTISTS_CACHE_TAG, path: '/' }
+        { tag: FEATURED_ARTISTS_CACHE_TAG }
       ],
       'delete-artista'
     )
@@ -107,10 +107,7 @@ describe('deleteArtistaAction canonical slug invalidation', () => {
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: CATALOG_BASE_CACHE_TAG })
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: CATALOG_CACHE_TAG })
     expect(revalidateWebCache).toHaveBeenCalledWith({ tag: CATALOG_PARTICIPATION_CACHE_TAG })
-    expect(revalidateWebCache).toHaveBeenCalledWith({
-      tag: FEATURED_ARTISTS_CACHE_TAG,
-      path: '/'
-    })
+    expect(revalidateWebCache).toHaveBeenCalledWith({ tag: FEATURED_ARTISTS_CACHE_TAG })
   })
 
   test('does not invalidate canonical slugs when deleting an inactive catalog row', async () => {

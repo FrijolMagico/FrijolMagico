@@ -110,9 +110,7 @@ export async function updateCatalogFieldAction(
       },
       {
         tag: FESTIVAL_CRITICAL_CACHE_TAG,
-        mode: 'immediate',
-        path: '/festivales/[slug]',
-        pathType: 'page'
+        mode: 'immediate'
       }
     )
   }

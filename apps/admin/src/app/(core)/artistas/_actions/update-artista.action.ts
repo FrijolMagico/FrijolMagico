@@ -224,9 +224,7 @@ export async function updateArtistaWithPseudonymsAction(
       invalidationRequests.push({ tag: CATALOG_CACHE_TAG })
       invalidationRequests.push({
         tag: FESTIVAL_CRITICAL_CACHE_TAG,
-        mode: 'immediate',
-        path: '/festivales/[slug]',
-        pathType: 'page'
+        mode: 'immediate'
       })
     }
     if (
@@ -399,9 +397,7 @@ export async function updateArtistaAction(
     invalidationRequests.push({ tag: CATALOG_CACHE_TAG })
     invalidationRequests.push({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
+      mode: 'immediate'
     })
   }
   if (

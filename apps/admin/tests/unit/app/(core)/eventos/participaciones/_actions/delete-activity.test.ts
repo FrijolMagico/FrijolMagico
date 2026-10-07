@@ -82,8 +82,8 @@ describe('deleteActivityAction catalog freshness', () => {
     ])
     expect(revalidateWebCacheBatch).toHaveBeenCalledWith(
       [
-        { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate', path: '/festivales/[slug]', pathType: 'page' },
-        { tag: FESTIVALES_CACHE_TAG, mode: 'swr', path: '/festivales', pathType: 'page' },
+        { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
+        { tag: FESTIVALES_CACHE_TAG, mode: 'swr' }
         { tag: 'catalogo:artistas' },
         { tag: 'catalogo:artistas:participaciones' }
       ],
@@ -92,14 +92,14 @@ describe('deleteActivityAction catalog freshness', () => {
     expect(revalidateWebCacheBatch).toHaveBeenCalledTimes(1)
   })
 
-  test('includes the detail path for a completed activity', async () => {
+  test('preserves the tag and mode requests for a completed activity', async () => {
     activityEstado = 'completado'
     await deleteActivityAction({ id: 22 })
 
     expect(revalidateWebCacheBatch).toHaveBeenCalledWith(
       [
-        { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate', path: '/festivales/[slug]', pathType: 'page' },
-        { tag: FESTIVALES_CACHE_TAG, mode: 'swr', path: '/festivales', pathType: 'page' },
+        { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
+        { tag: FESTIVALES_CACHE_TAG, mode: 'swr' },
         { tag: 'catalogo:artistas' },
         { tag: 'catalogo:artistas:participaciones' }
       ],
@@ -126,7 +126,7 @@ describe('deleteActivityAction catalog freshness', () => {
     expect(revalidateWebCacheBatch).toHaveBeenCalledTimes(1)
   })
 
-  test('includes only the festival-list path for an unpublished talk', async () => {
+  test('preserves the festival-list tag and mode for an unpublished talk', async () => {
     activityEstado = 'seleccionado'
     activityTipoSlug = 'charla'
     const result = await deleteActivityAction({ id: 22 })
@@ -135,7 +135,7 @@ describe('deleteActivityAction catalog freshness', () => {
     expect(revalidateWebCacheBatch).toHaveBeenCalledWith(
       [
         { tag: FESTIVAL_CRITICAL_CACHE_TAG, mode: 'immediate' },
-        { tag: FESTIVALES_CACHE_TAG, mode: 'swr', path: '/festivales', pathType: 'page' }
+        { tag: FESTIVALES_CACHE_TAG, mode: 'swr' }
       ],
       'delete-activity'
     )

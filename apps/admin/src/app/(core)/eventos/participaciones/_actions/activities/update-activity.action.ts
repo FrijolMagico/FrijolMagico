@@ -54,8 +54,6 @@ export async function updateActivityAction(
     let oldParticipationId: number | null = null
     let changed = false
     let catalogChanged = false
-    let festivalDetailChanged = false
-    let festivalListChanged = false
     await db.transaction(async (tx) => {
       const existing = await tx.query.participationActivity.findFirst({
         where: (table, operators) => operators.eq(table.id, activityId),
@@ -68,8 +66,7 @@ export async function updateActivityAction(
           notas: true
         },
         with: {
-          participacion: { columns: { edicionId: true } },
-          tipoActividad: { columns: { slug: true } }
+          participacion: { columns: { edicionId: true } }
         }
       })
       if (!existing) throw new Error('No se encontró la actividad')
@@ -91,40 +88,6 @@ export async function updateActivityAction(
         (existing.participacionId !== parsed.data.participacionId ||
           existing.tipoActividadId !== parsed.data.tipoActividadId ||
           existing.estado !== parsed.data.estado)
-
-      const publicStates = ['confirmado', 'completado']
-      const publicProjectionChanged =
-        existing.participacionId !== parsed.data.participacionId ||
-        existing.tipoActividadId !== parsed.data.tipoActividadId ||
-        existing.estado !== parsed.data.estado
-      const oldIsPublic = publicStates.includes(existing.estado ?? '')
-      const newIsPublic = publicStates.includes(parsed.data.estado ?? '')
-      festivalDetailChanged = publicProjectionChanged && (oldIsPublic || newIsPublic)
-
-      const oldTypeSlug = existing.tipoActividad?.slug
-      const newTypeId = parsed.data.tipoActividadId ?? existing.tipoActividadId
-      const newType =
-        existing.tipoActividadId === newTypeId
-          ? existing.tipoActividad
-          : await tx.query.activityType.findFirst({
-              where: (table, operators) =>
-                operators.eq(table.id, newTypeId),
-              columns: { slug: true }
-            })
-      const newTypeSlug = newType?.slug
-      const countsInFestivalList = (slug: string | undefined, isPublic: boolean) =>
-        slug === 'charla' ||
-        (isPublic && (slug === 'taller' || slug === 'musica'))
-      const oldCountsInFestivalList = countsInFestivalList(oldTypeSlug, oldIsPublic)
-      const newCountsInFestivalList = countsInFestivalList(newTypeSlug, newIsPublic)
-      const categoryOrParticipationChanged =
-        existing.participacionId !== parsed.data.participacionId ||
-        existing.tipoActividadId !== parsed.data.tipoActividadId
-      const statusChanged = existing.estado !== parsed.data.estado
-      festivalListChanged =
-        (categoryOrParticipationChanged &&
-          (oldCountsInFestivalList || newCountsInFestivalList)) ||
-        (statusChanged && oldCountsInFestivalList !== newCountsInFestivalList)
 
       await tx
         .update(participationActivity)
@@ -151,17 +114,11 @@ export async function updateActivityAction(
       [
         {
           tag: FESTIVAL_CRITICAL_CACHE_TAG,
-          mode: 'immediate',
-          ...(festivalDetailChanged
-            ? { path: '/festivales/[slug]', pathType: 'page' as const }
-            : {})
+          mode: 'immediate'
         },
         {
           tag: FESTIVALES_CACHE_TAG,
-          mode: 'swr',
-          ...(festivalListChanged
-            ? { path: '/festivales', pathType: 'page' as const }
-            : {})
+          mode: 'swr'
         },
         ...(catalogChanged
           ? [

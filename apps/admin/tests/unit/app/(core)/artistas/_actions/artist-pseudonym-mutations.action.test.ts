@@ -418,9 +418,7 @@ describe('updateArtistaWithPseudonymsAction', () => {
     })
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
+      mode: 'immediate'
     })
   })
 
@@ -485,9 +483,7 @@ describe('updateArtistaWithPseudonymsAction', () => {
         { tag: 'catalogo:artistas' },
         {
           tag: FESTIVAL_CRITICAL_CACHE_TAG,
-          mode: 'immediate',
-          path: '/festivales/[slug]',
-          pathType: 'page'
+          mode: 'immediate'
         },
         { tag: FEATURED_ARTISTS_CACHE_TAG, mode: 'swr' }
       ],
@@ -818,9 +814,7 @@ describe('updateArtistaWithPseudonymsAction', () => {
     })
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
+      mode: 'immediate'
     })
   })
 
@@ -891,9 +885,7 @@ describe('updateArtistaWithPseudonymsAction', () => {
     expect(result.success).toBe(true)
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
+      mode: 'immediate'
     })
   })
 
@@ -997,9 +989,7 @@ describe('updateArtistaWithPseudonymsAction', () => {
     })
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
+      mode: 'immediate'
     })
   })
 
@@ -1043,9 +1033,7 @@ describe('updateArtistaWithPseudonymsAction', () => {
     expect(result.success).toBe(true)
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
+      mode: 'immediate'
     })
   })
 
@@ -1262,9 +1250,7 @@ describe('updateArtistaAction', () => {
         { tag: 'catalogo:artistas' },
         {
           tag: FESTIVAL_CRITICAL_CACHE_TAG,
-          mode: 'immediate',
-          path: '/festivales/[slug]',
-          pathType: 'page'
+          mode: 'immediate'
         },
         { tag: FEATURED_ARTISTS_CACHE_TAG, mode: 'swr' }
       ],
@@ -1505,18 +1491,14 @@ describe('mutateArtistPseudonymAction', () => {
       [
         {
           tag: FESTIVAL_CRITICAL_CACHE_TAG,
-          mode: 'immediate',
-          path: '/festivales/[slug]',
-          pathType: 'page'
+          mode: 'immediate'
         }
       ],
       'mutate-artist-pseudonym'
     )
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
+      mode: 'immediate'
     })
   })
 
@@ -1543,9 +1525,7 @@ describe('mutateArtistPseudonymAction', () => {
     )
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
+      mode: 'immediate'
     })
   })
 
@@ -1758,9 +1738,7 @@ describe('mutateArtistPseudonymAction', () => {
     ).toBe(true)
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
+      mode: 'immediate'
     })
   })
 
@@ -1837,9 +1815,7 @@ describe('mutateArtistPseudonymAction', () => {
     })
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
+      mode: 'immediate'
     })
     for (const table of [
       catalogArtist,
@@ -1906,9 +1882,7 @@ describe('mutateArtistPseudonymAction', () => {
     expect(updateTag).toHaveBeenCalledWith('catalogo:artistas')
     expect(revalidateWebCache).toHaveBeenCalledWith({
       tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
+      mode: 'immediate'
     })
   })
 
