@@ -26,7 +26,7 @@ export const TopBarInfoClient = ({ data }: TopBarInfoClientProps) => {
     <section
       aria-label='Frijol Mágico'
       className={cn(
-        'bg-primary fixed top-0 z-40 flex w-full flex-col items-center justify-between space-y-4 px-4 py-4 font-sans transition-transform duration-300 ease-in-out sm:flex-row sm:px-6 sm:py-2 md:top-0 md:space-y-0',
+        'bg-primary fixed top-0 z-99 flex w-full flex-col items-center justify-between space-y-4 px-4 py-4 font-sans transition-transform duration-300 ease-in-out sm:flex-row sm:px-6 sm:py-2 md:top-0 md:space-y-0',
         !visible && '-translate-y-full'
       )}
     >

@@ -19,7 +19,7 @@ export const FestivalDetailPoster = ({
   animationMode
 }: FestivalDetailPosterProps) => (
   <figure
-    className='relative aspect-auto h-auto w-full'
+    className='absolute aspect-auto h-auto w-full'
     data-festival-entry={animationMode === 'active' ? 'poster' : undefined}
   >
     {posterUrl ? (

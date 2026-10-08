@@ -14,18 +14,21 @@ export const ParticipantByDiscipline = ({
   animationMode
 }: ParticipantByDisciplineProps) => (
   <section
-    className='w-full text-center md:w-auto md:text-start'
+    className='w-full space-y-2 text-center md:w-auto md:text-start'
     data-spoiler-category={
       animationMode === 'active' ? disciplineLabel : undefined
     }
     data-spoiler-state={animationMode === 'active' ? 'concealed' : undefined}
   >
-    <h3 className='text-palette-accent mb-3 font-mono text-2xl font-bold'>
+    <h3 className='text-palette-accent font-canarina text-4xl font-black'>
       {disciplineLabel}
     </h3>
-    <ul className='w-full columns-1 space-y-1 md:columns-2 md:gap-x-8'>
-      {participants.map((participant) => (
-        <li key={participant.pseudonimo} className='break-inside-avoid'>
+    <ul className='flex w-full flex-wrap justify-center gap-x-3 gap-y-2 md:justify-start'>
+      {participants.map((participant, index) => (
+        <li
+          key={participant.pseudonimo}
+          className='flex shrink-0 items-center gap-3 break-inside-avoid'
+        >
           <ParticipantItem
             pseudonimo={participant.pseudonimo}
             catalogoSlug={participant.catalogo_slug}
@@ -33,8 +36,14 @@ export const ParticipantByDiscipline = ({
             rrss={participant.rrss}
             animationMode={animationMode}
             categoryId={disciplineLabel}
-            itemIndex={participants.indexOf(participant)}
+            itemIndex={index}
           />
+          {index < participants.length - 1 && (
+            <span
+              aria-hidden='true'
+              className='bg-palette-foreground/50 size-1.5 shrink-0 rounded-full'
+            />
+          )}
         </li>
       ))}
     </ul>

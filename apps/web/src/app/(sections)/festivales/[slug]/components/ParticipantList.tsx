@@ -46,10 +46,10 @@ export const ParticipantList = ({
         animationMode === 'active' ? 'participants' : undefined
       }
     >
-      <h2 className='text-palette-primary mb-6 w-full text-center text-4xl font-bold md:text-start'>
+      <h2 className='text-palette-primary mb-4 w-full text-center text-5xl font-black md:text-start'>
         Participantes
       </h2>
-      <div className='flex flex-wrap gap-6'>
+      <div className='flex flex-col gap-6'>
         {Object.entries(grouped).map(([disciplineLabel, group]) => (
           <ParticipantByDiscipline
             key={disciplineLabel}

@@ -39,17 +39,13 @@ export const FestivalDetailContent = ({
             animationMode === 'active' ? 'header' : undefined
           }
         >
-          {animationMode === 'active' ? (
-            <h1 className='text-palette-primary text-4xl leading-none font-black tracking-tight md:text-5xl'>
-              <span className='text-palette-secondary'>{numero_edicion}</span>{' '}
-              {evento.nombre}
-            </h1>
-          ) : (
-            <h1 className='text-palette-primary text-4xl leading-none font-black tracking-tight md:text-5xl'>
-              {evento.nombre}{' '}
-              <span className='text-palette-secondary'>{numero_edicion}</span>
-            </h1>
-          )}
+          <h1 className='text-palette-primary text-4xl leading-none font-black tracking-tight md:text-7xl'>
+            {evento.nombre}{' '}
+            <span className='text-palette-secondary uppercase'>
+              {numero_edicion}
+            </span>
+          </h1>
+
           {edicion_nombre && (
             <p className='text-palette-accent text-xl font-semibold'>
               {edicion_nombre}
@@ -72,18 +68,10 @@ export const FestivalDetailContent = ({
           </div>
         </header>
 
-        <div className='grid gap-10 md:grid-cols-8 lg:gap-20'>
-          <aside className='md:sticky md:top-24 md:col-span-3 md:self-start'>
-            {animationMode === 'active' ? (
-              <FestivalDetailPoster
-                posterUrl={poster_url}
-                eventName={evento.nombre}
-                editionName={numero_edicion}
-                priority
-                animationMode={animationMode}
-              />
-            ) : (
-              <FestivalPosterTransition slug={detail.slug}>
+        <div className='relative flex flex-col gap-10 md:flex-row'>
+          <aside className='w-full max-w-92.5 md:w-92.5 md:shrink-0 md:self-stretch'>
+            <div className='relative aspect-370/523 w-full md:sticky md:top-24'>
+              {animationMode === 'active' ? (
                 <FestivalDetailPoster
                   posterUrl={poster_url}
                   eventName={evento.nombre}
@@ -91,11 +79,21 @@ export const FestivalDetailContent = ({
                   priority
                   animationMode={animationMode}
                 />
-              </FestivalPosterTransition>
-            )}
+              ) : (
+                <FestivalPosterTransition slug={detail.slug}>
+                  <FestivalDetailPoster
+                    posterUrl={poster_url}
+                    eventName={evento.nombre}
+                    editionName={numero_edicion}
+                    priority
+                    animationMode={animationMode}
+                  />
+                </FestivalPosterTransition>
+              )}
+            </div>
           </aside>
 
-          <div className='min-w-0 space-y-8 md:col-span-5'>
+          <div className='min-w-0'>
             <ParticipantList
               participantes={detail.participantes}
               animationMode={animationMode}
