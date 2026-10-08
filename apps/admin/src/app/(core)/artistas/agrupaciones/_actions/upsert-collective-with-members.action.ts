@@ -16,7 +16,8 @@ import {
   FESTIVAL_CRITICAL_CACHE_TAG,
   getCollectiveMembersCacheTag
 } from '@frijolmagico/cache-tags'
-import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
+import { revalidateWebCacheBatch } from '@/shared/lib/web-invalidation'
+import type { RevalidateWebCacheOptions } from '@/shared/lib/web-invalidation'
 import type { ActionState } from '@/shared/types/actions'
 import {
   upsertCollectivePayloadSchema,
@@ -221,21 +222,29 @@ export async function upsertCollectiveWithMembersAction(
     updateTag(COLLECTIVE_ACTIVE_CACHE_TAG)
     updateTag(COLLECTIVE_DELETED_CACHE_TAG)
     updateTag(getCollectiveMembersCacheTag(collectiveId))
+    const invalidationRequests: RevalidateWebCacheOptions[] = []
     if (collectiveNameChanged) {
-      void revalidateWebCacheBestEffort({
+      invalidationRequests.push({
         tag: FESTIVAL_CRITICAL_CACHE_TAG,
-        mode: 'immediate',
-        path: '/festivales/[slug]',
-        pathType: 'page'
+        mode: 'immediate'
       })
     }
     if (catalogChanged) {
-      void revalidateWebCacheBestEffort({ tag: CATALOG_BASE_CACHE_TAG })
-      void revalidateWebCacheBestEffort({ tag: CATALOG_PARTICIPATION_CACHE_TAG })
-      void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
+      invalidationRequests.push(
+        { tag: CATALOG_BASE_CACHE_TAG },
+        { tag: CATALOG_PARTICIPATION_CACHE_TAG },
+        { tag: CATALOG_CACHE_TAG }
+      )
     }
 
-    return { success: true }
+    const webInvalidation = invalidationRequests.length
+      ? await revalidateWebCacheBatch(
+          invalidationRequests,
+          'upsert-collective-with-members'
+        )
+      : {}
+
+    return { success: true, ...webInvalidation }
   } catch (error) {
     return {
       success: false,

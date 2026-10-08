@@ -7,14 +7,16 @@ import { artist } from '@frijolmagico/database/schema'
 import { and, eq, sql } from 'drizzle-orm'
 import { isNotDeleted } from '@frijolmagico/database/filters'
 import { requireAuth } from '@/shared/lib/auth/utils'
-import { revalidateWebCache } from '@/shared/lib/web-invalidation'
+import { revalidateWebCacheBatch } from '@/shared/lib/web-invalidation'
+import type { RevalidateWebCacheOptions } from '@/shared/lib/web-invalidation'
 import { deleteCatalogEntry } from '@/shared/lib/catalog-artist-deletion'
 import {
   ARTIST_CACHE_TAG,
   CANONICAL_CATALOG_SLUGS_CACHE_TAG,
   CATALOG_BASE_CACHE_TAG,
   CATALOG_CACHE_TAG,
-  FEATURED_ARTISTS_CACHE_TAG,
+  CATALOG_PARTICIPATION_CACHE_TAG,
+  FEATURED_ARTISTS_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 import type { ActionState } from '@/shared/types/actions'
 
@@ -27,14 +29,14 @@ export async function deleteArtistaAction(id: number): Promise<ActionState> {
       .select({
         id: artist.catalogArtist.id,
         activo: artist.catalogArtist.activo,
-        deletedAt: artist.catalogArtist.deletedAt,
+        deletedAt: artist.catalogArtist.deletedAt
       })
       .from(artist.catalogArtist)
       .where(
         and(
           eq(artist.catalogArtist.artistaId, id),
-          isNotDeleted(artist.catalogArtist.deletedAt),
-        ),
+          isNotDeleted(artist.catalogArtist.deletedAt)
+        )
       )
 
     let wasFeatured = false
@@ -45,17 +47,14 @@ export async function deleteArtistaAction(id: number): Promise<ActionState> {
         .update(artist.artist)
         .set({ deletedAt: sql`CURRENT_TIMESTAMP` })
         .where(
-          and(
-            eq(artist.artist.id, id),
-            isNotDeleted(artist.artist.deletedAt),
-          ),
+          and(eq(artist.artist.id, id), isNotDeleted(artist.artist.deletedAt))
         )
 
       // Delete catalog entries and handle featured replacement
       for (const entry of catalogEntries) {
         const { wasFeatured: entryWasFeatured } = await deleteCatalogEntry(
           tx,
-          entry.id,
+          entry.id
         )
         if (entryWasFeatured) wasFeatured = true
       }
@@ -63,33 +62,37 @@ export async function deleteArtistaAction(id: number): Promise<ActionState> {
 
     updateTag(ARTIST_CACHE_TAG)
     updateTag(CATALOG_BASE_CACHE_TAG)
-    if (catalogEntries.some((entry) => entry.activo && entry.deletedAt === null)) {
-      void revalidateWebCache({
+    const invalidationRequests: RevalidateWebCacheOptions[] = []
+    if (
+      catalogEntries.some((entry) => entry.activo && entry.deletedAt === null)
+    ) {
+      invalidationRequests.push({
         tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
-        mode: 'immediate',
+        mode: 'immediate'
       })
     }
-    void revalidateWebCache({ tag: CATALOG_BASE_CACHE_TAG })
-    void revalidateWebCache({ tag: CATALOG_CACHE_TAG, path: '/catalogo' })
+    invalidationRequests.push({ tag: CATALOG_BASE_CACHE_TAG })
+    invalidationRequests.push({ tag: CATALOG_CACHE_TAG })
+    invalidationRequests.push({ tag: CATALOG_PARTICIPATION_CACHE_TAG })
 
     if (wasFeatured) {
-      void revalidateWebCache({
-        tag: FEATURED_ARTISTS_CACHE_TAG,
-        path: '/',
-      })
+      invalidationRequests.push({ tag: FEATURED_ARTISTS_CACHE_TAG })
     }
 
-    return { success: true }
+    const webInvalidation = await revalidateWebCacheBatch(
+      invalidationRequests,
+      'delete-artista'
+    )
+    return { success: true, ...webInvalidation }
   } catch (error) {
     return {
       success: false,
       errors: [
         {
           entityType: 'artista',
-          message:
-            error instanceof Error ? error.message : 'Error desconocido',
-        },
-      ],
+          message: error instanceof Error ? error.message : 'Error desconocido'
+        }
+      ]
     }
   }
 }

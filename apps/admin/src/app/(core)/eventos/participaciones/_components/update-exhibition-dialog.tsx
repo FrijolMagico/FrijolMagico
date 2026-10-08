@@ -156,7 +156,11 @@ export function UpdateExhibitionDialog({ edition, artistas = [] }: ExhibitionEdi
       return
     }
 
-    toast.success('Cambios guardados')
+    toast.success(
+      result.webRevalidation === 'swr'
+        ? 'Cambios guardados. Pueden tardar en aparecer en la web.'
+        : 'Cambios guardados'
+    )
     methods.reset(values)
     closeUpdateDialogs()
   }

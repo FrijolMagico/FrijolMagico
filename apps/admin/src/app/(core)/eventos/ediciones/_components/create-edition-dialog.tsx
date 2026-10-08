@@ -65,7 +65,11 @@ export function CreateEditionDialog({
       return
     }
 
-    toast.success('Edición creada')
+    toast.success(
+      result.webRevalidation === 'swr'
+        ? 'Edición creada. Pueden tardar en aparecer en la web.'
+        : 'Edición creada'
+    )
     methods.reset(emptyForm)
     handleOpenChange(false)
   }

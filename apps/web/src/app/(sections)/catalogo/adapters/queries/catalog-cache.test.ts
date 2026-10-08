@@ -86,7 +86,7 @@ describe('catalog read cache boundaries', () => {
       const functionSource = cacheSource.match(
         new RegExp(`export async function ${functionName}\\([\\s\\S]*?\\n}`)
       )?.[0]
-      expect(functionSource).toContain("'use cache: remote'")
+      expect(functionSource).toContain("'use cache'")
       expect(functionSource).toContain(`cacheTag(${tagConstant})`)
     }
   })
@@ -106,7 +106,7 @@ describe('catalog read cache boundaries', () => {
         .slice(source.indexOf(`export async function ${functionName}(`))
         .split('\nexport async function ', 1)[0]
       expect(functionSource, `${functionName} should exist`).toContain(
-        "'use cache: remote'"
+        "'use cache'"
       )
       expect(
         functionSource,

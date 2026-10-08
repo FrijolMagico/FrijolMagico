@@ -47,7 +47,7 @@ export function OrganizationCard({ initialData }: OrganizationCardProps) {
 
   const onSubmit = (formData: OrganizationFormInput) => {
     startTransition(async () => {
-      const { success, errors, data } = await updateOrganization(
+      const { success, errors, data, webRevalidation } = await updateOrganization(
         {
           success: false
         },
@@ -70,7 +70,11 @@ export function OrganizationCard({ initialData }: OrganizationCardProps) {
         vision: data?.vision ?? ''
       })
 
-      toast.success('Organización actualizada correctamente')
+      toast.success(
+        webRevalidation === 'swr'
+          ? 'Organización actualizada correctamente. Pueden tardar en aparecer en la web.'
+          : 'Organización actualizada correctamente'
+      )
     })
   }
 

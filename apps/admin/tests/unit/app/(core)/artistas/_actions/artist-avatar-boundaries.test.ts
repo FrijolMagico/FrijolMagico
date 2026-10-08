@@ -152,7 +152,8 @@ describe('artist avatar persistence boundaries', () => {
         path: claims.path,
         version: claims.version,
         oldAsset: null
-      }
+      },
+      webRevalidation: 'swr'
     })
     expect(transactionCalls).toBe(0)
   })
@@ -174,7 +175,8 @@ describe('artist avatar persistence boundaries', () => {
         path: claims.path,
         version: claims.version,
         oldAsset: null
-      }
+      },
+      webRevalidation: 'swr'
     })
     expect(transactionCalls).toBe(1)
   })
@@ -296,7 +298,8 @@ describe('artist avatar persistence boundaries', () => {
         path: claims.path,
         version: claims.version,
         oldAsset: { path: 'artistas/42/old.webp', version: 'old' }
-      }
+      },
+      webRevalidation: 'swr'
     })
     expect(deleteObject).not.toHaveBeenCalled()
   })

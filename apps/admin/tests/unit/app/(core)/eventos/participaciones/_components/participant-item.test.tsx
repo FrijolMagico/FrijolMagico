@@ -1,5 +1,6 @@
 import { describe, expect, mock, test } from 'bun:test'
 import { createElement } from 'react'
+import type { ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 
 mock.module('@/core/eventos/participaciones/_store/use-participations-store', () => ({
@@ -12,7 +13,7 @@ mock.module('@/core/eventos/participaciones/_store/use-participations-store', ()
 }))
 
 function mockItemComponent(tag: string) {
-  return ({ children }: { children: unknown }) => createElement(tag, null, children)
+  return ({ children }: { children: ReactNode }) => createElement(tag, null, children)
 }
 
 mock.module('@/shared/components/ui/item', () => ({

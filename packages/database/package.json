@@ -29,8 +29,8 @@
     "migrate:production": "bun --env-file=.env.local run drizzle-kit migrate --config=drizzle-production.config.ts",
     "migrate:ci": "bun --no-env-file run drizzle-kit migrate --config=drizzle-ci.config.ts",
     "new": "bun run drizzle-kit generate --custom --name",
-    "pull:staging": "bun --no-env-file scripts/pull-snapshot.ts staging",
-    "pull:production": "bun --no-env-file scripts/pull-snapshot.ts production",
+    "pull:staging": "bun --env-file=.env.local run scripts/pull-turso-snapshot.ts staging",
+    "pull:production": "bun --env-file=.env.local run scripts/pull-turso-snapshot.ts production",
     "lint": "eslint .",
     "test": "bun test",
     "type-check": "tsc --noEmit"

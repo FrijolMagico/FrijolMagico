@@ -18,7 +18,7 @@ import {
   getParticipationExhibitionsCacheTag
 } from '@frijolmagico/cache-tags'
 import { findOrCreateEditionParticipation } from '../_lib/find-or-create-edition-participation'
-import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
+import { revalidateWebCacheBatch } from '@/shared/lib/web-invalidation'
 import { resolveActiveArtistPseudonym } from '../_lib/resolve-artist-pseudonym'
 import {
   type ExhibitionInsertInput,
@@ -100,26 +100,24 @@ export async function createExhibitionAction(data: {
         console.error('[createExhibitionAction] Local invalidation failed', { tag, error })
       }
     }
-    void revalidateWebCacheBestEffort({
-      tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      ...(catalogChanged
-        ? { path: '/festivales/[slug]', pathType: 'page' as const }
-        : {})
-    })
-    void revalidateWebCacheBestEffort({
-      tag: FESTIVALES_CACHE_TAG,
-      mode: 'swr',
-      ...(catalogChanged
-        ? { path: '/festivales', pathType: 'page' as const }
-        : {})
-    })
-    if (catalogChanged) {
-      void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
-      void revalidateWebCacheBestEffort({ tag: CATALOG_PARTICIPATION_CACHE_TAG })
-    }
+    const webRevalidation = await revalidateWebCacheBatch(
+      [
+        {
+          tag: FESTIVAL_CRITICAL_CACHE_TAG,
+          mode: 'immediate'
+        },
+        {
+          tag: FESTIVALES_CACHE_TAG,
+          mode: 'swr'
+        },
+        ...(catalogChanged
+          ? [{ tag: CATALOG_CACHE_TAG }, { tag: CATALOG_PARTICIPATION_CACHE_TAG }]
+          : [])
+      ],
+      'create-exhibition'
+    )
 
-    return { success: true }
+    return { success: true, ...webRevalidation }
   } catch (error) {
     console.error('[createExhibitionAction]', error)
     return {

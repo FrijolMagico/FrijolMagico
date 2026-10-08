@@ -1,8 +1,7 @@
-import { describe, expect, test } from 'bun:test'
+import { afterAll, afterEach, describe, expect, test } from 'bun:test'
 import { act, createElement } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { Window } from 'happy-dom'
 import { useDebouncedCallback } from 'use-debounce'
 import { resolvePresenterText } from '@/core/eventos/participaciones/_components/activity-presenter-fields'
 import { activityFormSchema } from '@/core/eventos/participaciones/_schemas/activity.schema'
@@ -10,18 +9,27 @@ import { ARTIST_STATUS } from '@/core/artistas/_constants'
 import type { ArtistLookup } from '@/core/eventos/participaciones/_types/participations.types'
 import type { ActivityFormInput } from '@/core/eventos/participaciones/_schemas/activity.schema'
 
-const window = new Window()
-globalThis.window = window as unknown as Window & typeof globalThis
-globalThis.document = window.document as unknown as Document
-globalThis.Node = window.Node as typeof Node
-globalThis.HTMLElement = window.HTMLElement as typeof HTMLElement
-globalThis.HTMLInputElement = window.HTMLInputElement as typeof HTMLInputElement
-globalThis.Element = window.Element as typeof Element
-globalThis.Event = window.Event as typeof Event
-globalThis.requestAnimationFrame = window.requestAnimationFrame.bind(window)
-globalThis.cancelAnimationFrame = window.cancelAnimationFrame.bind(window)
-globalThis.IS_REACT_ACT_ENVIRONMENT = true
+import { createHappyDOMEnvironment } from '@/tests/unit/_support/happy-dom-environment'
+
+const environment = await createHappyDOMEnvironment()
 const { createRoot } = await import('react-dom/client')
+const activeRoots = new Set<ReturnType<typeof createRoot>>()
+
+async function disposeRoot(root: ReturnType<typeof createRoot>) {
+  if (!activeRoots.has(root)) return
+  await act(async () => root.unmount())
+  activeRoots.delete(root)
+}
+
+afterEach(async () => {
+  try {
+    for (const root of activeRoots) await disposeRoot(root)
+  } finally {
+    document.body.replaceChildren()
+  }
+})
+
+afterAll(async () => environment.dispose())
 const { ActivityPresenterFields, applyPresenterOption, classifyPresenterInputAction } = await import(
   '@/core/eventos/participaciones/_components/activity-presenter-fields'
 )
@@ -90,11 +98,12 @@ async function renderPresenterForm(onSubmit?: (value: ActivityFormInput) => void
   const container = document.createElement('main')
   document.body.append(container)
   const root = createRoot(container)
+  activeRoots.add(root)
   await act(async () => root.render(createElement(PresenterForm, { onSubmit })))
   return {
     container,
     dispose: async () => {
-      await act(async () => root.unmount())
+      await disposeRoot(root)
       container.remove()
     }
   }
@@ -103,7 +112,7 @@ async function renderPresenterForm(onSubmit?: (value: ActivityFormInput) => void
 async function typeIn(input: HTMLInputElement, value: string) {
   await act(async () => {
     Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, value)
-    input.dispatchEvent(new window.InputEvent('input', { bubbles: true, inputType: 'insertText', data: value.slice(-1) }))
+    input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: value.slice(-1) }))
   })
 }
 
@@ -169,7 +178,7 @@ describe('ActivityPresenterFields interactions', () => {
     const input = container.querySelector<HTMLInputElement>('input[role="combobox"]')!
     await act(async () => input.focus())
     await typeIn(input, 'Ana María')
-    await act(async () => input.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })))
+    await act(async () => input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })))
     await act(async () => input.blur())
     expect(input.value).toBe('Ana María')
     await submit(container)
@@ -200,6 +209,7 @@ describe('ActivityPresenterFields interactions', () => {
     const container = document.createElement('main')
     document.body.append(container)
     const root = createRoot(container)
+    activeRoots.add(root)
     await act(async () => root.render(createElement(SelectionForm)))
     const buttons = container.querySelectorAll('button')
     await act(async () => buttons[0]!.click())
@@ -210,7 +220,7 @@ describe('ActivityPresenterFields interactions', () => {
     expect(submissions[0]!.detail).toMatchObject({
       presenterNombre: '', presenterArtistaId: 10, presenterPseudonimoId: 102
     })
-    await act(async () => root.unmount())
+    await disposeRoot(root)
     container.remove()
   })
 })

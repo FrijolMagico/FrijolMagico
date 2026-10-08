@@ -17,7 +17,10 @@ import {
   getEditionParticipationsCacheTag,
   getParticipationActivitiesCacheTag
 } from '@frijolmagico/cache-tags'
-import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
+import {
+  revalidateWebCacheBatch,
+  type RevalidateWebCacheOptions
+} from '@/shared/lib/web-invalidation'
 import { findOrCreateEditionParticipation } from '../_lib/find-or-create-edition-participation'
 import { resolveActiveArtistPseudonym } from '../_lib/resolve-artist-pseudonym'
 import { registrationWindowToUtc } from '../../_lib/activity-registration-time'
@@ -72,7 +75,6 @@ export async function createActivityAction(
     }
 
     let participationId: number | null = null
-    let effectiveActivityTypeSlug: string | null = null
     const isPublicActivity =
       data.activity.estado === 'confirmado' || data.activity.estado === 'completado'
 
@@ -96,7 +98,6 @@ export async function createActivityAction(
             : eq(table.id, data.activity.tipoActividadId)
       })
       if (!effectiveType) throw new Error('El tipo de actividad no existe')
-      effectiveActivityTypeSlug = effectiveType.slug
 
       if (!['taller', 'charla', 'musica'].includes(effectiveType.slug)) {
         throw new Error(
@@ -204,26 +205,26 @@ export async function createActivityAction(
         )
       }
     }
-    void revalidateWebCacheBestEffort({
-      tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      ...(isPublicActivity
-        ? { path: '/festivales/[slug]', pathType: 'page' as const }
-        : {})
-    })
-    void revalidateWebCacheBestEffort({
-      tag: FESTIVALES_CACHE_TAG,
-      mode: 'swr',
-      ...(isPublicActivity || effectiveActivityTypeSlug === 'charla'
-        ? { path: '/festivales', pathType: 'page' as const }
-        : {})
-    })
+    const webInvalidationRequests: RevalidateWebCacheOptions[] = [
+      {
+        tag: FESTIVAL_CRITICAL_CACHE_TAG,
+        mode: 'immediate'
+      },
+      {
+        tag: FESTIVALES_CACHE_TAG,
+        mode: 'swr'
+      }
+    ]
     if (isPublicActivity) {
-      void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
-      void revalidateWebCacheBestEffort({ tag: CATALOG_PARTICIPATION_CACHE_TAG })
+      webInvalidationRequests.push({ tag: CATALOG_CACHE_TAG })
+      webInvalidationRequests.push({ tag: CATALOG_PARTICIPATION_CACHE_TAG })
     }
+    const webRevalidation = await revalidateWebCacheBatch(
+      webInvalidationRequests,
+      'create-activity'
+    )
 
-    return { success: true }
+    return { success: true, ...webRevalidation }
   } catch (error) {
     console.error('[createActivityAction]', error)
     return {

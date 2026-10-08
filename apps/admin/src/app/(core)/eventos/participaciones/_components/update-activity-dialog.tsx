@@ -199,7 +199,9 @@ export function UpdateActivityDialog({
       return
     }
 
-    toast.success('Cambios guardados')
+    toast.success(
+      `Cambios guardados${result.webRevalidation === 'swr' ? ' Pueden tardar en aparecer en la web.' : ''}`
+    )
     methods.reset(values)
     closeUpdateDialogs()
     router.refresh()

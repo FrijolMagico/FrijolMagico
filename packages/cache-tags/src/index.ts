@@ -10,8 +10,10 @@
 // ── Catálogo ──────────────────────────────────
 export const CATALOG_CACHE_TAG = 'catalogo:artistas'
 export const CATALOG_BASE_CACHE_TAG = 'catalogo:artistas:base'
-export const CATALOG_PARTICIPATION_CACHE_TAG = 'catalogo:artistas:participaciones'
-export const CATALOG_EDITION_DATES_CACHE_TAG = 'catalogo:artistas:fechas-edicion'
+export const CATALOG_PARTICIPATION_CACHE_TAG =
+  'catalogo:artistas:participaciones'
+export const CATALOG_EDITION_DATES_CACHE_TAG =
+  'catalogo:artistas:fechas-edicion'
 export const CANONICAL_CATALOG_SLUGS_CACHE_TAG = 'catalogo:artistas:slugs'
 
 // ── Home / Destacados ─────────────────────────
@@ -21,6 +23,19 @@ export const FEATURED_ARTISTS_CACHE_TAG = 'home:destacados'
 export const NOSOTROS_CACHE_TAG = 'nosotros'
 export const FESTIVALES_CACHE_TAG = 'festivales'
 export const FESTIVAL_CRITICAL_CACHE_TAG = 'festivales:critico'
+
+export function resolveWebRevalidationMode(
+  tag: string,
+  requestedMode?: 'swr' | 'immediate'
+): 'swr' | 'immediate' {
+  if (
+    tag === FESTIVAL_CRITICAL_CACHE_TAG ||
+    tag === CANONICAL_CATALOG_SLUGS_CACHE_TAG
+  ) {
+    return 'immediate'
+  }
+  return requestedMode ?? 'swr'
+}
 
 // ── Artistas ──────────────────────────────────
 export const ARTIST_CACHE_TAG = 'artistas'
@@ -50,13 +65,13 @@ export function getEditionParticipationsCacheTag(editionId: number): string {
 }
 
 export function getParticipationExhibitionsCacheTag(
-  participationId: number,
+  participationId: number
 ): string {
   return `exposiciones:participacion:${participationId}`
 }
 
 export function getParticipationActivitiesCacheTag(
-  participationId: number,
+  participationId: number
 ): string {
   return `actividades:participacion:${participationId}`
 }

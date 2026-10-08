@@ -36,6 +36,8 @@ export function updateURLParams(filters: CatalogFilterValues) {
   const uniqueCity = dedupeArray(filters.city)
   const uniqueCountry = dedupeArray(filters.country)
   const params = new URLSearchParams()
+  const artistSlug = new URLSearchParams(window.location.search).get('artista')
+  if (artistSlug) params.set('artista', artistSlug)
   if (uniqueCategory.length > 0)
     params.set(FILTER_KEYS.category, uniqueCategory.join(','))
   if (uniqueCity.length > 0) params.set(FILTER_KEYS.city, uniqueCity.join(','))

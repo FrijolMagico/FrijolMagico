@@ -14,7 +14,10 @@ import {
   FESTIVAL_CRITICAL_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 import { toRawAssetPath } from '@frijolmagico/utils/cdn'
-import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
+import {
+  revalidateWebCacheBatch,
+  type RevalidateWebCacheOptions
+} from '@/shared/lib/web-invalidation'
 import {
   INVALID_RECEIPT,
   verifyArtistAvatarUploadReceipt
@@ -39,38 +42,31 @@ function receiptSecret(): string {
   }
 }
 
-async function invalidateFeaturedArtists(): Promise<void> {
-  await revalidateWebCacheBestEffort({
-    tag: FEATURED_ARTISTS_CACHE_TAG,
-    mode: 'swr'
-  })
-}
-
-async function invalidateFestivalDetail(): Promise<void> {
-  await revalidateWebCacheBestEffort({
-    tag: FESTIVAL_CRITICAL_CACHE_TAG,
-    mode: 'immediate',
-    path: '/festivales/[slug]',
-    pathType: 'page'
-  })
-}
-
-async function invalidateActivatedCatalog(
+function avatarCacheRequests(
   claims: {
     requestedActive?: boolean
     catalogId?: number
   },
   catalogActivationEvidence: boolean
-): Promise<void> {
+): RevalidateWebCacheOptions[] {
+  const requests: RevalidateWebCacheOptions[] = []
   if (claims.requestedActive && claims.catalogId) {
-    await revalidateWebCacheBestEffort({ tag: CATALOG_BASE_CACHE_TAG })
+    requests.push({ tag: CATALOG_BASE_CACHE_TAG })
     if (catalogActivationEvidence) {
-      await revalidateWebCacheBestEffort({
+      requests.push({
         tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
         mode: 'immediate'
       })
     }
   }
+  requests.push(
+    { tag: FEATURED_ARTISTS_CACHE_TAG, mode: 'swr' },
+    {
+      tag: FESTIVAL_CRITICAL_CACHE_TAG,
+      mode: 'immediate'
+    }
+  )
+  return requests
 }
 
 function actionErrorEntityType(message: string) {
@@ -144,10 +140,11 @@ export async function persistArtistAvatarAction(
       claims.version
     )
     if (committed) {
-      await invalidateActivatedCatalog(claims, true)
-      await invalidateFeaturedArtists()
-      await invalidateFestivalDetail()
-      return { success: true, data: committed }
+      const webInvalidation = await revalidateWebCacheBatch(
+        avatarCacheRequests(claims, true),
+        'persist-artist-avatar'
+      )
+      return { success: true, data: committed, ...webInvalidation }
     }
 
     let avatar: UploadArtistAvatarData
@@ -228,10 +225,11 @@ export async function persistArtistAvatarAction(
       avatar = recovered
       catalogActivationEvidence = true
     }
-    await invalidateActivatedCatalog(claims, catalogActivationEvidence)
-    await invalidateFeaturedArtists()
-    await invalidateFestivalDetail()
-    return { success: true, data: avatar }
+    const webInvalidation = await revalidateWebCacheBatch(
+      avatarCacheRequests(claims, catalogActivationEvidence),
+      'persist-artist-avatar'
+    )
+    return { success: true, data: avatar, ...webInvalidation }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Error desconocido'
     return {

@@ -49,6 +49,18 @@
       "interactive": true
     },
 
+    "@frijolmagico/admin#start": {
+      "env": ["TURSO_DATABASE_URL"],
+      "cache": false,
+      "persistent": true
+    },
+
+    "@frijolmagico/web#start": {
+      "env": ["TURSO_DATABASE_URL"],
+      "cache": false,
+      "persistent": true
+    },
+
     "lint": {
       "dependsOn": ["^build"],
       "outputs": []

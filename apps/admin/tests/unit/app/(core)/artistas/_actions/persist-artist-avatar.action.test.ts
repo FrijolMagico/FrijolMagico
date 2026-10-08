@@ -9,6 +9,14 @@ import {
 
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
 const revalidateWebCacheBestEffort = mock(async (_options: { tag: string }) => {})
+const invalidationBatches: { requests: { tag?: string; mode?: string; path?: string; pathType?: string }[]; context?: string }[] = []
+const revalidateWebCacheBatch = mock(async (
+  requests: { tag?: string; mode?: string; path?: string; pathType?: string }[],
+  context?: string
+) => {
+  invalidationBatches.push({ requests, context })
+  return { webRevalidation: 'swr' as const }
+})
 const updateValues: unknown[] = []
 let catalogActive = false
 let surfaceTransactionErrorAfterCommit = false
@@ -85,6 +93,7 @@ mock.module('server-only', () => ({}))
 mock.module('@frijolmagico/database/orm', () => ({ db }))
 mock.module('@/shared/lib/auth/utils', () => ({ requireAuth }))
 mock.module('@/shared/lib/web-invalidation', () => ({
+  revalidateWebCacheBatch,
   revalidateWebCacheBestEffort
 }))
 
@@ -127,6 +136,18 @@ function avatarOnlyReceipt() {
   )
 }
 
+const featuredRequest = { tag: FEATURED_ARTISTS_CACHE_TAG, mode: 'swr' }
+const festivalRequest = {
+  tag: FESTIVAL_CRITICAL_CACHE_TAG,
+  mode: 'immediate'
+}
+
+function expectBatchRequests(requests: typeof invalidationBatches[number]['requests']) {
+  expect(invalidationBatches).toEqual([
+    { requests, context: 'persist-artist-avatar' }
+  ])
+}
+
 describe('persist artist avatar cache invalidation', () => {
   beforeEach(() => {
     updateValues.length = 0
@@ -134,34 +155,38 @@ describe('persist artist avatar cache invalidation', () => {
     surfaceTransactionErrorAfterCommit = false
     committedAvatar = []
     revalidateWebCacheBestEffort.mockClear()
+    revalidateWebCacheBatch.mockClear()
+    invalidationBatches.length = 0
     requireAuth.mockReset()
     requireAuth.mockResolvedValue({ user: { id: 'admin-1' } })
   })
 
-  test('invalidates canonical slugs when persistence activates an inactive catalog', async () => {
+  test('batches exact invalidations and returns freshness outside the avatar DTO', async () => {
     const result = await persistArtistAvatarAction({
       receipt: activeCatalogReceipt()
     })
 
-    expect(result).toMatchObject({ success: true, data: { id: 10 } })
+    expect(result).toMatchObject({
+      success: true,
+      data: { id: 10 },
+      webRevalidation: 'swr'
+    })
+    expect(result.data).not.toHaveProperty('webRevalidation')
+    expect(invalidationBatches).toEqual([
+      {
+        requests: [
+          { tag: CATALOG_BASE_CACHE_TAG },
+          { tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG, mode: 'immediate' },
+          { tag: FEATURED_ARTISTS_CACHE_TAG, mode: 'swr' },
+          {
+            tag: FESTIVAL_CRITICAL_CACHE_TAG,
+            mode: 'immediate'
+          }
+        ],
+        context: 'persist-artist-avatar'
+      }
+    ])
     expect(updateValues).toContainEqual({ activo: true })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: CATALOG_BASE_CACHE_TAG
-    })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
-      mode: 'immediate'
-    })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: FEATURED_ARTISTS_CACHE_TAG,
-      mode: 'swr'
-    })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
-    })
   })
 
   test('recovers committed activation after an ambiguous transaction error', async () => {
@@ -171,21 +196,17 @@ describe('persist artist avatar cache invalidation', () => {
       receipt: activeCatalogReceipt()
     })
 
-    expect(result).toMatchObject({ success: true, data: { id: 10 } })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
-      mode: 'immediate'
+    expect(result).toMatchObject({
+      success: true,
+      data: { id: 10 },
+      webRevalidation: 'swr'
     })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: FEATURED_ARTISTS_CACHE_TAG,
-      mode: 'swr'
-    })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
-    })
+    expectBatchRequests([
+      { tag: CATALOG_BASE_CACHE_TAG },
+      { tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG, mode: 'immediate' },
+      featuredRequest,
+      festivalRequest
+    ])
   })
 
   test('does not invalidate canonical slugs when the catalog was already active', async () => {
@@ -197,10 +218,11 @@ describe('persist artist avatar cache invalidation', () => {
 
     expect(result).toMatchObject({ success: true, data: { id: 10 } })
     expect(updateValues).toContainEqual({ activo: true })
-    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalledWith({
-      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
-      mode: 'immediate'
-    })
+    expectBatchRequests([
+      { tag: CATALOG_BASE_CACHE_TAG },
+      featuredRequest,
+      festivalRequest
+    ])
   })
 
   test('invalidates Featured but not canonical slugs for an avatar-only receipt', async () => {
@@ -209,20 +231,7 @@ describe('persist artist avatar cache invalidation', () => {
     })
 
     expect(result).toMatchObject({ success: true, data: { id: 10 } })
-    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalledWith({
-      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
-      mode: 'immediate'
-    })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: FEATURED_ARTISTS_CACHE_TAG,
-      mode: 'swr'
-    })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
-    })
+    expectBatchRequests([featuredRequest, festivalRequest])
   })
 
   test('re-invalidates the canonical catalog cache for an idempotent retry', async () => {
@@ -240,34 +249,19 @@ describe('persist artist avatar cache invalidation', () => {
     })
 
     expect(result).toMatchObject({ success: true, data: { id: 10 } })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: CATALOG_BASE_CACHE_TAG
-    })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG,
-      mode: 'immediate'
-    })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: FEATURED_ARTISTS_CACHE_TAG,
-      mode: 'swr'
-    })
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
-    })
+    expectBatchRequests([
+      { tag: CATALOG_BASE_CACHE_TAG },
+      { tag: CANONICAL_CATALOG_SLUGS_CACHE_TAG, mode: 'immediate' },
+      featuredRequest,
+      festivalRequest
+    ])
   })
 
   test('does not invalidate festival detail when the receipt is invalid', async () => {
     const result = await persistArtistAvatarAction({ receipt: 'invalid' })
 
     expect(result).toMatchObject({ success: false })
-    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalledWith({
-      tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
-    })
+    expect(invalidationBatches).toHaveLength(0)
+    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
   })
 })

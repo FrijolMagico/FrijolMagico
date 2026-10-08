@@ -2,14 +2,15 @@ import { beforeEach, describe, expect, mock, test } from 'bun:test'
 
 const updateTag = mock(() => {})
 const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
-const revalidateWebCacheBestEffort = mock(async (_options: { tag: string }) => {})
+const revalidateWebCacheBatch = mock(async () => ({}))
 const catalogArtistTable = { id: 'catalog.id', deletedAt: 'catalog.deletedAt' }
 let restoredRows: { id: number }[] = [{ id: 9 }]
+let updateFailure: Error | null = null
 
 mock.module('server-only', () => ({}))
 mock.module('next/cache', () => ({ updateTag }))
 mock.module('@/shared/lib/auth/utils', () => ({ requireAuth }))
-mock.module('@/shared/lib/web-invalidation', () => ({ revalidateWebCacheBestEffort }))
+mock.module('@/shared/lib/web-invalidation', () => ({ revalidateWebCacheBatch }))
 mock.module('@frijolmagico/database/schema', () => ({
   artist: { catalogArtist: catalogArtistTable }
 }))
@@ -17,7 +18,12 @@ mock.module('@frijolmagico/database/orm', () => ({
   db: {
     update: () => ({
       set: () => ({
-        where: () => ({ returning: async () => restoredRows })
+        where: () => ({
+          returning: async () => {
+            if (updateFailure) throw updateFailure
+            return restoredRows
+          }
+        })
       })
     })
   }
@@ -35,28 +41,47 @@ const { restoreCatalogAction } = await import(
 beforeEach(() => {
   updateTag.mockClear()
   requireAuth.mockClear()
-  revalidateWebCacheBestEffort.mockClear()
+  revalidateWebCacheBatch.mockClear()
+  revalidateWebCacheBatch.mockResolvedValue({})
   restoredRows = [{ id: 9 }]
+  updateFailure = null
 })
 
 describe('restoreCatalogAction catalog invalidation', () => {
-  test('preserves catalog invalidation only after the restore returns a row', async () => {
-    await expect(restoreCatalogAction(9)).resolves.toEqual({ success: true })
+  test('awaits the three existing catalog requests only after the restore returns a row', async () => {
+    revalidateWebCacheBatch.mockResolvedValue({ webRevalidation: 'swr' })
 
-    expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:base')
-    expect(revalidateWebCacheBestEffort).toHaveBeenCalledWith({
-      tag: 'catalogo:artistas:base'
+    await expect(restoreCatalogAction(9)).resolves.toEqual({
+      success: true,
+      webRevalidation: 'swr',
     })
-    expect(updateTag).toHaveBeenCalledWith('catalogo:artistas:participaciones')
-    expect(updateTag).toHaveBeenCalledWith('catalogo:artistas')
+
+    expect(updateTag).toHaveBeenCalledTimes(3)
+    expect(revalidateWebCacheBatch).toHaveBeenCalledWith([
+      { tag: 'catalogo:artistas:base' },
+      { tag: 'catalogo:artistas:participaciones' },
+      { tag: 'catalogo:artistas' },
+    ], 'restore-catalog')
   })
 
-  test('does not invalidate caches when no row was restored', async () => {
+  test('preserves successful no-row outcome without invalidation or freshness metadata', async () => {
     restoredRows = []
 
     await expect(restoreCatalogAction(9)).resolves.toEqual({ success: true })
 
     expect(updateTag).not.toHaveBeenCalled()
-    expect(revalidateWebCacheBestEffort).not.toHaveBeenCalled()
+    expect(revalidateWebCacheBatch).not.toHaveBeenCalled()
+  })
+
+  test('preserves the database failure outcome and skips cache effects', async () => {
+    updateFailure = new Error('Restore failed')
+
+    await expect(restoreCatalogAction(9)).resolves.toEqual({
+      success: false,
+      errors: [{ entityType: 'catalogo', message: 'Restore failed' }],
+    })
+
+    expect(updateTag).not.toHaveBeenCalled()
+    expect(revalidateWebCacheBatch).not.toHaveBeenCalled()
   })
 })

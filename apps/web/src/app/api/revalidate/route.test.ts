@@ -1,4 +1,9 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
+import {
+  CANONICAL_CATALOG_SLUGS_CACHE_TAG,
+  FESTIVAL_CRITICAL_CACHE_TAG,
+  resolveWebRevalidationMode
+} from '@frijolmagico/cache-tags'
 import { NextRequest } from 'next/server'
 
 const revalidatePathMock = mock(() => {})
@@ -20,10 +25,25 @@ beforeEach(() => {
 const createRequest = (query: string, authorization?: string) => {
   const headers = new Headers()
   if (authorization) headers.set('Authorization', authorization)
-  return new NextRequest(`http://localhost/api/revalidate?${query}`, { headers })
+  return new NextRequest(`http://localhost/api/revalidate?${query}`, {
+    headers
+  })
 }
 
 describe('POST /api/revalidate', () => {
+  test('resolves protected modes and preserves requested ordinary-tag modes', () => {
+    expect(resolveWebRevalidationMode(FESTIVAL_CRITICAL_CACHE_TAG)).toBe(
+      'immediate'
+    )
+    expect(
+      resolveWebRevalidationMode(CANONICAL_CATALOG_SLUGS_CACHE_TAG, 'swr')
+    ).toBe('immediate')
+    expect(resolveWebRevalidationMode('ordinary-tag')).toBe('swr')
+    expect(resolveWebRevalidationMode('ordinary-tag', 'immediate')).toBe(
+      'immediate'
+    )
+  })
+
   test('rejects unauthorized requests without invalidating anything', async () => {
     const response = await POST(createRequest('tag=artists', 'Bearer wrong'))
 
@@ -42,6 +62,48 @@ describe('POST /api/revalidate', () => {
     expect(revalidateTagMock).toHaveBeenCalledWith('artists', 'max')
     expect(revalidatePathMock).toHaveBeenCalledTimes(1)
     expect(revalidatePathMock).toHaveBeenCalledWith('/artists')
+  })
+
+  test.each([FESTIVAL_CRITICAL_CACHE_TAG, CANONICAL_CATALOG_SLUGS_CACHE_TAG])(
+    'defaults protected tag %s to immediate invalidation',
+    async (tag) => {
+      const response = await POST(
+        createRequest(`tag=${encodeURIComponent(tag)}`, 'Bearer test-secret')
+      )
+
+      expect(response.status).toBe(200)
+      expect(revalidateTagMock).toHaveBeenCalledWith(tag, { expire: 0 })
+    }
+  )
+
+  test('accepts explicit immediate mode for protected tags', async () => {
+    const response = await POST(
+      createRequest(
+        `tag=${encodeURIComponent(FESTIVAL_CRITICAL_CACHE_TAG)}&mode=immediate`,
+        'Bearer test-secret'
+      )
+    )
+
+    expect(response.status).toBe(200)
+    expect(revalidateTagMock).toHaveBeenCalledWith(
+      FESTIVAL_CRITICAL_CACHE_TAG,
+      {
+        expire: 0
+      }
+    )
+  })
+
+  test('rejects explicit protected SWR before invalidating any tag or path', async () => {
+    const response = await POST(
+      createRequest(
+        `tag=${encodeURIComponent(FESTIVAL_CRITICAL_CACHE_TAG)}&mode=swr&path=%2Fartists`,
+        'Bearer test-secret'
+      )
+    )
+
+    expect(response.status).toBe(400)
+    expect(revalidateTagMock).not.toHaveBeenCalled()
+    expect(revalidatePathMock).not.toHaveBeenCalled()
   })
 
   test('uses immediate tag invalidation when requested', async () => {

@@ -1,6 +1,6 @@
 {
   "name": "frijolmagico",
-  "version": "4.13.1",
+  "version": "4.14.0",
   "private": true,
   "devEngines": {
     "packageManager": {
@@ -9,10 +9,12 @@
     }
   },
   "scripts": {
-    "build": "bun scripts/build-local.ts staging",
-    "build:real": "bun scripts/build-local.ts production",
+    "build": "TURSO_DATABASE_URL=file://${PWD}/packages/database/local.dev.db turbo run build",
+    "build:real": "TURSO_DATABASE_URL=file://${PWD}/packages/database/local.db turbo run build",
     "dev": "TURSO_DATABASE_URL=file://${PWD}/packages/database/local.dev.db turbo run dev",
     "dev:real": "TURSO_DATABASE_URL=file://${PWD}/packages/database/local.db turbo run dev",
+    "start": "TURSO_DATABASE_URL=file://${PWD}/packages/database/local.dev.db turbo run start",
+    "start:real": "TURSO_DATABASE_URL=file://${PWD}/packages/database/local.db turbo run start",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
     "test": "turbo run test",

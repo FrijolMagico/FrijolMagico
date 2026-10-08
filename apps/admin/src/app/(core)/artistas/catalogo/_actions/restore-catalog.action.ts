@@ -13,7 +13,8 @@ import {
   CATALOG_CACHE_TAG,
   CATALOG_PARTICIPATION_CACHE_TAG
 } from '@frijolmagico/cache-tags'
-import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
+import { revalidateWebCacheBatch } from '@/shared/lib/web-invalidation'
+import type { RevalidateWebCacheOptions } from '@/shared/lib/web-invalidation'
 import type { ActionState } from '@/shared/types/actions'
 
 export async function restoreCatalogAction(id: number): Promise<ActionState> {
@@ -32,10 +33,16 @@ export async function restoreCatalogAction(id: number): Promise<ActionState> {
       .returning({ id: artist.catalogArtist.id })
 
     if (restored.length > 0) {
-      for (const tag of [CATALOG_BASE_CACHE_TAG, CATALOG_PARTICIPATION_CACHE_TAG, CATALOG_CACHE_TAG]) {
-        updateTag(tag)
-        void revalidateWebCacheBestEffort({ tag })
-      }
+      const tags = [CATALOG_BASE_CACHE_TAG, CATALOG_PARTICIPATION_CACHE_TAG, CATALOG_CACHE_TAG]
+      const invalidationRequests: RevalidateWebCacheOptions[] = tags.map((tag) => ({ tag }))
+
+      for (const tag of tags) updateTag(tag)
+
+      const webInvalidation = await revalidateWebCacheBatch(
+        invalidationRequests,
+        'restore-catalog'
+      )
+      return { success: true, ...webInvalidation }
     }
 
     return { success: true }
