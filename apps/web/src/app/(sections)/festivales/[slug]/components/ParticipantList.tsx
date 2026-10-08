@@ -54,7 +54,11 @@ export const ParticipantList = ({
           <ParticipantByDiscipline
             key={disciplineLabel}
             disciplineLabel={disciplineLabel}
-            participants={group}
+            participants={[...group].sort((a, b) =>
+              a.pseudonimo.localeCompare(b.pseudonimo, 'es', {
+                sensitivity: 'base'
+              })
+            )}
             animationMode={animationMode}
           />
         ))}
