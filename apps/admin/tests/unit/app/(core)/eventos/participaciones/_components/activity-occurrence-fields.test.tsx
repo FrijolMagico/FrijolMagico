@@ -1,7 +1,6 @@
-import { expect, mock, test } from 'bun:test'
+import { afterAll, afterEach, expect, mock, test } from 'bun:test'
 import { act, createElement } from 'react'
-import { useForm } from 'react-hook-form'
-import { Window } from 'happy-dom'
+import { useForm, useWatch } from 'react-hook-form'
 mock.module('@/shared/components/date-picker-field', () => ({
   DatePickerField: ({ id, value, onChange }: { id: string; value: string; onChange: (date: string) => void }) =>
     createElement('button', { id, type: 'button', 'data-selected-date': value, onClick: () => {
@@ -14,16 +13,22 @@ const { ActivityOccurrenceFields } = await import('@/core/eventos/participacione
 import type { ActivityFormInput } from '@/core/eventos/participaciones/_schemas/activity.schema'
 import { activityOccurrencesSchema } from '@/core/eventos/participaciones/_schemas/activity.schema'
 
-const window = new Window()
-globalThis.window = window as unknown as Window & typeof globalThis
-globalThis.document = window.document as unknown as Document
-globalThis.Node = window.Node as typeof Node
-globalThis.HTMLElement = window.HTMLElement as typeof HTMLElement
-globalThis.HTMLInputElement = window.HTMLInputElement as typeof HTMLInputElement
-globalThis.Element = window.Element as typeof Element
-globalThis.Event = window.Event as typeof Event
-globalThis.IS_REACT_ACT_ENVIRONMENT = true
+import { createHappyDOMEnvironment } from '@/tests/unit/_support/happy-dom-environment'
+
+const environment = await createHappyDOMEnvironment()
 const { createRoot } = await import('react-dom/client')
+const activeRoots = new Set<ReturnType<typeof createRoot>>()
+
+afterEach(async () => {
+  try {
+    for (const root of activeRoots) await act(async () => root.unmount())
+  } finally {
+    activeRoots.clear()
+    document.body.replaceChildren()
+  }
+})
+
+afterAll(async () => environment.dispose())
 
 function Schedule({
   initial = [],
@@ -33,10 +38,11 @@ function Schedule({
   registrationEnabled?: boolean
 }) {
   const methods = useForm<ActivityFormInput>({ defaultValues: { occurrences: initial } })
+  const occurrences = useWatch({ control: methods.control, name: 'occurrences' })
   return createElement('form', null,
     createElement(ActivityOccurrenceFields, { methods, disabled: false, registrationEnabled }),
     createElement('button', { type: 'button', onClick: () => methods.setError('occurrences.0.durationMinutes', { message: 'La duración debe ser positiva' }) }, 'Mostrar error'),
-    createElement('output', { 'data-values': true }, JSON.stringify(methods.watch('occurrences')))
+    createElement('output', { 'data-values': true }, JSON.stringify(occurrences))
   )
 }
 
@@ -47,8 +53,9 @@ async function render(
   const container = document.createElement('main')
   document.body.append(container)
   const root = createRoot(container)
+  activeRoots.add(root)
   await act(async () => root.render(createElement(Schedule, { initial, registrationEnabled })))
-  return { container, dispose: async () => { await act(async () => root.unmount()); container.remove() } }
+  return { container, dispose: async () => { await act(async () => root.unmount()); activeRoots.delete(root); container.remove() } }
 }
 
 async function click(container: HTMLElement, label: string) {
@@ -59,8 +66,8 @@ async function click(container: HTMLElement, label: string) {
 
 async function enter(input: HTMLInputElement, text: string) {
   await act(async () => {
-    Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set?.call(input, text)
-    input.dispatchEvent(new window.Event('input', { bubbles: true }))
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, text)
+    input.dispatchEvent(new Event('input', { bubbles: true }))
   })
 }
 
@@ -89,11 +96,11 @@ test('activity session minute arrows use one-minute steps across midnight', asyn
     { date: '2026-11-28', startTime: '23:59', durationMinutes: 1 }
   ])
   const minute = container.querySelector<HTMLInputElement>('input[id^="occurrence-time-"][id$="-minute"]')!
-  await act(async () => minute.dispatchEvent(new window.KeyboardEvent('keydown', {
+  await act(async () => minute.dispatchEvent(new KeyboardEvent('keydown', {
     key: 'ArrowUp', bubbles: true, cancelable: true
   })))
   expect(container.querySelector('output')?.textContent).toContain('"startTime":"00:00"')
-  await act(async () => minute.dispatchEvent(new window.WheelEvent('wheel', {
+  await act(async () => minute.dispatchEvent(new WheelEvent('wheel', {
     deltaY: 1, bubbles: true, cancelable: true
   })))
   expect(container.querySelector('output')?.textContent).toContain('"startTime":"23:59"')
