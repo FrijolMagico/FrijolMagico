@@ -118,7 +118,7 @@ describe('updateParticipationAction cache freshness', () => {
           tag: FESTIVAL_CRITICAL_CACHE_TAG,
           mode: 'immediate'
         },
-        { tag: CATALOG_CACHE_TAG }
+        { tag: CATALOG_CACHE_TAG },
         { tag: CATALOG_PARTICIPATION_CACHE_TAG }
       ],
       'update-participation'
@@ -135,7 +135,7 @@ describe('updateParticipationAction cache freshness', () => {
           tag: FESTIVAL_CRITICAL_CACHE_TAG,
           mode: 'immediate'
         },
-        { tag: CATALOG_CACHE_TAG }
+        { tag: CATALOG_CACHE_TAG },
         { tag: CATALOG_PARTICIPATION_CACHE_TAG }
       ],
       'update-participation'

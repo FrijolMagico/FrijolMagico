@@ -147,9 +147,7 @@ describe('band actions', () => {
       [
         {
           tag: 'festivales:critico',
-          mode: 'immediate',
-          path: '/festivales/[slug]',
-          pathType: 'page'
+          mode: 'immediate'
         }
       ],
       'update-banda'

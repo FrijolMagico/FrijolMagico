@@ -75,7 +75,6 @@ export async function createActivityAction(
     }
 
     let participationId: number | null = null
-    let effectiveActivityTypeSlug: string | null = null
     const isPublicActivity =
       data.activity.estado === 'confirmado' || data.activity.estado === 'completado'
 
@@ -99,7 +98,6 @@ export async function createActivityAction(
             : eq(table.id, data.activity.tipoActividadId)
       })
       if (!effectiveType) throw new Error('El tipo de actividad no existe')
-      effectiveActivityTypeSlug = effectiveType.slug
 
       if (!['taller', 'charla', 'musica'].includes(effectiveType.slug)) {
         throw new Error(

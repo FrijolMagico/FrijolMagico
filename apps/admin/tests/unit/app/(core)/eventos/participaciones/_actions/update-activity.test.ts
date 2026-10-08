@@ -190,7 +190,7 @@ describe('updateActivityAction catalog freshness', () => {
           mode: 'immediate'
         },
         { tag: FESTIVALES_CACHE_TAG, mode: 'swr' },
-        { tag: 'catalogo:artistas' }
+        { tag: 'catalogo:artistas' },
         { tag: 'catalogo:artistas:participaciones' }
       ],
       'update-activity'
@@ -261,7 +261,7 @@ describe('updateActivityAction catalog freshness', () => {
           tag: FESTIVALES_CACHE_TAG,
           mode: 'swr'
         },
-        { tag: 'catalogo:artistas' }
+        { tag: 'catalogo:artistas' },
         { tag: 'catalogo:artistas:participaciones' }
       ],
       'update-activity'
