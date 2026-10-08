@@ -8,7 +8,7 @@ ParticipantList.tsx and its colocated regression test only. No SQL changes, no i
 
 ## Tasks
 - [x] T1 (complete; commit 13e79060): Add regression coverage, observe RED, sort groups, observe GREEN, lint and type-check; commit behavior and tests together.
-- [ ] T2 (in progress): Assess verification/review availability, publish branch and create PR to dev with patch label; report CI status.
+- [x] T2 (complete; delivery evidence commit 76a634cc plus final documentation commit): Assess verification/review availability, publish branch and create PR to dev with patch label; report CI status.
 
 ## Routing
 T1 delegated to gentle-ai-worker: component and regression test are two meaningful edit surfaces. T2 parent delivery orchestration; verifier if assessment requires it.
@@ -24,5 +24,10 @@ Worker observed RED then GREEN (3 focused tests); lint, type-check and diff chec
 
 Independent verifier confirmed 3 focused tests and 299 full web tests passing, lint and type-check passing (Turbo cache hits), and clean diff check. Bun crash did not recur; root cause remains unknown. Independent code review confirmed grouping and immutability.
 
+## Delivery evidence
+T1 commit: 13e79060. Progress evidence commit: 76a634cc.
+Native review review-672a2228839a6149: medium, review-reliability approved; exact acknowledgement completed and authority burned. Initial consent expired without lineage creation; fresh authorized start succeeded.
+Published branch and created PR https://github.com/FrijolMagico/FrijolMagico/pull/244 targeting dev, labels patch and type:bug, no issue. No merge performed.
+
 ## Next step
-Commit T1 then execute native review at work-unit boundary and create PR.
+Await remote CI and human review. Build/browser checks not run for this bounded ordering-only change.
