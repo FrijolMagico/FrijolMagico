@@ -53,5 +53,26 @@ T2 preceded T3. A push while `staging` is outside the allow-list creates a deplo
 1. Branch `staging` produces a git-scoped alias. The stable aliases and Preview env vars still address the 2026-10-02 deployments. If `staging` is meant to be the reachable staging environment, each push must reassign the stable aliases, or the stable alias must be retired in favor of the branch-derived URL.
 2. Whether the missing deployment is a branch-creation-only gap or a broken push webhook. Resolving it requires a commit push on `staging`, which is not authorized.
 
+## T4 resolution: the commit push was the missing trigger
+Commit `1281cbbd` (`chore(odd): track staging branch rename and preview target`) created both deployments, confirming candidate 1. The push that creates a branch does not trigger a deployment; the first commit on the branch does. The repository webhook was never broken.
+- Web `frijolmagico-d71lk2fdm-frijol-magicos-projects.vercel.app`, READY, `GET /` 200, TTFB 2.11s.
+- Admin `admin-frijolmagico-5rlk53r2g-frijol-magicos-projects.vercel.app`, READY, `GET /` 302 (deployment protection), TTFB 0.41s.
+- Build log confirms `Cloning ... (Branch: staging, Commit: 1281cbb)` with no Ignored Build Step execution, so the allow-list change is effective.
+
+## Alias state
+- `alias` and `automaticAliases` are null on both new deployments. Preview deployments in this project consistently carry no automatic alias; `frijolmagico-staging.vercel.app` and `admin-frijolmagico-staging.vercel.app` are manually assigned aliases, not git-derived ones. No configuration is missing to obtain the deployment; only manual alias assignment can give the stable names.
+- DNS for `*.vercel.app` is a wildcard, verified with a deliberately bogus hostname that resolves. Name resolution is therefore not evidence that an alias exists; use the API `alias` field.
+- Stable aliases currently resolve to `dpl_CsMccZxp6zBkJQgz3LmZQoQPtb5w` (Web, created 2026-10-03T13:45:59-03:00) and `dpl_3EA9gPHVTtTCqeNJpdp6iPui8Zjo` (Admin, 2026-10-03T13:43:35-03:00). Both are CLI uploads carrying `meta.gitDirty=1` and labeled with commit `07c602db`, so the current staging environment is not a reproducible artifact of any commit.
+
+## T6: REVALIDATION_SECRET is present as a shared team env var (corrected)
+Superseded: an earlier revision of this section claimed the secret was absent from both projects. That conclusion came from the wrong lens and is wrong.
+- `GET /v1/env?teamId=team_rdIkwpuYZXprztDHSgbuMe3n` returns `REVALIDATION_SECRET` twice, both linked to `frijolmagico` and `admin-frijolmagico`:
+  - `env_iOuqucgAWpdtUrgL5C1Q29qu`: type `sensitive`, targets `preview` and `production`, `applyToAllCustomEnvironments: true`, created 2026-04-12, updated 2026-10-02.
+  - `env_JNHV3dMaPzqJoI2TjxHg4qRR`: type `encrypted`, target `development` only, created 2026-10-03.
+- The secret is therefore available in Preview on both the signing side (`apps/admin/src/shared/lib/web-invalidation.ts:88,98`) and the validating side (`apps/web/src/app/api/revalidate/route.ts:6,10`). No env var needs to be created.
+- Method correction: shared env vars are not returned by `/v9/projects/{id}/env` and are not listed by `vercel env ls --project <name>`. Both omit them entirely, so a raw grep of the project JSON also finds nothing. The team endpoint is the only complete source. `vercel env ls --project` is not a complete configuration inventory.
+- Verification performed without reading values: the decrypted endpoints `/v1/env/{id}` and `/v1/projects/{idOrName}/env/{id}` were deliberately not called. Presence, key, type, targets and linked project ids come from the list endpoint.
+- Consequence: the Admin to Web cache sync has its credential in Preview. The `Web cache sync failed` observation in T8 requires a different explanation than a missing secret; that investigation is not part of this scope.
+
 ## Commit status
 No commit requested. The only repository change in this scope is this untracked task document.
