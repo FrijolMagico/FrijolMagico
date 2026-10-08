@@ -8,6 +8,7 @@ import {
   test
 } from 'bun:test'
 import { act, createElement } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 
 // ── Mock the server action ───────────────────────────────────────────
@@ -46,23 +47,23 @@ mock.module('sonner', () => ({
 
 // ── Mock Tooltip (renders content inline without hover interaction) ──
 mock.module('@/shared/components/ui/tooltip', () => ({
-  Tooltip: ({ children }: { children: unknown }) =>
+  Tooltip: ({ children }: { children: ReactNode }) =>
     createElement('div', { 'data-testid': 'tooltip' }, children),
   TooltipTrigger: ({
     children,
     render
   }: {
-    children?: unknown
-    render?: unknown
+    children?: ReactNode
+    render?: ReactElement
   }) =>
     createElement(
       'div',
       { 'data-testid': 'tooltip-trigger' },
       render ?? children
     ),
-  TooltipContent: ({ children }: { children: unknown }) =>
+  TooltipContent: ({ children }: { children: ReactNode }) =>
     createElement('div', { 'data-testid': 'tooltip-content' }, children),
-  TooltipProvider: ({ children }: { children: unknown }) =>
+  TooltipProvider: ({ children }: { children: ReactNode }) =>
     createElement('div', { 'data-testid': 'tooltip-provider' }, children)
 }))
 
@@ -185,7 +186,12 @@ globalThis.HTMLIFrameElement = TestNode as unknown as typeof HTMLIFrameElement
   }
 ).HTMLIFrameElement = TestNode as unknown as typeof HTMLIFrameElement
 ;(globalThis.window as unknown as { Event: typeof Event }).Event = Event
-globalThis.IS_REACT_ACT_ENVIRONMENT = true
+Object.defineProperty(globalThis, 'IS_REACT_ACT_ENVIRONMENT', {
+  configurable: true,
+  enumerable: true,
+  value: true,
+  writable: true
+})
 // @base-ui/react/avatar's useImageLoadingStatus uses new window.Image()
 class MockImage {
   onload: (() => void) | null = null

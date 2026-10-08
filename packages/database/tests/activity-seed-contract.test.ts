@@ -320,7 +320,7 @@ describe('complete activity seed contract', () => {
       {
         id: 7,
         numero_edicion: 'VII',
-        slug: 'temp',
+        slug: 'frijol-magico-vii',
         nombre: 'Festival Fixture Edition 07',
         published: 1
       }

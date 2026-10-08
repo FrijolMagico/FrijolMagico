@@ -7,18 +7,17 @@ import { normalizeString } from '@frijolmagico/utils/string'
 import { useCatalogFiltersStore } from '../store/useCatalogFiltersStore'
 import { CatalogFiltersBarLoader } from './CatalogSkeletonLoaders'
 import { urlHasFilters } from '../utils/urlFilters'
-import { getFiltersData } from '../utils/filterUtils'
 import { FILTER_KEYS } from '../constants/filterConstants'
 import { useAnalytics } from '@/components/analytics/useAnalytics'
 
-import type { CatalogArtist } from '../types/catalog'
+import type { CatalogSearchPayload } from '../types/catalog-payloads'
 import type { CatalogSelectionFilterKey } from '../types/filters'
 
 interface CatalogFilterBarProps {
-  catalogData: CatalogArtist[]
+  filterOptions: CatalogSearchPayload
 }
 
-export const CatalogFilterBar = ({ catalogData }: CatalogFilterBarProps) => {
+export const CatalogFilterBar = ({ filterOptions }: CatalogFilterBarProps) => {
   const [filtersOpen, setFiltersOpen] = useState<
     Record<CatalogSelectionFilterKey, boolean>
   >({
@@ -84,9 +83,9 @@ export const CatalogFilterBar = ({ catalogData }: CatalogFilterBarProps) => {
 
   if (!isReady) return <CatalogFiltersBarLoader />
 
-  const cityFilterData = getFiltersData(catalogData, FILTER_KEYS.city)
-  const categoryFilterData = getFiltersData(catalogData, FILTER_KEYS.category)
-  const countryFilterData = getFiltersData(catalogData, FILTER_KEYS.country)
+  const cityFilterData = filterOptions[FILTER_KEYS.city]
+  const categoryFilterData = filterOptions[FILTER_KEYS.category]
+  const countryFilterData = filterOptions[FILTER_KEYS.country]
 
   return (
     <div className='flex shrink-0 flex-wrap justify-center gap-4'>

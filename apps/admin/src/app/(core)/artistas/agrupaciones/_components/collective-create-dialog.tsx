@@ -66,7 +66,11 @@ export function CollectiveCreateDialog() {
       return
     }
 
-    toast.success('Agrupación creada correctamente')
+    toast.success(
+      result.webRevalidation === 'swr'
+        ? 'Agrupación creada correctamente. Pueden tardar en aparecer en la web.'
+        : 'Agrupación creada correctamente'
+    )
     methods.reset(getDefaultValues())
     toggleCreateCollectiveDialog(false)
   }

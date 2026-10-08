@@ -12,7 +12,7 @@ export interface EditionDayRow {
  * Used by the TopBar to build the date-and-place display string.
  */
 export async function getEditionDays(editionId: number) {
-  'use cache: remote'
+  'use cache'
   cacheLife({ stale: 5 * 60, revalidate: Infinity, expire: Infinity })
   cacheTag(FESTIVAL_CRITICAL_CACHE_TAG)
 

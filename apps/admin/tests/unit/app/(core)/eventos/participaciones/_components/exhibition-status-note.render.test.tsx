@@ -1,16 +1,34 @@
-import { expect, test, mock } from 'bun:test'
+import { afterAll, afterEach, expect, test, mock } from 'bun:test'
 import { createElement, act } from 'react'
-import { Window } from 'happy-dom'
+import { createHappyDOMEnvironment } from '@/tests/unit/_support/happy-dom-environment'
 
-const window = new Window()
-globalThis.window = window as unknown as Window & typeof globalThis
-globalThis.document = window.document as unknown as Document
-globalThis.Node = window.Node as typeof Node
-globalThis.HTMLElement = window.HTMLElement as typeof HTMLElement
-globalThis.Element = window.Element as typeof Element
-globalThis.Event = window.Event as typeof Event
-globalThis.IS_REACT_ACT_ENVIRONMENT = true
-const { createRoot } = await import('react-dom/client')
+const environment = await createHappyDOMEnvironment()
+const { createRoot: createDOMRoot } = await import('react-dom/client')
+const activeRoots = new Set<ReturnType<typeof createDOMRoot>>()
+
+function createRoot(container: HTMLElement) {
+  const root = createDOMRoot(container)
+  activeRoots.add(root)
+  return root
+}
+
+async function disposeRoot(root: ReturnType<typeof createDOMRoot>) {
+  if (!activeRoots.has(root)) return
+  await act(async () => root.unmount())
+  activeRoots.delete(root)
+}
+
+afterEach(async () => {
+  try {
+    for (const root of activeRoots) await act(async () => root.unmount())
+  } finally {
+    activeRoots.clear()
+    document.body.replaceChildren()
+    selectedExhibition = { entity: null, exhibition: null }
+  }
+})
+
+afterAll(async () => environment.dispose())
 
 mock.module('@/shared/components/entity-form/entity-form-dialog', () => ({
   EntityFormDialog: ({ children }: { children: React.ReactNode }) =>
@@ -124,7 +142,7 @@ test('create exhibition status guidance follows visible states', async () => {
       ?.click()
   )
   expect(container.textContent).toContain(note)
-  await act(async () => root.unmount())
+  await disposeRoot(root)
   container.remove()
 })
 
@@ -166,7 +184,7 @@ test('update exhibition status guidance follows visible states', async () => {
       ?.click()
   )
   expect(container.textContent).toContain(note)
-  await act(async () => root.unmount())
+  await disposeRoot(root)
   container.remove()
   selectedExhibition = { entity: null, exhibition: null }
 })

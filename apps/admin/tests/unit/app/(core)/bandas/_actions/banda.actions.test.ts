@@ -10,7 +10,12 @@ const RESTORE_ACTION_PATH =
 
 const updateTag = mock(() => {})
 const webInvalidations: unknown[] = []
+const revalidateWebCacheBatch = mock(async (requests: unknown[]) => {
+  webInvalidations.push(...requests)
+  return { webRevalidation: 'immediate' as const }
+})
 let currentBandName = 'Los Andes'
+let currentBandExists = true
 const getSession = mock(async () => ({ user: { id: '1' } }))
 const requireAuth = mock(async () => ({ user: { id: '1' } }))
 const getUser = mock(async () => ({ id: '1' }))
@@ -31,7 +36,8 @@ function createDbMock() {
     select: () => {
       const builder = {
         from: () => builder,
-        where: async () => [{ name: currentBandName }]
+        where: async () =>
+          currentBandExists ? [{ name: currentBandName }] : []
       }
       return builder
     },
@@ -73,7 +79,8 @@ mock.module('next/cache.js', () => ({ cacheTag: mock(() => {}), updateTag }))
 mock.module('@/shared/lib/web-invalidation', () => ({
   revalidateWebCacheBestEffort: (options: unknown) => {
     webInvalidations.push(options)
-  }
+  },
+  revalidateWebCacheBatch
 }))
 mock.module('@/shared/lib/auth/utils', () => ({
   getSession,
@@ -102,9 +109,11 @@ describe('band actions', () => {
   beforeEach(() => {
     updateTag.mockClear()
     requireAuth.mockClear()
+    revalidateWebCacheBatch.mockClear()
     webInvalidations.length = 0
     updateFailure = null
     currentBandName = 'Los Andes'
+    currentBandExists = true
     currentDb = createDbMock().db
   })
 
@@ -131,31 +140,46 @@ describe('band actions', () => {
   test('updateBandaAction immediately invalidates festivals when the name changes', async () => {
     const result = await updateBandaAction({ id: 1, name: 'New Name' })
 
-    expect(result.success).toBe(true)
+    expect(result).toEqual({ success: true, webRevalidation: 'immediate' })
     expect(updateTag).toHaveBeenCalledTimes(1)
-    expect(webInvalidations).toEqual([
-      {
-        tag: 'festivales:critico',
-        mode: 'immediate',
-        path: '/festivales/[slug]',
-        pathType: 'page'
-      }
-    ])
+    expect(revalidateWebCacheBatch).toHaveBeenCalledTimes(1)
+    expect(revalidateWebCacheBatch).toHaveBeenCalledWith(
+      [
+        {
+          tag: 'festivales:critico',
+          mode: 'immediate'
+        }
+      ],
+      'update-banda'
+    )
   })
 
   test('updateBandaAction does not invalidate festivals when the name is unchanged', async () => {
     const result = await updateBandaAction({ id: 1, name: 'Los Andes' })
 
-    expect(result.success).toBe(true)
+    expect(result).toEqual({ success: true })
     expect(updateTag).toHaveBeenCalledTimes(1)
+    expect(revalidateWebCacheBatch).not.toHaveBeenCalled()
     expect(webInvalidations).toEqual([])
   })
 
   test('updateBandaAction does not invalidate festivals when the name is omitted', async () => {
     const result = await updateBandaAction({ id: 1, description: 'Updated' })
 
-    expect(result.success).toBe(true)
+    expect(result).toEqual({ success: true })
     expect(updateTag).toHaveBeenCalledTimes(1)
+    expect(revalidateWebCacheBatch).not.toHaveBeenCalled()
+    expect(webInvalidations).toEqual([])
+  })
+
+  test('updateBandaAction does not invalidate festivals when the band is missing', async () => {
+    currentBandExists = false
+
+    const result = await updateBandaAction({ id: 1, name: 'New Name' })
+
+    expect(result).toEqual({ success: true })
+    expect(updateTag).toHaveBeenCalledTimes(1)
+    expect(revalidateWebCacheBatch).not.toHaveBeenCalled()
     expect(webInvalidations).toEqual([])
   })
 
@@ -166,6 +190,7 @@ describe('band actions', () => {
 
     expect(result.success).toBe(false)
     expect(updateTag).not.toHaveBeenCalled()
+    expect(revalidateWebCacheBatch).not.toHaveBeenCalled()
     expect(webInvalidations).toEqual([])
   })
 

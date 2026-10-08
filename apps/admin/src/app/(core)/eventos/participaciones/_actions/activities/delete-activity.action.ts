@@ -18,7 +18,10 @@ import {
   getEditionParticipationsCacheTag,
   getParticipationActivitiesCacheTag
 } from '@frijolmagico/cache-tags'
-import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
+import {
+  revalidateWebCacheBatch,
+  type RevalidateWebCacheOptions
+} from '@/shared/lib/web-invalidation'
 import { deleteOrphanedEditionParticipation } from '../participations/delete-orphaned-edition-participation'
 
 const { participationActivity } = participations
@@ -56,14 +59,12 @@ export async function deleteActivityAction(
     let alreadyAbsent = false
     let participationDeleted = false
     let isPublicActivity = false
-    let isTalkActivity = false
 
     await db.transaction(async (tx) => {
       const activity = await tx.query.participationActivity.findFirst({
         where: (table, { eq }) => eq(table.id, id),
         with: {
-          participacion: { columns: { edicionId: true } },
-          tipoActividad: { columns: { slug: true } }
+          participacion: { columns: { edicionId: true } }
         }
       })
 
@@ -72,7 +73,6 @@ export async function deleteActivityAction(
         editionId = activity.participacion?.edicionId ?? null
         isPublicActivity =
           activity.estado === 'confirmado' || activity.estado === 'completado'
-        isTalkActivity = activity.tipoActividad?.slug === 'charla'
         if (editionId === null) throw new Error('Participación no encontrada')
 
         await tx
@@ -110,24 +110,32 @@ export async function deleteActivityAction(
         console.error('[deleteActivityAction] Local invalidation failed', { tag, error })
       }
     }
-    void revalidateWebCacheBestEffort({
-      tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      ...(isPublicActivity ? { path: '/festivales/[slug]', pathType: 'page' as const } : {})
-    })
-    void revalidateWebCacheBestEffort({
-      tag: FESTIVALES_CACHE_TAG,
-      mode: 'swr',
-      ...((isPublicActivity || isTalkActivity)
-        ? { path: '/festivales', pathType: 'page' as const }
-        : {})
-    })
+    const webRevalidationRequests: RevalidateWebCacheOptions[] = [
+      {
+        tag: FESTIVAL_CRITICAL_CACHE_TAG,
+        mode: 'immediate'
+      },
+      {
+        tag: FESTIVALES_CACHE_TAG,
+        mode: 'swr'
+      }
+    ]
     if (isPublicActivity) {
-      void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
-      void revalidateWebCacheBestEffort({ tag: CATALOG_PARTICIPATION_CACHE_TAG })
+      webRevalidationRequests.push(
+        { tag: CATALOG_CACHE_TAG },
+        { tag: CATALOG_PARTICIPATION_CACHE_TAG }
+      )
     }
+    const webRevalidation = await revalidateWebCacheBatch(
+      webRevalidationRequests,
+      'delete-activity'
+    )
 
-    return { success: true, data: { alreadyAbsent, participationDeleted } }
+    return {
+      success: true,
+      data: { alreadyAbsent, participationDeleted },
+      ...webRevalidation
+    }
   } catch (error) {
     console.error('[deleteActivityAction]', error)
     return {

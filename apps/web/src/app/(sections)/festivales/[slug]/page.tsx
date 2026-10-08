@@ -1,7 +1,5 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { Suspense } from 'react'
-
 import { TrackPageView } from '@/components/analytics/TrackPageView'
 import { ContextBar } from '@/components/context-bar/ContextBar'
 import { getActiveFestival } from '@/data/data-access-layer/festivals/getActiveFestival'
@@ -74,11 +72,7 @@ export default async function FestivalDetailPage({
     isActiveFestival = false
   }
 
-  const navigator = (
-    <Suspense fallback={null}>
-      <FestivalNavigator slug={detail.slug} />
-    </Suspense>
-  )
+  const navigator = <FestivalNavigator slug={detail.slug} />
 
   return (
     <>

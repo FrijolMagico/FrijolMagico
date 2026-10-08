@@ -12,7 +12,7 @@ import {
   FESTIVAL_CRITICAL_CACHE_TAG
 } from '@frijolmagico/cache-tags'
 import { requireAuth } from '@/shared/lib/auth/utils'
-import { revalidateWebCache } from '@/shared/lib/web-invalidation'
+import { revalidateWebCacheBatch } from '@/shared/lib/web-invalidation'
 import type { ActionState } from '@/shared/types/actions'
 import {
   editionPublicationSchema,
@@ -26,7 +26,7 @@ const WEB_CACHE_INVALIDATIONS = [
   { tag: FESTIVALES_CACHE_TAG, mode: 'swr' }
 ] as const
 
-async function syncPublicationCaches(editionMatched: boolean) {
+async function syncPublicationCaches() {
   for (const tag of LOCAL_CACHE_TAGS) {
     try {
       updateTag(tag)
@@ -35,41 +35,12 @@ async function syncPublicationCaches(editionMatched: boolean) {
     }
   }
 
-  const webInvalidations = [
-    ...WEB_CACHE_INVALIDATIONS.map(({ tag, mode }) => ({
-      tag,
-      mode,
-      ...(editionMatched && tag === FESTIVAL_CRITICAL_CACHE_TAG
-        ? { path: '/festivales/[slug]', pathType: 'page' as const }
-        : {}),
-      ...(editionMatched && tag === FESTIVALES_CACHE_TAG
-        ? { path: '/festivales', pathType: 'page' as const }
-        : {})
-    })),
-    ...(editionMatched
-      ? [
-          { mode: 'immediate' as const, path: '/', pathType: 'page' as const },
-          { mode: 'immediate' as const, path: '/', pathType: 'layout' as const }
-        ]
-      : [])
-  ]
+  const webInvalidations = [...WEB_CACHE_INVALIDATIONS]
 
-  const results = await Promise.allSettled(
-    webInvalidations.map((invalidation) =>
-      Promise.resolve().then(() => revalidateWebCache(invalidation))
-    )
+  return await revalidateWebCacheBatch(
+    webInvalidations,
+    'update-edition-publication'
   )
-
-  results.forEach((result, index) => {
-    if (result.status === 'rejected') {
-      const invalidation = webInvalidations[index]
-      console.error('[edition-publication] Web cache sync failed',
-        'tag' in invalidation
-          ? { tag: invalidation.tag }
-          : { path: invalidation.path, pathType: invalidation.pathType }
-      )
-    }
-  })
 }
 
 export async function updateEditionPublicationAction(
@@ -90,15 +61,19 @@ export async function updateEditionPublicationAction(
       }
     }
 
-    const [updatedEdition] = await db
+    await db
       .update(eventEdition)
       .set({ published: parsed.data.published })
       .where(eq(eventEdition.id, parsed.data.id))
       .returning({ id: eventEdition.id })
 
-    await syncPublicationCaches(updatedEdition !== undefined)
+    const webInvalidation = await syncPublicationCaches()
 
-    return { success: true, data: { published: parsed.data.published } }
+    return {
+      success: true,
+      data: { published: parsed.data.published },
+      ...webInvalidation
+    }
   } catch (error) {
     return {
       success: false,

@@ -30,14 +30,3 @@ export const CatalogSearchBarLoader = () => {
     <div className='bg-foreground/10 h-8 w-full max-w-md animate-pulse rounded-xl px-3' />
   )
 }
-
-export const CatalogSearchSectionLoader = () => {
-  return (
-    <>
-      <section className='flex w-full flex-col justify-center gap-4 pb-6 sm:flex-row'>
-        <CatalogSearchBarLoader />
-        <CatalogFiltersBarLoader />
-      </section>
-    </>
-  )
-}

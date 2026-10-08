@@ -11,7 +11,7 @@ import {
 } from '@frijolmagico/cache-tags'
 import { persistArtistAvatarAction } from '@/core/artistas/_actions/persist-artist-avatar.action'
 import { getSession } from '@/shared/lib/auth/utils'
-import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
+import { revalidateWebCacheBatch } from '@/shared/lib/web-invalidation'
 
 function invalidateCatalogCache(): void {
   for (const tag of [
@@ -41,7 +41,20 @@ export async function POST(request: Request) {
     )
   }
   invalidateCatalogCache()
-  void revalidateWebCacheBestEffort({ tag: CATALOG_BASE_CACHE_TAG })
-  void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
-  return NextResponse.json(result.data)
+  const webInvalidation = await revalidateWebCacheBatch(
+    [
+      { tag: CATALOG_BASE_CACHE_TAG },
+      { tag: CATALOG_CACHE_TAG }
+    ],
+    'assets-persist'
+  )
+  const webRevalidation =
+    result.webRevalidation === 'swr' ||
+    webInvalidation.webRevalidation === 'swr'
+      ? 'swr'
+      : webInvalidation.webRevalidation ?? result.webRevalidation
+  return NextResponse.json({
+    ...result.data,
+    ...(webRevalidation ? { webRevalidation } : {})
+  })
 }

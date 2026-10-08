@@ -6,12 +6,12 @@ import { eq } from 'drizzle-orm'
 import { db } from '@frijolmagico/database/orm'
 import { participations } from '@frijolmagico/database/schema'
 import { requireAuth } from '@/shared/lib/auth/utils'
-import { ActionState } from '@/shared/types/actions'
+import type { ActionState } from '@/shared/types/actions'
 import {
   FESTIVAL_CRITICAL_CACHE_TAG,
   getParticipationActivitiesCacheTag
 } from '@frijolmagico/cache-tags'
-import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
+import { revalidateWebCacheBatch } from '@/shared/lib/web-invalidation'
 import {
   activityDetailUpdateSchema,
   type ActivityDetailUpdateInput
@@ -44,14 +44,17 @@ export async function updateActivityDetailAction(
       .where(eq(activity.id, parsed.data.id))
 
     updateTag(getParticipationActivitiesCacheTag(participationId))
-    void revalidateWebCacheBestEffort({
-      tag: FESTIVAL_CRITICAL_CACHE_TAG,
-      mode: 'immediate',
-      path: '/festivales/[slug]',
-      pathType: 'page'
-    })
+    const webInvalidation = await revalidateWebCacheBatch(
+      [
+        {
+          tag: FESTIVAL_CRITICAL_CACHE_TAG,
+          mode: 'immediate'
+        }
+      ],
+      'update-activity-detail'
+    )
 
-    return { success: true }
+    return { success: true, ...webInvalidation }
   } catch (error) {
     console.error('[updateDetallesAction]', error)
     return {

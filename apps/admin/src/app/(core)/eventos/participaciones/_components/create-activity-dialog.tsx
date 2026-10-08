@@ -193,7 +193,9 @@ export function CreateActivityDialog({
       return
     }
 
-    toast.success('Actividad agregada correctamente')
+    toast.success(
+      `Actividad agregada correctamente${result.webRevalidation === 'swr' ? ' Pueden tardar en aparecer en la web.' : ''}`
+    )
     methods.reset()
     setDescriptionResetKey((key) => key + 1)
     toggleCreateActivityDialogOpen(false)

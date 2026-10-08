@@ -1,13 +1,13 @@
 import { normalizeString } from '@frijolmagico/utils/string'
-import { CatalogArtist } from '../types/catalog'
-import { CatalogFilterValues } from '../types/filters'
+import type { CatalogListArtist } from '../types/catalog-payloads'
+import type { CatalogFilterValues } from '../types/filters'
 
 // Keys that can be used for filtering (string fields only)
 type FilterableKey = 'city' | 'country' | 'category'
 
 // Get unique filter options for the given key
 export const getFiltersData = (
-  catalog: CatalogArtist[],
+  catalog: Pick<CatalogListArtist, FilterableKey>[],
   key: FilterableKey
 ): { value: string }[] => {
   const uniqueValues = new Set<string>()
@@ -26,9 +26,9 @@ export const getFiltersData = (
 
 // Filter catalog based on search and filters
 export const filterCatalog = (
-  catalog: CatalogArtist[],
+  catalog: CatalogListArtist[],
   filters: CatalogFilterValues
-): CatalogArtist[] => {
+): CatalogListArtist[] => {
   const searchValue = filters.search
   const normalizedSearch = normalizeString(searchValue)
 

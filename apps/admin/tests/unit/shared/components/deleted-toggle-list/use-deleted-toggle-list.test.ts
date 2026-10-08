@@ -128,9 +128,37 @@ describe('useDeletedToggleList helpers', () => {
     expect(toastError).toHaveBeenCalledWith('No se pudo eliminar')
   })
 
+  test('appends delayed-web copy after successful SWR delete', async () => {
+    const optimisticUpdate = mock(() => {})
+    const serverAction = mock(async () => ({
+      success: true,
+      webRevalidation: 'swr' as const
+    }))
+
+    await runOptimisticMutation({
+      type: 'delete',
+      id: 1,
+      item: activeItems[0],
+      optimisticUpdate,
+      serverAction,
+      successMessage: 'Artista eliminado correctamente',
+      errorMessage: 'Error al eliminar'
+    })
+
+    expect(optimisticUpdate).toHaveBeenCalledTimes(1)
+    expect(serverAction).toHaveBeenCalledWith(1)
+    expect(toastSuccess).toHaveBeenCalledWith(
+      'Artista eliminado correctamente Pueden tardar en aparecer en la web.'
+    )
+    expect(toastError).not.toHaveBeenCalled()
+  })
+
   test('shows success toast after restore success', async () => {
     const optimisticUpdate = mock(() => {})
-    const serverAction = mock(async () => ({ success: true }))
+    const serverAction = mock(async () => ({
+      success: true,
+      webRevalidation: 'immediate' as const
+    }))
 
     await runOptimisticMutation({
       type: 'restore',
@@ -148,6 +176,75 @@ describe('useDeletedToggleList helpers', () => {
       'Artista restaurado correctamente'
     )
     expect(toastError).not.toHaveBeenCalled()
+  })
+
+  test('appends delayed-web copy after successful SWR restore', async () => {
+    const optimisticUpdate = mock(() => {})
+    const serverAction = mock(async () => ({
+      success: true,
+      webRevalidation: 'swr' as const
+    }))
+
+    await runOptimisticMutation({
+      type: 'restore',
+      id: 3,
+      item: deletedItems[0],
+      optimisticUpdate,
+      serverAction,
+      successMessage: 'Artista restaurado correctamente',
+      errorMessage: 'Error al restaurar'
+    })
+
+    expect(optimisticUpdate).toHaveBeenCalledTimes(1)
+    expect(serverAction).toHaveBeenCalledWith(3)
+    expect(toastSuccess).toHaveBeenCalledWith(
+      'Artista restaurado correctamente Pueden tardar en aparecer en la web.'
+    )
+    expect(toastError).not.toHaveBeenCalled()
+  })
+
+  test('does not show success after failed SWR delete', async () => {
+    const optimisticUpdate = mock(() => {})
+
+    await runOptimisticMutation({
+      type: 'delete',
+      id: 1,
+      item: activeItems[0],
+      optimisticUpdate,
+      serverAction: async () => ({
+        success: false,
+        webRevalidation: 'swr',
+        errors: [{ entityType: 'artista', message: 'No se pudo eliminar' }]
+      }),
+      successMessage: 'Artista eliminado correctamente',
+      errorMessage: 'Error al eliminar'
+    })
+
+    expect(optimisticUpdate).toHaveBeenCalledTimes(1)
+    expect(toastSuccess).not.toHaveBeenCalled()
+    expect(toastError).toHaveBeenCalledWith('No se pudo eliminar')
+  })
+
+  test('does not show success after failed SWR restore', async () => {
+    const optimisticUpdate = mock(() => {})
+
+    await runOptimisticMutation({
+      type: 'restore',
+      id: 3,
+      item: deletedItems[0],
+      optimisticUpdate,
+      serverAction: async () => ({
+        success: false,
+        webRevalidation: 'swr',
+        errors: [{ entityType: 'artista', message: 'No se pudo restaurar' }]
+      }),
+      successMessage: 'Artista restaurado correctamente',
+      errorMessage: 'Error al restaurar'
+    })
+
+    expect(optimisticUpdate).toHaveBeenCalledTimes(1)
+    expect(toastSuccess).not.toHaveBeenCalled()
+    expect(toastError).toHaveBeenCalledWith('No se pudo restaurar')
   })
 
   test('shows error toast after restore failure', async () => {

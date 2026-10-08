@@ -1,27 +1,37 @@
-import { expect, test } from 'bun:test'
+import { afterAll, afterEach, expect, test } from 'bun:test'
 import { act, createElement, useState } from 'react'
-import { Window } from 'happy-dom'
+import { createHappyDOMEnvironment } from '@/tests/unit/_support/happy-dom-environment'
 
-const window = new Window()
-globalThis.window = window as unknown as Window & typeof globalThis
-globalThis.document = window.document as unknown as Document
-globalThis.Node = window.Node as typeof Node
-globalThis.HTMLElement = window.HTMLElement as typeof HTMLElement
-globalThis.HTMLInputElement = window.HTMLInputElement as typeof HTMLInputElement
-globalThis.Element = window.Element as typeof Element
-globalThis.Event = window.Event as typeof Event
-globalThis.IS_REACT_ACT_ENVIRONMENT = true
-const { createRoot } = await import('react-dom/client')
+const environment = await createHappyDOMEnvironment()
+const { createRoot: createDOMRoot } = await import('react-dom/client')
+const activeRoots = new Set<ReturnType<typeof createDOMRoot>>()
+
+function createRoot(container: HTMLElement) {
+  const root = createDOMRoot(container)
+  activeRoots.add(root)
+  return root
+}
+
+afterEach(async () => {
+  try {
+    for (const root of activeRoots) await act(async () => root.unmount())
+  } finally {
+    activeRoots.clear()
+    document.body.replaceChildren()
+  }
+})
+
+afterAll(async () => environment.dispose())
 const { TimePickerField } = await import('@/shared/components/time-picker-field')
 
-async function setup(initial = '', disabled = false, error?: string, minuteStep?: number) {
+async function setup(initial = '', disabled = false, error?: string) {
   const changes: string[] = []
   let reset: (value: string) => void = () => {}
   function Form() {
     const [value, setValue] = useState(initial)
     reset = setValue
     return createElement('form', null,
-      createElement(TimePickerField, { id: 'time', label: 'Inicio', value, disabled, error, minuteStep,
+      createElement(TimePickerField, { id: 'time', label: 'Inicio', value, disabled, error,
         onChange: (next) => { changes.push(next); setValue(next) } }),
       createElement('input', { type: 'hidden', name: 'startTime', value }),
       createElement('output', null, value))
@@ -33,22 +43,23 @@ async function setup(initial = '', disabled = false, error?: string, minuteStep?
   const hour = container.querySelector<HTMLInputElement>('#time-hour')!
   const minute = container.querySelector<HTMLInputElement>('#time-minute')!
   return { container, hour, minute, changes,
-    submittedValue: () => new window.FormData(container.querySelector('form')!).get('startTime'),
+    submittedValue: () => new FormData(container.querySelector('form')!).get('startTime'),
     reset: async (value: string) => act(async () => reset(value)),
-    dispose: async () => { await act(async () => root.unmount()); container.remove() } }
+    dispose: async () => { await act(async () => root.unmount()); activeRoots.delete(root); container.remove() }
+  }
 }
 
 async function type(input: HTMLInputElement, text: string) {
   await act(async () => {
-    Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set?.call(input, text)
-    input.dispatchEvent(new window.Event('input', { bubbles: true }))
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, text)
+    input.dispatchEvent(new Event('input', { bubbles: true }))
   })
 }
 async function key(input: HTMLInputElement, name: string) {
-  await act(async () => input.dispatchEvent(new window.KeyboardEvent('keydown', { key: name, bubbles: true, cancelable: true })))
+  await act(async () => input.dispatchEvent(new KeyboardEvent('keydown', { key: name, bubbles: true, cancelable: true })))
 }
 async function wheel(input: HTMLInputElement, deltaY: number) {
-  await act(async () => input.dispatchEvent(new window.WheelEvent('wheel', { deltaY, bubbles: true, cancelable: true })))
+  await act(async () => input.dispatchEvent(new WheelEvent('wheel', { deltaY, bubbles: true, cancelable: true })))
 }
 
 test('every edit replaces the controlled value, including incomplete and invalid segments', async () => {
@@ -120,8 +131,8 @@ test('minute steps are one minute with carry, borrow and midnight wrap', async (
   await form.dispose()
 })
 
-test('one-minute override preserves midnight carry and borrow with wheel and arrows', async () => {
-  const form = await setup('23:59', false, undefined, 1)
+test('one-minute controls preserve midnight carry and borrow with wheel and arrows', async () => {
+  const form = await setup('23:59')
   await wheel(form.minute, -1)
   expect(form.changes.at(-1)).toBe('00:00')
   await wheel(form.minute, 1)

@@ -7,6 +7,7 @@ const requireAuth = mock(async () => ({ user: { id: 'admin-1' } }))
 const getSession = mock(async () => ({ user: { id: 'admin-1' } }))
 const getUser = mock(async () => ({ id: 'admin-1' }))
 const revalidateWebCache = mock(async () => ({ revalidated: true }))
+const revalidateWebCacheBatch = mock(async (_requests: unknown[]) => ({}))
 const revalidateWebCacheBestEffort = mock(async () => {})
 const buildWebInvalidationUrl = mock(() => 'https://example.com/api/revalidate')
 
@@ -24,6 +25,7 @@ mock.module('@/shared/lib/auth/utils', () => ({
 mock.module('@/shared/lib/web-invalidation', () => ({
   buildWebInvalidationUrl,
   revalidateWebCache,
+  revalidateWebCacheBatch,
   revalidateWebCacheBestEffort
 }))
 mock.module('@frijolmagico/database/orm', () => ({
@@ -76,6 +78,8 @@ describe('update-catalog action — avatar optimistic concurrency', () => {
     updateTag.mockReset()
     requireAuth.mockReset()
     revalidateWebCache.mockReset()
+    revalidateWebCacheBatch.mockReset()
+    revalidateWebCacheBatch.mockImplementation(async () => ({}))
     dbTransaction = async (cb) => {
       const result = await cb(createTx([]))
       return result

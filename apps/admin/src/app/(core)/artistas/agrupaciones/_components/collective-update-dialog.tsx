@@ -68,7 +68,11 @@ export function CollectiveUpdateDialog({
       return
     }
 
-    toast.success('Agrupación actualizada correctamente')
+    toast.success(
+      result.webRevalidation === 'swr'
+        ? 'Agrupación actualizada correctamente. Pueden tardar en aparecer en la web.'
+        : 'Agrupación actualizada correctamente'
+    )
     methods.reset()
     onOpenChange(false)
   }

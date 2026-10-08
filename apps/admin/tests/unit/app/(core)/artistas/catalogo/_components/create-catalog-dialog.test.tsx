@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
 import { act, createElement } from 'react'
+import type { ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 
 // ── Mock the Zustand store ──────────────────────────────────────────
@@ -74,6 +75,8 @@ mock.module('@/core/artistas/catalogo/_hooks/use-avatar-controller', () => ({
 let actionResult: {
   success: boolean
   data?: { catalogId: number; artistId: number; requestedActive: boolean }
+  errors?: { message: string }[]
+  webRevalidation?: 'swr' | 'immediate'
 } = { success: true }
 const mockCreateCatalogAction = mock(
   async (_prevState: { success: boolean }, _data: Record<string, unknown>) => {
@@ -103,7 +106,7 @@ mock.module('@/shared/components/ui/dialog', () => ({
     open,
     onOpenChange
   }: {
-    children: unknown
+    children: ReactNode
     open: boolean
     onOpenChange: (open: boolean) => void
   }) => {
@@ -112,25 +115,25 @@ mock.module('@/shared/components/ui/dialog', () => ({
       ? createElement('div', { 'data-testid': 'dialog' }, children)
       : null
   },
-  DialogContent: ({ children }: { children: unknown }) =>
+  DialogContent: ({ children }: { children: ReactNode }) =>
     createElement('div', { 'data-testid': 'dialog-content' }, children),
-  DialogHeader: ({ children }: { children: unknown }) =>
+  DialogHeader: ({ children }: { children: ReactNode }) =>
     createElement('div', { 'data-testid': 'dialog-header' }, children),
-  DialogTitle: ({ children }: { children: unknown }) =>
+  DialogTitle: ({ children }: { children: ReactNode }) =>
     createElement('h2', { 'data-testid': 'dialog-title' }, children),
-  DialogDescription: ({ children }: { children: unknown }) =>
+  DialogDescription: ({ children }: { children: ReactNode }) =>
     createElement('p', { 'data-testid': 'dialog-description' }, children),
-  DialogFooter: ({ children }: { children: unknown }) =>
+  DialogFooter: ({ children }: { children: ReactNode }) =>
     createElement('div', { 'data-testid': 'dialog-footer' }, children),
-  DialogTrigger: ({ children }: { children: unknown }) =>
+  DialogTrigger: ({ children }: { children: ReactNode }) =>
     createElement('div', { 'data-testid': 'dialog-trigger' }, children),
   DialogClose: ({
     children,
     render
   }: {
-    children?: unknown
-    render?: unknown
-  }) => (render as React.ReactElement) ?? children
+    children?: ReactNode
+    render?: ReactNode
+  }) => render ?? children
 }))
 
 // ── Mock UI components ──────────────────────────────────────────────
@@ -140,7 +143,7 @@ mock.module('@/shared/components/ui/combobox', () => ({
     onValueChange,
     items
   }: {
-    children: unknown
+    children: ReactNode
     onValueChange?: (val: unknown) => void
     items: Array<{ label: string; value: number }>
   }) => {
@@ -167,15 +170,15 @@ mock.module('@/shared/components/ui/combobox', () => ({
       )
     )
   },
-  ComboboxContent: ({ children }: { children: unknown }) =>
+  ComboboxContent: ({ children }: { children: ReactNode }) =>
     createElement('div', { 'data-testid': 'combobox-content' }, children),
   ComboboxInput: () =>
     createElement('input', { 'data-testid': 'combobox-input' }),
-  ComboboxEmpty: ({ children }: { children: unknown }) =>
+  ComboboxEmpty: ({ children }: { children: ReactNode }) =>
     createElement('div', { 'data-testid': 'combobox-empty' }, children),
-  ComboboxList: ({ children }: { children: unknown }) =>
+  ComboboxList: ({ children }: { children: ReactNode }) =>
     createElement('div', { 'data-testid': 'combobox-list' }, children),
-  ComboboxItem: ({ children, value }: { children: unknown; value: unknown }) =>
+  ComboboxItem: ({ children, value }: { children: ReactNode; value: unknown }) =>
     createElement(
       'button',
       { 'data-testid': `combobox-item-${(value as { value: number }).value}` },
@@ -184,15 +187,15 @@ mock.module('@/shared/components/ui/combobox', () => ({
 }))
 
 mock.module('@/shared/components/ui/field', () => ({
-  Field: ({ children }: { children: unknown }) =>
+  Field: ({ children }: { children: ReactNode }) =>
     createElement('div', { 'data-testid': 'field' }, children),
-  FieldError: ({ children }: { children: unknown }) =>
+  FieldError: ({ children }: { children: ReactNode }) =>
     createElement('div', { 'data-testid': 'field-error' }, children),
   FieldGroup: ({
     children,
     className
   }: {
-    children: unknown
+    children: ReactNode
     className?: string
   }) =>
     createElement('div', { 'data-testid': 'field-group', className }, children),
@@ -200,7 +203,7 @@ mock.module('@/shared/components/ui/field', () => ({
     children,
     htmlFor
   }: {
-    children: unknown
+    children: ReactNode
     htmlFor?: string
   }) => createElement('label', { htmlFor }, children)
 }))
@@ -227,7 +230,7 @@ mock.module('@/shared/components/ui/button', () => ({
     variant,
     size
   }: {
-    children: unknown
+    children: ReactNode
     disabled?: boolean
     onClick?: () => void
     type?: string
@@ -242,15 +245,15 @@ mock.module('@/shared/components/ui/button', () => ({
 }))
 
 mock.module('@/shared/components/ui/badge', () => ({
-  Badge: ({ children }: { children: unknown }) =>
+  Badge: ({ children }: { children: ReactNode }) =>
     createElement('span', { 'data-testid': 'badge' }, children)
 }))
 
+const mockToastError = mock(() => {})
+const mockToastSuccess = mock(() => {})
+
 mock.module('sonner', () => ({
-  toast: {
-    error: mock(() => {}),
-    success: mock(() => {})
-  }
+  toast: { error: mockToastError, success: mockToastSuccess }
 }))
 
 mock.module('next/image', () => ({
@@ -324,7 +327,8 @@ globalThis.HTMLIFrameElement = TestNode as unknown as typeof HTMLIFrameElement
   }
 ).HTMLIFrameElement = TestNode as unknown as typeof HTMLIFrameElement
 ;(globalThis.window as unknown as { Event: typeof Event }).Event = Event
-globalThis.IS_REACT_ACT_ENVIRONMENT = true
+;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
+  .IS_REACT_ACT_ENVIRONMENT = true
 
 // ── The component ───────────────────────────────────────────────────
 const { CreateCatalogDialog } =
@@ -360,6 +364,8 @@ beforeEach(() => {
   mockRetry.mockClear()
   mockSyncAvatar.mockClear()
   mockCreateCatalogAction.mockClear()
+  mockToastError.mockClear()
+  mockToastSuccess.mockClear()
   document.body.childNodes = []
 
   container = document.createElement('main')
@@ -436,6 +442,78 @@ describe('CreateCatalogDialog avatar integration', () => {
     // The actual submit goes through handleSubmit which calls onSubmit
     // For now, we verify the render and structure
     expect(container.textContent).toContain('Agregar al Catálogo')
+  })
+
+  test('shows the delayed-web notice only for successful SWR creates', async () => {
+    actionResult = {
+      success: true,
+      data: { catalogId: 9, artistId: 88, requestedActive: true },
+      webRevalidation: 'swr'
+    }
+
+    await act(async () => {
+      root?.render(createElement(CreateCatalogDialog, { availableArtists }))
+    })
+    const artists = nodesByTag(container, 'button').filter(
+      (button) => button.textContent === 'Luna Roja'
+    )
+    await act(async () => reactProps(artists[0]).onClick?.())
+    const form = nodesByTag(container, 'form')[0]
+    await act(async () => reactProps(form).onSubmit?.())
+
+    expect(mockToastSuccess).toHaveBeenCalledWith(
+      'Artista agregado al catálogo. Pueden tardar en aparecer en la web.'
+    )
+    expect(mockToastError).not.toHaveBeenCalled()
+  })
+
+  test.each([
+    ['immediate', { webRevalidation: 'immediate' as const }],
+    ['absent', {}]
+  ])('preserves the original create confirmation when metadata is %s', async (_label, metadata) => {
+    actionResult = {
+      success: true,
+      data: { catalogId: 9, artistId: 88, requestedActive: true },
+      ...metadata
+    }
+
+    await act(async () => {
+      root?.render(createElement(CreateCatalogDialog, { availableArtists }))
+    })
+    const artists = nodesByTag(container, 'button').filter(
+      (button) => button.textContent === 'Luna Roja'
+    )
+    await act(async () => reactProps(artists[0]).onClick?.())
+    const form = nodesByTag(container, 'form')[0]
+    await act(async () => reactProps(form).onSubmit?.())
+
+    expect(mockToastSuccess).toHaveBeenCalledWith('Artista agregado al catálogo')
+    expect(mockToastError).not.toHaveBeenCalled()
+  })
+
+  test('does not show success for failed or missing-data creates even with SWR metadata', async () => {
+    for (const result of [
+      { success: false, errors: [{ message: 'No se pudo guardar' }], webRevalidation: 'swr' as const },
+      { success: true, webRevalidation: 'swr' as const }
+    ]) {
+      actionResult = result
+      await act(async () => {
+        root?.render(createElement(CreateCatalogDialog, { availableArtists }))
+      })
+      const artists = nodesByTag(container, 'button').filter(
+        (button) => button.textContent === 'Luna Roja'
+      )
+      await act(async () => reactProps(artists[0]).onClick?.())
+      const form = nodesByTag(container, 'form')[0]
+      await act(async () => reactProps(form).onSubmit?.())
+    }
+
+    expect(mockToastSuccess).not.toHaveBeenCalled()
+    expect(mockToastError).toHaveBeenNthCalledWith(1, 'No se pudo guardar')
+    expect(mockToastError).toHaveBeenNthCalledWith(
+      2,
+      'No se pudo identificar el artista creado'
+    )
   })
 
   test('R5+4.8: enqueue runs before cleanup on successful create; cancel NOT called after programmatic close', async () => {

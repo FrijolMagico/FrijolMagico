@@ -10,7 +10,7 @@ import {
   BAND_ACTIVE_CACHE_TAG,
   FESTIVAL_CRITICAL_CACHE_TAG
 } from '@frijolmagico/cache-tags'
-import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
+import { revalidateWebCacheBatch } from '@/shared/lib/web-invalidation'
 import type { ActionState } from '@/shared/types/actions'
 import {
   bandUpdateSchema,
@@ -56,16 +56,24 @@ export async function updateBandaAction(
     })
 
     nextCache.updateTag?.(BAND_ACTIVE_CACHE_TAG)
+    let webRevalidation: 'swr' | 'immediate' | undefined
     if (bandNameChanged) {
-      void revalidateWebCacheBestEffort({
-        tag: FESTIVAL_CRITICAL_CACHE_TAG,
-        mode: 'immediate',
-        path: '/festivales/[slug]',
-        pathType: 'page'
-      })
+      const invalidation = await revalidateWebCacheBatch(
+        [
+          {
+            tag: FESTIVAL_CRITICAL_CACHE_TAG,
+            mode: 'immediate'
+          }
+        ],
+        'update-banda'
+      )
+      webRevalidation = invalidation.webRevalidation
     }
 
-    return { success: true }
+    return {
+      success: true,
+      ...(webRevalidation ? { webRevalidation } : {})
+    }
   } catch (error) {
     return {
       success: false,

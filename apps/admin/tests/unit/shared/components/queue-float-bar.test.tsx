@@ -53,6 +53,15 @@ function createMockStore(snapshot: AssetQueueSnapshot): SharedAssetQueueStore {
 
   return {
     getState: () => snapshot,
+    enqueue: mock((...args: Parameters<SharedAssetQueueStore['enqueue']>) =>
+      createJob({
+        target: args[0],
+        entityId: args[1],
+        preparedAsset: args[2],
+        preview: args[3] ?? null,
+        input: args[4]
+      })
+    ),
     subscribe: (listener: Listener) => {
       listeners.add(listener)
       return () => listeners.delete(listener)
@@ -71,22 +80,22 @@ function createMockStore(snapshot: AssetQueueSnapshot): SharedAssetQueueStore {
 describe('QueueFloatBar', () => {
   test('dismisses a successful queue after exactly 2.5 seconds', () => {
     const delays: number[] = []
-    let dismiss: (() => void) | null = null
+    const dismissal: { callback?: () => void } = {}
     const setTimer = (callback: () => void, delay: number) => {
       delays.push(delay)
-      dismiss = callback
+      dismissal.callback = callback
       return 0 as unknown as number
     }
-    let dismissedJobId: string | null = null
+    const dismissedJobId: { value: string | null } = { value: null }
 
     scheduleSuccessDismissal('completed-job', setTimer, (jobId) => {
-      dismissedJobId = jobId
+      dismissedJobId.value = jobId
     })
 
     expect(delays).toEqual([2_500])
-    expect(dismissedJobId).toBeNull()
-    dismiss?.()
-    expect(dismissedJobId).toBe('completed-job')
+    expect(dismissedJobId.value).toBeNull()
+    dismissal.callback?.()
+    expect(dismissedJobId.value).toBe('completed-job')
   })
 
   // 1 — hidden states

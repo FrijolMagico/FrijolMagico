@@ -73,7 +73,11 @@ export function UpdateEditionDialog({
       return
     }
 
-    toast.success('Edición actualizada')
+    toast.success(
+      result.webRevalidation === 'swr'
+        ? 'Edición actualizada. Pueden tardar en aparecer en la web.'
+        : 'Edición actualizada'
+    )
     closeUpdateEditionDialog()
   }
 

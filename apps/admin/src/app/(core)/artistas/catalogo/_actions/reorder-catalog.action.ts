@@ -5,8 +5,12 @@ import { updateTag } from 'next/cache'
 import { db } from '@frijolmagico/database/orm'
 import { artist } from '@frijolmagico/database/schema'
 import { eq } from 'drizzle-orm'
-import { CATALOG_BASE_CACHE_TAG, CATALOG_CACHE_TAG } from '@frijolmagico/cache-tags'
-import { revalidateWebCacheBestEffort } from '@/shared/lib/web-invalidation'
+import {
+  CATALOG_BASE_CACHE_TAG,
+  CATALOG_CACHE_TAG,
+} from '@frijolmagico/cache-tags'
+import { revalidateWebCacheBatch } from '@/shared/lib/web-invalidation'
+import type { RevalidateWebCacheOptions } from '@/shared/lib/web-invalidation'
 import { requireAuth } from '@/shared/lib/auth/utils'
 import type { ActionState } from '@/shared/types/actions'
 
@@ -35,8 +39,16 @@ export async function reorderCatalogAction(
   if (changed) {
     updateTag(CATALOG_BASE_CACHE_TAG)
     updateTag(CATALOG_CACHE_TAG)
-    void revalidateWebCacheBestEffort({ tag: CATALOG_BASE_CACHE_TAG })
-    void revalidateWebCacheBestEffort({ tag: CATALOG_CACHE_TAG })
+
+    const invalidationRequests: RevalidateWebCacheOptions[] = [
+      { tag: CATALOG_BASE_CACHE_TAG },
+      { tag: CATALOG_CACHE_TAG },
+    ]
+    const webInvalidation = await revalidateWebCacheBatch(
+      invalidationRequests,
+      'reorder-catalog'
+    )
+    return { success: true, ...webInvalidation }
   }
 
   return { success: true }
