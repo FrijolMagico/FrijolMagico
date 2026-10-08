@@ -140,17 +140,29 @@ describe('ParticipantItem', () => {
     const link = container.querySelector<HTMLElement>('[data-spoiler-link]')
     expect(link?.getAttribute('href')).toBe('https://facebook.com/artistah')
   })
-  test('keeps inactive catalog participants as ordinary links', () => {
+  test('keeps inactive catalog participants as ordinary links with uniform typography', () => {
     render(
       <ParticipantItem
         pseudonimo='Artista Ejemplo'
         catalogoSlug='artista-ejemplo'
       />
     )
-    expect(
-      screen.getByRole('link', { name: 'Artista Ejemplo' }).getAttribute('href')
-    ).toBe('/catalogo/artista-ejemplo')
+    const link = screen.getByRole('link', { name: 'Artista Ejemplo' })
+    expect(link.getAttribute('href')).toBe('/catalogo/artista-ejemplo')
+    expect(link.className).toContain('text-lg')
+    expect(link.className).toContain('uppercase')
+    expect(link.className).toContain('text-nowrap')
     expect(document.querySelector('[data-spoiler-redaction]')).toBeNull()
+  })
+
+  test('uses uniform typography in the inactive non-link branch', () => {
+    const { container } = render(
+      <ParticipantItem pseudonimo='Colectivo Z' catalogoSlug={null} />
+    )
+    const participant = container.querySelector('span')!
+    expect(participant.className).toContain('text-lg')
+    expect(participant.className).toContain('uppercase')
+    expect(participant.className).toContain('text-nowrap')
   })
 
   test('covers the complete active visual item and link icon with one text-free redaction bar', () => {
