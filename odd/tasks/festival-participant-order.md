@@ -7,8 +7,8 @@ Sort festival exhibitors alphabetically within each existing discipline using th
 ParticipantList.tsx and its colocated regression test only. No SQL changes, no issue required. Branch: fix/festival-participant-order. PR base: dev; version label: patch. Single writer. Estimated source/test diff: under 100 lines. Delivery strategy: single-pr.
 
 ## Tasks
-- [ ] T1 (in progress): Add regression coverage, observe RED, sort groups, observe GREEN, lint and type-check; commit behavior and tests together.
-- [ ] T2 (pending): Assess verification/review availability, publish branch and create PR to dev with patch label; report CI status.
+- [x] T1 (complete; commit 13e79060): Add regression coverage, observe RED, sort groups, observe GREEN, lint and type-check; commit behavior and tests together.
+- [ ] T2 (in progress): Assess verification/review availability, publish branch and create PR to dev with patch label; report CI status.
 
 ## Routing
 T1 delegated to gentle-ai-worker: component and regression test are two meaningful edit surfaces. T2 parent delivery orchestration; verifier if assessment requires it.
