@@ -68,7 +68,7 @@ export const ParticipantItem = ({
   const visualContent = (
     <span
       data-spoiler-content
-      className='relative inline-flex items-center gap-1'
+      className='relative flex shrink-0 items-center gap-1 text-lg font-bold text-nowrap uppercase'
     >
       <span data-spoiler-text>{pseudonimo}</span>
       {catalogoSlug && (
@@ -96,7 +96,7 @@ export const ParticipantItem = ({
           <CatalogAvatarFollower avatarUrl={avatarUrl}>
             <Link
               href={`/catalogo/${catalogoSlug}`}
-              className='hover:text-palette-accent text-palette-primary group mx-auto flex w-fit items-center gap-1 duration-200 md:mx-0'
+              className='hover:text-palette-accent text-palette-primary group mx-auto flex w-fit shrink-0 items-center gap-1 text-lg font-bold text-nowrap uppercase duration-200 md:mx-0'
             >
               {pseudonimo}
               <ArrowRightIcon className='size-4 opacity-50 duration-200 group-hover:-rotate-45' />
@@ -108,7 +108,7 @@ export const ParticipantItem = ({
       return (
         <Link
           href={`/catalogo/${catalogoSlug}`}
-          className='hover:text-palette-accent text-palette-primary group mx-auto flex w-fit items-center gap-1 duration-200 md:mx-0'
+          className='hover:text-palette-accent text-palette-primary group mx-auto flex w-fit shrink-0 items-center gap-1 text-lg font-bold text-nowrap uppercase duration-200 md:mx-0'
         >
           {pseudonimo}
           <ArrowRightIcon className='size-4 opacity-50 duration-200 group-hover:-rotate-45' />
@@ -172,6 +172,8 @@ export const ParticipantItem = ({
       {visualContent}
     </button>
   ) : (
-    <span className='text-palette-foreground/80'>{pseudonimo}</span>
+    <span className='text-palette-foreground/80 shrink-0 text-lg font-bold text-nowrap uppercase'>
+      {pseudonimo}
+    </span>
   )
 }

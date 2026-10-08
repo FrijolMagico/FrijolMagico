@@ -113,20 +113,22 @@ describe('FestivalDetailContent', () => {
     expect(container.querySelector('[data-spoiler-global-toggle]')).toBeNull()
   })
 
-  test('places the activity timeline at full article width below the poster/participants grid', async () => {
+  test('places the activity timeline at full article width below the poster/participants layout', async () => {
     const { container } = await renderAsync(
       FestivalDetailContent({ detail: baseDetail })
     )
     const article = container.querySelector('article')!
     const activitySection = screen.getByText('Actividades').closest('section')!
-    const identityGrid = container.querySelector('.md\\:grid-cols-8')!
+    const identityLayout = container.querySelector('.md\\:flex-row')!
+    const posterColumn = container.querySelector('aside')!
 
     expect(article.className).toContain('max-w-6xl')
-    expect(identityGrid.contains(activitySection)).toBe(false)
-    expect(article.firstElementChild?.contains(identityGrid)).toBe(true)
+    expect(identityLayout.contains(activitySection)).toBe(false)
+    expect(article.firstElementChild?.contains(identityLayout)).toBe(true)
     expect(activitySection.parentElement).toBe(article)
     expect(article.children[1]).toBe(activitySection)
-    expect(container.querySelector('aside')).not.toBeNull()
+    expect(posterColumn.className).toContain('md:self-stretch')
+    expect(posterColumn.querySelector('.md\\:sticky')).not.toBeNull()
     expect(screen.getByText('Participantes')).toBeDefined()
   })
 
