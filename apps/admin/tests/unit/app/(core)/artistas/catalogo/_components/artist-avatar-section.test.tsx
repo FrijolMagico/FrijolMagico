@@ -79,10 +79,6 @@ function nodesByRole(root: TestNode, role: string): TestNode[] {
   ])
 }
 
-function buttons(root: TestNode) {
-  return nodesByTag(root, 'button')
-}
-
 function reactProps(node: TestNode): Record<string, (event?: unknown) => void> {
   const key = Object.getOwnPropertyNames(node).find((name) =>
     name.startsWith('__reactProps$')
@@ -108,7 +104,12 @@ globalThis.HTMLIFrameElement = TestNode as unknown as typeof HTMLIFrameElement
   }
 ).HTMLIFrameElement = TestNode as unknown as typeof HTMLIFrameElement
 ;(globalThis.window as unknown as { Event: typeof Event }).Event = Event
-globalThis.IS_REACT_ACT_ENVIRONMENT = true
+Object.defineProperty(globalThis, 'IS_REACT_ACT_ENVIRONMENT', {
+  configurable: true,
+  enumerable: true,
+  value: true,
+  writable: true
+})
 
 const { ArtistAvatarSection } =
   await import('@/core/artistas/catalogo/_components/artist-avatar-section')
