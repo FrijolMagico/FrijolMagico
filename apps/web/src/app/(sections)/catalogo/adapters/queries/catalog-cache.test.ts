@@ -92,8 +92,10 @@ describe('catalog read cache boundaries', () => {
   })
 
   test('uses the event-driven Cache Components lifetime for all nine DB scopes', () => {
-    const profile =
+    const eventDrivenProfile =
       /cacheLife\(\{\s*stale:\s*5\s*\*\s*60,\s*revalidate:\s*Infinity,\s*expire:\s*Infinity\s*\}\)/
+    const weeklyActiveFestivalProfile =
+      /cacheLife\(\{\s*stale:\s*5\s*\*\s*60,\s*revalidate:\s*604800,\s*expire:\s*Infinity\s*\}\)/
     const scopes = [
       ['getCachedCatalogBaseRows', cacheSource],
       ['getCachedCatalogParticipationRows', cacheSource],
@@ -108,6 +110,10 @@ describe('catalog read cache boundaries', () => {
       expect(functionSource, `${functionName} should exist`).toContain(
         "'use cache'"
       )
+      const profile =
+        functionName === 'getActiveFestival'
+          ? weeklyActiveFestivalProfile
+          : eventDrivenProfile
       expect(
         functionSource,
         `${functionName} should use the approved lifetime`
