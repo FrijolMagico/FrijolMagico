@@ -16,7 +16,7 @@
     "subtitle": "Asociación Cultural Frijol Mágico"
   },
   "top_bar": {
-    "active": true,
+    "active": false,
     "text": "🌱 **Festival Frijol Mágico 2026:** _9 y 10 de Octubre, Mall VIVO Coquimbo_",
     "button": {
       "active": false,
