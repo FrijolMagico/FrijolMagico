@@ -42,7 +42,6 @@ describe('ActivityItem', () => {
     const { container } = render(
       <ActivityItem
         activity={{ ...baseActivity, participante_pseudonimo: artistName }}
-        isEditionPast={false}
       />
     )
 
@@ -64,7 +63,6 @@ describe('ActivityItem', () => {
     const { container } = render(
       <ActivityItem
         activity={{ ...baseActivity, descripcion: 'Aprende técnicas', ubicacion: 'Sala A' }}
-        isEditionPast={false}
       />
     )
     const details = container.querySelector('details')!
@@ -266,7 +264,7 @@ describe('ActivityItem', () => {
 
   test('keeps registration CTAs hidden during server render', () => {
     expect(
-      renderToString(<ActivityItem activity={baseActivity} isEditionPast={false} />)
+      renderToString(<ActivityItem activity={baseActivity} />)
     ).not.toContain('Inscríbete')
   })
 })
