@@ -1,42 +1,38 @@
-import { useId, type ReactNode } from 'react'
+import { useId, type CSSProperties, type ReactNode } from 'react'
 
 import { cn } from '@/utils/cn'
 import { FissureEdgeDecoration } from '@/components/fissure/FissureEdgeDecoration'
 import {
   FISSURE_EDGE_HEIGHT,
   FISSURE_EDGE_PATH,
-  FISSURE_TOP_TRANSFORM,
   VIEWBOX_WIDTH
 } from '@/components/fissure/constants'
 import { createFissureMaskStyle } from '@/components/fissure/mask'
 
-const DEFAULT_LANDSCAPE_HEIGHT = 640
+const COMPACT_GEOMETRY_HEIGHT = 840
+const CANVAS_WIDTH = 'max(100vw, 80rem)'
+const CANVAS_LEFT = 'min(0px, calc((100vw - 80rem) / 2))'
+
+type FissureBannerSizing =
+  | { sizing: 'square' }
+  | { sizing: 'fixed'; height: number }
 
 interface FissureBannerProps {
   children?: ReactNode
   className?: string
   contentClassName?: string
-  landscapeHeight?: number
-  compactHeight?: number
+  landscape: FissureBannerSizing
+  compact: FissureBannerSizing
   palette?: string
-}
-
-interface FissureEdgeLayoutProps {
-  height: number
-  bottomOffset: number
-  position: 'bottom' | 'top'
 }
 
 function FissureClickBlocker({
   height,
-  bottomOffset,
-  position
-}: FissureEdgeLayoutProps) {
-  const transform =
-    position === 'bottom'
-      ? `translate(0 ${bottomOffset})`
-      : FISSURE_TOP_TRANSFORM
-
+  bottomOffset
+}: {
+  height: number
+  bottomOffset: number
+}) {
   const blockerPath = `M0 0 H${VIEWBOX_WIDTH} V${FISSURE_EDGE_HEIGHT} H0 Z ${FISSURE_EDGE_PATH}`
 
   return (
@@ -51,7 +47,7 @@ function FissureClickBlocker({
         d={blockerPath}
         fill='transparent'
         fillRule='evenodd'
-        transform={transform}
+        transform={`translate(0 ${bottomOffset})`}
       />
     </svg>
   )
@@ -61,53 +57,67 @@ function FissureBannerLayout({
   children,
   className,
   contentClassName,
-  height,
-  palette,
-  aspectSquare
-}: FissureBannerProps & {
-  height: number
-  palette: string
-  aspectSquare?: boolean
+  sizing,
+  palette
+}: Omit<FissureBannerProps, 'landscape' | 'compact'> & {
+  sizing: FissureBannerSizing
 }) {
   const baseId = useId().replace(/:/g, '')
   const bottomMaskId = `${baseId}-bottom-mask`
   const bottomBlurId = `${baseId}-bottom-blur`
-  const topMaskId = `${baseId}-top-mask`
-  const topBlurId = `${baseId}-top-blur`
+  const isSquare = sizing.sizing === 'square'
+  const height = isSquare ? COMPACT_GEOMETRY_HEIGHT : sizing.height
   const bottomOffset = height - FISSURE_EDGE_HEIGHT
-  const maskStyle = createFissureMaskStyle(height, { bottom: true })
+  const maskStyle = createFissureMaskStyle(height, {
+    top: false,
+    bottom: true
+  })
+  const frameStyle: CSSProperties = {
+    height: isSquare ? undefined : sizing.height
+  }
+  const canvasStyle: CSSProperties = {
+    width: CANVAS_WIDTH,
+    left: CANVAS_LEFT
+  }
+  const maskLayerStyle: CSSProperties = {
+    ...canvasStyle,
+    ...maskStyle,
+    height: isSquare ? '100vw' : height
+  }
+  const fixedContentStyle: CSSProperties = {
+    position: 'fixed',
+    top: 0,
+    left: CANVAS_LEFT,
+    width: CANVAS_WIDTH,
+    height: isSquare ? '100vw' : height
+  }
 
   return (
     <header
       className={cn(
         'relative w-full overflow-hidden',
-        aspectSquare && 'aspect-square',
+        isSquare && 'aspect-square',
         className
       )}
-      style={aspectSquare ? undefined : { height }}
+      style={frameStyle}
     >
       <div
-        className={cn(
-          'relative left-1/2 w-screen min-w-7xl -translate-x-1/2',
-          aspectSquare && 'h-full'
-        )}
-        style={aspectSquare ? undefined : { height }}
+        className='bg-background absolute top-0 overflow-hidden'
+        style={maskLayerStyle}
       >
         <div
-          className='bg-background absolute inset-0 overflow-hidden'
-          style={maskStyle}
+          data-palette={palette}
+          className={cn(
+            'flex h-full w-full items-center justify-center',
+            contentClassName
+          )}
+          style={fixedContentStyle}
         >
-          <div
-            data-palette={palette}
-            className={cn(
-              'relative z-0 flex h-full w-full items-center justify-center',
-              contentClassName
-            )}
-          >
-            {children}
-          </div>
+          {children}
         </div>
+      </div>
 
+      <div className='pointer-events-none absolute inset-0' style={canvasStyle}>
         <FissureEdgeDecoration
           position='bottom'
           blurId={bottomBlurId}
@@ -115,23 +125,7 @@ function FissureBannerLayout({
           height={height}
           bottomOffset={bottomOffset}
         />
-        <FissureEdgeDecoration
-          position='top'
-          blurId={topBlurId}
-          maskId={topMaskId}
-          height={height}
-          bottomOffset={bottomOffset}
-        />
-        <FissureClickBlocker
-          position='bottom'
-          height={height}
-          bottomOffset={bottomOffset}
-        />
-        <FissureClickBlocker
-          position='top'
-          height={height}
-          bottomOffset={bottomOffset}
-        />
+        <FissureClickBlocker height={height} bottomOffset={bottomOffset} />
       </div>
     </header>
   )
@@ -141,22 +135,12 @@ export function FissureBanner({
   children,
   className,
   contentClassName,
-  landscapeHeight = DEFAULT_LANDSCAPE_HEIGHT,
-  compactHeight,
+  landscape,
+  compact,
   palette = 'base'
 }: FissureBannerProps) {
-  if (compactHeight === undefined) {
-    return (
-      <FissureBannerLayout
-        className={className}
-        contentClassName={contentClassName}
-        height={landscapeHeight}
-        palette={palette}
-      >
-        {children}
-      </FissureBannerLayout>
-    )
-  }
+  const landscapeLayout = { sizing: landscape }
+  const compactLayout = { sizing: compact }
 
   return (
     <>
@@ -164,19 +148,18 @@ export function FissureBanner({
         <FissureBannerLayout
           className={className}
           contentClassName={contentClassName}
-          height={landscapeHeight}
           palette={palette}
+          {...landscapeLayout}
         >
           {children}
         </FissureBannerLayout>
       </div>
       <div className='hidden max-[820px]:block portrait:block'>
         <FissureBannerLayout
-          aspectSquare
           className={className}
           contentClassName={contentClassName}
-          height={compactHeight}
           palette={palette}
+          {...compactLayout}
         >
           {children}
         </FissureBannerLayout>
