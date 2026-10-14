@@ -23,13 +23,17 @@ function buildDataUri(svg: string): string {
 }
 
 interface FissureMaskOptions {
-  /** Si es true, incluye el borde fisurado inferior además del superior. Default: false */
+  /** Includes the top fissure. Default: true */
+  top?: boolean
+  /** Includes the bottom fissure. Default: false */
   bottom?: boolean
+  /** Uses a fixed 99-unit bottom strip for naturally sized content. Default: false */
+  contentBottomStrip?: boolean
 }
 
 /**
- * Genera un CSS mask-image con el borde superior fisurado.
- * Opcionalmente incluye el borde inferior pasando `{ bottom: true }`.
+ * Generates a CSS mask-image with the top fissure by default.
+ * Pass `{ bottom: true }` to include the bottom edge, or `{ top: false }` for bottom-only.
  *
  * El rect blanco tiene un overlap de 2px con el path para eliminar
  * el hairline gap por anti-aliasing en WebKit/Blink.
@@ -38,17 +42,47 @@ export function createFissureMaskStyle(
   height: number,
   options?: FissureMaskOptions
 ): CSSProperties {
+  const hasTop = options?.top ?? true
   const hasBottom = options?.bottom ?? false
-  const rectY = FISSURE_EDGE_HEIGHT - OVERLAP
-  const rectHeight = hasBottom
-    ? height - FISSURE_EDGE_HEIGHT * 2 + 1 + OVERLAP * 2
-    : height - FISSURE_EDGE_HEIGHT + 1 + OVERLAP
+  const hasContentBottomStrip = options?.contentBottomStrip ?? false
+  const rectY = hasTop ? FISSURE_EDGE_HEIGHT - OVERLAP : 0
+  const rectHeight =
+    hasTop && hasBottom
+      ? height - FISSURE_EDGE_HEIGHT * 2 + 1 + OVERLAP * 2
+      : hasTop || hasBottom
+        ? height - FISSURE_EDGE_HEIGHT + 1 + OVERLAP
+        : height
 
-  let paths = `<path d="${FISSURE_EDGE_PATH}" fill="white" transform="${FISSURE_TOP_TRANSFORM}"/>`
+  let paths = ''
+
+  if (hasTop) {
+    paths += `<path d="${FISSURE_EDGE_PATH}" fill="white" transform="${FISSURE_TOP_TRANSFORM}"/>`
+  }
 
   if (hasBottom) {
-    const bottomOffset = height - FISSURE_EDGE_HEIGHT
+    const bottomOffset = hasContentBottomStrip
+      ? 0
+      : height - FISSURE_EDGE_HEIGHT
     paths += `<path d="${FISSURE_EDGE_PATH}" fill="white" transform="translate(0 ${bottomOffset})"/>`
+  }
+
+  if (hasContentBottomStrip) {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VIEWBOX_WIDTH} ${FISSURE_EDGE_HEIGHT}" preserveAspectRatio="none">${paths}</svg>`
+    const stripMask = buildDataUri(svg)
+    const contentMask = 'linear-gradient(white, white)'
+
+    return {
+      WebkitMaskImage: `${contentMask}, ${stripMask}`,
+      maskImage: `${contentMask}, ${stripMask}`,
+      WebkitMaskPosition: '0 0, 0 100%',
+      maskPosition: '0 0, 0 100%',
+      WebkitMaskSize:
+        '100% calc(100% - var(--fissure-edge-strip-height) + 2px), 100% var(--fissure-edge-strip-height)',
+      maskSize:
+        '100% calc(100% - var(--fissure-edge-strip-height) + 2px), 100% var(--fissure-edge-strip-height)',
+      WebkitMaskRepeat: 'no-repeat, no-repeat',
+      maskRepeat: 'no-repeat'
+    }
   }
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VIEWBOX_WIDTH} ${height}" preserveAspectRatio="none"><rect x="0" y="${rectY}" width="${VIEWBOX_WIDTH}" height="${rectHeight}" fill="white"/>${paths}</svg>`

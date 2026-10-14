@@ -13,6 +13,8 @@ interface FissureEdgeDecorationProps {
   position: 'bottom' | 'top'
   maskId: string
   blurId: string
+  /** Fixed CSS height for a bottom-anchored content strip. */
+  stripHeight?: string
   /** Activa animación hover (requiere grupo padre con class "group"). Default: false */
   hoverable?: boolean
 }
@@ -23,6 +25,7 @@ export function FissureEdgeDecoration({
   position,
   maskId,
   blurId,
+  stripHeight,
   hoverable = false
 }: FissureEdgeDecorationProps) {
   const transform =
@@ -41,7 +44,8 @@ export function FissureEdgeDecoration({
   return (
     <div
       className={cn(
-        'pointer-events-none absolute inset-0 z-10',
+        'pointer-events-none absolute z-10',
+        stripHeight ? 'inset-x-0 bottom-0' : 'inset-0',
         hoverable && 'transition-transform duration-300 ease-out',
         hoverable &&
           position === 'bottom' &&
@@ -50,6 +54,7 @@ export function FissureEdgeDecoration({
           position === 'top' &&
           'group-hover:-translate-y-1'
       )}
+      style={stripHeight ? { height: stripHeight } : undefined}
     >
       <svg
         aria-hidden='true'
