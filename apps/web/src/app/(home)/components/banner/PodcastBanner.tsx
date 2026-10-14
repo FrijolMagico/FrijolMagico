@@ -4,7 +4,7 @@ import { ArrowRightIcon } from 'lucide-react'
 
 export function PodcastBanner() {
   return (
-    <section className='bg-palette-shadow relative flex h-full w-full items-center justify-center overflow-hidden px-2'>
+    <section className='bg-palette-shadow relative flex h-full w-full items-center justify-center overflow-hidden px-2 pt-12 pb-12'>
       {/* Animated background orbs */}
       <div className='bg-palette-primary pointer-events-none absolute top-0 right-0 left-0 z-0 mx-auto aspect-square w-1/2 rounded-full blur-[100px]' />
 

@@ -66,4 +66,15 @@ describe('Footer', () => {
     expect(versionText).toBeDefined()
     expect(versionText.textContent).not.toBe('v4.0.0')
   })
+
+  test('anchors the full content wrapper to the bottom of the viewport frame', () => {
+    render(<Footer />)
+
+    const content = screen.getByTestId('footer-content')
+
+    expect(content.className).toContain('h-full')
+    expect(content.className).toContain('min-w-0')
+    expect(content.className).toContain('flex-col')
+    expect(content.className).toContain('justify-end')
+  })
 })

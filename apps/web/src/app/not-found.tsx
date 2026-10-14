@@ -1,10 +1,10 @@
 import { Header } from '@/components/Header'
 import { LogoHomeLink } from '@/components/LogoHomeLink'
-import { ContextBar } from '@/components/context-bar/ContextBar'
 
 export default function NotFound() {
   return (
     <>
+      <span data-not-found hidden />
       <div className='fixed right-0 bottom-2 scale-75'>
         <LogoHomeLink />
       </div>
@@ -17,7 +17,6 @@ export default function NotFound() {
         </p>
         <LogoHomeLink />
       </main>
-      <ContextBar mode='minimal' />
     </>
   )
 }

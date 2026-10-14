@@ -11,7 +11,6 @@ import { RelatedArtists } from './components/RelatedArtists'
 import { TrackPageView } from '@/components/analytics/TrackPageView'
 import { ArtistAvatarTransition } from '@/components/transitions/ArtistAvatarTransition'
 import { ArtistNameTransition } from '@/components/transitions/ArtistNameTransition'
-import { ContextBar } from '@/components/context-bar/ContextBar'
 
 // Generate params for all artist pages at build time
 export async function generateStaticParams() {
@@ -150,7 +149,6 @@ export default async function ArtistPage({
 
         <RelatedArtists artist={artist} catalogData={catalogData} />
       </article>
-      <ContextBar />
     </>
   )
 }

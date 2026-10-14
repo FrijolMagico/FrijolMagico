@@ -41,6 +41,10 @@
   }
 }
 
+body:has([data-not-found]) [data-context-bar-controls] {
+  display: none;
+}
+
 :root {
   interpolate-size: allow-keywords;
 }

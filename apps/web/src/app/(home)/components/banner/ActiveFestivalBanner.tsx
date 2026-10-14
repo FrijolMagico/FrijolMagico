@@ -122,7 +122,7 @@ export function ActiveFestivalBanner({
       <Link href={href} className='block h-full w-full'>
         <picture className='block h-full w-full'>
           <source
-            media='(min-width: 821px) and (orientation: landscape)'
+            media='(min-width: 768px)'
             srcSet={desktopSrcSet}
           />
           <img
