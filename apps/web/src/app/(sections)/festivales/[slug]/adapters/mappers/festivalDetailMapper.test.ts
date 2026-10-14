@@ -230,6 +230,16 @@ describe('mapFestivalDetail', () => {
     expect(result.actividades[1].ocurrencias).toEqual([])
   })
 
+  test('preserves the edition end date without deriving pastness', () => {
+    const result = mapFestivalDetail({
+      ...baseRaw,
+      edicion_fin: '2025-10-03'
+    } as unknown as FestivalDetail)
+
+    expect(result.edicion_fin).toBe('2025-10-03')
+    expect(result).not.toHaveProperty('is_edition_past')
+  })
+
   test('returns the same top-level fields', () => {
     const result = mapFestivalDetail(baseRaw as unknown as FestivalDetail)
 

@@ -34,16 +34,13 @@ const occurrence = (
 
 describe('buildFestivalSchedule', () => {
   test('groups by chronological day and type, sorting entries by time with stable ties', () => {
-    const schedule = buildFestivalSchedule(
-      [
-        makeActivity('Later', 'charla', [occurrence(1, '2026-10-04', '12:00', 30)]),
-        makeActivity('Second tie', 'taller', [occurrence(2, '2026-10-03', '09:00', 30)]),
-        makeActivity('Music', 'musica', [occurrence(3, '2026-10-03', '08:00', 30)]),
-        makeActivity('First tie', 'taller', [occurrence(4, '2026-10-03', '09:00', 30)]),
-        makeActivity('Earlier', 'charla', [occurrence(5, '2026-10-04', '10:00', 30)])
-      ],
-      false
-    )
+    const schedule = buildFestivalSchedule([
+      makeActivity('Later', 'charla', [occurrence(1, '2026-10-04', '12:00', 30)]),
+      makeActivity('Second tie', 'taller', [occurrence(2, '2026-10-03', '09:00', 30)]),
+      makeActivity('Music', 'musica', [occurrence(3, '2026-10-03', '08:00', 30)]),
+      makeActivity('First tie', 'taller', [occurrence(4, '2026-10-03', '09:00', 30)]),
+      makeActivity('Earlier', 'charla', [occurrence(5, '2026-10-04', '10:00', 30)])
+    ])
 
     expect(schedule.days.map(({ date }) => date)).toEqual(['2026-10-03', '2026-10-04'])
     expect(schedule.days[0].groups.map(({ type }) => type)).toEqual(['taller', 'musica'])
@@ -58,16 +55,13 @@ describe('buildFestivalSchedule', () => {
   })
 
   test('assigns arbitrarily many columns to overlaps and reuses columns at interval ends', () => {
-    const schedule = buildFestivalSchedule(
-      [
-        makeActivity('A', 'taller', [occurrence(1, '2026-10-03', '09:00', 120)]),
-        makeActivity('B', 'taller', [occurrence(2, '2026-10-03', '09:00', 60)]),
-        makeActivity('C', 'taller', [occurrence(3, '2026-10-03', '09:30', 90)]),
-        makeActivity('D', 'taller', [occurrence(4, '2026-10-03', '10:00', 30)]),
-        makeActivity('E', 'taller', [occurrence(5, '2026-10-03', '11:00', 30)])
-      ],
-      false
-    )
+    const schedule = buildFestivalSchedule([
+      makeActivity('A', 'taller', [occurrence(1, '2026-10-03', '09:00', 120)]),
+      makeActivity('B', 'taller', [occurrence(2, '2026-10-03', '09:00', 60)]),
+      makeActivity('C', 'taller', [occurrence(3, '2026-10-03', '09:30', 90)]),
+      makeActivity('D', 'taller', [occurrence(4, '2026-10-03', '10:00', 30)]),
+      makeActivity('E', 'taller', [occurrence(5, '2026-10-03', '11:00', 30)])
+    ])
     const group = schedule.days[0].groups[0]
 
     expect(group.entries.map(({ activity, column }) => [activity.titulo, column])).toEqual([
@@ -81,15 +75,12 @@ describe('buildFestivalSchedule', () => {
   })
 
   test('shares overlap columns across types and reuses the peak-concurrency column pool', () => {
-    const schedule = buildFestivalSchedule(
-      [
-        makeActivity('Workshop', 'taller', [occurrence(1, '2026-10-03', '09:00', 120)]),
-        makeActivity('Talk', 'charla', [occurrence(2, '2026-10-03', '09:00', 30)]),
-        makeActivity('Music', 'musica', [occurrence(3, '2026-10-03', '09:15', 45)]),
-        makeActivity('Later talk', 'charla', [occurrence(4, '2026-10-03', '10:00', 30)])
-      ],
-      false
-    )
+    const schedule = buildFestivalSchedule([
+      makeActivity('Workshop', 'taller', [occurrence(1, '2026-10-03', '09:00', 120)]),
+      makeActivity('Talk', 'charla', [occurrence(2, '2026-10-03', '09:00', 30)]),
+      makeActivity('Music', 'musica', [occurrence(3, '2026-10-03', '09:15', 45)]),
+      makeActivity('Later talk', 'charla', [occurrence(4, '2026-10-03', '10:00', 30)])
+    ])
     const groups = schedule.days[0].groups
     const entries = groups.flatMap(({ entries: groupEntries }) => groupEntries)
 
@@ -106,7 +97,7 @@ describe('buildFestivalSchedule', () => {
     const first = occurrence(1, '2026-10-03', '09:00', 30, 'https://example.org/one')
     const second = occurrence(2, '2026-10-04', '10:00', 45, 'https://example.org/two')
     const activity = makeActivity('Repeated', 'taller', [first, second])
-    const schedule = buildFestivalSchedule([activity], false)
+    const schedule = buildFestivalSchedule([activity])
 
     expect(schedule.days.flatMap(({ groups }) => groups.flatMap(({ entries }) => entries))).toEqual([
       expect.objectContaining({ activity, occurrence: first, occurrenceIndex: 0 }),
@@ -124,7 +115,7 @@ describe('buildFestivalSchedule', () => {
     const invalidDuration = makeActivity('No duration', 'musica', [
       occurrence(2, '2026-10-03', '20:00', null)
     ])
-    const active = buildFestivalSchedule([dated, undated, invalidDuration], false)
+    const active = buildFestivalSchedule([dated, undated, invalidDuration])
 
     expect(active.days).toHaveLength(1)
     expect(active.days[0].date).toBe('2026-10-03')
@@ -137,7 +128,5 @@ describe('buildFestivalSchedule', () => {
       ['Undated', null]
     ])
 
-    const past = buildFestivalSchedule([dated, undated, invalidDuration], true)
-    expect(past).toEqual({ days: [], unscheduled: [] })
   })
 })

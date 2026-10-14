@@ -103,10 +103,7 @@ export const FestivalDetailContent = ({
       </div>
 
       {detail.actividades.length > 0 && (
-        <ActivityList
-          actividades={detail.actividades}
-          isEditionPast={detail.is_edition_past}
-        />
+        <ActivityList actividades={detail.actividades} />
       )}
       {navigator && <div className='mt-10'>{navigator}</div>}
     </article>

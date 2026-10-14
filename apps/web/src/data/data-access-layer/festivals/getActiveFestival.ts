@@ -13,7 +13,7 @@ export interface ActiveFestivalData {
 
 export async function getActiveFestival() {
   'use cache'
-  cacheLife({ stale: 5 * 60, revalidate: Infinity, expire: Infinity })
+  cacheLife({ stale: 5 * 60, revalidate: 604800, expire: Infinity })
   cacheTag(FESTIVAL_CRITICAL_CACHE_TAG)
 
   return await executeQuery<ActiveFestivalData>(
