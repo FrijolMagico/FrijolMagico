@@ -3,7 +3,7 @@ import { LinkBtn } from '@/components/LinkBtn'
 import { paths } from '@/config/paths'
 import { FeaturedArtists } from './components/FeaturedArtists'
 import { Banner } from './components/banner'
-import { ContextBar } from '@/components/context-bar/ContextBar'
+import { DoodleLine } from '@/components/DoodleLine'
 
 export default async function Home() {
   return (
@@ -16,6 +16,7 @@ export default async function Home() {
 
         <HeroSection />
 
+        <DoodleLine color='text-primary' className='py-4' />
         <section className='mx-auto h-full max-w-6xl space-y-20 px-6'>
           <article className='space-y-10'>
             <div className='flex flex-col items-center gap-2'>
@@ -41,7 +42,6 @@ export default async function Home() {
           </article>
         </section>
       </main>
-      <ContextBar />
     </>
   )
 }

@@ -5,7 +5,7 @@ export const Background = () => {
   const strokeDasharray = '10 10'
 
   return (
-    <div className='absolute inset-0 -z-10 overflow-hidden'>
+    <div className='pointer-events-none absolute inset-0 z-0 overflow-hidden'>
       <div
         className='absolute inset-0 -left-1/2 w-[200%]'
         style={{

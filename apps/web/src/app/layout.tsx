@@ -12,13 +12,15 @@ import siteData from '@/data/site.json'
 import '@/styles/globals.css'
 import { TopBarInfoWrapper } from '@/components/top-bar-info/TopBarInfoWrapper'
 import { TopBarRouteGate } from '@/components/top-bar-info/top-bar-route-gate'
-import { Background } from '@/components/Background'
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 
 import { cn } from '@/utils/cn'
 import { Footer } from '@/components/Footer'
+import { SiteForeground } from '@/components/site-foreground'
+import { Background } from '@/components/Background'
+import { ContextBar } from '@/components/context-bar/ContextBar'
 
 const SITE = siteData
 
@@ -102,7 +104,7 @@ export default function RootLayout({
     <html lang={SITE.lang}>
       <body
         className={cn(
-          'bg-background font-rubik relative flex h-full min-h-screen w-full flex-col pt-12 antialiased [&>main]:flex-1',
+          'bg-background font-rubik relative flex h-full min-h-screen w-full flex-col antialiased',
           josefinSans.variable,
           notoSans.variable,
           superFortress.variable,
@@ -112,21 +114,24 @@ export default function RootLayout({
           canarinaFont.variable
         )}
       >
+        <Background />
         <GoogleAnalytics />
         <SpeedInsights />
         <Analytics />
-        <Background />
-        <a
-          href='#main-content'
-          className='focus:bg-accent sr-only focus:not-sr-only focus:fixed focus:top-14 focus:left-1/2 focus:z-50 focus:-translate-x-1/2 focus:rounded-lg focus:px-4 focus:py-2 focus:text-white focus:shadow-lg focus:outline-none'
-        >
-          Saltar al contenido principal
-        </a>
-        <TopBarRouteGate>
-          <TopBarInfoWrapper />
-        </TopBarRouteGate>
-        <div id='main-content' tabIndex={-1} className='outline-none' />
-        {children}
+        <SiteForeground>
+          <a
+            href='#main-content'
+            className='focus:bg-accent sr-only focus:not-sr-only focus:fixed focus:top-14 focus:left-1/2 focus:z-50 focus:-translate-x-1/2 focus:rounded-lg focus:px-4 focus:py-2 focus:text-white focus:shadow-lg focus:outline-none'
+          >
+            Saltar al contenido principal
+          </a>
+          <TopBarRouteGate>
+            <TopBarInfoWrapper />
+          </TopBarRouteGate>
+          <div id='main-content' tabIndex={-1} className='outline-none' />
+          {children}
+        </SiteForeground>
+        <ContextBar />
         <Footer />
       </body>
     </html>

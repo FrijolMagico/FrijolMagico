@@ -1,17 +1,19 @@
-import { useId, type CSSProperties, type ReactNode } from 'react'
+import { type CSSProperties, type ReactNode } from 'react'
 
 import { cn } from '@/utils/cn'
-import { FissureEdgeDecoration } from '@/components/fissure/FissureEdgeDecoration'
 import {
+  FISSURE_EDGE_AMPLITUDE,
   FISSURE_EDGE_HEIGHT,
   FISSURE_EDGE_PATH,
   VIEWBOX_WIDTH
 } from '@/components/fissure/constants'
-import { createFissureMaskStyle } from '@/components/fissure/mask'
+import {
+  FISSURE_CANVAS_LEFT,
+  FISSURE_CANVAS_WIDTH,
+  FissureSurface
+} from '@/components/fissure/fissure-surface'
 
 const COMPACT_GEOMETRY_HEIGHT = 840
-const CANVAS_WIDTH = 'max(100vw, 80rem)'
-const CANVAS_LEFT = 'min(0px, calc((100vw - 80rem) / 2))'
 
 type FissureBannerSizing =
   | { sizing: 'square' }
@@ -26,28 +28,23 @@ interface FissureBannerProps {
   palette?: string
 }
 
-function FissureClickBlocker({
-  height,
-  bottomOffset
-}: {
-  height: number
-  bottomOffset: number
-}) {
+function FissureClickBlocker() {
   const blockerPath = `M0 0 H${VIEWBOX_WIDTH} V${FISSURE_EDGE_HEIGHT} H0 Z ${FISSURE_EDGE_PATH}`
 
   return (
     <svg
       aria-hidden='true'
-      className='pointer-events-none absolute inset-0 z-50 h-full w-full overflow-visible'
+      className='pointer-events-none absolute inset-x-0 bottom-0 z-50 h-full w-full overflow-visible'
+      style={{ height: FISSURE_EDGE_AMPLITUDE }}
       preserveAspectRatio='none'
-      viewBox={`0 0 ${VIEWBOX_WIDTH} ${height}`}
+      viewBox={`0 0 ${VIEWBOX_WIDTH} ${FISSURE_EDGE_HEIGHT}`}
     >
       <path
         className='pointer-events-auto cursor-auto'
         d={blockerPath}
         fill='transparent'
         fillRule='evenodd'
-        transform={`translate(0 ${bottomOffset})`}
+        transform='translate(0 0)'
       />
     </svg>
   )
@@ -62,33 +59,16 @@ function FissureBannerLayout({
 }: Omit<FissureBannerProps, 'landscape' | 'compact'> & {
   sizing: FissureBannerSizing
 }) {
-  const baseId = useId().replace(/:/g, '')
-  const bottomMaskId = `${baseId}-bottom-mask`
-  const bottomBlurId = `${baseId}-bottom-blur`
   const isSquare = sizing.sizing === 'square'
   const height = isSquare ? COMPACT_GEOMETRY_HEIGHT : sizing.height
-  const bottomOffset = height - FISSURE_EDGE_HEIGHT
-  const maskStyle = createFissureMaskStyle(height, {
-    top: false,
-    bottom: true
-  })
   const frameStyle: CSSProperties = {
     height: isSquare ? undefined : sizing.height
-  }
-  const canvasStyle: CSSProperties = {
-    width: CANVAS_WIDTH,
-    left: CANVAS_LEFT
-  }
-  const maskLayerStyle: CSSProperties = {
-    ...canvasStyle,
-    ...maskStyle,
-    height: isSquare ? '100vw' : height
   }
   const fixedContentStyle: CSSProperties = {
     position: 'fixed',
     top: 0,
-    left: CANVAS_LEFT,
-    width: CANVAS_WIDTH,
+    left: FISSURE_CANVAS_LEFT,
+    width: FISSURE_CANVAS_WIDTH,
     height: isSquare ? '100vw' : height
   }
 
@@ -101,9 +81,13 @@ function FissureBannerLayout({
       )}
       style={frameStyle}
     >
-      <div
-        className='bg-background absolute top-0 overflow-hidden'
-        style={maskLayerStyle}
+      <FissureSurface
+        geometryHeight={height}
+        height={isSquare ? '100vw' : height}
+        edge='bottom'
+        overlay={
+          <FissureClickBlocker />
+        }
       >
         <div
           data-palette={palette}
@@ -115,18 +99,7 @@ function FissureBannerLayout({
         >
           {children}
         </div>
-      </div>
-
-      <div className='pointer-events-none absolute inset-0' style={canvasStyle}>
-        <FissureEdgeDecoration
-          position='bottom'
-          blurId={bottomBlurId}
-          maskId={bottomMaskId}
-          height={height}
-          bottomOffset={bottomOffset}
-        />
-        <FissureClickBlocker height={height} bottomOffset={bottomOffset} />
-      </div>
+      </FissureSurface>
     </header>
   )
 }
@@ -144,7 +117,7 @@ export function FissureBanner({
 
   return (
     <>
-      <div className='max-[820px]:hidden portrait:hidden'>
+      <div className='hidden md:block'>
         <FissureBannerLayout
           className={className}
           contentClassName={contentClassName}
@@ -154,7 +127,7 @@ export function FissureBanner({
           {children}
         </FissureBannerLayout>
       </div>
-      <div className='hidden max-[820px]:block portrait:block'>
+      <div className='md:hidden'>
         <FissureBannerLayout
           className={className}
           contentClassName={contentClassName}

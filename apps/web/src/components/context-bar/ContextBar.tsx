@@ -27,7 +27,9 @@ interface ContextBarProps {
   mode?: ContextBarMode
 }
 
-export function ContextBar({ mode = CONTEXT_BAR_MODE.NORMAL }: ContextBarProps) {
+export function ContextBar({
+  mode = CONTEXT_BAR_MODE.NORMAL
+}: ContextBarProps) {
   const rawPathname = usePathname()
   const pathname = rawPathname ?? '/'
   const visible = useScrollHide(100)
@@ -51,7 +53,7 @@ export function ContextBar({ mode = CONTEXT_BAR_MODE.NORMAL }: ContextBarProps) 
       aria-label='Navegacion de contexto'
       aria-hidden={!visible}
       className={cn(
-        'bg-background/80 fixed bottom-4 z-30 mx-auto self-center rounded-lg px-4 py-2 shadow-lg backdrop-blur-md transition-all duration-300',
+        'bg-background/80 fixed bottom-4 left-1/2 z-99 mx-auto -translate-x-1/2 self-center rounded-lg px-4 py-2 shadow-lg backdrop-blur-md transition-all duration-300',
         !visible && 'pointer-events-none translate-y-[200%] opacity-0'
       )}
     >
@@ -70,7 +72,10 @@ export function ContextBar({ mode = CONTEXT_BAR_MODE.NORMAL }: ContextBarProps) 
           />
         </Link>
 
-        <div className='flex items-center justify-center gap-1'>
+        <div
+          className='flex items-center justify-center gap-1'
+          data-context-bar-controls
+        >
           {showBreadcrumbControls && (
             <Link
               href={backHref}
@@ -81,9 +86,7 @@ export function ContextBar({ mode = CONTEXT_BAR_MODE.NORMAL }: ContextBarProps) 
             </Link>
           )}
 
-          {showBreadcrumbControls && (
-            <ContextBreadcrumb segments={segments} />
-          )}
+          {showBreadcrumbControls && <ContextBreadcrumb segments={segments} />}
         </div>
 
         <ContextDropdown sections={sections} activeSection={activeSection} />

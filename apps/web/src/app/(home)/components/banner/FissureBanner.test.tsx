@@ -5,40 +5,52 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { FissureBanner } from './FissureBanner'
 
 describe('FissureBanner sizing', () => {
+  test('selects compact below md and landscape from md without orientation conditions', () => {
+    const markup = renderToStaticMarkup(
+      createElement(FissureBanner, {
+        landscape: { sizing: 'fixed', height: 420 },
+        compact: { sizing: 'fixed', height: 360 }
+      })
+    )
+
+    expect(markup).toContain('class="hidden md:block"')
+    expect(markup).toContain('class="md:hidden"')
+    expect(markup).not.toContain('max-[820px]')
+    expect(markup).not.toContain('portrait:')
+  })
+
   test('accepts explicit independent sizing for landscape and compact layouts', () => {
     const markup = renderToStaticMarkup(
       createElement(FissureBanner, {
         landscape: { sizing: 'fixed', height: 420 },
-        compact: { sizing: 'fixed', height: 360 },
-        children: 'content'
-      })
+        compact: { sizing: 'fixed', height: 360 }
+      }, 'content')
     )
 
     expect(markup).toContain('height:420px')
     expect(markup).toContain('height:360px')
   })
 
-  test('uses fixed landscape height while compact square keeps 840 reference geometry', () => {
+  test('uses fixed landscape height while compact square keeps its viewport-sized frame', () => {
     const markup = renderToStaticMarkup(
       createElement(FissureBanner, {
         landscape: { sizing: 'fixed', height: 640 },
-        compact: { sizing: 'square' },
-        children: 'festival'
-      })
+        compact: { sizing: 'square' }
+      }, 'festival')
     )
 
     expect(markup).toContain('height:640px')
     expect(markup).toContain('aspect-square')
-    expect(markup).toContain('viewBox="0 0 1920 840"')
+    expect(markup).toContain('height:100vw')
+    expect(markup).toContain('viewBox="0 0 1920 99"')
   })
 
   test('keeps the fixed content layer outside transformed ancestors and clips it with the moving frame', () => {
     const markup = renderToStaticMarkup(
       createElement(FissureBanner, {
         landscape: { sizing: 'fixed', height: 420 },
-        compact: { sizing: 'fixed', height: 640 },
-        children: createElement('p', null, 'stationary')
-      })
+        compact: { sizing: 'fixed', height: 640 }
+      }, createElement('p', null, 'stationary'))
     )
 
     expect(markup).toContain('position:fixed')
@@ -53,16 +65,15 @@ describe('FissureBanner sizing', () => {
     const markup = renderToStaticMarkup(
       createElement(FissureBanner, {
         landscape: { sizing: 'fixed', height: 420 },
-        compact: { sizing: 'fixed', height: 640 },
-        children: createElement('p', null, 'content')
-      })
+        compact: { sizing: 'fixed', height: 640 }
+      }, createElement('p', null, 'content'))
     )
 
     expect(markup).toContain('height:420px')
-    expect(markup).toContain('viewBox="0 0 1920 420"')
-    expect(markup).toContain('viewBox="0 0 1920 640"')
-    expect(markup).toContain('translate(0 321)')
-    expect(markup).toContain('translate(0 541)')
+    expect(markup.match(/viewBox="0 0 1920 99"/g)).toHaveLength(4)
+    expect(markup).toContain('height:99px')
+    expect(markup).toContain('bottom-0')
+    expect(markup).toContain('translate(0 0)')
     expect(markup).toContain('-webkit-mask-image:')
   })
 
@@ -70,9 +81,8 @@ describe('FissureBanner sizing', () => {
     const markup = renderToStaticMarkup(
       createElement(FissureBanner, {
         landscape: { sizing: 'fixed', height: 420 },
-        compact: { sizing: 'fixed', height: 640 },
-        children: createElement('section', { className: 'bg-blue-500' }, 'banner')
-      })
+        compact: { sizing: 'fixed', height: 640 }
+      }, createElement('section', { className: 'bg-blue-500' }, 'banner'))
     )
 
     expect(markup).toContain('position:fixed')
@@ -87,13 +97,12 @@ describe('FissureBanner sizing', () => {
     const markup = renderToStaticMarkup(
       createElement(FissureBanner, {
         landscape: { sizing: 'fixed', height: 640 },
-        compact: { sizing: 'square' },
-        children: 'compact'
-      })
+        compact: { sizing: 'square' }
+      }, 'compact')
     )
 
     expect(markup).toContain('aspect-square')
-    expect(markup).toContain('viewBox="0 0 1920 840"')
+    expect(markup).toContain('viewBox="0 0 1920 99"')
     expect(markup).toContain('height:100vw')
     expect(markup).not.toContain('height:840px')
   })
@@ -102,9 +111,8 @@ describe('FissureBanner sizing', () => {
     const markup = renderToStaticMarkup(
       createElement(FissureBanner, {
         landscape: { sizing: 'fixed', height: 420 },
-        compact: { sizing: 'fixed', height: 360 },
-        children: 'aligned'
-      })
+        compact: { sizing: 'fixed', height: 360 }
+      }, 'aligned')
     )
 
     const maskLayer = markup.match(
@@ -125,16 +133,14 @@ describe('FissureBanner sizing', () => {
     const markup = renderToStaticMarkup(
       createElement(FissureBanner, {
         landscape: { sizing: 'fixed', height: 420 },
-        compact: { sizing: 'fixed', height: 360 },
-        children: 'fixed'
-      })
+        compact: { sizing: 'fixed', height: 360 }
+      }, 'fixed')
     )
 
     expect(markup).toContain('height:420px')
     expect(markup).toContain('height:360px')
-    expect(markup.match(/viewBox="0 0 1920 420"/g)).toHaveLength(2)
-    expect(markup.match(/viewBox="0 0 1920 360"/g)).toHaveLength(2)
-    expect(markup).toContain('translate(0 321)')
-    expect(markup).toContain('translate(0 261)')
+    expect(markup.match(/viewBox="0 0 1920 99"/g)).toHaveLength(4)
+    expect(markup).toContain('height:99px')
+    expect(markup).toContain('bottom-0')
   })
 })

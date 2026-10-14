@@ -2,6 +2,7 @@ import { cn } from '@/utils/cn'
 import {
   FISSURE_EDGE_HEIGHT,
   FISSURE_EDGE_OUTLINE_PATH,
+  FISSURE_EDGE_OVERLAP,
   FISSURE_EDGE_PATH,
   FISSURE_TOP_TRANSFORM,
   VIEWBOX_WIDTH
@@ -33,8 +34,14 @@ export function FissureEdgeDecoration({
       ? `translate(0 ${bottomOffset})`
       : FISSURE_TOP_TRANSFORM
 
-  const maskRect =
-    position === 'bottom'
+  const maskRect = stripHeight
+    ? position === 'bottom'
+      ? { y: '0', height: String(FISSURE_EDGE_OVERLAP) }
+      : {
+          y: String(FISSURE_EDGE_HEIGHT - FISSURE_EDGE_OVERLAP),
+          height: String(FISSURE_EDGE_OVERLAP)
+        }
+    : position === 'bottom'
       ? { y: '0', height: bottomOffset + 1 }
       : {
           y: String(FISSURE_EDGE_HEIGHT),
@@ -45,7 +52,9 @@ export function FissureEdgeDecoration({
     <div
       className={cn(
         'pointer-events-none absolute z-10',
-        stripHeight ? 'inset-x-0 bottom-0' : 'inset-0',
+        stripHeight
+          ? `inset-x-0 ${position === 'top' ? 'top-0' : 'bottom-0'}`
+          : 'inset-0',
         hoverable && 'transition-transform duration-300 ease-out',
         hoverable &&
           position === 'bottom' &&

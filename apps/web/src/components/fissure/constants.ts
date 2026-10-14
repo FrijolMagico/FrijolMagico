@@ -1,5 +1,7 @@
 export const VIEWBOX_WIDTH = 1920
 export const FISSURE_EDGE_HEIGHT = 99
+export const FISSURE_EDGE_AMPLITUDE = `${FISSURE_EDGE_HEIGHT}px`
+export const FISSURE_EDGE_OVERLAP = 2
 export const FISSURE_TOP_TRANSFORM = 'rotate(180, 960, 49.5)'
 
 export const FISSURE_EDGE_PATH =

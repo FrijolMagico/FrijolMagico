@@ -50,6 +50,35 @@ describe('createFissureMaskStyle', () => {
     expect(svg).toContain(`transform="translate(0 ${height - FISSURE_EDGE_HEIGHT})"`)
   })
 
+  test('top and bottom strips keep the reference amplitude across frame heights', () => {
+    for (const height of [360, 400, 420, 640, 840]) {
+      for (const edge of ['top', 'bottom'] as const) {
+        const style = createFissureMaskStyle(height, {
+          top: edge === 'top',
+          bottom: edge === 'bottom',
+          edgeStrip: edge
+        })
+        const svg = getMaskSvg(FISSURE_EDGE_HEIGHT, {
+          top: edge === 'top',
+          bottom: edge === 'bottom',
+          edgeStrip: edge
+        })
+
+        expect((style as Record<string, unknown>)['--fissure-edge-strip-height']).toBe('99px')
+        expect(style.maskSize).toBe(
+          '100% calc(100% - var(--fissure-edge-strip-height) + 2px), 100% var(--fissure-edge-strip-height)'
+        )
+        expect(style.maskPosition).toBe(edge === 'top' ? '0 100%, 0 0' : '0 0, 0 100%')
+        expect(svg).toContain(`viewBox="0 0 ${VIEWBOX_WIDTH} ${FISSURE_EDGE_HEIGHT}"`)
+        expect(svg).toContain(
+          edge === 'top'
+            ? `transform="${FISSURE_TOP_TRANSFORM}"`
+            : 'transform="translate(0 0)"'
+        )
+      }
+    }
+  })
+
   test('content mode composes an upper mask with a fixed 99-unit bottom strip', () => {
     const style = createFissureMaskStyle(640, {
       top: false,

@@ -1,13 +1,13 @@
 import type { CSSProperties } from 'react'
 
 import {
+  FISSURE_EDGE_AMPLITUDE,
   FISSURE_EDGE_HEIGHT,
+  FISSURE_EDGE_OVERLAP,
   FISSURE_EDGE_PATH,
   FISSURE_TOP_TRANSFORM,
   VIEWBOX_WIDTH
 } from './constants'
-
-const OVERLAP = 2
 
 const CSS_MASK_PROPS = {
   WebkitMaskPosition: '0 0',
@@ -27,8 +27,12 @@ interface FissureMaskOptions {
   top?: boolean
   /** Includes the bottom fissure. Default: false */
   bottom?: boolean
-  /** Uses a fixed 99-unit bottom strip for naturally sized content. Default: false */
+  /** Uses the shared fixed-amplitude edge strip. Default: disabled */
+  edgeStrip?: 'top' | 'bottom'
+  /** Legacy bottom-strip option. Prefer edgeStrip. */
   contentBottomStrip?: boolean
+  /** Legacy top-strip option. Prefer edgeStrip. */
+  topEdgeStrip?: boolean
 }
 
 /**
@@ -45,13 +49,40 @@ export function createFissureMaskStyle(
   const hasTop = options?.top ?? true
   const hasBottom = options?.bottom ?? false
   const hasContentBottomStrip = options?.contentBottomStrip ?? false
-  const rectY = hasTop ? FISSURE_EDGE_HEIGHT - OVERLAP : 0
+  const edgeStrip =
+    options?.edgeStrip ??
+    (options?.topEdgeStrip ? 'top' : hasContentBottomStrip ? 'bottom' : undefined)
+  const rectY = hasTop ? FISSURE_EDGE_HEIGHT - FISSURE_EDGE_OVERLAP : 0
   const rectHeight =
     hasTop && hasBottom
-      ? height - FISSURE_EDGE_HEIGHT * 2 + 1 + OVERLAP * 2
+      ? height - FISSURE_EDGE_HEIGHT * 2 + 1 + FISSURE_EDGE_OVERLAP * 2
       : hasTop || hasBottom
-        ? height - FISSURE_EDGE_HEIGHT + 1 + OVERLAP
+        ? height - FISSURE_EDGE_HEIGHT + 1 + FISSURE_EDGE_OVERLAP
         : height
+
+  if (edgeStrip) {
+    const edgePath =
+      edgeStrip === 'top'
+        ? `<path d="${FISSURE_EDGE_PATH}" fill="white" transform="${FISSURE_TOP_TRANSFORM}"/>`
+        : `<path d="${FISSURE_EDGE_PATH}" fill="white" transform="translate(0 0)"/>`
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VIEWBOX_WIDTH} ${FISSURE_EDGE_HEIGHT}" preserveAspectRatio="none">${edgePath}</svg>`
+    const stripMask = buildDataUri(svg)
+    const contentMask = 'linear-gradient(white, white)'
+    const maskSize = `100% calc(100% - var(--fissure-edge-strip-height) + ${FISSURE_EDGE_OVERLAP}px), 100% var(--fissure-edge-strip-height)`
+    const maskPosition = edgeStrip === 'top' ? '0 100%, 0 0' : '0 0, 0 100%'
+
+    return {
+      WebkitMaskImage: `${contentMask}, ${stripMask}`,
+      maskImage: `${contentMask}, ${stripMask}`,
+      WebkitMaskPosition: maskPosition,
+      maskPosition,
+      WebkitMaskSize: maskSize,
+      maskSize,
+      WebkitMaskRepeat: 'no-repeat, no-repeat',
+      maskRepeat: 'no-repeat',
+      '--fissure-edge-strip-height': FISSURE_EDGE_AMPLITUDE
+    } as CSSProperties
+  }
 
   let paths = ''
 
@@ -60,29 +91,8 @@ export function createFissureMaskStyle(
   }
 
   if (hasBottom) {
-    const bottomOffset = hasContentBottomStrip
-      ? 0
-      : height - FISSURE_EDGE_HEIGHT
+    const bottomOffset = height - FISSURE_EDGE_HEIGHT
     paths += `<path d="${FISSURE_EDGE_PATH}" fill="white" transform="translate(0 ${bottomOffset})"/>`
-  }
-
-  if (hasContentBottomStrip) {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VIEWBOX_WIDTH} ${FISSURE_EDGE_HEIGHT}" preserveAspectRatio="none">${paths}</svg>`
-    const stripMask = buildDataUri(svg)
-    const contentMask = 'linear-gradient(white, white)'
-
-    return {
-      WebkitMaskImage: `${contentMask}, ${stripMask}`,
-      maskImage: `${contentMask}, ${stripMask}`,
-      WebkitMaskPosition: '0 0, 0 100%',
-      maskPosition: '0 0, 0 100%',
-      WebkitMaskSize:
-        '100% calc(100% - var(--fissure-edge-strip-height) + 2px), 100% var(--fissure-edge-strip-height)',
-      maskSize:
-        '100% calc(100% - var(--fissure-edge-strip-height) + 2px), 100% var(--fissure-edge-strip-height)',
-      WebkitMaskRepeat: 'no-repeat, no-repeat',
-      maskRepeat: 'no-repeat'
-    }
   }
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VIEWBOX_WIDTH} ${height}" preserveAspectRatio="none"><rect x="0" y="${rectY}" width="${VIEWBOX_WIDTH}" height="${rectHeight}" fill="white"/>${paths}</svg>`
