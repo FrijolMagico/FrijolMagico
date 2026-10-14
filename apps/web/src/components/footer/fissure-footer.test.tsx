@@ -5,29 +5,28 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { FissureFooter } from './fissure-footer'
 
 describe('FissureFooter', () => {
-  test('uses the mobile 640px frame and md 400px frame for both layers', () => {
+  test('uses responsive clipped and fixed layers with the fissure surface', () => {
     const markup = renderToStaticMarkup(
       createElement(FissureFooter, null, createElement('div', null, 'footer content'))
     )
 
     const footerFrame = markup.match(/<footer\b[^>]*>/)?.[0]
-    const fixedContent = markup.match(
-      /<div class="fixed h-\[640px\] md:h-\[400px\]"/
-    )?.[0]
+    const fixedContent = [...markup.matchAll(/<div class="([^"]*)"[^>]*>/g)]
+      .map(([, className]) => className)
+      .find((className) => className.split(' ').includes('fixed'))
 
     expect(footerFrame).toBeDefined()
     expect(fixedContent).toBeDefined()
-    expect(footerFrame).toContain('overflow-hidden')
+    expect(footerFrame).toContain('relative z-20 h-140 w-full overflow-hidden md:h-90')
     expect(markup).toContain('data-fissure-footer')
     expect(markup).not.toContain('sticky')
-    expect(footerFrame).toContain('h-[640px]')
-    expect(footerFrame).toContain('md:h-[400px]')
     expect(footerFrame).not.toContain('820px')
     expect(footerFrame).not.toContain('portrait')
-    expect(markup).toContain('position:fixed;bottom:0;left:0;width:100%')
     expect(markup).toContain('width:max(100vw, 80rem)')
     expect(markup).toContain('left:min(0px, calc((100vw - 80rem) / 2))')
-    expect(fixedContent).toContain('h-[640px] md:h-[400px]')
+    expect(fixedContent?.split(' ')).toEqual(
+      expect.arrayContaining(['fixed', 'bottom-0', 'left-0', 'h-160', 'w-full', 'md:h-90'])
+    )
     expect(fixedContent).not.toContain('820px')
     expect(fixedContent).not.toContain('portrait')
     expect(markup).toContain('height:99px')
