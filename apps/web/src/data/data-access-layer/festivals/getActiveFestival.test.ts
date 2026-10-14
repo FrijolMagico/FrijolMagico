@@ -6,15 +6,17 @@ import { executeQueryMock } from '@/test-utils/mockDatabase'
 
 import { getActiveFestival } from './getActiveFestival'
 
+const cacheLifeMock = mock(() => {})
 const cacheTagMock = mock<(tag: string) => void>(() => {})
 
 mock.module('next/cache', () => ({
-  cacheLife: mock(() => {}),
+  cacheLife: cacheLifeMock,
   cacheTag: cacheTagMock
 }))
 
 beforeEach(() => {
   executeQueryMock.mockReset()
+  cacheLifeMock.mockClear()
   cacheTagMock.mockClear()
 })
 
@@ -39,6 +41,11 @@ describe('getActiveFestival', () => {
     expect(result.data).toHaveLength(1)
     expect(result.data![0].slug).toBe('edicion-15-1')
     expect(result.data![0].event_name).toBe('Festival Frijol Mágico')
+    expect(cacheLifeMock).toHaveBeenCalledWith({
+      stale: 5 * 60,
+      revalidate: 604800,
+      expire: Infinity
+    })
     expect(cacheTagMock.mock.calls.map(([tag]) => tag)).toEqual([
       FESTIVAL_CRITICAL_CACHE_TAG
     ])
@@ -53,6 +60,11 @@ describe('getActiveFestival', () => {
     const result = await getActiveFestival()
 
     expect(result.data).toHaveLength(0)
+    expect(cacheLifeMock).toHaveBeenCalledWith({
+      stale: 5 * 60,
+      revalidate: 604800,
+      expire: Infinity
+    })
   })
 
   test('handles query error', async () => {

@@ -96,7 +96,6 @@ describe('ActivityList', () => {
             makeActivity('Workshop', 'taller', [occurrence(1, '2026-10-03')]),
             makeActivity('Talk', 'charla', [occurrence(2, '2026-10-03', '11:00')])
           ]}
-          isEditionPast={false}
         />
       )
       const scroller = container.querySelector<HTMLElement>(
@@ -143,7 +142,7 @@ describe('ActivityList', () => {
       }
     }
     const { container } = render(
-      <ActivityList actividades={[activity]} isEditionPast={false} />
+      <ActivityList actividades={[activity]} />
     )
 
     expect(container.querySelectorAll('article')).toHaveLength(2)
@@ -185,7 +184,6 @@ describe('ActivityList', () => {
           },
           makeActivity('Taller', 'taller', [occurrence(3, date)])
         ]}
-        isEditionPast={false}
       />
     )
 
@@ -229,7 +227,6 @@ describe('ActivityList', () => {
           makeActivity('Charla 12:30', 'charla', [occurrence(5, date, '12:30')]),
           makeActivity('Taller 12:30', 'taller', [occurrence(6, date, '12:30')])
         ]}
-        isEditionPast={false}
       />
     )
 
@@ -284,7 +281,6 @@ describe('ActivityList', () => {
             descripcion: 'Details for the later activity'
           }
         ]}
-        isEditionPast={false}
       />
     )
 
@@ -318,7 +314,6 @@ describe('ActivityList', () => {
           },
           makeActivity('Closed sibling', 'charla', [occurrence(2, date)])
         ]}
-        isEditionPast={false}
       />
     )
 
@@ -346,7 +341,6 @@ describe('ActivityList', () => {
           makeActivity('Primer día', 'taller', [occurrence(1, '2026-10-03')]),
           makeActivity('Segundo día', 'charla', [occurrence(2, '2026-10-04')])
         ]}
-        isEditionPast={false}
       />
     )
 
@@ -377,32 +371,33 @@ describe('ActivityList', () => {
     expect(screen.getByText('Segundo día')).toBeDefined()
   })
 
-  test('shows dated and undated unscheduled activities only for active editions', () => {
+  test('keeps dated and undated unconfirmed activities visible after timed content', () => {
     const activities = [
       makeActivity('Sin hora', 'taller', [occurrence(1, '2026-10-03', null)]),
+      makeActivity('Con hora', 'charla', [occurrence(2, '2026-10-03', '10:00')]),
       makeActivity('Sin fecha', 'charla', [])
     ]
-    const { container, unmount } = render(
-      <ActivityList actividades={activities} isEditionPast={false} />
-    )
-    expect(screen.getByText('Horario por confirmar')).toBeDefined()
-    expect(screen.getByText('Sin hora')).toBeDefined()
-    expect(screen.getByText('Actividades sin fecha')).toBeDefined()
-    expect(screen.getByText('Sin fecha')).toBeDefined()
-    expect(Array.from(container.querySelectorAll('article > span')).map((badge) => badge.textContent)).toEqual([
-      'Taller',
-      'Charla'
+    const { container } = render(<ActivityList actividades={activities} />)
+    const articles = Array.from(container.querySelectorAll('article'))
+
+    expect(articles.map((article) => article.querySelector('h3')?.textContent)).toEqual([
+      'Con hora',
+      'Sin hora',
+      'Sin fecha'
+    ])
+    expect(screen.getAllByText('Horario por confirmar')).toHaveLength(3)
+    expect(
+      articles.slice(1).map((article) => article.querySelector('p')?.textContent)
+    ).toEqual(['Horario por confirmar', 'Horario por confirmar'])
+    expect(Array.from(container.querySelectorAll('[data-timeline-time]')).map((time) => time.textContent)).toEqual([
+      '10:00',
+      '--:--',
+      '--:--'
     ])
     expect(container.querySelector('section[aria-label="Actividades del 2026-10-03"]')).not.toBeNull()
-    unmount()
-    render(<ActivityList actividades={activities} isEditionPast />)
-    expect(screen.queryByText('Horario por confirmar')).toBeNull()
-    expect(screen.queryByText('Actividades sin fecha')).toBeNull()
-    expect(screen.queryByText('Sin hora')).toBeNull()
-    expect(screen.queryByText('Sin fecha')).toBeNull()
   })
 
-  test('keeps separate activities distinct and hides undated legacy activities', () => {
+  test('keeps separate activities distinct and includes undated activities', () => {
     const { container } = render(
       <ActivityList
         actividades={[
@@ -410,12 +405,11 @@ describe('ActivityList', () => {
           makeActivity('Duplicado', 'taller', [occurrence(2, '2026-10-03')]),
           makeActivity('Legacy', 'charla', [])
         ]}
-        isEditionPast
       />
     )
-    expect(container.querySelectorAll('article')).toHaveLength(2)
+    expect(container.querySelectorAll('article')).toHaveLength(3)
     expect(screen.getAllByText('Duplicado')).toHaveLength(2)
-    expect(screen.queryByText('Legacy')).toBeNull()
+    expect(screen.getByText('Legacy')).toBeDefined()
   })
 
   test('labels each day button with its day number and month', () => {
@@ -425,7 +419,6 @@ describe('ActivityList', () => {
           makeActivity('Día nueve', 'taller', [occurrence(1, '2026-10-09')]),
           makeActivity('Día diez', 'taller', [occurrence(2, '2026-10-10')])
         ]}
-        isEditionPast={false}
       />
     )
 
@@ -441,7 +434,6 @@ describe('ActivityList', () => {
     const { container } = render(
       <ActivityList
         actividades={[makeActivity('Undated music', 'musica', [])]}
-        isEditionPast={false}
       />
     )
 
@@ -456,24 +448,24 @@ describe('ActivityList', () => {
     const workshop = makeActivity('Workshop', 'taller', [occurrence(1, '2026-10-03')])
     const talk = makeActivity('Talk', 'charla', [occurrence(2, '2026-10-03')])
     const { rerender } = render(
-      <ActivityList actividades={[workshop, talk]} isEditionPast={false} />
+      <ActivityList actividades={[workshop, talk]} />
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Charlas' }))
     expect(screen.getByRole('button', { name: 'Charlas' }).getAttribute('aria-pressed')).toBe('true')
     expect(screen.queryByText('Workshop')).toBeNull()
 
-    rerender(<ActivityList actividades={[talk]} isEditionPast={false} />)
+    rerender(<ActivityList actividades={[talk]} />)
     expect(screen.getByRole('button', { name: 'Charlas' }).getAttribute('aria-pressed')).toBe('true')
     expect(screen.getByText('Talk')).toBeDefined()
     expect(screen.queryByText('Workshop')).toBeNull()
 
-    rerender(<ActivityList actividades={[workshop]} isEditionPast={false} />)
+    rerender(<ActivityList actividades={[workshop]} />)
     expect(screen.getByRole('button', { name: 'Todos' }).getAttribute('aria-pressed')).toBe('true')
     expect(screen.queryByRole('button', { name: 'Charlas' })).toBeNull()
     expect(screen.getByText('Workshop')).toBeDefined()
 
-    rerender(<ActivityList actividades={[workshop, talk]} isEditionPast={false} />)
+    rerender(<ActivityList actividades={[workshop, talk]} />)
     expect(screen.getByRole('button', { name: 'Todos' }).getAttribute('aria-pressed')).toBe('true')
     expect(screen.getByRole('button', { name: 'Charlas' }).getAttribute('aria-pressed')).toBe('false')
     expect(screen.getByText('Workshop')).toBeDefined()
@@ -484,7 +476,6 @@ describe('ActivityList', () => {
     render(
       <ActivityList
         actividades={[makeActivity('Other activity', 'otro', [])]}
-        isEditionPast={false}
       />
     )
 
@@ -494,7 +485,7 @@ describe('ActivityList', () => {
   })
 
   test('renders only the section heading and Todos when the edition is empty', () => {
-    render(<ActivityList actividades={[]} isEditionPast={false} />)
+    render(<ActivityList actividades={[]} />)
     expect(screen.getByText('Actividades')).toBeDefined()
     expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual([
       'Todos'

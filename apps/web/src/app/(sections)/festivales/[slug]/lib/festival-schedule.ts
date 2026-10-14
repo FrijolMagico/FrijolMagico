@@ -69,8 +69,7 @@ function assignColumns(entries: FestivalScheduleEntry[]): number {
 }
 
 export function buildFestivalSchedule(
-  activities: FestivalActivity[],
-  isEditionPast: boolean
+  activities: FestivalActivity[]
 ): FestivalSchedule {
   const days = new Map<
     string,
@@ -80,9 +79,7 @@ export function buildFestivalSchedule(
 
   activities.forEach((activity, activityIndex) => {
     if (activity.ocurrencias.length === 0) {
-      if (!isEditionPast) {
-        unscheduled.push({ activity, occurrence: null, activityIndex, occurrenceIndex: null })
-      }
+      unscheduled.push({ activity, occurrence: null, activityIndex, occurrenceIndex: null })
       return
     }
 
@@ -96,18 +93,16 @@ export function buildFestivalSchedule(
         duration <= 0 ||
         startMinutes + duration > 24 * 60
       ) {
-        if (!isEditionPast) {
-          const entry = { activity, occurrence, activityIndex, occurrenceIndex }
-          if (occurrence.fecha) {
-            let day = days.get(occurrence.fecha)
-            if (!day) {
-              day = { groups: new Map(), unscheduled: [] }
-              days.set(occurrence.fecha, day)
-            }
-            day.unscheduled.push(entry)
-          } else {
-            unscheduled.push(entry)
+        const entry = { activity, occurrence, activityIndex, occurrenceIndex }
+        if (occurrence.fecha) {
+          let day = days.get(occurrence.fecha)
+          if (!day) {
+            day = { groups: new Map(), unscheduled: [] }
+            days.set(occurrence.fecha, day)
           }
+          day.unscheduled.push(entry)
+        } else {
+          unscheduled.push(entry)
         }
         return
       }

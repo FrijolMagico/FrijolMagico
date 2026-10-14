@@ -30,7 +30,6 @@ const baseRawResult = {
     numero_edicion: 'XV',
     poster_url: 'https://cdn.frijolmagico.cl/poster.webp',
     edicion_fin: '2025-10-03',
-    is_edition_past: true,
     dias: [],
     participantes: [
       {
@@ -115,25 +114,16 @@ describe('festivalDetailRepository', () => {
       participante_pseudonimo: 'Músico',
       ocurrencias: []
     })
-    const pastHtml = renderToStaticMarkup(
+    const html = renderToStaticMarkup(
       createElement(ActivityList, {
-        actividades: result?.actividades ?? [],
-        isEditionPast: result?.is_edition_past ?? false
+        actividades: result?.actividades ?? []
       })
     )
-    expect(pastHtml).not.toContain('Músico')
-    expect(pastHtml).not.toContain('Concierto reservado')
-    expect(pastHtml).not.toContain('Inscríbete')
-
-    const activeHtml = renderToStaticMarkup(
-      createElement(ActivityList, {
-        actividades: result?.actividades ?? [],
-        isEditionPast: false
-      })
-    )
-    expect(activeHtml).toContain('Concierto reservado')
-    expect(activeHtml).toContain('Actividades sin fecha')
-    expect(activeHtml).not.toContain('Inscríbete')
+    expect(html).toContain('Músico')
+    expect(html).toContain('Concierto reservado')
+    expect(html).toContain('Actividades sin fecha')
+    expect(html).toContain('Horario por confirmar')
+    expect(html).not.toContain('Inscríbete')
   })
 
   test('returns presenter names and selected catalog slugs in activity results', async () => {

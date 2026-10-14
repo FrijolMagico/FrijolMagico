@@ -107,13 +107,32 @@ describe('ContextBar', () => {
 
   test('normal mode retains breadcrumbs for a valid dynamic route', () => {
     pathname = '/catalogo/canela'
-    const { container } = render(<ContextBar />)
+    const { container, rerender } = render(<ContextBar />)
 
     expect(screen.getByRole('link', { name: 'Volver' })).toBeDefined()
     expect(screen.getByRole('link', { name: 'Catálogo' })).toBeDefined()
     expect(container.querySelector('[aria-current="page"]')?.textContent).toBe(
       'Canela'
     )
+
+    pathname = '/festivales/edicion-xv'
+    rerender(<ContextBar />)
+    expect(screen.getByRole('link', { name: 'Volver' })).toBeDefined()
+    expect(container.querySelector('[aria-current="page"]')?.textContent).toBe(
+      'Edicion Xv'
+    )
+  })
+
+  test('groups breadcrumb and back controls for marker-scoped hiding', () => {
+    pathname = '/catalogo/canela'
+    const { container } = render(<ContextBar />)
+
+    expect(
+      container.querySelector('[data-context-bar-controls]')?.textContent
+    ).toContain('Canela')
+    expect(
+      container.querySelector('[data-context-bar-controls] a[aria-label="Volver"]')
+    ).not.toBeNull()
   })
 
   test('homepage retains its minimal presentation', () => {

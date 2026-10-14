@@ -16,7 +16,6 @@ import { cn } from '@/utils/cn'
 
 interface ActivityListProps {
   actividades: FestivalActivity[]
-  isEditionPast: boolean
 }
 
 const TYPE_FILTERS = [
@@ -49,11 +48,8 @@ function getActivityTypeBadge(type: string) {
   return type
 }
 
-export const ActivityList = ({
-  actividades,
-  isEditionPast
-}: ActivityListProps) => {
-  const schedule = buildFestivalSchedule(actividades, isEditionPast)
+export const ActivityList = ({ actividades }: ActivityListProps) => {
+  const schedule = buildFestivalSchedule(actividades)
   const [selectedDate, setSelectedDate] = useState(schedule.days[0]?.date ?? '')
   const [selectedType, setSelectedType] = useState<string>('all')
   const visibleTypeFilters = TYPE_FILTERS.filter(
@@ -309,26 +305,34 @@ export const ActivityList = ({
               <h3 className='text-palette-accent mb-3 font-mono text-lg font-bold'>
                 Horario por confirmar
               </h3>
-              <ul className='grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3'>
-                {visibleDatedUnscheduled.map(
-                  ({
-                    activity,
-                    occurrence,
-                    activityIndex,
-                    occurrenceIndex
-                  }) => (
-                    <li key={`${activityIndex}-${occurrenceIndex}`}>
-                      <ActivityItem
-                        activity={{
-                          ...activity,
-                          ocurrencias: occurrence ? [occurrence] : []
-                        }}
-                        badge={getActivityTypeBadge(activity.tipo)}
-                      />
-                    </li>
-                  )
-                )}
-              </ul>
+              <div className='grid grid-cols-[4.5rem_minmax(0,1fr)] gap-2'>
+                <time
+                  data-timeline-time
+                  className='text-palette-primary pt-2 text-right font-mono text-lg font-bold tabular-nums sm:text-2xl'
+                >
+                  --:--
+                </time>
+                <ul className='grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3'>
+                  {visibleDatedUnscheduled.map(
+                    ({
+                      activity,
+                      occurrence,
+                      activityIndex,
+                      occurrenceIndex
+                    }) => (
+                      <li key={`${activityIndex}-${occurrenceIndex}`}>
+                        <ActivityItem
+                          activity={{
+                            ...activity,
+                            ocurrencias: occurrence ? [occurrence] : []
+                          }}
+                          badge={getActivityTypeBadge(activity.tipo)}
+                        />
+                      </li>
+                    )
+                  )}
+                </ul>
+              </div>
             </section>
           )}
 
@@ -340,26 +344,34 @@ export const ActivityList = ({
               <h3 className='text-palette-accent mb-3 font-mono text-lg font-bold'>
                 Actividades sin fecha
               </h3>
-              <ul className='grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3'>
-                {visibleUndated.map(
-                  ({
-                    activity,
-                    occurrence,
-                    activityIndex,
-                    occurrenceIndex
-                  }) => (
-                    <li key={`${activityIndex}-${occurrenceIndex ?? 'none'}`}>
-                      <ActivityItem
-                        activity={{
-                          ...activity,
-                          ocurrencias: occurrence ? [occurrence] : []
-                        }}
-                        badge={getActivityTypeBadge(activity.tipo)}
-                      />
-                    </li>
-                  )
-                )}
-              </ul>
+              <div className='grid grid-cols-[4.5rem_minmax(0,1fr)] gap-2'>
+                <time
+                  data-timeline-time
+                  className='text-palette-primary pt-2 text-right font-mono text-lg font-bold tabular-nums sm:text-2xl'
+                >
+                  --:--
+                </time>
+                <ul className='grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3'>
+                  {visibleUndated.map(
+                    ({
+                      activity,
+                      occurrence,
+                      activityIndex,
+                      occurrenceIndex
+                    }) => (
+                      <li key={`${activityIndex}-${occurrenceIndex ?? 'none'}`}>
+                        <ActivityItem
+                          activity={{
+                            ...activity,
+                            ocurrencias: occurrence ? [occurrence] : []
+                          }}
+                          badge={getActivityTypeBadge(activity.tipo)}
+                        />
+                      </li>
+                    )
+                  )}
+                </ul>
+              </div>
             </section>
           )}
         </div>

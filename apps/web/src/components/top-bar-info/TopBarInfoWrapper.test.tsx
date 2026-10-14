@@ -17,7 +17,20 @@ mock.module('next/cache', () => ({
   cacheTag: mock(() => {})
 }))
 
-afterEach(cleanup)
+const siteDataFixture = {
+  top_bar: {
+    active: false,
+    text: 'Festival de prueba',
+    button: { active: false, text: 'Más info', href: '/festivales/prueba' }
+  }
+}
+
+mock.module('@/data/site.json', () => ({ default: siteDataFixture }))
+
+afterEach(() => {
+  cleanup()
+  siteDataFixture.top_bar.active = false
+})
 
 beforeEach(() => {
   executeQueryMock.mockReset()
@@ -56,36 +69,30 @@ describe('TopBarInfoWrapper', () => {
     expect(section!.textContent).toContain('Festival Frijol Mágico')
   })
 
-  test('renders site data when no festival is active', async () => {
-    // Mock: no active festival
+  test('renders site data when no festival is active and static top bar is enabled', async () => {
+    siteDataFixture.top_bar.active = true
     executeQueryMock.mockResolvedValueOnce({
       data: [],
       error: null
     })
 
-    // TopBarInfoWrapper will fall back to siteData.top_bar
     const { TopBarInfoWrapper } = await import('./TopBarInfoWrapper')
     const element = await TopBarInfoWrapper()
 
     expect(element).not.toBeNull()
-    // site.json top_bar has text: '¡Vive la experiencia!'
-    // Just check it renders something non-null
     const { container } = render(element)
-    expect(container.querySelector('section')).not.toBeNull()
+    expect(container.querySelector('section')?.textContent).toContain('Festival de prueba')
   })
 
-  test('returns null when no festival and site top_bar is inactive', async () => {
-    // Mock: no active festival
+  test('returns null when no festival is active and static top bar is disabled', async () => {
     executeQueryMock.mockResolvedValueOnce({
       data: [],
       error: null
     })
-    // Temporarily set top_bar.active to false
-    // We need a different mock approach for site.json
-    // For now just verify the fallback case works
+
     const { TopBarInfoWrapper } = await import('./TopBarInfoWrapper')
     const element = await TopBarInfoWrapper()
 
-    expect(element).not.toBeNull()
+    expect(element).toBeNull()
   })
 })

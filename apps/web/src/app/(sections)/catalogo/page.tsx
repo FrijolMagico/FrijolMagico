@@ -1,6 +1,5 @@
 import { Header } from '@/components/Header'
 import { TrackPageView } from '@/components/analytics/TrackPageView'
-import { ContextBar } from '@/components/context-bar/ContextBar'
 import { paths } from '@/config/paths'
 import siteData from '@/data/site.json'
 import type { Metadata } from 'next'
@@ -31,7 +30,6 @@ export default function CatalogPage() {
         <CatalogListServer />
       </main>
       <CatalogPanelServer />
-      <ContextBar />
     </>
   )
 }

@@ -4,7 +4,6 @@ import siteData from '@/data/site.json'
 import { getFestivalesData } from './lib/getFestivalesData'
 import { FestivalesTimeline } from './components/FestivalesTimeline'
 import { TrackPageView } from '@/components/analytics/TrackPageView'
-import { ContextBar } from '@/components/context-bar/ContextBar'
 
 const festivals = siteData.festivals
 
@@ -25,7 +24,6 @@ export default async function FestivalesPage() {
       ) : (
         <FestivalesTimeline festivales={festivales} />
       )}
-      <ContextBar />
     </>
   )
 }
