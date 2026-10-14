@@ -12,7 +12,6 @@ import { ActivityItemHeadContent } from './ActivityItemHeadContent'
 
 interface ActivityItemProps {
   activity: FestivalActivity
-  isEditionPast?: boolean
   badge?: string
 }
 
@@ -43,6 +42,7 @@ export const ActivityItem = ({ activity, badge }: ActivityItemProps) => {
         occurrence.duracion_minutos
       )
     : null
+  const displayedTimeRange = timeRange ?? 'Horario por confirmar'
 
   return (
     <article className='bg-palette-background border-palette-primary group relative h-full w-full min-w-0 rounded-lg border'>
@@ -70,7 +70,7 @@ export const ActivityItem = ({ activity, badge }: ActivityItemProps) => {
           <summary className='flex h-full min-h-40 w-full cursor-pointer justify-between gap-4'>
             <ActivityItemHeadContent
               activity={activity}
-              timeRange={timeRange}
+              timeRange={displayedTimeRange}
             />
             <ChevronDown
               className='text-palette-foreground/40 my-auto size-5 shrink-0 transition-transform duration-200 group-open/details:rotate-180'
@@ -86,7 +86,10 @@ export const ActivityItem = ({ activity, badge }: ActivityItemProps) => {
         </details>
       ) : (
         <div className='flex h-full min-h-40 w-full px-4'>
-          <ActivityItemHeadContent activity={activity} timeRange={timeRange} />
+          <ActivityItemHeadContent
+            activity={activity}
+            timeRange={displayedTimeRange}
+          />
         </div>
       )}
     </article>
