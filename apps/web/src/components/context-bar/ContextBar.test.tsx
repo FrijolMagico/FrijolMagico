@@ -3,7 +3,11 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { createElement } from 'react'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
-import { parsePathname, getSections, type BreadcrumbSegment } from '@/utils/paths'
+import {
+  parsePathname,
+  getSections,
+  type BreadcrumbSegment
+} from '@/utils/paths'
 import { ContextBar } from './ContextBar'
 import { ContextBreadcrumb } from './ContextBreadcrumb'
 import { ContextDropdown } from './ContextDropdown'
@@ -131,7 +135,9 @@ describe('ContextBar', () => {
       container.querySelector('[data-context-bar-controls]')?.textContent
     ).toContain('Canela')
     expect(
-      container.querySelector('[data-context-bar-controls] a[aria-label="Volver"]')
+      container.querySelector(
+        '[data-context-bar-controls] a[aria-label="Volver"]'
+      )
     ).not.toBeNull()
   })
 
@@ -184,6 +190,28 @@ describe('ContextBreadcrumb', () => {
 
 describe('ContextDropdown', () => {
   const mockSections = getSections()
+
+  test('includes transparency alongside all existing sections', () => {
+    render(
+      <ContextDropdown sections={mockSections} activeSection='/transparencia' />
+    )
+    fireEvent.click(screen.getByRole('button', { name: /secciones/i }))
+    const transparency = screen.getByRole('menuitem', { name: 'Transparencia' })
+    expect(
+      screen.getAllByRole('menuitem').map((item) => item.textContent)
+    ).toEqual(['Catálogo', 'Nosotros', 'Festivales', 'Transparencia'])
+    expect(transparency.getAttribute('href')).toBe('/transparencia')
+    expect(transparency.querySelector('svg')).not.toBeNull()
+    for (const [name, href] of [
+      ['Catálogo', '/catalogo'],
+      ['Nosotros', '/nosotros'],
+      ['Festivales', '/festivales']
+    ] as const) {
+      expect(screen.getByRole('menuitem', { name }).getAttribute('href')).toBe(
+        href
+      )
+    }
+  })
 
   test('toggles the menu open and closed', () => {
     render(

@@ -53,7 +53,7 @@ export function ContextBar({
       aria-label='Navegacion de contexto'
       aria-hidden={!visible}
       className={cn(
-        'bg-background/80 fixed bottom-4 left-1/2 z-99 mx-auto -translate-x-1/2 self-center rounded-lg px-4 py-2 shadow-lg backdrop-blur-md transition-all duration-300',
+        'bg-background/80 border-primary/80 fixed bottom-4 left-1/2 z-99 mx-auto -translate-x-1/2 self-center rounded-full border border-dashed px-4 py-2 shadow-lg backdrop-blur-md transition-all duration-300',
         !visible && 'pointer-events-none translate-y-[200%] opacity-0'
       )}
     >
