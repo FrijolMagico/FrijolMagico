@@ -20,7 +20,8 @@ export const paths = {
       festival: {
         path: '/festivales',
         label: 'Festivales'
-      }
+      },
+      transparency: { path: '/transparencia', label: 'Transparencia' }
     }
   }
 } as const

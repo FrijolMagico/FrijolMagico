@@ -2,7 +2,6 @@ import { HeroSection } from './components/HeroSection'
 import { LinkBtn } from '@/components/LinkBtn'
 import { paths } from '@/config/paths'
 import { FeaturedArtists } from './components/FeaturedArtists'
-import { Banner } from './components/banner'
 import { DoodleLine } from '@/components/DoodleLine'
 
 export default async function Home() {
@@ -10,10 +9,8 @@ export default async function Home() {
     <>
       <main
         data-palette='base'
-        className='mx-auto -mt-12 h-full w-full space-y-12 overflow-x-hidden md:pb-12'
+        className='mx-auto h-full w-full space-y-12 overflow-x-hidden pt-12 md:pb-12'
       >
-        <Banner />
-
         <HeroSection />
 
         <DoodleLine color='text-primary' className='py-4' />

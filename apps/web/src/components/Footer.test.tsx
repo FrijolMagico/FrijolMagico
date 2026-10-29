@@ -23,7 +23,8 @@ mock.module('@/config/paths', () => ({
             label: (name: string) => name
           }
         },
-        about: { path: '/nosotros', label: 'Nosotros' }
+        about: { path: '/nosotros', label: 'Nosotros' },
+        transparency: { path: '/transparencia', label: 'Transparencia' }
       }
     }
   }
@@ -39,7 +40,8 @@ mock.module('@/data/site.json', () => ({
 }))
 
 mock.module('@/components/fissure/FissureEdgeDecoration', () => ({
-  FissureEdgeDecoration: () => createElement('div', { 'data-testid': 'fissure-decoration' })
+  FissureEdgeDecoration: () =>
+    createElement('div', { 'data-testid': 'fissure-decoration' })
 }))
 
 mock.module('@/components/fissure/mask', () => ({
@@ -58,6 +60,33 @@ mock.module('./LinkBtn', () => ({
 import { Footer } from './Footer'
 
 describe('Footer', () => {
+  test('aligns social and navigation columns at the top', () => {
+    const { container } = render(<Footer />)
+    const socialHeading = Array.from(container.querySelectorAll('h4')).find(
+      (heading) => heading.textContent === 'Síguenos'
+    )
+    const columns = socialHeading?.parentElement?.parentElement
+    expect(columns?.classList.contains('items-start')).toBe(true)
+    expect(columns?.classList.contains('items-center')).toBe(false)
+  })
+
+  test('keeps existing navigation links and places transparency last', () => {
+    const { container } = render(<Footer />)
+    const heading = Array.from(container.querySelectorAll('h4')).find(
+      (item) => item.textContent === 'Navegar'
+    )
+    const links = heading?.parentElement?.querySelectorAll('li a') ?? []
+    expect(
+      Array.from(links, (link) => [link.textContent, link.getAttribute('href')])
+    ).toEqual([
+      ['Inicio', '/'],
+      ['Festivales', '/festivales'],
+      ['Catálogo', '/catalogo'],
+      ['Nosotros', '/nosotros'],
+      ['Transparencia', '/transparencia']
+    ])
+  })
+
   test('renders dynamic version from APP_VERSION, not hardcoded v4.0.0', () => {
     render(<Footer />)
 
