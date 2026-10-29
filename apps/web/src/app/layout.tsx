@@ -21,6 +21,7 @@ import { Footer } from '@/components/Footer'
 import { SiteForeground } from '@/components/site-foreground'
 import { Background } from '@/components/Background'
 import { ContextBar } from '@/components/context-bar/ContextBar'
+import { Banner } from '@/components/banner/banner'
 
 const SITE = siteData
 
@@ -128,6 +129,9 @@ export default function RootLayout({
           <TopBarRouteGate>
             <TopBarInfoWrapper />
           </TopBarRouteGate>
+          <div data-site-banner className='-mt-12'>
+            <Banner />
+          </div>
           <div id='main-content' tabIndex={-1} className='outline-none' />
           {children}
         </SiteForeground>

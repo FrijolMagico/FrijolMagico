@@ -7,10 +7,18 @@ Main website for Frijol Mágico Cultural Association (frijolmagico.cl). Built wi
 The web app serves as the digital hub for the Frijol Mágico Festival, featuring:
 
 - **Home Page**: Bento grid with festival announcements and featured content
+- **Shared Fissure Banner**: Rendered once before page content on every web route by the root layout, including home and not-found pages. The active-festival/podcast selection and responsive sizing remain in `src/components/banner/banner.tsx`.
 - **Catalog**: Artist catalog with filters, search, and panel view
 - **Festivals**: Festival editions with timeline, schedule, and participant info
 - **Open Calls**: Convocatorias for festival participation
-- **About**: Organization information
+- **About**: Organization information, with a centered offset transparency button separated from the team image by a doodle line
+- **Transparency** (`/transparencia`): Six funded projects with funding lines, amounts and agreement links, followed by the 2026 festival impact report. Last entry in both the navigation's sections menu and the footer's Navegar list. Project data lives in `src/app/(sections)/transparencia/data/funding-projects.ts`.
+
+The transparency projects appear in this order: Aves Migratorias, Festival 2024,
+Festival "Un nuevo germinar", Novela Grafica Los Perdedores, Festival 2025 and
+Festival 2026. The four festival names link to their published editions using
+`LinkBtn` with its rotating arrow. Agreement links reuse the footer's
+`wavy-underline` with text-color-only hover, and the centered impact report uses `LinkCta`'s `offset` variant. Project names stay on one line with inline arrows; the table scrolls horizontally on narrow screens.
 
 ## Tech Stack
 
@@ -32,7 +40,8 @@ src/
 │   │   ├── catalogo/          # Artist catalog
 │   │   ├── convocatoria/      # Open calls
 │   │   ├── festivales/        # Festival pages
-│   │   └── nosotros/          # About page
+│   │   ├── nosotros/          # About page
+│   │   └── transparencia/     # Funding agreements and impact report
 │   ├── layout.tsx
 │   └── not-found.tsx
 ├── components/                # Shared components

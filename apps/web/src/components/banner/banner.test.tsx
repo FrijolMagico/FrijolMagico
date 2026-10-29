@@ -19,7 +19,7 @@ mock.module('./ActiveFestivalBanner', () => ({
 mock.module('./FissureBanner', () => ({ FissureBanner: FissureBannerMock }))
 mock.module('./PodcastBanner', () => ({ PodcastBanner: PodcastBannerMock }))
 
-const { Banner } = await import('./index')
+const { Banner } = await import('./banner')
 
 afterEach(() => {
   getActiveFestivalMock.mockReset()

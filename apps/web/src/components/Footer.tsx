@@ -13,7 +13,8 @@ const navLinks = [
   { name: 'Inicio', href: paths.home.path },
   { name: 'Festivales', href: paths.home.sub.festival.path },
   { name: 'Catálogo', href: paths.home.sub.catalog.path },
-  { name: 'Nosotros', href: paths.home.sub.about.path }
+  { name: 'Nosotros', href: paths.home.sub.about.path },
+  { name: 'Transparencia', href: paths.home.sub.transparency.path }
 ]
 
 const socialLinks = [
@@ -31,8 +32,8 @@ export const Footer = () => (
     >
       <BackToTop />
       <div className='w-full min-w-0 space-y-4 pt-24 md:pt-8'>
-        <div className='mx-auto flex w-full min-w-0 max-w-4xl flex-col items-center justify-between gap-4 md:flex-row lg:py-4'>
-          <section className='w-full min-w-0 max-w-sm space-y-2'>
+        <div className='mx-auto flex w-full max-w-4xl min-w-0 flex-col items-center justify-between gap-4 md:flex-row lg:py-4'>
+          <section className='w-full max-w-sm min-w-0 space-y-2'>
             <Image
               src='https://cdn.frijolmagico.cl/asoc/logos/logotipo_white.png'
               alt='Logo de la Asociación Cultural Frijol Mágico'
@@ -48,7 +49,7 @@ export const Footer = () => (
             </p>
           </section>
           <nav className='mt-4 flex min-w-0 flex-col items-center'>
-            <div className='text-background/80 flex min-w-0 items-center justify-center gap-6 lg:gap-12'>
+            <div className='text-background/80 flex min-w-0 items-start justify-center gap-6 lg:gap-12'>
               <div className='space-y-2'>
                 <h4 className='wavy-underline text-background uppercase'>
                   Síguenos

@@ -1,6 +1,9 @@
 import Image from 'next/image'
 
 import { Header } from '@/components/Header'
+import { DoodleLine } from '@/components/DoodleLine'
+import { LinkCta } from '@/components/link-cta'
+import { paths } from '@/config/paths'
 import siteData from '@/data/site.json'
 import { ErrorSection } from '@/components/ErrorSection'
 import { Grid } from '@/components/Grid'
@@ -117,6 +120,16 @@ export default async function NosotrosPage() {
             </GridItem>
           </Grid>
         )}
+        <div className='mt-12 space-y-6 text-center'>
+          <DoodleLine color='text-secondary' className='mx-auto max-w-xs' />
+          <LinkCta
+            href={paths.home.sub.transparency.path}
+            variant='offset'
+            className='inline-flex'
+          >
+            Ver Transparencia
+          </LinkCta>
+        </div>
       </main>
     </>
   )
